@@ -22,8 +22,9 @@
 
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.*;
+
 import java.sql.ResultSet;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -33,11 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.DQPCore.ConnectorCapabilitiesCache;
-
-import static org.junit.Assert.*;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -53,8 +49,6 @@ import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 
@@ -203,21 +197,6 @@ public class TestDQPCore {
         } catch (ExecutionException e) {
         	assertTrue(e.getCause() instanceof QueryResolverException);
         }
-    }
-    
-    @Test public void testCapabilitesCache() {
-    	ConnectorCapabilitiesCache cache = new ConnectorCapabilitiesCache();
-    	DQPWorkContext workContext = new DQPWorkContext();
-    	workContext.setVdbName("foo"); //$NON-NLS-1$
-    	workContext.setVdbVersion("1"); //$NON-NLS-1$
-    	Map<String, SourceCapabilities> vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
-    	vdbCapabilites.put("model1", new BasicSourceCapabilities()); //$NON-NLS-1$
-    	vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNotNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
-    	workContext.setVdbName("bar"); //$NON-NLS-1$
-    	vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
     }
     
 	@Test public void testLookupVisibility() throws Exception {

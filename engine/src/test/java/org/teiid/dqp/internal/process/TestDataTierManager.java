@@ -384,8 +384,9 @@ public class TestDataTierManager extends TestCase {
 				ConnectorID connectorId) throws MetaMatrixComponentException {
 			closed = true;
 		}
+		@Override
 		public SourceCapabilities getCapabilities(RequestMessage request,
-				DQPWorkContext dqpWorkContext, ConnectorID connector)
+				DQPWorkContext dqpWorkContext, String modelName)
 				throws MetaMatrixComponentException {
 			return null;
 		}

@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
@@ -254,7 +253,7 @@ public class TestPreparedStatement {
         	}
         };
         FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, new HashMap(), null, DEBUG, null, workContext, 101024);
+        serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, null, DEBUG, null, workContext, 101024);
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();
         

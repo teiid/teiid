@@ -78,7 +78,7 @@ public interface DataService extends ApplicationService {
      * @param connector Connector to retrieve capabilities from
      * @return All capability information as key-value pairs
      */
-    SourceCapabilities getCapabilities(RequestMessage request, DQPWorkContext dqpWorkContext, ConnectorID connector) 
+    SourceCapabilities getCapabilities(RequestMessage request, DQPWorkContext dqpWorkContext, String modelName) 
         throws MetaMatrixComponentException;
     
     /**

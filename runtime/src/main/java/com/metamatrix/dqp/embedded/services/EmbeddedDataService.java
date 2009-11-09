@@ -24,14 +24,15 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.ConnectionPool;
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.metadata.runtime.MetadataStore;
@@ -76,16 +77,16 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
  */
 public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataService {
     // Map of connector binding name to ConnectorID
-    private Map connectorIDs = new HashMap();
+    private Map<String, ConnectorID> connectorIDs = new ConcurrentHashMap<String, ConnectorID>();
 
     // Map of ConnectorID to ConnectorData
-    private Map connectorMgrs = new HashMap();
+    private Map<ConnectorID, ConnectorManager> connectorMgrs = new ConcurrentHashMap<ConnectorID, ConnectorManager>();
     
     // A counter to keep track of connector ids
     private AtomicInteger counter = new AtomicInteger();
     
     // Connector List
-    private Map loadedConnectorBindingsMap = new HashMap();
+    private Map<String, ConnectorBinding> loadedConnectorBindingsMap = new ConcurrentHashMap<String, ConnectorBinding>();
     
     private ApplicationEnvironment env;
     
@@ -115,11 +116,11 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      */
     public ConnectorID selectConnector(String deployedConnectorBindingName) 
         throws MetaMatrixComponentException {        
-        ConnectorID id = (ConnectorID) connectorIDs.get(deployedConnectorBindingName);
+        ConnectorID id = connectorIDs.get(deployedConnectorBindingName);
         if (id == null) {
             ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
             if (binding != null) {
-                id = (ConnectorID) connectorIDs.get(binding.getDeployedName());
+                id = connectorIDs.get(binding.getDeployedName());
             }
             if (id == null) {
                 throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Connector_State_invalid", new Object[] { deployedConnectorBindingName })); //$NON-NLS-1$
@@ -139,10 +140,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     	String deployedConnectorBindingName = bindingNames.get(0);
     	ConnectorID connector = selectConnector(deployedConnectorBindingName);
     	ConnectorManager mgr = getConnectorManager(connector);
-    	if (mgr == null) {
-    		throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$
-    	}
-    	
     	try {
 			return mgr.getMetadata(modelName, importProperties);
 		} catch (ConnectorException e) {
@@ -161,53 +158,46 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 			ResultsReceiver<AtomicResultsMessage> resultListener)
 			throws MetaMatrixComponentException {
         ConnectorManager mgr = getConnectorManager(connector);
-        if(mgr != null) {
-			mgr.executeRequest(resultListener, request);
-        }
-        else {
-            throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$
-        }
+		mgr.executeRequest(resultListener, request);
     }
 	
 	public void cancelRequest(AtomicRequestID request, ConnectorID connectorId)
 			throws MetaMatrixComponentException {
         ConnectorManager mgr = getConnectorManager(connectorId);
-        if (mgr == null ) {                        
-            throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorId })); //$NON-NLS-1$            
-        }
         mgr.cancelRequest(request);
 	}
 
 	public void closeRequest(AtomicRequestID request, ConnectorID connectorId)
 			throws MetaMatrixComponentException {
         ConnectorManager mgr = getConnectorManager(connectorId);
-        if (mgr == null ) {                        
-            throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorId })); //$NON-NLS-1$            
-        }
         mgr.closeRequest(request);
 	}
 	
 	public void requestBatch(AtomicRequestID request, ConnectorID connectorId)
 		throws MetaMatrixComponentException {
         ConnectorManager mgr = getConnectorManager(connectorId);
-        if (mgr == null ) {                        
-            throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorId })); //$NON-NLS-1$            
-        }
         mgr.requstMore(request);
 	}
 
 	public SourceCapabilities getCapabilities(RequestMessage request,
-			DQPWorkContext dqpWorkContext, ConnectorID connector)
+			DQPWorkContext dqpWorkContext, String modelName)
 			throws MetaMatrixComponentException {
-        ConnectorManager mgr = getConnectorManager(connector);
-        if (mgr != null ) {                        
+        // Find capabilities 
+		VDBService vdbService = (VDBService)this.lookupService(DQPServiceNames.VDB_SERVICE);
+    	List bindings = vdbService.getConnectorBindingNames(dqpWorkContext.getVdbName(), dqpWorkContext.getVdbVersion(), modelName);
+        ConnectorCapabilities caps = null;
+        ConnectorException ex = null;
+    	for(int i=0; i<bindings.size(); i++) {
+            String connBinding = (String) bindings.get(i); 
+            ConnectorID connector = selectConnector(connBinding);
+            ConnectorManager mgr = getConnectorManager(connector);
             try {
-				return mgr.getCapabilities(dqpWorkContext.getRequestID(request.getExecutionId()), request.getExecutionPayload(), dqpWorkContext);
-			} catch (ConnectorException e) {
-				throw new MetaMatrixComponentException(e);
-			}
+    			return mgr.getCapabilities(dqpWorkContext.getRequestID(request.getExecutionId()), request.getExecutionPayload(), dqpWorkContext);
+    		} catch (ConnectorException e) {
+                ex = e;
+    		}
         }
-        throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$            
+        throw new MetaMatrixComponentException(ex, DQPEmbeddedPlugin.Util.getString("DataService.Didnt_find_caps", modelName)); //$NON-NLS-1$
 	}
 
     /** 
@@ -217,7 +207,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {
     	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
         if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding);
+            ConnectorManager mgr = getConnectorManager(binding, false);
             if (mgr != null ) {            
                 return mgr.getQueueStatistics();
             }
@@ -232,7 +222,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     public Collection<? extends ConnectionPool> getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
     	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
         if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding);
+            ConnectorManager mgr = getConnectorManager(binding, false);
             if (mgr != null ) {  
             	Collection<MMConnectionPool> result = mgr.getConnectionPoolStats();
             	for (MMConnectionPool mmConnectionPool : result) {
@@ -251,7 +241,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {
     	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
     	if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding);
+            ConnectorManager mgr = getConnectorManager(binding, false);
             if (mgr != null ) {            
                 mgr.clearCache();
                 return;
@@ -268,24 +258,22 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         throws ApplicationLifecycleException, MetaMatrixComponentException {
         
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
-        if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding);
-            if (mgr != null && mgr.getStatus() == ConnectorStatus.NOT_INITIALIZED) {
-                // Start the manager
-                mgr.start(env);
-                
-                // Add the references to the mgr as loaded.
-                ConnectorID connID = mgr.getConnectorID(); 
-                this.connectorIDs.put(binding.getDeployedName(), connID);
-                this.connectorMgrs.put(connID, mgr);                
-                this.loadedConnectorBindingsMap.put(binding.getDeployedName(), binding);
-                
-                DQPEmbeddedPlugin.logInfo("DataService.Connector_Started", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
-            }
+        if (binding == null) {
+        	throw new ApplicationLifecycleException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$
         }
-        else {
-            throw new ApplicationLifecycleException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$
-        }        
+        ConnectorManager mgr = getConnectorManager(binding, true);
+        if (mgr.getStatus() == ConnectorStatus.NOT_INITIALIZED) {
+            // Start the manager
+            mgr.start(env);
+            
+            // Add the references to the mgr as loaded.
+            ConnectorID connID = mgr.getConnectorID(); 
+            this.connectorIDs.put(binding.getDeployedName(), connID);
+            this.connectorMgrs.put(connID, mgr);                
+            this.loadedConnectorBindingsMap.put(binding.getDeployedName(), binding);
+            
+            DQPEmbeddedPlugin.logInfo("DataService.Connector_Started", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
+        }
     }
 
     /** 
@@ -296,22 +284,20 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         throws ApplicationLifecycleException, MetaMatrixComponentException {
 
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
-        if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding, false);
-            if (mgr != null ) {
-                // Run the stop command no matter what state they are in, since the Alive status is not
-                // always reliable, it is only based on the Connector implementation. This is fool proof. 
-                mgr.stop();
-                
-                // remove from the local configuration. We want to create a new connector binding each time
-                // we start, so that we can initialize with correct properties, in case they chnaged.
-                removeConnectorBinding(binding.getDeployedName());
-                
-                DQPEmbeddedPlugin.logInfo("DataService.Connector_Stopped", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
-            }
+        if (binding == null) {
+        	throw new ApplicationLifecycleException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$
         }
-        else {
-            throw new ApplicationLifecycleException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$
+        ConnectorManager mgr = getConnectorManager(binding, false);
+        if (mgr != null ) {
+            // Run the stop command no matter what state they are in, since the Alive status is not
+            // always reliable, it is only based on the Connector implementation. This is fool proof. 
+            mgr.stop();
+            
+            // remove from the local configuration. We want to create a new connector binding each time
+            // we start, so that we can initialize with correct properties, in case they chnaged.
+            removeConnectorBinding(binding.getDeployedName());
+            
+            DQPEmbeddedPlugin.logInfo("DataService.Connector_Stopped", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
         }
     }
 
@@ -334,7 +320,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         throws MetaMatrixComponentException {
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
         if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding);
+            ConnectorManager mgr = getConnectorManager(binding, false);
             if (mgr != null) {
                 return mgr.getStatus();
             }
@@ -405,7 +391,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     	getConfigurationService().unregister(this.listener);
         // Avoid concurrent modification as stop binding also modifies the 
         // map.
-        String[] connectorBindings = (String[])loadedConnectorBindingsMap.keySet().toArray(new String[loadedConnectorBindingsMap.keySet().size()]);        
+        String[] connectorBindings = loadedConnectorBindingsMap.keySet().toArray(new String[loadedConnectorBindingsMap.keySet().size()]);        
         for(int i = 0; i < connectorBindings.length; i++) {
             try {
                 stopConnectorBinding(connectorBindings[i]);
@@ -430,34 +416,34 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     ConnectorManager getConnectorManager(ConnectorBinding binding, boolean create) 
         throws MetaMatrixComponentException{
         
-        ConnectorID connectionId = (ConnectorID)connectorIDs.get(binding.getDeployedName());
-        if (connectionId == null && create) {
-            return createConnectorManger(binding);
+        ConnectorID connectionId = connectorIDs.get(binding.getDeployedName());
+        if (connectionId == null) {
+        	if (create) {
+        		return createConnectorManger(binding);
+        	}
+        	return null;
         }
-        return (ConnectorManager)connectorMgrs.get(connectionId);
+        return connectorMgrs.get(connectionId);
     }
 
-    ConnectorManager getConnectorManager(ConnectorBinding binding) 
-        throws MetaMatrixComponentException{
-        return getConnectorManager(binding, true);
-    }
-    
     /**
      * When somebody asks for the connector manager by their ID, that means
      * Manager has been already created, we do not need to load the connector
      * binding. 
+     * @throws ComponentNotFoundException 
      */
-    ConnectorManager getConnectorManager(ConnectorID connID) {        
-        if (connID != null) {
-            return (ConnectorManager)connectorMgrs.get(connID);
+    ConnectorManager getConnectorManager(ConnectorID connID) throws ComponentNotFoundException {        
+        ConnectorManager mgr = connectorMgrs.get(connID);
+        if (mgr == null ) {                        
+            throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", connID)); //$NON-NLS-1$            
         }
-        return null;
+        return mgr;
     }    
 
     public ConnectorBinding getConnectorBinding(String deployedConnectorBindingName) 
         throws MetaMatrixComponentException{
         
-        ConnectorBinding binding = (ConnectorBinding)loadedConnectorBindingsMap.get(deployedConnectorBindingName);
+        ConnectorBinding binding = loadedConnectorBindingsMap.get(deployedConnectorBindingName);
         if (binding == null) {
             // if connector binding not found load from the configuration service.
             binding = getConfigurationService().getConnectorBinding(deployedConnectorBindingName);

@@ -66,7 +66,6 @@ import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
@@ -88,37 +87,16 @@ import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.server.serverapi.RequestInfo;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * Implements the core DQP processing.
  */
 @Singleton
 public class DQPCore implements ClientSideDQP {
-	
-	static class ConnectorCapabilitiesCache  {
-		
-		private Map<VDBKey, Map<String, SourceCapabilities>> cache = new LRUCache<VDBKey, Map<String, SourceCapabilities>>(1000);
-		
-		Map<String, SourceCapabilities> getVDBConnectorCapabilities(
-				DQPWorkContext workContext) {
-			VDBKey key = new VDBKey(workContext.getVdbName(), workContext.getVdbVersion());
-			Map<String, SourceCapabilities> vdbCapabilties = null;
-			synchronized (this.cache) {
-				vdbCapabilties = cache.get(key);
-				if (vdbCapabilties == null) {
-					vdbCapabilties = new ConcurrentHashMap<String, SourceCapabilities>();
-					this.cache.put(key, vdbCapabilties);
-				}
-			}
-			return vdbCapabilties;
-		}
-	}
 	
 	static class ClientState {
 		List<RequestID> requests;
@@ -169,7 +147,6 @@ public class DQPCore implements ClientSideDQP {
     private int maxFetchSize = DEFAULT_FETCH_SIZE;
     
     // Resources
-    private ConnectorCapabilitiesCache connectorCapabilitiesCache = new ConnectorCapabilitiesCache();
     private BufferManager bufferManager;
     private ProcessorDataManager dataTierMgr;
     private PreparedPlanCache prepPlanCache;
@@ -279,7 +256,6 @@ public class DQPCore implements ClientSideDQP {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		RequestID requestID = workContext.getRequestID(reqID);
 		requestMsg.markProcessingStart();
-		Map<String, SourceCapabilities> vdbCapabilties = this.connectorCapabilitiesCache.getVDBConnectorCapabilities(workContext);
 		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), maxFetchSize));
 		Request request = null;
 	    if ( requestMsg.isPreparedStatement() || requestMsg.isCallableStatement()) {
@@ -289,9 +265,9 @@ public class DQPCore implements ClientSideDQP {
 	    }
 	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
 	    request.initialize(requestMsg, environment, bufferManager,
-				dataTierMgr, vdbCapabilties, transactionService,
-				processorDebugAllowed, state.tempTableStoreImpl,
-				workContext, chunkSize);
+				dataTierMgr, transactionService, processorDebugAllowed,
+				state.tempTableStoreImpl, workContext,
+				chunkSize);
 		
         RequestWorkItem workItem = null;
         

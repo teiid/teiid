@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -121,7 +120,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     private TempTableStore tempTableStore;
     protected IDGenerator idGenerator = new IDGenerator();
     private boolean procDebugAllowed = false;
-    private Map connectorCapabilitiesCache;
     DQPWorkContext workContext;
     RequestID requestId;
 
@@ -150,7 +148,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               ApplicationEnvironment env,
                               BufferManager bufferManager,
                               ProcessorDataManager processorDataManager,
-                              Map connectorCapabilitiesCache,
                               TransactionService transactionService,
                               boolean procDebugAllowed,
                               TempTableStore tempTableStore,
@@ -167,7 +164,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.transactionService = transactionService;
         this.procDebugAllowed = procDebugAllowed;
         this.tempTableStore = tempTableStore;
-        this.connectorCapabilitiesCache = connectorCapabilitiesCache;
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
@@ -191,10 +187,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     	// Prepare dependencies for running the optimizer        
         this.capabilitiesFinder =
-            new SharedCachedFinder(
-                this.vdbService,
+            new CachedFinder(
                 (DataService) this.env.findService(DQPServiceNames.DATA_SERVICE),
-                requestMsg, workContext, connectorCapabilitiesCache);        
+                requestMsg,
+                workContext);        
         
         MetadataService metadataService = (MetadataService) this.env.findService(DQPServiceNames.METADATA_SERVICE);
         if(metadataService == null){

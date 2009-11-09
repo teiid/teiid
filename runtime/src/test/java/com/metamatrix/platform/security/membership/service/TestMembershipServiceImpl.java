@@ -22,7 +22,6 @@
 
 package com.metamatrix.platform.security.membership.service;
 
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -39,7 +38,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.service.AuthenticationToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SuccessfulAuthenticationToken;
-import com.metamatrix.platform.security.membership.spi.MembershipSourceException;
 import com.metamatrix.platform.security.membership.spi.file.TestFileMembershipDomain;
 
 public class TestMembershipServiceImpl extends TestCase {

@@ -127,6 +127,8 @@ public class ConnectorManager implements ApplicationService {
 
     private Properties props;
 	private ClassLoader classloader;
+	
+	private SourceCapabilities cachedCapabilities;
     
     public void initialize(Properties props) {
     	this.props = props;
@@ -160,6 +162,9 @@ public class ConnectorManager implements ApplicationService {
 	}
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {
+    	if (cachedCapabilities != null) {
+    		return cachedCapabilities;
+    	}
         Connection conn = null;
         // Defect 17536 - Set the thread-context classloader to the non-delegating classloader when calling
         // methods on the connector.
@@ -189,7 +194,12 @@ public class ConnectorManager implements ApplicationService {
             }
             caps = (ConnectorCapabilities) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.props));
             BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), isXa);
-            resultCaps.setScope(global?Scope.SCOPE_GLOBAL:Scope.SCOPE_PER_USER);
+            if (global) {
+            	resultCaps.setScope(Scope.SCOPE_GLOBAL);
+            	cachedCapabilities = resultCaps;
+            } else {
+            	resultCaps.setScope(Scope.SCOPE_PER_USER);
+            }
             return resultCaps;
         } finally {
         	if ( conn != null ) {

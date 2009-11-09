@@ -164,10 +164,11 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
         }
     }
 
-	public SourceCapabilities getCapabilities(RequestMessage request,
-			DQPWorkContext dqpWorkContext, ConnectorID connector)
-			throws MetaMatrixComponentException {
-        return caps;
+    @Override
+    public SourceCapabilities getCapabilities(RequestMessage request,
+    		DQPWorkContext dqpWorkContext, String modelName)
+    		throws MetaMatrixComponentException {
+    	return caps;
     }
         
     /** 

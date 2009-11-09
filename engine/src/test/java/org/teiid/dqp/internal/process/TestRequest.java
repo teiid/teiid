@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -122,7 +121,7 @@ public class TestRequest extends TestCase {
         FakeApplicationEnvironment environment = 
             new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         
-        request.initialize(message, environment, null, null, null, null, false, null, workContext, 101024);
+        request.initialize(message, environment, null, null, null, false, null, workContext, 101024);
         request.initMetadata();
         request.validateEntitlement(command);
     }
@@ -189,8 +188,8 @@ public class TestRequest extends TestCase {
         	request = new Request();
         }
         request.initialize(message, environment, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), new HashMap(), null, false, null,
-				workContext, 101024);
+				new FakeDataManager(), null, false, null, workContext,
+				101024);
         
         request.processRequest();
         return request;

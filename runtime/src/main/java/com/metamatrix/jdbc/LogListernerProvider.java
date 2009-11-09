@@ -22,21 +22,14 @@
 
 package com.metamatrix.jdbc;
 
-import java.util.Properties;
-
 import org.apache.log4j.Logger;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.metamatrix.core.log.LogListener;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
-	
-	@Inject @Named("DQPProperties")
-	Properties props;
 	
 	@Override
 	public LogListener get() {
