@@ -25,6 +25,8 @@ package org.teiid.adminapi;
 import java.util.Collection;
 import java.util.Date;
 
+import com.metamatrix.core.vdb.VDBStatus;
+
 /**
  * Represents a Virtual Database in the MetaMatrix system.
  * <br>A VDB has a name and a version.</br>
@@ -54,25 +56,31 @@ public interface VDB extends
      * 
      * @since 4.3
      */
-    public static final int INCOMPLETE = 1;
+    public static final int INCOMPLETE = VDBStatus.INCOMPLETE;
     /**
      * Inactive VDB (can edit connector binding)
      * 
      * @since 4.3
      */
-    public static final int INACTIVE = 2;
+    public static final int INACTIVE = VDBStatus.INACTIVE;
     /**
      * Active VDB
      * 
      * @since 4.3
      */
-    public static final int ACTIVE = 3;
+    public static final int ACTIVE = VDBStatus.ACTIVE;
     /**
      * Mark VDB for Deletion
      * 
      * @since 4.3
      */
-    public static final int DELETED = 4;
+    public static final int DELETED = VDBStatus.DELETED;
+    /**
+     * Active Default
+     * 
+     * @since 5.5.3
+     */
+    public static final int ACTIVE_DEFAULT = VDBStatus.ACTIVE_DEFAULT;
 
     /**
      * @return date the VDB was versioned

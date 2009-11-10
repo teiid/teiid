@@ -22,21 +22,19 @@
 
 package com.metamatrix.jdbc;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.*;
 
 import java.sql.SQLException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.util.ProductInfoConstants;
 
 public class TestMMConnection extends TestCase {
 
@@ -57,8 +55,8 @@ public class TestMMConnection extends TestCase {
     	props.setProperty(BaseDataSource.VDB_VERSION, STD_DATABASE_VERSION);
     	props.setProperty(BaseDataSource.USER_NAME, "metamatrixadmin"); //$NON-NLS-1$
     	Properties productInfo = new Properties();
-    	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
-    	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
+    	productInfo.setProperty(MMURL.JDBC.VDB_NAME, STD_DATABASE_NAME);
+    	productInfo.setProperty(MMURL.JDBC.VDB_VERSION, STD_DATABASE_VERSION);
     	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "metamatrixadmin"), productInfo, "fake")); //$NON-NLS-1$
     	return new MMConnection(mock, props, serverUrl);
     }

@@ -48,11 +48,11 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
+import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -62,7 +62,6 @@ import com.metamatrix.platform.security.api.service.AuthenticationToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionListener;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.util.ProductInfoConstants;
 
 /**
  * This class serves as the primary implementation of the Session Service.
@@ -115,7 +114,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		if (info == null) {
 			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
 		}
-		if (info.getProductInfo(ProductInfoConstants.VIRTUAL_DB) != null) {
+		if (info.getProductInfo(MMURL.JDBC.VDB_NAME) != null) {
             try {
     			dqpCore.terminateConnection(info.getSessionToken().getSessionIDValue());
             } catch (Exception e) {
@@ -148,24 +147,22 @@ public class SessionServiceImpl implements SessionServiceInterface {
         //
         // Validate VDB and version if logging on to server product...
         //
-        String vdbName = properties.getProperty(ProductInfoConstants.VIRTUAL_DB);
+        String vdbName = properties.getProperty(MMURL.JDBC.VDB_NAME);
         if (vdbName != null) {
-            String vdbVersion = properties.getProperty(ProductInfoConstants.VDB_VERSION);
+            String vdbVersion = properties.getProperty(MMURL.JDBC.VDB_VERSION);
             try {
-            	vdbVersion = vdbService.getActiveVDBVersion(vdbName, vdbVersion);
-            } catch (VirtualDatabaseDoesNotExistException e) {
-                throw new SessionServiceException(e);
-            } catch (VirtualDatabaseException e) {
-                if (vdbVersion == null) {
-                    throw new SessionServiceException(e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database", new Object[] {vdbName})); //$NON-NLS-1$
+            	VDBArchive vdb = vdbService.getVDB(vdbName, vdbVersion);
+                if (vdb.getStatus() != VDBStatus.ACTIVE && vdb.getStatus() != VDBStatus.ACTIVE_DEFAULT) {
+                    throw new SessionServiceException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$
                 }
-                throw new SessionServiceException(e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database_{0}_of_version_{1}", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
+                vdbName = vdb.getName();
+                vdbVersion = vdb.getVersion();
             } catch (MetaMatrixComponentException e) {
-				throw new SessionServiceException(e);
+                throw new SessionServiceException(e); 
 			}
             // Reset product info with validated constants
-            productInfo.put(ProductInfoConstants.VIRTUAL_DB, vdbName);
-            productInfo.put(ProductInfoConstants.VDB_VERSION, vdbVersion);
+            productInfo.put(MMURL.JDBC.VDB_NAME, vdbName);
+            productInfo.put(MMURL.JDBC.VDB_VERSION, vdbVersion);
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
@@ -252,7 +249,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		}
 		ArrayList<MetaMatrixSessionInfo> results = new ArrayList<MetaMatrixSessionInfo>();
 		for (MetaMatrixSessionInfo info : this.sessionCache.values()) {
-			if (VDBName.equalsIgnoreCase(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB)) && VDBVersion.equalsIgnoreCase(info.getProductInfo(ProductInfoConstants.VDB_VERSION))) {
+			if (VDBName.equalsIgnoreCase(info.getProductInfo(MMURL.JDBC.VDB_NAME)) && VDBVersion.equalsIgnoreCase(info.getProductInfo(MMURL.JDBC.VDB_VERSION))) {
 				results.add(info);
 			}
 		}

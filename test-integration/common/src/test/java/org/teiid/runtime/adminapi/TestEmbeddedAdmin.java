@@ -190,7 +190,7 @@ public class TestEmbeddedAdmin {
             admin.changeVDBStatus("DoesNotExist", "1", VDB.DELETED); //$NON-NLS-1$ //$NON-NLS-2$
             fail("Must have failed to delete a non existing VDB"); //$NON-NLS-1$
         } catch (AdminException err) {
-            assertEquals("VDB \"DoesNotExist\" version \"1\" does not exist or not in valid state.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("VDB \"DoesNotExist\" version \"1\" is not active.", err.getMessage()); //$NON-NLS-1$
         } 
     }
 
@@ -211,7 +211,7 @@ public class TestEmbeddedAdmin {
             getConnection("DoesNotExist", configFile); //$NON-NLS-1$
             fail("found a Connection to a non avtive VDB"); //$NON-NLS-1$
         } catch (SQLException err) {
-            assertEquals("VDB \"DoesNotExist\" version \"latest\" does not exist or not in valid state.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("VDB \"DoesNotExist\" version \"latest\" is not active.", err.getMessage()); //$NON-NLS-1$
         } 
     }
     
@@ -226,12 +226,31 @@ public class TestEmbeddedAdmin {
             conn = getConnection(VDB_NAME, configFile);
             fail("found a Connection to a non avtive VDB");                 //$NON-NLS-1$
         } catch (SQLException err) {
-            assertEquals("Unexpected error finding latest version of Virtual Database TestEmpty", err.getMessage()); //$NON-NLS-1$
+            assertEquals("VDB \"TestEmpty\" version \"latest\" is not active.", err.getMessage()); //$NON-NLS-1$
         } finally {
             cleanupVDB(admin, VDB_NAME, "1"); //$NON-NLS-1$
         }
     }
+    
+    @Test public void testGetConnectionToActiveDefault() throws Exception {
+        admin = getAdmin();
+        cleanupVDB(admin, VDB_NAME, "1"); //$NON-NLS-1$
+        try {
+            admin.addVDB(VDB_NAME, Util.getBinaryFile(VDB_FILE), new AdminOptions(AdminOptions.OnConflict.IGNORE));
 
+            admin.changeVDBStatus(VDB_NAME, "1", VDB.ACTIVE_DEFAULT); //$NON-NLS-1$ 
+            
+            admin.addVDB(VDB_NAME, Util.getBinaryFile(VDB_FILE), new AdminOptions(AdminOptions.OnConflict.IGNORE));
+            
+            admin.changeVDBStatus(VDB_NAME, "2", VDB.ACTIVE); //$NON-NLS-1$
+            
+            conn = getConnection(VDB_NAME, configFile);
+            assertEquals("1", conn.getVDBVersion()); //$NON-NLS-1$
+        } finally {
+            cleanupVDB(admin, VDB_NAME, "1"); //$NON-NLS-1$
+            cleanupVDB(admin, VDB_NAME, "2"); //$NON-NLS-1$
+        }
+    }
     
     @Test public void testSelectNonPrepared() throws Exception {
         admin = getAdmin();

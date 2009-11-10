@@ -40,6 +40,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -75,7 +76,6 @@ import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.SessionListener;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
@@ -1214,8 +1214,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
              * A Client Connection to DQP has been removed  
              */
             public void sessionClosed(MetaMatrixSessionInfo session) {
-            	String vdbName = session.getProductInfo(ProductInfoConstants.VIRTUAL_DB);
-            	String vdbVersion = session.getProductInfo(ProductInfoConstants.VDB_VERSION);
+            	String vdbName = session.getProductInfo(MMURL.JDBC.VDB_NAME);
+            	String vdbVersion = session.getProductInfo(MMURL.JDBC.VDB_VERSION);
             	if (vdbName != null && vdbVersion != null) {
 	            	if (canDeleteVDB(vdbName, vdbVersion)) {
 	            		runVDBCleanUp(vdbName, vdbVersion);

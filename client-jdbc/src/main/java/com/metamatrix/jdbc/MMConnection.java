@@ -68,7 +68,6 @@ import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.jdbc.api.ExecutionProperties;
-import com.metamatrix.platform.util.ProductInfoConstants;
 
 /**
  * <p>The Connection object represents driver's connection to the MetaMatrix embedded server.
@@ -495,7 +494,12 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         checkConnection();
         //get the virtual database name to which we are connected.
 
-        return this.serverConn.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
+        return this.serverConn.getLogonResult().getProductInfo(MMURL.JDBC.VDB_NAME);
+    }
+    
+    public String getVDBVersion() throws SQLException {
+    	checkConnection();
+        return this.serverConn.getLogonResult().getProductInfo(MMURL.JDBC.VDB_VERSION);
     }
 
     /**

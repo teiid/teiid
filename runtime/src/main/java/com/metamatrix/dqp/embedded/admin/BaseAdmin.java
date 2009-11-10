@@ -52,6 +52,7 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
@@ -74,7 +75,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 
@@ -282,8 +282,8 @@ abstract class BaseAdmin {
     
     private Session convertConnection(MetaMatrixSessionInfo src) {
         MMSession session = new MMSession(new String[] {src.getSessionID().toString()});
-        session.setVDBName(src.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
-        session.setVDBVersion(src.getProductInfo(ProductInfoConstants.VDB_VERSION)); 
+        session.setVDBName(src.getProductInfo(MMURL.JDBC.VDB_NAME));
+        session.setVDBVersion(src.getProductInfo(MMURL.JDBC.VDB_VERSION)); 
         session.setApplicationName(src.getApplicationName());
         session.setIPAddress(src.getClientIp());
         session.setHostName(src.getClientHostname());

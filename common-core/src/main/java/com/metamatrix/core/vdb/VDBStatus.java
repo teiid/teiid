@@ -28,7 +28,7 @@ public interface VDBStatus {
     public static final short INACTIVE = 2;
     public static final short ACTIVE = 3;
     public static final short DELETED = 4;
-    public static final short ACTIVE_DEFAULT = 3;
+    public static final short ACTIVE_DEFAULT = 5;
     
     final static String[] VDB_STATUS_NAMES = {
     	"Incomplete", //$NON-NLS-1$

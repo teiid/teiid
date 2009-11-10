@@ -28,7 +28,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 
 /**
  * This interface defines methods which are specific to dealing with VDBs
@@ -101,7 +100,12 @@ public interface VDBService extends ApplicationService {
     // to be removed later..
     public String getConnectorName(String connectorBindingID) throws MetaMatrixComponentException;    
     
-    public String getActiveVDBVersion(String vdbName, String vdbVersion) throws MetaMatrixComponentException, VirtualDatabaseException;
-    
+    /**
+     * 
+     * @param vdbName
+     * @param vdbVersion may be null to indicate latest/default
+     * @return
+     * @throws MetaMatrixComponentException
+     */
     public VDBArchive getVDB(String vdbName, String vdbVersion) throws MetaMatrixComponentException;
 }

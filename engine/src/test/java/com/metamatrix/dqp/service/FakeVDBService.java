@@ -268,11 +268,6 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
     }
     
     @Override
-    public String getActiveVDBVersion(String vdbName, String vdbVersion) {
-    	throw new UnsupportedOperationException();
-    }
-    
-    @Override
     public VDBArchive getVDB(String vdbName, String vdbVersion)
     		throws MetaMatrixComponentException {
     	throw new UnsupportedOperationException();

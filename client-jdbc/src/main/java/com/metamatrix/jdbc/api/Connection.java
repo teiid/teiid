@@ -40,5 +40,7 @@ public interface Connection extends java.sql.Connection {
      * @throws SQLException
      */
     Admin getAdminAPI() throws SQLException;
+    
+    String getVDBVersion() throws SQLException;
 
 }

@@ -22,7 +22,7 @@
 
 package com.metamatrix.admin.api.exception.security;
 
-public class InvalidSessionException extends SessionException {
+public class InvalidSessionException extends MetaMatrixSecurityException {
 
 
     /**
