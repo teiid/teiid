@@ -25,6 +25,7 @@ package com.metamatrix.query.validator;
 import java.util.Collection;
 import java.util.Set;
 
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ReservedWords;
@@ -38,7 +39,6 @@ import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 
@@ -71,11 +71,12 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         
         // Verify data type of aggregate expression
         String aggregateFunction = obj.getAggregateFunction();
-        if(aggregateFunction.equals(ReservedWords.SUM) || aggregateFunction.equals(ReservedWords.AVG)) {
-            if(obj.getType() == null) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, SQLStringVisitor.getSQLString(obj)}), obj);
-            }
-        } 
+        if((aggregateFunction.equals(ReservedWords.SUM) || aggregateFunction.equals(ReservedWords.AVG)) && obj.getType() == null) {
+            handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
+        }
+        if((aggregateFunction.equals(ReservedWords.MIN) || aggregateFunction.equals(ReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+    		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        }
         validateBelow = false;
     }
     
