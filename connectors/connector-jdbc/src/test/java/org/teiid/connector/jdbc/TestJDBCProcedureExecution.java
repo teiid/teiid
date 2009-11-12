@@ -44,7 +44,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 public class TestJDBCProcedureExecution {
 	
 	@Test public void testProcedureExecution() throws Exception {
-		ICommand command = MetadataFactory.helpTranslate(MetadataFactory.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
+		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
 		Connection connection = Mockito.mock(Connection.class);
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
@@ -60,7 +60,7 @@ public class TestJDBCProcedureExecution {
 	}
 	
 	@Test public void testProcedureExecution1() throws Exception {
-		ICommand command = MetadataFactory.helpTranslate(MetadataFactory.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
+		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
 		Connection connection = Mockito.mock(Connection.class);
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);

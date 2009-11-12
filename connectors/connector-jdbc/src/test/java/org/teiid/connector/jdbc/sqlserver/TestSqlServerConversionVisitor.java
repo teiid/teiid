@@ -22,17 +22,23 @@
 
 package org.teiid.connector.jdbc.sqlserver;
 
+import java.util.List;
 import java.util.Properties;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
-import org.teiid.connector.jdbc.translator.TranslatedCommand;
+import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.language.ICommand;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.unittest.FakeMetadataFacade;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
+import com.metamatrix.query.unittest.FakeMetadataObject;
+import com.metamatrix.query.unittest.FakeMetadataStore;
 
 /**
  */
@@ -46,22 +52,15 @@ public class TestSqlServerConversionVisitor {
     }
 
     public String getTestVDB() {
-        return MetadataFactory.PARTS_VDB;
+        return TranslationHelper.PARTS_VDB;
     }
 
     public String getBQTVDB() {
-        return MetadataFactory.BQT_VDB;
+        return TranslationHelper.BQT_VDB;
     }
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
-		helpTestVisitor(vdb, input, new String[] {expectedOutput});
-    }
-    
-    public void helpTestVisitor(String vdb, String input, String[] expectedOutputs) throws ConnectorException {
-        ICommand obj = MetadataFactory.helpTranslate(vdb, input);
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans); //$NON-NLS-1$
-        tc.translateCommand(obj);
-        Assert.assertEquals("Did not get correct sql", expectedOutputs[0], tc.getSql());             //$NON-NLS-1$
+    	TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
     }
 
     @Test
@@ -131,6 +130,34 @@ public class TestSqlServerConversionVisitor {
         helpTestVisitor(getBQTVDB(),
             input, 
             output);        
+    }
+    
+    @Test public void testUniqueidentifier() throws Exception { 
+        FakeMetadataObject ldapModel = FakeMetadataFactory.createPhysicalModel("foo"); //$NON-NLS-1$
+        FakeMetadataObject table = FakeMetadataFactory.createPhysicalGroup("bar", ldapModel); //$NON-NLS-1$
+        String[] elemNames = new String[] {
+            "x"  //$NON-NLS-1$ 
+        };
+        String[] elemTypes = new String[] {  
+            DataTypeManager.DefaultDataTypes.STRING
+        };
+        
+        List cols = FakeMetadataFactory.createElements(table, elemNames, elemTypes);
+        
+        FakeMetadataObject obj = (FakeMetadataObject) cols.get(0);
+        obj.putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "uniqueidentifier"); //$NON-NLS-1$
+        
+        FakeMetadataStore store = new FakeMetadataStore();
+        store.addObject(ldapModel);
+        store.addObject(table);     
+        store.addObjects(cols);
+        
+        // Create the facade from the store
+        QueryMetadataInterface metadata = new FakeMetadataFacade(store);
+        
+        TranslationUtility tu = new TranslationUtility(metadata);
+        ICommand command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT MAX(cast(bar.x as char(36))) FROM bar", trans, command); //$NON-NLS-1$
     }
        
 }

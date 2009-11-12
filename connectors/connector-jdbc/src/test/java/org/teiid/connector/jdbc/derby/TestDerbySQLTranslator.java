@@ -27,7 +27,7 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 
@@ -48,7 +48,7 @@ public class TestDerbySQLTranslator {
         String input = "select concat(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$
         String output = "SELECT {fn concat(SmallA.StringNum, '_xx')} FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class TestDerbySQLTranslator {
         String input = "select concat(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT {fn concat(SmallA.StringNum, SmallA.StringNum)} FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
     
     @Test
@@ -64,7 +64,7 @@ public class TestDerbySQLTranslator {
         String input = "select concat2(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$
         String output = "SELECT {fn concat(coalesce(SmallA.StringNum, ''), '_xx')} FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class TestDerbySQLTranslator {
         String input = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
     
 }

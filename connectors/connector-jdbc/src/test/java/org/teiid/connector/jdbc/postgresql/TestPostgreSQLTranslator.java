@@ -27,7 +27,7 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 
@@ -41,15 +41,15 @@ public class TestPostgreSQLTranslator {
     }
     
     public String getTestVDB() {
-        return MetadataFactory.PARTS_VDB;
+        return TranslationHelper.PARTS_VDB;
     }
     
     private String getTestBQTVDB() {
-        return MetadataFactory.BQT_VDB;
+        return TranslationHelper.BQT_VDB;
     }
         
     public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
-        MetadataFactory.helpTestVisitor(vdb, input, expectedOutput, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, TRANSLATOR);
     }
 
     @Test public void testConversion1() throws Exception {
@@ -414,7 +414,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in substr('chimp', 1)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -431,7 +431,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT position(SmallA.StringNum in 'chimp') FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -448,7 +448,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
         String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in substr('234567890', 1)) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -465,7 +465,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -482,7 +482,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT position(SmallA.StringNum in substr('chimp', 1)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -499,7 +499,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT position(SmallA.StringNum in substr('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -516,7 +516,7 @@ public class TestPostgreSQLTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT position(SmallA.StringNum in substr('chimp', CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }

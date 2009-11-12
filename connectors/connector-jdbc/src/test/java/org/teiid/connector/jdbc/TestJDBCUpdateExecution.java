@@ -42,7 +42,7 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
 public class TestJDBCUpdateExecution {
 
 	@Test public void testBulkUpdate() throws Exception {
-		ICommand command = MetadataFactory.helpTranslate(MetadataFactory.BQT_VDB, "insert into bqt1.smalla (intkey, intnum) values (1, 2)"); //$NON-NLS-1$
+		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into bqt1.smalla (intkey, intnum) values (1, 2)"); //$NON-NLS-1$
 		ILiteral value = ((ILiteral)((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues().get(0));
 		ILiteral value1 = ((ILiteral)((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues().get(1));
 		value.setMultiValued(true);

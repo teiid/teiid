@@ -35,7 +35,7 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
-public class MetadataFactory {
+public class TranslationHelper {
 	
     public static final String PARTS_VDB = "/PartsSupplier.vdb"; //$NON-NLS-1$
     public static final String BQT_VDB = "/bqt.vdb"; //$NON-NLS-1$
@@ -43,7 +43,7 @@ public class MetadataFactory {
     public static ICommand helpTranslate(String vdbFileName, String sql) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
-    		util = new TranslationUtility(MetadataFactory.class.getResource(vdbFileName));
+    		util = new TranslationUtility(TranslationHelper.class.getResource(vdbFileName));
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
@@ -56,10 +56,13 @@ public class MetadataFactory {
 	    // Convert from sql to objects
 	    ICommand obj = helpTranslate(vdb, input);
 	    
-	    TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), translator); //$NON-NLS-1$
+	    helpTestVisitor(expectedOutput, translator, obj);
+	}
+
+	public static void helpTestVisitor(String expectedOutput,
+			Translator translator, ICommand obj) throws ConnectorException {
+		TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), translator); //$NON-NLS-1$
 	    tc.translateCommand(obj);
-	    
-	    // Check stuff
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
 	}
 

@@ -30,7 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.language.ICommand;
 
@@ -130,7 +130,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT LOCATE(char(SmallA.IntNum), 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -147,7 +147,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT LOCATE(SmallA.StringNum, 'chimp') FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -164,7 +164,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
         String output = "SELECT LOCATE(char(SmallA.IntNum), '234567890', 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -181,7 +181,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -198,7 +198,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT LOCATE(SmallA.StringNum, 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -215,7 +215,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT LOCATE(SmallA.StringNum, 'chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -232,7 +232,7 @@ public class TestDB2SqlTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT LOCATE(SmallA.StringNum, 'chimp', CASE WHEN (LOCATE(SmallA.StringNum, 'chimp') + 1) < 1 THEN 1 ELSE (LOCATE(SmallA.StringNum, 'chimp') + 1) END) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }

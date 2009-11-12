@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ILanguageObject;
@@ -65,7 +65,7 @@ public class TestSQLConversionVisitor extends TestCase {
     }
 
     public String getTestVDB() {
-        return MetadataFactory.PARTS_VDB;
+        return TranslationHelper.PARTS_VDB;
     }
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput) {
@@ -81,7 +81,7 @@ public class TestSQLConversionVisitor extends TestCase {
             }
             trans.initialize(EnvironmentUtility.createEnvironment(p, false));
 
-            MetadataFactory.helpTestVisitor(vdb, input, expectedOutput, trans);
+            TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (ConnectorException e) {
 			throw new RuntimeException(e);
 		}    	
@@ -405,6 +405,6 @@ public class TestSQLConversionVisitor extends TestCase {
     	p.setProperty(JDBCPropertyNames.TRIM_STRINGS, Boolean.TRUE.toString());
         trans.initialize(EnvironmentUtility.createEnvironment(p, false));
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, "select stringkey from bqt1.smalla", "SELECT rtrim(SmallA.StringKey) FROM SmallA", trans); //$NON-NLS-1$ //$NON-NLS-2$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, "select stringkey from bqt1.smalla", "SELECT rtrim(SmallA.StringKey) FROM SmallA", trans); //$NON-NLS-1$ //$NON-NLS-2$
     }
 }

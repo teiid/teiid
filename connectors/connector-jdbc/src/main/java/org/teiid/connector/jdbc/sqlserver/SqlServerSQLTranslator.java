@@ -28,8 +28,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
+import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageObject;
+
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
@@ -51,6 +58,21 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
     @Override
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
     	return SqlServerCapabilities.class;
+    }
+    
+    @Override
+    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof IElement) {
+    		IElement elem = (IElement)obj;
+    		try {
+				if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+					return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			} catch (ConnectorException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
+    	}
+    	return super.translate(obj, context);
     }
     
 }

@@ -27,7 +27,7 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 
@@ -45,21 +45,21 @@ public class TestH2Translator {
 		String input = "select timestampdiff(SQL_TSI_FRAC_SECOND, timestampvalue, {d'1970-01-01'}) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT datediff('MILLISECOND', SmallA.TimestampValue, TIMESTAMP '1970-01-01 00:00:00.0') * 1000000 FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
 	
 	@Test public void testTimestampAdd() throws Exception {
 		String input = "select timestampadd(SQL_TSI_FRAC_SECOND, 2, datevalue) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT cast(dateadd('MILLISECOND', (2 / 1000000), cast(SmallA.DateValue AS timestamp)) AS date) FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
 	
 	@Test public void testTimestampAdd1() throws Exception {
 		String input = "select timestampadd(SQL_TSI_HOUR, intnum, {t'00:00:00'}) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT cast(dateadd('HOUR', SmallA.IntNum, TIMESTAMP '1970-01-01 00:00:00.0') AS time) FROM SmallA";  //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, input, output, TRANSLATOR);
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
 
 

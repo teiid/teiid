@@ -30,7 +30,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -101,7 +101,7 @@ public class TestOracleTranslator {
         String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey CROSS JOIN MediumA"; //$NON-NLS-1$
           
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }
@@ -110,7 +110,7 @@ public class TestOracleTranslator {
         String input = "select smalla.intkey from bqt1.smalla cross join (bqt1.smallb cross join bqt1.mediuma)"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA CROSS JOIN (SmallB CROSS JOIN MediumA)"; //$NON-NLS-1$
       
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }
@@ -119,7 +119,7 @@ public class TestOracleTranslator {
         String input = "SELECT char(convert(STRINGNUM, integer) + 100) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT chr((trunc(to_number(SmallA.StringNum)) + 100)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, output, 
             TRANSLATOR);
     }
@@ -128,7 +128,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(STRINGNUM, long) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT trunc(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -137,7 +137,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(STRINGNUM, long), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -146,7 +146,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(cast(SmallA.TimestampValue AS date)), 'YYYY-MM-DD') FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -154,7 +154,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(cast(SmallA.TimeValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF') FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -162,7 +162,7 @@ public class TestOracleTranslator {
         String input = "SELECT nvl(INTNUM, 'otherString') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT nvl(to_char(SmallA.IntNum), 'otherString') FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -170,7 +170,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(STRINGNUM, integer), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -187,7 +187,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', to_char(SmallA.IntNum), 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -204,7 +204,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -221,7 +221,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
         String output = "SELECT INSTR('234567890', to_char(SmallA.IntNum), 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -238,7 +238,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -255,7 +255,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -272,7 +272,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -289,7 +289,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN (INSTR('chimp', SmallA.StringNum) + 1) < 1 THEN 1 ELSE (INSTR('chimp', SmallA.StringNum) + 1) END) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -298,7 +298,7 @@ public class TestOracleTranslator {
         String input = "SELECT substring(StringNum, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -306,7 +306,7 @@ public class TestOracleTranslator {
         String input = "SELECT substring(StringNum, 1, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1, 1) FROM SmallA";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -314,7 +314,7 @@ public class TestOracleTranslator {
         String input = "SELECT IntKey FROM BQT1.SMALLA UNION SELECT IntKey FROM BQT1.SMALLB ORDER BY IntKey"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallB.IntKey FROM SmallB ORDER BY IntKey NULLS FIRST";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -322,7 +322,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 10, 0"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 10) WHERE ROWNUM_ > 10"; //$NON-NLS-1$
                
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -330,7 +330,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 0, 10"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT SmallA.IntKey FROM SmallA) WHERE ROWNUM <= 10"; //$NON-NLS-1$
                
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -338,7 +338,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 1, 10"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 11) WHERE ROWNUM_ > 1"; //$NON-NLS-1$
                
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -346,7 +346,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.mediuma limit 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT MediumA.IntKey FROM MediumA) WHERE ROWNUM <= 100"; //$NON-NLS-1$
                
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -354,7 +354,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.mediuma limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT MediumA.IntKey FROM MediumA) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
                
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -362,7 +362,7 @@ public class TestOracleTranslator {
     @Test public void testConcat2_useLiteral() throws Exception {        
         String input = "select concat2(stringnum,'_xx') from bqt1.Smalla"; //$NON-NLS-1$
         String output = "SELECT concat(nvl(SmallA.StringNum, ''), '_xx') FROM SmallA"; //$NON-NLS-1$
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -370,7 +370,7 @@ public class TestOracleTranslator {
     @Test public void testConcat2() throws Exception {        
         String input = "select concat2(stringnum, stringkey) from bqt1.Smalla"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN (SmallA.StringNum IS NULL) AND (SmallA.StringKey IS NULL) THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringKey, '')) END FROM SmallA"; //$NON-NLS-1$
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -386,7 +386,7 @@ public class TestOracleTranslator {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_relate(A.OBJECTVALUE, b.OBJECTVALUE, 'mask=ANYINTERACT') = true"; //$NON-NLS-1$
         String output = "SELECT /*+ ORDERED */ A.IntKey FROM SmallA A, SmallB B WHERE sdo_relate(A.ObjectValue, B.ObjectValue, 'mask=ANYINTERACT') = 'true'";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -402,7 +402,7 @@ public class TestOracleTranslator {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -418,7 +418,7 @@ public class TestOracleTranslator {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SmallA.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -439,7 +439,7 @@ public class TestOracleTranslator {
         // as the signature was the best match for this query.
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.StringKey, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -460,7 +460,7 @@ public class TestOracleTranslator {
         // as the signature was the best match for this query.
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -476,7 +476,7 @@ public class TestOracleTranslator {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_within_distance(a.OBJECTVALUE, b.OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT A.IntKey FROM SmallA A, SmallB B WHERE sdo_within_distance(A.ObjectValue, B.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -485,7 +485,7 @@ public class TestOracleTranslator {
         String input = "SELECT log(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT ln(trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
     
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -494,7 +494,7 @@ public class TestOracleTranslator {
         String input = "SELECT log10(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT log(10, trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
     
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
@@ -503,7 +503,7 @@ public class TestOracleTranslator {
         String input = "SELECT char(CONVERT(stringkey, INTEGER)), lcase(stringkey), ucase(stringkey), ifnull(stringkey, 'x') FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT chr(trunc(to_number(SmallA.StringKey))), lower(SmallA.StringKey), upper(SmallA.StringKey), nvl(SmallA.StringKey, 'x') FROM SmallA"; //$NON-NLS-1$
         
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }    

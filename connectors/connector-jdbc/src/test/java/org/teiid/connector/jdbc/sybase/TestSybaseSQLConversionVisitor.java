@@ -29,7 +29,7 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.MetadataFactory;
+import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.language.ICommand;
 
@@ -47,16 +47,16 @@ public class TestSybaseSQLConversionVisitor {
     }
 
     public String getTestVDB() {
-        return MetadataFactory.PARTS_VDB;
+        return TranslationHelper.PARTS_VDB;
     }
 
     public String getBQTVDB() {
-        return MetadataFactory.BQT_VDB;
+        return TranslationHelper.BQT_VDB;
     }
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput) {
         // Convert from sql to objects
-        ICommand obj = MetadataFactory.helpTranslate(vdb, input);
+        ICommand obj = TranslationHelper.helpTranslate(vdb, input);
         
         TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans); //$NON-NLS-1$
 		try {
