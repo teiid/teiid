@@ -9,9 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.XAConnection;
@@ -23,26 +21,24 @@ import org.teiid.adminapi.VDB;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceFactory;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
+import com.metamatrix.common.util.PropertiesUtils;
+
 
 public abstract class ConnectionStrategy {
+     
     
-    private Map<String, ConnectionStrategy> driversources = null;
-    private Map<String, ConnectionStrategy> datasourcesources = null;
-    private Map<String, ConnectionStrategy> jeesources = null;
-
-    
-    private Map<String, DataSource> datasources = null;
-    
+    private Properties env = null;
     private DataSourceFactory dsFactory;
     
-    
-    public ConnectionStrategy(Properties props, DataSourceFactory dsFactory) throws QueryTestFailedException {
-    	this.env = props;
-    	this.dsFactory = dsFactory;
-   	
+
+    public ConnectionStrategy(Properties props, DataSourceFactory dsf) {
+	this.env = PropertiesUtils.clone(props);
+	
+	this.dsFactory = dsf;
     }
     
     /*
@@ -56,42 +52,12 @@ public abstract class ConnectionStrategy {
     public abstract Connection getConnection() throws QueryTestFailedException;
     
     /**
-     * Implement shutdown of your type of connecton
-     * 
-     *
      * @since
      */
-    public void shutdown() {
-        if (driversources != null) {
-        	shutDownSources(driversources);
-        	driversources = null;
-        }
-        
-        if (datasourcesources != null) {
-        	shutDownSources(datasourcesources);
-        	datasourcesources = null;
-        }
-        
-        if (jeesources != null) {
-        	shutDownSources(jeesources);
-        	jeesources = null;
-        }
+    public void shutdown() {       
+        this.dsFactory.cleanup();
     }
     
-    private void shutDownSources(Map<String, ConnectionStrategy> sources) {
-       	for (Iterator<String> it=sources.keySet().iterator(); it.hasNext();  ){	        		
-        		ConnectionStrategy cs = sources.get(it.next());
-        		try {
-        			cs.shutdown();
-        		} catch (Exception e) {
-        			
-        		}
-        		
-        	}
-        	sources.clear();
-
-    }
-
     public Connection getAdminConnection() throws QueryTestFailedException{
     	return null;
     }
@@ -106,22 +72,14 @@ public abstract class ConnectionStrategy {
         return null;
     }
     
-    
-    private Properties env = null;
+
     
     
     public Properties getEnvironment() {
     	return env;
     }
     
-    public int getNumberAvailableDataSources() {
-    	return this.dsFactory.getNumberAvailableDataSources();
-    }
-    
-    public Map<String, DataSource> getDataSources() {
-    	return this.datasources;
-    }
-    
+   
     class CloseInterceptor implements InvocationHandler {
 
         Connection conn;
@@ -144,8 +102,6 @@ public abstract class ConnectionStrategy {
    
     void configure() throws QueryTestFailedException  {
     	
-    	datasources = new HashMap<String, DataSource>(3);
-    	
     	String ac = this.env.getProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
     	this.autoCommit = Boolean.getBoolean(ac);
     	
@@ -162,22 +118,15 @@ public abstract class ConnectionStrategy {
         	}
             
             Admin admin = (Admin)c.getAdminAPI();
-        
-//            Properties p = new Properties();
-//            if (this.env.getProperty(PROCESS_BATCH) != null) {
-//                p.setProperty("metamatrix.buffer.processorBatchSize", this.env.getProperty(PROCESS_BATCH)); //$NON-NLS-1$
-//            }
-//            
-//            if (this.env.getProperty(CONNECTOR_BATCH) != null) {
-//                p.setProperty("metamatrix.buffer.connectorBatchSize", this.env.getProperty(CONNECTOR_BATCH)); //$NON-NLS-1$
-//            }
             
             setupVDBConnectorBindings(admin);
             
             admin.restart();
+            
+            int sleep = 5;
  
-            System.out.println("Bouncing the system..(wait 15 seconds)"); //$NON-NLS-1$
-            Thread.sleep(1000*15);
+            System.out.println("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
+            Thread.sleep(1000*sleep);
         //    Thread.sleep(1000*60);
             System.out.println("done."); //$NON-NLS-1$
 
@@ -221,9 +170,8 @@ public abstract class ConnectionStrategy {
 	        	org.teiid.test.framework.datasource.DataSource ds = this.dsFactory.getDatasource(useName, m.getName());
 	        	
 	        	if (ds != null) {
-		        	datasources.put(m.getName(), ds);
 
-	                System.out.println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":"  + ds.getConnectorType()); //$NON-NLS-1$
+	        	    System.out.println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":"  + ds.getConnectorType()); //$NON-NLS-1$
 
 		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
 		        	ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
@@ -248,70 +196,64 @@ public abstract class ConnectionStrategy {
     	
     }
     
-    public synchronized ConnectionStrategy createDriverStrategy(String identifier, Properties props) throws QueryTestFailedException  {
-    	if (driversources == null) {
-    		driversources = new HashMap<String, ConnectionStrategy>();
-    	}
-    	
-     	if (identifier == null) {
-     			return new DriverConnection(props, dsFactory);
-     	}
-     	
-     	ConnectionStrategy strategy = null;
-     	if (driversources.containsKey(identifier)) {
-     		strategy = driversources.get(identifier);
-     	} else {
-     		strategy = new DriverConnection(props, dsFactory);
-     		driversources.put(identifier, strategy);
-     	}	     	
-   	
-       	return strategy;
-    
-    }
-    
-    public synchronized ConnectionStrategy createDataSourceStrategy(String identifier, Properties props) throws QueryTestFailedException  {	     	
-    	if (datasourcesources == null) {
-    		datasourcesources = new HashMap<String, ConnectionStrategy>();
-    	}
-    	
-     	if (identifier == null) {
-    		return new DataSourceConnection(props, dsFactory);
-     	}
-     	
-     	ConnectionStrategy strategy = null;
-     	if (datasourcesources.containsKey(identifier)) {
-     		strategy = datasourcesources.get(identifier);
-     	} else {
-     		strategy = new DataSourceConnection(props, dsFactory);
-     		datasourcesources.put(identifier, strategy);
-     	}
-       	
-       	return strategy;
-    
-    }
-    
-    public synchronized ConnectionStrategy createJEEStrategy(String identifier, Properties props) throws QueryTestFailedException  {
-    	if (jeesources == null) {
-    		jeesources = new HashMap<String, ConnectionStrategy>();
-    	}
-    	
-     	if (identifier == null) {
-    		return new JEEConnection(props, dsFactory);
-     	}
-     	
-     	ConnectionStrategy strategy = null;
-     	if (jeesources.containsKey(identifier)) {
-     		strategy = jeesources.get(identifier);
-     	} else {
-     		strategy = new JEEConnection(props, dsFactory);
-     		jeesources.put(identifier, strategy);
-     	}
-       	
-       	return strategy;
-    
-    }
-  
-        
+    public synchronized Connection createDriverConnection(String identifier) throws QueryTestFailedException  {
+
+	DataSource ds = null;
+	if (identifier != null) {
+	    ds = DataSourceMgr.getInstance().getDataSource(identifier);
+	}
+	if (ds == null) {
+	    	throw new TransactionRuntimeException(
+			"Program Error: DataSource is not mapped to Identifier " + identifier);
+	}
+	
+	Connection conn = ds.getConnection();
+	
+	if (conn != null) return conn;
+	
+	ConnectionStrategy cs = null;
+	if (identifier == null) {
+	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+ 		
+ 	} else {
+ 	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+ 	}
+	
+	ds.setConnection(cs);
+	
+	return ds.getConnection();
  
-   
+	
+    }
+
+    
+    public synchronized XAConnection createDataSourceConnection(String identifier) throws QueryTestFailedException  {	     	
+	
+	DataSource ds = null;
+	if (identifier != null) {
+	    ds = DataSourceMgr.getInstance().getDataSource(identifier);
+	}
+	if (ds == null) {
+	    	throw new TransactionRuntimeException(
+			"Program Error: DataSource is not mapped to Identifier " + identifier);
+	}
+	
+	XAConnection conn = ds.getXAConnection();
+	
+	if (conn != null) return conn;
+	
+	ConnectionStrategy cs = null;
+	if (identifier == null) {
+	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+	} else {
+	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+	}
+	
+	ds.setXAConnection(cs);
+	
+	return ds.getXAConnection();
+	
+
+    }
+    
 }

@@ -21,10 +21,11 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class ConnectionStrategyFactory {
 	
     
-	    public static ConnectionStrategy createConnectionStrategy(ConfigPropertyLoader configprops, DataSourceFactory dsFactory) throws QueryTestFailedException {
+	    public static ConnectionStrategy createConnectionStrategy(ConfigPropertyLoader configprops) throws QueryTestFailedException {
 	     	ConnectionStrategy strategy = null;
 	     	Properties props = configprops.getProperties();
-            
+	     	DataSourceFactory factory = new DataSourceFactory(configprops);
+           
 	        String type = props.getProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
 	        if (type == null) {
 	        	throw new RuntimeException("Property " + ConfigPropertyNames.CONNECTION_TYPE + " was specified");
@@ -32,15 +33,15 @@ public class ConnectionStrategyFactory {
 	        
 	        if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION)) {
 	        	// pass in null to create new strategy
-	                strategy = new DriverConnection(props, dsFactory);
+	                strategy = new DriverConnection(props, factory);
 	                System.out.println("Created Driver Strategy");
 	        }
 	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION)) {
-	            strategy = new DataSourceConnection(props, dsFactory);
+	            strategy = new DataSourceConnection(props, factory);
 	            System.out.println("Created DataSource Strategy");
 	        }
 	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.JNDI_CONNECTION)) {
-	            strategy = new JEEConnection(props, dsFactory);
+	            strategy = new JEEConnection(props, factory);
 	            System.out.println("Created JEE Strategy");
 	        }   
 	        
@@ -60,7 +61,7 @@ public class ConnectionStrategyFactory {
 			
 			ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
 			
-			DataSourceFactory factory = new DataSourceFactory(config);
+			new DataSourceFactory(config);
 
 		}
 }
