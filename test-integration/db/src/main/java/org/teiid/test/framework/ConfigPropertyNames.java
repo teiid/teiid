@@ -1,5 +1,7 @@
 package org.teiid.test.framework;
 
+import org.teiid.test.framework.datasource.DataSource;
+
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
@@ -22,40 +24,36 @@ public interface ConfigPropertyNames {
 	/**
 	 * For Driver/Datasource connection related properties, {@link ConnectionStrategy}.
 	 */
-	
 
-	/**
-	 * Transaction Type indicates the type of transaction container to use
-	 * @see TransactionFactory
-	 */
-    public static final String TRANSACTION_TYPE = "transaction-type"; //$NON-NLS-1$
-
-    public interface TRANSACTION_TYPES {
-		public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$
-		public static final String XATRANSACTION = "xa"; //$NON-NLS-1$
-		public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
-    }
-	
 	
 	
 	/**
-	 * The USE_DATASOURCES_PROP is a comma delimited system property that can be used to limit the
+	 * The USE_DATASOURCES_PROP is a comma delimited property that can be used to limit the
 	 * datasources that are in use for the tests.   Use the directory name defined in the ddl directory. 
 	 * This enables a developers to test a certain datasource without having to remove 
 	 * connection.properties files.
 	 */
 	public static final String USE_DATASOURCES_PROP = "usedatasources";
+	
+	
+	/**
+	 * The USE_DATASOURCE_TYPES_PROP is a comma delimited property that can be used to limit the
+	 * types of datasources to be used for the tests.   The database type {@link DataSource#DB_TYPE} corresponds to the
+	 * defined types in the resources/ddl directory.   By specifying this property, the test will use on data sources
+	 * of the specified types..
+	 */
+	public static final String USE_DATASOURCE_TYPES_PROP = "usedatasourcetypes";
+	
 		
 	
 	/**
-	 * The EXCLUDE_DATASOURCES_PROP is a comma delimited system property that can be used to exclude
+	 * The EXCLUDE_DATASOURCES_PROP is a comma delimited property that can be used to exclude
 	 * certain database types.    
 	 * This is done so that whole sets of tests can be excluded when a datasource  has been defined
 	 * for a specific database type.
-	 * Example of this is the XATransactions currently doesn't support using sqlserver (@see TEIID-559)  
 	 */
 	
-	public static final String EXCLUDE_DATASBASE_TYPES_PROP = "excludedatasources";
+	public static final String EXCLUDE_DATASBASE_TYPES_PROP = "excludedatasourcetypes";
 
 	
 	
@@ -98,6 +96,14 @@ public interface ConfigPropertyNames {
 		public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
 		public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
     	
+    }
+    
+    public interface TXN_AUTO_WRAP_OPTIONS {
+	    public static final String AUTO_WRAP_OFF = "OFF";  //$NON-NLS-1$
+	    public static final String AUTO_WRAP_ON = "ON";  //$NON-NLS-1$
+	    public static final String AUTO_WRAP_PESSIMISTIC = "PESSIMISTIC";  //$NON-NLS-1$
+	    public static final String AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC";  //$NON-NLS-1$
+
     }
 
 }

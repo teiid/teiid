@@ -8,159 +8,150 @@ import java.util.Properties;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.core.util.StringUtil;
 
-
 public abstract class TransactionContainer {
+
+    private boolean debug = false;
+   
+ 
+    private String testClassName = null;
+
+    protected ConnectionStrategy connStrategy;
+    protected Properties props;
+
+    protected TransactionContainer() {
+	ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
 	
-		private boolean debug = false;
-		
-		protected ConfigPropertyLoader config = null;
-		protected Properties props;
-		protected ConnectionStrategy connStrategy;
-		protected DataSourceFactory dsfactory;
-		
-		protected String testClassName = null;
-	    
-	    protected TransactionContainer(ConfigPropertyLoader propertyconfig){        
-	    	this.config = propertyconfig;
-	    }
-	    
-	    protected void setUp(TransactionQueryTest test) throws QueryTestFailedException  {
-	    	this.dsfactory = new DataSourceFactory(config);
-	    	
-	    	this.connStrategy = ConnectionStrategyFactory.createConnectionStrategy(config, dsfactory);
-	        this.props = new Properties();
-	        this.props.putAll(this.connStrategy.getEnvironment());
-	        
- 	
-	    }
-	    
-	    protected void before(TransactionQueryTest test){}
-	    
-	    protected void after(TransactionQueryTest test) {}
-	        
-	    public void runTransaction(TransactionQueryTest test) {
-	    	
-	    	this.testClassName =StringUtil.getLastToken(test.getClass().getName(), ".");
- 		
-	        try {		 
-	        	
-	        	runIt(test);
-	        	
-	        } finally {
-	        	debug("	test.cleanup");
-	        	
-	        	try {
-	        		test.cleanup();
-	        	} finally {
-			    	
-			   		// cleanup all defined datasources for the last test and
-	        		// any overrides regarding inclusions and exclusions.
-	        		if (dsfactory != null) {
-	        			this.dsfactory.cleanup();
-	        		}
-			    	
-		    		// cleanup all connections created for this test.
-		    		if (connStrategy != null) {
-		    			connStrategy.shutdown();
-		    		}
-	        	}
-	        }
+	try {
+	    this.connStrategy = ConnectionStrategyFactory
+		    .createConnectionStrategy(config);
+	} catch (QueryTestFailedException e) {
+	    // TODO Auto-generated catch block
+	    throw new TransactionRuntimeException(e);
+	}
+	this.props = new Properties();
+	this.props.putAll(this.connStrategy.getEnvironment());
 
-	    }
-	    
-	    private void runIt(TransactionQueryTest test)  {
-   	
-	    	detail("Start transaction test: " + test.getTestName());
-
-	        try {  
-	        	
-	           	setUp(test);
-		    	test.setConnectionStrategy(connStrategy);
-
-		    	
-		    	if (!test.hasRequiredDataSources()) {
-		    		return;
-		    	}
-		    	
-		    	
-    	
-		    	test.setupDataSource();
-
-	        	
-	        	debug("	setConnection");
-	            test.setConnection(this.connStrategy.getConnection());
-	            test.setExecutionProperties(this.props);
-	            debug("	before(test)");
-	                        
-	            before(test);
-	            debug("	test.before");
-
-	            test.before();
-	            
-	            debug("	test.testcase");
-
-	            // run the test
-	            test.testCase();
-	            
-	        	debug("	test.after");
-
-	            test.after();
-	            debug("	after(test)");
-
-	            after(test);
-	            
-	            detail("End transaction test: " + test.getTestName());
-
-	            
-	        }catch(Throwable e) {
-	        	if (!test.exceptionExpected()) {
-	        		e.printStackTrace();
-	        	}
-	            throw new TransactionRuntimeException(e.getMessage());
-	        }
-	        
-            if (test.exceptionExpected() && !test.exceptionOccurred()) {
-            	throw new TransactionRuntimeException("Expected exception, but one did not occur for test: " + this.getClass().getName() + "." + test.getTestName());
-            }
-	        
-	        try {
-		        detail("Start validation: " + test.getTestName());
-
-	        	test.validateTestCase();
-	        	
-	        	detail("End validation: " + test.getTestName());
-
-	        }catch(Exception e) {
-	            throw new TransactionRuntimeException(e);
-	        }
-            
-	    	detail("Completed transaction test: " + test.getTestName());
+    }
 
 
-	    }       
-	    
-	    public Properties getEnvironmentProperties() {
-	    	return props;
-	    }
-	    
-	    protected void debug(String message) {
-	    	if (debug) {
-	    		System.out.println("[" + this.testClassName + "] " + message);
-	    	}
-	    	
-	    }
-	    
-	    protected void detail(String message) {
-	    	System.out.println("[" + this.testClassName + "] " + message);
-	    }
-	    
-
+    public ConnectionStrategy getConnectionStrategy() {
+	return this.connStrategy;
+    }
     
+    
+    public void setEnvironmentProperty(String key, String value) {
+	this.getConnectionStrategy().getEnvironment().setProperty(key, value);
+    }
+
+    protected void before(TransactionQueryTest test) {
+    }
+
+    protected void after(TransactionQueryTest test) {
+    }
+
+    public void runTransaction(TransactionQueryTest test) {
+
+	this.testClassName = StringUtil.getLastToken(test.getClass().getName(),
+		".");
+
+	try {
+	    detail("Start transaction test: " + test.getTestName());
+
+	    try {
+		test.setConnectionStrategy(connStrategy);
+
+		test.setup();
+
+	    } catch (Throwable e) {
+		if (!test.exceptionExpected()) {
+		    e.printStackTrace();
+		}
+		throw new TransactionRuntimeException(e.getMessage());
+	    }
+
+	    runTest(test);
+
+	    detail("Completed transaction test: " + test.getTestName());
+
+	} finally {
+	    debug("	test.cleanup");
+
+	    try {
+		test.cleanup();
+	    } finally {
+
+		// cleanup all connections created for this test.
+		if (connStrategy != null) {
+		    connStrategy.shutdown();
+		}
+	    }
+	}
+
+    }
+
+    protected void runTest(TransactionQueryTest test) {
+	debug("Start runTest: " + test.getTestName());
+
+	try {
+
+	    debug("	before(test)");
+
+	    before(test);
+	    debug("	test.before");
+
+	    test.before();
+
+	    debug("	test.testcase");
+
+	    // run the test
+	    test.testCase();
+
+	    debug("	test.after");
+
+	    test.after();
+	    debug("	after(test)");
+
+	    after(test);
+
+	    debug("End runTest: " + test.getTestName());
+
+	} catch (Throwable e) {
+
+	    if (!test.exceptionExpected()) {
+		e.printStackTrace();
+	    }
+	    debug("Error: " + e.getMessage());
+	    throw new TransactionRuntimeException(e.getMessage());
+	}
+
+	if (test.exceptionExpected() && !test.exceptionOccurred()) {
+	    throw new TransactionRuntimeException(
+		    "Expected exception, but one did not occur for test: "
+			    + this.getClass().getName() + "."
+			    + test.getTestName());
+	}
+
+    }
+
+
+    protected void debug(String message) {
+	if (debug) {
+	    System.out.println("[" + this.testClassName + "] " + message);
+	}
+
+    }
+
+    protected void detail(String message) {
+	System.out.println("[" + this.testClassName + "] " + message);
+    }
+
+    protected boolean done() {
+	return true;
+    }
 
 }

@@ -71,7 +71,7 @@ public class ConfigPropertyLoader {
 		return props;
 	}
 	
-	public Map getModelAssignedDatabaseTypes() {
+	public Map<String, String> getModelAssignedDatabaseTypes() {
 		return this.modelAssignedDatabaseType;
 	}
 	
