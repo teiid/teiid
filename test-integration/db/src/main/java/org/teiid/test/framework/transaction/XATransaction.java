@@ -21,9 +21,9 @@ public class XATransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
 	private MMXid xid;
 	
-    public XATransaction(ConfigPropertyLoader config) {
-        super(config);
-    }
+	public XATransaction() {
+		super();
+	}
         
     protected void before(TransactionQueryTest test) {
         try {          

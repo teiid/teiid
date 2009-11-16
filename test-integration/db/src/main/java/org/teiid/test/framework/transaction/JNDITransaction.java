@@ -19,9 +19,9 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class JNDITransaction extends TransactionContainer {
     UserTransaction userTxn = null;
     
-    public JNDITransaction(ConfigPropertyLoader config) {
-        super(config);
-    }
+//    public JNDITransaction(ConfigPropertyLoader config) {
+//        super(config);
+//    }
     
     protected void before(TransactionQueryTest test) {
         if (this.props.getProperty(CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN) == null) {

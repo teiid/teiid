@@ -10,9 +10,9 @@ import java.sql.SQLException;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
+import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-
-
 
 
 /** 
@@ -20,12 +20,12 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  */
 public class LocalTransaction extends TransactionContainer {
 
-    public LocalTransaction(ConfigPropertyLoader config) {
-        super(config);
-        
+    public LocalTransaction() {
+	super();
     }
-    
     protected void before(TransactionQueryTest test) {
+	this.setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+	
         try {
         	debug("Autocommit: " + this.connStrategy.getAutocommit());
             test.getConnection().setAutoCommit(this.connStrategy.getAutocommit());

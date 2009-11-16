@@ -22,25 +22,25 @@ public class TransactionFactory {
     public static TransactionContainer create(ConfigPropertyLoader config) throws QueryTestFailedException {
     	TransactionContainer transacton = null;
     	    	
-        String type = config.getProperty(ConfigPropertyNames.TRANSACTION_TYPE);
-        if (type == null) {
-        	type = ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION;
-        }
-        
-        System.out.println("Create TransactionContainer: " + type);
-        
-        if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
-        	transacton = new LocalTransaction(config);
-        }
-        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.XATRANSACTION)) {
-        	transacton = new XATransaction(config);
-        }
-        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.JNDI_TRANSACTION)) {
-        	transacton = new JNDITransaction(config);
-
-        } else {
-        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + ConfigPropertyNames.TRANSACTION_TYPE );
-        }
+//        String type = config.getProperty(ConfigPropertyNames.TRANSACTION_TYPE);
+//        if (type == null) {
+//        	type = ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION;
+//        }
+//        
+//        System.out.println("Create TransactionContainer: " + type);
+//        
+//        if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
+//        	transacton = new LocalTransaction(config);
+//        }
+//        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.XATRANSACTION)) {
+//        	transacton = new XATransaction(config);
+//        }
+//        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.JNDI_TRANSACTION)) {
+//        	transacton = new JNDITransaction(config);
+//
+//        } else {
+//        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + ConfigPropertyNames.TRANSACTION_TYPE );
+//        }
 
         return transacton;
     }
