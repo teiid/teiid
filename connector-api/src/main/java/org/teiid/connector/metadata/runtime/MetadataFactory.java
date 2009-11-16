@@ -78,6 +78,7 @@ public class MetadataFactory {
 	private void setValuesUsingParent(String name,
 			AbstractMetadataRecord parent, AbstractMetadataRecord child, String recordType) throws ConnectorException {
 		child.setFullName(parent.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
+		child.setName(name);
 		if (!uniqueNames.add(recordType + "/" + child.getFullName())) { //$NON-NLS-1$
 			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.duplicate_name", child)); //$NON-NLS-1$
 		}

@@ -1011,6 +1011,20 @@ public class RecordFactory {
                                               final String parentObjectID) {
         
         record.setUUID(getObjectValue(objectID));
+        if (fullName != null) {
+        	int index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
+            String name = fullName;
+            if (index > 0) {
+            	name = fullName.substring(index + 1);
+            }
+            if (record instanceof ColumnRecordImpl) {
+                index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
+                if (index > 0) {
+                	name = fullName.substring(index + 1);
+                }
+            }
+            record.setName(name);
+        }
         record.setFullName(fullName);
         record.setNameInSource(getObjectValue(nameInSource));
     }
