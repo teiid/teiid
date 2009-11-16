@@ -6,12 +6,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.StringUtil;
 
 
@@ -87,16 +89,19 @@ public class DataSourceFactory {
 
 	// the DO_NO_USE_DEFAULT will be passed in when the test are run from maven and no property is passed in for UseDataSources 
 	private static final String DO_NOT_USE_DEFAULT="${usedatasources}";
-	private ConfigPropertyLoader configprops;
-
+	
+	private DataSourceMgr dsmgr = DataSourceMgr.getInstance();
+	
+//	private ConfigPropertyLoader configprops;
+	
+	private Properties configprops;
+	
 	// contains the names of the datasources when the -Dusedatasources option is used
 	private Map<String, String> useDS = null;
 	
 	// contains all the datasources available to be used
 	private Map<String, DataSource> availDS = null;
 
-	// map of the datasources assigned to with model
-	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>(); // key = modelname 
 	
 	// contains any dbtype preconditions on a model, which requires a model to be assigned a certain database type
 	private Map<String, String> requiredDataBaseTypes = null; // key=modelname  value=dbtype
@@ -115,9 +120,13 @@ public class DataSourceFactory {
 
 	
 	public DataSourceFactory(ConfigPropertyLoader config) {
-		this.configprops = config;
+	    	this.configprops = PropertiesUtils.clone(config.getProperties());
 		this.requiredDataBaseTypes = config.getModelAssignedDatabaseTypes();
 		config();
+	}
+	
+	public Properties getConfigProperties() {
+	    return this.configprops;
 	}
 
 	/**
@@ -135,9 +144,23 @@ public class DataSourceFactory {
 	private void config() {
 		System.out.println("Configure Datasource Factory ");
 		
-		Map<String, DataSource> availDatasources = DataSourceMgr.getInstance().getDataSources();
+		Map<String, DataSource> availDatasources = dsmgr.getDataSources();
 		
 		availDS = new HashMap<String, DataSource>(availDatasources.size());
+		
+		String usedstypeprop = configprops
+		.getProperty(ConfigPropertyNames.USE_DATASOURCE_TYPES_PROP);
+		
+		Set<String> useDBTypes = null;
+
+		if (usedstypeprop != null && usedstypeprop.length() > 0) {
+			List<String> eprops = StringUtil.split(usedstypeprop, ",");
+			useDBTypes = new HashSet<String>(eprops.size());
+			useDBTypes.addAll(eprops);
+			System.out.println("EXCLUDE datasources: " + usedstypeprop);
+		} else {
+		    useDBTypes = Collections.EMPTY_SET;
+		}
 		
 		String excludeprop = configprops
 		.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
@@ -180,43 +203,23 @@ public class DataSourceFactory {
 		} else {
 			for (Iterator<DataSource> it = availDatasources.values().iterator(); it.hasNext(); ) {
 				DataSource ds = it.next();
+				// if the datasource type is not excluded, then consider for usages
 				if (!excludedDBTypes.contains(ds.getDBType())) {
+				    
+				    // if use a specific db type is specified, then it must match,
+				    // otherwise add it to the available list
+				    if (useDBTypes.size() > 0 && usedstypeprop.contains(ds.getDBType())) {
+        				availDS.put(ds.getName(), ds);
+				    } else {
 					availDS.put(ds.getName(), ds);
-			
-				//	availDS.putAll(availDatasources);
+				    }
+				    
 				}
 			}
+		    
+		    
 		}
 
-//		String excludeprop = configprops
-//				.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
-//		
-//		Set<String> excludedDBTypes = null;
-//
-//		if (excludeprop != null && excludeprop.length() > 0) {
-//			List<String> eprops = StringUtil.split(excludeprop, ",");
-//			excludedDBTypes = new HashSet<String>(eprops.size());
-//			excludedDBTypes.addAll(eprops);
-//			System.out.println("EXCLUDE datasources: " + excludeprop);
-//			
-//			Iterator<DataSource> it = availDS.values().iterator();
-//
-//			// go thru all the datasources and remove those that are excluded
-//			while (it.hasNext()) {
-//				DataSource checkit = it.next();
-//
-//				if (excludedDBTypes.contains(checkit.getDBType())) {
-//					it.remove();
-//					
-//					if (useDS != null) {
-//						useDS
-//					}
-//				} 
-//				
-//				
-//			}
-//			
-//		}
 		
 		
 		if (requiredDataBaseTypes != null) {
@@ -239,7 +242,8 @@ public class DataSourceFactory {
 						if (ds.getDBType().equalsIgnoreCase(rdbtype)) {
 							assignedDataSources.add(ds.getName());
 
-							modelToDatasourceMap.put(modelName, ds);
+							dsmgr.setDataSource(modelName, ds);
+						//	modelToDatasourceMap.put(modelName, ds);
 							metDBRequiredTypes = true;
 				
 						}
@@ -280,8 +284,10 @@ public class DataSourceFactory {
 		// so that all future request using that group name for a specified
 		// model
 		// will use the same datasource
-		if (modelToDatasourceMap.containsKey(key)) {
-			return modelToDatasourceMap.get(key);
+		
+		ds = dsmgr.getDataSource(key);
+		if (ds != null) {
+		    return ds;
 		}
 		
 		if (this.hasRequiredDBTypes) {
@@ -373,17 +379,18 @@ public class DataSourceFactory {
 
 		assignedDataSources.add(ds.getName());
 
-		modelToDatasourceMap.put(key, ds);
+		dsmgr.setDataSource(key, ds);
 		return ds;
 
 	}
 
 	public void cleanup() {
 
-		modelToDatasourceMap.clear();
 		assignedDataSources.clear();
+		requiredDataBaseTypes.clear();
 
-		useDS = null;
+		if (useDS != null) useDS.clear();
+		if (availDS != null) availDS.clear();
 
 	}
 	
