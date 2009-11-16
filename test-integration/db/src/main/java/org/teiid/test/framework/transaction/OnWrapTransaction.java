@@ -6,7 +6,7 @@ package org.teiid.test.framework.transaction;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 
@@ -21,13 +21,13 @@ public class OnWrapTransaction extends TransactionContainer {
 	super();
     }
         
-    public void before(TransactionQueryTest test) {
+    public void before(TransactionQueryTestCase test) {
 	this.setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
 
         
     }
     
-    public void after(TransactionQueryTest test) {
+    public void after(TransactionQueryTestCase test) {
 
     }
 }

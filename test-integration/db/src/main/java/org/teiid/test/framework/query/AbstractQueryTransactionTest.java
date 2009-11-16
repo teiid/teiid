@@ -12,7 +12,7 @@ import java.util.Properties;
 import javax.sql.XAConnection;
 
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataStore;
@@ -22,7 +22,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 
 /**
  * The AbstractQueryTransactionTest is the base implementation for the
- * {@link TransactionQueryTest}. This provides the default logic for perform a testcase.
+ * {@link TransactionQueryTestCase}. This provides the default logic for perform a testcase.
  * The only method to implement in order to perform a basic, single datasource, test
  * is the {@link #testCase()} method.
  * 
@@ -43,7 +43,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * 
  */
 public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.api.AbstractQueryTest
-	implements TransactionQueryTest {
+	implements TransactionQueryTestCase {
     
     private static boolean initialized = false;
 
@@ -97,7 +97,8 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 			    CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP,
 			    txnautowrap);
 		    
-		    this.print("TransactionAutoWrap = " + txnautowrap);
+		   
+//		    this.print("TransactionAutoWrap = " + txnautowrap);
 		}
 		
 		String fetchSizeStr = executionProperties
@@ -239,7 +240,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
      * At end of each test, perform any cleanup that your test requires. Note:
      * Do not cleanup any connections by calling {@link ConnectionStrategy#shutdown()}. 
      * That is performed by the
-     * {@link TransactionContainer#runTransaction(TransactionQueryTest)} at the
+     * {@link TransactionContainer#runTransaction(TransactionQueryTestCase)} at the
      * end of the test.
      */
     public void cleanup() {

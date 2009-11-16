@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -23,7 +23,7 @@ public class LocalTransaction extends TransactionContainer {
     public LocalTransaction() {
 	super();
     }
-    protected void before(TransactionQueryTest test) {
+    protected void before(TransactionQueryTestCase test) {
 	this.setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
 	
         try {
@@ -34,7 +34,7 @@ public class LocalTransaction extends TransactionContainer {
         }        
     }
     
-    protected void after(TransactionQueryTest test) {
+    protected void after(TransactionQueryTestCase test) {
     	boolean exception = false;
         try {            
             if (test.rollbackAllways()|| test.exceptionOccurred()) {

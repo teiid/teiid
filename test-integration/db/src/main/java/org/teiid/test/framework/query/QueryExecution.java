@@ -13,9 +13,10 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
  *
  */
 public class QueryExecution extends AbstractQueryTest {
-	
+    
 	public QueryExecution(Connection conn) {
 		super(conn);
 	}
+	
 
 }

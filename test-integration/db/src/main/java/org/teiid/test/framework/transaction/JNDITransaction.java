@@ -7,9 +7,8 @@ package org.teiid.test.framework.transaction;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -19,11 +18,12 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class JNDITransaction extends TransactionContainer {
     UserTransaction userTxn = null;
     
-//    public JNDITransaction(ConfigPropertyLoader config) {
-//        super(config);
-//    }
     
-    protected void before(TransactionQueryTest test) {
+    public JNDITransaction() {
+	super();
+    }
+    
+    protected void before(TransactionQueryTestCase test) {
         if (this.props.getProperty(CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN) == null) {
             throw new TransactionRuntimeException("No JNDI name found for the User Transaction to look up in application server");
         }
@@ -39,7 +39,7 @@ public class JNDITransaction extends TransactionContainer {
         }        
     }
     
-    protected void after(TransactionQueryTest test) {
+    protected void after(TransactionQueryTestCase test) {
         try {
             if (this.userTxn != null) {
                 if (test.rollbackAllways()|| test.exceptionOccurred()) {

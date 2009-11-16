@@ -11,7 +11,7 @@ import javax.transaction.xa.XAResource;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -25,7 +25,7 @@ public class XATransaction extends TransactionContainer {
 		super();
 	}
         
-    protected void before(TransactionQueryTest test) {
+    protected void before(TransactionQueryTestCase test) {
         try {          
         	xid = createXid();
         	XAResource xaResource = getXAConnection().getXAResource();
@@ -46,7 +46,7 @@ public class XATransaction extends TransactionContainer {
 		return new MMXid(0, gid, bid);
 	}
     
-    protected void after(TransactionQueryTest test) {
+    protected void after(TransactionQueryTestCase test) {
         boolean delistSuccessful = false;
         boolean commit = false;
         

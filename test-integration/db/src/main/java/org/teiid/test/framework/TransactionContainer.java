@@ -48,13 +48,13 @@ public abstract class TransactionContainer {
 	this.getConnectionStrategy().getEnvironment().setProperty(key, value);
     }
 
-    protected void before(TransactionQueryTest test) {
+    protected void before(TransactionQueryTestCase test) {
     }
 
-    protected void after(TransactionQueryTest test) {
+    protected void after(TransactionQueryTestCase test) {
     }
 
-    public void runTransaction(TransactionQueryTest test) {
+    public void runTransaction(TransactionQueryTestCase test) {
 
 	this.testClassName = StringUtil.getLastToken(test.getClass().getName(),
 		".");
@@ -94,7 +94,7 @@ public abstract class TransactionContainer {
 
     }
 
-    protected void runTest(TransactionQueryTest test) {
+    protected void runTest(TransactionQueryTestCase test) {
 	debug("Start runTest: " + test.getTestName());
 
 	try {
