@@ -42,8 +42,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 	
     private int cardinality;
     private Type tableType;
-    private String materializedTableID;
-    private String materializedStageTableID;
     private boolean isVirtual;
     private boolean isSystem;
     private boolean isMaterialized;
@@ -59,8 +57,8 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
     private String insertPlan;
     private String updatePlan;
     private String deletePlan;
-    private String materializedStageTableName;
-    private String materializedTableName;
+    private TableRecordImpl materializedStageTable;
+    private TableRecordImpl materializedTable;
 
     //XML specific
     private List<String> bindings;
@@ -110,14 +108,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
         return tableType;
     }
 
-    public String getMaterializedStageTableID() {
-        return this.materializedStageTableID;
-    }
-
-    public String getMaterializedTableID() {
-        return this.materializedTableID;
-    }
-
     public boolean supportsUpdate() {
         return supportsUpdate;
     }
@@ -163,22 +153,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
      */
     public void setSystem(boolean b) {
         isSystem = b;
-    }
-
-    /**
-     * @param materializedStageTableID The materializedStageTableID to set.
-     * @since 4.2
-     */
-    public void setMaterializedStageTableID(String materializedStageTableID) {
-        this.materializedStageTableID = materializedStageTableID;
-    }
-
-    /**
-     * @param materializedTableID The materializedTableID to set.
-     * @since 4.2
-     */
-    public void setMaterializedTableID(String materializedTableID) {
-        this.materializedTableID = materializedTableID;
     }
 
     public String getInsertPlan() {
@@ -253,20 +227,20 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		this.selectTransformation = selectTransformation;
 	}
     
-    public String getMaterializedStageTableName() {
-    	return this.materializedStageTableName;
-    }
-    
-    public String getMaterializedTableName() {
-    	return this.materializedTableName;
-    }
-    
-    public void setMaterializedStageTableName(String materializedStageTableName) {
-		this.materializedStageTableName = materializedStageTableName;
+    public TableRecordImpl getMaterializedStageTable() {
+		return materializedStageTable;
 	}
     
-    public void setMaterializedTableName(String materializedTableName) {
-		this.materializedTableName = materializedTableName;
+    public TableRecordImpl getMaterializedTable() {
+		return materializedTable;
+	}
+    
+    public void setMaterializedStageTable(TableRecordImpl materializedStageTable) {
+		this.materializedStageTable = materializedStageTable;
+	}
+    
+    public void setMaterializedTable(TableRecordImpl materializedTable) {
+		this.materializedTable = materializedTable;
 	}
 
 	public void setResourcePath(String resourcePath) {
@@ -289,16 +263,4 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		return keys;
 	}
 	
-    public String toString() {
-        StringBuffer sb = new StringBuffer(100);
-        sb.append(getClass().getSimpleName());
-        sb.append(" name="); //$NON-NLS-1$
-        sb.append(getName());
-        sb.append(", nameInSource="); //$NON-NLS-1$
-        sb.append(getNameInSource());
-        sb.append(", uuid="); //$NON-NLS-1$
-        sb.append(getUUID());
-        return sb.toString();
-    }
-
 }

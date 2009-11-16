@@ -438,9 +438,13 @@ public class RecordFactory {
 
         if(includeMaterializationFlag(indexVersion)) {
             // The next token are the UUIDs for the materialized table ID
-            table.setMaterializedTableID((String)tokens.get(tokenIndex++));
+        	TableRecordImpl matTable = new TableRecordImpl();
+        	matTable.setUUID((String)tokens.get(tokenIndex++));
+            table.setMaterializedTable(matTable);
             // The next token are the UUID for the materialized stage table ID
-            table.setMaterializedStageTableID((String)tokens.get(tokenIndex++));
+            matTable = new TableRecordImpl();
+        	matTable.setUUID((String)tokens.get(tokenIndex++));
+            table.setMaterializedStageTable(matTable);
         }
 
 		// The next tokens are footer values
@@ -1002,7 +1006,7 @@ public class RecordFactory {
      * be the order of the arguments in method signature.
      */
     private static void setRecordHeaderValues(final AbstractMetadataRecord record, final String recordType, 
-                                              final String upperName, final String objectID, final String fullName, 
+                                              final String upperName, final String objectID, String fullName, 
                                               final String nameInSource, 
                                               final String parentObjectID) {
         

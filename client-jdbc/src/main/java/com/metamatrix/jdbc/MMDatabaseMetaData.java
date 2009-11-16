@@ -280,7 +280,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         .append(".ProcedureParams as p CROSS JOIN ") //$NON-NLS-1$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
         .append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(p.ProcedureName)").append(LIKE_ESCAPE).append("AND UCASE(p.Name) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
-        .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION OPTION MAKEDEP SystemPhysical.COLUMNS").toString(); //$NON-NLS-1$
+        .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
 
     private static final String QUERY_SCHEMAS =
       new StringBuffer("SELECT Name AS TABLE_SCHEM, NULL AS TABLE_CATALOG") //$NON-NLS-1$

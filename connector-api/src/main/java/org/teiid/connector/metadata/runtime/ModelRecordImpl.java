@@ -88,16 +88,4 @@ public class ModelRecordImpl extends AbstractMetadataRecord {
         modelType = i;
     }
 
-    public String toString() {
-        StringBuffer sb = new StringBuffer(100);
-        sb.append(getClass().getSimpleName());
-        sb.append(" name="); //$NON-NLS-1$
-        sb.append(getName());
-        sb.append(", nameInSource="); //$NON-NLS-1$
-        sb.append(getNameInSource());
-        sb.append(", uuid="); //$NON-NLS-1$
-        sb.append(getUUID());
-        return sb.toString();
-    }
-
 }

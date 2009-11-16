@@ -36,6 +36,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
@@ -77,11 +78,6 @@ import com.metamatrix.query.util.LogConstants;
 public class NewCalculateCostUtil {
 
     public static final float UNKNOWN_VALUE = -1;
-    
-    // These batch size should generally not be used as they should be retrieved from the 
-    // command context, however they might be used in test scenarios where that is undefined
-    static final int DEFAULT_PROCESSOR_BATCH_SIZE = 2000;
-    static final int DEFAULT_CONNECTOR_BATCH_SIZE = 2000;
     
     // the following variables are used to hold cost estimates (roughly in milliseconds)
     private final static float compareTime = .05f; //TODO: a better estimate would be based upon the number of conjuncts
@@ -908,7 +904,7 @@ public class NewCalculateCostUtil {
         
         float numberComparisons = merge?(leftChildCardinality + rightChildCardinality):(leftChildCardinality * rightChildCardinality);
         
-        float connectorBatchSize = DEFAULT_CONNECTOR_BATCH_SIZE;
+        float connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
         if(context != null) {
             connectorBatchSize = context.getConnectorBatchSize(); 
         }
@@ -969,8 +965,8 @@ public class NewCalculateCostUtil {
             return UNKNOWN_VALUE;
         }
 
-        float connectorBatchSize = DEFAULT_CONNECTOR_BATCH_SIZE;
-        float processorBatchSize = DEFAULT_PROCESSOR_BATCH_SIZE;
+        float connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+        float processorBatchSize = BufferConfig.DEFAULT_PROCESSOR_BATCH_SIZE;
         if(context != null) {
             connectorBatchSize = context.getConnectorBatchSize();
             processorBatchSize = context.getProcessorBatchSize();

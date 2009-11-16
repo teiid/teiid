@@ -67,19 +67,6 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
     private String primitiveTypeID;
     private Variety varietyType;
 
-    public String getName() {
-        final String fullName = super.getName();
-        int indx = fullName.lastIndexOf(URI_REFERENCE_DELIMITER);
-        if (indx > -1) {
-            return fullName.substring(indx+1);
-        }
-        indx = fullName.lastIndexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
-        if (indx > -1) {
-            return fullName.substring(indx+1);
-        }
-        return fullName;
-    }
-
     public int getLength() {
         return this.length;
     }

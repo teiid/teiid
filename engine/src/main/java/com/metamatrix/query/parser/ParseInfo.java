@@ -36,8 +36,8 @@ public class ParseInfo {
 	// This gets set according to the current clause
 	public boolean aggregatesAllowed = false;
         
-    // treat a double quoted variable as variable insted of string 
-    public boolean allowDoubleQuotedVariable=false;
+    // treat a double quoted variable as variable instead of string 
+    public boolean allowDoubleQuotedVariable=true;
     
 	public ParseInfo() { }
 	

@@ -56,6 +56,7 @@ import com.metamatrix.metadata.runtime.api.MetadataSource;
 import com.metamatrix.vdb.materialization.ScriptType;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * Latest incarnation of the VDBContext, specifically for weeding out 
@@ -87,6 +88,8 @@ public class VDBArchive implements MetadataSource {
 	
 	private Set<String> pathsInArchive = new HashSet<String>();
 	private boolean open;
+	
+	private VDBKey key;
 		
 	public static VDBArchive loadVDB(URL vdbURL, File deployDirectory) throws IOException {
 		boolean loadedFromDef = false;
@@ -365,7 +368,7 @@ public class VDBArchive implements MetadataSource {
 	 * @param vdbDef
 	 * @throws IOException
 	 */
-	public void updateConfigurationDef(BasicVDBDefn vdbDef) throws IOException {
+	public synchronized void updateConfigurationDef(BasicVDBDefn vdbDef) throws IOException {
 		if (vdbDef == null) {
 			return;
 		}
@@ -383,6 +386,7 @@ public class VDBArchive implements MetadataSource {
 		// update the local copies.
 		this.def = vdbDef;
 		appendManifest(this.def);
+		this.key = null;
 	}	
 	
 	/**
@@ -465,13 +469,6 @@ public class VDBArchive implements MetadataSource {
 	public String getName() {
 		checkOpen();
 		return this.def.getName();
-	}
-	
-	public void setName(String name) {
-		checkOpen();
-		if (this.def != null) {
-			this.def.setName(name);
-		}
 	}
 	
 	public String getVersion() {
@@ -564,5 +561,29 @@ public class VDBArchive implements MetadataSource {
 		}
 		return this.def.getModel(name);
 	}
+	
+    /** 
+     * checks the validity of the VDB
+     * @return true if valid; false otherwise.
+     */
+    public boolean isValid() {
+        if (getVDBValidityErrors() != null) {
+            return false;
+        }
+                
+        Collection models = getConfigurationDef().getModels();
+        if (models != null && models.isEmpty()) {
+            return false;        	
+        }
+                
+        return true;
+    } 
+    
+    public synchronized VDBKey getVDBKey() {
+    	if (key == null) {
+    		key = new VDBKey(getName(), getVersion()); 
+    	}
+        return key;
+    }
 
 }

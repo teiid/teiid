@@ -1092,10 +1092,10 @@ public class FakeMetadataFactory {
         QueryNode vspqn59 = new QueryNode("vsp59", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temp FROM pm5.g3;INSERT INTO #temp (e1, e2) VALUES('integer',1); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp59 = createVirtualProcedure("pm5.vsp59", pm6, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn59); //$NON-NLS-1$
         
-        QueryNode vspqn60 = new QueryNode("vsp60", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values (\"First\");insert into temp_table (column1) values (\"Second\");insert into temp_table (column1) values (\"Third\");select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn60 = new QueryNode("vsp60", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp60 = createVirtualProcedure("pm1.vsp60", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn60); //$NON-NLS-1$
 
-        QueryNode vspqn61 = new QueryNode("vsp61", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values (\"First\");drop table temp_table;create local temporary table temp_table (column1 string);insert into temp_table (column1) values (\"First\");insert into temp_table (column1) values (\"Second\");insert into temp_table (column1) values (\"Third\");select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn61 = new QueryNode("vsp61", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');drop table temp_table;create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp61 = createVirtualProcedure("pm1.vsp61", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn61); //$NON-NLS-1$
 
         QueryNode vspqn62 = new QueryNode("vsp62", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string); select e1 as column1 into temp_table from pm1.g1;select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1920,7 +1920,7 @@ public class FakeMetadataFactory {
 		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT CONCAT(e1, \"m\") as x, (e2 +1) as y, Count(*) as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, Count(*) as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g3 = createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 
 		QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -833,7 +833,7 @@ public class TestQueryRewriter {
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+		String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
@@ -860,7 +860,7 @@ public class TestQueryRewriter {
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+		String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
@@ -888,7 +888,7 @@ public class TestQueryRewriter {
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+		String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
@@ -911,7 +911,7 @@ public class TestQueryRewriter {
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+		String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
@@ -929,13 +929,13 @@ public class TestQueryRewriter {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "IF (CHANGING.e1 = \"false\")\n"; //$NON-NLS-1$
+		procedure = procedure + "IF (CHANGING.e1 = 'false')\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "Select e1 from vm1.g1 where HAS = CRITERIA ON (vm1.g1.e2);\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Update vm1.g1 SET e1 = \"String\", e2 =1 where e2 = 10"; //$NON-NLS-1$
+		String userQuery = "Update vm1.g1 SET e1 = 'String', e2 =1 where e2 = 10"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
@@ -952,12 +952,12 @@ public class TestQueryRewriter {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "IF (CHANGING.e1 = \"true\")\n"; //$NON-NLS-1$
+		procedure = procedure + "IF (CHANGING.e1 = 'true')\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Update vm1.g1 SET e1 = \"String\", e2 =1 where e2 = 10"; //$NON-NLS-1$
+		String userQuery = "Update vm1.g1 SET e1 = 'String', e2 =1 where e2 = 10"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
@@ -974,13 +974,13 @@ public class TestQueryRewriter {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "IF (CHANGING.e1 = \"true\")\n"; //$NON-NLS-1$
+		procedure = procedure + "IF (CHANGING.e1 = 'true')\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "Select e2 from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g1.e2);\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Update vm1.g1 SET e1 = \"String\", e2 =1 where e2 = 10"; //$NON-NLS-1$
+		String userQuery = "Update vm1.g1 SET e1 = 'String', e2 =1 where e2 = 10"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
@@ -998,13 +998,13 @@ public class TestQueryRewriter {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
-		procedure = procedure + "IF (CHANGING.e1 = \"true\")\n"; //$NON-NLS-1$
+		procedure = procedure + "IF (CHANGING.e1 = 'true')\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "Select e2 from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g1.e2) with (vm1.g1.e2 = convert(sqrt(pm1.g1.e2), integer));\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		
-		String userQuery = "Update vm1.g1 SET e1 = \"String\", e2 =1 where e2 = 10"; //$NON-NLS-1$
+		String userQuery = "Update vm1.g1 SET e1 = 'String', e2 =1 where e2 = 10"; //$NON-NLS-1$
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
@@ -1794,7 +1794,7 @@ public class TestQueryRewriter {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+        String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.INSERT_PROCEDURE, procedure);
         
@@ -1821,7 +1821,7 @@ public class TestQueryRewriter {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+        String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
         String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$
@@ -1843,7 +1843,7 @@ public class TestQueryRewriter {
         procedure = procedure + "Select count(*) from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
-        String userQuery = "Insert into vm1.g1 (e1, e2) values (\"String\", 1)"; //$NON-NLS-1$
+        String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
         String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$

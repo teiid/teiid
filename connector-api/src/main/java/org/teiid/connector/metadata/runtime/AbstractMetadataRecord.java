@@ -70,14 +70,6 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}
 	
 	public String getName() {
-    	if(this.name == null || this.name.trim().length() == 0) {
-			int nmIdx = this.fullName != null ? this.fullName.lastIndexOf(NAME_DELIM_CHAR) : -1;
-			if (nmIdx == -1) {
-				this.name = this.fullName;
-			} else {
-				this.name = this.fullName != null ? this.fullName.substring(nmIdx+1) : null;
-			}
-    	}
 		return name;
 	}	
 	
@@ -89,20 +81,17 @@ public abstract class AbstractMetadataRecord implements Serializable {
 		int prntIdx = fullName.indexOf(NAME_DELIM_CHAR);
 		return fullName.substring(0, prntIdx);
     }
-
+	
     public String toString() {
-        return uuid + ": " + name; //$NON-NLS-1$
-    }
-    
-    /**
-     * @deprecated the returned value may be incorrect in the case of an XML element (see defects #11326 and #11362)
-     */
-    public String getParentFullName() {
-        int prntIdx = getFullName() != null ? getFullName().lastIndexOf(NAME_DELIM_CHAR+getName()) : -1;
-        if (prntIdx <= 0) {
-            return ""; //$NON-NLS-1$
-        }
-        return getFullName().substring(0, prntIdx);
+    	StringBuffer sb = new StringBuffer(100);
+        sb.append(getClass().getSimpleName());
+        sb.append(" name="); //$NON-NLS-1$
+        sb.append(getName());
+        sb.append(", nameInSource="); //$NON-NLS-1$
+        sb.append(getNameInSource());
+        sb.append(", uuid="); //$NON-NLS-1$
+        sb.append(getUUID());
+        return sb.toString();
     }
     
     /**
@@ -141,7 +130,6 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * Compare two records for equality.
      */
     public boolean equals(Object obj) {
-
         if(obj == this) {
             return true;
         }

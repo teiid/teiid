@@ -30,6 +30,7 @@ import java.util.TimeZone;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
+import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
@@ -54,9 +55,9 @@ public class CommandContext implements Cloneable {
     /** Identify a group of related commands, which typically get cleaned up together */
     private String connectionID;
 
-    private int processorBatchSize = 2000;
+    private int processorBatchSize = BufferConfig.DEFAULT_PROCESSOR_BATCH_SIZE;
     
-    private int connectorBatchSize = 2000;
+    private int connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
 
     private String userName;
     

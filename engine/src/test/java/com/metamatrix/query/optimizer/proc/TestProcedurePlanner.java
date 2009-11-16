@@ -138,7 +138,7 @@ public class TestProcedurePlanner extends TestCase {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1=\"false\" and INPUT.e1=1)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(CHANGING.e1='false' and INPUT.e1=1)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
         procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$

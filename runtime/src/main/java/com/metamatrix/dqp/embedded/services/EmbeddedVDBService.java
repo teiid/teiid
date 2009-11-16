@@ -243,19 +243,21 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         
         if (status != currentStatus) {            
             // Change the VDB's status
-            if (currentStatus != VDBStatus.ACTIVE
-                    && (status == VDBStatus.ACTIVE || status == VDBStatus.ACTIVE_DEFAULT) ) {
-                if (!isValidVDB(vdb) || !getConfigurationService().isFullyConfiguredVDB(vdb)) {
+            if (status == VDBStatus.ACTIVE || status == VDBStatus.ACTIVE_DEFAULT) {
+            	if (!vdb.isValid()) {
+            		throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
+            	}
+                if (!getConfigurationService().isFullyConfiguredVDB(vdb)) {
                     throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("VDBService.vdb_missing_bindings", new Object[] {vdb.getName(), vdb.getVersion()})); //$NON-NLS-1$
                 }
-            }
-            if (status == VDBStatus.ACTIVE_DEFAULT) {
-            	//only 1 can be set as active default
-            	VDBArchive latestActive = getVDB(vdbName, null);
-            	if (latestActive.getStatus() == VDBStatus.ACTIVE_DEFAULT) {
-            		latestActive.setStatus(VDBStatus.ACTIVE);
-                    getConfigurationService().saveVDB(latestActive, latestActive.getVersion());
-            	}
+                if (status == VDBStatus.ACTIVE_DEFAULT) {
+                	//only 1 can be set as active default
+                	VDBArchive latestActive = getVDB(vdbName, null);
+                	if (latestActive.getStatus() == VDBStatus.ACTIVE_DEFAULT) {
+                		latestActive.setStatus(VDBStatus.ACTIVE);
+                        getConfigurationService().saveVDB(latestActive, latestActive.getVersion());
+                	}
+                }
             }
             vdb.setStatus((short)status);
 

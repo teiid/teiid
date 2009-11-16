@@ -271,7 +271,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public VDBArchive getVDB(String vdbName, String vdbVersion) 
         throws MetaMatrixComponentException {
-        return loadedVDBs.get(vdbId(vdbName, vdbVersion));
+        return loadedVDBs.get(new VDBKey(vdbName, vdbVersion));
     }
         
     /**
@@ -338,7 +338,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 		}
         
         // make sure we match up the connector binding based on user preferences
-        URL vdbFile = availableVDBFiles.get(vdbId(srcVdb));
+        URL vdbFile = availableVDBFiles.get(srcVdb.getVDBKey());
         if (vdbFile == null) {
         	vdbFile = getNewVDBLocation(srcVdb);
         	VDBConfigurationWriter.write(srcVdb, vdbFile);
@@ -352,7 +352,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 
     private VDBArchive loadVDB(VDBArchive vdb, boolean replaceBindings) throws MetaMatrixComponentException {
         // check if this is a valid VDB
-        if (!isValidVDB(vdb)) {
+        if (!vdb.isValid()) {
         	throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
         }
                                       
@@ -485,7 +485,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 
     	try {
     		
-    		URL vdbFile = availableVDBFiles.remove(vdbId(vdb));
+    		URL vdbFile = availableVDBFiles.remove(vdb.getVDBKey());
     		
     		Assertion.isNotNull(vdbFile);
     		
@@ -496,7 +496,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	        notifyVDBUnLoad(vdb.getName(), vdb.getVersion());
 	        
 	        // remove from local references.
-	        loadedVDBs.remove(vdbId(vdb));
+	        loadedVDBs.remove(vdb.getVDBKey());
 	        
 	        VDBDefn def = vdb.getConfigurationDef();
 	                
@@ -1128,8 +1128,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 
 	private void deployVDB(URL vdbURL, VDBArchive vdb) {		
 		// add vdb to loaded VDBS
-		loadedVDBs.put(vdbId(vdb), vdb);
-		availableVDBFiles.put(vdbId(vdb), vdbURL);
+		loadedVDBs.put(vdb.getVDBKey(), vdb);
+		availableVDBFiles.put(vdb.getVDBKey(), vdbURL);
 		DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.loaded_vdb", new Object[] {vdbURL}); //$NON-NLS-1$
 	}
 
@@ -1338,7 +1338,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
     }
     
-    private File getWorkDir() {
+    public File getWorkDir() {
         String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKDIR);
         File workDir = new File(workDirectory);
         return workDir;

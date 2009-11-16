@@ -54,6 +54,8 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
      */
     public URL getSystemVdb();
     
+    public File getWorkDir();
+    
     /**
      * Get DQP properties
      * @return Properties - properties

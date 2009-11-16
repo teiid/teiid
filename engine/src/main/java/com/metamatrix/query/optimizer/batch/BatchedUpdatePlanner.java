@@ -40,6 +40,7 @@ import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.RelationalPlanner;
+import com.metamatrix.query.optimizer.relational.rules.CapabilitiesUtil;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.batch.BatchedUpdatePlan;
 import com.metamatrix.query.processor.relational.BatchedUpdateNode;
@@ -138,7 +139,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     batchLoop: for (int batchIndex = commandIndex+1; batchIndex < numCommands; batchIndex++) {
                         Command batchingCandidate = (Command)updateCommands.get(batchIndex);
                         // If this command updates the same model, and is eligible for batching, add it to the batch
-                        if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata)) {
+                        if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata, capFinder)) {
                             batch.add(batchingCandidate);
                             if (allContexts != null) {
                             	contexts.add(allContexts.get(batchIndex));
@@ -222,20 +223,18 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * @param command an update command
      * @param batchModelID the model ID for the batch concerned
      * @param metadata
+     * @param capFinder 
      * @return true if this command can be place in a batch associated with the model ID; false otherwise
      * @throws QueryMetadataException
      * @throws MetaMatrixComponentException
      * @since 4.2
      */
-    private static boolean canBeAddedToBatch(Command command, Object batchModelID, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+    private static boolean canBeAddedToBatch(Command command, Object batchModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException {
         // If it's eligible ...
         if (isEligibleForBatching(command, metadata)) {
             Object modelID = metadata.getModelID(getUpdatedGroup(command).getMetadataID());
-            // ... and it updates a group in the same model ...
-            if (modelID.equals(batchModelID)) {
-                // ... then it can be added to the batch.
-                return true;
-            }
+            
+            return CapabilitiesUtil.isSameConnector(modelID, batchModelID, metadata, capFinder);
         }
         return false;
     }

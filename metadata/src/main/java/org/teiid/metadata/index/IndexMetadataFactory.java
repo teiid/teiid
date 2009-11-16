@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class IndexMetadataFactory {
 	private Index[] indexes;
     private Map<String, DatatypeRecordImpl> datatypeCache;
     private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
+    private Map<String, TableRecordImpl> tableCache = new HashMap<String, TableRecordImpl>();
     private MetadataStore store = new MetadataStore();
     
     public IndexMetadataFactory(MetadataSource source) throws IOException {
@@ -91,77 +93,93 @@ public class IndexMetadataFactory {
     }
     
     public void getTables() {
-		Collection<TableRecordImpl> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE, null, false);
-		for (TableRecordImpl tableRecord : records) {
-	    	List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
-	        for (ColumnRecordImpl columnRecordImpl : columns) {
-	    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
-			}
-	        Collections.sort(columns);
-	        tableRecord.setColumns(columns);
-	        tableRecord.setAccessPatterns(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.ACCESS_PATTERN));
-	        Map<String, ColumnRecordImpl> uuidColumnMap = new HashMap<String, ColumnRecordImpl>();
-	        for (ColumnRecordImpl columnRecordImpl : columns) {
-				uuidColumnMap.put(columnRecordImpl.getUUID(), columnRecordImpl);
-			}
-	        for (KeyRecord columnSetRecordImpl : tableRecord.getAccessPatterns()) {
-				loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-				columnSetRecordImpl.setTable(tableRecord);
-			}
-	        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
-	        for (ForeignKeyRecordImpl foreignKeyRecord : tableRecord.getForeignKeys()) {
-	        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
-	        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
-	        	foreignKeyRecord.setTable(tableRecord);
-			}
-	        tableRecord.setUniqueKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.UNIQUE_KEY));
-	        for (KeyRecord columnSetRecordImpl : tableRecord.getUniqueKeys()) {
-				loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-				columnSetRecordImpl.setTable(tableRecord);
-			}
-	        tableRecord.setIndexes(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.INDEX));
-	        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
-				loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-				columnSetRecordImpl.setTable(tableRecord);
-			}
-	        if (tableRecord.getPrimaryKey() != null) {
-	        	KeyRecord primaryKey = getPrimaryKey(tableRecord.getPrimaryKey().getUUID());
-	        	loadColumnSetRecords(primaryKey, uuidColumnMap);
-	        	primaryKey.setTable(tableRecord);
-	        	tableRecord.setPrimaryKey(primaryKey);
-	        }
-	        String groupName = tableRecord.getFullName();
-	        if (tableRecord.isVirtual()) {
-	        	TransformationRecordImpl update = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM,false);
-		        if (update != null) {
-		        	tableRecord.setUpdatePlan(update.getTransformation());
+    	for (ModelRecordImpl model : store.getModels().values()) {
+			List<TableRecordImpl> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
+			//load non-materialized first, so that the uuid->table cache is populated
+			Collections.sort(records, new Comparator<TableRecordImpl>() {
+				@Override
+				public int compare(TableRecordImpl o1, TableRecordImpl o2) {
+					if (!o1.isMaterialized()) {
+						return -1;
+					}
+					if (!o2.isMaterialized()) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+			for (TableRecordImpl tableRecord : records) {
+				tableCache.put(tableRecord.getUUID(), tableRecord);
+		    	List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
+		        for (ColumnRecordImpl columnRecordImpl : columns) {
+		    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
+				}
+		        Collections.sort(columns);
+		        tableRecord.setColumns(columns);
+		        tableRecord.setAccessPatterns(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.ACCESS_PATTERN));
+		        Map<String, ColumnRecordImpl> uuidColumnMap = new HashMap<String, ColumnRecordImpl>();
+		        for (ColumnRecordImpl columnRecordImpl : columns) {
+					uuidColumnMap.put(columnRecordImpl.getUUID(), columnRecordImpl);
+				}
+		        for (KeyRecord columnSetRecordImpl : tableRecord.getAccessPatterns()) {
+					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
+					columnSetRecordImpl.setTable(tableRecord);
+				}
+		        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
+		        for (ForeignKeyRecordImpl foreignKeyRecord : tableRecord.getForeignKeys()) {
+		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
+		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
+		        	foreignKeyRecord.setTable(tableRecord);
+				}
+		        tableRecord.setUniqueKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.UNIQUE_KEY));
+		        for (KeyRecord columnSetRecordImpl : tableRecord.getUniqueKeys()) {
+					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
+					columnSetRecordImpl.setTable(tableRecord);
+				}
+		        tableRecord.setIndexes(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.INDEX));
+		        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
+					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
+					columnSetRecordImpl.setTable(tableRecord);
+				}
+		        if (tableRecord.getPrimaryKey() != null) {
+		        	KeyRecord primaryKey = getPrimaryKey(tableRecord.getPrimaryKey().getUUID());
+		        	loadColumnSetRecords(primaryKey, uuidColumnMap);
+		        	primaryKey.setTable(tableRecord);
+		        	tableRecord.setPrimaryKey(primaryKey);
 		        }
-		        TransformationRecordImpl insert = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM,false);
-		        if (insert != null) {
-		        	tableRecord.setInsertPlan(insert.getTransformation());
+		        String groupUUID = tableRecord.getUUID();
+		        if (tableRecord.isVirtual()) {
+		        	TransformationRecordImpl update = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM,false);
+			        if (update != null) {
+			        	tableRecord.setUpdatePlan(update.getTransformation());
+			        }
+			        TransformationRecordImpl insert = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM,false);
+			        if (insert != null) {
+			        	tableRecord.setInsertPlan(insert.getTransformation());
+			        }
+			        TransformationRecordImpl delete = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM,false);
+			        if (delete != null) {
+			        	tableRecord.setDeletePlan(delete.getTransformation());
+			        }
+			        TransformationRecordImpl select = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM,false);
+			        // this group may be an xml document            
+			        if(select == null) {
+				        select = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,false);
+			        }
+			        if (select != null) {
+				        tableRecord.setSelectTransformation(select.getTransformation());
+				        tableRecord.setBindings(select.getBindings());
+				        tableRecord.setSchemaPaths(select.getSchemaPaths());
+				        tableRecord.setResourcePath(select.getResourcePath());
+			        }
 		        }
-		        TransformationRecordImpl delete = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM,false);
-		        if (delete != null) {
-		        	tableRecord.setDeletePlan(delete.getTransformation());
+		        if (tableRecord.isMaterialized()) {
+		        	tableRecord.setMaterializedStageTable(tableCache.get(tableRecord.getMaterializedStageTable().getUUID()));
+		        	tableRecord.setMaterializedTable(tableCache.get(tableRecord.getMaterializedTable().getUUID()));
 		        }
-		        TransformationRecordImpl select = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM,false);
-		        // this group may be an xml document            
-		        if(select == null) {
-			        select = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,false);
-		        }
-		        if (select != null) {
-			        tableRecord.setSelectTransformation(select.getTransformation());
-			        tableRecord.setBindings(select.getBindings());
-			        tableRecord.setSchemaPaths(select.getSchemaPaths());
-			        tableRecord.setResourcePath(select.getResourcePath());
-		        }
-	        }
-	        if (tableRecord.isMaterialized()) {
-	        	tableRecord.setMaterializedStageTableName(((TableRecordImpl)getRecordByType(tableRecord.getMaterializedStageTableID(), MetadataConstants.RECORD_TYPE.TABLE)).getFullName());
-	        	tableRecord.setMaterializedTableName(((TableRecordImpl)getRecordByType(tableRecord.getMaterializedTableID(), MetadataConstants.RECORD_TYPE.TABLE)).getFullName());
-	        }
-			this.store.addTable(tableRecord);
-		}
+				store.addTable(tableRecord);
+			}
+    	}
     }
 
 	private KeyRecord getPrimaryKey(String uuid) {
@@ -215,39 +233,41 @@ public class IndexMetadataFactory {
     }
     
     public void getProcedures() {
-		Collection<ProcedureRecordImpl> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, null, false);
-		for (ProcedureRecordImpl procedureRecord : procedureRecordImpls) {
-	    	procedureRecord.setParameters(new ArrayList<ProcedureParameterRecordImpl>(procedureRecord.getParameterIDs().size()));
-	    	
-	        // get the parameter metadata info
-	        for (String paramID : procedureRecord.getParameterIDs()) {
-	            ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
-	            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
-	            procedureRecord.getParameters().add(paramRecord);
-	        }
-	    	
-	        String resultID = procedureRecord.getResultSetID();
-	        if(resultID != null) {
-	            ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET, false);
-	            if (resultRecord != null) {
-		            loadColumnSetRecords(resultRecord, null);
-		            procedureRecord.setResultSet(resultRecord);
-	            }
-	            //it is ok to be null here.  it will happen when a 
-	            //virtual stored procedure is created from a
-	            //physical stored procedrue without a result set
-	            //TODO: find a better fix for this
-	        }
-
-	        // if this is a virtual procedure get the procedure plan
-	        if(procedureRecord.isVirtual()) {
-	    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureRecord.getFullName(), MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
-	    		if(transformRecord != null) {
-	    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
-	    		}
-	        }
-			this.store.addProcedure(procedureRecord);
-		}
+    	for (ModelRecordImpl model : store.getModels().values()) {
+			Collection<ProcedureRecordImpl> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
+			for (ProcedureRecordImpl procedureRecord : procedureRecordImpls) {
+		    	procedureRecord.setParameters(new ArrayList<ProcedureParameterRecordImpl>(procedureRecord.getParameterIDs().size()));
+		    	
+		        // get the parameter metadata info
+		        for (String paramID : procedureRecord.getParameterIDs()) {
+		            ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
+		            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
+		            procedureRecord.getParameters().add(paramRecord);
+		        }
+		    	
+		        String resultID = procedureRecord.getResultSetID();
+		        if(resultID != null) {
+		            ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET, false);
+		            if (resultRecord != null) {
+			            loadColumnSetRecords(resultRecord, null);
+			            procedureRecord.setResultSet(resultRecord);
+		            }
+		            //it is ok to be null here.  it will happen when a 
+		            //virtual stored procedure is created from a
+		            //physical stored procedure without a result set
+		            //TODO: find a better fix for this
+		        }
+	
+		        // if this is a virtual procedure get the procedure plan
+		        if(procedureRecord.isVirtual()) {
+		    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureRecord.getUUID(), MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
+		    		if(transformRecord != null) {
+		    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
+		    		}
+		        }
+				store.addProcedure(procedureRecord);
+			}
+    	}
     }
     
     /**
@@ -277,10 +297,10 @@ public class IndexMetadataFactory {
 		}
 	}
     
-	private Collection findMetadataRecords(final char recordType,
+	private List findMetadataRecords(final char recordType,
 			final String entityName, final boolean isPartialName) {
 		IEntryResult[] results = queryIndex(recordType, entityName, isPartialName);
-		Collection<AbstractMetadataRecord> records = loadRecords(results);
+		List<AbstractMetadataRecord> records = loadRecords(results);
 		return records;
 	}
 

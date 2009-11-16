@@ -225,7 +225,6 @@ public class SQLParserUtil {
             Object[] params = new Object[] { id };
             throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_id", params)); //$NON-NLS-1$
         }
-        id = id.replace('/', '.');
         id = id.replaceAll("\"", ""); //$NON-NLS-1$ //$NON-NLS-2$
         return id;
     }    

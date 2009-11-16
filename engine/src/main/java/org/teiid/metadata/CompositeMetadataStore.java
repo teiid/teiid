@@ -131,7 +131,6 @@ public class CompositeMetadataStore {
 	 */
 	
 	public ColumnRecordImpl findElement(String elementName) throws QueryMetadataException {
-		ColumnRecordImpl result = null;
 		if (StringUtil.startsWithIgnoreCase(elementName,UUID.PROTOCOL)) {
 			for (MetadataStore store : this.metadataStores) {
 				for (TableRecordImpl table : store.getTables().values()) {
@@ -154,10 +153,7 @@ public class CompositeMetadataStore {
     			}
 			}
         }
-		if (result == null) {
-	        throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		return result;
+        throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 	}
 
 	public Collection<TableRecordImpl> getXMLTempGroups(TableRecordImpl tableRecord) throws QueryMetadataException {

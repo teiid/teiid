@@ -225,10 +225,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
     public Object getGroupIDForElementID(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         if(elementID instanceof ColumnRecordImpl) {
             ColumnRecordImpl columnRecord = (ColumnRecordImpl) elementID;
-            return this.getGroupID(columnRecord.getParentFullName());
+            return this.getGroupID(getGroupName(columnRecord.getFullName()));
         } else if(elementID instanceof ProcedureParameterRecordImpl){
             ProcedureParameterRecordImpl columnRecord = (ProcedureParameterRecordImpl) elementID;
-            return this.getGroupID(columnRecord.getParentFullName());
+            return this.getGroupID(getGroupName(columnRecord.getFullName()));
         } else {
             throw createInvalidRecordTypeException(elementID);
         }
@@ -675,7 +675,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
         ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
         TableRecordImpl tableRecord = (TableRecordImpl) groupID;
         if(tableRecord.isMaterialized()) {
-	        return this.getGroupID(tableRecord.getMaterializedTableName());
+	        return tableRecord.getMaterializedTable();
         }
         return null;
     }
@@ -689,7 +689,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
         ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
         TableRecordImpl tableRecord = (TableRecordImpl) groupID;
         if(tableRecord.isMaterialized()) {
-	        return this.getGroupID(tableRecord.getMaterializedStageTableName());
+	        return tableRecord.getMaterializedStageTable();
         }
         return null;
     }

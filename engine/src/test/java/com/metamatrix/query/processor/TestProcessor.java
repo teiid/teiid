@@ -3989,7 +3989,7 @@ public class TestProcessor {
     
     @Test public void testInsert() {
         // Create query
-        String sql = "Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values (\"MyString\", 1)"; //$NON-NLS-1$
+        String sql = "Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] { 

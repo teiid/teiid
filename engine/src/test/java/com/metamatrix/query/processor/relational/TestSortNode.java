@@ -57,7 +57,7 @@ public class TestSortNode {
     public static final int INT_BATCH_SIZE = TestSortNode.getIntBatchSize(); //the size of 100 integers    
     
     private void helpTestSort(long bytesInMemory, List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(bytesInMemory);
+        BufferManager mgr = NodeTestUtil.getTestBufferManager(bytesInMemory, BATCH_SIZE, BATCH_SIZE);
         TestableBufferManagerImpl impl = (TestableBufferManagerImpl) mgr;
         impl.setBlockOn(blockOn);
         impl.getConfig().setTotalAvailableMemory(bytesInMemory);

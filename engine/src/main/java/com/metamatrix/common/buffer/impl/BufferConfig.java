@@ -32,7 +32,8 @@ import com.metamatrix.common.buffer.BufferManagerPropertyNames;
  */
 public class BufferConfig {
 	
-	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 1000;
+	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 2000;
+	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 2000;
 
     // Configuration 
     private long totalAvailableMemory = 100000000;
@@ -40,8 +41,7 @@ public class BufferConfig {
     private int activeMemoryThreshold = 75;
     private int managementInterval = 500;
     private int connectorBatchSize = DEFAULT_CONNECTOR_BATCH_SIZE;
-    //private int processorBatchSize = 500;
-    private int processorBatchSize = 100;
+    private int processorBatchSize = DEFAULT_PROCESSOR_BATCH_SIZE;
     private String bufferStorageDirectory = "../buffer"; //$NON-NLS-1$
     private int logStatInterval = 0;
     

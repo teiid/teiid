@@ -22,7 +22,6 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -30,12 +29,8 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.common.vdb.api.VDBDefn;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 
 /** 
@@ -115,39 +110,4 @@ public abstract class EmbeddedBaseDQPService implements ApplicationService {
         return started;
     }
     
-    protected VDBKey vdbId(VDBArchive vdb) {
-        return new VDBKey(vdb.getName(),vdb.getVersion());
-    }
-    
-    protected VDBKey vdbId(String name, String version) {
-        return new VDBKey(name, version);
-    }    
-   
-    /** 
-     * checks the validity of the VDB
-     * @param vdb
-     * @return true if valid; false otherwise.
-     */
-    protected boolean isValidVDB(VDBArchive vdb) {
-
-    	// check if vdb has validity errors. If so log it..
-        if (vdb.getVDBValidityErrors() != null) {
-            String[] errors = vdb.getVDBValidityErrors(); 
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < errors.length; i++) {
-                sb.append("-").append(errors[i]).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
-            } // for
-            DQPEmbeddedPlugin.logError("VDBService.validityErrors", new Object[] {vdb.getName(), sb}); //$NON-NLS-1$
-            return false;
-        }
-                
-        VDBDefn def = vdb.getConfigurationDef();
-        Collection models = def.getModels();
-        if (models != null && models.isEmpty()) {
-            DQPEmbeddedPlugin.logError("VDBService.vdb_missing_models", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$
-            return false;        	
-        }
-                
-        return true;
-    }    
 }

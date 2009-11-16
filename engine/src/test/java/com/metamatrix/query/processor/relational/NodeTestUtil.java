@@ -42,12 +42,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
  * @since 4.2
  */
 public class NodeTestUtil {
-    static BufferManager getTestBufferManager(long bytesAvailable) {
-        // Get the properties for BufferManager
-        Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
-        return createBufferManager(bmProps);
-    }
     
     static BufferManager getTestBufferManager(long bytesAvailable, int procBatchSize, int connectorBatchSize) {
 

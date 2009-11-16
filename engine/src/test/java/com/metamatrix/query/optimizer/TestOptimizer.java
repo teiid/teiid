@@ -802,17 +802,17 @@ public class TestOptimizer extends TestCase {
     }
     
     public void testInsert() { 
-        helpPlan("Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values (\"MyString\", 1)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        helpPlan("Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)"} ); //$NON-NLS-1$
     }
     
     public void testUpdate1() { 
-      	helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM(\"MyString\"), pm1.g1.e2= 1 where pm1.g1.e3= \"true\"", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+      	helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e3= 'true'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e3 = TRUE"} ); //$NON-NLS-1$
   	}
   	
     public void testUpdate2() { 
-        helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM(\"MyString\"), pm1.g1.e2= 1 where pm1.g1.e2= convert(pm1.g1.e4, integer)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e2= convert(pm1.g1.e4, integer)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"} ); //$NON-NLS-1$
     }
     
@@ -3639,7 +3639,7 @@ public class TestOptimizer extends TestCase {
 
         ProcessorPlan plan = helpPlan(
             "SELECT VDBName PKVDB, PKGroupFullName, PKElementName, VDBName FKVDB,FKGroupFullName, FKElementName, convert(FKPosition, short) As FKPosition, FKKeyName, PKKeyName " + //$NON-NLS-1$
-            "FROM System.ReferenceKeyElements WHERE PKKeyType = 'Primary' AND FKKeyType = 'Foreign' AND FKGroupFullName = \"PartsOracle.SUPPLIER_PARTS\"",           //$NON-NLS-1$
+            "FROM System.ReferenceKeyElements WHERE PKKeyType = 'Primary' AND FKKeyType = 'Foreign' AND FKGroupFullName = 'PartsOracle.SUPPLIER_PARTS'",           //$NON-NLS-1$
             FakeMetadataFactory.exampleSystemPhysical(), 
             null, capFinder,
             new String[] { 

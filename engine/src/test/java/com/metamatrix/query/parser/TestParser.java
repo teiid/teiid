@@ -2070,15 +2070,15 @@ public class TestParser extends TestCase {
 		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
 		select.addSymbol(a);
 
-		Expression constant = new Constant("value"); //$NON-NLS-1$
-		Criteria crit = new CompareCriteria(a, CompareCriteria.NE, constant);
+		Expression ex = new ElementSymbol("value"); //$NON-NLS-1$
+		Criteria crit = new CompareCriteria(a, CompareCriteria.NE, ex);
 
 		Query query = new Query();
 		query.setSelect(select);
 		query.setFrom(from);
 		query.setCriteria(crit);
 		helpTest("SELECT a from db.g where a <> \"value\"",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a <> 'value'",  //$NON-NLS-1$
+				 "SELECT a FROM db.g WHERE a <> value",  //$NON-NLS-1$
 				 query);
 	}
 
@@ -2099,7 +2099,7 @@ public class TestParser extends TestCase {
         query.setSelect(select);
         query.setFrom(from);
         query.setCriteria(crit);
-        helpTest("SELECT a from db.g where a != \"value\"",  //$NON-NLS-1$
+        helpTest("SELECT a from db.g where a != 'value'",  //$NON-NLS-1$
                  "SELECT a FROM db.g WHERE a <> 'value'",  //$NON-NLS-1$
                  query);
     }
@@ -5316,7 +5316,7 @@ public class TestParser extends TestCase {
     }
  
 	public void testUnicode3() {
-		String sql = "SELECT \"\u05e0\"";  //$NON-NLS-1$
+		String sql = "SELECT '\u05e0'";  //$NON-NLS-1$
 
 		Query query = new Query();
 		Select select = new Select();
@@ -6461,53 +6461,6 @@ public class TestParser extends TestCase {
                 "SELECT fooKey AS fooAlias FROM x.y.z", //$NON-NLS-1$
                 query, info); 		
     }
-    
-    public void testFullyQualifiedElementWithSlashes() throws Exception {
-        GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-        
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("x.y.z.fooKey")); //$NON-NLS-1$
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-        helpTest("SELECT \"x/y\".z.fooKey FROM \"x/y\".z", //$NON-NLS-1$
-                "SELECT x.y.z.fooKey FROM x.y.z", //$NON-NLS-1$
-                query); 		
-    }    
-    
-    public void testFullyQualifiedVaribleWithSlashes() throws Exception {
-        GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-        
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("x.y.z.fooKey")); //$NON-NLS-1$
-		AliasSymbol alias = new AliasSymbol("key", new ElementSymbol("x.y.z.key2")); //$NON-NLS-1$ //$NON-NLS-2$
-		select.addSymbol(alias);
-		
-		Criteria crit = new CompareCriteria(new ElementSymbol("x.y.z.fooKey"), SubqueryCompareCriteria.GT, new Constant(new Integer(10))); //$NON-NLS-1$
-		
-		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ElementSymbol("x.y.z.fooKey"), true); //$NON-NLS-1$
-	
-		GroupBy groupby = new GroupBy();
-		groupby.addSymbol(new ElementSymbol("key")); //$NON-NLS-1$
-		
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		query.setOrderBy(orderby);
-		query.setGroupBy(groupby);
-		
-        helpTest("SELECT x/y.z.fooKey, x/y.z.key2 as 'key' FROM x/y.z where x/y.z.fooKey > 10 group by key order by x/y.z.fooKey", //$NON-NLS-1$
-                "SELECT x.y.z.fooKey, x.y.z.key2 AS key FROM x.y.z WHERE x.y.z.fooKey > 10 GROUP BY key ORDER BY x.y.z.fooKey", //$NON-NLS-1$
-                query); 		
-    } 
 
     /** QUERY Tool Format*/
     public void testQueryWithQuotes_MSQuery() throws Exception {
