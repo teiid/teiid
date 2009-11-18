@@ -388,7 +388,11 @@ public abstract class AbstractQueryTest {
     }
 
     protected void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
-    	assertEquals(read(expectedReader, true) , read(resultReader, true));
+    	assertEquals(read(expectedReader, compareCaseSensitive()) , read(resultReader, compareCaseSensitive()));
+    }
+    
+    protected boolean compareCaseSensitive() {
+	return true;
     }
     
     public void printResults() {
