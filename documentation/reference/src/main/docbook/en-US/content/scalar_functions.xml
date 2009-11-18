@@ -1736,47 +1736,43 @@
   </sect1>
   <sect1>
     <title>Lookup Function</title>
-    <para>The Lookup function allows you to cache a group’s
+    <para>The Lookup function allows you to cache a table’s
     data in memory and access it through a scalar function. This caching
-    accelerates response time to queries that use the lookup groups, known
-    in business terminology as lookup tables or code groups.</para>
-    <para>A StatePostalCodes group used to translate postal codes to
+    accelerates response time to queries that use the lookup tables, known
+    in business terminology as lookup tables or code tables.</para>
+    <para>A StatePostalCodes table used to translate postal codes to
       complete state names might represent an example of this type of
-      lookup group. One element, PostalCode, represents a key element.
-      Other groups within the model refer to this two-letter code. A
-      second element, StateDisplayName, would represent the complete name
-      of the state. Hence, a query to this lookup group would typically
+      lookup table. One column, PostalCode, represents a key column.
+      Other tables refer to this two-letter code. A
+      second column, StateDisplayName, would represent the complete name
+      of the state. Hence, a query to this lookup table would typically
       provide the PostalCode and expect the StateDisplayName in response.
     </para>
-    <para>When you call this function for any combination of codeGroup, returnElement, and
-      keyElement for the first time, the Teiid System caches the result. 
+    <para>When you call this function for any combination of codeTable, returnColumn, and
+      keyColumn for the first time, the Teiid System caches the result. 
       The Teiid System uses this cached map for all
-      queries, in all sessions, that later access this lookup group. The
-      codeGroup requires use of the fully-qualified name, and the
-      returnElement and keyElement parameters should use shortened column
+      queries, in all sessions, that later access this lookup table. The
+      codeTable requires use of the fully-qualified name, and the
+      returnColumn and keyColumn parameters should use shortened column
       names.</para>
     <para>Because the Teiid System caches and indexes this
       information in memory, this function provides quick access after the
-      Teiid System initially caches the lookup group. The Teiid
-      System unloads these cached lookup groups when you stop and restart
+      Teiid System initially caches the lookup table. The Teiid
+      System unloads these cached lookup tables when you stop and restart
       the Teiid System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
       static data that does not change over time.</para>
     <note>
       <itemizedlist>
         <listitem>
-          <para>The keyElement column is expected to contain unique key
-            values. If the column contains duplicate values, only the last
-            loaded value will be used for lookup purposes. In some cases, this
-            may cause unexpected results, so it is strongly recommended that
-            only columns without duplicate values be used as the keyElement. The
+          <para>The keyColumn is expected to contain unique key
+            values. If the column contains duplicate values, an exception will be thrown. The
             lookup caches can be flushed via the svcmgr.</para>
         </listitem>
         <listitem>
-          <para>Cached lookup groups might consume significant memory. You
-            can limit the number and maximum size of these code groups by
-            setting properties of the QueryService through the Teiid
-            Console.</para>
+          <para>Cached lookup tables might consume significant memory. You
+            can limit the number and maximum size of these code tables by
+            setting configuration properties.</para>
         </listitem>
       </itemizedlist>
     </note>
@@ -1798,20 +1794,20 @@
         <tbody>
           <row>
             <entry>
-              <para>LOOKUP(codeGroup, returnElement,
-                keyElement, keyValue)</para>
+              <para>LOOKUP(codeTable, returnColumn,
+                keyColumn, keyValue)</para>
             </entry>
             <entry>
-              <para>In the lookup group codeGroup, find the row where
-                keyElement has the value keyValue and return the
-                associated returnElement</para>
+              <para>In the lookup table codeTable, find the row where
+                keyColumn has the value keyValue and return the
+                associated returnColumn</para>
             </entry>
             <entry>
-              <para>codeGroup must be a fully-qualified string
+              <para>codeTable must be a fully-qualified string
                 literal containing metadata identifiers, keyValue datatype
-                must match datatype of the keyElement, return datatype
-                matches that of returnElement. returnElement and
-                keyElement parameters should use their shortened names.
+                must match datatype of the keyColumn, return datatype
+                matches that of returnColumn. returnColumn and
+                keyColumn parameters should use their shortened names.
               </para>
             </entry>
           </row>

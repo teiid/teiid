@@ -77,11 +77,6 @@ public abstract class AbstractMetadataRecord implements Serializable {
 		this.name = name;
 	}
 	
-    public String getModelName() {
-		int prntIdx = fullName.indexOf(NAME_DELIM_CHAR);
-		return fullName.substring(0, prntIdx);
-    }
-	
     public String toString() {
     	StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());

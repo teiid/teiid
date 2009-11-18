@@ -30,9 +30,9 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Table;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.types.DataTypeManager;
@@ -49,7 +49,6 @@ public class TestTextConnector {
 
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector connector = new TextConnector();
-        // Initialize license checker with class, non-GUI notifier and don't exitOnFailure
         connector.start(env);
         return connector;
     }
@@ -63,15 +62,15 @@ public class TestTextConnector {
     
     @Test public void testGetMetadata() throws Exception{
         TextConnector connector = helpSetUp(UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt"); //$NON-NLS-1$
-        Map<String, DatatypeRecordImpl> datatypes = new HashMap<String, DatatypeRecordImpl>();
-        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new DatatypeRecordImpl());
-        datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new DatatypeRecordImpl());
-        datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new DatatypeRecordImpl());
-        datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new DatatypeRecordImpl());
+        Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
+        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
+        datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new Datatype());
+        datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new Datatype());
+        datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new Datatype());
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         connector.getConnectorMetadata(metadata); 
-        assertEquals(0, metadata.getMetadataStore().getProcedures().size());
-        TableRecordImpl group = metadata.getMetadataStore().getTables().get("summitdata.summitdata"); //$NON-NLS-1$
+        assertEquals(0, metadata.getMetadataStore().getSchemas().values().iterator().next().getProcedures().size());
+        Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata.summitdata"); //$NON-NLS-1$
         assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$
         assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
         assertEquals(14, group.getColumns().size());

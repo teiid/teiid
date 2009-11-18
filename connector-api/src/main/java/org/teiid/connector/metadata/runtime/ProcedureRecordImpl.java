@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * ProcedureRecordImpl
  */
-public class ProcedureRecordImpl extends AbstractMetadataRecord {
+public class ProcedureRecordImpl extends AbstractMetadataRecord implements SchemaObject {
     
 	public enum Type {
 		Function,
@@ -42,9 +42,21 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
     private boolean isVirtual;
     private String resultSetID;
     private int updateCount = 1;
-    private List<ProcedureParameterRecordImpl> parameters;
-    private ColumnSetRecordImpl resultSet;
+    private List<ProcedureParameter> parameters;
+    private ColumnSet resultSet;
     private String queryPlan;
+    
+    private Schema schema;
+    
+    @Override
+    public Schema getSchema() {
+    	return schema;
+    }
+    
+    @Override
+    public void setSchema(Schema schema) {
+    	this.schema = schema;
+    }
     
     public List<String> getParameterIDs() {
         return parameterIDs;
@@ -79,11 +91,11 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
         return this.updateCount;
     }
     
-	public List<ProcedureParameterRecordImpl> getParameters() {
+	public List<ProcedureParameter> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(List<ProcedureParameterRecordImpl> parameters) {
+	public void setParameters(List<ProcedureParameter> parameters) {
 		this.parameters = parameters;
 	}
 
@@ -127,11 +139,11 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
     	this.updateCount = count;
     }
 
-	public void setResultSet(ColumnSetRecordImpl resultSet) {
+	public void setResultSet(ColumnSet resultSet) {
 		this.resultSet = resultSet;
 	}
 
-	public ColumnSetRecordImpl getResultSet() {
+	public ColumnSet getResultSet() {
 		return resultSet;
 	}
 

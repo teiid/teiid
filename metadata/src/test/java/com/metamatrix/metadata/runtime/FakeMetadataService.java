@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.IndexMetadataFactory;
@@ -79,7 +79,7 @@ public class FakeMetadataService implements ApplicationService, MetadataService 
 	}
 	
 	@Override
-	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes()
+	public Map<String, Datatype> getBuiltinDatatypes()
 			throws MetaMatrixComponentException {
 		return null;
 	}

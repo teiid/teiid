@@ -22,38 +22,34 @@
 
 package org.teiid.connector.metadata.runtime;
 
-
 /**
- * ProcedureParameterRecordImpl
+ * ForeignKeyRecordImpl
  */
-public class ProcedureParameterRecordImpl extends BaseColumn {
+public class ForeignKey extends KeyRecord {
 
-	public enum Type {
-		Unknown,
-		In,
-		InOut,
-		ResultSet,
-		Out,
-		ReturnValue
-	}
-	
-	private Type type;
-	private boolean optional;
-	
-	public void setType(Type type) {
-		this.type = type;
-	}
-	
-	public Type getType() {
-		return type;
-	}
-	
-	public void setOptional(boolean optional) {
-		this.optional = optional;
-	}
-	
-	public boolean isOptional() {
-		return optional;
+    private String uniqueKeyID;
+    private KeyRecord primaryKey;
+    
+    public ForeignKey() {
+		super(Type.Foreign);
 	}
     
+    public String getUniqueKeyID() {
+        return uniqueKeyID;
+    }
+
+    /**
+     * @param object
+     */
+    public void setUniqueKeyID(String keyID) {
+        uniqueKeyID = keyID;
+    }    
+    
+    public KeyRecord getPrimaryKey() {
+    	return this.primaryKey;
+    }
+    
+    public void setPrimaryKey(KeyRecord primaryKey) {
+		this.primaryKey = primaryKey;
+	}
 }

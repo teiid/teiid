@@ -128,12 +128,12 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
       <title>Access Patterns</title>
       <para>
 		Access patterns are used on both physical and virtual sources to
-		specify the need for criteria against a set of elements. Failure to supply the criteria will
+		specify the need for criteria against a set of columns. Failure to supply the criteria will
 		result in a planning error, rather than a run-away source query. Access
 		patterns can be applied in a set such that only one of the access
 		patterns is required to be satisfied.</para>
-      <para>Currently any form of criteria may satisfy an access
-		pattern as long as it contains references to affect elements.</para>
+      <para>Currently any form of criteria referencing an affected column may satisfy an access
+		pattern.</para>
     </sect2>
     <sect2>
       <title>Pushdown</title>
@@ -535,21 +535,6 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
           <para> Limit - Returns a specified number of rows, then stops
             processing. Also processes an offset if present.</para>
           <para />
-        </listitem>
-        <listitem>
-          <para> Dependent Feeder - This node accepts its input stream
-            and forwards to its parent unchanged but also feeds all
-            dependent sources that need the stream of data. Thus, this
-            node actually performs no work within the tree, just diverts
-            a copy of the tuple stream to listening nodes.</para>
-          <para />
-        </listitem>
-        <listitem>
-          <para> Dependent Wait - This node waits until a criteria
-            requiring dependent values below this node has the necessary
-            data to continue. At that point, it continues processing on
-            it's subplan and merely forwards data from the child to the
-            parent.</para>
         </listitem>
       </itemizedlist>
       <sect3>

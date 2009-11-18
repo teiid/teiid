@@ -36,18 +36,19 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
-import org.teiid.connector.metadata.runtime.ColumnSetRecordImpl;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
-import org.teiid.connector.metadata.runtime.ForeignKeyRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.ColumnSet;
+import org.teiid.connector.metadata.runtime.Datatype;
+import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.SchemaObject;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl.SearchType;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl.Type;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
+import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -144,18 +145,12 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
      */
     public Object getModelID(final Object groupOrElementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if (!(groupOrElementID instanceof TableRecordImpl) && !(groupOrElementID instanceof ColumnRecordImpl)) {
+        if (!(groupOrElementID instanceof SchemaObject)) {
         	throw createInvalidRecordTypeException(groupOrElementID);
         }
         
-        String modelName = ((AbstractMetadataRecord)groupOrElementID).getModelName();
-        return getModel(modelName);
+        return ((SchemaObject)groupOrElementID).getSchema();
     }
-
-	private Object getModel(String modelName) throws QueryMetadataException,
-			MetaMatrixComponentException {
-    	return getMetadataStore().getModel(modelName.toLowerCase());
-	}
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
@@ -215,19 +210,19 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInGroupID(java.lang.Object)
      */
     public List getElementIDsInGroupID(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-    	return ((TableRecordImpl)groupID).getColumns();
+    	ArgCheck.isInstanceOf(Table.class, groupID);
+    	return ((Table)groupID).getColumns();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupIDForElementID(java.lang.Object)
      */
     public Object getGroupIDForElementID(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            ColumnRecordImpl columnRecord = (ColumnRecordImpl) elementID;
+        if(elementID instanceof Column) {
+            Column columnRecord = (Column) elementID;
             return this.getGroupID(getGroupName(columnRecord.getFullName()));
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
-            ProcedureParameterRecordImpl columnRecord = (ProcedureParameterRecordImpl) elementID;
+        } else if(elementID instanceof ProcedureParameter){
+            ProcedureParameter columnRecord = (ProcedureParameter) elementID;
             return this.getGroupID(getGroupName(columnRecord.getFullName()));
         } else {
             throw createInvalidRecordTypeException(elementID);
@@ -257,10 +252,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
         procInfo.setProcedureID(procRecord);
 
         // modelID for the procedure
-        procInfo.setModelID(getModel(procRecord.getModelName()));
+        procInfo.setModelID(procRecord.getSchema());
 
         // get the parameter metadata info
-        for (ProcedureParameterRecordImpl paramRecord : procRecord.getParameters()) {
+        for (ProcedureParameter paramRecord : procRecord.getParameters()) {
             String runtimeType = paramRecord.getRuntimeType();
             int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
             // create a parameter and add it to the procedure object
@@ -272,14 +267,14 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
         // if the procedure returns a resultSet, obtain resultSet metadata
         if(procRecord.getResultSet() != null) {
-            ColumnSetRecordImpl resultRecord = procRecord.getResultSet();
+            ColumnSet resultRecord = procRecord.getResultSet();
             // resultSet is the last parameter in the procedure
             int lastParamIndex = procInfo.getParameters().size() + 1;
             SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
             param.setClassType(java.sql.ResultSet.class);           
             param.setMetadataID(resultRecord);
 
-            for (ColumnRecordImpl columnRecord : resultRecord.getColumns()) {
+            for (Column columnRecord : resultRecord.getColumns()) {
                 String colType = columnRecord.getRuntimeType();
                 param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
             }
@@ -307,7 +302,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @param parameterType
      * @return
      */
-    private int convertParamRecordTypeToStoredProcedureType(final ProcedureParameterRecordImpl.Type parameterType) {
+    private int convertParamRecordTypeToStoredProcedureType(final ProcedureParameter.Type parameterType) {
         switch (parameterType) {
             case In : return SPParameter.IN;
             case Out : return SPParameter.OUT;
@@ -323,10 +318,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementType(java.lang.Object)
      */
     public String getElementType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getRuntimeType();            
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
-            return ((ProcedureParameterRecordImpl) elementID).getRuntimeType();
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getRuntimeType();            
+        } else if(elementID instanceof ProcedureParameter){
+            return ((ProcedureParameter) elementID).getRuntimeType();
         } else {
             throw createInvalidRecordTypeException(elementID);
         }
@@ -336,19 +331,19 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDefaultValue(java.lang.String)
      */
     public Object getDefaultValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getDefaultValue();            
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
-            return ((ProcedureParameterRecordImpl) elementID).getDefaultValue();
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getDefaultValue();            
+        } else if(elementID instanceof ProcedureParameter){
+            return ((ProcedureParameter) elementID).getDefaultValue();
         } else {
             throw createInvalidRecordTypeException(elementID);
         }
     }
 
     public Object getMinimumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getMinValue();            
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getMinValue();            
+        } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
             throw createInvalidRecordTypeException(elementID);
@@ -356,9 +351,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
     }
 
     public Object getMaximumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getMaxValue();            
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getMaxValue();            
+        } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
             throw createInvalidRecordTypeException(elementID);
@@ -369,8 +364,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#isVirtualGroup(java.lang.Object)
      */
     public boolean isVirtualGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        return ((TableRecordImpl) groupID).isVirtual();
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        return ((Table) groupID).isVirtual();
     }
 
     /** 
@@ -381,25 +376,25 @@ public class TransformationMetadata extends BasicQueryMetadata {
     	if(groupID instanceof ProcedureRecordImpl) {
             return true;            
         } 
-    	if(groupID instanceof TableRecordImpl){
+    	if(groupID instanceof Table){
             return false;
         } 
     	throw createInvalidRecordTypeException(groupID);
     }
 
     public boolean isVirtualModel(final Object modelID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ModelRecordImpl.class, modelID);
-        ModelRecordImpl modelRecord = (ModelRecordImpl) modelID;
-        return modelRecord.getModelType() == ModelRecordImpl.Type.Virtual;
+        ArgCheck.isInstanceOf(Schema.class, modelID);
+        Schema modelRecord = (Schema) modelID;
+        return !modelRecord.isPhysical();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getVirtualPlan(java.lang.Object)
      */
     public QueryNode getVirtualPlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
+        ArgCheck.isInstanceOf(Table.class, groupID);
 
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        Table tableRecord = (Table) groupID;
         if (!tableRecord.isVirtual()) {
             throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
         }
@@ -421,36 +416,36 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getInsertPlan(java.lang.Object)
      */
     public String getInsertPlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecordImpl = (TableRecordImpl)groupID;
+    	ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
             throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__8")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
-        return ((TableRecordImpl)groupID).getInsertPlan();
+        return ((Table)groupID).getInsertPlan();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getUpdatePlan(java.lang.Object)
      */
     public String getUpdatePlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecordImpl = (TableRecordImpl)groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
         	throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__10")+tableRecordImpl.getFullName());         //$NON-NLS-1$
         }
-        return ((TableRecordImpl)groupID).getUpdatePlan();
+        return ((Table)groupID).getUpdatePlan();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDeletePlan(java.lang.Object)
      */
     public String getDeletePlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecordImpl = (TableRecordImpl)groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
             throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.DeletePlan_could_not_be_found_for_physical_group__12")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
-        return ((TableRecordImpl)groupID).getDeletePlan();
+        return ((Table)groupID).getDeletePlan();
     }
 
     /* (non-Javadoc)
@@ -458,7 +453,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public boolean modelSupports(final Object modelID, final int modelConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ModelRecordImpl.class, modelID);
+        ArgCheck.isInstanceOf(Schema.class, modelID);
 
         switch(modelConstant) {
             default:
@@ -471,8 +466,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public boolean groupSupports(final Object groupID, final int groupConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
 
         switch(groupConstant) {
             case SupportConstants.Group.UPDATE:
@@ -488,8 +483,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
     public boolean elementSupports(final Object elementID, final int elementConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
         
-        if(elementID instanceof ColumnRecordImpl) {
-            ColumnRecordImpl columnRecord = (ColumnRecordImpl) elementID;            
+        if(elementID instanceof Column) {
+            Column columnRecord = (Column) elementID;            
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
                     return columnRecord.getNullType() == NullType.Nullable;
@@ -518,8 +513,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
                 default:
                     throw new UnsupportedOperationException(DQPPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
             }
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
-            ProcedureParameterRecordImpl columnRecord = (ProcedureParameterRecordImpl) elementID;            
+        } else if(elementID instanceof ProcedureParameter) {
+            ProcedureParameter columnRecord = (ProcedureParameter) elementID;            
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
                 	return columnRecord.getNullType() == NullType.Nullable;
@@ -561,7 +556,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaxSetSize(java.lang.Object)
      */
     public int getMaxSetSize(final Object modelID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ModelRecordImpl.class, modelID);
+        ArgCheck.isInstanceOf(Schema.class, modelID);
         return 0;
     }
 
@@ -569,8 +564,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getIndexesInGroup(java.lang.Object)
      */
     public Collection getIndexesInGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        return ((TableRecordImpl)groupID).getIndexes();
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        return ((Table)groupID).getIndexes();
     }
 
     /* (non-Javadoc)
@@ -578,9 +573,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Collection getUniqueKeysInGroup(final Object groupID)
         throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-    	TableRecordImpl tableRecordImpl = (TableRecordImpl)groupID;
-    	ArrayList<ColumnSetRecordImpl> result = new ArrayList<ColumnSetRecordImpl>(tableRecordImpl.getUniqueKeys());
+    	ArgCheck.isInstanceOf(Table.class, groupID);
+    	Table tableRecordImpl = (Table)groupID;
+    	ArrayList<ColumnSet> result = new ArrayList<ColumnSet>(tableRecordImpl.getUniqueKeys());
     	if (tableRecordImpl.getPrimaryKey() != null) {
 	    	result.add(tableRecordImpl.getPrimaryKey());
     	}
@@ -597,8 +592,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Collection getForeignKeysInGroup(final Object groupID)
         throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-    	return ((TableRecordImpl)groupID).getForeignKeys();
+    	ArgCheck.isInstanceOf(Table.class, groupID);
+    	return ((Table)groupID).getForeignKeys();
     }
 
     /* (non-Javadoc)
@@ -606,8 +601,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Object getPrimaryKeyIDForForeignKeyID(final Object foreignKeyID)
         throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ForeignKeyRecordImpl.class, foreignKeyID);
-        ForeignKeyRecordImpl fkRecord = (ForeignKeyRecordImpl) foreignKeyID;
+        ArgCheck.isInstanceOf(ForeignKey.class, foreignKeyID);
+        ForeignKey fkRecord = (ForeignKey) foreignKeyID;
         return fkRecord.getPrimaryKey();
     }
 
@@ -616,24 +611,24 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Collection getAccessPatternsInGroup(final Object groupID)
         throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-    	return ((TableRecordImpl)groupID).getAccessPatterns();
+    	ArgCheck.isInstanceOf(Table.class, groupID);
+    	return ((Table)groupID).getAccessPatterns();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInIndex(java.lang.Object)
      */
     public List getElementIDsInIndex(final Object index) throws MetaMatrixComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(ColumnSetRecordImpl.class, index);
-    	return ((ColumnSetRecordImpl)index).getColumns();
+    	ArgCheck.isInstanceOf(ColumnSet.class, index);
+    	return ((ColumnSet)index).getColumns();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInKey(java.lang.Object)
      */
     public List getElementIDsInKey(final Object key) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ColumnSetRecordImpl.class, key);
-        return ((ColumnSetRecordImpl)key).getColumns();
+        ArgCheck.isInstanceOf(ColumnSet.class, key);
+        return ((ColumnSet)key).getColumns();
     }
 
     /* (non-Javadoc)
@@ -641,18 +636,18 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public List getElementIDsInAccessPattern(final Object accessPattern)
         throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ColumnSetRecordImpl.class, accessPattern);
-        return ((ColumnSetRecordImpl)accessPattern).getColumns();
+        ArgCheck.isInstanceOf(ColumnSet.class, accessPattern);
+        return ((ColumnSet)accessPattern).getColumns();
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#isXMLGroup(java.lang.Object)
      */
     public boolean isXMLGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
+        ArgCheck.isInstanceOf(Table.class, groupID);
 
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
-        return tableRecord.getTableType() == TableRecordImpl.Type.Document;
+        Table tableRecord = (Table) groupID;
+        return tableRecord.getTableType() == Table.Type.Document;
     }
 
     /** 
@@ -661,8 +656,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public boolean hasMaterialization(final Object groupID) throws MetaMatrixComponentException,
                                                       QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
         return tableRecord.isMaterialized();
     }
 
@@ -672,8 +667,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Object getMaterialization(final Object groupID) throws MetaMatrixComponentException,
                                                     QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedTable();
         }
@@ -686,8 +681,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public Object getMaterializationStage(final Object groupID) throws MetaMatrixComponentException,
                                                          QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedStageTable();
         }
@@ -698,9 +693,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMappingNode(java.lang.Object)
      */
     public MappingNode getMappingNode(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
+        ArgCheck.isInstanceOf(Table.class, groupID);
 
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        Table tableRecord = (Table) groupID;
 		final String groupName = tableRecord.getFullName();
         if(tableRecord.isVirtual()) {
             // get mappin transform
@@ -735,10 +730,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
     public Collection getXMLTempGroups(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
 
-        if(tableRecord.getTableType() == TableRecordImpl.Type.Document) {
+        if(tableRecord.getTableType() == Table.Type.Document) {
             return this.store.getXMLTempGroups(tableRecord);
         }
         return Collections.EMPTY_SET;
@@ -748,8 +743,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getCardinality(java.lang.Object)
      */
     public int getCardinality(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        return ((TableRecordImpl) groupID).getCardinality();
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        return ((Table) groupID).getCardinality();
     }
 
     /* (non-Javadoc)
@@ -757,8 +752,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
      */
     public List getXMLSchemas(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
 
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
-        TableRecordImpl tableRecord = (TableRecordImpl) groupID;
+        ArgCheck.isInstanceOf(Table.class, groupID);
+        Table tableRecord = (Table) groupID;
 
         // lookup transformation record for the group
         String groupName = tableRecord.getFullName();
@@ -794,66 +789,66 @@ public class TransformationMetadata extends BasicQueryMetadata {
     }
 
     public int getElementLength(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getLength();            
-        } else if(elementID instanceof ProcedureParameterRecordImpl){
-            return ((ProcedureParameterRecordImpl) elementID).getLength();
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getLength();            
+        } else if(elementID instanceof ProcedureParameter){
+            return ((ProcedureParameter) elementID).getLength();
         } else {
             throw createInvalidRecordTypeException(elementID);
         }
     }
 
     public int getPosition(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getPosition();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
-            return ((ProcedureParameterRecordImpl) elementID).getPosition();            
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getPosition();
+        } else if(elementID instanceof ProcedureParameter) {
+            return ((ProcedureParameter) elementID).getPosition();            
         } else {
             throw createInvalidRecordTypeException(elementID);            
         }
     }
     
     public int getPrecision(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getPrecision();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
-            return ((ProcedureParameterRecordImpl) elementID).getPrecision();            
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getPrecision();
+        } else if(elementID instanceof ProcedureParameter) {
+            return ((ProcedureParameter) elementID).getPrecision();            
         } else {
             throw createInvalidRecordTypeException(elementID);            
         }
     }
     
     public int getRadix(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getRadix();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
-            return ((ProcedureParameterRecordImpl) elementID).getRadix();            
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getRadix();
+        } else if(elementID instanceof ProcedureParameter) {
+            return ((ProcedureParameter) elementID).getRadix();            
         } else {
             throw createInvalidRecordTypeException(elementID);            
         }
     }
     
 	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getFormat();
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getFormat();
         } 
         throw createInvalidRecordTypeException(elementID);            
 	}       
     
     public int getScale(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getScale();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
-            return ((ProcedureParameterRecordImpl) elementID).getScale();            
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getScale();
+        } else if(elementID instanceof ProcedureParameter) {
+            return ((ProcedureParameter) elementID).getScale();            
         } else {
             throw createInvalidRecordTypeException(elementID);            
         }
     }
 
     public int getDistinctValues(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getDistinctValues();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getDistinctValues();
+        } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {
             throw createInvalidRecordTypeException(elementID);            
@@ -861,9 +856,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
     }
 
     public int getNullValues(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getNullValues();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getNullValues();
+        } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {
             throw createInvalidRecordTypeException(elementID);            
@@ -871,9 +866,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
     }
 
     public String getNativeType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if(elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl) elementID).getNativeType();
-        } else if(elementID instanceof ProcedureParameterRecordImpl) {
+        if(elementID instanceof Column) {
+            return ((Column) elementID).getNativeType();
+        } else if(elementID instanceof ProcedureParameter) {
             return null;            
         } else {
             throw createInvalidRecordTypeException(elementID);            
@@ -935,7 +930,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @since 5.0
      */
     public String getModeledType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        DatatypeRecordImpl record = getDatatypeRecord(elementID);
+        Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getDatatypeID();
         }
@@ -947,7 +942,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @since 5.0
      */
     public String getModeledBaseType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        DatatypeRecordImpl record = getDatatypeRecord(elementID);
+        Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getBasetypeID();
         }
@@ -959,18 +954,18 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @since 5.0
      */
     public String getModeledPrimitiveType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
-        DatatypeRecordImpl record = getDatatypeRecord(elementID);
+        Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getPrimitiveTypeID();
         }
         return null;
     }
 
-    private DatatypeRecordImpl getDatatypeRecord(final Object elementID) {
-        if (elementID instanceof ColumnRecordImpl) {
-            return ((ColumnRecordImpl)elementID).getDatatype();
-        } else if (elementID instanceof ProcedureParameterRecordImpl) {
-            return ((ProcedureParameterRecordImpl)elementID).getDatatype();
+    private Datatype getDatatypeRecord(final Object elementID) {
+        if (elementID instanceof Column) {
+            return ((Column)elementID).getDatatype();
+        } else if (elementID instanceof ProcedureParameter) {
+            return ((ProcedureParameter)elementID).getDatatype();
         } else {
             throw createInvalidRecordTypeException(elementID);            
         }

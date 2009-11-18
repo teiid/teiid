@@ -23,14 +23,14 @@
 package org.teiid.connector.metadata.runtime;
 
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl.SearchType;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
 
 
 
 /**
  * ColumnRecordImpl
  */
-public class DatatypeRecordImpl extends AbstractMetadataRecord {
+public class Datatype extends AbstractMetadataRecord {
 	
 	public enum Type {
 		Basic,

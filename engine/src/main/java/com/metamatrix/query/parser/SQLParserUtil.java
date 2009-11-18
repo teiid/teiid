@@ -45,21 +45,6 @@ public class SQLParserUtil {
     boolean isMetadataID(String id) throws ParseException {
         int length = id.length();
         
-        if(id.indexOf("mmuuid:") >= 0) { //$NON-NLS-1$
-            // Validate modeler form.  Example: "mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"
-            
-            int dotIndex = id.indexOf("."); //$NON-NLS-1$
-            if(dotIndex >= 0) { 
-                String groupPart = id.substring(0, dotIndex);
-                String lastPart = id.substring(dotIndex+1);
-                if(isModelerID(groupPart) || isMetadataPart(groupPart)) {
-                    return (lastPart.equals("*") || isModelerID(lastPart)); //$NON-NLS-1$
-                } 
-                return false;
-            } 
-            return isModelerID(id);                
-        } 
-        
         // Validate server forms:   
         //  group, vdb.group, "group", vdb."group",
         //  group.*, vdb.group.*, "group".*, vdb."group".*,
@@ -93,26 +78,6 @@ public class SQLParserUtil {
         return true;
     }    
 
-    /**
-     * Check that this is a valid mmuuid
-     * @param id Group ID string
-     */
-    boolean isModelerID(String id) throws ParseException {
-        int length = id.length();
-        
-        if(id.startsWith("mmuuid:")) { //$NON-NLS-1$
-            // Validate modeler form.  Example: "mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"
-            for(int i=7; i<length; i++) { 
-                char c = id.charAt(i);
-                if( ! (c == '-' || (c >= 'a' && c <= 'f') || StringUtil.isDigit(c)) ) {
-                    return false;
-                }
-            }  
-            return true;
-        }  
-        return false;
-    }        
-        
     /**
      * Check that this is a valid function name
      * @param id Function name string

@@ -27,15 +27,15 @@ import java.util.List;
 /**
  * ColumnSetRecordImpl
  */
-public class ColumnSetRecordImpl extends AbstractMetadataRecord {
+public class ColumnSet extends AbstractMetadataRecord {
 	
-    private List<ColumnRecordImpl> columns;
+    private List<Column> columns;
     
-    public List<ColumnRecordImpl> getColumns() {
+    public List<Column> getColumns() {
     	return columns;
     }
 
-    public void setColumns(List<ColumnRecordImpl> columns) {
+    public void setColumns(List<Column> columns) {
 		this.columns = columns;
 	}
 

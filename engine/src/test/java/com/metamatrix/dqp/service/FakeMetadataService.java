@@ -25,7 +25,7 @@ package com.metamatrix.dqp.service;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.metadata.CompositeMetadataStore;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -82,7 +82,7 @@ public class FakeMetadataService extends FakeAbstractService implements Metadata
 	}
 	
 	@Override
-	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes()
+	public Map<String, Datatype> getBuiltinDatatypes()
 			throws MetaMatrixComponentException {
 		return null;
 	}

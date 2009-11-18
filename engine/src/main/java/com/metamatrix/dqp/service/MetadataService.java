@@ -24,7 +24,7 @@ package com.metamatrix.dqp.service;
 
 import java.util.Map;
 
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.metadata.CompositeMetadataStore;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -39,6 +39,6 @@ public interface MetadataService extends ApplicationService {
     
     CompositeMetadataStore getMetadataObjectSource(String vdbName, String vdbVersion) throws MetaMatrixComponentException;
     
-    Map<String, DatatypeRecordImpl> getBuiltinDatatypes() throws MetaMatrixComponentException;
+    Map<String, Datatype> getBuiltinDatatypes() throws MetaMatrixComponentException;
     
 }

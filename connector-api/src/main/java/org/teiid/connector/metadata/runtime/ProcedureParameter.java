@@ -24,68 +24,36 @@ package org.teiid.connector.metadata.runtime;
 
 
 /**
- * ModelRecordImpl
+ * ProcedureParameterRecordImpl
  */
-public class ModelRecordImpl extends AbstractMetadataRecord {
+public class ProcedureParameter extends BaseColumn {
 
 	public enum Type {
-		Physical,
-		Virtual,
-		Type,
-		VDB_Archive() {
-			@Override
-			public String toString() {
-				return "VDB Archive"; //$NON-NLS-1$
-			}
-		},
 		Unknown,
-		Function,
-		Configuration,
-		Metamodel,
-		Extension,
-		Logical,
-		Materialization
+		In,
+		InOut,
+		ResultSet,
+		Out,
+		ReturnValue
 	}
 	
-    private Type modelType;
-    private boolean isVisible = true;
-    private String primaryMetamodelUri;
-
-    public String getPrimaryMetamodelUri() {
-        return primaryMetamodelUri;
-    }
-
-    public boolean isVisible() {
-        return isVisible;
-    }
-
-    public Type getModelType() {
-        return modelType;
-    }
-
-    public boolean isPhysical() {
-        return getModelType() == Type.Physical;
-    }
-
-    /**
-     * @param string
-     */
-    public void setPrimaryMetamodelUri(String string) {
-        primaryMetamodelUri = string;
-    }
-
-    /**
-     * @param b
-     */
-    public void setVisible(boolean b) {
-        isVisible = b;
-    }
-
-    /**
-     * @param i
-     */
-    public void setModelType(Type i) {
-        modelType = i;
-    }
-
+	private Type type;
+	private boolean optional;
+	
+	public void setType(Type type) {
+		this.type = type;
+	}
+	
+	public Type getType() {
+		return type;
+	}
+	
+	public void setOptional(boolean optional) {
+		this.optional = optional;
+	}
+	
+	public boolean isOptional() {
+		return optional;
+	}
+    
 }

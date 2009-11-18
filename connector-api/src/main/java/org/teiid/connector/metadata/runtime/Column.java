@@ -26,7 +26,7 @@ package org.teiid.connector.metadata.runtime;
 /**
  * ColumnRecordImpl
  */
-public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRecordImpl> {
+public class Column extends BaseColumn implements Comparable<Column> {
 
 	public enum SearchType {
 		Unsearchable,
@@ -62,7 +62,7 @@ public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRec
     private int nullValues = -1;
 
     @Override
-    public int compareTo(ColumnRecordImpl record) {
+    public int compareTo(Column record) {
     	return this.getPosition() - record.getPosition();
     }
     

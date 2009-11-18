@@ -2805,111 +2805,6 @@ public class TestParser extends TestCase {
         helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: Like escape value must be a single character.");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
-    
-	// ==================== modeler literals ===========================
-
-	/** Select mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 */
-	public void testModelerID() {
-		GroupSymbol g = new GroupSymbol("mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("Select mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 "SELECT mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 FROM mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 query);		
-	}
-	
-	/** Select mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 */
-	public void testModelerFullID() {
-		GroupSymbol g = new GroupSymbol("mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("Select mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 "SELECT mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 FROM mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 query);		
-	    
-	}
-
-	/** Select a.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 as a */
-	public void testModelerAliasElement() {
-		GroupSymbol g = new GroupSymbol("a", "mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"); //$NON-NLS-1$ //$NON-NLS-2$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("Select a.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 as a",  //$NON-NLS-1$
-				 "SELECT a.mmuuid:abcf22c0-3236-1dfa-9931-e83d04ce10a0 FROM mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 AS a",  //$NON-NLS-1$
-				 query);		
-	    
-	}
-
-	/** Select mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.* From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0 */
-	public void testModelerGroupStar() {
-		GroupSymbol g = new GroupSymbol("mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		AllInGroupSymbol a = new AllInGroupSymbol("mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.*");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("Select mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.* From mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 "SELECT mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0.* FROM mmuuid:345f22c0-3236-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-				 query);		
-	    
-	}
-    
-    /** SELECT * FROM mmuuid:66f628c1-3455-1dfa-9931-e83d04ce10a0 ORDER BY mmuuid:66f628c2-3455-1dfa-9931-e83d04ce10a0 */
-    public void testModelerOrderBy() {
-        GroupSymbol g = new GroupSymbol("mmuuid:66f628c1-3455-1dfa-9931-e83d04ce10a0"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        select.addSymbol(new AllSymbol());
-
-        OrderBy orderBy = new OrderBy();
-        orderBy.addVariable(new ElementSymbol("mmuuid:66f628c2-3455-1dfa-9931-e83d04ce10a0")); //$NON-NLS-1$
-
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setOrderBy(orderBy);
-        
-        helpTest("SELECT * FROM mmuuid:66f628c1-3455-1dfa-9931-e83d04ce10a0 ORDER BY mmuuid:66f628c2-3455-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-                 "SELECT * FROM mmuuid:66f628c1-3455-1dfa-9931-e83d04ce10a0 ORDER BY mmuuid:66f628c2-3455-1dfa-9931-e83d04ce10a0",  //$NON-NLS-1$
-                 query);        
-        
-    }
-
 	/** SELECT "date"."time" from db.g */
 	public void testReservedWordsInElement() {
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
@@ -6464,7 +6359,7 @@ public class TestParser extends TestCase {
 
     /** QUERY Tool Format*/
     public void testQueryWithQuotes_MSQuery() throws Exception {
-        QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\", \"PART_ID\", \"PART_NAME\", \"PART_WEIGHT\" FROM \"VirtualParts/base\".\"Parts\""); //$NON-NLS-1$
+        QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\", \"PART_ID\", \"PART_NAME\", \"PART_WEIGHT\" FROM \"VirtualParts.base\".\"Parts\""); //$NON-NLS-1$
     }
      
     /** MS Query Format **/
@@ -6474,17 +6369,17 @@ public class TestParser extends TestCase {
 
     /** MS Access Format**/
     public void testQueryWithQuotes_MSAccess() throws Exception {
-        QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\" ,\"PART_ID\" ,\"PART_NAME\" ,\"PART_WEIGHT\"  FROM \"parts_oracle/DEV_RRAMESH\".\"PARTS\""); //$NON-NLS-1$
+        QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\" ,\"PART_ID\" ,\"PART_NAME\" ,\"PART_WEIGHT\"  FROM \"parts_oracle.DEV_RRAMESH\".\"PARTS\""); //$NON-NLS-1$
     }
 
     /** BO Business View Manager**/
     public void testQueryWithQuotes_BODesigner() throws Exception {
-        QueryParser.getQueryParser().parseCommand("SELECT DISTINCT \"PARTS\".\"PART_NAME\" FROM   \"parts_oracle/DEV_RRAMESH\".\"PARTS\" \"PARTS\""); //$NON-NLS-1$
+        QueryParser.getQueryParser().parseCommand("SELECT DISTINCT \"PARTS\".\"PART_NAME\" FROM   \"parts_oracle.DEV_RRAMESH\".\"PARTS\" \"PARTS\""); //$NON-NLS-1$
     }
 
     /** Crystal Reports **/
     public void testQueryWithQuotes_CrystalReports() throws Exception {
-        QueryParser.getQueryParser().parseCommand("SELECT \"Oracle_PARTS\".\"PART_COLOR\", \"Oracle_PARTS\".\"PART_ID\", \"Oracle_PARTS\".\"PART_NAME\", \"Oracle_PARTS\".\"PART_WEIGHT\", \"SQL_PARTS\".\"PART_COLOR\", \"SQL_PARTS\".\"PART_ID\", \"SQL_PARTS\".\"PART_NAME\", \"SQL_PARTS\".\"PART_WEIGHT\" FROM   \"parts_oracle/DEV_RRAMESH\".\"PARTS\" \"Oracle_PARTS\", \"parts_sqlserver/dv_rreddy/dv_rreddy\".\"PARTS\" \"SQL_PARTS\" WHERE  (\"Oracle_PARTS\".\"PART_ID\"=\"SQL_PARTS\".\"PART_ID\")"); //$NON-NLS-1$
+        QueryParser.getQueryParser().parseCommand("SELECT \"Oracle_PARTS\".\"PART_COLOR\", \"Oracle_PARTS\".\"PART_ID\", \"Oracle_PARTS\".\"PART_NAME\", \"Oracle_PARTS\".\"PART_WEIGHT\", \"SQL_PARTS\".\"PART_COLOR\", \"SQL_PARTS\".\"PART_ID\", \"SQL_PARTS\".\"PART_NAME\", \"SQL_PARTS\".\"PART_WEIGHT\" FROM   \"parts_oracle.DEV_RRAMESH\".\"PARTS\" \"Oracle_PARTS\", \"parts_sqlserver.dv_rreddy.dv_rreddy\".\"PARTS\" \"SQL_PARTS\" WHERE  (\"Oracle_PARTS\".\"PART_ID\"=\"SQL_PARTS\".\"PART_ID\")"); //$NON-NLS-1$
     }
 
     public void testOrderByWithNumbers_InQuotes() throws Exception {       

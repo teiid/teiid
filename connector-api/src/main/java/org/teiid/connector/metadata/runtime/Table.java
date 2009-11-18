@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * TableRecordImpl
  */
-public class TableRecordImpl extends ColumnSetRecordImpl {
+public class Table extends ColumnSet implements SchemaObject {
 
 	public enum Type {
 		Table,
@@ -46,7 +46,7 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
     private boolean isSystem;
     private boolean isMaterialized;
     private boolean supportsUpdate;
-    private List<ForeignKeyRecordImpl> foriegnKeys;
+    private List<ForeignKey> foriegnKeys;
     private List<KeyRecord> indexes;
     private List<KeyRecord> uniqueKeys;
     private List<KeyRecord> accessPatterns;
@@ -57,13 +57,23 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
     private String insertPlan;
     private String updatePlan;
     private String deletePlan;
-    private TableRecordImpl materializedStageTable;
-    private TableRecordImpl materializedTable;
+    private Table materializedStageTable;
+    private Table materializedTable;
 
     //XML specific
     private List<String> bindings;
 	private List<String> schemaPaths;
 	private String resourcePath;
+	
+	private Schema schema;
+	
+	public Schema getSchema() {
+		return schema;
+	}
+	
+	public void setSchema(Schema schema) {
+		this.schema = schema;
+	}
 	
     public List<String> getBindings() {
 		return bindings;
@@ -179,11 +189,11 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		this.deletePlan = deletePlan;
 	}
     
-    public List<ForeignKeyRecordImpl> getForeignKeys() {
+    public List<ForeignKey> getForeignKeys() {
     	return this.foriegnKeys;
     }
     
-    public void setForiegnKeys(List<ForeignKeyRecordImpl> foriegnKeys) {
+    public void setForiegnKeys(List<ForeignKey> foriegnKeys) {
 		this.foriegnKeys = foriegnKeys;
 	}
     
@@ -227,19 +237,19 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		this.selectTransformation = selectTransformation;
 	}
     
-    public TableRecordImpl getMaterializedStageTable() {
+    public Table getMaterializedStageTable() {
 		return materializedStageTable;
 	}
     
-    public TableRecordImpl getMaterializedTable() {
+    public Table getMaterializedTable() {
 		return materializedTable;
 	}
     
-    public void setMaterializedStageTable(TableRecordImpl materializedStageTable) {
+    public void setMaterializedStageTable(Table materializedStageTable) {
 		this.materializedStageTable = materializedStageTable;
 	}
     
-    public void setMaterializedTable(TableRecordImpl materializedTable) {
+    public void setMaterializedTable(Table materializedTable) {
 		this.materializedTable = materializedTable;
 	}
 

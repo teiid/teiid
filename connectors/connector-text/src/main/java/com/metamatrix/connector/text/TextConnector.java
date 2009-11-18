@@ -43,9 +43,9 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.basic.BasicConnector;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Table;
 
 
 /**
@@ -374,10 +374,10 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
 					throw new ConnectorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
 				}
 			}
-			TableRecordImpl table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
+			Table table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
 			for (int i = 0; i < columnNames.length; i++) {
 				String type = typeNames == null?TypeFacility.RUNTIME_NAMES.STRING:typeNames[i].trim().toLowerCase();
-				ColumnRecordImpl column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
+				Column column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
 				column.setNameInSource(String.valueOf(i));
 				column.setNativeType(TypeFacility.RUNTIME_NAMES.STRING);
 			}

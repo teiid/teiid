@@ -231,7 +231,7 @@
         <para>When Teiid detects that an explicit conversion can
           not be applied implicitly in criteria, the criteria will be
           treated as false. For example:</para>
-        <programlisting>SELECT * FROM my.group WHERE created_by = ‘not a date’</programlisting>
+        <programlisting>SELECT * FROM my.table WHERE created_by = ‘not a date’</programlisting>
         <para>
           Given that created_by is typed as date, rather than converting
           <literal>'not a date'</literal>
@@ -350,10 +350,10 @@
       <title>Conversion of String Literals</title>
       <para> Teiid automatically converts string literals within a
         SQL statement to their implied types. This typically occurs in a
-        criteria comparison where an element with a different datatype
+        criteria comparison where an expression with a different datatype
         is compared to a literal string:</para>
-      <programlisting>SELECT * FROM my.group WHERE created_by = ‘2003-01-02’</programlisting>
-      <para> Here if the created_by element has the datatype of date,
+      <programlisting>SELECT * FROM my.table WHERE created_by = ‘2003-01-02’</programlisting>
+      <para> Here if the created_by column has the datatype of date,
         Teiid automatically converts the string literal to a date
         datatype as well.</para>
     </sect2>

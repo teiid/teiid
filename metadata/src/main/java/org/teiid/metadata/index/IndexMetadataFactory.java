@@ -33,16 +33,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
-import org.teiid.connector.metadata.runtime.ColumnSetRecordImpl;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
-import org.teiid.connector.metadata.runtime.ForeignKeyRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.ColumnSet;
+import org.teiid.connector.metadata.runtime.Datatype;
+import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.TransformationMetadata;
@@ -61,10 +61,10 @@ import com.metamatrix.metadata.runtime.api.MetadataSource;
 public class IndexMetadataFactory {
 
 	private Index[] indexes;
-    private Map<String, DatatypeRecordImpl> datatypeCache;
+    private Map<String, Datatype> datatypeCache;
     private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
-    private Map<String, TableRecordImpl> tableCache = new HashMap<String, TableRecordImpl>();
-    private MetadataStore store = new MetadataStore();
+    private Map<String, Table> tableCache = new HashMap<String, Table>();
+	private MetadataStore store = new MetadataStore();
     
     public IndexMetadataFactory(MetadataSource source) throws IOException {
     	ArrayList<Index> tmp = new ArrayList<Index>();
@@ -86,19 +86,19 @@ public class IndexMetadataFactory {
 	}
     
     public void getModels() {
-    	Collection<ModelRecordImpl> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.MODEL, null, false);
-    	for (ModelRecordImpl modelRecord : records) {
-			store.addModel(modelRecord);
+    	Collection<Schema> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.MODEL, null, false);
+    	for (Schema modelRecord : records) {
+			store.addSchema(modelRecord);
 		}
     }
     
     public void getTables() {
-    	for (ModelRecordImpl model : store.getModels().values()) {
-			List<TableRecordImpl> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
+    	for (Schema model : store.getSchemas().values()) {
+			List<Table> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
 			//load non-materialized first, so that the uuid->table cache is populated
-			Collections.sort(records, new Comparator<TableRecordImpl>() {
+			Collections.sort(records, new Comparator<Table>() {
 				@Override
-				public int compare(TableRecordImpl o1, TableRecordImpl o2) {
+				public int compare(Table o1, Table o2) {
 					if (!o1.isMaterialized()) {
 						return -1;
 					}
@@ -108,17 +108,17 @@ public class IndexMetadataFactory {
 					return 0;
 				}
 			});
-			for (TableRecordImpl tableRecord : records) {
+			for (Table tableRecord : records) {
 				tableCache.put(tableRecord.getUUID(), tableRecord);
-		    	List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
-		        for (ColumnRecordImpl columnRecordImpl : columns) {
+		    	List<Column> columns = new ArrayList<Column>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
+		        for (Column columnRecordImpl : columns) {
 		    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
 				}
 		        Collections.sort(columns);
 		        tableRecord.setColumns(columns);
 		        tableRecord.setAccessPatterns(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.ACCESS_PATTERN));
-		        Map<String, ColumnRecordImpl> uuidColumnMap = new HashMap<String, ColumnRecordImpl>();
-		        for (ColumnRecordImpl columnRecordImpl : columns) {
+		        Map<String, Column> uuidColumnMap = new HashMap<String, Column>();
+		        for (Column columnRecordImpl : columns) {
 					uuidColumnMap.put(columnRecordImpl.getUUID(), columnRecordImpl);
 				}
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getAccessPatterns()) {
@@ -126,7 +126,7 @@ public class IndexMetadataFactory {
 					columnSetRecordImpl.setTable(tableRecord);
 				}
 		        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
-		        for (ForeignKeyRecordImpl foreignKeyRecord : tableRecord.getForeignKeys()) {
+		        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
 		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
 		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
 		        	foreignKeyRecord.setTable(tableRecord);
@@ -177,7 +177,7 @@ public class IndexMetadataFactory {
 		        	tableRecord.setMaterializedStageTable(tableCache.get(tableRecord.getMaterializedStageTable().getUUID()));
 		        	tableRecord.setMaterializedTable(tableCache.get(tableRecord.getMaterializedTable().getUUID()));
 		        }
-				store.addTable(tableRecord);
+				model.addTable(tableRecord);
 			}
     	}
     }
@@ -191,11 +191,11 @@ public class IndexMetadataFactory {
 		return pk;
 	}
 	
-    public Map<String, DatatypeRecordImpl> getDatatypeCache() {
+    public Map<String, Datatype> getDatatypeCache() {
 		if (this.datatypeCache == null) {
-			this.datatypeCache = new HashMap<String, DatatypeRecordImpl>();
-			Collection<DatatypeRecordImpl> dataTypes = findMetadataRecords(MetadataConstants.RECORD_TYPE.DATATYPE, null, false);
-			for (DatatypeRecordImpl datatypeRecordImpl : dataTypes) {
+			this.datatypeCache = new HashMap<String, Datatype>();
+			Collection<Datatype> dataTypes = findMetadataRecords(MetadataConstants.RECORD_TYPE.DATATYPE, null, false);
+			for (Datatype datatypeRecordImpl : dataTypes) {
 				datatypeCache.put(datatypeRecordImpl.getUUID(), datatypeRecordImpl);
 				this.store.addDatatype(datatypeRecordImpl);
 			}
@@ -203,8 +203,8 @@ public class IndexMetadataFactory {
 		return datatypeCache;
 	}
 	
-	private ColumnRecordImpl findElement(String fullName) {
-        ColumnRecordImpl columnRecord = (ColumnRecordImpl)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
+	private Column findElement(String fullName) {
+        Column columnRecord = (Column)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
     	columnRecord.setDatatype(getDatatypeCache().get(columnRecord.getDatatypeUUID()));
         return columnRecord;
     }
@@ -233,21 +233,21 @@ public class IndexMetadataFactory {
     }
     
     public void getProcedures() {
-    	for (ModelRecordImpl model : store.getModels().values()) {
+    	for (Schema model : store.getSchemas().values()) {
 			Collection<ProcedureRecordImpl> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
 			for (ProcedureRecordImpl procedureRecord : procedureRecordImpls) {
-		    	procedureRecord.setParameters(new ArrayList<ProcedureParameterRecordImpl>(procedureRecord.getParameterIDs().size()));
+		    	procedureRecord.setParameters(new ArrayList<ProcedureParameter>(procedureRecord.getParameterIDs().size()));
 		    	
 		        // get the parameter metadata info
 		        for (String paramID : procedureRecord.getParameterIDs()) {
-		            ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
+		            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
 		            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
 		            procedureRecord.getParameters().add(paramRecord);
 		        }
 		    	
 		        String resultID = procedureRecord.getResultSetID();
 		        if(resultID != null) {
-		            ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET, false);
+		            ColumnSet resultRecord = (ColumnSet) getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET, false);
 		            if (resultRecord != null) {
 			            loadColumnSetRecords(resultRecord, null);
 			            procedureRecord.setResultSet(resultRecord);
@@ -265,7 +265,7 @@ public class IndexMetadataFactory {
 		    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
 		    		}
 		        }
-				store.addProcedure(procedureRecord);
+				model.addProcedure(procedureRecord);
 			}
     	}
     }
@@ -286,7 +286,7 @@ public class IndexMetadataFactory {
 		return loadRecords(results);        
     }
     
-	private void loadColumnSetRecords(ColumnSetRecordImpl indexRecord, Map<String, ColumnRecordImpl> columns) {
+	private void loadColumnSetRecords(ColumnSet indexRecord, Map<String, Column> columns) {
 		for (int i = 0; i < indexRecord.getColumns().size(); i++) {
 			String uuid = indexRecord.getColumns().get(i).getUUID();
 			if (columns != null) {

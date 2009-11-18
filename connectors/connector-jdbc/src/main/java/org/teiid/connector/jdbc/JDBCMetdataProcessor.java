@@ -36,12 +36,12 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.BaseColumn;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl.Type;
+import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
@@ -55,9 +55,9 @@ public class JDBCMetdataProcessor {
 		private String catalog;
 		private String schema;
 		private String name;
-		private TableRecordImpl table;
+		private Table table;
 		
-		public TableInfo(String catalog, String schema, String name, TableRecordImpl table) {
+		public TableInfo(String catalog, String schema, String name, Table table) {
 			this.catalog = catalog;
 			this.schema = schema;
 			this.name = name;
@@ -126,7 +126,7 @@ public class JDBCMetdataProcessor {
 				}
 				BaseColumn record = null;
 				if (columnType == DatabaseMetaData.procedureColumnResult) {
-					ColumnRecordImpl column = metadataFactory.addProcedureResultSetColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), procedure);
+					Column column = metadataFactory.addProcedureResultSetColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), procedure);
 					record = column;
 					column.setNativeType(columns.getString(7));
 				} else {
@@ -153,7 +153,7 @@ public class JDBCMetdataProcessor {
 			String tableSchema = tables.getString(2);
 			String tableName = tables.getString(3);
 			String fullName = getTableName(tableCatalog, tableSchema, tableName);
-			TableRecordImpl table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
+			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
 			table.setNameInSource(fullName);
 			table.setSupportsUpdate(true);
 			String remarks = tables.getString(5);
@@ -184,7 +184,7 @@ public class JDBCMetdataProcessor {
 			String columnName = columns.getString(4);
 			int type = columns.getInt(5);
 			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-			ColumnRecordImpl column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
+			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
 			column.setNativeType(columns.getString(6));
 			column.setRadix(columns.getInt(10));
 			column.setNullType(NullType.values()[columns.getShort(11)]);

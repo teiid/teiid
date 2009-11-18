@@ -44,7 +44,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     private int precision;
     private NullType nullType;
     private int position;
-    private DatatypeRecordImpl datatype;
+    private Datatype datatype;
 
     public String getDefaultValue() {
         return defaultValue;
@@ -121,11 +121,11 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 		defaultValue = object;
 	}
 
-    public DatatypeRecordImpl getDatatype() {
+    public Datatype getDatatype() {
 		return datatype;
 	}
     
-    public void setDatatype(DatatypeRecordImpl datatype) {
+    public void setDatatype(Datatype datatype) {
 		this.datatype = datatype;
 	}
 

@@ -194,25 +194,21 @@ TOKEN : /* Special function words */
 |	<SQL_TSI_YEAR: "SQL_TSI_YEAR"> 
 }
 
-TOKEN : /* User variables and literals */
+TOKEN : /* User variables and literals 
+          - NOTE IDs are not spec compliant.  We allow for
+          - any number of name parts to appear and restrict quoted
+          - IDs to continaing regular identifiers
+         */
 {
-    < ALL_IN_GROUP: (<GROUP_PART> | <MMUUID_PART>) <PERIOD> <STAR> >
+    < ALL_IN_GROUP: <GROUP_PART> <PERIOD> <STAR> >
 
-|   < VARIABLE: <ID> | <MMUUID> >
+|   < ID: <GROUP_PART> ( <PERIOD> <QUOTED_ID> )? >
 
-|   < #ID: <GROUP_PART> 									  // Group name
-		   ( (<PERIOD>|<SLASH>) (<QUOTED_ID> | <MMUUID_PART>) )? >        // Element name extension
-
-|	< #ELEMENT: <GROUP_PART> (<PERIOD>|<SLASH>) <QUOTED_ID> >
-|	< #GROUP_PART: ("#")? (<QUOTED_ID> (<PERIOD>|<SLASH>))? <QUOTED_ID> >
+|	< #GROUP_PART: ("#")? (<QUOTED_ID> <PERIOD>)? <QUOTED_ID> >
 |	< #QUOTED_ID: <DOTTED_ID> | ("\"" <DOTTED_ID> "\"") >           
-|	< #DOTTED_ID: <ID_PART> ((<PERIOD>|<SLASH>) <ID_PART>)* >           
+|	< #DOTTED_ID: <ID_PART> (<PERIOD> <ID_PART>)* >           
 |   < #ID_PART: ("@")? <LETTER> (<ID_CHAR>)* >               
 |   < #ID_CHAR: (<LETTER> | "_" | <DIGIT>) >    
-
-|	< #MMUUID: <MMUUID_PART> (<PERIOD> <MMUUID_PART>)?	>	  // Modeler-only mmuuid formats
-|   < #MMUUID_PART: "mmuuid:" (<MMUUID_CHAR>)* >              
-|   < #MMUUID_CHAR: ["a"-"f"] | ["0"-"9"] | "-">          
 
 | 	< DATETYPE: "{" "d" >
 | 	< TIMETYPE: "{" "t" >
@@ -313,7 +309,7 @@ Command dropTable(ParseInfo info) :
 }
 {
 	<DROP> <TABLE> 
-	tableToken = <VARIABLE>
+	tableToken = <ID>
 	{
 		drop.setTable(new GroupSymbol(validateMetadataID(tableToken.image)));
 		return drop;
@@ -334,7 +330,7 @@ Command createTempTable(ParseInfo info) :
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
-	tableToken = <VARIABLE>
+	tableToken = <ID>
 	<LPAREN>
 	{
 		create.setTable(new GroupSymbol(validateMetadataID(tableToken.image)));
@@ -511,7 +507,7 @@ LoopStatement loopStatement(ParseInfo info) :
     query = queryExpression(info)
     <RPAREN>
     <AS>
-    cursor = <VARIABLE>
+    cursor = <ID>
     block = block(info)
     
     {
@@ -583,14 +579,14 @@ CriteriaSelector criteriaSelector() :
     [LOOKAHEAD(4)<ON> 
     <LPAREN> 
     
-    elementToken = <VARIABLE>
+    elementToken = <ID>
     
     { 
        elements.add(new ElementSymbol(validateMetadataID(elementToken.image)));
     }       
         
     (<COMMA>
-        elementToken = <VARIABLE>
+        elementToken = <ID>
         
         {
             elements.add(new ElementSymbol(validateMetadataID(elementToken.image)));
@@ -643,7 +639,7 @@ DeclareStatement declareStatement(ParseInfo info) :
 {
     <DECLARE>
     type = dataType()
-    varToken = <VARIABLE>
+    varToken = <ID>
     {
         variableID = new ElementSymbol(validateMetadataID(varToken.image));
     }
@@ -669,7 +665,7 @@ AssignmentStatement assignStatement(ParseInfo info) :
 }
 {
     
-    varToken = <VARIABLE>
+    varToken = <ID>
     {
         elementID = new ElementSymbol(validateMetadataID(varToken.image));              
     } 
@@ -750,7 +746,7 @@ TranslateCriteria translateCriteria(ParseInfo info) :
             critList = new ArrayList();
          }
          <LPAREN>
-        elementToken = <VARIABLE>
+        elementToken = <ID>
         <EQ>
         value = expression(info) 
         {
@@ -763,7 +759,7 @@ TranslateCriteria translateCriteria(ParseInfo info) :
             compCrit = null;
         }
         (   <COMMA>
-            elementToken = <VARIABLE>
+            elementToken = <ID>
             <EQ>
             value = expression(info)
          {
@@ -838,7 +834,7 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	elements = createElementsWithTypes(info)
 
 	 [<INTO>
-      groupToken = <VARIABLE>
+      groupToken = <ID>
       {
          String groupID = validateMetadataID(groupToken.image);
          group = new GroupSymbol(groupID);
@@ -879,7 +875,7 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 	Token elementToken = null;
 }
 {
-	elementToken = <VARIABLE>
+	elementToken = <ID>
     <EQ>
     {
     	String symbolName = shortName?validateElementName(elementToken.image):validateMetadataID(elementToken.image);
@@ -888,7 +884,7 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
         using.addClause(symbol, value);
     }
 	(<COMMA>
-     elementToken = <VARIABLE>
+     elementToken = <ID>
      <EQ>
      {
           symbolName = shortName?validateElementName(elementToken.image):validateMetadataID(elementToken.image);
@@ -913,7 +909,7 @@ List createElementsWithTypes(ParseInfo info) :
 	List elements = new ArrayList();
 }
 {
-	 elementToken = <VARIABLE>
+	 elementToken = <ID>
 	 type = dataType()
 	 {
 	    ElementSymbol symbol = new ElementSymbol(validateElementName(elementToken.image));
@@ -921,7 +917,7 @@ List createElementsWithTypes(ParseInfo info) :
 		elements.add(symbol);
 	 }
 	 (<COMMA>
-		elementToken = <VARIABLE>
+		elementToken = <ID>
 		type = dataType()
 		{
 			symbol = new ElementSymbol(validateElementName(elementToken.image));
@@ -952,13 +948,13 @@ StoredProcedure callableStatement(ParseInfo info) :
 	   storedProcedure.setParameter(parameter);
 	 }
 	]
-	call = <VARIABLE>
+	call = <ID>
 	{
 		if (!"call".equalsIgnoreCase(call.image)) { //$NON-NLS-1$
 		   throw new ParseException(QueryPlugin.Util.getString("SQLParser.call_expected")); //$NON-NLS-1$
 		}
 	}
-	procNameToken = <VARIABLE>
+	procNameToken = <ID>
 	{
 		storedProcedure.setProcedureName(procNameToken.image);
 	}
@@ -998,7 +994,7 @@ StoredProcedure storedProcedure(ParseInfo info) :
 {
 	(
 		(<EXEC> | <EXECUTE>)
-		procNameToken = <VARIABLE>
+		procNameToken = <ID>
 		{
 			storedProcedure.setProcedureName(procNameToken.image);
 		}
@@ -1007,7 +1003,7 @@ StoredProcedure storedProcedure(ParseInfo info) :
 		<LPAREN>
 		
 		(
-		 LOOKAHEAD(<VARIABLE> <EQ>)
+		 LOOKAHEAD(<ID> <EQ>)
 		 storedProcedure = executeNamedParams(info, storedProcedure)
 		 | 		
 		 storedProcedure = executeUnnamedParams(info, storedProcedure, 1)
@@ -1113,7 +1109,7 @@ String paramName(ParseInfo info) :
     
 }
 {
-	t=<VARIABLE>	
+	t=<ID>	
 	{ 
 		parameterName = t.image;
 		
@@ -1139,16 +1135,16 @@ Insert insert(ParseInfo info) :
 }
 {
 	<INSERT> <INTO>
-	groupToken = <VARIABLE>
+	groupToken = <ID>
 
-	[LOOKAHEAD(<LPAREN><VARIABLE>)
+	[LOOKAHEAD(<LPAREN><ID>)
 		<LPAREN>
-		elementToken = <VARIABLE>
+		elementToken = <ID>
 		{
 			insert.addVariable(new ElementSymbol(validateMetadataID(elementToken.image)));
 		}
 		(	<COMMA>
-			elementToken = <VARIABLE>
+			elementToken = <ID>
 			{
 				insert.addVariable(new ElementSymbol(validateMetadataID(elementToken.image)));
 			}
@@ -1231,7 +1227,7 @@ Update update(ParseInfo info) :
 }
 {
 	<UPDATE>
-	groupToken = <VARIABLE>
+	groupToken = <ID>
 	<SET>
 	setClauseList = setClauseList(false, info)
 	{
@@ -1271,7 +1267,7 @@ Delete delete(ParseInfo info) :
 }
 {
 	<DELETE> <FROM>
-	groupToken = <VARIABLE>
+	groupToken = <ID>
 	[criteria = where(info)]
 	[option = option(info)
 	  {
@@ -1407,7 +1403,7 @@ Into into(ParseInfo info) :
 }
 {	
 	<INTO>
-	(groupID=<VARIABLE>)
+	(groupID=<ID>)
 	{
     	into = new Into(new GroupSymbol(groupID.image));
 		return into;
@@ -1472,7 +1468,7 @@ SelectSymbol selectSymbol(ParseInfo info) :
 			// Expression
 			expression=expression(info)	
 		)
-		[[<AS>] ( aliasToken=<VARIABLE> |
+		[[<AS>] ( aliasToken=<ID> |
 				  aliasToken=<STRINGVAL>
 				)
 		]
@@ -1744,7 +1740,7 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
       command = storedProcedure(info) )
 	<RPAREN>
 	[<AS>]
-	aliasID = <VARIABLE>
+	aliasID = <ID>
 	
 	{
 		clause = new SubqueryFromClause(validateAlias(aliasID.image), command);
@@ -1766,7 +1762,7 @@ UnaryFromClause unaryFromClause(ParseInfo info) :
 	UnaryFromClause clause = null;
 }
 {	
-	(groupID=<VARIABLE> [[<AS>] aliasID=<VARIABLE>])
+	(groupID=<ID> [[<AS>] aliasID=<ID>])
 	{
     	if(aliasID != null) {		
             group = new GroupSymbol(validateAlias(aliasID.image), validateMetadataID(groupID.image));
@@ -2287,7 +2283,7 @@ OrderBy orderby(ParseInfo info) :
 }
 {
 	<ORDER> <BY>
-	(id=<VARIABLE> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
+	(id=<ID> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
 	{
         ascending = true;
        	if(type != null) {
@@ -2302,7 +2298,7 @@ OrderBy orderby(ParseInfo info) :
        	}
 	}
 	(<COMMA>
-		(id=<VARIABLE> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
+		(id=<ID> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
 		{
             ascending = true;
             if(type != null) {
@@ -2379,35 +2375,35 @@ Option option(ParseInfo info) :
 		debug 		= <DEBUG> |
 		
 		<MAKEDEP>		
-		id=<VARIABLE>
+		id=<ID>
 		{
             option.addDependentGroup(validateMetadataID(id.image));
 		}
 		(<COMMA>
-			id=<VARIABLE>
+			id=<ID>
 			{
                 option.addDependentGroup(validateMetadataID(id.image));
 	        }
 		)* |
 		<MAKENOTDEP>		
-		id=<VARIABLE>
+		id=<ID>
 		{
             option.addNotDependentGroup(validateMetadataID(id.image));
 		}
 		(<COMMA>
-			id=<VARIABLE>
+			id=<ID>
 			{
                 option.addNotDependentGroup(validateMetadataID(id.image));
 	        }
 		)* |
 		
 		nocache	= <NOCACHE>		
-		[id=<VARIABLE>
+		[id=<ID>
 		{
             option.addNoCacheGroup(validateMetadataID(id.image));
 		}
 		(<COMMA>
-			id=<VARIABLE>
+			id=<ID>
 			{
                 option.addNoCacheGroup(validateMetadataID(id.image));
 	        }
@@ -2596,7 +2592,7 @@ Expression basicExpression(ParseInfo info) :
 		LOOKAHEAD(2) (expression=function(info))
 		|
 		// ElementSymbol
-		(symbol=<VARIABLE> 
+		(symbol=<ID> 
 			{
 				// Check that this isn't actually a string expression.  That 
 				// is a possibility due to the token definitions where a 
@@ -2841,7 +2837,7 @@ Function function(ParseInfo info) :
 		<RPAREN>
 	)  			
 	|
-	(	funcToken = <VARIABLE>
+	(	funcToken = <ID>
 		{ 
 			funcName = validateFunctionName(funcToken.image);
 		}

@@ -29,12 +29,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl.Type;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.connector.metadata.runtime.Table.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -56,28 +56,28 @@ public class CompositeMetadataStore {
 		this.metadataSource = metadataSource;
 		this.metadataStores = metadataStores;
 		for (MetadataStore metadataStore : metadataStores) {
-			for (String model : metadataStore.getModels().keySet()) {
+			for (String model : metadataStore.getSchemas().keySet()) {
 				storeMap.put(model.toLowerCase(), metadataStore);
 			}
 		}
 	}
 	
-	public ModelRecordImpl getModel(String fullName)
+	public Schema getModel(String fullName)
 			throws QueryMetadataException, MetaMatrixComponentException {
-		ModelRecordImpl result = getMetadataStore(fullName).getModels().get(fullName);
+		Schema result = getMetadataStore(fullName).getSchemas().get(fullName);
 		if (result == null) {
 	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;
 	}
 	
-	public TableRecordImpl findGroup(String fullName)
+	public Table findGroup(String fullName)
 			throws QueryMetadataException {
 		List<String> tokens = StringUtil.getTokens(fullName, TransformationMetadata.DELIMITER_STRING);
 		if (tokens.size() < 2) {
 		    throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}			
-		TableRecordImpl result = getMetadataStore(tokens.get(0)).getTables().get(fullName);
+		Table result = getMetadataStore(tokens.get(0)).getSchemas().get(tokens.get(0)).getTables().get(fullName);
 		if (result == null) {
 	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
@@ -87,9 +87,11 @@ public class CompositeMetadataStore {
 	public Collection<String> getGroupsForPartialName(String partialGroupName) {
 		List<String> result = new LinkedList<String>();
 		for (MetadataStore store : metadataStores) {
-			for (Map.Entry<String, TableRecordImpl> entry : store.getTables().entrySet()) {
-				if (entry.getKey().endsWith(partialGroupName)) {
-					result.add(entry.getValue().getFullName());
+			for (Schema schema : store.getSchemas().values()) {
+				for (Map.Entry<String, Table> entry : schema.getTables().entrySet()) {
+					if (entry.getKey().endsWith(partialGroupName)) {
+						result.add(entry.getValue().getFullName());
+					}
 				}
 			}
 		}
@@ -103,7 +105,7 @@ public class CompositeMetadataStore {
 		if (tokens.size() < 2) {
 		    throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
-		ProcedureRecordImpl result = getMetadataStore(tokens.get(0)).getProcedures().get(fullyQualifiedProcedureName);
+		ProcedureRecordImpl result = getMetadataStore(tokens.get(0)).getSchemas().get(tokens.get(0)).getProcedures().get(fullyQualifiedProcedureName);
 		if (result == null) {
 	        throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
@@ -130,13 +132,15 @@ public class CompositeMetadataStore {
 	 * The next methods are hold overs from XML/UUID resolving and will perform poorly
 	 */
 	
-	public ColumnRecordImpl findElement(String elementName) throws QueryMetadataException {
+	public Column findElement(String elementName) throws QueryMetadataException {
 		if (StringUtil.startsWithIgnoreCase(elementName,UUID.PROTOCOL)) {
 			for (MetadataStore store : this.metadataStores) {
-				for (TableRecordImpl table : store.getTables().values()) {
-					for (ColumnRecordImpl column : table.getColumns()) {
-						if (column.getUUID().equalsIgnoreCase(elementName)) {
-							return column;
+				for (Schema schema : store.getSchemas().values()) {
+					for (Table table : schema.getTables().values()) {
+						for (Column column : table.getColumns()) {
+							if (column.getUUID().equalsIgnoreCase(elementName)) {
+								return column;
+							}
 						}
 					}
 				}
@@ -146,8 +150,8 @@ public class CompositeMetadataStore {
     		if (tokens.size() < 3) {
     		    throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
     		}
-    		TableRecordImpl table = findGroup(StringUtil.join(tokens.subList(0, tokens.size() - 1), TransformationMetadata.DELIMITER_STRING));
-    		for (ColumnRecordImpl column : table.getColumns()) {
+    		Table table = findGroup(StringUtil.join(tokens.subList(0, tokens.size() - 1), TransformationMetadata.DELIMITER_STRING));
+    		for (Column column : table.getColumns()) {
     			if (column.getFullName().equalsIgnoreCase(elementName)) {
     				return column;
     			}
@@ -156,13 +160,15 @@ public class CompositeMetadataStore {
         throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 	}
 
-	public Collection<TableRecordImpl> getXMLTempGroups(TableRecordImpl tableRecord) throws QueryMetadataException {
-		ArrayList<TableRecordImpl> results = new ArrayList<TableRecordImpl>();
-		MetadataStore store = getMetadataStore(tableRecord.getModelName().toLowerCase());
+	public Collection<Table> getXMLTempGroups(Table tableRecord) throws QueryMetadataException {
+		ArrayList<Table> results = new ArrayList<Table>();
+		MetadataStore store = getMetadataStore(tableRecord.getSchema().getName().toLowerCase());
 		String namePrefix = tableRecord.getFullName() + TransformationMetadata.DELIMITER_STRING;
-		for (TableRecordImpl table : store.getTables().values()) {
-			if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
-				results.add(table);
+		for (Schema schema : store.getSchemas().values()) {
+			for (Table table : schema.getTables().values()) {
+				if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
+					results.add(table);
+				}
 			}
 		}
 		return results;

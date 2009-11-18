@@ -33,7 +33,6 @@ import java.util.Set;
 import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl.Type;
 
 import com.metamatrix.core.id.UUIDFactory;
 
@@ -45,22 +44,22 @@ import com.metamatrix.core.id.UUIDFactory;
  */
 public class MetadataFactory {
 	
-	private ModelRecordImpl model;
+	private Schema model;
 	private UUIDFactory factory = new UUIDFactory();
-	private Map<String, DatatypeRecordImpl> dataTypes;
+	private Map<String, Datatype> dataTypes;
 	private Properties importProperties;
 	private MetadataStore store = new MetadataStore();
 	private Set<String> uniqueNames = new HashSet<String>();
 	
-	public MetadataFactory(String modelName, Map<String, DatatypeRecordImpl> dataTypes, Properties importProperties) {
+	public MetadataFactory(String modelName, Map<String, Datatype> dataTypes, Properties importProperties) {
 		this.dataTypes = dataTypes;
 		this.importProperties = importProperties;
-		model = new ModelRecordImpl();
+		model = new Schema();
 		model.setName(modelName);
-		model.setModelType(Type.Physical);
+		model.setPhysical(true);
 		model.setPrimaryMetamodelUri("http://www.metamatrix.com/metamodels/Relational"); //$NON-NLS-1$
 		setUUID(model);	
-		store.addModel(model);
+		store.addSchema(model);
 	}
 	
 	public MetadataStore getMetadataStore() {
@@ -90,17 +89,17 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException 
 	 */
-	public TableRecordImpl addTable(String name) throws ConnectorException {
-		TableRecordImpl table = new TableRecordImpl();
-		table.setTableType(TableRecordImpl.Type.Table);
+	public Table addTable(String name) throws ConnectorException {
+		Table table = new Table();
+		table.setTableType(Table.Type.Table);
 		setValuesUsingParent(name, model, table, "table"); //$NON-NLS-1$
-		table.setColumns(new LinkedList<ColumnRecordImpl>());
+		table.setColumns(new LinkedList<Column>());
 		table.setAccessPatterns(new LinkedList<KeyRecord>());
 		table.setIndexes(new LinkedList<KeyRecord>());
-		table.setForiegnKeys(new LinkedList<ForeignKeyRecordImpl>());
+		table.setForiegnKeys(new LinkedList<ForeignKey>());
 		table.setUniqueKeys(new LinkedList<KeyRecord>());
 		setUUID(table);
-		this.store.addTable(table);
+		this.model.addTable(table);
 		return table;
 	}
 	
@@ -112,12 +111,12 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public ColumnRecordImpl addColumn(String name, String type, ColumnSetRecordImpl table) throws ConnectorException {
-		ColumnRecordImpl column = new ColumnRecordImpl();
+	public Column addColumn(String name, String type, ColumnSet table) throws ConnectorException {
+		Column column = new Column();
 		setValuesUsingParent(name, table, column, "column"); //$NON-NLS-1$
 		table.getColumns().add(column);
 		column.setPosition(table.getColumns().size()); //1 based indexing
-		DatatypeRecordImpl datatype = setColumnType(type, column);
+		Datatype datatype = setColumnType(type, column);
 		column.setCaseSensitive(datatype.isCaseSensitive());
 		column.setAutoIncrementable(datatype.isAutoIncrement());
 		column.setSigned(datatype.isSigned());		
@@ -125,9 +124,9 @@ public class MetadataFactory {
 		return column;
 	}
 
-	private DatatypeRecordImpl setColumnType(String type,
+	private Datatype setColumnType(String type,
 			BaseColumn column) throws ConnectorException {
-		DatatypeRecordImpl datatype = dataTypes.get(type);
+		Datatype datatype = dataTypes.get(type);
 		if (datatype == null) {
 			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.unknown_datatype", type)); //$NON-NLS-1$
 		}
@@ -148,10 +147,10 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public ColumnSetRecordImpl addPrimaryKey(String name, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
+	public ColumnSet addPrimaryKey(String name, List<String> columnNames, Table table) throws ConnectorException {
 		KeyRecord primaryKey = new KeyRecord(KeyRecord.Type.Primary);
 		primaryKey.setTable(table);
-		primaryKey.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
+		primaryKey.setColumns(new ArrayList<Column>(columnNames.size()));
 		setValuesUsingParent(name, table, primaryKey, "pk"); //$NON-NLS-1$
 		setUUID(primaryKey);
 		assignColumns(columnNames, table, primaryKey);
@@ -167,10 +166,10 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public KeyRecord addAccessPattern(String name, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
+	public KeyRecord addAccessPattern(String name, List<String> columnNames, Table table) throws ConnectorException {
 		KeyRecord ap = new KeyRecord(KeyRecord.Type.AccessPattern);
 		ap.setTable(table);
-		ap.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
+		ap.setColumns(new ArrayList<Column>(columnNames.size()));
 		setValuesUsingParent(name, table, ap, "index"); //$NON-NLS-1$
 		setUUID(ap);
 		assignColumns(columnNames, table, ap);
@@ -187,10 +186,10 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
+	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) throws ConnectorException {
 		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.NonUnique:KeyRecord.Type.Index);
 		index.setTable(table);
-		index.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
+		index.setColumns(new ArrayList<Column>(columnNames.size()));
 		setValuesUsingParent(name, table, index, "index"); //$NON-NLS-1$
 		setUUID(index);
 		assignColumns(columnNames, table, index);
@@ -207,10 +206,10 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public ForeignKeyRecordImpl addForiegnKey(String name, List<String> columnNames, TableRecordImpl pkTable, TableRecordImpl table) throws ConnectorException {
-		ForeignKeyRecordImpl foreignKey = new ForeignKeyRecordImpl();
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, Table pkTable, Table table) throws ConnectorException {
+		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setTable(table);
-		foreignKey.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
+		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
 		setValuesUsingParent(name, table, foreignKey, "fk"); //$NON-NLS-1$
 		setUUID(foreignKey);
 		if (pkTable.getPrimaryKey() == null) {
@@ -233,8 +232,8 @@ public class MetadataFactory {
 		ProcedureRecordImpl procedure = new ProcedureRecordImpl();
 		setValuesUsingParent(name, this.model, procedure, "proc"); //$NON-NLS-1$
 		setUUID(procedure);
-		procedure.setParameters(new LinkedList<ProcedureParameterRecordImpl>());
-		this.store.addProcedure(procedure);
+		procedure.setParameters(new LinkedList<ProcedureParameter>());
+		this.model.addProcedure(procedure);
 		return procedure;
 	}
 	
@@ -242,13 +241,13 @@ public class MetadataFactory {
 	 * Add a procedure parameter.
 	 * @param name
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
-	 * @param parameterType should be one of {@link ProcedureParameterRecordImpl.Type}
+	 * @param parameterType should be one of {@link ProcedureParameter.Type}
 	 * @param procedure
 	 * @return
 	 * @throws ConnectorException 
 	 */
-	public ProcedureParameterRecordImpl addProcedureParameter(String name, String type, ProcedureParameterRecordImpl.Type parameterType, ProcedureRecordImpl procedure) throws ConnectorException {
-		ProcedureParameterRecordImpl param = new ProcedureParameterRecordImpl();
+	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, ProcedureRecordImpl procedure) throws ConnectorException {
+		ProcedureParameter param = new ProcedureParameter();
 		setValuesUsingParent(name, procedure, param, "param"); //$NON-NLS-1$
 		setUUID(param);
 		param.setType(parameterType);
@@ -266,9 +265,9 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException 
 	 */
-	public ColumnRecordImpl addProcedureResultSetColumn(String name, String type, ProcedureRecordImpl procedure) throws ConnectorException {
+	public Column addProcedureResultSetColumn(String name, String type, ProcedureRecordImpl procedure) throws ConnectorException {
 		if (procedure.getResultSet() == null) {
-			ColumnSetRecordImpl resultSet = new ColumnSetRecordImpl();
+			ColumnSet resultSet = new ColumnSet();
 			setValuesUsingParent("RESULT_SET", procedure, resultSet, "rs"); //$NON-NLS-1$ //$NON-NLS-2$
 			setUUID(resultSet);
 			procedure.setResultSet(resultSet);
@@ -277,11 +276,11 @@ public class MetadataFactory {
 		return addColumn(name, type, procedure.getResultSet());
 	}
 
-	private void assignColumns(List<String> columnNames, TableRecordImpl table,
-			ColumnSetRecordImpl columns) throws ConnectorException {
+	private void assignColumns(List<String> columnNames, Table table,
+			ColumnSet columns) throws ConnectorException {
 		for (String columnName : columnNames) {
 			boolean match = false;
-			for (ColumnRecordImpl column : table.getColumns()) {
+			for (Column column : table.getColumns()) {
 				if (column.getName().equals(columnName)) {
 					match = true;
 					columns.getColumns().add(column);

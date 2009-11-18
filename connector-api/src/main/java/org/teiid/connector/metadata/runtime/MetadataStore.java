@@ -33,59 +33,27 @@ import java.util.Map;
  */
 public class MetadataStore implements Serializable {
 
-	private static final long serialVersionUID = -5276588417872522795L;
-	private Map<String, ModelRecordImpl> models = new LinkedHashMap<String, ModelRecordImpl>();
-	private Map<String, TableRecordImpl> tables = new LinkedHashMap<String, TableRecordImpl>();
-	private Map<String, ProcedureRecordImpl> procedures = new LinkedHashMap<String, ProcedureRecordImpl>();
-	private Collection<DatatypeRecordImpl> datatypes = new ArrayList<DatatypeRecordImpl>();
+	private static final long serialVersionUID = -3130247626435324312L;
+	private Map<String, Schema> schemas = new LinkedHashMap<String, Schema>();
+	private Collection<Datatype> datatypes = new ArrayList<Datatype>();
 	
-	public void addModel(ModelRecordImpl model) {
-		this.models.put(model.getFullName().toLowerCase(), model);
+	public Map<String, Schema> getSchemas() {
+		return schemas;
 	}
 	
-	public void addTable(TableRecordImpl table) {
-		this.tables.put(table.getFullName().toLowerCase(), table);
+	public void addSchema(Schema schema) {
+		this.schemas.put(schema.getName().toLowerCase(), schema);
 	}
 	
-	public void addProcedure(ProcedureRecordImpl procedure) {
-		this.procedures.put(procedure.getFullName().toLowerCase(), procedure);
-	}
-	
-	public void addDatatype(DatatypeRecordImpl datatype) {
+	public void addDatatype(Datatype datatype) {
 		this.datatypes.add(datatype);
 	}
 		
 	/**
-	 * Get the models represented in this store.  
-	 * For a connector there will only be 1 model and the model name is treated as 
-	 * a top level schema for all source metadata.
-	 * @return
-	 */
-	public Map<String, ModelRecordImpl> getModels() {
-		return models;
-	}
-	
-	/**
-	 * Get the tables defined in this store
-	 * @return
-	 */
-	public Map<String, TableRecordImpl> getTables() {
-		return tables;
-	}
-	
-	/**
-	 * Get the procedures defined in this store
-	 * @return
-	 */
-	public Map<String, ProcedureRecordImpl> getProcedures() {
-		return procedures;
-	}
-	
-	/**
 	 * Get the datatypes defined in this store
 	 * @return
 	 */
-	public Collection<DatatypeRecordImpl> getDatatypes() {
+	public Collection<Datatype> getDatatypes() {
 		return datatypes;
 	}
 	

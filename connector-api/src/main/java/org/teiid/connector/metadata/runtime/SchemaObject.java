@@ -22,34 +22,10 @@
 
 package org.teiid.connector.metadata.runtime;
 
-/**
- * ForeignKeyRecordImpl
- */
-public class ForeignKeyRecordImpl extends KeyRecord {
+public interface SchemaObject {
+	
+	Schema getSchema();
+	
+	void setSchema(Schema schema);
 
-    private String uniqueKeyID;
-    private KeyRecord primaryKey;
-    
-    public ForeignKeyRecordImpl() {
-		super(Type.Foreign);
-	}
-    
-    public String getUniqueKeyID() {
-        return uniqueKeyID;
-    }
-
-    /**
-     * @param object
-     */
-    public void setUniqueKeyID(String keyID) {
-        uniqueKeyID = keyID;
-    }    
-    
-    public KeyRecord getPrimaryKey() {
-    	return this.primaryKey;
-    }
-    
-    public void setPrimaryKey(KeyRecord primaryKey) {
-		this.primaryKey = primaryKey;
-	}
 }

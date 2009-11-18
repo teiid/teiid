@@ -35,15 +35,15 @@ import java.util.Set;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
-import org.teiid.connector.metadata.runtime.ForeignKeyRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.Datatype;
+import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.metadata.CompositeMetadataStore;
 
@@ -186,7 +186,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				case MODELS:
 				case MODELPROPERTIES:
 					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (ModelRecordImpl model : store.getModels().values()) {
+						for (Schema model : store.getSchemas().values()) {
 							if(checkVisibility(vdbName, vdbVersion, model.getName())) {
 								if (sysTable == SystemTables.MODELS) {
 									rows.add(Arrays.asList(model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
@@ -203,7 +203,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				case DATATYPEPROPERTIES:
 					rows = new LinkedHashSet(); //System types are duplicated in each indexed vdb... 
 					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (DatatypeRecordImpl datatype : store.getDatatypes()) {
+						for (Datatype datatype : store.getDatatypes()) {
 							if (sysTable == SystemTables.DATATYPES) {
 								rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
 										datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
@@ -221,117 +221,121 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				case PROCEDUREPARAMS:
 				case PROCEDUREPARAMPROPERTIES:
 					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (ProcedureRecordImpl proc : store.getProcedures().values()) {
-							if(!checkVisibility(vdbName, vdbVersion, proc.getModelName())) {
-								continue;
-							}
-							switch (sysTable) {
-							case PROCEDURES:
-								ModelRecordImpl model = store.getModels().get(proc.getModelName().toLowerCase());
-								rows.add(Arrays.asList(proc.getModelName(), proc.getName(), proc.getNameInSource(), proc.getResultSetID() != null, model.getUUID(), proc.getUUID(), proc.getAnnotation(), proc.getFullName()));
-								break;
-							case PROCEDUREPROPERTIES:
-								for (Map.Entry<String, String> entry : proc.getProperties().entrySet()) {
-									rows.add(Arrays.asList(proc.getModelName(), proc.getName(), entry.getKey(), entry.getValue(), proc.getUUID()));
+						for (Schema schema : store.getSchemas().values()) {
+							for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+								if(!checkVisibility(vdbName, vdbVersion, proc.getSchema().getName())) {
+									continue;
 								}
-								break;
-							default:
-								for (ProcedureParameterRecordImpl param : proc.getParameters()) {
-									if (sysTable == SystemTables.PROCEDUREPARAMS) {
-										rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
-												param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
-									} else {
-										for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
-											rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
-										}
+								switch (sysTable) {
+								case PROCEDURES:
+									Schema model = proc.getSchema();
+									rows.add(Arrays.asList(model.getName(), proc.getName(), proc.getNameInSource(), proc.getResultSetID() != null, model.getUUID(), proc.getUUID(), proc.getAnnotation(), proc.getFullName()));
+									break;
+								case PROCEDUREPROPERTIES:
+									for (Map.Entry<String, String> entry : proc.getProperties().entrySet()) {
+										rows.add(Arrays.asList(proc.getSchema().getName(), proc.getName(), entry.getKey(), entry.getValue(), proc.getUUID()));
 									}
-								}
-								if (proc.getResultSetID() != null) {
-									for (ColumnRecordImpl param : proc.getResultSet().getColumns()) {
+									break;
+								default:
+									for (ProcedureParameter param : proc.getParameters()) {
 										if (sysTable == SystemTables.PROCEDUREPARAMS) {
-											rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameterRecordImpl.Type.ResultSet.toString(), false, 
+											rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
 													param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
 										} else {
 											for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
-												rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
+												rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
 											}
 										}
 									}
+									if (proc.getResultSetID() != null) {
+										for (Column param : proc.getResultSet().getColumns()) {
+											if (sysTable == SystemTables.PROCEDUREPARAMS) {
+												rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
+														param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+											} else {
+												for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
+													rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
+												}
+											}
+										}
+									}
+									break;
 								}
-								break;
 							}
 						}
 					}
 					break;				
 				default:
 					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (TableRecordImpl table : store.getTables().values()) {
-							if(!checkVisibility(vdbName, vdbVersion, table.getModelName())) {
-								continue;
-							}
-							switch (sysTable) {
-							case GROUPS:
-								rows.add(Arrays.asList(table.getModelName(), table.getFullName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
-										table.isPhysical(), table.getName().toUpperCase(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
-								break;
-							case GROUPPROPERTIES:
-								for (Map.Entry<String, String> entry : table.getProperties().entrySet()) {
-									rows.add(Arrays.asList(table.getModelName(), table.getFullName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), table.getUUID()));
+						for (Schema schema : store.getSchemas().values()) {
+							for (Table table : schema.getTables().values()) {
+								if(!checkVisibility(vdbName, vdbVersion, table.getSchema().getName())) {
+									continue;
 								}
-								break;
-							case ELEMENTS:
-								for (ColumnRecordImpl column : table.getColumns()) {
-									if (column.getDatatype() == null) {
-										continue; //some mapping classes don't set the datatype
+								switch (sysTable) {
+								case GROUPS:
+									rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
+											table.isPhysical(), table.getName().toUpperCase(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
+									break;
+								case GROUPPROPERTIES:
+									for (Map.Entry<String, String> entry : table.getProperties().entrySet()) {
+										rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), table.getUUID()));
 									}
-									rows.add(Arrays.asList(table.getModelName(), table.getName(), table.getFullName(), column.getName(), column.getPosition(), column.getNameInSource(), 
-											column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
-											column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
-											column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
-											column.getCharOctetLength(), column.getRadix(), table.getName().toUpperCase(), column.getName().toUpperCase(), column.getUUID(), column.getAnnotation()));
-								}
-								break;
-							case ELEMENTPROPERTIES:
-								for (ColumnRecordImpl column : table.getColumns()) {
-									for (Map.Entry<String, String> entry : column.getProperties().entrySet()) {
-										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), column.getName(), entry.getKey(), entry.getValue(), table.getName(), column.getName().toUpperCase(), 
-												table.getName().toUpperCase(), column.getUUID()));
-									}	
-								}
-								break;
-							case KEYS:
-								for (KeyRecord key : table.getAllKeys()) {
-									rows.add(Arrays.asList(table.getModelName(), table.getFullName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
-											false, table.getName(), table.getName().toUpperCase(), (key instanceof ForeignKeyRecordImpl)?((ForeignKeyRecordImpl)key).getUniqueKeyID():null, key.getUUID()));
-								}
-								break;
-							case KEYPROPERTIES:
-								for (KeyRecord key : table.getAllKeys()) {
-									for (Map.Entry<String, String> entry : key.getProperties().entrySet()) {
-										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), key.getName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), 
-												key.getUUID()));
+									break;
+								case ELEMENTS:
+									for (Column column : table.getColumns()) {
+										if (column.getDatatype() == null) {
+											continue; //some mapping classes don't set the datatype
+										}
+										rows.add(Arrays.asList(table.getSchema().getName(), table.getName(), table.getFullName(), column.getName(), column.getPosition(), column.getNameInSource(), 
+												column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
+												column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
+												column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
+												column.getCharOctetLength(), column.getRadix(), table.getName().toUpperCase(), column.getName().toUpperCase(), column.getUUID(), column.getAnnotation()));
 									}
-								}
-								break;
-							case KEYELEMENTS:
-								for (KeyRecord key : table.getAllKeys()) {
-									int postition = 1;
-									for (ColumnRecordImpl column : key.getColumns()) {
-										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), column.getName(), key.getName(), key.getType().toString(), table.getName(), table.getName().toUpperCase(), 
-												(key instanceof ForeignKeyRecordImpl)?((ForeignKeyRecordImpl)key).getUniqueKeyID():null, key.getUUID(), postition++));
+									break;
+								case ELEMENTPROPERTIES:
+									for (Column column : table.getColumns()) {
+										for (Map.Entry<String, String> entry : column.getProperties().entrySet()) {
+											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), column.getName(), entry.getKey(), entry.getValue(), table.getName(), column.getName().toUpperCase(), 
+													table.getName().toUpperCase(), column.getUUID()));
+										}	
 									}
-								}
-								break;
-							case REFERENCEKEYCOLUMNS:
-								for (ForeignKeyRecordImpl key : table.getForeignKeys()) {
-									int postition = 0;
-									for (ColumnRecordImpl column : key.getColumns()) {
-										TableRecordImpl pkTable = key.getPrimaryKey().getTable();
-										rows.add(Arrays.asList(null, vdbName, pkTable.getFullName(), key.getPrimaryKey().getColumns().get(postition).getName(), null, vdbName, table.getFullName(), column.getName(),
-												++postition, 3, 3, key.getName(), key.getPrimaryKey().getName(), 5));
+									break;
+								case KEYS:
+									for (KeyRecord key : table.getAllKeys()) {
+										rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
+												false, table.getName(), table.getName().toUpperCase(), (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID()));
 									}
+									break;
+								case KEYPROPERTIES:
+									for (KeyRecord key : table.getAllKeys()) {
+										for (Map.Entry<String, String> entry : key.getProperties().entrySet()) {
+											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), key.getName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), 
+													key.getUUID()));
+										}
+									}
+									break;
+								case KEYELEMENTS:
+									for (KeyRecord key : table.getAllKeys()) {
+										int postition = 1;
+										for (Column column : key.getColumns()) {
+											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), column.getName(), key.getName(), key.getType().toString(), table.getName(), table.getName().toUpperCase(), 
+													(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++));
+										}
+									}
+									break;
+								case REFERENCEKEYCOLUMNS:
+									for (ForeignKey key : table.getForeignKeys()) {
+										int postition = 0;
+										for (Column column : key.getColumns()) {
+											Table pkTable = key.getPrimaryKey().getTable();
+											rows.add(Arrays.asList(null, vdbName, pkTable.getFullName(), key.getPrimaryKey().getColumns().get(postition).getName(), null, vdbName, table.getFullName(), column.getName(),
+													++postition, 3, 3, key.getName(), key.getPrimaryKey().getName(), 5));
+										}
+									}
+									break;
 								}
-								break;
 							}
 						}
 					}

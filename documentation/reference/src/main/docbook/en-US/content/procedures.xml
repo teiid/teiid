@@ -20,12 +20,12 @@
         A command statement executes a
         <link linkend="sql_commands">SQL command</link>
         , such as SELECT, INSERT, UPDATE, DELETE, or EXECUTE, against
-        one or more other models (and their underlying data sources).
+        one or more data sources.
       </para>
       <example>
         <title>Example Command Statements</title>
-        <programlisting>SELECT * FROM MyModel.MyTable WHERE ColA &gt; 100;
-INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
+        <programlisting>SELECT * FROM MySchema.MyTable WHERE ColA &gt; 100;
+INSERT INTO MySchema.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
         </example>
     </sect2>
     <sect2 id="dynamic_sql">
@@ -49,7 +49,7 @@ INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
           </para>
         </listitem>
         <listitem>
-          <para>The "USING" clause allows the dynamic SQL string to contain special element symbols that are bound at runtime to specified values. This allows for some independence of the SQL string from the surrounding procedure variable names and input names. In the dynamic command "USING" clause, each variable is specified by short name only. However in the dynamic SQL the "USING" variable must be fully qualified to "USING.". The "USING" clause is only for values that will be used in the dynamic SQL as legal expressions. It is not possible to use the "USING" clause to replace table names, keywords, etc. This makes using symbols equivalent in power to normal bind (?) expressions in prepared statements. The "USING" clause helps reduce the amount of string manipulation needed. If a reference is made to a USING symbol in the SQL string that is not bound to a value in the "USING" clause, an exception will occur.
+          <para>The "USING" clause allows the dynamic SQL string to contain variable references that are bound at runtime to specified values. This allows for some independence of the SQL string from the surrounding procedure variable names and input names. In the dynamic command "USING" clause, each variable is specified by short name only. However in the dynamic SQL the "USING" variable must be fully qualified to "USING.". The "USING" clause is only for values that will be used in the dynamic SQL as legal expressions. It is not possible to use the "USING" clause to replace table names, keywords, etc. This makes using symbols equivalent in power to normal bind (?) expressions in prepared statements. The "USING" clause helps reduce the amount of string manipulation needed. If a reference is made to a USING symbol in the SQL string that is not bound to a value in the "USING" clause, an exception will occur.
           </para>
         </listitem>
         <listitem>
@@ -194,7 +194,7 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           </para>
         </listitem>
         <listitem>
-          <para>VARIABLES.x = SELECT Column1 FROM MyModel.MyTable;
+          <para>VARIABLES.x = SELECT Column1 FROM MySchema.MyTable;
           </para>
         </listitem>
       </itemizedlist>
@@ -303,14 +303,14 @@ END</synopsis>
           <para>Nullable - NO_NULLS, NULLABLE, NULLABLE_UNKNOWN; parameter is optional if nullable, and is not required to be listed when using named parameter syntax</para>
         </listitem>
       </itemizedlist>
-      <para>You reference an input to a virtual procedure by using the fully-qualified name of the param (or less if unambiguous). For example, MyModel.MyProc.Param1.
+      <para>You reference an input to a virtual procedure by using the fully-qualified name of the param (or less if unambiguous). For example, MySchema.MyProc.Param1.
       </para>
       <example>
         <title>Example of Referencing an Input Parameter for 'GetBalance' Procedure</title>
         <programlisting>
 CREATE VIRTUAL PROCEDURE 
 BEGIN 
-  SELECT Balance FROM MyModel.Accts WHERE MyModel.Accts.AccountID = MyModel.GetBalance.AcctID; 
+  SELECT Balance FROM MySchema.Accts WHERE MySchema.Accts.AccountID = MySchema.GetBalance.AcctID; 
 END</programlisting>
       </example>
     </sect2>
@@ -370,7 +370,7 @@ END
         the procedure has defined inputs, you specify those in a
         sequential list, or using "name=value" syntax. You must use the
         name of the input parameter, scoped by the full procedure name if
-        the parameter name is ambiguous in the context of other elements
+        the parameter name is ambiguous in the context of other columns
         or variables in the procedure.</para>
       <para> A virtual procedure call will return a result set just like any
         SELECT, so you can use this in many places you can use a SELECT.
@@ -489,7 +489,7 @@ END</synopsis>
           <para>You can use the HAS CRITERIA clause to check whether the user’s command has a particular kind of criteria on a particular set of attributes. This clause evaluates to either true or false. You can use it anywhere you can use a criteria within a procedure.</para>
           <para>
             Usage:
-            <synopsis>HAS [criteria operator] CRITERIA [ON (element list)]</synopsis>
+            <synopsis>HAS [criteria operator] CRITERIA [ON (column list)]</synopsis>
           </para>
           <itemizedlist>
             <para>Syntax Rules</para>
@@ -498,11 +498,11 @@ END</synopsis>
               </para>
             </listitem>
             <listitem>
-              <para>If the ON clause is present, HAS CRITERIA will return true only if criteria was present on all of the specified elements.
+              <para>If the ON clause is present, HAS CRITERIA will return true only if criteria was present on all of the specified columns.
               </para>
             </listitem>
             <listitem>
-              <para>The elements in a HAS CRITERIA ON clause always refer to virtual elements.
+              <para>The columns in a HAS CRITERIA ON clause always refer to virtual columns.
               </para>
             </listitem>
           </itemizedlist>
@@ -521,11 +521,11 @@ END</synopsis>
                   <entry>Checks simply whether there was any criteria at all.</entry>
                 </row>
                 <row>
-                  <entry><code>HAS CRITERIA ON (element1, element2)</code></entry>
-                  <entry>Checks whether the criteria uses element1 and element2.</entry>
+                  <entry><code>HAS CRITERIA ON (column1, column2)</code></entry>
+                  <entry>Checks whether the criteria uses column1 and column2.</entry>
                 </row>
                 <row>
-                  <entry><code>HAS = CRITERIA ON (element1)</code></entry>
+                  <entry><code>HAS = CRITERIA ON (column1)</code></entry>
                   <entry>Checks whether the criteria has a comparison criteria with = operator.</entry>
                 </row>
                 <row>
@@ -541,10 +541,10 @@ END</synopsis>
         </sect3>
         <sect3>
           <title>TRANSLATE CRITERIA</title>
-          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the element mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.</para>
+          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the column mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.</para>
           <para>
             Usage:
-            <synopsis>TRANSLATE [criteria operator] CRITERIA [ON (element list)] [WITH (mapping list)]</synopsis>
+            <synopsis>TRANSLATE [criteria operator] CRITERIA [ON (column list)] [WITH (mapping list)]</synopsis>
           </para>
           <itemizedlist>
             <para>Syntax Rules</para>
@@ -553,15 +553,15 @@ END</synopsis>
               </para>
             </listitem>
             <listitem>
-              <para>If the ON clause is present, TRANSLATE CRITERIA will only form criteria using the specified elements.
+              <para>If the ON clause is present, TRANSLATE CRITERIA will only form criteria using the specified columns.
               </para>
             </listitem>
             <listitem>
-              <para>The elements in a TRANSLATE CRITERIA ON clause always refer to virtual elements.
+              <para>The columns in a TRANSLATE CRITERIA ON clause always refer to virtual columns.
               </para>
             </listitem>
           </itemizedlist>
-          <para>You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual element is defined by an expression.</para>
+          <para>You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual column is defined by an expression.</para>
           <para>Some samples of the HAS TRANSLATE clause:</para>
           <informaltable>
             <tgroup cols="2">
@@ -579,21 +579,21 @@ END</synopsis>
                   <entry>Translates any user criteria using the default mappings.</entry>
                 </row>
                 <row>
-                  <entry>TRANSLATE CRITERIA WITH (element1 = 'A', element2 = INPUT.element2 + 2)</entry>
-                  <entry>Translates any criteria with some additional mappings: element1 is always mapped to 'A' and element2 is mapped to the incoming element2 value + 2.</entry>
+                  <entry>TRANSLATE CRITERIA WITH (column1 = 'A', column2 = INPUT.column2 + 2)</entry>
+                  <entry>Translates any criteria with some additional mappings: column1 is always mapped to 'A' and column2 is mapped to the incoming column2 value + 2.</entry>
                 </row>
                 <row>
-                  <entry><code>TRANSLATE = CRITERIA ON (element1)</code></entry>
-                  <entry>Translates only criteria that have = comparison operator and involve element1.</entry>
+                  <entry><code>TRANSLATE = CRITERIA ON (column1)</code></entry>
+                  <entry>Translates only criteria that have = comparison operator and involve column1.</entry>
                 </row>
               </tbody>
             </tgroup>
           </informaltable>
           <para>
-          The TRANSLATE CRITERIA, ON clause always refers to virtual elements.
+          The TRANSLATE CRITERIA, ON clause always refers to virtual columns.
           The WITH clause always has items with form &lt;elem&gt; = &lt;expression&gt;, 
-          where the &lt;elem&gt; is a virtual element and the &lt;expression&gt; 
-          specifies what that virtual element should be
+          where the &lt;elem&gt; is a virtual column and the &lt;expression&gt; 
+          specifies what that virtual column should be
           replaced with when TRANSLATE CRITERIA translates the virtual
           criteria (from UPDATE or DELETE) into a physical criteria in
           the command. By default, a mapping is created based on the

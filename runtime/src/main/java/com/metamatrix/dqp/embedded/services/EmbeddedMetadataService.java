@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
@@ -205,11 +205,11 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
 		return null;
 	}
 
-	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes() {
-		Collection<DatatypeRecordImpl> datatypes = this.systemMetadataStore.getDatatypes();
-		Map<String, DatatypeRecordImpl> datatypeMap = new HashMap<String, DatatypeRecordImpl>();
+	public Map<String, Datatype> getBuiltinDatatypes() {
+		Collection<Datatype> datatypes = this.systemMetadataStore.getDatatypes();
+		Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
 		for (Class<?> typeClass : DataTypeManager.getAllDataTypeClasses()) {
-			for (DatatypeRecordImpl datatypeRecordImpl : datatypes) {
+			for (Datatype datatypeRecordImpl : datatypes) {
 				if (datatypeRecordImpl.getJavaClassName().equals(typeClass.getName())) {
 					datatypeMap.put(DataTypeManager.getDataTypeName(typeClass), datatypeRecordImpl);
 					break;

@@ -29,18 +29,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
-import org.teiid.connector.metadata.runtime.ColumnSetRecordImpl;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
-import org.teiid.connector.metadata.runtime.ForeignKeyRecordImpl;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.ColumnSet;
+import org.teiid.connector.metadata.runtime.Datatype;
+import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.ModelRecordImpl;
-import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.ColumnRecordImpl.SearchType;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl.Variety;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
+import org.teiid.connector.metadata.runtime.Datatype.Variety;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.internal.core.index.EntryResult;
 import org.teiid.internal.core.index.IIndexConstants;
@@ -177,7 +177,7 @@ public class RecordFactory {
             case MetadataConstants.RECORD_TYPE.COLUMN: return createColumnRecord(record);
             case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN: return createColumnSetRecord(record, new KeyRecord(KeyRecord.Type.AccessPattern));
             case MetadataConstants.RECORD_TYPE.INDEX: return createColumnSetRecord(record, new KeyRecord(KeyRecord.Type.Index));
-            case MetadataConstants.RECORD_TYPE.RESULT_SET: return createColumnSetRecord(record, new ColumnSetRecordImpl());
+            case MetadataConstants.RECORD_TYPE.RESULT_SET: return createColumnSetRecord(record, new ColumnSet());
             case MetadataConstants.RECORD_TYPE.UNIQUE_KEY: return createColumnSetRecord(record, new KeyRecord(KeyRecord.Type.Unique));
             case MetadataConstants.RECORD_TYPE.PRIMARY_KEY: return createColumnSetRecord(record, new KeyRecord(KeyRecord.Type.Primary));
             case MetadataConstants.RECORD_TYPE.FOREIGN_KEY: return createForeignKeyRecord(record);
@@ -309,10 +309,10 @@ public class RecordFactory {
     /**
      * Create a ModelRecord instance from the specified index record
      */
-    public static ModelRecordImpl createModelRecord(final char[] record) {
+    public static Schema createModelRecord(final char[] record) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final ModelRecordImpl model = new ModelRecordImpl();
+        final Schema model = new Schema();
 
         // The tokens are the standard header values
         int tokenIndex = 0;
@@ -324,7 +324,7 @@ public class RecordFactory {
         tokenIndex++;
         
         // The next token is the model type
-        model.setModelType(ModelRecordImpl.Type.values()[Integer.parseInt((String)tokens.get(tokenIndex++))]);
+        model.setPhysical(Integer.parseInt((String)tokens.get(tokenIndex++)) == 0);
         
         // The next token is the primary metamodel Uri
         model.setPrimaryMetamodelUri(getObjectValue((String)tokens.get(tokenIndex++)));
@@ -394,10 +394,10 @@ public class RecordFactory {
     /**
      * Create a TableRecord instance from the specified index record
      */
-    public static TableRecordImpl createTableRecord(final char[] record) {
+    public static Table createTableRecord(final char[] record) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final TableRecordImpl table = new TableRecordImpl();
+        final Table table = new Table();
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);
@@ -412,7 +412,7 @@ public class RecordFactory {
         table.setCardinality( Integer.parseInt((String)tokens.get(tokenIndex++)) );
 
         // The next token is the tableType
-        table.setTableType(TableRecordImpl.Type.values()[Integer.parseInt((String)tokens.get(tokenIndex++))]);
+        table.setTableType(Table.Type.values()[Integer.parseInt((String)tokens.get(tokenIndex++))]);
 
         // The next token are the supports flags
         char[] supportFlags = ((String)tokens.get(tokenIndex++)).toCharArray();
@@ -438,11 +438,11 @@ public class RecordFactory {
 
         if(includeMaterializationFlag(indexVersion)) {
             // The next token are the UUIDs for the materialized table ID
-        	TableRecordImpl matTable = new TableRecordImpl();
+        	Table matTable = new Table();
         	matTable.setUUID((String)tokens.get(tokenIndex++));
             table.setMaterializedTable(matTable);
             // The next token are the UUID for the materialized stage table ID
-            matTable = new TableRecordImpl();
+            matTable = new Table();
         	matTable.setUUID((String)tokens.get(tokenIndex++));
             table.setMaterializedStageTable(matTable);
         }
@@ -453,10 +453,10 @@ public class RecordFactory {
         return table;
     }
 
-	private static List<ColumnRecordImpl> createColumns(List<String> uuids) {
-		List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(uuids.size());
+	private static List<Column> createColumns(List<String> uuids) {
+		List<Column> columns = new ArrayList<Column>(uuids.size());
         for (String uuid : uuids) {
-        	ColumnRecordImpl column = new ColumnRecordImpl();
+        	Column column = new Column();
         	column.setUUID(uuid);
 			columns.add(column);
 		}
@@ -466,10 +466,10 @@ public class RecordFactory {
     /**
      * Create a ColumnRecord instance from the specified index record
      */
-    public static ColumnRecordImpl createColumnRecord(final char[] record) {
+    public static Column createColumnRecord(final char[] record) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final ColumnRecordImpl column = new ColumnRecordImpl();
+        final Column column = new Column();
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);
@@ -553,7 +553,7 @@ public class RecordFactory {
     /**
      * Create a ColumnSetRecord instance from the specified index record
      */
-    public static ColumnSetRecordImpl createColumnSetRecord(final char[] record, ColumnSetRecordImpl columnSet) {
+    public static ColumnSet createColumnSetRecord(final char[] record, ColumnSet columnSet) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
 
@@ -583,10 +583,10 @@ public class RecordFactory {
     /**
      * Create a ForeignKeyRecord instance from the specified index record
      */
-    public static ForeignKeyRecordImpl createForeignKeyRecord(final char[] record) {
+    public static ForeignKey createForeignKeyRecord(final char[] record) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final ForeignKeyRecordImpl fkRecord = new ForeignKeyRecordImpl();
+        final ForeignKey fkRecord = new ForeignKey();
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);
@@ -613,10 +613,10 @@ public class RecordFactory {
     /**
      * Create a DatatypeRecord instance from the specified index record
      */
-    public static DatatypeRecordImpl createDatatypeRecord(final char[] record) {
+    public static Datatype createDatatypeRecord(final char[] record) {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final DatatypeRecordImpl dt = new DatatypeRecordImpl();
+        final Datatype dt = new Datatype();
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);
@@ -645,7 +645,7 @@ public class RecordFactory {
         dt.setJavaClassName(getObjectValue((String)tokens.get(tokenIndex++)));
         
         // Set the datatype type
-        dt.setType(DatatypeRecordImpl.Type.values()[Short.parseShort((String)tokens.get(tokenIndex++))]);
+        dt.setType(Datatype.Type.values()[Short.parseShort((String)tokens.get(tokenIndex++))]);
         
         // Set the search type
         dt.setSearchType(SearchType.values()[3 - Integer.parseInt((String)tokens.get(tokenIndex++))]);
@@ -731,11 +731,11 @@ public class RecordFactory {
      * Create a ProcedureParameterRecord instance from the specified index record
      * header|defaultValue|dataType|length|radix|scale|nullType|precision|paramType|footer|
      */
-    public static ProcedureParameterRecordImpl createProcedureParameterRecord(final char[] record) {
+    public static ProcedureParameter createProcedureParameterRecord(final char[] record) {
 
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final ProcedureParameterRecordImpl paramRd = new ProcedureParameterRecordImpl();
+        final ProcedureParameter paramRd = new ProcedureParameter();
 
         // The tokens are the standard header values
         int tokenIndex = 0;
@@ -773,22 +773,22 @@ public class RecordFactory {
         paramRd.setPosition(Integer.parseInt((String)tokens.get(tokenIndex++)) );
 
         // The next token is parameter type
-        ProcedureParameterRecordImpl.Type type = null;
+        ProcedureParameter.Type type = null;
         switch (Short.parseShort((String)tokens.get(tokenIndex++))) {
         case MetadataConstants.PARAMETER_TYPES.IN_PARM:
-        	type = ProcedureParameterRecordImpl.Type.In;
+        	type = ProcedureParameter.Type.In;
         	break;
         case MetadataConstants.PARAMETER_TYPES.INOUT_PARM:
-        	type = ProcedureParameterRecordImpl.Type.InOut;
+        	type = ProcedureParameter.Type.InOut;
         	break;
         case MetadataConstants.PARAMETER_TYPES.OUT_PARM:
-        	type = ProcedureParameterRecordImpl.Type.Out;
+        	type = ProcedureParameter.Type.Out;
         	break;
         case MetadataConstants.PARAMETER_TYPES.RESULT_SET:
-        	type = ProcedureParameterRecordImpl.Type.ResultSet;
+        	type = ProcedureParameter.Type.ResultSet;
         	break;
         case MetadataConstants.PARAMETER_TYPES.RETURN_VALUE:
-        	type = ProcedureParameterRecordImpl.Type.ReturnValue;
+        	type = ProcedureParameter.Type.ReturnValue;
         	break;
         }
         paramRd.setType(type);
@@ -1012,16 +1012,17 @@ public class RecordFactory {
         
         record.setUUID(getObjectValue(objectID));
         if (fullName != null) {
-        	int index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
-            String name = fullName;
-            if (index > 0) {
-            	name = fullName.substring(index + 1);
-            }
-            if (record instanceof ColumnRecordImpl) {
-                index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
+        	String name = fullName;
+            if (record instanceof Column) { //take only the last part
+                int index = fullName.lastIndexOf(IndexConstants.NAME_DELIM_CHAR);
                 if (index > 0) {
                 	name = fullName.substring(index + 1);
                 }
+            } else { //remove model name
+	            int index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
+	            if (index > 0) {
+	            	name = fullName.substring(index + 1);
+	            }
             }
             record.setName(name);
         }

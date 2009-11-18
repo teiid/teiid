@@ -24,17 +24,17 @@
       are processed in the context of a virtual database, or VDB.
       Because information can be federated across multiple sources,
       tables and columns must be scoped in some manner to avoid
-      conflicts. This scoping is provided by models, which contain the
+      conflicts. This scoping is provided by schemas, which contain the
       information for each data source or set of views.</para>
     <itemizedlist>
       <para>Fully-qualified table and column names are of
         the following form, where the separate 'parts' of the identifier
         are delimited by periods.</para>
       <listitem>
-        <para>TABLE: &lt;model_name&gt;.&lt;table_spec&gt;</para>
+        <para>TABLE: &lt;schema_name&gt;.&lt;table_spec&gt;</para>
       </listitem>
       <listitem>
-        <para>COLUMN: &lt;model_name&gt;.&lt;table_spec&gt;.&lt;column_name&gt;</para>
+        <para>COLUMN: &lt;schema_name&gt;.&lt;table_spec&gt;.&lt;column_name&gt;</para>
       </listitem>
     </itemizedlist>
     <itemizedlist>
@@ -62,18 +62,15 @@
       <para> Some examples of valid fully-qualified table identifiers are:
       </para>
       <listitem>
-        <para>MyModel.MySchema.Portfolios
+        <para>MySchema.Portfolios
         </para>
       </listitem>
       <listitem>
-        <para>"MyModel"."MySchema.Portfolios"
+        <para>"MySchema.Portfolios"
         </para>      
       </listitem>
       <listitem>
-        <para>MyModel.Inventory</para>
-      </listitem>
-      <listitem>
-        <para>MyModel.MyCatalog.dbo.Authors
+        <para>MySchema.MyCatalog.dbo.Authors
         </para>
       </listitem>
     </itemizedlist>
@@ -81,19 +78,15 @@
       <para>Some examples of valid fully-qualified column identifiers
         are:</para>
       <listitem>
-        <para>MyModel.MySchema.Portfolios.portfolioID
+        <para>MySchema.Portfolios.portfolioID
         </para>
       </listitem>
       <listitem>
-        <para>"MyModel"."MySchema.Portfolios"."portfolioID" 
+        <para>"MySchema.Portfolios"."portfolioID" 
         </para>
       </listitem>
       <listitem>
-        <para>MyModel.Inventory.totalPallets
-        </para>
-      </listitem>
-      <listitem>
-        <para>MyModel.MyCatalog.dbo.Authors.lastName
+        <para>MySchema.MyCatalog.dbo.Authors.lastName
         </para>
       </listitem>
     </itemizedlist>
@@ -564,7 +557,7 @@
             </para>
           </listitem>
           <listitem>
-            <para>The procedure virtual group automatically has an access pattern on its IN and IN_OUT parameters which
+            <para>The procedure virtual table automatically has an access pattern on its IN and IN_OUT parameters which
             allows it to be planned correctly as a dependent join when necessary or fail when sufficient criteria cannot be found.
             </para>
           </listitem>
@@ -605,7 +598,7 @@
         </para>
       </listitem>
       <listitem>
-        <para>SELECT &lt;element name>,...INTO &lt;temporary table name&gt; FROM &lt;table name&gt;
+        <para>SELECT &lt;column name>,...INTO &lt;temporary table name&gt; FROM &lt;table name&gt;
         </para>
       </listitem>
       <listitem>
