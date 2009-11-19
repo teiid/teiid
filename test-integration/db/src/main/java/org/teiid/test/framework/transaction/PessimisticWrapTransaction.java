@@ -4,7 +4,6 @@
  */
 package org.teiid.test.framework.transaction;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;

@@ -45,7 +45,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.api.AbstractQueryTest
 	implements TransactionQueryTestCase {
     
-    private static boolean initialized = false;
+    private static String initialized = null;
 
     protected String testname = "NA";
     protected int fetchSize = -1;
@@ -138,9 +138,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 
     }
 
-    public boolean compareResultsCaseSensitive() {
-	return true;
-    }
+
 
     /**
      * Override <code>setupDataSource</code> if there is different mechanism for
@@ -154,8 +152,8 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
     @Override
     public void setup() throws QueryTestFailedException {
 
-	if (!initialized) {
-	    initialized = true;
+	if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
+	    initialized = this.getClass().getSimpleName();
 	    DataStore.initialize(connStrategy);
 	    
 	}

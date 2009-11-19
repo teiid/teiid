@@ -99,8 +99,8 @@ public class DataStore {
     private static void setUpTest(Connection c) throws Exception {
 	
             Statement stmt = c.createStatement();
-            stmt.addBatch("delete from g2 where e1 > 50"); //$NON-NLS-1$
-            stmt.addBatch("delete from g1 where e1 > 100"); 
+            stmt.addBatch("delete from g2 where e1 >= 50"); //$NON-NLS-1$
+            stmt.addBatch("delete from g1 where e1 >= 100"); 
     
             stmt.executeBatch();
             stmt.close();

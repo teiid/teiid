@@ -26,6 +26,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.jdbc.util.MMJDBCURL;
 
 
 public abstract class ConnectionStrategy {
@@ -54,8 +55,12 @@ public abstract class ConnectionStrategy {
     /**
      * @since
      */
-    public void shutdown() {       
-        this.dsFactory.cleanup();
+    public void shutdown() {    
+	try {
+	    this.dsFactory.cleanup();
+	} catch (Throwable t) {
+	    
+	}
     }
     
     public Connection getAdminConnection() throws QueryTestFailedException{
@@ -121,19 +126,19 @@ public abstract class ConnectionStrategy {
             
             setupVDBConnectorBindings(admin);
             
-            admin.restart();
+            
+ //          admin.restart();
             
             int sleep = 5;
  
             System.out.println("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
             Thread.sleep(1000*sleep);
-        //    Thread.sleep(1000*60);
             System.out.println("done."); //$NON-NLS-1$
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
         	e.printStackTrace();
 
-            throw new TransactionRuntimeException(e);
+            throw new TransactionRuntimeException(e.getMessage());
         }  finally {
         	// need to close and flush the connection after restarting
         	this.shutdown();
@@ -144,15 +149,33 @@ public abstract class ConnectionStrategy {
     protected void setupVDBConnectorBindings(Admin api) throws QueryTestFailedException {
          
     	try {
-
+    	    
+    	    	VDB vdb = null;
     		Collection<VDB> vdbs = api.getVDBs("*");
     		if (vdbs == null) {
     	  		throw new QueryTestFailedException("GetVDBS returned no vdbs available");
     	  		 
-    		} else if (vdbs.size() != 1) {
-    			throw new QueryTestFailedException("GetVDBS returned more than 1 vdb available");
+    		} else if (vdbs.size() > 0) {
+    	    	    String urlString = this.env.getProperty(DriverConnection.DS_URL);
+     	    	    MMJDBCURL url = new MMJDBCURL(urlString);
+     	    	    System.out.println("Trying to match VDB : " + url.getVDBName());
+	    	    
+    	    	    for (Iterator iterator = vdbs.iterator(); iterator
+			    .hasNext();) {
+			VDB v = (VDB) iterator.next();
+			if (v.getName().equalsIgnoreCase(url.getVDBName())) {
+			    vdb = v;
+			} 
+			
+		    }
+    	    	    if (vdbs == null) {
+	  		throw new QueryTestFailedException("GetVDBS did not return a vdb that matched " + url.getVDBName());
+    	    	    }
+    	    	    
+     		} else {
+    		    vdb = (VDB) vdbs.iterator().next();
     		}
-    		VDB vdb = (VDB) vdbs.iterator().next();
+
     		Iterator<Model> modelIt = vdb.getModels().iterator();
     		while (modelIt.hasNext() ) {
     			Model m = modelIt.next();
@@ -180,6 +203,8 @@ public abstract class ConnectionStrategy {
 		        	
 		        	api.assignBindingToModel(ds.getName(), vdb.getName(), vdb.getVDBVersion(), m.getName());
 		        	
+		        	
+		                api.startConnectorBinding(ds.getName());
 	        	} else {
 	        		throw new QueryTestFailedException("Error: Unable to create binding to map to model : " + m.getName() + ", the mapped name " + useName + " had no datasource properties defined");
 	        	}
