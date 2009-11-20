@@ -1,19 +1,23 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  	<parent>
-    		<artifactId>teiid</artifactId>
-    		<groupId>org.jboss.teiid</groupId>
-    		<version>6.3.0-SNAPSHOT</version>
-  	</parent>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<parent>
+		<artifactId>teiid</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>6.3.0-SNAPSHOT</version>
+	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
- 	<groupId>org.jboss.teiid</groupId>
 	<artifactId>teiid-console</artifactId>
-	<name>TEIID Console</name>
-	<description>This project is for the RHQ plugin that supports the TEIID Console </description>
+	<name>Console</name>
+	<description>This project is for the RHQ plugin that supports the
+		TEIID Console </description>
 
 	<properties>
-		<org.jboss.jopr.as4.version>1.2.0.GA</org.jboss.jopr.as4.version>
+		<!--
+			<org.jboss.jopr.as4.version>1.2.0.GA</org.jboss.jopr.as4.version>
+		-->
 		<org.jboss.jopr.as5.version>1.2.0.GA</org.jboss.jopr.as5.version>
 
 		<org.jboss.jopr.version>1.2.0.GA</org.jboss.jopr.version>
@@ -21,11 +25,14 @@
 		<apache.ant.version>1.7.0</apache.ant.version>
 
 	</properties>
-	
+
 	<build>
 		<pluginManagement>
 			<plugins>
-		<!-- Fixes how test resources of a project can be used in projects dependent on it  -->
+				<!--
+					Fixes how test resources of a project can be used in projects
+					dependent on it
+				-->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
@@ -34,7 +41,7 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
-	  <!-- Specify the compiler options and settings -->
+			<!-- Specify the compiler options and settings -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -55,7 +62,10 @@
 					</includes>
 					<excludes>
 						<exclude>**/Abstract*TestCase.java</exclude>
-			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
+						<!--
+							hack to prevent anonymous inner classes in Tests from being run
+							as tests
+						-->
 						<include>**/Test*$*.java</include>
 					</excludes>
 					<systemProperties>
@@ -70,7 +80,7 @@
 					</systemProperties>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2-beta-2</version>
@@ -91,73 +101,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			
-			<!--
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-antrun-plugin</artifactId>
-							<dependencies>
-								<dependency>
-									<groupId>org.apache.ant</groupId>
-									<artifactId>ant</artifactId>
-									<version>${apache.ant.version}</version>
-								</dependency>
-							</dependencies>
-							<executions>
-								<execution>
-									<id>assemble-artifacts</id>
-									<phase>package</phase>
-									<configuration>
-										<tasks>
-											<property name="product.version" value="${project.version}" />
-											<property name="product.name" value="${project.name}" />
-											<ant antfile="src/assembly/assemble-artifacts.xml" />
-										</tasks>
-									</configuration>
-									<goals>
-										<goal>run</goal>
-									</goals>
-								</execution>
-							</executions>
-						</plugin>
-			-->
-			
-			<!--
-          <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dist-wars</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-							<outputDirectory>${basedir}/target/</outputDirectory>
-
-                            <artifactItems>
-                                 <artifactItem>
-                                    <groupId>org.jboss.jopr</groupId>
-                                    <artifactId>jopr-embedded-jbas4</artifactId>
-                                    <version>${org.jboss.jopr.as4.version}</version>
-                                     <type>war</type>
-                                    <overWrite>true</overWrite>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.jboss.jopr</groupId>
-                                    <artifactId>jopr-embedded-jbas5</artifactId>
-                                    <version>${org.jboss.jopr.as5.version}</version>
-                                     <type>war</type>
-                                    <overWrite>true</overWrite>
-                                </artifactItem>
-                            </artifactItems>
-                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-			-->
-<!--
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -171,63 +114,91 @@
 				</dependencies>
 				<executions>
 					<execution>
-						<id>assembly-kit-jboss-as4</id>
+						<id>assemble-artifacts</id>
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<mkdir dir="target/jboss-as4-war"/>
-								<unzip src="target/jopr-embedded-jbas4-${org.jboss.jopr.as4.version}.war" dest="target/jboss-as4-war"/>
-
-								<mkdir dir="target/plugin-classes"/>
-
-
-								<unzip src="../jbedsp-plugin/target/distribution/jbedsp-plugin-${project.version}-binaries.jar" dest="target/jboss-as4-war/WEB-INF/lib"/>
-
-								<unzip src="../jbedsp-plugin/target/distribution/jbedsp-embedded-plugin-${project.version}.jar" dest="target/plugin-classes"/>								
-								<unzip src="target/${project.name}-${project.version}.jar" dest="target/plugin-classes"/>
-								<jar destfile="target/jboss-as4-war/plugins/jbedsp-jopr-plugin-${project.version}.jar" basedir="target/plugin-classes"/>
-							
-								<zip destfile="target/jopr-teiid-embedded-jbas4.war" basedir="target/jboss-as4-war" />
-
+								<property name="product.version" value="${project.version}" />
+								<property name="product.name" value="${project.name}" />
+								<ant antfile="src/assembly/assemble-artifacts.xml" />
 							</tasks>
-
 						</configuration>
-
 						<goals>
 							<goal>run</goal>
-						</goals>						
+						</goals>
 					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
 					<execution>
-						<id>assembly-kit-jboss-as5</id>
-						<phase>package</phase>
-						<configuration>
-							<tasks>
-								<mkdir dir="target/jboss-as5-war"/>
-								<unzip src="target/jopr-embedded-jbas5-${org.jboss.jopr.as5.version}.war" dest="target/jboss-as5-war"/>
-
-								<mkdir dir="target/plugin-classes"/>
-
-								<unzip src="../jbedsp-plugin/target/distribution/jbedsp-plugin-${project.version}-binaries.jar" dest="target/jboss-as5-war/WEB-INF/lib"/>
-
-								<unzip src="../jbedsp-plugin/target/distribution/jbedsp-embedded-plugin-${project.version}.jar" dest="target/plugin-classes"/>								
-								<unzip src="target/${project.name}-${project.version}.jar" dest="target/plugin-classes"/>
-								<jar destfile="target/jboss-as5-war/plugins/jbedsp-jopr-plugin-${project.version}.jar" basedir="target/plugin-classes"/>
-							
-								<zip destfile="target/jopr-teiid-embedded-jbas5.war" basedir="target/jboss-as5-war" />
-							</tasks>
-
-						</configuration>
-
+						<id>copy-dist-wars</id>
+						<phase>process-resources</phase>
 						<goals>
-							<goal>run</goal>
-						</goals>						
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/</outputDirectory>
+
+							<artifactItems>
+								<!--
+									<artifactItem> <groupId>org.jboss.jopr</groupId>
+									<artifactId>jopr-embedded-jbas4</artifactId>
+									<version>${org.jboss.jopr.as4.version}</version>
+									<type>war</type> <overWrite>true</overWrite> </artifactItem>
+								-->
+								<artifactItem>
+									<groupId>org.jboss.jopr</groupId>
+									<artifactId>jopr-embedded-jbas5</artifactId>
+									<version>${org.jboss.jopr.as5.version}</version>
+									<type>war</type>
+									<overWrite>true</overWrite>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
 					</execution>
+				</executions>
+			</plugin>
+
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>${apache.ant.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<!--
+						<execution> <id>assembly-kit-jboss-as4</id> <phase>package</phase>
+						<configuration> <tasks> <mkdir dir="target/jboss-as4-war"/> <unzip
+						src="target/jopr-embedded-jbas4-${org.jboss.jopr.as4.version}.war"
+						dest="target/jboss-as4-war"/> <mkdir dir="target/plugin-classes"/>
+
+
+						<unzip
+						src="../jbedsp-plugin/target/distribution/jbedsp-plugin-${project.version}-binaries.jar"
+						dest="target/jboss-as4-war/WEB-INF/lib"/> <unzip
+						src="../jbedsp-plugin/target/distribution/jbedsp-embedded-plugin-${project.version}.jar"
+						dest="target/plugin-classes"/> <unzip
+						src="target/${project.name}-${project.version}.jar"
+						dest="target/plugin-classes"/> <jar
+						destfile="target/jboss-as4-war/plugins/jbedsp-jopr-plugin-${project.version}.jar"
+						basedir="target/plugin-classes"/> <zip
+						destfile="target/jopr-teiid-embedded-jbas4.war"
+						basedir="target/jboss-as4-war" /> </tasks> </configuration>
+
+						<goals> <goal>run</goal> </goals> </execution>
+					-->
 
 				</executions>
 			</plugin>
--->
-
-
 
 		</plugins>
 	</build>
@@ -262,6 +233,18 @@
 			<scope>provided</scope> <!-- provided by the agent/plugin-container -->
 		</dependency>
 
+		<dependency>
+			<groupId>org.rhq</groupId>
+			<artifactId>rhq-jmx-plugin</artifactId>
+			<version>${org.jboss.jopr.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mc4j</groupId>
+			<artifactId>org-mc4j-ems</artifactId>
+			<version>1.2.6</version>
+		</dependency>
+
 		<!--
 			TODO: This is a fix for the Javac bug requiring annotations to be
 			available when compiling dependent classes. It is fixed in JDK 6.
@@ -292,53 +275,59 @@
 			<scope>provided</scope>
 		</dependency>
 
-   		<dependency>
-      		<groupId>org.jboss.teiid</groupId>
-      		<artifactId>teiid-client</artifactId>
-    	</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<type>test-jar</type>
 		</dependency>
-			
-   		<dependency>
-      		<groupId>org.jboss.teiid</groupId>
-      		<artifactId>teiid-client-jdbc</artifactId>
-    	</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client-jdbc</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client-jdbc</artifactId>
 			<type>test-jar</type>
 		</dependency>
 
-    	<dependency>
-      		<groupId>org.jboss.teiid</groupId>
-      		<artifactId>teiid-common-core</artifactId>
-    	</dependency>
-    	<dependency>
-      		<groupId>org.jboss.teiid</groupId>
-      		<artifactId>teiid-common-core</artifactId>
-      		<type>test-jar</type>
-   		</dependency>
-
 		<dependency>
-			<groupId>org.jboss.jopr</groupId>
-			<artifactId>jopr-embedded-jbas4</artifactId>
-			<type>war</type>
-			<version>${org.jboss.jopr.as4.version}</version>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<type>test-jar</type>
+		</dependency>
+
+		<!--
+			<dependency> <groupId>org.jboss.jopr</groupId>
+			<artifactId>jopr-embedded-jbas4</artifactId> <type>war</type>
+			<version>${org.jboss.jopr.as4.version}</version> </dependency>
+		-->
 		<dependency>
 			<groupId>org.jboss.jopr</groupId>
 			<artifactId>jopr-embedded-jbas5</artifactId>
 			<type>war</type>
 			<version>${org.jboss.jopr.as5.version}</version>
 		</dependency>
-			
+
+		<dependency>
+			<groupId>org.jboss.integration</groupId>
+			<artifactId>jboss-profileservice-spi</artifactId>
+			<version>5.1.0.CR2</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
 		</dependency>
+
 
 
 	</dependencies>
