@@ -7498,6 +7498,20 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testOrderByUnrelatedExpression() {
+        String sql = "SELECT e1, e2 + 1 from pm1.g2 order by e3 || e2 limit 1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList("a", 1),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
     
     private static final boolean DEBUG = false;
 }
