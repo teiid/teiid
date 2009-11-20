@@ -215,7 +215,7 @@ public class MetaDataProcessor {
         
         ParseInfo info = new ParseInfo();
         // Defect 19747 - the parser needs the following connection property to decide whether to treat double-quoted strings as variable names
-        info.allowDoubleQuotedVariable = isDoubleQuotedVariablesAllowed;
+        info.ansiQuotedIdentifiers = isDoubleQuotedVariablesAllowed;
         CacheID id = new PreparedPlanCache.CacheID(workContext, info, sql);
         PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(id);
         if(plan != null) {

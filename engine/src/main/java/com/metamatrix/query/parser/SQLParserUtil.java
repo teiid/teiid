@@ -121,7 +121,7 @@ public class SQLParserUtil {
      * @param id Possible string literal
      */
     boolean isStringLiteral(String str, ParseInfo info) throws ParseException {
-    	if (info.allowDoubleQuotedVariable() || str.charAt(0) != '"' || str.charAt(str.length() - 1) != '"') {
+    	if (info.useAnsiQuotedIdentifiers() || str.charAt(0) != '"' || str.charAt(str.length() - 1) != '"') {
     		return false;
     	}
     	int index = 1;

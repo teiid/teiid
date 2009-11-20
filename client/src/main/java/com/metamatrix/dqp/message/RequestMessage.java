@@ -66,7 +66,7 @@ public class RequestMessage implements Serializable {
     private boolean useResultSetCache;
         
     // Treat the double quoted strings as variables in the command
-    private boolean dblQuotedVariableAllowed = false;
+    private boolean dblQuotedVariableAllowed = true;
     
     //whether query plan is allowed or not
     private boolean queryPlanAllowed = true;

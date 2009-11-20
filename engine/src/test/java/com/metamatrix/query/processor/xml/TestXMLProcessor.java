@@ -67,7 +67,6 @@ import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.xml.TestXMLPlanner;
-import com.metamatrix.query.parser.ParseInfo;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -2928,9 +2927,7 @@ public class TestXMLProcessor extends TestCase {
 
     public static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException { 
         QueryParser parser = new QueryParser();
-        ParseInfo info = new ParseInfo();
-        info.allowDoubleQuotedVariable = true;
-        Command command = parser.parseCommand(sql, info);
+        Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
         command = QueryRewriter.rewrite(command, null, metadata, null);
         return command;

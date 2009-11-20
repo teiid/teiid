@@ -37,17 +37,17 @@ public class ParseInfo {
 	public boolean aggregatesAllowed = false;
         
     // treat a double quoted variable as variable instead of string 
-    public boolean allowDoubleQuotedVariable=true;
+    public boolean ansiQuotedIdentifiers=true;
     
 	public ParseInfo() { }
 	
-	public boolean allowDoubleQuotedVariable() {
-	    return allowDoubleQuotedVariable;
+	public boolean useAnsiQuotedIdentifiers() {
+	    return ansiQuotedIdentifiers;
 	}
 	
 	@Override
 	public int hashCode() {
-		return allowDoubleQuotedVariable?1:0;
+		return ansiQuotedIdentifiers?1:0;
 	}
 	
 	@Override
@@ -59,6 +59,6 @@ public class ParseInfo {
 			return false;
 		}
 		ParseInfo other = (ParseInfo)obj;
-		return this.allowDoubleQuotedVariable == other.allowDoubleQuotedVariable;
+		return this.ansiQuotedIdentifiers == other.ansiQuotedIdentifiers;
 	}
 }

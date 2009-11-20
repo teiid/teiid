@@ -333,7 +333,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
 	public static ParseInfo createParseInfo(RequestMessage requestMsg) {
 		ParseInfo parseInfo = new ParseInfo();
-    	parseInfo.allowDoubleQuotedVariable = requestMsg.isDoubleQuotedVariableAllowed();
+    	parseInfo.ansiQuotedIdentifiers = requestMsg.isDoubleQuotedVariableAllowed();
 		return parseInfo;
 	}
 
@@ -584,8 +584,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
 		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && userCommand instanceof XQuery;
 		
 		ParseInfo parseInfo = new ParseInfo();
-		if (isRootXQuery && requestMsg.isDoubleQuotedVariableAllowed()) {
-			parseInfo.allowDoubleQuotedVariable = true;
+		if (isRootXQuery) {
+			parseInfo.ansiQuotedIdentifiers = requestMsg.isDoubleQuotedVariableAllowed();
 		}
 		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
         QueryResolver.resolveCommand(newCommand, metadata);            

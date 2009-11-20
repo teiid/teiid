@@ -2221,7 +2221,7 @@ public class TestParser {
 		query.setSelect(select);
 		query.setFrom(from);
 		ParseInfo info = new ParseInfo();
-		info.allowDoubleQuotedVariable = false;
+		info.ansiQuotedIdentifiers = false;
 		helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
 				 "SELECT 'g\".\"a' FROM g",  //$NON-NLS-1$
 				 query, info);
