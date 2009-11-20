@@ -12,8 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+
+import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  * The DataSourceMgr is responsible for loading and managing the datasources
@@ -28,6 +32,18 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class DataSourceMgr {
 
     private static DataSourceMgr _instance = null;
+    
+    /**
+     * Defines the default location where the datasource files will be found.
+     * An override can be specified by setting the property {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC}.
+     */
+    public static final String DEFAULT_DATASOURCES_LOC="./target/classes/datasources/";
+    
+    /**
+     * When run from maven, the {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC} will be assigned
+     * to this value because of its a place holder for when a user does set the vm argument.
+     */
+    private static final String UNASSIGNEDDSLOC="${datasourceloc}";
 
     private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>(); // key
 											   // =
@@ -84,24 +100,32 @@ public class DataSourceMgr {
 
     private void loadDataSourceMappings() throws QueryTestFailedException {
 
-	File[] dirs = findAllChildDirectories("./target/classes/datasources/");
+	String dsloc = ConfigPropertyLoader.createInstance().getProperty(ConfigPropertyNames.OVERRIDE_DATASOURCES_LOC);
+	
+	if (dsloc == null || dsloc.equalsIgnoreCase(UNASSIGNEDDSLOC)) {
+	    dsloc = DEFAULT_DATASOURCES_LOC;
+	}
+	
+	File[] dirs = findAllChildDirectories(dsloc);
 	if (dirs == null || dirs.length == 0) {
 	    throw new TransactionRuntimeException(
 		    "No datasource directories found at location "
-			    + "./target/classes/datasources/");
+			    + dsloc);
 	}
 	for (int i = 0; i < dirs.length; i++) {
 	    File d = dirs[i];
 
-	    String dname = d.getName();
-
-	    addDataSource(dname, d.getName(), allDatasourcesMap);
+	    addDataSource(d, allDatasourcesMap);
 
 	}
 
 	if (allDatasourcesMap == null || allDatasourcesMap.isEmpty()) {
 	    throw new TransactionRuntimeException(
 		    "Error: No Datasources were loaded.");
+	} else if (allDatasourcesMap.size() < 2) {
+	    throw new TransactionRuntimeException(
+	    	"Error: Must load 2 Datasources, only 1 was found.");
+ 
 	}
 
 	System.out.println("Number of total datasource mappings loaded "
@@ -147,15 +171,23 @@ public class DataSourceMgr {
 
     }
 
-    private void addDataSource(String dirname, String dirloc,
+    private void addDataSource(File datasourcedir, //String dirname, String dirloc,
 	    Map<String, DataSource> datasources) {
+	
+//	String dirname = datasourcefile.getName();
+	
+	File dsfile = new File(datasourcedir, "connection.properties");
+	
+	if (!dsfile.exists()) {
+	    return;
+	}
 
-	String dsfile = "/datasources/" + dirloc + "/connection.properties";
+//	String dsfile = "/datasources/" + dirname + "/connection.properties";
 	Properties dsprops = loadProperties(dsfile);
 
 	if (dsprops != null) {
 
-	    DataSource ds = new DataSource(dirname, "dsgroup", dsprops);
+	    DataSource ds = new DataSource(datasourcedir.getName(), "dsgroup", dsprops);
 	    datasources.put(ds.getName(), ds);
 	    System.out.println("Loaded datasource " + ds.getName());
 
@@ -163,20 +195,24 @@ public class DataSourceMgr {
 
     }
 
-    private static Properties loadProperties(String filename) {
+    private static Properties loadProperties(File dsfile) {
 	Properties props = null;
 
 	try {
-	    InputStream in = DataSourceMgr.class.getResourceAsStream(filename);
-	    if (in != null) {
-		props = new Properties();
-		props.load(in);
-		return props;
-	    }
-	    return null;
+	    
+	    props = PropertiesUtils.load(dsfile.getAbsolutePath());
+	    return props;
+	    
+//	    InputStream in = DataSourceMgr.class.getResourceAsStream(dsfile.getAbsolutePath());
+//	    if (in != null) {
+//		props = new Properties();
+//		props.load(in);
+//		return props;
+//	    }
+//	    return null;
 	} catch (IOException e) {
 	    throw new TransactionRuntimeException(
-		    "Error loading properties from file '" + filename + "'"
+		    "Error loading properties from file '" + dsfile.getAbsolutePath() + "'"
 			    + e.getMessage());
 	}
     }

@@ -1,6 +1,7 @@
 package org.teiid.test.framework;
 
 import org.teiid.test.framework.datasource.DataSource;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
@@ -55,10 +56,16 @@ public interface ConfigPropertyNames {
 	
 	public static final String EXCLUDE_DATASBASE_TYPES_PROP = "excludedatasourcetypes";
 
-	
+	/**
+	 * The {@link #OVERRIDE_DATASOURCES_LOC}, when specified, will override the default
+	 * defined for {@link DataSourceMgr#DEFAULT_DATASOURCES_LOC};
+	 * 
+	 */
+	public static final String OVERRIDE_DATASOURCES_LOC = "datasourceloc";
 	
 	/**
-	 * Connection Type indicates the type of connection (strategy) to use
+	 * Connection Type indicates the type of connection (strategy) to use when 
+	 * connecting to Teiid.
 	 * Options are {@link CONNECTION_TYPES}
 	 */
     public static final String CONNECTION_TYPE = "connection-type"; //$NON-NLS-1$
@@ -66,6 +73,7 @@ public interface ConfigPropertyNames {
     
     /**
      * {@see #CONNECTION_TYPE} regarding setting the specific connection type to use
+     * when connecting to Teiid
      * @author vanhalbert
      *
      */
