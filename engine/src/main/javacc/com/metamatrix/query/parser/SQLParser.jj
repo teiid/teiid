@@ -194,21 +194,13 @@ TOKEN : /* Special function words */
 |	<SQL_TSI_YEAR: "SQL_TSI_YEAR"> 
 }
 
-TOKEN : /* User variables and literals 
-          - NOTE IDs are not spec compliant.  We allow for
-          - any number of name parts to appear and restrict quoted
-          - IDs to continaing regular identifiers
-         */
+TOKEN : /* User variables and literals */
 {
-    < ALL_IN_GROUP: <GROUP_PART> <PERIOD> <STAR> >
+    < ALL_IN_GROUP: <ID> <PERIOD> <STAR> >
 
-|   < ID: <GROUP_PART> ( <PERIOD> <QUOTED_ID> )? >
-
-|	< #GROUP_PART: ("#")? (<QUOTED_ID> <PERIOD>)? <QUOTED_ID> >
-|	< #QUOTED_ID: <DOTTED_ID> | ("\"" <DOTTED_ID> "\"") >           
-|	< #DOTTED_ID: <ID_PART> (<PERIOD> <ID_PART>)* >           
-|   < #ID_PART: ("@")? <LETTER> (<ID_CHAR>)* >               
-|   < #ID_CHAR: (<LETTER> | "_" | <DIGIT>) >    
+|   < ID: <QUOTED_ID> (<PERIOD> <QUOTED_ID>)* >
+|	< #QUOTED_ID: <ID_PART> | ("\"" (("\"\"") | ~["\""] )+ "\"") >           
+|   < #ID_PART: (("@" | "#" | <LETTER>) (<LETTER> | "_" | <DIGIT>)*) >               
 
 | 	< DATETYPE: "{" "d" >
 | 	< TIMETYPE: "{" "t" >
@@ -218,12 +210,9 @@ TOKEN : /* User variables and literals
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
 |   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
 				( ["e", "E"] (["+","-"])? (<DIGIT>)+ )? >
-|   < STRINGVAL: (("N")? (<STRINGA> | <STRINGB>)) >
-|	< #STRINGA: "'" (~["'"])* ( "''" (~["'"])* )* "'" >
-|   < #STRINGB: "\"" (~["\""])* ( "\"\"" (~["\""])* )* "\"" >
+|   < STRINGVAL: (("N")? "'" ( ("''") | ~["'"] )* "'") >
 |	< #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) >
 |	< #DIGIT: ["0"-"9"] >
-|   < #COLON: ":">
 
 }
 
@@ -255,6 +244,28 @@ TOKEN : /* Punctuation */
 
 //----------------------------------------------------
 //----------------------------------------------------
+
+String stringVal() :
+{
+	Token t = null;	
+}
+{
+  	(t = <STRINGVAL>)
+  	{
+  		return normalizeStringLiteral(t.image);
+  	}
+}
+
+String id() :
+{
+	Token t = null;
+}
+{
+  	(t = <ID>)
+  	{
+  		return normalizeId(t.image);
+  	}
+}
 
 /** 
  * Parse any of several command types - this is the main parser entry point. 
@@ -305,13 +316,13 @@ Command userCommand(ParseInfo info) :
 Command dropTable(ParseInfo info) :
 {
 	Drop drop = new Drop();
-	Token tableToken = null;
+	String table = null;
 }
 {
 	<DROP> <TABLE> 
-	tableToken = <ID>
+	table = id()
 	{
-		drop.setTable(new GroupSymbol(validateMetadataID(tableToken.image)));
+		drop.setTable(new GroupSymbol(table));
 		return drop;
 	}
 }
@@ -325,15 +336,15 @@ Command dropTable(ParseInfo info) :
 Command createTempTable(ParseInfo info) :
 {
 	Create create = new Create();
-	Token tableToken = null;
+	String table = null;
 	List columns = null;
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
-	tableToken = <ID>
+	table = id()
 	<LPAREN>
 	{
-		create.setTable(new GroupSymbol(validateMetadataID(tableToken.image)));
+		create.setTable(new GroupSymbol(table));
 	}
 	columns = createElementsWithTypes(info)
 	{
@@ -496,7 +507,7 @@ WhileStatement whileStatement(ParseInfo info) :
 LoopStatement loopStatement(ParseInfo info) :
 {
     LoopStatement loopStmt = null;    
-    Token cursor = null;
+    String cursor = null;
     QueryCommand query = null;
     Block block = null;
 }
@@ -507,12 +518,11 @@ LoopStatement loopStatement(ParseInfo info) :
     query = queryExpression(info)
     <RPAREN>
     <AS>
-    cursor = <ID>
+    cursor = id()
     block = block(info)
     
     {
-    	String cursorName = cursor.image;
-        loopStmt = new LoopStatement(block, query, cursorName);   
+        loopStmt = new LoopStatement(block, query, cursor);   
 
         return loopStmt;
     }    
@@ -553,7 +563,7 @@ CriteriaSelector criteriaSelector() :
 {
     CriteriaSelector critSelector = new CriteriaSelector();
     
-    Token elementToken = null;
+    String element = null;
     List elements = new ArrayList();
     Token operator = null;
 }
@@ -579,18 +589,18 @@ CriteriaSelector criteriaSelector() :
     [LOOKAHEAD(4)<ON> 
     <LPAREN> 
     
-    elementToken = <ID>
+    element = id()
     
     { 
-       elements.add(new ElementSymbol(validateMetadataID(elementToken.image)));
+       elements.add(new ElementSymbol(element));
     }       
         
     (<COMMA>
-        elementToken = <ID>
-        
-        {
-            elements.add(new ElementSymbol(validateMetadataID(elementToken.image)));
-        }           
+        element = id()
+    
+    	{ 
+       		elements.add(new ElementSymbol(element));
+    	}           
     )*    
     <RPAREN>
 
@@ -631,7 +641,7 @@ HasCriteria hasCriteria() :
 DeclareStatement declareStatement(ParseInfo info) :
 {
     DeclareStatement declStmt = null;
-    Token varToken = null;    
+    String var = null;    
     Constant type = null;  
     ElementSymbol variableID = null;
     LanguageObject value = null;
@@ -639,9 +649,9 @@ DeclareStatement declareStatement(ParseInfo info) :
 {
     <DECLARE>
     type = dataType()
-    varToken = <ID>
+    var = id()
     {
-        variableID = new ElementSymbol(validateMetadataID(varToken.image));
+        variableID = new ElementSymbol(var);
     }
     [<EQ>
      value = assignStatementOperand(info)
@@ -660,14 +670,14 @@ DeclareStatement declareStatement(ParseInfo info) :
 AssignmentStatement assignStatement(ParseInfo info) :
 {
     LanguageObject value = null;
-    Token varToken = null;
+    String var = null;
     ElementSymbol elementID = null;
 }
 {
     
-    varToken = <ID>
+    var = id()
     {
-        elementID = new ElementSymbol(validateMetadataID(varToken.image));              
+        elementID = new ElementSymbol(var);              
     } 
     <EQ>
     value = assignStatementOperand(info)
@@ -725,7 +735,7 @@ CommandStatement sqlStatement(ParseInfo info) :
  
 TranslateCriteria translateCriteria(ParseInfo info) :
 {
-    Token elementToken = null;
+    String element = null;
     Expression value = null;
     ElementSymbol leftSymbol = null;
     
@@ -746,12 +756,12 @@ TranslateCriteria translateCriteria(ParseInfo info) :
             critList = new ArrayList();
          }
          <LPAREN>
-        elementToken = <ID>
+        element = id()
         <EQ>
         value = expression(info) 
         {
             compCrit = new CompareCriteria();
-            leftSymbol = new ElementSymbol(elementToken.image);
+            leftSymbol = new ElementSymbol(element);
             compCrit.setLeftExpression(leftSymbol);
             compCrit.setRightExpression(value);
             compCrit.setOperator(CompareCriteria.EQ);  
@@ -759,12 +769,12 @@ TranslateCriteria translateCriteria(ParseInfo info) :
             compCrit = null;
         }
         (   <COMMA>
-            elementToken = <ID>
+            element = id()
             <EQ>
             value = expression(info)
          {
             compCrit = new CompareCriteria();
-            leftSymbol = new ElementSymbol(elementToken.image);
+            leftSymbol = new ElementSymbol(element);
             compCrit.setLeftExpression(leftSymbol);
             compCrit.setRightExpression(value);
             compCrit.setOperator(CompareCriteria.EQ);
@@ -815,7 +825,7 @@ CreateUpdateProcedureCommand  createUpdateProcedure(ParseInfo info) :
 DynamicCommand dynamicCommand(ParseInfo info) :
 {
     Expression sql = null;           
-    Token groupToken = null;
+    String groupID = null;
 	GroupSymbol group = null;
 	int updateCount = 0;
 	Token updateToken = null;
@@ -834,9 +844,8 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	elements = createElementsWithTypes(info)
 
 	 [<INTO>
-      groupToken = <ID>
+      groupID = id()
       {
-         String groupID = validateMetadataID(groupToken.image);
          group = new GroupSymbol(groupID);
       }
      ]
@@ -872,22 +881,22 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 {
 	SetClauseList using = new SetClauseList();
-	Token elementToken = null;
+	String element = null;
 }
 {
-	elementToken = <ID>
+	element = id()
     <EQ>
     {
-    	String symbolName = shortName?validateElementName(elementToken.image):validateMetadataID(elementToken.image);
+    	String symbolName = shortName?validateElementName(element):element;
         ElementSymbol symbol = new ElementSymbol(symbolName);
         Expression value = expression(info);
         using.addClause(symbol, value);
     }
 	(<COMMA>
-     elementToken = <ID>
+	 element = id()
      <EQ>
      {
-          symbolName = shortName?validateElementName(elementToken.image):validateMetadataID(elementToken.image);
+	      symbolName = shortName?validateElementName(element):element;
           symbol = new ElementSymbol(symbolName);
           value = expression(info);
           using.addClause(symbol, value);
@@ -899,28 +908,28 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 }
 
 /**
- * * Create elementes with datatypes
+ * Create elements with datatypes
  * @throws ParseException if parsing failed
  */
 List createElementsWithTypes(ParseInfo info) :
 {
-	Token elementToken = null;
+	String element = null;
 	Constant type = null;
 	List elements = new ArrayList();
 }
 {
-	 elementToken = <ID>
+	 element = id()
 	 type = dataType()
 	 {
-	    ElementSymbol symbol = new ElementSymbol(validateElementName(elementToken.image));
+	    ElementSymbol symbol = new ElementSymbol(validateElementName(element));
 	    symbol.setType(DataTypeManager.getDataTypeClass(type.getValue().toString()));
 		elements.add(symbol);
 	 }
 	 (<COMMA>
-		elementToken = <ID>
+		element = id()
 		type = dataType()
 		{
-			symbol = new ElementSymbol(validateElementName(elementToken.image));
+			symbol = new ElementSymbol(validateElementName(element));
 		    symbol.setType(DataTypeManager.getDataTypeClass(type.getValue().toString()));
 		    elements.add(symbol);
 		}
@@ -935,7 +944,7 @@ StoredProcedure callableStatement(ParseInfo info) :
 	StoredProcedure storedProcedure = new StoredProcedure();
 	storedProcedure.setCallableStatement(true);
 	Token call = null;
-	Token procNameToken = null;
+	String procName = null;
 	Option option = null;
 	SPParameter parameter = null;
 	int parameterIndex = 1;
@@ -954,9 +963,9 @@ StoredProcedure callableStatement(ParseInfo info) :
 		   throw new ParseException(QueryPlugin.Util.getString("SQLParser.call_expected")); //$NON-NLS-1$
 		}
 	}
-	procNameToken = <ID>
+	procName = id()
 	{
-		storedProcedure.setProcedureName(procNameToken.image);
+		storedProcedure.setProcedureName(procName);
 	}
 		
 	//parameters
@@ -988,15 +997,15 @@ StoredProcedure callableStatement(ParseInfo info) :
 StoredProcedure storedProcedure(ParseInfo info) :
 {
 	StoredProcedure storedProcedure = new StoredProcedure();
-	Token procNameToken = null;
+	String procName = null;
 	Option option = null;
 }
 {
 	(
 		(<EXEC> | <EXECUTE>)
-		procNameToken = <ID>
+		procName = id()
 		{
-			storedProcedure.setProcedureName(procNameToken.image);
+			storedProcedure.setProcedureName(procName);
 		}
 		
 		//parameters
@@ -1067,7 +1076,7 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 	{
 		storedProcedure.setDisplayNamedParameters(true);
 	}
-	(name=paramName(info)
+	(name=id()
 	 <EQ>
 	 value = expression(info)
 		{
@@ -1078,7 +1087,7 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 			parameter = null;
 		}
 		(	<COMMA>
-		 	name=paramName(info)
+		 	name=id()
 	 		<EQ>
 	 		value = expression(info)
 			{
@@ -1097,29 +1106,6 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 }
 
 /**
- * Parse an execute statement parameter name (must not be
- * enclosed in single or double ticks)
- * @return Parsed insert statement
- * @throws ParseException if parsing failed
- */
-String paramName(ParseInfo info) :
-{
-    Token t = null;
-    String parameterName = null;
-    
-}
-{
-	t=<ID>	
-	{ 
-		parameterName = t.image;
-		
-		parameterName = validateMetadataID(parameterName);
-		
-		return parameterName;
-	}
-}
-
-/**
  * Parse an INSERT command
  * @return Parsed insert statement
  * @throws ParseException if parsing failed
@@ -1127,26 +1113,26 @@ String paramName(ParseInfo info) :
 Insert insert(ParseInfo info) :
 {
 	Insert insert = new Insert();
-	Token groupToken = null;
-	Token elementToken = null;
+	String group = null;
+	String element = null;
 	List values = null;
 	Option option = null;
 	QueryCommand query = null;
 }
 {
 	<INSERT> <INTO>
-	groupToken = <ID>
+	group = id()
 
 	[LOOKAHEAD(<LPAREN><ID>)
 		<LPAREN>
-		elementToken = <ID>
+		element = id()
 		{
-			insert.addVariable(new ElementSymbol(validateMetadataID(elementToken.image)));
+			insert.addVariable(new ElementSymbol(element));
 		}
 		(	<COMMA>
-			elementToken = <ID>
+			element = id()
 			{
-				insert.addVariable(new ElementSymbol(validateMetadataID(elementToken.image)));
+				insert.addVariable(new ElementSymbol(element));
 			}
 		)*
 		<RPAREN>
@@ -1176,7 +1162,7 @@ Insert insert(ParseInfo info) :
 	
 	{
 		// Store group
-		insert.setGroup(new GroupSymbol(validateMetadataID(groupToken.image)) );
+		insert.setGroup(new GroupSymbol(group) );
 
 		return insert;
 	}
@@ -1219,7 +1205,7 @@ List rowValues(ParseInfo info) :
 Update update(ParseInfo info) :
 {
 	Update update = new Update();
-	Token groupToken = null;
+	String group = null;
 	SetClauseList setClauseList = null;
 	Criteria criteria = null;
 	ElementSymbol elementID = null;
@@ -1227,7 +1213,7 @@ Update update(ParseInfo info) :
 }
 {
 	<UPDATE>
-	groupToken = <ID>
+	group = id()
 	<SET>
 	setClauseList = setClauseList(false, info)
 	{
@@ -1241,7 +1227,7 @@ Update update(ParseInfo info) :
 	]
 	{	
 		// Store group
-		update.setGroup(new GroupSymbol( validateMetadataID(groupToken.image)) );
+		update.setGroup(new GroupSymbol( group) );
 		
 		// Store optional criteria
 		if(criteria != null) {
@@ -1260,14 +1246,14 @@ Update update(ParseInfo info) :
  */
 Delete delete(ParseInfo info) :
 {
-	Token groupToken = null;
+	String group = null;
 	Criteria criteria = null;
 	Delete delete = new Delete();
 	Option option = null;
 }
 {
 	<DELETE> <FROM>
-	groupToken = <ID>
+	group = id()
 	[criteria = where(info)]
 	[option = option(info)
 	  {
@@ -1275,7 +1261,7 @@ Delete delete(ParseInfo info) :
 	  }
 	]
 	{
-		delete.setGroup(new GroupSymbol(validateMetadataID(groupToken.image)));
+		delete.setGroup(new GroupSymbol(group));
 		delete.setCriteria(criteria);
 		        
         return delete; 
@@ -1398,14 +1384,14 @@ Query query(ParseInfo info) :
 
 Into into(ParseInfo info) :
 {
-	Token groupID = null;
+	String groupID = null;
 	Into into = null;
 }
 {	
 	<INTO>
-	(groupID=<ID>)
+	(groupID=id())
 	{
-    	into = new Into(new GroupSymbol(groupID.image));
+    	into = new Into(new GroupSymbol(groupID));
 		return into;
     }	
 }
@@ -1454,7 +1440,7 @@ Select select(ParseInfo info) :
 SelectSymbol selectSymbol(ParseInfo info) :
 {
 	Expression expression = null;
-    Token aliasToken = null;
+    String alias = null;
     Token allInGroupToken = null;	
 }
 {
@@ -1468,50 +1454,32 @@ SelectSymbol selectSymbol(ParseInfo info) :
 			// Expression
 			expression=expression(info)	
 		)
-		[[<AS>] ( aliasToken=<ID> |
-				  aliasToken=<STRINGVAL>
-				)
+		[[<AS>] ( alias=id() )
 		]
 	)
 	{
 		// Validate alias
-        String alias = null;
-        if(aliasToken != null) { 
-            alias = validateAlias(aliasToken.image);
+        if(alias != null) { 
+            alias = validateAlias(alias);
         }    
 	
 		if(allInGroupToken != null) {
-			if(aliasToken == null) {
-				// Group.*
-				return new AllInGroupSymbol(validateMetadataID(allInGroupToken.image));
-			} else {
-				Object[] params = new Object[] { allInGroupToken.image };				
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.Cant_alias_star", params)); //$NON-NLS-1$
-			}
-		} else if(expression instanceof ElementSymbol) {
-			SingleElementSymbol es = (ElementSymbol) expression;
-			if(aliasToken != null) {
-				// Aliased element
-				es = new AliasSymbol(alias, es);
-			}
-			return es;
+			// Group.*
+			return new AllInGroupSymbol(normalizeId(allInGroupToken.image));
+		} 
+		SingleElementSymbol es = null;
+		if(expression instanceof ElementSymbol) {
+			es = (ElementSymbol) expression;
 		} else if(expression instanceof AggregateSymbol) {
-			// This can happen if the aggregate symbol is surrounded by ( ), which
-			// can happen when queries are generated in ODBC
-			AggregateSymbol aggSymbol = (AggregateSymbol) expression;
-			if(aliasToken != null) {
-				return new AliasSymbol(alias, aggSymbol);
-			} else {
-				return aggSymbol;
-			}			
+		    es = (AggregateSymbol)expression;
 		} else {
 			String functionName = generateFunctionName(info, null);
-			SingleElementSymbol expSymbol = new ExpressionSymbol(functionName, expression);
-			if(aliasToken != null) { 
-				expSymbol = new AliasSymbol(alias, expSymbol);
-			}
-			return expSymbol;
+			es = new ExpressionSymbol(functionName, expression);
 		}
+		if(alias != null) { 
+			return new AliasSymbol(alias, es);
+		}
+		return es;
 	}
 }
 
@@ -1729,7 +1697,7 @@ FromClause tablePrimary(ParseInfo info) :
  */
 SubqueryFromClause subqueryFromClause(ParseInfo info) :
 {
-    Token aliasID = null;
+    String aliasID = null;
 	Command command = null;
 	SubqueryFromClause clause = null;
 	Token lparen = null;
@@ -1740,10 +1708,10 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
       command = storedProcedure(info) )
 	<RPAREN>
 	[<AS>]
-	aliasID = <ID>
+	aliasID = id()
 	
 	{
-		clause = new SubqueryFromClause(validateAlias(aliasID.image), command);
+		clause = new SubqueryFromClause(validateAlias(aliasID), command);
         setFromClauseOptions(lparen, clause);
         return clause;
     }	
@@ -1758,16 +1726,16 @@ UnaryFromClause unaryFromClause(ParseInfo info) :
 {
 	GroupSymbol group = null;
 	Token groupID = null;
-    Token aliasID = null;
+    String aliasID = null;
 	UnaryFromClause clause = null;
 }
 {	
-	(groupID=<ID> [[<AS>] aliasID=<ID>])
+	(groupID=<ID> [[<AS>] aliasID=id()])
 	{
     	if(aliasID != null) {		
-            group = new GroupSymbol(validateAlias(aliasID.image), validateMetadataID(groupID.image));
+            group = new GroupSymbol(validateAlias(aliasID), normalizeId(groupID.image));
         } else {
-			group = new GroupSymbol(validateMetadataID(groupID.image));
+			group = new GroupSymbol(normalizeId(groupID.image));
         }
         clause = new UnaryFromClause(group);
         setFromClauseOptions(groupID, clause);
@@ -2063,15 +2031,15 @@ MatchCriteria matchCrit(ParseInfo info) :
 
 Character escapeChar(ParseInfo info) :
 {
-	Token escStr = null;
+	String escStr = null;
 }
 {
-	<ESCAPE> escStr=<STRINGVAL>
+	<ESCAPE> escStr=stringVal()
 	{
-		if (escStr.image.length() != 3) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_escape_char", escStr.image)); //$NON-NLS-1$
+		if (escStr.length() != 1) {
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_escape_char", escStr)); //$NON-NLS-1$
 		}
-		return Character.valueOf(escStr.image.charAt(1));
+		return Character.valueOf(escStr.charAt(0));
 	}
 }
 
@@ -2276,46 +2244,63 @@ Criteria having(ParseInfo info) :
  */
 OrderBy orderby(ParseInfo info) :
 {
-    Token id = null;
+    SingleElementSymbol ex = null;
     Token type = null;
     OrderBy orderby = new OrderBy();
     boolean ascending = true;    
 }
 {
 	<ORDER> <BY>
-	(id=<ID> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
+	ex=sortKey(info) [<ASC> | type=<DESC>]
 	{
         ascending = true;
        	if(type != null) {
        		ascending = false;
        		type=null;
        	} 
-       	if (StringUtil.isDigits(id.image)){
-        	orderby.addVariable(new ElementSymbol(id.image), ascending);               	
-       	}
-       	else{
-        	orderby.addVariable(new ElementSymbol(validateMetadataID(id.image)), ascending);
-       	}
+    	orderby.addVariable(ex, ascending);
 	}
 	(<COMMA>
-		(id=<ID> | id=<STRINGVAL> | id=<INTEGERVAL>) [<ASC> | type=<DESC>]
+		ex=sortKey(info) [<ASC> | type=<DESC>]
 		{
             ascending = true;
             if(type != null) {
                 ascending = false;
                 type=null;
             }
-            if (StringUtil.isDigits(id.image)){
-                orderby.addVariable(new ElementSymbol(id.image), ascending);       
-            }
-            else{
-                orderby.addVariable(new ElementSymbol(validateMetadataID(id.image)), ascending);
-            }
+            orderby.addVariable(ex, ascending);
         }
 	)*
 	{
 	    return orderby;
 	}
+}
+
+SingleElementSymbol sortKey(ParseInfo info) :
+{
+    Expression ex = null;
+}
+{
+    ex=expression(info)
+    {
+        //legacy support check for positional constants
+        if (ex instanceof Constant) {
+        	boolean valid = false;
+            Constant c = (Constant)ex;
+            if (c.getValue() instanceof Integer) {
+                Integer val = (Integer)c.getValue();
+                valid = val.intValue() > 0;
+            }      
+            if (!valid) {
+            	throw new ParseException(QueryPlugin.Util.getString("SQLParser.non_position_constant", ex)); //$NON-NLS-1$
+            }
+        } 
+        if(ex instanceof ElementSymbol) {
+            return (ElementSymbol)ex;
+        } 
+        String exprName = generateFunctionName(info, null);
+        return new ExpressionSymbol(exprName, ex);
+    }
 }
 
 /** 
@@ -2363,7 +2348,7 @@ Option option(ParseInfo info) :
 	Token plan = null;
 	Token debug = null;
 	Token planOnly = null;
-	Token id = null;
+	String id = null;
 	Token nocache = null;
 	Option option = new Option();
 }
@@ -2375,37 +2360,37 @@ Option option(ParseInfo info) :
 		debug 		= <DEBUG> |
 		
 		<MAKEDEP>		
-		id=<ID>
+		id=id()
 		{
-            option.addDependentGroup(validateMetadataID(id.image));
+            option.addDependentGroup(id);
 		}
 		(<COMMA>
-			id=<ID>
+			id=id()
 			{
-                option.addDependentGroup(validateMetadataID(id.image));
+                option.addDependentGroup(id);
 	        }
 		)* |
 		<MAKENOTDEP>		
-		id=<ID>
+		id=id()
 		{
-            option.addNotDependentGroup(validateMetadataID(id.image));
+            option.addNotDependentGroup(id);
 		}
 		(<COMMA>
-			id=<ID>
+			id=id()
 			{
-                option.addNotDependentGroup(validateMetadataID(id.image));
+                option.addNotDependentGroup(id);
 	        }
 		)* |
 		
 		nocache	= <NOCACHE>		
-		[id=<ID>
+		[id=id()
 		{
-            option.addNoCacheGroup(validateMetadataID(id.image));
+            option.addNoCacheGroup(id);
 		}
 		(<COMMA>
-			id=<ID>
+			id=id()
 			{
-                option.addNoCacheGroup(validateMetadataID(id.image));
+                option.addNoCacheGroup(id);
 	        }
 		)*]
 	)*
@@ -2575,7 +2560,7 @@ Expression basicExpression(ParseInfo info) :
         (
 		// Reference
 		refToken=<QMARK>
-		| 	
+		|
 		// Literal
 		literal=literal()
 		|
@@ -2594,16 +2579,9 @@ Expression basicExpression(ParseInfo info) :
 		// ElementSymbol
 		(symbol=<ID> 
 			{
-				// Check that this isn't actually a string expression.  That 
-				// is a possibility due to the token definitions where a 
-				// quoted group ("group") may look like a string constant ("xyz").
-				// Due to the ordering of token definitions (which is important
-				// in other places), this will be matched as an ID, not as a 
-				// StringVal.  Anywhere that an expression can be used, the 
-				// only valid choice is as a string constant.
 				String symbolImage = symbol.image;
 				if(isStringLiteral(symbolImage, info)) {
-				    literal = new Constant(symbolImage.substring(1, symbolImage.length()-1));
+				    literal = new Constant(normalizeStringLiteral(symbolImage));
 				    symbol = null;
 				}  
 			}
@@ -2629,7 +2607,7 @@ Expression basicExpression(ParseInfo info) :
 		if(refToken != null) {
 			return new Reference(info.referenceCount++);
 		} else if(symbol != null) {
-			return new ElementSymbol(validateMetadataID(symbol.image));
+			return new ElementSymbol(normalizeId(symbol.image));
 		} else if(literal != null) {
 			return literal;		// may be null literal
 		} else if (subquery != null){
@@ -2837,9 +2815,9 @@ Function function(ParseInfo info) :
 		<RPAREN>
 	)  			
 	|
-	(	funcToken = <ID>
+	(	funcName = id()
 		{ 
-			funcName = validateFunctionName(funcToken.image);
+			funcName = validateFunctionName(funcName);
 		}
 		<LPAREN>
 		[
@@ -2944,21 +2922,12 @@ Constant literal() :
 {
     Token t = null;
     String strVal = null;
-    char tickChar = '\'';
     Class escapeType = null;
     Constant constant = null;
 }
 {
 	(	
-		t=<STRINGVAL>	{ 
-			strVal = t.image;
-			
-			if(strVal.charAt(0) == 'N') {
-				strVal = strVal.substring(1);
-			}			
-			tickChar = strVal.charAt(0);
-			strVal = strVal.substring(1, strVal.length()-1);
-			strVal = removeEscapeChars(strVal, tickChar);
+		strVal=stringVal()	{ 
 			constant = new Constant(strVal, DataTypeManager.DefaultDataClasses.STRING);
 		} |
 		
@@ -2999,10 +2968,9 @@ Constant literal() :
         ( (<BOOLEANTYPE>   { escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN; } |
           <TIMESTAMPTYPE> { escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP; } | 
           <DATETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.DATE; } |
-          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) t=<STRINGVAL> { 
-	        	String str = t.image.substring(1, t.image.length()-1);
+          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) strVal=stringVal() { 
 	        	try {
-	        		constant = new Constant(DataTypeManager.transformValue(str, escapeType), escapeType);
+	        		constant = new Constant(DataTypeManager.transformValue(strVal, escapeType), escapeType);
 	        	} catch (TransformationException e) {
 	        		throw new ParseException(e.getMessage()); //$NON-NLS-1$
 	        	}

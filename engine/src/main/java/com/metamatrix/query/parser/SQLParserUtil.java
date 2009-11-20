@@ -23,6 +23,8 @@
 package com.metamatrix.query.parser;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.metamatrix.core.util.Assertion;
@@ -37,47 +39,58 @@ import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.proc.CriteriaSelector;
 
 public class SQLParserUtil {
-
-    /**
-     * Check that this is a valid group or element ID
-     * @param id Group ID string
-     */
-    boolean isMetadataID(String id) throws ParseException {
-        int length = id.length();
-        
-        // Validate server forms:   
-        //  group, vdb.group, "group", vdb."group",
-        //  group.*, vdb.group.*, "group".*, vdb."group".*,
-        //  group.element, vdb.group.element, "group".element, vdb."group".element
-        //  tag.tag.tag
-        //  tag.tag.@attribute
-        
-        // Check first character - must be letter or "
-        char c = id.charAt(0);
-        if( ! (c == '\"' || c == '#' || StringUtil.isLetter(c)) ) {
-            return false;
-        }
-
-        // Check middle characters - letter, number, _, "        
-        if(length > 1) {
-            for(int i=1; i<length; i++) { 
-                c = id.charAt(i);
-                if( ! (c == '.' || c == '_' || c == '\"' || c == '/' || c == '@' || StringUtil.isLetterOrDigit(c)) ) {                 
-                    // Allow last character to be * as well
-                    if( i == (length-1) ) {
-                        if(c != '*') { 
-                            return false;
-                        }    
-                    } else {
-                        return false;
-                    }    
-                }
-            }
-        }
-        
-        return true;
-    }    
-
+	
+	String normalizeStringLiteral(String s) {
+		int start = 1;
+  		if (s.charAt(0) == 'N') {
+  			start++;
+  		}
+  		char tickChar = s.charAt(start - 1);
+  		s = s.substring(start, s.length() - 1);
+  		return removeEscapeChars(s, tickChar);
+	}
+	
+	String normalizeId(String s) {
+		if (s.indexOf('"') == -1) {
+			return s;
+		}
+		List<String> nameParts = new LinkedList<String>();
+		while (s.length() > 0) {
+			if (s.charAt(0) == '"') {
+				boolean escape = false;
+				for (int i = 1; i < s.length(); i++) {
+					if (s.charAt(i) != '"') {
+						continue;
+					}
+					escape = !escape;
+					boolean end = i == s.length() - 1;
+					if (end || (escape && s.charAt(i + 1) == '.')) {
+				  		String part = s.substring(1, i);
+				  		s = s.substring(i + (end?1:2));
+				  		nameParts.add(removeEscapeChars(part, '"'));
+				  		break;
+					}
+				}
+			} else {
+				int index = s.indexOf('.');
+				if (index == -1) {
+					nameParts.add(s);
+					break;
+				} 
+				nameParts.add(s.substring(0, index));
+				s = s.substring(index + 1);
+			}
+		}
+		StringBuilder sb = new StringBuilder();
+		for (Iterator<String> i = nameParts.iterator(); i.hasNext();) {
+			sb.append(i.next());
+			if (i.hasNext()) {
+				sb.append('.');
+			}
+		}
+		return sb.toString();
+	}
+	
     /**
      * Check that this is a valid function name
      * @param id Function name string
@@ -102,96 +115,27 @@ public class SQLParserUtil {
         throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_func", params)); //$NON-NLS-1$
     }
 
-    /**
-     * Check that this is a valid alias
-     * @param alias Alias string
-     */
-    boolean isAlias(String alias) throws ParseException {
-        if((alias.charAt(0) == '\"' && alias.charAt(alias.length()-1) == '\"')
-        ||(alias.charAt(0) == '\'' && alias.charAt(alias.length()-1) == '\'')) {
-            return isMetadataPart(alias.substring(1, alias.length()-1));
-        }   
-        return isMetadataPart(alias);
-    }
-
-    /**
-     * Check that this is a valid metadata part - starts with a letter and contains alpha, numeric, _
-     * @param part Metadata part string
-     */
-    boolean isMetadataPart(String part) throws ParseException {
-        int length = part.length();
-        
-        // Check first character - must be letter
-        char c = part.charAt(0);
-        if( ! StringUtil.isLetter(c) ) {
-            return false;
-        }
-        
-        // Check other characters - letter, number, _       
-        if(length > 1) {
-            for(int i=1; i<length; i++) { 
-                c = part.charAt(i);
-                if( ! (c == '_' || StringUtil.isLetterOrDigit(c)) ) {                 
-                    return false;
-                }
-            }
-        }
-        
-        return true;
-    }    
 
     /**
      * Check if this is a valid string literal
      * @param id Possible string literal
      */
     boolean isStringLiteral(String str, ParseInfo info) throws ParseException {
-        // Check first last characters first - this is a requirement and should
-        // fail quickly in most cases
-        if(str.charAt(0) != '\"' || str.charAt(str.length()-1) != '\"') {
-            return false;
-        }
-        
-        // Check whether this is a string like "abcdefg" or a variable like "category.group"."element"
-        
-        // First, tokenize on periods (note that periods may be embedded in quoted parts)
-        List tokens = StringUtil.split(str, "."); //$NON-NLS-1$
-        if(tokens.size() < 2) { 
-            // No periods, so this must be a string literal
-            return info.allowDoubleQuotedVariable()? false : true;
-        }   
-        // Start at second token (i=1) and look at pairs of this and previous for 
-        // a pair that ends and begins in ".  Also, have to make sure that " is not 
-        // part of an escaped quote: "abc"".""def" should be a string literal while
-        // "abc"."def" should be a variable.
-        for(int i=1; i<tokens.size(); i++) {
-            String first = (String) tokens.get(i-1);
-            String second = (String) tokens.get(i);
-            if( second.charAt(0) == '\"' &&
-                second.charAt(1) != '\"' && 
-                first.charAt(first.length()-1) == '\"' && 
-                first.charAt(first.length()-2) != '\"' ) {
-                
-                return false;
-            }
-        }
-        
-        // Didn't find any evidence that this is a dotted variable, so must be a string
-        // unless we are allowing double quoted variable, like ODBC metadata tools use.
-        return info.allowDoubleQuotedVariable()? false : true;
-    }    
-
-    /**
-     * Check that this is a valid metadata ID, remove quotes, and return updated
-     * ID string.
-     * @param id Metadata ID string
-     */
-    String validateMetadataID(String id) throws ParseException {
-        if(! isMetadataID(id)) { 
-            Object[] params = new Object[] { id };
-            throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_id", params)); //$NON-NLS-1$
-        }
-        id = id.replaceAll("\"", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        return id;
+    	if (info.allowDoubleQuotedVariable() || str.charAt(0) != '"' || str.charAt(str.length() - 1) != '"') {
+    		return false;
+    	}
+    	int index = 1;
+    	while (index < str.length() - 1) {
+    		index = str.indexOf('"', index);
+    		if (index == -1 || index + 1 == str.length()) {
+    			return true;
+    		}
+    		if (str.charAt(index + 1) != '"') {
+    			return false;
+    		}
+    		index += 2;
+    	}
+    	return true;
     }    
 
     /**
@@ -204,7 +148,7 @@ public class SQLParserUtil {
     }
 
     private String validateName(String id, boolean element) throws ParseException {
-        if(! isAlias(id)) { 
+        if(id.indexOf('.') != -1) { 
             Object[] params = new Object[] { id };
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
             if (element) {
@@ -212,9 +156,7 @@ public class SQLParserUtil {
             }
             throw new ParseException(QueryPlugin.Util.getString(key, params)); 
         }
-        // Remove Quotes and Single Tick
-        id = removeCharacter(id, '"');
-        return removeCharacter(id, '\'');
+        return id;
     }
     
     /**
@@ -225,28 +167,6 @@ public class SQLParserUtil {
         return validateName(id, true);
     }
     
-    /**
-     * Remove all quotes from the specified id string
-     * @param id Input string
-     * @param remove character to be removed from id
-     * @return string from which remove character is removed, 
-     * if no instances of remove character is found original string returned
-     */
-    String removeCharacter(String id, char remove) {
-        if(id.indexOf(remove) >= 0) {
-            StringBuffer newStr = new StringBuffer();
-            int length = id.length();
-            for(int i=0; i<length; i++) { 
-                char c = id.charAt(i);
-                if(c != remove) { 
-                    newStr.append(c);  
-                } 
-            }
-            return newStr.toString();    
-        } 
-        return id;
-    } 
-
     String removeEscapeChars(String str, char tickChar) {
         String doubleTick = "" + tickChar + tickChar; //$NON-NLS-1$
         int index = str.indexOf(doubleTick);

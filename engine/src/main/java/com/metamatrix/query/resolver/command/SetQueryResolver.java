@@ -35,12 +35,15 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
+import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.CommandResolver;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SetQuery;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -90,9 +93,8 @@ public class SetQueryResolver implements CommandResolver {
         
         // ORDER BY clause
         if(setQuery.getOrderBy() != null) {
-            List validGroups = Collections.EMPTY_LIST;
             //order by elements must use the short name of the projected symbols
-            ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), validGroups, setQuery.getProjectedSymbols(), metadata, false);
+            ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), setQuery, metadata);
         } 
 
         setProjectedTypes(setQuery, firstProjectTypes);
@@ -116,7 +118,7 @@ public class SetQueryResolver implements CommandResolver {
                 for (int j = 0; j < projectedSymbols.size(); j++) {
                     SingleElementSymbol ses = (SingleElementSymbol)projectedSymbols.get(j);
                     Class targetType = (Class)firstProjectTypes.get(j);
-                    if (ses.getType() != targetType && ResolverUtil.orderByContainsVariable(child.getOrderBy(), ses, j)) {
+                    if (ses.getType() != targetType && orderByContainsVariable(child.getOrderBy(), ses, j)) {
                         String sourceTypeName = DataTypeManager.getDataTypeName(ses.getType());
                         String targetTypeName = DataTypeManager.getDataTypeName(targetType);
                         throw new QueryResolverException(QueryPlugin.Util.getString("UnionQueryResolver.type_conversion", //$NON-NLS-1$
@@ -127,6 +129,21 @@ public class SetQueryResolver implements CommandResolver {
             child.setProjectedTypes(firstProjectTypes);
             setProjectedTypes(child, firstProjectTypes);
         }
+    }
+    
+    /**
+     * Checks if a variable is in the ORDER BY
+     * @param position 0-based index of the variable
+     * @return True if the ORDER BY contains the element
+     */
+    public static boolean orderByContainsVariable(OrderBy orderBy, SingleElementSymbol ses, int position) {
+        for (final Iterator iterator = orderBy.getVariables().iterator(); iterator.hasNext();) {
+            final ElementSymbol element = (ElementSymbol)iterator.next();
+            if (position == ((TempMetadataID)element.getMetadataID()).getPosition()) {
+                return true;
+            }
+        } 
+        return false;
     }
     
 	static void checkSymbolTypes(List firstProjectTypes, List projSymbols) {

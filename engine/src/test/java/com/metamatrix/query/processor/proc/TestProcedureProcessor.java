@@ -525,7 +525,7 @@ public class TestProcedureProcessor {
 
     // error statement
     @Test public void testProcedureProcessor7() throws Exception {
-        String errorValue = "\"MY ERROR\""; //$NON-NLS-1$
+        String errorValue = "'MY ERROR'"; //$NON-NLS-1$
         helpTestErrorStatment(errorValue, "MY ERROR"); //$NON-NLS-1$
     }
     
@@ -535,7 +535,7 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testProcedureProcessor9() throws Exception {
-        String errorValue = "var1||\"MY ERROR\""; //$NON-NLS-1$
+        String errorValue = "var1||'MY ERROR'"; //$NON-NLS-1$
         helpTestErrorStatment(errorValue, "5MY ERROR"); //$NON-NLS-1$
     }
         
@@ -544,7 +544,7 @@ public class TestProcedureProcessor {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "loop on (Select pm1.g1.e2 from pm1.g1 where e2 = 5) as mycursor\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$ 
-        procedure = procedure + "ERROR (mycursor.e2||\"MY ERROR\");\n"; //$NON-NLS-1$
+        procedure = procedure + "ERROR (mycursor.e2||'MY ERROR');\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$

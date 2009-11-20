@@ -25,6 +25,7 @@ package com.metamatrix.query.resolver.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -39,7 +40,6 @@ import com.metamatrix.api.exception.query.UnresolvedSymbolDescription;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataTypes;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
@@ -54,6 +54,9 @@ import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.QueryCommand;
+import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.AbstractCaseExpression;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -68,6 +71,8 @@ import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
@@ -292,163 +297,158 @@ public class ResolverUtil {
         }
     }
     
-    /**
-    * Attempt to resolve the order by
-    * throws QueryResolverException if the symbol is not of SingleElementSymbol type
-    * @param orderBy
-     * @param fromClauseGroups groups of the FROM clause of the query (for 
-    * resolving ambiguous unqualified element names), or empty List if a Set Query
-    * Order By is being resolved
-     * @param knownElements resolved elements from SELECT clause, which are only 
-    * ones allowed to be in ORDER BY 
-     * @param metadata QueryMetadataInterface
-     * @param isSimpleQuery
-    */
-    public static void resolveOrderBy(OrderBy orderBy, List fromClauseGroups, List knownElements, QueryMetadataInterface metadata, boolean isSimpleQuery)
+	/**
+	 * Attempt to resolve the order by throws QueryResolverException if the
+	 * symbol is not of SingleElementSymbol type
+	 * 
+	 * @param orderBy
+	 * @param fromClauseGroups
+	 *            groups of the FROM clause of the query (for resolving
+	 *            ambiguous unqualified element names), or empty List if a Set
+	 *            Query Order By is being resolved
+	 * @param knownElements
+	 *            resolved elements from SELECT clause, which are only ones
+	 *            allowed to be in ORDER BY
+	 * @param metadata
+	 *            QueryMetadataInterface
+	 * @param isSimpleQuery
+	 */
+    public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, QueryMetadataInterface metadata)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
 
-        orderBy.setInPlanForm(false);
+    	List<SingleElementSymbol> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
+    	
+    	boolean isSimpleQuery = false;
+    	List fromClauseGroups = Collections.emptyList();
         
+        if (command instanceof Query) {
+        	Query query = (Query)command;
+        	isSimpleQuery = !query.getSelect().isDistinct() && query.getGroupBy() == null;
+        	if (query.getFrom() != null) {
+        		fromClauseGroups = query.getFrom().getGroups();
+        	}
+        }
+    	
         // Cached state, if needed
         String[] knownShortNames = new String[knownElements.size()];
+        List<Expression> expressions = new ArrayList<Expression>(knownElements.size());
 
         for(int i=0; i<knownElements.size(); i++) {
-            SingleElementSymbol knownSymbol = (SingleElementSymbol) knownElements.get(i);
+            SingleElementSymbol knownSymbol = knownElements.get(i);
+            expressions.add(SymbolMap.getExpression(knownSymbol));
             if (knownSymbol instanceof ExpressionSymbol) {
                 continue;
             }
             
             String name = knownSymbol.getShortName();
-            //special check for uuid element symbols
-            if (knownSymbol instanceof ElementSymbol && knownSymbol.getShortName().equalsIgnoreCase(knownSymbol.getName())) {
-                name = metadata.getShortElementName(metadata.getFullName((((ElementSymbol)knownSymbol).getMetadataID())));
-            }  
             
             knownShortNames[i] = name;
         }
 
-        // Collect all elements from order by
-        List elements = orderBy.getVariables();
-        Iterator elementIter = elements.iterator();
-
-        // Walk through elements of order by
-        while(elementIter.hasNext()){
-            ElementSymbol symbol = (ElementSymbol) elementIter.next();
-            SingleElementSymbol matchedSymbol = null;
-            String symbolName = symbol.getName();
-            String groupPart = metadata.getGroupName(symbolName);
-            String shortName = symbol.getShortName();
+        for (int i = 0; i < orderBy.getVariableCount(); i++) {
+        	SingleElementSymbol sortKey = orderBy.getVariable(i);
+        	if (sortKey instanceof ElementSymbol) {
+        		int index = resolveSortKey(orderBy, fromClauseGroups, knownElements, metadata,
+    					isSimpleQuery, knownShortNames, (ElementSymbol)sortKey);
+                if (index == -1) {
+                	index = expressions.indexOf(SymbolMap.getExpression(sortKey));
+                }
+                orderBy.setExpressionPosition(i, index);
+                if (index == -1) {
+                	orderBy.addUnrelated((ElementSymbol)sortKey);
+                }
+                continue;
+        	} else if (sortKey instanceof ExpressionSymbol) {
+        		// check for legacy positional
+    			ExpressionSymbol es = (ExpressionSymbol)sortKey;
+        		if (es.getExpression() instanceof Constant) {
+            		Constant c = (Constant)es.getExpression();
+        		    int elementOrder = Integer.valueOf(c.getValue().toString()).intValue();
+        		    // adjust for the 1 based index.
+        		    if (elementOrder > knownElements.size() || elementOrder < 1) {
+            		    throw new QueryResolverException(QueryPlugin.Util.getString("SQLParser.non_position_constant", c)); //$NON-NLS-1$
+        		    }
+        		    orderBy.setExpressionPosition(i, elementOrder - 1);
+        		}
+        	}
+        	//handle order by expressions        	
+        	if (command instanceof SetQuery) {
+    			throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.setquery_order_expression", sortKey)); //$NON-NLS-1$	 
+    		}
+        	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
+                resolveSortKey(orderBy, fromClauseGroups, knownElements, metadata,
+    					isSimpleQuery, knownShortNames, symbol); 
+			}
+            ResolverVisitor.resolveLanguageObject(sortKey, metadata);
+            int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
             
-            //check for union order by (allow uuids to skip this check)
-            if (fromClauseGroups.isEmpty() && groupPart != null && !shortName.equals(symbolName)) {
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
-            }
-
-            // walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
-            for(int i=0; i<knownShortNames.length; i++) {
-            	if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
-                    if (groupPart != null) {
-                        Object knownSymbol = knownElements.get(i);
-                        if(knownSymbol instanceof ElementSymbol) {
-                            ElementSymbol knownElement = (ElementSymbol) knownSymbol;
-                            GroupSymbol group = knownElement.getGroupSymbol();
-                            
-                            // skip this one if the two short names are not from the same group
-                            if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
-                    if(matchedSymbol != null) {
-                        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
-                    }
-                    matchedSymbol = (SingleElementSymbol)knownElements.get(i);
-                }
-            }
-                        
-            // this clause handles the order by clause like  
-            // select foo from bar order by "1"; where 1 is foo. 
-            if (matchedSymbol == null && StringUtil.isDigits(symbolName)) {
-                int elementOrder = Integer.valueOf(symbolName).intValue() - 1;
-                // adjust for the 1 based index.
-                if (elementOrder < knownElements.size() && elementOrder >= 0) {
-                    matchedSymbol = (SingleElementSymbol)knownElements.get(elementOrder);
-                    
-                    for(int i=0; i<knownShortNames.length; i++) {
-                        if (i == elementOrder) {
-                            continue;
-                        }
-                        if (matchedSymbol.getShortCanonicalName().equalsIgnoreCase(knownShortNames[i])) {
-                            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, knownShortNames[i]));
-                        }
-                    }
-                }
-            }
-
-            if(matchedSymbol == null) {
-                // Didn't find it by full name or short name, so try resolving
-                // and retrying by full name - this will work for uuid case
-                try {
-                	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, metadata);
-                } catch(QueryResolverException e) {
-                	throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()) );
-                }
-
-                matchedSymbol = findMatchingElementByID(symbol, knownElements);
-            }
-                       
-            if (matchedSymbol == null) {
-            	if (!isSimpleQuery) {
-                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()));
-                }
-            	orderBy.setUnrelated(true);
-            } else {
-	            TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
-	            tempMetadataID.setPosition(knownElements.indexOf(matchedSymbol));
-	            symbol.setMetadataID(tempMetadataID);
-	            symbol.setType(matchedSymbol.getType());
-            } 
+            if (index != -1) {
+    			//the query is using an derived column, but not through an alias
+    			orderBy.setExpressionPosition(i, index);
+    		} 
+            //must be an unrelated sort expression
         }
     }
+    
+    private static int resolveSortKey(OrderBy orderBy, List fromClauseGroups,
+			List knownElements, QueryMetadataInterface metadata,
+			boolean isSimpleQuery, String[] knownShortNames,
+			ElementSymbol symbol) throws MetaMatrixComponentException,
+			QueryMetadataException, QueryResolverException {
+		SingleElementSymbol matchedSymbol = null;
+		String symbolName = symbol.getName();
+		String groupPart = metadata.getGroupName(symbolName);
+		String shortName = symbol.getShortName();
+		
+		//check for union order by 
+		if (fromClauseGroups.isEmpty() && groupPart != null && !shortName.equals(symbolName)) {
+		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
+		}
 
-    /**
-     * Helper for resolveOrderBy to find a matching fully-qualified element in a list of
-     * projected SELECT symbols.
-     * @throws QueryResolverException 
-     */
-    private static SingleElementSymbol findMatchingElementByID(ElementSymbol symbol, List knownElements) throws QueryResolverException {
-        Object elementID = symbol.getMetadataID();
-        
-        if(elementID == null) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()));
-        }
-        
-        Object groupID = symbol.getGroupSymbol().getMetadataID();
+		// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
+		for(int i=0; i<knownShortNames.length; i++) {
+			if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
+		        if (groupPart != null) {
+		            Object knownSymbol = knownElements.get(i);
+		            if(knownSymbol instanceof ElementSymbol) {
+		                ElementSymbol knownElement = (ElementSymbol) knownSymbol;
+		                GroupSymbol group = knownElement.getGroupSymbol();
+		                
+		                // skip this one if the two short names are not from the same group
+		                if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
+		                    continue;
+		                }
+		            }
+		        }
+		        
+		        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
+		        if(matchedSymbol != null) {
+		            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
+		        }
+		        matchedSymbol = (SingleElementSymbol)knownElements.get(i);
+		    }
+		}
+		            		           
+		if (matchedSymbol != null) {
+		    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
+		    int position = knownElements.indexOf(matchedSymbol);
+		    tempMetadataID.setPosition(position);
+		    symbol.setMetadataID(tempMetadataID);
+		    symbol.setType(matchedSymbol.getType());
+		    return position;
+		}
+		if (!isSimpleQuery) {
+	        throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.invalid_unrelated", symbol.getName())); //$NON-NLS-1$
+	    }
+	    // Didn't find it by full name or short name, so try resolving
+	    try {
+	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, metadata);
+	    } catch(QueryResolverException e) {
+	    	throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()) );
+	    }
+		return -1;
+	}
 
-        for(int i=0; i<knownElements.size(); i++) {
-            SingleElementSymbol selectSymbol = (SingleElementSymbol)knownElements.get(i);
-            SingleElementSymbol knownSymbol = null;
-            if(selectSymbol instanceof AliasSymbol) {
-            	knownSymbol = ((AliasSymbol)selectSymbol).getSymbol();
-            }
-
-            if(knownSymbol instanceof ElementSymbol) {
-                ElementSymbol knownElement = (ElementSymbol) knownSymbol;
-                Object knownElementID = knownElement.getMetadataID();
-
-                if(elementID.equals(knownElementID)) {
-                    Object knownGroupID = knownElement.getGroupSymbol().getMetadataID();
-                    if(groupID.equals(knownGroupID)) {
-                        return selectSymbol;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
 
     /** 
      * Get the default value for the parameter, which could be null
@@ -773,25 +773,6 @@ public class ResolverUtil {
         if (nameMatchesGroup(groupContext, fullName)) {
             matchedGroups.add(group);
             return true;
-        }
-        return false;
-    }
-    
-    /**
-     * Checks if a variable is in the ORDER BY
-     * @param position 0-based index of the variable
-     * @return True if the ORDER BY contains the element
-     */
-    public static boolean orderByContainsVariable(OrderBy orderBy, SingleElementSymbol ses, int position) {
-        if (!orderBy.isInPlanForm()) {
-            for (final Iterator iterator = orderBy.getVariables().iterator(); iterator.hasNext();) {
-                final ElementSymbol element = (ElementSymbol)iterator.next();
-                if (position == ((TempMetadataID)element.getMetadataID()).getPosition()) {
-                    return true;
-                }
-            } 
-        } else {
-            return orderBy.getVariables().contains(ses);
         }
         return false;
     }

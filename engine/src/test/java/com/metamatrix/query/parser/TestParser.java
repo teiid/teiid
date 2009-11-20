@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.parser;
 
+import static org.junit.Assert.*;
+
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -103,21 +105,7 @@ import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
 
-public class TestParser extends TestCase {
-
-	private ParseInfo info = new ParseInfo();
-	
-	// ################################## FRAMEWORK ################################
-	
-	public TestParser(String name) { 
-		super(name);
-	}	
-	
-	public void setUp() {
-		info.allowDoubleQuotedVariable = true;
-	}
-
-	// ################################## TEST HELPERS ################################
+public class TestParser {
 
     static void helpTest(String sql, String expectedString, Command expectedCommand) {
         helpTest(sql, expectedString, expectedCommand, new ParseInfo());
@@ -150,7 +138,6 @@ public class TestParser extends TestCase {
             }
         }       
     }
-
     
     private void helpBlockTest(String block, String expectedString, Block expectedBlock) {
         Block actualBlock = null;
@@ -221,7 +208,7 @@ public class TestParser extends TestCase {
     // ======================== Joins ===============================================
 
 	/** SELECT * FROM g1 inner join g2 on g1.a1=g2.a2 */
-	public void testInnerJoin() {
+	@Test public void testInnerJoin() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -247,7 +234,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM g1 cross join g2 */
-	public void testCrossJoin() {
+	@Test public void testCrossJoin() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
 		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);		
@@ -268,7 +255,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT * FROM (g1 cross join g2), g3 */
-	public void testFromClauses() {
+	@Test public void testFromClauses() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
 		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);		
@@ -290,12 +277,12 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM g1 inner join g2 */
-	public void testInvalidInnerJoin() {
+	@Test public void testInvalidInnerJoin() {
 		helpException("SELECT * FROM g1 inner join g2");		 //$NON-NLS-1$
 	}
 
 	/** SELECT * FROM (g1 cross join g2) cross join g3 */
-	public void testMultiCrossJoin() {
+	@Test public void testMultiCrossJoin() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
@@ -317,7 +304,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM (g1 cross join g2) cross join (g3 cross join g4) */
-	public void testMultiCrossJoin2() {
+	@Test public void testMultiCrossJoin2() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
@@ -342,7 +329,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM g1 cross join (g2 cross join g3) */
-	public void testMultiCrossJoin3() {
+	@Test public void testMultiCrossJoin3() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
@@ -365,7 +352,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM g1 cross join (g2 cross join g3), g4 */
-	public void testMixedJoin() {
+	@Test public void testMixedJoin() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
@@ -389,7 +376,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT * FROM g1 cross join (g2 cross join g3), g4, g5 cross join g6 */
-	public void testMixedJoin2() {
+	@Test public void testMixedJoin2() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
@@ -418,7 +405,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT * FROM g1, g2 inner join g3 on g2.a=g3.a */
-	public void testMixedJoin3() {
+	@Test public void testMixedJoin3() {
 		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
 		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
 		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
@@ -446,7 +433,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** Select myG.a myA, myH.b from g myG right outer join h myH on myG.x=myH.x */
-	public void testRightOuterJoinWithAliases() {
+	@Test public void testRightOuterJoinWithAliases() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -473,7 +460,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** Select myG.x myX, myH.y from g myG right join h myH on myG.x=myH.x */
-	public void testRightJoinWithAliases() {
+	@Test public void testRightJoinWithAliases() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -500,7 +487,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** Select myG.a myA, myH.b from g myG left outer join h myH on myG.x=myH.x */
-	public void testLeftOuterJoinWithAliases() {
+	@Test public void testLeftOuterJoinWithAliases() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -527,7 +514,7 @@ public class TestParser extends TestCase {
 	}	
 
 	/** Select myG.a myA, myH.b from g myG left join h myH on myG.x=myH.x */
-	public void testLeftJoinWithAliases() {
+	@Test public void testLeftJoinWithAliases() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -554,7 +541,7 @@ public class TestParser extends TestCase {
 	}	
 	
 	/** Select myG.a myA, myH.b from g myG full outer join h myH on myG.x=myH.x */
-	public void testFullOuterJoinWithAliases() {
+	@Test public void testFullOuterJoinWithAliases() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -581,7 +568,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** Select g.a, h.b from g full join h on g.x=h.x */
-	public void testFullJoin() {
+	@Test public void testFullJoin() {
 		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("g")); //$NON-NLS-1$
 		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("h"));		 //$NON-NLS-1$
 		CompareCriteria jcrit = new CompareCriteria(
@@ -609,7 +596,7 @@ public class TestParser extends TestCase {
     // ======================= Convert ==============================================
 
 	/** SELECT CONVERT(a, string) FROM g */
-	public void testConversionFunction() {
+	@Test public void testConversionFunction() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -628,7 +615,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT CONVERT(CONVERT(a, timestamp), string) FROM g */
-	public void testConversionFunction2() {
+	@Test public void testConversionFunction2() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -650,7 +637,7 @@ public class TestParser extends TestCase {
     // ======================= Functions ==============================================
 
 	/** SELECT 5 + length(concat(a, 'x')) FROM g */
-	public void testMultiFunction() {
+	@Test public void testMultiFunction() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -671,7 +658,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT REPLACE(a, 'x', 'y') AS y FROM g */
-	public void testAliasedFunction() {
+	@Test public void testAliasedFunction() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -691,7 +678,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT cast(a as string) FROM g */
-	public void testCastFunction() {
+	@Test public void testCastFunction() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -710,7 +697,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT cast(cast(a as timestamp) as string) FROM g */
-	public void testMultiCastFunction() {
+	@Test public void testMultiCastFunction() {
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -730,7 +717,7 @@ public class TestParser extends TestCase {
 	}
 
     /** SELECT left(fullname, 3) as x FROM system.groups */
-    public void testLeftFunction() {
+    @Test public void testLeftFunction() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -750,7 +737,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT right(fullname, 3) as x FROM system.groups */
-    public void testRightFunction() {
+    @Test public void testRightFunction() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -770,7 +757,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT char('x') AS x FROM system.groups */
-    public void testCharFunction() {
+    @Test public void testCharFunction() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -790,7 +777,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT insert('x', 1, 'a') as x FROM system.groups */
-    public void testInsertFunction() {
+    @Test public void testInsertFunction() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -811,7 +798,7 @@ public class TestParser extends TestCase {
 
 
     
-    public void testInsertIntoSelect() {
+    @Test public void testInsertIntoSelect() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -835,7 +822,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT translate('x', 'x', 'y') FROM system.groups */
-    public void testTranslateFunction() {
+    @Test public void testTranslateFunction() {
         GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -854,7 +841,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_FRAC_SECOND, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionFracSecond() {
+    @Test public void testTimestampaddFunctionFracSecond() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -875,7 +862,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_SECOND, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionSecond() {
+    @Test public void testTimestampaddFunctionSecond() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -896,7 +883,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_MINUTE, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionMinute() {
+    @Test public void testTimestampaddFunctionMinute() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -917,7 +904,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_HOUR, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionHour() {
+    @Test public void testTimestampaddFunctionHour() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -938,7 +925,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_DAY, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionDay() {
+    @Test public void testTimestampaddFunctionDay() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -959,7 +946,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_WEEK, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionWeek() {
+    @Test public void testTimestampaddFunctionWeek() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -980,7 +967,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_QUARTER, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionQuarter() {
+    @Test public void testTimestampaddFunctionQuarter() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1001,7 +988,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampadd(SQL_TSI_YEAR, 10, '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampaddFunctionYear() {
+    @Test public void testTimestampaddFunctionYear() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1022,7 +1009,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT timestampdiff(SQL_TSI_FRAC_SECOND, '2003-05-01 10:20:10', '2003-05-01 10:20:30') as x FROM my.group1 */
-    public void testTimestampdiffFunctionFracSecond() {
+    @Test public void testTimestampdiffFunctionFracSecond() {
         GroupSymbol g = new GroupSymbol("my.group1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1043,7 +1030,7 @@ public class TestParser extends TestCase {
     }
     
     /** SELECT 5 + 2 + 3 FROM g */
-    public void testArithmeticOperatorPrecedence1() {
+    @Test public void testArithmeticOperatorPrecedence1() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1063,7 +1050,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 + 2 - 3 FROM g */
-    public void testArithmeticOperatorPrecedence2() {
+    @Test public void testArithmeticOperatorPrecedence2() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1083,7 +1070,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 + 2 * 3 FROM g */
-    public void testArithmeticOperatorPrecedence3() {
+    @Test public void testArithmeticOperatorPrecedence3() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1104,7 +1091,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 * 2 + 3 FROM g */
-    public void testArithmeticOperatorPrecedence4() {
+    @Test public void testArithmeticOperatorPrecedence4() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1124,7 +1111,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 * 2 * 3 FROM g */
-    public void testArithmeticOperatorPrecedence5() {
+    @Test public void testArithmeticOperatorPrecedence5() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1144,7 +1131,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 1 + 2 * 3 + 4 * 5 FROM g */
-    public void testArithmeticOperatorPrecedenceMixed1() {
+    @Test public void testArithmeticOperatorPrecedenceMixed1() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1166,7 +1153,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 1 * 2 + 3 * 4 + 5 FROM g */
-    public void testArithmeticOperatorPrecedenceMixed2() {
+    @Test public void testArithmeticOperatorPrecedenceMixed2() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1188,7 +1175,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 - 4 - 3 - 2 FROM g --> SELECT ((5 - 4) - 3) - 2 FROM g */
-    public void testLeftAssociativeExpressions1() {
+    @Test public void testLeftAssociativeExpressions1() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1209,7 +1196,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 5 / 4 / 3 / 2 FROM g --> SELECT ((5 / 4) / 3) / 2 FROM g */
-    public void testLeftAssociativeExpressions2() {
+    @Test public void testLeftAssociativeExpressions2() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1230,7 +1217,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 'a' || 'b' || 'c' FROM g */
-    public void testConcatOperator1() {
+    @Test public void testConcatOperator1() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1250,7 +1237,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT 2 + 3 || 5 + 1 * 2 FROM g */
-    public void testMixedOperators1() {
+    @Test public void testMixedOperators1() {
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1274,7 +1261,7 @@ public class TestParser extends TestCase {
     // ======================= Group By ==============================================
 	
 	/** SELECT a FROM m.g GROUP BY b, c */
-	public void testGroupBy() {
+	@Test public void testGroupBy() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1297,7 +1284,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a FROM m.g GROUP BY b, c HAVING b=5*/
-	public void testGroupByHaving() {
+	@Test public void testGroupByHaving() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1322,7 +1309,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT COUNT(a) AS c FROM m.g */
-	public void testAggregateFunction() {
+	@Test public void testAggregateFunction() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1341,7 +1328,7 @@ public class TestParser extends TestCase {
 	}
 
     /** SELECT (COUNT(a)) AS c FROM m.g - this kind of query is generated by ODBC sometimes */
-    public void testAggregateFunctionWithParens() {
+    @Test public void testAggregateFunctionWithParens() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1360,7 +1347,7 @@ public class TestParser extends TestCase {
     }
 
 	/** SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0*/
-	public void testHavingFunction() {
+	@Test public void testHavingFunction() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1388,7 +1375,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) > 0 AND b+5 > 0 */
-	public void testCompoundHaving() {
+	@Test public void testCompoundHaving() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1423,22 +1410,22 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(AVG(b)) */
-	public void testFailNestedAggregateInHaving() {
+	@Test public void testFailNestedAggregateInHaving() {
 		helpException("SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) AS x = 5");		 //$NON-NLS-1$
 	}
 
 	/** SELECT a FROM m.g GROUP BY a, b AS x */
-	public void testFailAliasInHaving() {
+	@Test public void testFailAliasInHaving() {
 		helpException("SELECT a FROM m.g GROUP BY a, b AS x");		 //$NON-NLS-1$
 	}
  
 	/** SELECT a FROM m.g GROUP BY count(a) */
-	public void testFailAggregateInGroupBy() {
+	@Test public void testFailAggregateInGroupBy() {
 		helpException("SELECT a FROM m.g GROUP BY count(a)");		 //$NON-NLS-1$
 	}
 	
 	
-	public void testExceptionLength() {
+	@Test public void testExceptionLength() {
         String sql = "SELECT * FROM Customer where Customer.Name = (select lastname from CUSTOMER where acctid = 9"; ////$NON-NLS-1$
         try {
             QueryParser.getQueryParser().parseCommand(sql);
@@ -1453,7 +1440,7 @@ public class TestParser extends TestCase {
 
 	
     
-    public void testFunctionOfAggregates() {
+    @Test public void testFunctionOfAggregates() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1476,7 +1463,7 @@ public class TestParser extends TestCase {
     }
 	
 	/** SELECT 5-null, a.g1.c1 FROM a.g1 */
-	public void testArithmeticNullFunction() { 
+	@Test public void testArithmeticNullFunction() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1497,7 +1484,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT 'abc' FROM a.g1 */
-	public void testStringLiteral() { 
+	@Test public void testStringLiteral() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1516,7 +1503,7 @@ public class TestParser extends TestCase {
 
 
 	/** SELECT 'O''Leary' FROM a.g1 */
-	public void testStringLiteralEscapedTick() { 
+	@Test public void testStringLiteralEscapedTick() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1534,7 +1521,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT '''abc''' FROM a.g1 */
-	public void testStringLiteralEscapedTick2() { 
+	@Test public void testStringLiteralEscapedTick2() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1552,7 +1539,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT 'a''b''c' FROM a.g1 */
-	public void testStringLiteralEscapedTick3() { 
+	@Test public void testStringLiteralEscapedTick3() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1570,25 +1557,25 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT " "" " FROM a.g1 */
-	public void testStringLiteralEscapedTick4() { 
+	@Test public void testStringLiteralEscapedTick4() { 
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
 
 		Select select = new Select();
-		select.addSymbol(new ExpressionSymbol("expr", new Constant(" \" "))); //$NON-NLS-1$ //$NON-NLS-2$
+		select.addSymbol(new ElementSymbol(" \" ")); //$NON-NLS-1$ 
 						
 		Query query = new Query();
 		query.setSelect(select);
 		query.setFrom(from);
 		
 		helpTest("SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
-				 "SELECT ' \" ' FROM a.g1",  //$NON-NLS-1$
+				 "SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
 				 query);
 	}
 	
 	/** SELECT 123456789012 FROM a.g1 */
-	public void testLongLiteral() {
+	@Test public void testLongLiteral() {
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1606,7 +1593,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT 1000000000000000000000000 FROM a.g1 */
-	public void testBigIntegerLiteral() {
+	@Test public void testBigIntegerLiteral() {
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1624,7 +1611,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT 1.3e8 FROM a.g1 */
-	public void testFloatWithE() {
+	@Test public void testFloatWithE() {
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1642,7 +1629,7 @@ public class TestParser extends TestCase {
 	}	
 	
 	/** SELECT -1.3e-6 FROM a.g1 */
-	public void testFloatWithMinusE() {
+	@Test public void testFloatWithMinusE() {
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1660,7 +1647,7 @@ public class TestParser extends TestCase {
 	}	
 	
 	/** SELECT -1.3e+8 FROM a.g1 */
-	public void testFloatWithPlusE() {
+	@Test public void testFloatWithPlusE() {
 		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1678,7 +1665,7 @@ public class TestParser extends TestCase {
 	}	
 
     /** SELECT {d'2002-10-02'} FROM m.g1 */
-    public void testDateLiteral1() {
+    @Test public void testDateLiteral1() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1696,7 +1683,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT {d'2002-9-1'} FROM m.g1 */
-    public void testDateLiteral2() {
+    @Test public void testDateLiteral2() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1714,12 +1701,12 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT {d'bad'} FROM m.g1 */
-    public void testDateLiteralFail() {
+    @Test public void testDateLiteralFail() {
         helpException("SELECT {d'bad'} FROM m.g1"); //$NON-NLS-1$
     }
         
     /** SELECT {t '11:10:00' } FROM m.g1 */
-    public void testTimeLiteral1() {
+    @Test public void testTimeLiteral1() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1737,7 +1724,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT {t '5:10:00'} FROM m.g1 */
-    public void testTimeLiteral2() {
+    @Test public void testTimeLiteral2() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1755,12 +1742,12 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT {t 'xyz'} FROM m.g1 */
-    public void testTimeLiteralFail() {
+    @Test public void testTimeLiteralFail() {
         helpException("SELECT {t 'xyz'} FROM m.g1"); //$NON-NLS-1$
     }
     
     /** SELECT {ts'2002-10-02 19:00:02.50'} FROM m.g1 */
-    public void testTimestampLiteral() {
+    @Test public void testTimestampLiteral() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1778,7 +1765,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT {b'true'} FROM m.g1 */
-    public void testBooleanLiteralTrue() {
+    @Test public void testBooleanLiteralTrue() {
     	Boolean expected = Boolean.TRUE;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT {b'true'}";  //$NON-NLS-1$
@@ -1800,7 +1787,7 @@ public class TestParser extends TestCase {
                  query);
 	}
     /** SELECT TRUE FROM m.g1 */
-    public void testBooleanLiteralTrue2() {
+    @Test public void testBooleanLiteralTrue2() {
     	Boolean expected = Boolean.TRUE;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT TRUE";  //$NON-NLS-1$
@@ -1810,7 +1797,7 @@ public class TestParser extends TestCase {
     }
   
     /** SELECT {b'false'} FROM m.g1 */
-    public void testBooleanLiteralFalse() {
+    @Test public void testBooleanLiteralFalse() {
     	Boolean expected = Boolean.FALSE;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
@@ -1820,7 +1807,7 @@ public class TestParser extends TestCase {
     }
     
     /** SELECT FALSE FROM m.g1 */
-    public void testBooleanLiteralFalse2() {
+    @Test public void testBooleanLiteralFalse2() {
     	Boolean expected = Boolean.FALSE;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
@@ -1829,7 +1816,7 @@ public class TestParser extends TestCase {
         helpTestLiteral(expected, expectedType, sql, expectedSql);                    
     }
     
-    public void testBooleanLiteralUnknown() {
+    @Test public void testBooleanLiteralUnknown() {
     	Boolean expected = null;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT {b'unknown'}";  //$NON-NLS-1$
@@ -1838,7 +1825,7 @@ public class TestParser extends TestCase {
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
     
-    public void testBooleanLiteralUnknown2() {
+    @Test public void testBooleanLiteralUnknown2() {
     	Boolean expected = null;
     	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
     	String sql = "SELECT UNKNOWN";  //$NON-NLS-1$
@@ -1848,7 +1835,7 @@ public class TestParser extends TestCase {
     }
         
 	/** SELECT DISTINCT a FROM g */
-	public void testSelectDistinct(){
+	@Test public void testSelectDistinct(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1866,7 +1853,7 @@ public class TestParser extends TestCase {
 	}
 
     /** SELECT ALL a FROM g */
-    public void testSelectAll(){
+    @Test public void testSelectAll(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1886,7 +1873,7 @@ public class TestParser extends TestCase {
     //=========================Aliasing==============================================
 
 	/** SELECT a AS myA, b FROM g */
-	public void testAliasInSelect(){
+	@Test public void testAliasInSelect(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -1905,7 +1892,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a myA, b FROM g, h */
-	public void testAliasInSelect2(){
+	@Test public void testAliasInSelect2(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		GroupSymbol h = new GroupSymbol("h"); //$NON-NLS-1$
 		From from = new From();
@@ -1926,7 +1913,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT myG.a FROM g AS myG */
-	public void testAliasInFrom(){
+	@Test public void testAliasInFrom(){
 		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
 		From from = new From();
 		from.addGroup(g);
@@ -1943,7 +1930,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT myG.*, myH.b FROM g AS myG, h AS myH */
-	public void testAliasesInFrom(){
+	@Test public void testAliasesInFrom(){
 		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
 		GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
 		From from = new From();
@@ -1964,7 +1951,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT myG.a, myH.b FROM g myG, h myH */
-	public void testHiddenAliasesInFrom(){
+	@Test public void testHiddenAliasesInFrom(){
 		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
 		GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
 		From from = new From();
@@ -1985,19 +1972,19 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a AS or FROM g */
-	public void testAliasInSelectUsingKeywordFails(){
+	@Test public void testAliasInSelectUsingKeywordFails(){
 		helpException("SELECT a AS or FROM g");		 //$NON-NLS-1$
 	}
 
 	/** SELECT or.a FROM g AS or */
-	public void testAliasInFromUsingKeywordFails(){
+	@Test public void testAliasInFromUsingKeywordFails(){
 		helpException("SELECT or.a FROM g AS or");		 //$NON-NLS-1$
 	}
 
     // ======================= Misc ==============================================
 
     /** Select a From db.g Where a IS NULL */
-    public void testIsNullCriteria1(){
+    @Test public void testIsNullCriteria1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2018,7 +2005,7 @@ public class TestParser extends TestCase {
     }
     
     /** Select a From db.g Where a IS NOT NULL */
-    public void testIsNullCriteria2(){
+    @Test public void testIsNullCriteria2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2040,7 +2027,7 @@ public class TestParser extends TestCase {
     }
     
 	/** Select a From db.g Where Not a IS NULL */
-	public void testNotIsNullCriteria(){
+	@Test public void testNotIsNullCriteria(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2061,7 +2048,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a from db.g where a <> "value" */
-	public void testStringNotEqualDoubleTicks(){
+	@Test public void testStringNotEqualDoubleTicks(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2083,7 +2070,7 @@ public class TestParser extends TestCase {
 	}
 
     /** SELECT a from db.g where a != "value" */
-    public void testNotEquals2(){
+    @Test public void testNotEquals2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2105,7 +2092,7 @@ public class TestParser extends TestCase {
     }
 
 	/** SELECT a from db."g" where a = 5 */
-	public void testPartlyQuotedGroup(){
+	@Test public void testPartlyQuotedGroup(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2126,7 +2113,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a from "db"."g" where a = 5 */
-	public void testFullyQuotedGroup(){
+	@Test public void testFullyQuotedGroup(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2147,7 +2134,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT "db".g.a from db.g */
-	public void testPartlyQuotedElement1(){
+	@Test public void testPartlyQuotedElement1(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2166,7 +2153,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT "db"."g".a from db.g */
-	public void testPartlyQuotedElement2(){
+	@Test public void testPartlyQuotedElement2(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2185,7 +2172,7 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT "db"."g"."a" from db.g */
-	public void testPartlyQuotedElement3(){
+	@Test public void testPartlyQuotedElement3(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2204,26 +2191,44 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT ""g"".""a" from db.g */
-	public void testStringLiteralLikeQuotedElement(){
+	@Test public void testStringLiteralLikeQuotedElement(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
 
 		Select select = new Select();
-		ExpressionSymbol a = new ExpressionSymbol("expr", new Constant("g\".\"a"));  //$NON-NLS-1$ //$NON-NLS-2$
-		select.addSymbol(a);
+		select.addSymbol(new ElementSymbol("g\".\"a")); //$NON-NLS-1$
 
 		Query query = new Query();
 		query.setSelect(select);
 		query.setFrom(from);
 
 		helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
-				 "SELECT 'g\".\"a' FROM g",  //$NON-NLS-1$
+				 "SELECT \"g\"\"\".\"\"\"a\" FROM g",  //$NON-NLS-1$
 				 query);
+	}
+	
+	/** SELECT ""g"".""a" from db.g */
+	@Test public void testStringLiteralLikeQuotedElement1(){
+		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+		From from = new From();
+		from.addGroup(g);
+
+		Select select = new Select();
+		select.addSymbol(new ExpressionSymbol("expr", new Constant("g\".\"a"))); //$NON-NLS-1$ //$NON-NLS-2$
+
+		Query query = new Query();
+		query.setSelect(select);
+		query.setFrom(from);
+		ParseInfo info = new ParseInfo();
+		info.allowDoubleQuotedVariable = false;
+		helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
+				 "SELECT 'g\".\"a' FROM g",  //$NON-NLS-1$
+				 query, info);
 	}
 
 	/** SELECT g.x AS "select" FROM g */
-	public void testQuotedAlias(){
+	@Test public void testQuotedAlias(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2242,7 +2247,7 @@ public class TestParser extends TestCase {
 	}
 
     /** SELECT g.x AS year FROM g */
-    public void testQuotedAlias2(){
+    @Test public void testQuotedAlias2(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2259,9 +2264,28 @@ public class TestParser extends TestCase {
                  "SELECT g.x AS year FROM g",  //$NON-NLS-1$
                  query);
     }
+
+    @Test public void testQuotedAlias3(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+
+        Select select = new Select();
+        AliasSymbol a = new AliasSymbol("some year", new ElementSymbol("g.x"));  //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(a);
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+
+        helpTest("SELECT g.x AS \"some year\" FROM g",  //$NON-NLS-1$
+                 "SELECT g.x AS \"some year\" FROM g",  //$NON-NLS-1$
+                 query);
+    }
+
     
     /** SELECT g."select" FROM g */
-    public void testReservedWordElement1(){
+    @Test public void testReservedWordElement1(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2280,7 +2304,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet.x FROM newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet */
-    public void testReservedWordElement2() {
+    @Test public void testReservedWordElement2() {
         GroupSymbol g = new GroupSymbol("newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2299,7 +2323,7 @@ public class TestParser extends TestCase {
     }
     
     /** SELECT * FROM newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet  */
-    public void testReservedWordGroup1(){
+    @Test public void testReservedWordGroup1(){
         GroupSymbol g = new GroupSymbol("newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2317,7 +2341,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT * FROM newModel5."ResultSetDocument.MappingClasses.from.from.Query1InputSet"  */
-    public void testReservedWordGroup2(){
+    @Test public void testReservedWordGroup2(){
         GroupSymbol g = new GroupSymbol("newModel5.ResultSetDocument.MappingClasses.from.from.Query1InputSet"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2335,7 +2359,7 @@ public class TestParser extends TestCase {
     }    
     
     /** SELECT * FROM model.doc WHERE ab.cd.@ef = 'abc' */
-    public void testXMLCriteriaWithAttribute() {
+    @Test public void testXMLCriteriaWithAttribute() {
         GroupSymbol g = new GroupSymbol("model.doc"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2355,13 +2379,8 @@ public class TestParser extends TestCase {
                  query);   
     }
 
-    /** SELECT * FROM model.doc WHERE @ef = 'abc' */
-    public void testXMLCriteriaWithUnqualifiedAttribute() {
-        helpException("SELECT * FROM model.doc WHERE @ef = 'abc'");    //$NON-NLS-1$
-    }
-
 	/** SELECT a from db.g where a <> 'value' */
-	public void testStringNotEqual(){
+	@Test public void testStringNotEqual(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2383,7 +2402,7 @@ public class TestParser extends TestCase {
 	}	
 
     /** SELECT a from db.g where a BETWEEN 1000 AND 2000 */
-    public void testBetween1(){
+    @Test public void testBetween1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2406,7 +2425,7 @@ public class TestParser extends TestCase {
     }   
     
     /** SELECT a from db.g where a NOT BETWEEN 1000 AND 2000 */
-    public void testBetween2(){
+    @Test public void testBetween2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2429,7 +2448,7 @@ public class TestParser extends TestCase {
     }   
     
 	/** SELECT a from db.g where a < 1000 */
-	public void testCompareLT(){
+	@Test public void testCompareLT(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2451,7 +2470,7 @@ public class TestParser extends TestCase {
 	}	
 	
 	/** SELECT a from db.g where a > 1000 */
-	public void testCompareGT(){
+	@Test public void testCompareGT(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2473,7 +2492,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT a from db.g where a <= 1000 */
-	public void testCompareLE(){
+	@Test public void testCompareLE(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2495,7 +2514,7 @@ public class TestParser extends TestCase {
 	}		
 
 	/** SELECT a from db.g where a >= 1000 */
-	public void testCompareGE(){
+	@Test public void testCompareGE(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2517,22 +2536,22 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a from db.g where b = x and a = 1000 */
-	public void testCompoundCompare1(){
+	@Test public void testCompoundCompare1(){
 	    helpTestCompoundCompare("SELECT a from db.g where b = x and a = 1000"); //$NON-NLS-1$
 	}
 
 	/** SELECT a from db.g where (b = x and a = 1000) */
-	public void testCompoundCompare2(){
+	@Test public void testCompoundCompare2(){
 	    helpTestCompoundCompare("SELECT a from db.g where (b = x and a = 1000)"); //$NON-NLS-1$
 	}
 
 	/** SELECT a from db.g where ((b = x) and (a = 1000)) */
-	public void testCompoundCompare3(){
+	@Test public void testCompoundCompare3(){
 	    helpTestCompoundCompare("SELECT a from db.g where ((b = x) and (a = 1000))"); //$NON-NLS-1$
 	}
 
 	/** SELECT a from db.g where (((b = x) and (a = 1000))) */
-	public void testCompoundCompare4(){
+	@Test public void testCompoundCompare4(){
 	    helpTestCompoundCompare("SELECT a from db.g where (((b = x) and (a = 1000)))"); //$NON-NLS-1$
 	}
 
@@ -2561,7 +2580,7 @@ public class TestParser extends TestCase {
 	}
 	
     /** SELECT a FROM db.g WHERE b IN (1000,5000)*/
-    public void testSetCriteria0(){
+    @Test public void testSetCriteria0(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2586,7 +2605,7 @@ public class TestParser extends TestCase {
     }   
     
     /** SELECT a FROM db.g WHERE b NOT IN (1000,5000)*/
-    public void testSetCriteria1(){
+    @Test public void testSetCriteria1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2613,7 +2632,7 @@ public class TestParser extends TestCase {
 	// ================================== order by ==================================
 	
 	/** SELECT a FROM db.g WHERE b = aString order by c*/
-	public void testOrderBy(){
+	@Test public void testOrderBy(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2635,7 +2654,7 @@ public class TestParser extends TestCase {
 	}	
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc*/
-	public void testOrderByDesc(){
+	@Test public void testOrderByDesc(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2659,7 +2678,7 @@ public class TestParser extends TestCase {
 	}	
 
 	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
-	public void testOrderBys(){
+	@Test public void testOrderBys(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2682,7 +2701,7 @@ public class TestParser extends TestCase {
 	}	
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d desc*/
-	public void testOrderBysDesc(){
+	@Test public void testOrderBysDesc(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2708,7 +2727,7 @@ public class TestParser extends TestCase {
 	}
 	
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d*/
-	public void testMixedOrderBys(){
+	@Test public void testMixedOrderBys(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2736,7 +2755,7 @@ public class TestParser extends TestCase {
 	// ================================== match ====================================
 
     /** SELECT a FROM db.g WHERE b LIKE 'aString'*/
-    public void testLike0(){
+    @Test public void testLike0(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2758,7 +2777,7 @@ public class TestParser extends TestCase {
     }   
 
     /** SELECT a FROM db.g WHERE b NOT LIKE 'aString'*/
-    public void testLike1(){
+    @Test public void testLike1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2780,7 +2799,7 @@ public class TestParser extends TestCase {
     }   
 
 	/** SELECT a from db.g where b like '#String' escape '#'*/
-	public void testLikeWithEscape(){
+	@Test public void testLikeWithEscape(){
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2801,12 +2820,12 @@ public class TestParser extends TestCase {
 				 query);
 	}
 	
-    public void testLikeWithEscapeException(){
+    @Test public void testLikeWithEscapeException(){
         helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: Like escape value must be a single character.");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */
-	public void testReservedWordsInElement() {
+	@Test public void testReservedWordsInElement() {
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2825,7 +2844,7 @@ public class TestParser extends TestCase {
 	}
     
     /** SELECT a */
-    public void testNoFromClause(){
+    @Test public void testNoFromClause(){
         Select select = new Select();
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         ExpressionSymbol b = new ExpressionSymbol("expr", new Constant(new Integer(5), Integer.class)); //$NON-NLS-1$
@@ -2839,27 +2858,27 @@ public class TestParser extends TestCase {
 	// ==================== misc queries that should fail ===========================
 
 	/** FROM g WHERE a = 'aString' */
-	public void testFailsNoSelectClause(){
+	@Test public void testFailsNoSelectClause(){
 		helpException("FROM g WHERE a = 'aString'");		 //$NON-NLS-1$
 	}
 	
 	/** SELECT a WHERE a = 'aString' */
-	public void testFailsNoFromClause(){
+	@Test public void testFailsNoFromClause(){
 		helpException("SELECT a WHERE a = 'aString'");		 //$NON-NLS-1$
 	}
 	
 	/** SELECT xx.yy%.a from xx.yy */
-	public void testFailsWildcardInSelect(){
+	@Test public void testFailsWildcardInSelect(){
 		helpException("SELECT xx.yy%.a from xx.yy");		 //$NON-NLS-1$
 	}
 
 	/** SELECT a or b from g */
-	public void testFailsOrInSelect(){
+	@Test public void testFailsOrInSelect(){
 		helpException("SELECT a or b from g");		 //$NON-NLS-1$
 	}
 	
 	/** SELECT a FROM g WHERE a LIKE x*/
-	public void testLikeWOConstant(){
+	@Test public void testLikeWOConstant(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2881,12 +2900,12 @@ public class TestParser extends TestCase {
 	}
 
 	/** SELECT a from g ORDER BY b DSC*/
-	public void testFailsDSCMisspelled(){
+	@Test public void testFailsDSCMisspelled(){
 		helpException("SELECT a from g ORDER BY b DSC");		 //$NON-NLS-1$
 	}
 	
 	/** Test reusability of parser */	
-	public void testReusabilityOfParserObject() {
+	@Test public void testReusabilityOfParserObject() {
 		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2908,7 +2927,7 @@ public class TestParser extends TestCase {
 	}
 	
     /** SELECT a from db.g where b LIKE ? */
-    public void testParameter1() {
+    @Test public void testParameter1() {
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2930,7 +2949,7 @@ public class TestParser extends TestCase {
     }
 
     /** SELECT a from db.g where b LIKE ? */
-    public void testParameter2() {
+    @Test public void testParameter2() {
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2972,7 +2991,7 @@ public class TestParser extends TestCase {
     }
     
     /** SELECT a, b FROM (SELECT c FROM m.g) AS y */
-    public void testSubquery1() {
+    @Test public void testSubquery1() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -3004,7 +3023,7 @@ public class TestParser extends TestCase {
     }
     
     /** SELECT a, b FROM ((SELECT c FROM m.g)) AS y */
-    public void testSubquery1a() {
+    @Test public void testSubquery1a() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -3036,7 +3055,7 @@ public class TestParser extends TestCase {
     }    
 
     /** SELECT a, b FROM m.g1 JOIN (SELECT c FROM m.g2) AS y ON m.g1.a = y.c */
-    public void testSubquery2() {
+    @Test public void testSubquery2() {
         GroupSymbol g = new GroupSymbol("m.g2"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -3073,12 +3092,12 @@ public class TestParser extends TestCase {
     }
 
 	/** SELECT a, b FROM (SELECT c FROM m.g2) */
-	public void testSubqueryInvalid() {
+	@Test public void testSubqueryInvalid() {
 		helpException("SELECT a, b FROM (SELECT c FROM m.g2)"); //$NON-NLS-1$
 	}
 		    
     /** INSERT INTO m.g (a) VALUES (?) */
-    public void testInsertWithReference() {
+    @Test public void testInsertWithReference() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         List vars = new ArrayList();
@@ -3092,14 +3111,14 @@ public class TestParser extends TestCase {
                  insert);                     
     }
         
-    public void testStoredQueryWithNoParameter(){
+    @Test public void testStoredQueryWithNoParameter(){
     	StoredProcedure storedQuery = new StoredProcedure();
     	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
     	helpTest("exec proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     	helpTest("execute proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testStoredQueryWithNoParameter2(){
+    @Test public void testStoredQueryWithNoParameter2(){
     	StoredProcedure storedQuery = new StoredProcedure();
     	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
     	
@@ -3116,7 +3135,7 @@ public class TestParser extends TestCase {
     	helpTest("SELECT X.A FROM (exec proc1()) AS X", "SELECT X.A FROM (EXEC proc1()) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testStoredQuery(){
+    @Test public void testStoredQuery(){
     	StoredProcedure storedQuery = new StoredProcedure();
     	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
     	SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
@@ -3126,7 +3145,7 @@ public class TestParser extends TestCase {
     	helpTest("execute proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testStoredQuery2(){
+    @Test public void testStoredQuery2(){
     	StoredProcedure storedQuery = new StoredProcedure();
     	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
     	SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
@@ -3144,7 +3163,7 @@ public class TestParser extends TestCase {
     	helpTest("SELECT X.A FROM (exec proc1('param1')) AS X", "SELECT X.A FROM (EXEC proc1('param1')) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testStoredQuery2SanityCheck(){
+    @Test public void testStoredQuery2SanityCheck(){
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
@@ -3186,14 +3205,14 @@ public class TestParser extends TestCase {
         helpTest("SELECT X.A FROM ((exec proc1('param1'))) AS X", "SELECT X.A FROM (EXEC proc1('param1')) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
-    public void testErrorStatement(){
+    @Test public void testErrorStatement(){
         RaiseErrorStatement errStmt = new RaiseErrorStatement(new Constant("Test only")); //$NON-NLS-1$
                  
         helpStmtTest("ERROR 'Test only';", "ERROR 'Test only';", //$NON-NLS-1$ //$NON-NLS-2$
             errStmt);           
     }
     
-    public void testIfStatement(){
+    @Test public void testIfStatement(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
         Statement ifStmt = new DeclareStatement(a, shortType);
@@ -3219,7 +3238,7 @@ public class TestParser extends TestCase {
              stmt);     
     }    
 
-    /*public void testIfStatement1(){
+    /*@Test public void testIfStatement1(){
         ElementSymbol a = new ElementSymbol("a");
         String shortType = new String("short");
         Statement ifStmt = new DeclareStatement(a, shortType);
@@ -3245,7 +3264,7 @@ public class TestParser extends TestCase {
              stmt);     
     }*/   
     
-    public void testCriteriaSelector0(){
+    @Test public void testCriteriaSelector0(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3255,7 +3274,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("IS NULL CRITERIA ON (a)", "IS NULL CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector1(){
+    @Test public void testCriteriaSelector1(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3265,7 +3284,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("= CRITERIA ON (a)", "= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector2(){
+    @Test public void testCriteriaSelector2(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3275,7 +3294,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("<> CRITERIA ON (a)", "<> CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector3(){
+    @Test public void testCriteriaSelector3(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3285,7 +3304,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("< CRITERIA ON (a)", "< CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector4(){
+    @Test public void testCriteriaSelector4(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3295,7 +3314,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("> CRITERIA ON (a)", "> CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector5(){
+    @Test public void testCriteriaSelector5(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3305,7 +3324,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest(">= CRITERIA ON (a)", ">= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector6(){
+    @Test public void testCriteriaSelector6(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3315,7 +3334,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("<= CRITERIA ON (a)", "<= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector7(){
+    @Test public void testCriteriaSelector7(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3326,7 +3345,7 @@ public class TestParser extends TestCase {
     }
     
     
-    public void testCriteriaSelector8(){
+    @Test public void testCriteriaSelector8(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3336,7 +3355,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("IN CRITERIA ON (a)", "IN CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCriteriaSelector9(){
+    @Test public void testCriteriaSelector9(){
         //ElementSymbol a = new ElementSymbol("a");
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3346,7 +3365,7 @@ public class TestParser extends TestCase {
         helpCriteriaSelectorTest("CRITERIA", "CRITERIA", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCriteriaSelector10(){
+    @Test public void testCriteriaSelector10(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3357,7 +3376,7 @@ public class TestParser extends TestCase {
     }
 
     /**HAS IS NULL CRITERIA ON (a)*/    
-    public void testHasIsNullCriteria(){
+    @Test public void testHasIsNullCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3374,7 +3393,7 @@ public class TestParser extends TestCase {
     }   
     
     /**HAS LIKE CRITERIA ON (a)*/    
-    public void testHasLikeCriteria(){
+    @Test public void testHasLikeCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3390,7 +3409,7 @@ public class TestParser extends TestCase {
             hasSelector);
     }  
             
-    public void testHasEQCriteria(){
+    @Test public void testHasEQCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3406,7 +3425,7 @@ public class TestParser extends TestCase {
             hasSelector);
     }    
     
-    public void testHasNECriteria(){
+    @Test public void testHasNECriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3423,7 +3442,7 @@ public class TestParser extends TestCase {
     }    
     
     /**HAS IN CRITERIA ON (a)*/    
-    public void testHasInCriteria(){
+    @Test public void testHasInCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3440,7 +3459,7 @@ public class TestParser extends TestCase {
     }   
      
     /**HAS COMPARE_LT CRITERIA ON (a)*/    
-    public void testHasLTCriteria(){
+    @Test public void testHasLTCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3457,7 +3476,7 @@ public class TestParser extends TestCase {
     }   
     
     /**HAS COMPARE_LE CRITERIA ON (a)*/    
-    public void testHasLECriteria(){
+    @Test public void testHasLECriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3474,7 +3493,7 @@ public class TestParser extends TestCase {
     }   
     
     /**HAS COMPARE_GT CRITERIA ON (a)*/    
-    public void testHasGTCriteria(){
+    @Test public void testHasGTCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3491,7 +3510,7 @@ public class TestParser extends TestCase {
     }   
        
     /**HAS COMPARE_GE CRITERIA ON (a)*/    
-    public void testHasGECriteria(){
+    @Test public void testHasGECriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3508,7 +3527,7 @@ public class TestParser extends TestCase {
     }   
          
     /**HAS BETWEEN CRITERIA ON (a)*/    
-    public void testHasBetweenCriteria(){
+    @Test public void testHasBetweenCriteria(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3524,7 +3543,7 @@ public class TestParser extends TestCase {
             hasSelector);
     }   
          
-    public void testTranslateCriteria(){
+    @Test public void testTranslateCriteria(){
         ElementSymbol a = new ElementSymbol("a");              //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3550,7 +3569,7 @@ public class TestParser extends TestCase {
             
     }
     
-    public void testAssignStatement(){
+    @Test public void testAssignStatement(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
        
         List symbols = new ArrayList();
@@ -3581,7 +3600,7 @@ public class TestParser extends TestCase {
         helpStmtTest("a = 'aString';", "a = 'aString';", exprStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-     public void testAssignStatement2(){
+     @Test public void testAssignStatement2(){
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
         List vars = new ArrayList();
@@ -3600,7 +3619,7 @@ public class TestParser extends TestCase {
            
     }
     
-    public void testDeclareStatement(){
+    @Test public void testDeclareStatement(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type);
@@ -3608,7 +3627,7 @@ public class TestParser extends TestCase {
         helpStmtTest("DECLARE short a;","DECLARE short a;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDeclareStatementWithAssignment(){
+    @Test public void testDeclareStatementWithAssignment(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type, new Constant(null));
@@ -3616,7 +3635,7 @@ public class TestParser extends TestCase {
         helpStmtTest("DECLARE short a = null;","DECLARE short a = null;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDeclareStatementWithAssignment1(){
+    @Test public void testDeclareStatementWithAssignment1(){
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("string"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type, sampleQuery());
@@ -3624,7 +3643,7 @@ public class TestParser extends TestCase {
         helpStmtTest("DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;","DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
       
-    public void testStatement() {
+    @Test public void testStatement() {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement declStmt = new DeclareStatement(a, type);
@@ -3634,7 +3653,7 @@ public class TestParser extends TestCase {
             stmt);
     }
         
-    public void testBlock() {
+    @Test public void testBlock() {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement declStmt = new DeclareStatement(a, type);
@@ -3645,7 +3664,7 @@ public class TestParser extends TestCase {
             block);
     }
        
-    public void testCommandStatement(){
+    @Test public void testCommandStatement(){
         Query query = sampleQuery();
         
         Command sqlCmd = query;
@@ -3676,7 +3695,7 @@ public class TestParser extends TestCase {
         return query;
     }
     
-    public void testDynamicCommandStatement(){
+    @Test public void testDynamicCommandStatement(){
         List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
@@ -3699,7 +3718,7 @@ public class TestParser extends TestCase {
     }
     
     //sql is a variable, also uses the as, into, and update clauses
-    public void testDynamicCommandStatement1(){
+    @Test public void testDynamicCommandStatement1(){
         List symbols = new ArrayList();
         
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
@@ -3727,7 +3746,7 @@ public class TestParser extends TestCase {
         cmdStmt);       
     }
     
-    public void testDynamicCommandStatementWithUsing(){
+    @Test public void testDynamicCommandStatementWithUsing(){
         SetClauseList using = new SetClauseList();
         
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
@@ -3746,22 +3765,22 @@ public class TestParser extends TestCase {
     }
 
     //as clause should use short names
-    public void testDynamicCommandStatement2(){
+    @Test public void testDynamicCommandStatement2(){
         helpException("create virtual procedure begin execute string z as variables.a1 string, a2 integer into #g; end"); //$NON-NLS-1$       
     }
     
     //using clause should use short names
-    public void testDynamicCommandStatement3(){
+    @Test public void testDynamicCommandStatement3(){
         helpException("create virtual procedure begin execute string z as a1 string, a2 integer into #g using variables.x=variables.y; end", "Parsing error: Invalid simple identifier format: [variables.x]"); //$NON-NLS-1$ //$NON-NLS-2$       
     }
     
     //into clause requires as clause
-    public void testDynamicCommandStatement4(){
+    @Test public void testDynamicCommandStatement4(){
         helpException("create virtual procedure begin execute string z into #g using x=variables.y; end"); //$NON-NLS-1$       
     }
     
     /** original test */
-    public void testCreateUpdateProcedureCommand(){
+    @Test public void testCreateUpdateProcedureCommand(){
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
            "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = SELECT a1 FROM g WHERE a2 = 5;\nEND\n"+ //$NON-NLS-1$
            "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
@@ -3770,7 +3789,7 @@ public class TestParser extends TestCase {
     }
 
     /** test that a command in parens isn't parsed as a ScalarSubquery */
-    public void testCreateUpdateProcedureCommandCase3025_1(){
+    @Test public void testCreateUpdateProcedureCommandCase3025_1(){
  
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = (SELECT a1 FROM g WHERE a2 = 5);\nEND\n"+ //$NON-NLS-1$
@@ -3780,7 +3799,7 @@ public class TestParser extends TestCase {
     }    
 
     /** test that a command in DOUBLE parens isn't parsed as a ScalarSubquery */
-    public void testCreateUpdateProcedureCommandCase3025_2(){
+    @Test public void testCreateUpdateProcedureCommandCase3025_2(){
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
            "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = ((SELECT a1 FROM g WHERE a2 = 5) );\nEND\n"+ //$NON-NLS-1$
            "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
@@ -3868,7 +3887,7 @@ public class TestParser extends TestCase {
     }
 
     /** test an expression in parentheses in an assignment statement */
-    public void testCreateUpdateProcedureCommandCase3025_3(){
+    @Test public void testCreateUpdateProcedureCommandCase3025_3(){
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = (concat('x', 'y') );\nEND\n"+ //$NON-NLS-1$
@@ -3879,7 +3898,7 @@ public class TestParser extends TestCase {
     }
 
     /** test an expression in parentheses in an assignment statement */
-    public void testCreateUpdateProcedureCommandCase3025_4(){
+    @Test public void testCreateUpdateProcedureCommandCase3025_4(){
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = ((concat('x', 'y') ));\nEND\n"+ //$NON-NLS-1$
@@ -3890,7 +3909,7 @@ public class TestParser extends TestCase {
     }
 
     /** test an expression without parentheses in an assignment statement */
-    public void testCreateUpdateProcedureCommandCase3025_5(){
+    @Test public void testCreateUpdateProcedureCommandCase3025_5(){
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = concat('x', 'y') ;\nEND\n"+ //$NON-NLS-1$
@@ -3976,7 +3995,7 @@ public class TestParser extends TestCase {
     }    
 
     /**IF statement with has criteria */
-    public void testCreateUpdateProcedureCommand1(){
+    @Test public void testCreateUpdateProcedureCommand1(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4056,7 +4075,7 @@ public class TestParser extends TestCase {
            "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
-     public void testCreateUpdateProcedureCommand0(){
+     @Test public void testCreateUpdateProcedureCommand0(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4137,7 +4156,7 @@ public class TestParser extends TestCase {
     }
     
     /**IF statement with has LIKE criteria */
-    public void testCreateUpdateProcedureCommand2(){
+    @Test public void testCreateUpdateProcedureCommand2(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4219,7 +4238,7 @@ public class TestParser extends TestCase {
     }
     
     /**IF statement with has IN criteria */
-    public void testCreateUpdateProcedureCommand3(){
+    @Test public void testCreateUpdateProcedureCommand3(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4301,7 +4320,7 @@ public class TestParser extends TestCase {
     }
     
     /**IF statement with has <> criteria */
-    public void testCreateUpdateProcedureCommand4(){
+    @Test public void testCreateUpdateProcedureCommand4(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4383,7 +4402,7 @@ public class TestParser extends TestCase {
     }
     
     /**Has criteria in WHERE clause*/
-    public void testCreateUpdateProcedureCommand5(){
+    @Test public void testCreateUpdateProcedureCommand5(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4473,7 +4492,7 @@ public class TestParser extends TestCase {
     }
         
     /** Translate criteria (empty criteriaSelector in WHERE clause*/
-    public void testCreateUpdateProcedureCommand7(){
+    @Test public void testCreateUpdateProcedureCommand7(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4566,7 +4585,7 @@ public class TestParser extends TestCase {
     }
     
     /** Translate criteria (is null criteriaSelector in WHERE clause*/
-    public void testCreateUpdateProcedureCommand9(){
+    @Test public void testCreateUpdateProcedureCommand9(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4659,7 +4678,7 @@ public class TestParser extends TestCase {
     }
     
         /** Translate criteria ( only with WHERE clause) */
-    public void testCreateUpdateProcedureCommand10(){
+    @Test public void testCreateUpdateProcedureCommand10(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4752,7 +4771,7 @@ public class TestParser extends TestCase {
     }
     
     /** Translate criteria ( only with WHERE clause) */
-    public void testCreateUpdateProcedureCommand12(){
+    @Test public void testCreateUpdateProcedureCommand12(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4851,7 +4870,7 @@ public class TestParser extends TestCase {
     }
    
    /** Translate criteria (with only Criteria in WHERE clause) */
-    public void testCreateUpdateProcedureCommand11(){
+    @Test public void testCreateUpdateProcedureCommand11(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -4943,7 +4962,7 @@ public class TestParser extends TestCase {
     }
     
     /**IF statement with has criteria no on */
-    public void testCreateUpdateProcedureCommand8(){
+    @Test public void testCreateUpdateProcedureCommand8(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -5017,7 +5036,7 @@ public class TestParser extends TestCase {
            "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
      
-    public void testSubquerySetCriteria0() { 
+    @Test public void testSubquerySetCriteria0() { 
         //test wrap up command with subquerySetCriteria
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
@@ -5047,7 +5066,7 @@ public class TestParser extends TestCase {
              outer);        
     }     
                
-    public void testSubquerySetCriteria1() { 
+    @Test public void testSubquerySetCriteria1() { 
 
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
@@ -5077,7 +5096,7 @@ public class TestParser extends TestCase {
              outer);        
     }                
 
-    public void testSubquerySetCriteriaWithExec() { 
+    @Test public void testSubquerySetCriteriaWithExec() { 
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5101,7 +5120,7 @@ public class TestParser extends TestCase {
              outer);        
     }          
 
-    public void testSubquerySetCriteriaWithUnion() { 
+    @Test public void testSubquerySetCriteriaWithUnion() { 
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5143,7 +5162,7 @@ public class TestParser extends TestCase {
              outer);        
     }          
         
-    public void testVariablesInExec(){
+    @Test public void testVariablesInExec(){
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         SPParameter parameter = new SPParameter(1, new ElementSymbol("param1")); //$NON-NLS-1$
@@ -5153,7 +5172,7 @@ public class TestParser extends TestCase {
         helpTest("execute proc1(param1)", "EXEC proc1(param1)", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
                 
-    public void testExecSubquery(){
+    @Test public void testExecSubquery(){
         Query query = new Query();
         Select select = new Select();
         select.addSymbol(new AllSymbol());
@@ -5170,7 +5189,7 @@ public class TestParser extends TestCase {
             query);
     }    
     
-    public void testUnicode1() {
+    @Test public void testUnicode1() {
         try {
             byte[] data = { (byte)0xd0, (byte)0x9c, (byte)0xd0, (byte)0xbe, (byte)0xd1, (byte)0x81, (byte)0xd0, (byte)0xba, (byte)0xd0, (byte)0xb2, (byte)0xd0, (byte)0xb0};
     
@@ -5194,7 +5213,7 @@ public class TestParser extends TestCase {
         }
     }
 
-    public void testUnicode2() {
+    @Test public void testUnicode2() {
         String sql = "SELECT * FROM TestDocument.TestDocument WHERE Subject='\u0041\u005a'";  //$NON-NLS-1$
 
         Query query = new Query();
@@ -5210,7 +5229,7 @@ public class TestParser extends TestCase {
         helpTest(sql, query.toString(), query);
     }
  
-	public void testUnicode3() {
+	@Test public void testUnicode3() {
 		String sql = "SELECT '\u05e0'";  //$NON-NLS-1$
 
 		Query query = new Query();
@@ -5222,7 +5241,7 @@ public class TestParser extends TestCase {
 		helpTest(sql, query.toString(), query);
 	}
 
-	public void testUnicode4() {
+	@Test public void testUnicode4() {
 		String sql = "SELECT \u05e0 FROM g";  //$NON-NLS-1$
 
 		Query query = new Query();
@@ -5237,7 +5256,7 @@ public class TestParser extends TestCase {
 		helpTest(sql, query.toString(), query);
 	}
     
-    public void testEscapedFunction1() {
+    @Test public void testEscapedFunction1() {
         String sql = "SELECT * FROM a.thing WHERE e1 = {fn concat('a', 'b')}"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -5256,7 +5275,7 @@ public class TestParser extends TestCase {
             query);        
     }
 
-    public void testEscapedFunction2() {
+    @Test public void testEscapedFunction2() {
         String sql = "SELECT * FROM a.thing WHERE e1 = {fn convert(5, string)}"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -5275,7 +5294,7 @@ public class TestParser extends TestCase {
             query);        
     }
 
-    public void testEscapedFunction3() {
+    @Test public void testEscapedFunction3() {
         String sql = "SELECT * FROM a.thing WHERE e1 = {fn cast(5 as string)}"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -5292,7 +5311,7 @@ public class TestParser extends TestCase {
         helpTest(sql, "SELECT * FROM a.thing WHERE e1 = cast(5 AS string)", query);         //$NON-NLS-1$
     }
 
-    public void testEscapedFunction4() {
+    @Test public void testEscapedFunction4() {
         String sql = "SELECT * FROM a.thing WHERE e1 = {fn concat({fn concat('a', 'b')}, 'c')}"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -5310,7 +5329,7 @@ public class TestParser extends TestCase {
         helpTest(sql, "SELECT * FROM a.thing WHERE e1 = concat(concat('a', 'b'), 'c')", query);         //$NON-NLS-1$
     }
 
-    public void testFunctionWithUnderscore() {
+    @Test public void testFunctionWithUnderscore() {
         String sql = "SELECT yowza_yowza() FROM a.thing"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -5327,7 +5346,7 @@ public class TestParser extends TestCase {
         helpTest(sql, "SELECT yowza_yowza() FROM a.thing", query);         //$NON-NLS-1$
     }
 
-    public void testManyInnerJoins1() {
+    @Test public void testManyInnerJoins1() {
         String sql = "SELECT * " + //$NON-NLS-1$
             "FROM SQL1.dbo.Customers INNER JOIN SQL1.dbo.Orders " + //$NON-NLS-1$
             "ON SQL1.dbo.Customers.CustomerID = SQL1.dbo.Orders.CustomerID " + //$NON-NLS-1$
@@ -5369,7 +5388,7 @@ public class TestParser extends TestCase {
         helpTest(sql, sqlExpected, query);        
     }
   
-    public void testManyInnerJoins2() {
+    @Test public void testManyInnerJoins2() {
         String sql = "SELECT * " + //$NON-NLS-1$
             "FROM A INNER JOIN (B RIGHT OUTER JOIN C ON b1 = c1) " + //$NON-NLS-1$
             "ON a1 = b1 " + //$NON-NLS-1$
@@ -5415,7 +5434,7 @@ public class TestParser extends TestCase {
         helpTest(sql, sqlExpected, query);        
     }
   
-    public void testManyInnerJoins3() {
+    @Test public void testManyInnerJoins3() {
         String sql = "SELECT * " + //$NON-NLS-1$
             "FROM A INNER JOIN " + //$NON-NLS-1$
             "(B RIGHT OUTER JOIN C ON b1 = c1 " + //$NON-NLS-1$
@@ -5459,7 +5478,7 @@ public class TestParser extends TestCase {
         helpTest(sql, sqlExpected, query);        
     }      
       
-    public void testLoopStatement(){
+    @Test public void testLoopStatement(){
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5491,7 +5510,7 @@ public class TestParser extends TestCase {
              +"\n"+"END", loopStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }  
 
-    public void testLoopStatementWithOrderBy(){
+    @Test public void testLoopStatementWithOrderBy(){
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5527,7 +5546,7 @@ public class TestParser extends TestCase {
              +"\n"+"END", loopStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }  
     
-    public void testWhileStatement(){
+    @Test public void testWhileStatement(){
         ElementSymbol x = new ElementSymbol("x", false); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { x, new Constant(new Integer(1)) }); //$NON-NLS-1$
         Statement assignmentStmt = new AssignmentStatement(x, f);
@@ -5541,17 +5560,17 @@ public class TestParser extends TestCase {
                      +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testBreakStatement(){
+    @Test public void testBreakStatement(){
         Statement breakStmt = new BreakStatement();
         helpStmtTest("break;", "BREAK;", breakStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testContinueStatement(){
+    @Test public void testContinueStatement(){
         Statement contStmt = new ContinueStatement();
         helpStmtTest("continue;", "CONTINUE;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testVirtualProcedure(){        
+    @Test public void testVirtualProcedure(){        
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
         String intType = new String("integer"); //$NON-NLS-1$
         Statement dStmt = new DeclareStatement(x, intType);
@@ -5604,7 +5623,7 @@ public class TestParser extends TestCase {
 
     }
     
-    public void testScalarSubqueryExpressionInSelect(){
+    @Test public void testScalarSubqueryExpressionInSelect(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5628,7 +5647,7 @@ public class TestParser extends TestCase {
                  q2);
     }    
 
-    public void testScalarSubqueryExpressionInSelect2(){
+    @Test public void testScalarSubqueryExpressionInSelect2(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5651,7 +5670,7 @@ public class TestParser extends TestCase {
                  q2);
     }   
 
-    public void testScalarSubqueryExpressionInSelect3(){
+    @Test public void testScalarSubqueryExpressionInSelect3(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5675,7 +5694,7 @@ public class TestParser extends TestCase {
                  q2);
     }   
 
-    public void testScalarSubqueryExpressionWithAlias(){
+    @Test public void testScalarSubqueryExpressionWithAlias(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5699,7 +5718,7 @@ public class TestParser extends TestCase {
                  q2);
     }   
 
-    public void testScalarSubqueryExpressionInComplexExpression() throws QueryParserException {
+    @Test public void testScalarSubqueryExpressionInComplexExpression() throws QueryParserException {
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
        
@@ -5716,7 +5735,7 @@ public class TestParser extends TestCase {
                  q2);
     }
 
-    public void testScalarSubqueryExpressionInComplexExpression2() throws QueryParserException{
+    @Test public void testScalarSubqueryExpressionInComplexExpression2() throws QueryParserException{
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
@@ -5733,7 +5752,7 @@ public class TestParser extends TestCase {
                  q2);
     } 
 
-    public void testScalarSubqueryExpressionInComplexExpression3() throws QueryParserException{
+    @Test public void testScalarSubqueryExpressionInComplexExpression3() throws QueryParserException{
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
@@ -5750,7 +5769,7 @@ public class TestParser extends TestCase {
                  q2);
     }
 
-    public void testScalarSubqueryExpressionInFunction() throws QueryParserException{
+    @Test public void testScalarSubqueryExpressionInFunction() throws QueryParserException{
         Select s2 = new Select();
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         
@@ -5767,11 +5786,11 @@ public class TestParser extends TestCase {
                  q2);
     } 
     
-    public void testBadScalarSubqueryExpression() {
+    @Test public void testBadScalarSubqueryExpression() {
         helpException("SELECT e1, length(SELECT e1 FROM m.g1) as X FROM m.g2"); //$NON-NLS-1$
     }
 
-    public void testExistsPredicateCriteria(){
+    @Test public void testExistsPredicateCriteria(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5796,7 +5815,7 @@ public class TestParser extends TestCase {
                  q2);            
     }
     
-    public void testAnyQuantifierSubqueryComparePredicate(){
+    @Test public void testAnyQuantifierSubqueryComparePredicate(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5822,7 +5841,7 @@ public class TestParser extends TestCase {
 
     }    
 
-    public void testSomeQuantifierSubqueryComparePredicate(){
+    @Test public void testSomeQuantifierSubqueryComparePredicate(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5848,7 +5867,7 @@ public class TestParser extends TestCase {
 
     }  
 
-    public void testAllQuantifierSubqueryComparePredicate(){
+    @Test public void testAllQuantifierSubqueryComparePredicate(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5874,7 +5893,7 @@ public class TestParser extends TestCase {
 
     } 
     
-    public void testScalarSubqueryComparePredicate(){
+    @Test public void testScalarSubqueryComparePredicate(){
 
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -5900,7 +5919,7 @@ public class TestParser extends TestCase {
 
     }
 
-    public void testSelectInto(){
+    @Test public void testSelectInto(){
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5920,7 +5939,7 @@ public class TestParser extends TestCase {
                  q);  
     }
     
-    public void testCaseExpression1() {
+    @Test public void testCaseExpression1() {
         CaseExpression expr = TestCaseExpression.example(4);
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
@@ -5946,7 +5965,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
     
-    public void testCaseExpression2() {
+    @Test public void testCaseExpression2() {
         CaseExpression expr = TestCaseExpression.example(4);
         expr.setElseExpression(null);
         Select select = new Select();
@@ -5972,7 +5991,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
     
-    public void testCaseExpression3() {
+    @Test public void testCaseExpression3() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example2(4);
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
@@ -5995,7 +6014,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
     
-    public void testSearchedCaseExpression1() {
+    @Test public void testSearchedCaseExpression1() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example(4);
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
@@ -6020,7 +6039,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
     
-    public void testSearchedCaseExpression2() {
+    @Test public void testSearchedCaseExpression2() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example(4);
         expr.setElseExpression(null);
         Select select = new Select();
@@ -6045,7 +6064,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
     
-    public void testSearchedCaseExpression3() {
+    @Test public void testSearchedCaseExpression3() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example(4);
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
@@ -6068,7 +6087,7 @@ public class TestParser extends TestCase {
         helpTest(query, query, q);
     }
 
-    public void testAndOrPrecedence_1575() {
+    @Test public void testAndOrPrecedence_1575() {
         Select s = new Select();
         s.addSymbol(new AllSymbol());
         From f = new From();
@@ -6087,7 +6106,7 @@ public class TestParser extends TestCase {
         "SELECT * FROM m.g1 WHERE (e1 = 0) OR ((e2 = 1) AND (e3 = 3))", q);                          //$NON-NLS-1$
     }
 
-    public void testAndOrPrecedence2_1575() {
+    @Test public void testAndOrPrecedence2_1575() {
         Select s = new Select();
         s.addSymbol(new AllSymbol());
         From f = new From();
@@ -6130,16 +6149,16 @@ public class TestParser extends TestCase {
     }
 
 
-    public void testCompoundNonJoinCriteriaInFromWithComparisonCriteria() {        
+    @Test public void testCompoundNonJoinCriteriaInFromWithComparisonCriteria() {        
         CompareCriteria c2 = new CompareCriteria(new ElementSymbol("e2"), CompareCriteria.EQ, new Constant(new Integer(1))); //$NON-NLS-1$
         helpTestCompoundNonJoinCriteria("e2 = 1", c2);     //$NON-NLS-1$
     }
     
-    public void testCompoundNonJoinCriteriaInFromWithIsNull() {        
+    @Test public void testCompoundNonJoinCriteriaInFromWithIsNull() {        
         helpTestCompoundNonJoinCriteria("e2 IS NULL", new IsNullCriteria(new ElementSymbol("e2")));     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCompoundNonJoinCriteriaInFromUWithIN() {        
+    @Test public void testCompoundNonJoinCriteriaInFromUWithIN() {        
         Collection values = new ArrayList();
         values.add(new Constant(new Integer(0)));
         values.add(new Constant(new Integer(1)));
@@ -6147,36 +6166,36 @@ public class TestParser extends TestCase {
         helpTestCompoundNonJoinCriteria("e2 IN (0, 1)", crit);     //$NON-NLS-1$
     }
 
-    public void testCompoundNonJoinCriteriaInFromUWithLIKE() {        
+    @Test public void testCompoundNonJoinCriteriaInFromUWithLIKE() {        
         PredicateCriteria crit = new MatchCriteria(new ElementSymbol("e2"), new Constant("%")); //$NON-NLS-1$ //$NON-NLS-2$
         helpTestCompoundNonJoinCriteria("e2 LIKE '%'", crit);     //$NON-NLS-1$
     }
 
-    public void testCompoundNonJoinCriteria_defect15167_1() throws Exception {   
+    @Test public void testCompoundNonJoinCriteria_defect15167_1() throws Exception {   
         QueryParser.getQueryParser().parseCommand("SELECT A.alert_id, A.primary_entity_name, A.primary_entity_level_code, A.alert_description, A.create_date, A.alert_risk_score, S.scenario_name, A.alert_status_code, A.process_id, A.actual_values_text, S.SCENARIO_CATEGORY_DESC, A.primary_entity_number, A.scenario_id, A.primary_entity_key FROM (FSK_ALERT AS A LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id) INNER JOIN FSC_ACCOUNT_DIM AS C ON A.primary_entity_key = C.ACCOUNT_KEY  AND ((S.current_ind = 'Y') OR (S.current_ind IS NULL)) WHERE (A.primary_entity_level_code = 'ACC') AND (C.ACCOUNT_KEY = 23923) AND (A.logical_delete_ind = 'N') OPTION PLANONLY"); //$NON-NLS-1$
     }
 
-    public void testCompoundNonJoinCriteria_defect15167_2() throws Exception {   
+    @Test public void testCompoundNonJoinCriteria_defect15167_2() throws Exception {   
         QueryParser.getQueryParser().parseCommand("SELECT A.alert_id, A.primary_entity_name, A.primary_entity_level_code, A.alert_description, A.create_date, A.alert_risk_score, S.scenario_name, A.alert_status_code, A.process_id, A.actual_values_text, S.SCENARIO_CATEGORY_DESC, A.primary_entity_number, A.scenario_id, A.primary_entity_key FROM (FSK_ALERT AS A LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id) INNER JOIN FSC_ACCOUNT_DIM AS C ON A.primary_entity_key = C.ACCOUNT_KEY  AND (S.current_ind = 'Y' OR S.current_ind IS NULL) WHERE (A.primary_entity_level_code = 'ACC') AND (C.ACCOUNT_KEY = 23923) AND (A.logical_delete_ind = 'N') OPTION PLANONLY"); //$NON-NLS-1$
     }
 
-    public void testCompoundNonJoinCriteria_defect15167_3() throws Exception {   
+    @Test public void testCompoundNonJoinCriteria_defect15167_3() throws Exception {   
         QueryParser.getQueryParser().parseCommand("SELECT A.alert_id, A.primary_entity_name, A.primary_entity_level_code, A.alert_description, A.create_date, A.alert_risk_score, S.scenario_name, A.alert_status_code, A.process_id, A.actual_values_text, S.SCENARIO_CATEGORY_DESC, A.primary_entity_number, A.scenario_id, A.primary_entity_key FROM (FSK_ALERT AS A LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id) INNER JOIN FSC_ACCOUNT_DIM AS C ON (A.primary_entity_key = C.ACCOUNT_KEY AND (S.current_ind = 'Y' OR S.current_ind IS NULL)) WHERE (A.primary_entity_level_code = 'ACC') AND (C.ACCOUNT_KEY = 23923) AND (A.logical_delete_ind = 'N') OPTION PLANONLY"); //$NON-NLS-1$
     }
 
-    public void testCompoundNonJoinCriteria_defect15167_4() throws Exception {   
+    @Test public void testCompoundNonJoinCriteria_defect15167_4() throws Exception {   
         QueryParser.getQueryParser().parseCommand("SELECT A.alert_id, A.primary_entity_name, A.primary_entity_level_code, A.alert_description, A.create_date, A.alert_risk_score, S.scenario_name, A.alert_status_code, A.process_id, A.actual_values_text, S.SCENARIO_CATEGORY_DESC, A.primary_entity_number, A.scenario_id, A.primary_entity_key FROM (FSK_ALERT AS A LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id) INNER JOIN FSC_ACCOUNT_DIM AS C ON (A.primary_entity_key = C.ACCOUNT_KEY AND S.current_ind = 'Y' OR S.current_ind IS NULL) WHERE (A.primary_entity_level_code = 'ACC') AND (C.ACCOUNT_KEY = 23923) AND (A.logical_delete_ind = 'N') OPTION PLANONLY"); //$NON-NLS-1$
     }
     
-    public void testFunctionInGroupBy() throws Exception {
+    @Test public void testFunctionInGroupBy() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT SUM(s), elem+1 FROM m.g GROUP BY elem+1"); //$NON-NLS-1$
     }
 
-    public void testCaseInGroupBy() throws Exception {
+    @Test public void testCaseInGroupBy() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT SUM(elem+1), CASE elem WHEN 0 THEN 1 ELSE 2 END AS c FROM m.g GROUP BY CASE elem WHEN 0 THEN 1 ELSE 2 END"); //$NON-NLS-1$
     }
 
-    public void testNationCharString() throws Exception {
+    @Test public void testNationCharString() throws Exception {
         Query query = (Query) QueryParser.getQueryParser().parseCommand("SELECT N'blah' FROM m.g"); //$NON-NLS-1$
         Select select = query.getSelect();
         ExpressionSymbol s = (ExpressionSymbol) select.getSymbol(0);
@@ -6184,18 +6203,18 @@ public class TestParser extends TestCase {
         assertEquals(c, new Constant("blah")); //$NON-NLS-1$
     }
 
-    public void testNationCharString2() throws Exception {
+    @Test public void testNationCharString2() throws Exception {
         Query query = (Query) QueryParser.getQueryParser().parseCommand("SELECT DISTINCT TABLE_QUALIFIER, NULL AS TABLE_OWNER, NULL AS TABLE_NAME, NULL AS TABLE_TYPE, NULL AS REMARKS FROM ATIODBCSystem.OA_TABLES  WHERE TABLE_QUALIFIER LIKE N'%'  ESCAPE '\\'  ORDER BY TABLE_QUALIFIER  "); //$NON-NLS-1$
         MatchCriteria matchCrit = (MatchCriteria) query.getCriteria();
         Constant c = (Constant) matchCrit.getRightExpression();
         assertEquals(c, new Constant("%")); //$NON-NLS-1$
     }
     
-    public void testScalarSubquery() throws Exception {
+    @Test public void testScalarSubquery() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT (SELECT 1) FROM x"); //$NON-NLS-1$
     }
 
-    public void testElementInDoubleQuotes() throws Exception {
+    @Test public void testElementInDoubleQuotes() throws Exception {
         GroupSymbol g = new GroupSymbol("x"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6210,10 +6229,10 @@ public class TestParser extends TestCase {
 		
 		helpTest("SELECT \"foo\" FROM x",  //$NON-NLS-1$
 				 "SELECT foo FROM x",  //$NON-NLS-1$
-				 query, info);                
+				 query);                
     }
     
-    public void testElementInDoubleQuotes_Insert() throws Exception {
+    @Test public void testElementInDoubleQuotes_Insert() throws Exception {
         GroupSymbol g = new GroupSymbol("x"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6226,10 +6245,10 @@ public class TestParser extends TestCase {
         
         helpTest("insert into x (\"foo\") values ('bar')",  //$NON-NLS-1$
                  "INSERT INTO x (foo) VALUES ('bar')",  //$NON-NLS-1$
-                 query, info);                
+                 query);                
     }
     
-    public void testElementInDoubleQuotes_Update() throws Exception {
+    @Test public void testElementInDoubleQuotes_Update() throws Exception {
         GroupSymbol g = new GroupSymbol("x"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6241,10 +6260,10 @@ public class TestParser extends TestCase {
         
         helpTest("update x set \"foo\"='bar'",  //$NON-NLS-1$
                  "UPDATE x SET foo = 'bar'",  //$NON-NLS-1$
-                 query, info);                
+                 query);                
     }  
     
-    public void testElementInDoubleQuotes_delete() throws Exception {
+    @Test public void testElementInDoubleQuotes_delete() throws Exception {
         GroupSymbol g = new GroupSymbol("x"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6255,10 +6274,10 @@ public class TestParser extends TestCase {
         
         helpTest("delete from x where \"foo\"='bar'",  //$NON-NLS-1$
                  "DELETE FROM x WHERE foo = 'bar'",  //$NON-NLS-1$
-                 query, info);                
+                 query);                
     }    
     
-    public void testAliasInDoubleQuotes() throws Exception {        
+    @Test public void testAliasInDoubleQuotes() throws Exception {        
         GroupSymbol g = new GroupSymbol("x"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6273,10 +6292,10 @@ public class TestParser extends TestCase {
 		
 		helpTest("SELECT fooKey AS \"fooAlias\" FROM x",  //$NON-NLS-1$
 				 "SELECT fooKey AS fooAlias FROM x",  //$NON-NLS-1$
-				 query, info);		
+				 query);		
     }
     
-    public void testAliasInDoubleQuotesWithQuotedGroup() throws Exception {
+    @Test public void testAliasInDoubleQuotesWithQuotedGroup() throws Exception {
         
         GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
         From from = new From();
@@ -6297,10 +6316,10 @@ public class TestParser extends TestCase {
 		
 		helpTest("SELECT fooKey AS \"fooAlias\" FROM \"x.y\".z where x.\"y.z\".id = 10",  //$NON-NLS-1$
 		         "SELECT fooKey AS fooAlias FROM x.y.z WHERE x.y.z.id = 10",  //$NON-NLS-1$
-				 query, info);		        
+				 query);		        
     }
 
-    public void testSingleQuotedConstant() throws Exception {        
+    @Test public void testSingleQuotedConstant() throws Exception {        
         
         GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
         From from = new From();
@@ -6316,10 +6335,10 @@ public class TestParser extends TestCase {
 				        
 		helpTest("SELECT 'fooString' FROM \"x.y.z\"",  //$NON-NLS-1$
 		        "SELECT 'fooString' FROM x.y.z",  //$NON-NLS-1$
-				 query, info);        
+				 query);        
     }
 
-    public void testAliasInSingleQuotes() throws Exception {
+    @Test public void testAliasInSingleQuotes() throws Exception {
         
         GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
         From from = new From();
@@ -6333,56 +6352,30 @@ public class TestParser extends TestCase {
 		query.setSelect(select);
 		query.setFrom(from);
 		
-        helpTest("SELECT fooKey 'fooAlias' FROM x.\"y\".z", //$NON-NLS-1$
-                "SELECT fooKey AS fooAlias FROM x.y.z", //$NON-NLS-1$
-                query, info); 
+        helpException("SELECT fooKey 'fooAlias' FROM x.\"y\".z"); //$NON-NLS-1$
     }
     
-    public void testAliasInSingleQuotes2() throws Exception {
-
-        GroupSymbol g = new GroupSymbol("x.y.z"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-        
-        AliasSymbol as = new AliasSymbol("fooAlias", new ElementSymbol("fooKey")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-        helpTest("SELECT \"fooKey\" AS 'fooAlias' FROM x.y.z", //$NON-NLS-1$
-                "SELECT fooKey AS fooAlias FROM x.y.z", //$NON-NLS-1$
-                query, info); 		
-    }
-
     /** QUERY Tool Format*/
-    public void testQueryWithQuotes_MSQuery() throws Exception {
+    @Test public void testQueryWithQuotes_MSQuery() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\", \"PART_ID\", \"PART_NAME\", \"PART_WEIGHT\" FROM \"VirtualParts.base\".\"Parts\""); //$NON-NLS-1$
     }
      
-    /** MS Query Format **/
-    public void testQueryWithQuotes_MSQuery2() throws Exception {
-        QueryParser.getQueryParser().parseCommand("SELECT Core.ModelType.Value AS 'ModelType', DtcBase.Metamodels.DisplayName AS 'MetaModel', DtcBase.Models.Name AS 'ModelName', DtcBase.Models.Version, Core.ModelAnnotation.PrimaryMetamodelUri, DtcBase.Models.TransactionId AS 'ModelID'"); //$NON-NLS-1$
-    }
-
     /** MS Access Format**/
-    public void testQueryWithQuotes_MSAccess() throws Exception {
+    @Test public void testQueryWithQuotes_MSAccess() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT \"PART_COLOR\" ,\"PART_ID\" ,\"PART_NAME\" ,\"PART_WEIGHT\"  FROM \"parts_oracle.DEV_RRAMESH\".\"PARTS\""); //$NON-NLS-1$
     }
 
     /** BO Business View Manager**/
-    public void testQueryWithQuotes_BODesigner() throws Exception {
+    @Test public void testQueryWithQuotes_BODesigner() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT DISTINCT \"PARTS\".\"PART_NAME\" FROM   \"parts_oracle.DEV_RRAMESH\".\"PARTS\" \"PARTS\""); //$NON-NLS-1$
     }
 
     /** Crystal Reports **/
-    public void testQueryWithQuotes_CrystalReports() throws Exception {
+    @Test public void testQueryWithQuotes_CrystalReports() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT \"Oracle_PARTS\".\"PART_COLOR\", \"Oracle_PARTS\".\"PART_ID\", \"Oracle_PARTS\".\"PART_NAME\", \"Oracle_PARTS\".\"PART_WEIGHT\", \"SQL_PARTS\".\"PART_COLOR\", \"SQL_PARTS\".\"PART_ID\", \"SQL_PARTS\".\"PART_NAME\", \"SQL_PARTS\".\"PART_WEIGHT\" FROM   \"parts_oracle.DEV_RRAMESH\".\"PARTS\" \"Oracle_PARTS\", \"parts_sqlserver.dv_rreddy.dv_rreddy\".\"PARTS\" \"SQL_PARTS\" WHERE  (\"Oracle_PARTS\".\"PART_ID\"=\"SQL_PARTS\".\"PART_ID\")"); //$NON-NLS-1$
     }
 
-    public void testOrderByWithNumbers_InQuotes() throws Exception {       
+    @Test public void testOrderByWithNumbers_InQuotes() throws Exception {       
         GroupSymbol g = new GroupSymbol("z"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6399,10 +6392,10 @@ public class TestParser extends TestCase {
 		query.setFrom(from);
 		query.setOrderBy(orderby);
 		
-		helpTest("SELECT x, y from z order by \"1\"", "SELECT x, y FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$
+		helpTest("SELECT x, y from z order by \"1\"", "SELECT x, y FROM z ORDER BY \"1\"", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testOrderByWithNumbers_AsInt() throws Exception {
+    @Test public void testOrderByWithNumbers_AsInt() throws Exception {
         GroupSymbol g = new GroupSymbol("z"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -6412,7 +6405,7 @@ public class TestParser extends TestCase {
 		select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
 
 		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ElementSymbol("1"), true); //$NON-NLS-1$
+		orderby.addVariable(new ExpressionSymbol("expr", new Constant(1)), true); //$NON-NLS-1$
 
 		Query query = new Query();
 		query.setSelect(select);
@@ -6422,58 +6415,11 @@ public class TestParser extends TestCase {
 		helpTest("SELECT x, y FROM z order by 1", "SELECT x, y FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$        
     }
    
-    public void testOrderByWithNumbers_AsNegitiveInt() throws Exception {
-        try {
+    @Test(expected=QueryParserException.class) public void testOrderByWithNumbers_AsNegitiveInt() throws Exception {
         QueryParser.getQueryParser().parseCommand("SELECT x, y FROM z order by -1"); //$NON-NLS-1$
-        fail("order by should not have negitive values"); //$NON-NLS-1$
-        }catch(Exception e) {
-            // this is expected.
-        }
     } 
     
-    public void testOrderByWithNumbers_Expression() throws Exception {
-        GroupSymbol g = new GroupSymbol("z"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-        
-        Function f = new Function("+", new Expression[] {new ElementSymbol("x"), new ElementSymbol("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(es);
-		
-		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ElementSymbol("1"), true); //$NON-NLS-1$
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setOrderBy(orderby);           
-        
-        helpTest("SELECT x+y FROM z order by 1", "SELECT (x + y) FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    public void testOrderByWithNumbers_ScalarFunction() throws Exception {
-        GroupSymbol g = new GroupSymbol("z"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-        
-        Function f = new Function("concat", new Expression[] {new ElementSymbol("x", false), new Constant("5")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        ExpressionSymbol es = new ExpressionSymbol("expr", f); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(es);
-		
-		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ElementSymbol("1"), true); //$NON-NLS-1$
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setOrderBy(orderby);          
-                
-        helpTest("SELECT concat(x, \"5\") FROM z order by 1", "SELECT concat(x, '5') FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    public void testEmptyAndNullInputsGiveSameErrorMessage() throws Exception {
+    @Test public void testEmptyAndNullInputsGiveSameErrorMessage() throws Exception {
         String emptyMessage = null;
         try {
             QueryParser.getQueryParser().parseCommand(""); //$NON-NLS-1$
@@ -6493,7 +6439,7 @@ public class TestParser extends TestCase {
         assertTrue("Expected same message for empty and null cases", emptyMessage.equals(nullMessage)); //$NON-NLS-1$
     }
 
-    public void testCase3281NamedVariable() {
+    @Test public void testCase3281NamedVariable() {
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setDisplayNamedParameters(true);
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
@@ -6505,7 +6451,7 @@ public class TestParser extends TestCase {
         helpTest("execute proc1(param1 = 'paramValue1')", "EXEC proc1(param1 = 'paramValue1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCase3281NamedVariables() {
+    @Test public void testCase3281NamedVariables() {
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setDisplayNamedParameters(true);
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
@@ -6521,7 +6467,7 @@ public class TestParser extends TestCase {
         helpTest("execute proc1(param1 = 'paramValue1', param2 = 'paramValue2')", "EXEC proc1(param1 = 'paramValue1', param2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCase3281QuotedNamedVariableFails2() {
+    @Test public void testCase3281QuotedNamedVariableFails2() {
         try {
             QueryParser.getQueryParser().parseCommand("Exec proc1('param1' = 'paramValue1')"); //$NON-NLS-1$
             fail("Named parameter name cannot be quoted"); //$NON-NLS-1$
@@ -6533,7 +6479,7 @@ public class TestParser extends TestCase {
     }
 
     /** Test what happens if the name of a parameter is a reserved word.  It must be quoted (double-ticks). */
-    public void testCase3281NamedVariablesReservedWords() {
+    @Test public void testCase3281NamedVariablesReservedWords() {
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setDisplayNamedParameters(true);
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
@@ -6549,7 +6495,7 @@ public class TestParser extends TestCase {
         helpTest("execute proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", "EXEC proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
-    public void testExceptionMessageWithLocation() {
+    @Test public void testExceptionMessageWithLocation() {
         try {
             QueryParser.getQueryParser().parseCommand("SELECT FROM"); //$NON-NLS-1$
         } catch(QueryParserException e) {
@@ -6557,7 +6503,7 @@ public class TestParser extends TestCase {
         }
     }
     
-    public void testExceptionMessageWithoutLocation() {
+    @Test public void testExceptionMessageWithoutLocation() {
         try {
             QueryParser.getQueryParser().parseCommand("SELECT COUNT(*) FROM a WHERE COUNT(*) > 1"); //$NON-NLS-1$
         } catch(QueryParserException e) {
@@ -6565,7 +6511,7 @@ public class TestParser extends TestCase {
         }        
     }
     
-    public void testLimit() {
+    @Test public void testLimit() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
@@ -6576,7 +6522,7 @@ public class TestParser extends TestCase {
         helpTest("Select * from a limit 0, 100", "SELECT * FROM a LIMIT 0, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testLimitWithOffset() {
+    @Test public void testLimitWithOffset() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
@@ -6586,7 +6532,7 @@ public class TestParser extends TestCase {
         helpTest("Select * from a limit 50,100", "SELECT * FROM a LIMIT 50, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testLimitWithReferences1() {
+    @Test public void testLimitWithReferences1() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
@@ -6596,7 +6542,7 @@ public class TestParser extends TestCase {
         helpTest("Select * from a limit ?,100", "SELECT * FROM a LIMIT ?, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testLimitWithReferences2() {
+    @Test public void testLimitWithReferences2() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
@@ -6606,7 +6552,7 @@ public class TestParser extends TestCase {
         helpTest("Select * from a limit 50,?", "SELECT * FROM a LIMIT 50, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testLimitWithReferences3() {
+    @Test public void testLimitWithReferences3() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
@@ -6616,11 +6562,11 @@ public class TestParser extends TestCase {
         helpTest("Select * from a limit ?,?", "SELECT * FROM a LIMIT ?, ?", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testEmptyOuterJoinCriteria() {
+    @Test public void testEmptyOuterJoinCriteria() {
         helpException("select a from b left outer join c on ()"); //$NON-NLS-1$
     }
     
-    public void testCreateTempTable1() {
+    @Test public void testCreateTempTable1() {
         Create create = new Create();
         create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
         List columns = new ArrayList();
@@ -6634,7 +6580,7 @@ public class TestParser extends TestCase {
         helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCreateTempTable2() {
+    @Test public void testCreateTempTable2() {
         Create create = new Create();
         create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
         List columns = new ArrayList();
@@ -6648,33 +6594,33 @@ public class TestParser extends TestCase {
         helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCreateTempTable3() {
+    @Test public void testCreateTempTable3() {
         helpException("Create TEMPORARY table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
     }
     
-    public void testCreateTempTable4() {
+    @Test public void testCreateTempTable4() {
         helpException("Create table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
     }
     
-    public void testCreateTempTable5() {
+    @Test public void testCreateTempTable5() {
         helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$ 
     }
     
-    public void testCreateTempTable6() {
+    @Test public void testCreateTempTable6() {
         helpException("Create  local TEMPORARY table tempTable (c1 varchar, c2 byte)"); //$NON-NLS-1$ 
     }
     
-    public void testCreateTempTable7() {
+    @Test public void testCreateTempTable7() {
         helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"Parsing error: Invalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
-    public void testDropTable() {
+    @Test public void testDropTable() {
         Drop drop = new Drop();
         drop.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
         helpTest("DROP table tempTable", "DROP TABLE tempTable", drop); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testEscapedOuterJoin() {
+    @Test public void testEscapedOuterJoin() {
         String sql = "SELECT * FROM {oj A LEFT OUTER JOIN B ON (A.x=B.x)}"; //$NON-NLS-1$
         String expected = "SELECT * FROM A LEFT OUTER JOIN B ON A.x = B.x"; //$NON-NLS-1$
         
@@ -6693,19 +6639,19 @@ public class TestParser extends TestCase {
         helpTest(sql, expected, query);
     } 
     
-    public void testBadAlias() {
+    @Test public void testBadAlias() {
         String sql = "select a as a.x from foo"; //$NON-NLS-1$
         
         helpException(sql, "Parsing error: Invalid alias format: [a.x]"); //$NON-NLS-1$
     }
     
-    public void testBadFunctionName() {
+    @Test public void testBadFunctionName() {
         String sql = "select a.x()"; //$NON-NLS-1$
         
         helpException(sql, "Parsing error: Invalid function name: [a.x]"); //$NON-NLS-1$
     }
     
-    public void testUnionJoin() {
+    @Test public void testUnionJoin() {
         String sql = "select * from pm1.g1 union join pm1.g2 where g1.e1 = 1"; //$NON-NLS-1$
         String expected = "SELECT * FROM pm1.g1 UNION JOIN pm1.g2 WHERE g1.e1 = 1"; //$NON-NLS-1$
         
@@ -6721,13 +6667,13 @@ public class TestParser extends TestCase {
         helpTest(sql, expected, command);
     }
     
-    public void testUnionJoin1() {
+    @Test public void testUnionJoin1() {
         String sql = "select * from pm1.g1 union all join pm1.g2 where g1.e1 = 1"; //$NON-NLS-1$
         
         helpException(sql);
     }
     
-    public void testIfElseWithoutBeginEnd() {
+    @Test public void testIfElseWithoutBeginEnd() {
         String sql = "CREATE PROCEDURE BEGIN IF (x > 1) select 1; IF (x > 1) select 1; ELSE select 1; END"; //$NON-NLS-1$
         String expected = "CREATE PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
@@ -6750,15 +6696,15 @@ public class TestParser extends TestCase {
         helpTest(sql, expected, command);
     }
     
-    public void testBadCreate() {
+    @Test public void testBadCreate() {
         helpException("create insert"); //$NON-NLS-1$
     }
     
-    public void testCommandWithSemicolon() throws Exception {
+    @Test public void testCommandWithSemicolon() throws Exception {
         helpTest("select * from pm1.g1;", "SELECT * FROM pm1.g1", QueryParser.getQueryParser().parseCommand("select * from pm1.g1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
-    public void testLOBTypes() throws Exception {
+    @Test public void testLOBTypes() throws Exception {
         Function convert = new Function("convert", new Expression[] {new Constant(null), new Constant("blob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert1 = new Function("convert", new Expression[] {new Constant(null), new Constant("clob")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function convert2 = new Function("convert", new Expression[] {new Constant(null), new Constant("xml")}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6769,7 +6715,7 @@ public class TestParser extends TestCase {
         helpTest("select convert(null, blob), convert(null, clob), convert(null, xml)", "SELECT convert(null, blob), convert(null, clob), convert(null, xml)", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testInsertWithoutColumns() {
+    @Test public void testInsertWithoutColumns() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         insert.addValue(new Constant("a")); //$NON-NLS-1$
@@ -6778,4 +6724,5 @@ public class TestParser extends TestCase {
                  "INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  insert);
     }
+    
 }

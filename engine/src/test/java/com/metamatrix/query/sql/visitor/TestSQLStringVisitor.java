@@ -512,7 +512,7 @@ public class TestSQLStringVisitor extends TestCase {
 
 	public void testOption1() {
 		Option option = new Option();
-		helpTest(option, "");     //$NON-NLS-1$
+		helpTest(option, "OPTION");     //$NON-NLS-1$
 	}
 
 	public void testOption2() {

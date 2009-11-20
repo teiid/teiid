@@ -66,7 +66,6 @@ import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.DependentValueSource;
@@ -143,6 +142,7 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
+import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.util.ValueIterator;
@@ -729,79 +729,7 @@ public class QueryRewriter {
             } 
         }
 
-        if (query.getGroupBy() != null) {
-            // we check for group by expressions here to create an ANSI SQL plan
-            boolean hasExpression = false;
-            for (final Iterator iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
-                hasExpression = iterator.next() instanceof ExpressionSymbol;
-            } 
-            if (hasExpression) {
-                Select select = query.getSelect();
-                GroupBy groupBy = query.getGroupBy();
-                query.setGroupBy(null);
-                Criteria having = query.getHaving();
-                query.setHaving(null);
-                OrderBy orderBy = query.getOrderBy();
-                query.setOrderBy(null);
-                Limit limit = query.getLimit();
-                query.setLimit(null);
-                Into into = query.getInto();
-                query.setInto(null);
-                Set<Expression> newSelectColumns = new HashSet<Expression>();
-                for (final Iterator iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
-                    newSelectColumns.add(SymbolMap.getExpression((SingleElementSymbol)iterator.next()));
-                }
-                Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
-                aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(select, true));
-                if (having != null) {
-                    aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
-                }
-                for (AggregateSymbol aggregateSymbol : aggs) {
-                    if (aggregateSymbol.getExpression() != null) {
-                        Expression expr = aggregateSymbol.getExpression();
-                        newSelectColumns.add(SymbolMap.getExpression(expr));
-                    }
-                }
-                Select innerSelect = new Select();
-                int index = 0;
-                for (Expression expr : newSelectColumns) {
-                    if (expr instanceof SingleElementSymbol) {
-                        innerSelect.addSymbol((SingleElementSymbol)expr);
-                    } else {
-                        innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
-                    }
-                }
-                query.setSelect(innerSelect);
-                Query outerQuery = null;
-                try {
-                    outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
-                } catch (QueryMetadataException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
-                } catch (QueryResolverException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
-                } catch (MetaMatrixComponentException err) {
-                    throw new MetaMatrixRuntimeException(err);
-                }
-                Iterator iter = outerQuery.getSelect().getProjectedSymbols().iterator();
-                HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-                for (SingleElementSymbol symbol : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
-                    expressionMap.put((Expression)SymbolMap.getExpression(symbol).clone(), (SingleElementSymbol)iter.next());
-                }
-                ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
-                outerQuery.setGroupBy(groupBy);
-                ExpressionMappingVisitor.mapExpressions(having, expressionMap);
-                outerQuery.setHaving(having);
-                ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-                outerQuery.setOrderBy(orderBy);
-                outerQuery.setLimit(limit);
-                ExpressionMappingVisitor.mapExpressions(select, expressionMap);
-                outerQuery.setSelect(select);
-                outerQuery.setInto(into);
-                outerQuery.setOption(query.getOption());
-                query = outerQuery;
-                rewriteExpressions(innerSelect);
-            }
-        }
+        query = rewriteGroupBy(query);
 
         // Rewrite having
         Criteria having = query.getHaving();
@@ -812,7 +740,7 @@ public class QueryRewriter {
         rewriteExpressions(query.getSelect());
 
         if (!query.getIsXML()) {
-            rewriteOrderBy(query);
+            query = (Query)rewriteOrderBy(query);
         }
         
         if (query.getLimit() != null) {
@@ -825,6 +753,91 @@ public class QueryRewriter {
         
         return query;
     }
+
+	/**
+	 * Converts a group by with expressions into a group by with only element symbols and an inline view
+	 * @param query
+	 * @return
+	 * @throws QueryValidatorException
+	 */
+	private Query rewriteGroupBy(Query query) throws QueryValidatorException {
+		if (query.getGroupBy() == null) {
+			return query;
+		}
+        // we check for group by expressions here to create an ANSI SQL plan
+        boolean hasExpression = false;
+        for (final Iterator iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
+            hasExpression = iterator.next() instanceof ExpressionSymbol;
+        } 
+        if (!hasExpression) {
+        	return query;
+        }
+        Select select = query.getSelect();
+        GroupBy groupBy = query.getGroupBy();
+        query.setGroupBy(null);
+        Criteria having = query.getHaving();
+        query.setHaving(null);
+        OrderBy orderBy = query.getOrderBy();
+        query.setOrderBy(null);
+        Limit limit = query.getLimit();
+        query.setLimit(null);
+        Into into = query.getInto();
+        query.setInto(null);
+        Set<Expression> newSelectColumns = new HashSet<Expression>();
+        for (final Iterator iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
+            newSelectColumns.add(SymbolMap.getExpression((SingleElementSymbol)iterator.next()));
+        }
+        Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
+        aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(select, true));
+        if (having != null) {
+            aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
+        }
+        for (AggregateSymbol aggregateSymbol : aggs) {
+            if (aggregateSymbol.getExpression() != null) {
+                Expression expr = aggregateSymbol.getExpression();
+                newSelectColumns.add(SymbolMap.getExpression(expr));
+            }
+        }
+        Select innerSelect = new Select();
+        int index = 0;
+        for (Expression expr : newSelectColumns) {
+            if (expr instanceof SingleElementSymbol) {
+                innerSelect.addSymbol((SingleElementSymbol)expr);
+            } else {
+                innerSelect.addSymbol(new ExpressionSymbol("EXPR" + index++ , expr)); //$NON-NLS-1$
+            }
+        }
+        query.setSelect(innerSelect);
+        Query outerQuery = null;
+        try {
+            outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
+        } catch (QueryMetadataException err) {
+            throw new QueryValidatorException(err, err.getMessage());
+        } catch (QueryResolverException err) {
+            throw new QueryValidatorException(err, err.getMessage());
+        } catch (MetaMatrixComponentException err) {
+            throw new MetaMatrixRuntimeException(err);
+        }
+        Iterator iter = outerQuery.getSelect().getProjectedSymbols().iterator();
+        HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+        for (SingleElementSymbol symbol : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
+            expressionMap.put((Expression)SymbolMap.getExpression(symbol).clone(), (SingleElementSymbol)iter.next());
+        }
+        ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
+        outerQuery.setGroupBy(groupBy);
+        ExpressionMappingVisitor.mapExpressions(having, expressionMap);
+        outerQuery.setHaving(having);
+        ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
+        outerQuery.setOrderBy(orderBy);
+        outerQuery.setLimit(limit);
+        ExpressionMappingVisitor.mapExpressions(select, expressionMap);
+        outerQuery.setSelect(select);
+        outerQuery.setInto(into);
+        outerQuery.setOption(query.getOption());
+        query = outerQuery;
+        rewriteExpressions(innerSelect);
+		return query;
+	}
     
     private void rewriteExpressions(LanguageObject obj) throws QueryValidatorException {
         if (obj == null) {
@@ -855,55 +868,108 @@ public class QueryRewriter {
 	
     /**
      * Rewrite the order by clause.
+     * Unrelated order by expressions will cause the creation of nested inline views.
      *  
      * @param query
      * @throws QueryValidatorException 
      */
-    private void rewriteOrderBy(QueryCommand query) throws QueryValidatorException {
-        OrderBy orderBy = query.getOrderBy();
+    public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws QueryValidatorException {
+    	final OrderBy orderBy = queryCommand.getOrderBy();
         if (orderBy == null) {
-            return;
+            return queryCommand;
         }
-        makeSelectUnique(query.getProjectedQuery().getSelect(), true);
-        List projectedSymbols = query.getProjectedQuery().getSelect().getProjectedSymbols();
-        if (orderBy.isInPlanForm()) {
-            rewriteExpressions(orderBy);
-        }
-
-        OrderBy newOrderBy = new OrderBy();
-        newOrderBy.setUnrelated(orderBy.hasUnrelated());
+        Select select = queryCommand.getProjectedQuery().getSelect();
+        final List projectedSymbols = select.getProjectedSymbols();
         HashSet<Expression> previousExpressions = new HashSet<Expression>();
         
+        boolean hasUnrelatedExpression = false;
+        
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
-            SingleElementSymbol querySymbol = orderBy.getVariable(i);
-            if (!orderBy.isInPlanForm()) { 
-                //get the order by item from the select clause, the variable must be an element symbol
-            	//however we have a hack to determine the position...
-            	Object id = ((ElementSymbol)querySymbol).getMetadataID();
-            	if (id instanceof TempMetadataID) {
-	                int index = ((TempMetadataID)((ElementSymbol)querySymbol).getMetadataID()).getPosition();
-	                if (index != -1) {
-	                	querySymbol = (SingleElementSymbol)((SingleElementSymbol)projectedSymbols.get(index)).clone();
-	                }
-            	} // else not a projected symbol
-            } 
-            Expression expr = SymbolMap.getExpression(querySymbol);
-            if (!previousExpressions.add(expr)) {
-                continue;
-            }
-            
-            if (query instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true)) {
-                continue;
-            }
-            newOrderBy.addVariable((SingleElementSymbol)querySymbol.clone(), orderBy.getOrderType(i).booleanValue());
+        	SingleElementSymbol querySymbol = orderBy.getVariable(i);
+        	int index = orderBy.getExpressionPosition(i);
+        	if (index == -1) {
+        		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
+        	  	continue; // must be unrelated - but potentially contains references to the select clause
+        	}
+        	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
+        	Expression expr = SymbolMap.getExpression(querySymbol);
+        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
+                orderBy.removeOrderByItem(i--);
+        	} else {
+        		orderBy.getVariables().set(i, querySymbol.clone());
+        	}
         }
         
-        if (newOrderBy.getVariableCount() == 0) {
-            query.setOrderBy(null);
-        } else {
-            newOrderBy.setInPlanForm(true);
-            query.setOrderBy(newOrderBy);
-        }
+        if (orderBy.getVariableCount() == 0) {
+        	queryCommand.setOrderBy(null);
+            return queryCommand;
+        } 
+        
+        if (!hasUnrelatedExpression) {
+        	return queryCommand;
+        } 
+        
+        int originalSymbolCount = select.getProjectedSymbols().size();
+
+        //add unrelated to select
+        select.addSymbols(orderBy.getUnrelated());
+        makeSelectUnique(select, false);
+        
+        Query query = queryCommand.getProjectedQuery();
+        
+        Into into = query.getInto();
+        query.setInto(null);
+        Limit limit = query.getLimit();
+        query.setLimit(null);
+        query.setOrderBy(null);
+        
+        Query top = null;
+        
+        try {
+        	Query intermediate = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
+			Iterator iter = intermediate.getSelect().getProjectedSymbols().iterator();
+		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)select.getProjectedSymbols()) {
+		    	SingleElementSymbol ses = (SingleElementSymbol)iter.next();
+		        expressionMap.put(SymbolMap.getExpression(symbol), ses);
+		        expressionMap.put(new ElementSymbol(symbol.getName()), ses);
+		    }
+		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
+		    for (int i = 0; i < orderBy.getVariableCount(); i++) {
+		    	int index = orderBy.getExpressionPosition(i);
+		    	SingleElementSymbol ss = orderBy.getVariable(i);
+		    	if (index == -1 && !(ss instanceof ElementSymbol)) {
+		    		intermediate.getSelect().addSymbol((SelectSymbol)ss.clone());
+		    	}
+			}
+		    makeSelectUnique(intermediate.getSelect(), true);
+		    
+        	top = createInlineViewQuery(new GroupSymbol("Y"), intermediate, metadata, intermediate.getSelect().getProjectedSymbols()); //$NON-NLS-1$
+			iter = top.getSelect().getProjectedSymbols().iterator();
+		    expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)intermediate.getSelect().getProjectedSymbols()) {
+		        expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
+		    }
+		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
+		    //now the order by should only contain element symbols
+		} catch (QueryResolverException e) {
+			throw new QueryValidatorException(e, e.getMessage());
+		} catch (QueryMetadataException e) {
+			throw new QueryValidatorException(e, e.getMessage());
+		} catch (MetaMatrixComponentException e) {
+			throw new QueryValidatorException(e, e.getMessage());
+		}
+		//filter back out the unrelated
+		orderBy.getUnrelated().clear();
+		List symbols = top.getSelect().getSymbols();
+		for (ElementSymbol symbol : (List<ElementSymbol>)symbols.subList(originalSymbolCount, symbols.size())) {
+			orderBy.addUnrelated(symbol);
+		}
+		top.getSelect().setSymbols(symbols.subList(0, originalSymbolCount));
+		top.setInto(into);
+		top.setLimit(limit);
+		top.setOrderBy(orderBy);
+		return top;
     }
     
     /**

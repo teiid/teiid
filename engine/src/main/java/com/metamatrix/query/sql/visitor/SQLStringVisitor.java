@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ReservedWords;
@@ -114,6 +115,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     private static final String SPACE = " "; //$NON-NLS-1$
     private static final String BEGIN_COMMENT = "/*"; //$NON-NLS-1$
     private static final String END_COMMENT = "*/"; //$NON-NLS-1$
+    private static final char ID_ESCAPE_CHAR = '\"';
     
     private LinkedList<Object> parts = new LinkedList<Object>();
 
@@ -618,87 +620,77 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(Option obj) {
-		boolean anOption = false;
-        List parts = new ArrayList();
-
         parts.add(ReservedWords.OPTION);
 
 		if(obj.getShowPlan()) {
-			anOption = true;
 			parts.add(" "); //$NON-NLS-1$
 			parts.add(ReservedWords.SHOWPLAN);
 		}
 
         if(obj.getPlanOnly()) {
-            anOption = true;
             parts.add(" "); //$NON-NLS-1$
             parts.add(ReservedWords.PLANONLY);
         }
 
 		if(obj.getDebug()) {
-			anOption = true;
 			parts.add(" "); //$NON-NLS-1$
 			parts.add(ReservedWords.DEBUG);
 		}
         
         Collection groups = obj.getDependentGroups();
         if(groups != null && groups.size() > 0) {
-            anOption = true;
             parts.add(" "); //$NON-NLS-1$
             parts.add(ReservedWords.MAKEDEP);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
-            parts.add(iter.next());
 
             while(iter.hasNext()) {
-                parts.add(", "); //$NON-NLS-1$
-                parts.add(iter.next());
+                outputDisplayName((String)iter.next());
+                
+                if (iter.hasNext()) {
+                	parts.add(", ");
+                }
             }
         }
         
         groups = obj.getNotDependentGroups();
         if(groups != null && groups.size() > 0) {
-            anOption = true;
             parts.add(" "); //$NON-NLS-1$
             parts.add(ReservedWords.MAKENOTDEP);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
-            parts.add(iter.next());
 
             while(iter.hasNext()) {
-                parts.add(", "); //$NON-NLS-1$
-                parts.add(iter.next());
+                outputDisplayName((String)iter.next());
+                
+                if (iter.hasNext()) {
+                	parts.add(", ");
+                }
             }
         }
         
         groups = obj.getNoCacheGroups();
         if(groups != null && groups.size() > 0) {
-            anOption = true;
             parts.add(" "); //$NON-NLS-1$
             parts.add(ReservedWords.NOCACHE);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
-            parts.add(iter.next());
 
             while(iter.hasNext()) {
-                parts.add(", "); //$NON-NLS-1$
-                parts.add(iter.next());
+                outputDisplayName((String)iter.next());
+                
+                if (iter.hasNext()) {
+                	parts.add(", ");
+                }
             }
         }else if(obj.isNoCache()){
-            anOption = true;
             parts.add(" "); //$NON-NLS-1$
             parts.add(ReservedWords.NOCACHE);
         }
 
-        // Only add this if any option was set to true - otherwise omit
-		if(anOption) {
-            replaceStringParts(parts.toArray());
-		} else {
-            replaceStringParts(new Object[0]);
-        }
     }
 
     public void visit(OrderBy obj) {
@@ -713,11 +705,12 @@ public class SQLStringVisitor extends LanguageVisitor {
         Iterator typeIter = types.iterator();
         while ( iter.hasNext() ) {
 		    SingleElementSymbol ses = (SingleElementSymbol)iter.next();
-            if (ses instanceof ElementSymbol && ((ElementSymbol)ses).getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME)) {
-                parts.add(registerNode(ses));
-            } else {
-                outputDisplayName(ses.getOutputName());
-            }
+		    if (ses instanceof AliasSymbol) {
+		    	AliasSymbol as = (AliasSymbol)ses;
+		    	outputDisplayName(as.getOutputName());
+		    } else {
+		    	parts.add(registerNode(ses));
+		    }
             Boolean type = (Boolean) typeIter.next();
             if( type.booleanValue() == OrderBy.DESC ) {
                 parts.add(SPACE);
@@ -1000,7 +993,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 
                 if(param.getExpression() == null) {
                     if(param.getName() != null) {
-                        parts.add(escapeSinglePart(obj.getParamFullName(param)));
+                    	outputDisplayName(obj.getParamFullName(param));
                     } else {
                         parts.add("?"); //$NON-NLS-1$
                     }
@@ -1151,7 +1144,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
             } else {
             	String strValue = obj.getValue().toString();
-		        strValue = escapeStringValue(strValue);
+		        strValue = escapeStringValue(strValue, '\'');
 			    constantParts = new Object[] { getStringQuoteBegin(), strValue, getStringQuoteEnd() };
             }
         }
@@ -1180,8 +1173,8 @@ public class SQLStringVisitor extends LanguageVisitor {
  	 * @param str String literal value (unquoted), never null
  	 * @return Escaped string literal value
  	 */
-    protected String escapeStringValue(String str) {
-        int index = str.indexOf('\'');
+    protected String escapeStringValue(String str, char tick) {
+        int index = str.indexOf(tick);
         if(index < 0) {
             return str;
         }
@@ -1189,9 +1182,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     	StringBuffer temp = new StringBuffer();
     	while(index >= 0) {
         	temp.append(str.substring(last, index));
-    		temp.append("''"); //$NON-NLS-1$
+    		temp.append(tick).append(tick); 
     		last = index+1;
-    		index = str.indexOf('\'', last);
+    		index = str.indexOf(tick, last);
     	}
 
     	if(last <= (str.length()-1)) {
@@ -1591,13 +1584,23 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(registerNode(obj.getRowLimit()));
     }
 
-    private static final char ID_ESCAPE_CHAR = '\"';
-
     private String escapeSinglePart(String part) {
     	if(isReservedWord(part)) {
     	    return ID_ESCAPE_CHAR + part + ID_ESCAPE_CHAR;
     	}
-  	 	return part;
+    	boolean escape = true;
+    	char start = part.charAt(0);
+    	if (start == '#' || start == '@' || StringUtil.isLetter(start)) {
+    		escape = false;
+    		for (int i = 1; !escape && i < part.length(); i++) {
+    			char c = part.charAt(i);
+    			escape = !StringUtil.isLetterOrDigit(c) && c != '_';
+    		}
+    	}
+    	if (escape) {
+    		return ID_ESCAPE_CHAR + escapeStringValue(part, '"') + ID_ESCAPE_CHAR;
+    	}
+    	return part;
     }
 
     /**

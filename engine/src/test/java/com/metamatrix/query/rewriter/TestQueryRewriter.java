@@ -161,7 +161,7 @@ public class TestQueryRewriter {
 		assertNotNull("Expected a QueryValidatorException but got none.", exception); //$NON-NLS-1$
 	}
 
-    private Command helpTestRewriteCommand(String original, String expected) { 
+    static Command helpTestRewriteCommand(String original, String expected) { 
         try {
             return helpTestRewriteCommand(original, expected, FakeMetadataFactory.example1Cached());
         } catch(MetaMatrixException e) { 
@@ -169,7 +169,7 @@ public class TestQueryRewriter {
         }
     }
     
-    private Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws MetaMatrixException { 
+    static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws MetaMatrixException { 
         Command command = QueryParser.getQueryParser().parseCommand(original);            
         QueryResolver.resolveCommand(command, metadata);
         Command rewriteCommand = QueryRewriter.rewrite(command, null, metadata, null);
@@ -1035,7 +1035,7 @@ public class TestQueryRewriter {
 		rewritProc = rewritProc + "DECLARE String var1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "IF((var1 = 'x') OR (var1 = 'y'))\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2, null AS E2_0, FALSE AS E2_1, TRUE AS E1 FROM pm1.g1;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT pm1.g1.e2, null, FALSE, TRUE FROM pm1.g1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
@@ -1365,7 +1365,7 @@ public class TestQueryRewriter {
     @Test public void testRewriteProcedure24() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET e2=Input.e2 WHERE TRANSLATE LIKE CRITERIA ON (e1) WITH (e1=concat(pm1.g1.e1, \"%\"));\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET e2=Input.e2 WHERE TRANSLATE LIKE CRITERIA ON (e1) WITH (e1=concat(pm1.g1.e1, '%'));\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g1 set E2=1 where e2 = 1 and e1 LIKE 'mnopxyz_'"; //$NON-NLS-1$
@@ -1998,15 +1998,7 @@ public class TestQueryRewriter {
             }                
         }
     }
-    
-    @Test public void testRewiteOrderBy() {
-        helpTestRewriteCommand("SELECT 1+1 as a FROM pm1.g1 order by a", "SELECT 2 AS a FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testRewiteOrderBy1() {
-        helpTestRewriteCommand("SELECT 1+1 as a FROM pm1.g1 union select pm1.g2.e1 from pm1.g2 order by a", "SELECT '2' AS a FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY a"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
+        
     /**
      * The rewrite creates inline view to do the type conversion.
      * 
@@ -2032,12 +2024,7 @@ public class TestQueryRewriter {
         
         helpTestRewriteCommand(sql, "SELECT 1 AS a"); //$NON-NLS-1$
     }
-    
-    @Test public void testOrderByDuplicateRemoval() {
-        String sql = "SELECT pm1.g1.e1, pm1.g1.e1 as c1234567890123456789012345678901234567890 FROM pm1.g1 ORDER BY c1234567890123456789012345678901234567890, e1 "; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT pm1.g1.e1, pm1.g1.e1 AS c1234567890123456789012345678901234567890 FROM pm1.g1 ORDER BY c1234567890123456789012345678901234567890"); //$NON-NLS-1$
-    }
-    
+        
     /**
      * Case 4814
      */

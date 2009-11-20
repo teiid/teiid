@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,7 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -55,8 +57,7 @@ import com.metamatrix.query.unittest.TimestampUtil;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.validator.TestValidator;
 
-
-public class TestVirtualDepJoin extends TestCase {
+public class TestVirtualDepJoin {
     
     /** 
      * @param usAcctsElem
@@ -189,7 +190,7 @@ public class TestVirtualDepJoin extends TestCase {
         return new FakeMetadataFacade(store);
     }
 
-    public void testVirtualDepJoinNoValues() throws Exception {  
+    @Test public void testVirtualDepJoinNoValues() throws Exception {  
         // Create query  
         String sql = "select first, last, sum(amount) from Europe.CustAccts e join CustomerMaster.Customers c on c.id=e.id where c.first=-9999 group by c.id, first, last"; //$NON-NLS-1$ 
          
@@ -280,15 +281,15 @@ public class TestVirtualDepJoin extends TestCase {
         TestProcessor.helpProcess(plan, context, dataManager, expected); 
     }
     
-    public void testVirtualDepJoinSourceSelectionPushdown() throws Exception {
+    @Test public void testVirtualDepJoinSourceSelectionPushdown() throws Exception {
         helpTestVirtualDepJoinSourceSelection(true);
     }
 
-    public void testVirtualDepJoinSourceSelectionNoPushdown() throws Exception {
+    @Test public void testVirtualDepJoinSourceSelectionNoPushdown() throws Exception {
         helpTestVirtualDepJoinSourceSelection(false);
     }
 
-    public void testVirtualDepJoinPartialPushdown() throws Exception {  
+    @Test public void testVirtualDepJoinPartialPushdown() throws Exception {  
         // Create query  
         String sql = "SELECT * from Master.Transactions where last = 'Davis'"; //$NON-NLS-1$ 
          
@@ -343,7 +344,7 @@ public class TestVirtualDepJoin extends TestCase {
         TestProcessor.helpProcess(plan, context, dataManager, expected); 
     }    
 
-    public void testVirtualDepJoinOverAggregates() throws Exception {  
+    @Test public void testVirtualDepJoinOverAggregates() throws Exception {  
         // Create query  
         String sql = "select first, last, sum(amount) from Europe.CustAccts e join CustomerMaster.Customers c on c.id=e.id where c.first='Miles' group by c.id, first, last"; //$NON-NLS-1$ 
          
@@ -398,19 +399,19 @@ public class TestVirtualDepJoin extends TestCase {
         assertEquals(expectedQueries, dataManager.getQueries());
     }    
     
-    public void testVirtualDepJoinSelects() throws Exception {
+    @Test public void testVirtualDepJoinSelects() throws Exception {
         helpTestVirtualDepJoin(false);
     }
     
-    public void testVirtualDepJoinPushdown() throws Exception {
+    @Test public void testVirtualDepJoinPushdown() throws Exception {
         helpTestVirtualDepJoin(true);
     }
     
-    public void testVirtualDepMultipleDependentBatches() throws Exception {  
+    @Test public void testVirtualDepMultipleDependentBatches() throws Exception {  
         helpTestMultipleBatches(true);
     }
     
-    public void testVirtualDepMultipleDependentBatchesNonUnique() throws Exception {  
+    @Test public void testVirtualDepMultipleDependentBatchesNonUnique() throws Exception {  
         helpTestMultipleBatches(false);
     }
 
@@ -632,7 +633,7 @@ public class TestVirtualDepJoin extends TestCase {
             elementSymbols, (List[])data.toArray(new List[data.size()]));
     }
     
-    public void testVirtualAccessVirtualDep() throws Exception {
+    @Test public void testVirtualAccessVirtualDep() throws Exception {
         String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e2) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
         
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -666,7 +667,7 @@ public class TestVirtualDepJoin extends TestCase {
      * Here the virtual makenotdep hint causes us to throw an exception 
      *
      */
-    public void testVirtualAccessVirtualDep2() {
+    @Test public void testVirtualAccessVirtualDep2() {
         String sql = "SELECT a.e0, b.e2 FROM vTest.vGroup a makenotdep inner join vTest.vGroup b on (a.e0 = b.e2 and a.e1 = b.e2) where b.e0=1 and b.e1='2'"; //$NON-NLS-1$
         
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -683,7 +684,7 @@ public class TestVirtualDepJoin extends TestCase {
      *  same as testVirtualDepJoinOverAggregate, but the makenotdep hint prevents the
      *  dependent join from happening
      */
-    public void testVirtualDepJoinOverAggregates2() throws Exception {  
+    @Test public void testVirtualDepJoinOverAggregates2() throws Exception {  
         // Create query  
         String sql = "select first, last, sum(amount) from Europe.CustAccts e makenotdep join CustomerMaster.Customers c on c.id=e.id where c.first='Miles' group by c.id, first, last"; //$NON-NLS-1$ 
          
@@ -731,7 +732,7 @@ public class TestVirtualDepJoin extends TestCase {
     }    
 
     
-    public void testVirtualMakeDepHint() throws Exception {  
+    @Test public void testVirtualMakeDepHint() throws Exception {  
         // Create query  
         String sql = "select distinct pm1.g1.e1 from (pm1.g1 inner join pm1.g2 on g1.e1 = g2.e1) makedep inner join pm2.g1 on pm2.g1.e1 = pm1.g1.e1 where pm2.g1.e3 = 1"; //$NON-NLS-1$ 
          

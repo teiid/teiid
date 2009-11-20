@@ -89,7 +89,7 @@ public class TestAliasGenerator {
     }
     
     @Test public void testNestedInlineViewOrderBy() throws Exception {
-        String sql = "select * from (select intnum x from (select intnum from bqt1.smallb) b order by x) y order by x"; //$NON-NLS-1$
+        String sql = "select x from (select intnum x from (select intnum from bqt1.smallb) b order by x) y order by x"; //$NON-NLS-1$
         String expected = "SELECT v_1.c_0 FROM (SELECT v_0.c_0 FROM (SELECT g_0.intnum AS c_0 FROM bqt1.smallb AS g_0) AS v_0) AS v_1 ORDER BY c_0"; //$NON-NLS-1$
         helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
     }

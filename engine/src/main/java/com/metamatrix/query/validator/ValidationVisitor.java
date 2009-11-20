@@ -644,6 +644,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if(obj.getLimit() != null) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj); //$NON-NLS-1$
         }
+        if (obj.getOrderBy() != null) {
+        	OrderBy orderBy = obj.getOrderBy();
+        	if (orderBy.hasUnrelated()) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.unrelated_orderby_xml"), obj); //$NON-NLS-1$
+        	}
+        	for (SingleElementSymbol ses : (List<SingleElementSymbol>)orderBy.getVariables()) {
+				if (!(ses instanceof ElementSymbol)) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.orderby_expression_xml"), obj); //$NON-NLS-1$
+				}
+			}
+         }
     }
     
     protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) {

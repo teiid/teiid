@@ -24,14 +24,18 @@ package com.metamatrix.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -46,16 +50,19 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 public class OrderBy implements LanguageObject {
 
 	/** Constant for the ascending value */
-    public static final boolean ASC = Boolean.TRUE.booleanValue();
+    public static final boolean ASC = true;
 
 	/** Constant for the descending value */
-    public static final boolean DESC = Boolean.FALSE.booleanValue();
+    public static final boolean DESC = false;
 
 	private List sortOrder;
     private List orderTypes;
-    private boolean inPlanForm = true;
-    private boolean hasUnrelated;
-
+    /**
+     * set by the resolver to contain element symbol references 
+     * outside of the select clause
+     */
+    private Set<ElementSymbol> unrelated; 
+    private List<Integer> expressionPositions;
     /**
      * Constructs a default instance of this class.
      */
@@ -192,8 +199,16 @@ public class OrderBy implements LanguageObject {
 	    	copySymbols.add(ses.clone());
 	    }
 		OrderBy result = new OrderBy(copySymbols, getTypes());
-		result.setInPlanForm(this.inPlanForm);
-		result.setUnrelated(this.hasUnrelated);
+		if (this.unrelated != null) {
+			HashSet<ElementSymbol> copyUnrelated = new HashSet<ElementSymbol>();
+			for (ElementSymbol elementSymbol : this.unrelated) {
+				copyUnrelated.add((ElementSymbol)elementSymbol.clone());
+			}
+			result.unrelated = copyUnrelated;
+		}
+		if (this.expressionPositions != null) {
+			result.expressionPositions = new ArrayList<Integer>(expressionPositions);
+		}
         return result;
 	}
 
@@ -239,20 +254,42 @@ public class OrderBy implements LanguageObject {
     	return SQLStringVisitor.getSQLString(this);
     }
 
-    public boolean isInPlanForm() {
-        return this.inPlanForm;
-    }
-
-    public void setInPlanForm(boolean inPlanForm) {
-        this.inPlanForm = inPlanForm;
-    }
-    
     public boolean hasUnrelated() {
-		return hasUnrelated;
+		return this.unrelated != null;
 	}
     
-    public void setUnrelated(boolean hasUnrelated) {
-		this.hasUnrelated = hasUnrelated;
+    public void addUnrelated(ElementSymbol symbol) {
+    	if (this.unrelated == null) {
+    		this.unrelated = new HashSet<ElementSymbol>();
+    	}
+    	this.unrelated.add(symbol);
 	}
-
+    
+    public Set<ElementSymbol> getUnrelated() {
+    	if (this.unrelated == null) {
+    		return Collections.emptySet();
+    	}
+		return unrelated;
+	}
+    
+    public void setExpressionPosition(int orderIndex, int selectIndex) {
+    	if (this.expressionPositions == null) {
+    		this.expressionPositions = new ArrayList<Integer>(Collections.nCopies(sortOrder.size(), -1));
+    	}
+    	this.expressionPositions.set(orderIndex, selectIndex);
+    }
+    
+    public int getExpressionPosition(int orderIndex) {
+    	if (expressionPositions == null) {
+    		return -1;
+    	}
+		return expressionPositions.get(orderIndex);
+	}
+    
+    public void removeOrderByItem(int index) {
+        sortOrder.remove(index);
+        orderTypes.remove(index);
+        expressionPositions.remove(index);
+    }
+    
 }
