@@ -119,7 +119,7 @@
 						<configuration>
 							<tasks>
 								<property name="product.version" value="${project.version}" />
-								<property name="product.name" value="${project.name}" />
+								<property name="product.name" value="${project.artifactId}" />
 								<ant antfile="src/assembly/assemble-artifacts.xml" />
 							</tasks>
 						</configuration>
