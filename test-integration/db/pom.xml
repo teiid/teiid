@@ -1,17 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<!--
+	The database dependent tests are meant to be run on their own, not as part of the continous or nightly
+	build for Teiid.   
+-->
+
+
+<!--
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
 		<version>6.3.0-SNAPSHOT</version>
 	</parent>
+	
+		<packaging>pom</packaging>
+	
+	-->
+
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>test-integration-db</artifactId>
 
 	<name>DB Dependent Integration Tests</name>
  	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
+
+	<version>6.3.0-SNAPSHOT</version>
+	<properties>
+		<site.url>http://www.jboss.org/teiid</site.url>
+
+		<derby.version>10.2.1.6</derby.version>
+		<mysql.connector.version>5.1.5</mysql.connector.version>
+		<postgresql.version>8.3-603.jdbc3</postgresql.version>
+
+		<apache.ant.version>1.7.0</apache.ant.version>
+	</properties>
+	<scm>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
+	</scm>
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License</name>
+			<url>http://www.gnu.org/licenses/lgpl.html</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
 
 	<repositories>
 		<repository>
@@ -24,7 +59,130 @@
 		</repository>
 	</repositories>
 
+
 	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-internal</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-sdk</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-sdk</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client-jdbc</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+	    <dependency>
+	      <groupId>org.jboss.teiid</groupId>
+	      <artifactId>teiid-txn-jbossts</artifactId>
+			<version>${project.version}</version>
+	    </dependency>
+
+		<!-- internal dependencies that are only used by integration testing -->
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-runtime</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-runtime</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>        
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-loopback</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-text</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-text</artifactId>
+			<type>test-jar</type>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-jdbc</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-jdbc</artifactId>
+			<type>test-jar</type>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- external dependencies -->
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>${derby.version}</version>
+
+		</dependency>
+<!--
+	</dependencies>
+
+	<dependencies>
+-->
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
@@ -178,6 +336,8 @@
 		            <property>
 		              <name>usedatasources</name>
 		              <value>${usedatasources}</value>
+		              <name>datasourceloc</name>
+		              <value>${datasourceloc}</value>
 		            </property>
 		          </systemProperties>
 
@@ -208,6 +368,18 @@
 	      <build>
 	        <plugins>
 
+	  <!-- Specify the compiler options and settings -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+				</configuration>
+			</plugin>
+
 	          <plugin>
 	          	<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-antrun-plugin</artifactId>
@@ -218,9 +390,8 @@
 							<version>${apache.ant.version}</version>
 						</dependency>
 					</dependencies>
-	            <configuration>
-
-	            </configuration>
+				<configuration>
+				</configuration>
 					<executions>
 						<execution>
 							<id>setupalldatasources</id>
@@ -252,6 +423,17 @@
     		</activation>
 	      <build>
 	        <plugins>
+	  <!-- Specify the compiler options and settings -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+				</configuration>
+			</plugin>
 
 	          <plugin>
 	          	<groupId>org.apache.maven.plugins</groupId>
