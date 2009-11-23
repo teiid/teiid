@@ -23,15 +23,36 @@
 					<isset property="single"/>
 				</not>
 		</condition>
+		
+		<available file="${datasourceloc}" property="external.datasource.dir"/>
+
+	</target>
+
+	
+	<target name="init"
+		depends="check.external.ds.dir, set.local.ds.dir">
+		
+		<mkdir dir="${target.dir}"/>
 
 	</target>
 	
-	<target name="init">
-		<mkdir dir="${target.dir}"/>
+	
+	<target name="check.external.ds.dir"
+		if="external.datasource.dir">
+		
+		<property name="ds.loc" value="${datasourceloc}"></property>
+
+	</target>
+	
+	<target name="set.local.ds.dir"
+		unless="external.datasource.dir">
+	
+		<property name="ds.loc" value="${resources.dir}/datasources/"></property>
+		
 	</target>
 		
 	<target name="manage.all.schemas" if="all">
-		<echo>Creating all schemas from datasource dir ${resources.dir}</echo>
+		<echo>Creating all schemas from datasource dir ${ds.loc}</echo>
 		<!--
 		This will process each directory located under the refid location. 
 		Its expects the following:
@@ -39,7 +60,7 @@
 			- connection.properties file must exist in the directory to be used 
 		-->
  		<subant genericantfile="${resources.dir}/ddl/run_ddl.xml" inheritall="true"  >
- 			<dirset dir="${resources.dir}/datasources/" />
+ 			<dirset dir="${ds.loc}" />
  			<property name="sql.ddl.dir" value="${resources.dir}/ddl"/>
 			<property name="lib.dir" value="${basedir}/lib"/>
 
@@ -50,14 +71,14 @@
 
 
 	<target name="manage.single.schemas" if="single">
-		<echo>Creating single schema ${single}</echo>
+		<echo>Creating single schema ${ds.loc}/${single}</echo>
 		
-		<available file="${resources.dir}/datasources/${single}" property="dir.exist"/>
-		<fail unless="dir.exist" message="The datasource single was not found at ${resources.dir}/datasources/${single}" />
+		<available file="${ds.loc}/${single}" property="dir.exist"/>
+		<fail unless="dir.exist" message="The datasource single was not found at ${ds.loc}/${single}" />
 
 
 		<ant inheritAll="true" antfile="${resources.dir}/ddl/run_ddl.xml">
-			<property name="basedir" value="${resources.dir}/datasources/${single}"/>
+			<property name="basedir" value="${ds.loc}/${single}"/>
 			<property name="sql.ddl.dir" value="${resources.dir}/ddl"/>
 			<property name="lib.dir" value="${basedir}/lib"/>
 

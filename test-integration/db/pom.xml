@@ -275,6 +275,8 @@
 		            <property>
 		              <name>usedatasources</name>
 		              <value>${usedatasources}</value>
+		              <name>datasourceloc</name>
+		              <value>${datasourceloc}</value>
 		            </property>
 		          </systemProperties>
 
@@ -400,6 +402,7 @@
 								<tasks>
 									<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
 									<property name="relative.resources.dir" value="src/main/resources"></property>
+									<property name="datasourceloc" value="${datasourceloc}"></property>
 									<ant antfile="src/main/resources/ddl/manage_schemas.xml"  />
 								</tasks>
 							</configuration>
@@ -457,6 +460,7 @@
 
 									<property name="single" value="${datasource}"></property>
 									<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
+									<property name="datasourceloc" value="${datasourceloc}"></property>
 
 									<property name="relative.resources.dir" value="src/main/resources"></property>
 									<ant antfile="src/main/resources/ddl/manage_schemas.xml"  />
