@@ -12,7 +12,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>6.3.0-SNAPSHOT</version>
+		<version>7.0.0-SNAPSHOT</version>
 	</parent>
 	
 		<packaging>pom</packaging>
@@ -26,7 +26,7 @@
  	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
 
-	<version>6.3.0-SNAPSHOT</version>
+	<version>7.0.0-SNAPSHOT</version>
 	<properties>
 		<site.url>http://www.jboss.org/teiid</site.url>
 
