@@ -37,7 +37,7 @@ public class ParseInfo {
 	public boolean aggregatesAllowed = false;
         
     // treat a double quoted variable as variable instead of string 
-    public boolean ansiQuotedIdentifiers=true;
+    public boolean ansiQuotedIdentifiers=Boolean.valueOf(System.getProperty("teiid.ansi_quoted_identifiers", Boolean.TRUE.toString())).booleanValue(); //$NON-NLS-1$
     
 	public ParseInfo() { }
 	

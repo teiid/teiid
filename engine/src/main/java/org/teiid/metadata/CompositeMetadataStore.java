@@ -24,47 +24,39 @@ package org.teiid.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.Table.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.core.id.UUID;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
 
 /**
  * Aggregates the metadata from multiple stores.  
  * IMPORTANT: All strings queries should be in lower case.
  */
-public class CompositeMetadataStore {
+public class CompositeMetadataStore extends MetadataStore {
 
 	private MetadataSource metadataSource;
-	private Map<String, MetadataStore> storeMap = new LinkedHashMap<String, MetadataStore>();
-	private List<MetadataStore> metadataStores;
 	
 	public CompositeMetadataStore(List<MetadataStore> metadataStores, MetadataSource metadataSource) {
 		this.metadataSource = metadataSource;
-		this.metadataStores = metadataStores;
 		for (MetadataStore metadataStore : metadataStores) {
-			for (String model : metadataStore.getSchemas().keySet()) {
-				storeMap.put(model.toLowerCase(), metadataStore);
-			}
+			this.schemas.putAll(metadataStore.getSchemas());
+			this.datatypes.addAll(metadataStore.getDatatypes());
 		}
 	}
 	
-	public Schema getModel(String fullName)
-			throws QueryMetadataException, MetaMatrixComponentException {
-		Schema result = getMetadataStore(fullName).getSchemas().get(fullName);
+	public Schema getSchema(String fullName)
+			throws QueryMetadataException {
+		Schema result = getSchemas().get(fullName);
 		if (result == null) {
 	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
@@ -73,102 +65,95 @@ public class CompositeMetadataStore {
 	
 	public Table findGroup(String fullName)
 			throws QueryMetadataException {
-		List<String> tokens = StringUtil.getTokens(fullName, TransformationMetadata.DELIMITER_STRING);
-		if (tokens.size() < 2) {
+		int index = fullName.indexOf(TransformationMetadata.DELIMITER_STRING);
+		if (index == -1) {
 		    throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}			
-		Table result = getMetadataStore(tokens.get(0)).getSchemas().get(tokens.get(0)).getTables().get(fullName);
+		String schema = fullName.substring(0, index);
+		Table result = getSchema(schema).getTables().get(fullName.substring(index + 1));
 		if (result == null) {
 	        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;
 	}
 	
+	/**
+	 * TODO: this resolving mode allows partial matches of a full group name containing .
+	 * @param partialGroupName
+	 * @return
+	 */
 	public Collection<String> getGroupsForPartialName(String partialGroupName) {
 		List<String> result = new LinkedList<String>();
-		for (MetadataStore store : metadataStores) {
-			for (Schema schema : store.getSchemas().values()) {
-				for (Map.Entry<String, Table> entry : schema.getTables().entrySet()) {
-					if (entry.getKey().endsWith(partialGroupName)) {
-						result.add(entry.getValue().getFullName());
-					}
+		for (Schema schema : getSchemas().values()) {
+			for (Table t : schema.getTables().values()) {
+				String fullName = t.getFullName();
+				if (fullName.regionMatches(true, fullName.length() - partialGroupName.length(), partialGroupName, 0, partialGroupName.length())) {
+					result.add(fullName);	
 				}
 			}
 		}
 		return result;
 	}
 	
-	public ProcedureRecordImpl getStoredProcedure(
-			String fullyQualifiedProcedureName)
+	public ProcedureRecordImpl getStoredProcedure(String name)
 			throws MetaMatrixComponentException, QueryMetadataException {
-		List<String> tokens = StringUtil.getTokens(fullyQualifiedProcedureName, TransformationMetadata.DELIMITER_STRING);
-		if (tokens.size() < 2) {
-		    throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
+		if (index > -1) {
+			String schema = name.substring(0, index);
+			ProcedureRecordImpl result = getSchema(schema).getProcedures().get(name.substring(index + 1));
+			if (result != null) {
+		        return result;
+			}	
 		}
-		ProcedureRecordImpl result = getMetadataStore(tokens.get(0)).getSchemas().get(tokens.get(0)).getProcedures().get(fullyQualifiedProcedureName);
+		ProcedureRecordImpl result = null;
+		//assume it's a partial name
+		name = TransformationMetadata.DELIMITER_STRING + name;
+		for (Schema schema : getSchemas().values()) {
+			for (ProcedureRecordImpl p : schema.getProcedures().values()) {
+				String fullName = p.getFullName();
+				if (fullName.regionMatches(true, fullName.length() - name.length(), name, 0, name.length())) {
+					if (result != null) {
+						return null; //don't allow ambiguous
+					}
+					result = p;	
+				}
+			}
+		}
 		if (result == null) {
-	        throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	        throw new QueryMetadataException(name+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;
-	}
-
-	private MetadataStore getMetadataStore(String modelName) throws QueryMetadataException {
-		MetadataStore store = this.storeMap.get(modelName);
-		if (store == null) {
-			throw new QueryMetadataException(modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		return store;
 	}
 
 	public MetadataSource getMetadataSource() {
 		return metadataSource;
 	}
 	
-	public List<MetadataStore> getMetadataStores() {
-		return metadataStores;
-	}
-
 	/*
 	 * The next methods are hold overs from XML/UUID resolving and will perform poorly
 	 */
 	
-	public Column findElement(String elementName) throws QueryMetadataException {
-		if (StringUtil.startsWithIgnoreCase(elementName,UUID.PROTOCOL)) {
-			for (MetadataStore store : this.metadataStores) {
-				for (Schema schema : store.getSchemas().values()) {
-					for (Table table : schema.getTables().values()) {
-						for (Column column : table.getColumns()) {
-							if (column.getUUID().equalsIgnoreCase(elementName)) {
-								return column;
-							}
-						}
-					}
-				}
-			}
-        } else {
-        	List<String> tokens = StringUtil.getTokens(elementName, TransformationMetadata.DELIMITER_STRING);
-    		if (tokens.size() < 3) {
-    		    throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-    		}
-    		Table table = findGroup(StringUtil.join(tokens.subList(0, tokens.size() - 1), TransformationMetadata.DELIMITER_STRING));
-    		for (Column column : table.getColumns()) {
-    			if (column.getFullName().equalsIgnoreCase(elementName)) {
-    				return column;
-    			}
+	public Column findElement(String fullName) throws QueryMetadataException {
+		int columnIndex = fullName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
+		if (columnIndex == -1) {
+			throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		}
+		Table table = findGroup(fullName.substring(0, columnIndex));
+		String shortElementName = fullName.substring(columnIndex + 1);
+		for (Column column : table.getColumns()) {
+			if (column.getName().equalsIgnoreCase(shortElementName)) {
+				return column;
 			}
         }
-        throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 	}
 
-	public Collection<Table> getXMLTempGroups(Table tableRecord) throws QueryMetadataException {
+	public Collection<Table> getXMLTempGroups(Table tableRecord) {
 		ArrayList<Table> results = new ArrayList<Table>();
-		MetadataStore store = getMetadataStore(tableRecord.getSchema().getName().toLowerCase());
 		String namePrefix = tableRecord.getFullName() + TransformationMetadata.DELIMITER_STRING;
-		for (Schema schema : store.getSchemas().values()) {
-			for (Table table : schema.getTables().values()) {
-				if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
-					results.add(table);
-				}
+		for (Table table : tableRecord.getSchema().getTables().values()) {
+			if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
+				results.add(table);
 			}
 		}
 		return results;

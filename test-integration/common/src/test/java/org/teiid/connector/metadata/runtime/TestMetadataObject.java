@@ -99,7 +99,7 @@ public class TestMetadataObject extends TestCase {
     
     public Element getElementID(String groupName, String elementName, TranslationUtility transUtil) {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
-        ISelectSymbol symbol = (ISelectSymbol) query.getSelect().getSelectSymbols().get(0);
+        ISelectSymbol symbol = query.getSelect().getSelectSymbols().get(0);
         IElement element = (IElement) symbol.getExpression();
         return element.getMetadataObject();
     }
@@ -140,7 +140,7 @@ public class TestMetadataObject extends TestCase {
     
     public void helpTestProcedureID(String procName, String shortName, int inputParamCount, String[] paramNames, TranslationUtility transUtil) throws Exception {
         Procedure procID = getProcedureID(procName, inputParamCount, transUtil);     
-        assertEquals(procName, procID.getFullName()); //$NON-NLS-1$
+        assertEquals(procName, procID.getFullName()); 
         assertEquals(shortName, procID.getName());
         
         // Check children
@@ -149,7 +149,7 @@ public class TestMetadataObject extends TestCase {
         Set actualParamNames = new HashSet();
         for (Parameter childID : children) {
             assertEquals(procID, childID.getParent());
-            assertTrue(childID.getFullName().startsWith(procID.getFullName()));
+            assertTrue(childID.getFullName() + " " + procID.getFullName(), childID.getFullName().startsWith(procID.getFullName())); //$NON-NLS-1$
             actualParamNames.add(childID.getName());            
         }
         
@@ -164,7 +164,7 @@ public class TestMetadataObject extends TestCase {
     }
 
     public void testProcedureID_resultSet() throws Exception {
-        String[] paramNames = new String[] { "Param1", "RSParam" };          //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-4$
+        String[] paramNames = new String[] { "Param1", "RSParam" };          //$NON-NLS-1$ //$NON-NLS-2$ 
         helpTestProcedureID("ConnectorMetadata.TestProc2", "TestProc2", 1, paramNames, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$               
     }
 

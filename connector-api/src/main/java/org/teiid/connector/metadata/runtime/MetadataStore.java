@@ -34,8 +34,8 @@ import java.util.Map;
 public class MetadataStore implements Serializable {
 
 	private static final long serialVersionUID = -3130247626435324312L;
-	private Map<String, Schema> schemas = new LinkedHashMap<String, Schema>();
-	private Collection<Datatype> datatypes = new ArrayList<Datatype>();
+	protected Map<String, Schema> schemas = new LinkedHashMap<String, Schema>();
+	protected Collection<Datatype> datatypes = new ArrayList<Datatype>();
 	
 	public Map<String, Schema> getSchemas() {
 		return schemas;

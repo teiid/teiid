@@ -135,7 +135,14 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements com.meta
 
     public String getSchemaName(int index) throws SQLException {
         verifyProvider();
-        return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
+        String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
+        if (name != null) {
+        	int dotIndex = name.indexOf('.');
+        	if (dotIndex != -1) {
+        		return name.substring(0, dotIndex);
+        	}
+        }
+        return null;
     }
 
     public int getPrecision(int index) throws SQLException {
@@ -150,11 +157,19 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements com.meta
 
     public String getTableName(int index) throws SQLException {
         verifyProvider();
-        return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
+        String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
+        if (name != null) {
+        	int dotIndex = name.indexOf('.');
+        	if (dotIndex != -1) {
+        		return name.substring(dotIndex + 1);
+        	}
+        }
+        return name;
     }
 
     public String getCatalogName(int index) throws SQLException {
-        return null;
+    	verifyProvider();
+    	return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
     }
 
     public int getColumnType(int index) throws SQLException {

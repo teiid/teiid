@@ -113,6 +113,7 @@ public class IndexMetadataFactory {
 		    	List<Column> columns = new ArrayList<Column>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN));
 		        for (Column columnRecordImpl : columns) {
 		    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
+		    		columnRecordImpl.setParent(tableRecord);
 				}
 		        Collections.sort(columns);
 		        tableRecord.setColumns(columns);
@@ -123,28 +124,28 @@ public class IndexMetadataFactory {
 				}
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getAccessPatterns()) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-					columnSetRecordImpl.setTable(tableRecord);
+					columnSetRecordImpl.setParent(tableRecord);
 				}
 		        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
 		        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
 		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
 		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
-		        	foreignKeyRecord.setTable(tableRecord);
+		        	foreignKeyRecord.setParent(tableRecord);
 				}
 		        tableRecord.setUniqueKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.UNIQUE_KEY));
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getUniqueKeys()) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-					columnSetRecordImpl.setTable(tableRecord);
+					columnSetRecordImpl.setParent(tableRecord);
 				}
 		        tableRecord.setIndexes(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.INDEX));
 		        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
-					columnSetRecordImpl.setTable(tableRecord);
+					columnSetRecordImpl.setParent(tableRecord);
 				}
 		        if (tableRecord.getPrimaryKey() != null) {
 		        	KeyRecord primaryKey = getPrimaryKey(tableRecord.getPrimaryKey().getUUID());
 		        	loadColumnSetRecords(primaryKey, uuidColumnMap);
-		        	primaryKey.setTable(tableRecord);
+		        	primaryKey.setParent(tableRecord);
 		        	tableRecord.setPrimaryKey(primaryKey);
 		        }
 		        String groupUUID = tableRecord.getUUID();
@@ -236,19 +237,20 @@ public class IndexMetadataFactory {
     	for (Schema model : store.getSchemas().values()) {
 			Collection<ProcedureRecordImpl> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
 			for (ProcedureRecordImpl procedureRecord : procedureRecordImpls) {
-		    	procedureRecord.setParameters(new ArrayList<ProcedureParameter>(procedureRecord.getParameterIDs().size()));
-		    	
 		        // get the parameter metadata info
-		        for (String paramID : procedureRecord.getParameterIDs()) {
-		            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
+		        for (int i = 0; i < procedureRecord.getParameters().size(); i++) {
+		            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(procedureRecord.getParameters().get(i).getUUID(), MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
 		            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
-		            procedureRecord.getParameters().add(paramRecord);
+		            procedureRecord.getParameters().set(i, paramRecord);
+		            paramRecord.setProcedure(procedureRecord);
 		        }
 		    	
-		        String resultID = procedureRecord.getResultSetID();
-		        if(resultID != null) {
-		            ColumnSet resultRecord = (ColumnSet) getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET, false);
+		        ColumnSet<ProcedureRecordImpl> result = procedureRecord.getResultSet();
+		        if(result != null) {
+		            ColumnSet<ProcedureRecordImpl> resultRecord = (ColumnSet<ProcedureRecordImpl>) getRecordByType(result.getUUID(), MetadataConstants.RECORD_TYPE.RESULT_SET, false);
 		            if (resultRecord != null) {
+		            	resultRecord.setParent(procedureRecord);
+		            	resultRecord.setName("RSParam"); //$NON-NLS-1$
 			            loadColumnSetRecords(resultRecord, null);
 			            procedureRecord.setResultSet(resultRecord);
 		            }
@@ -286,14 +288,17 @@ public class IndexMetadataFactory {
 		return loadRecords(results);        
     }
     
-	private void loadColumnSetRecords(ColumnSet indexRecord, Map<String, Column> columns) {
+	private void loadColumnSetRecords(ColumnSet<?> indexRecord, Map<String, Column> columns) {
 		for (int i = 0; i < indexRecord.getColumns().size(); i++) {
 			String uuid = indexRecord.getColumns().get(i).getUUID();
+			Column c = null;
 			if (columns != null) {
-				indexRecord.getColumns().set(i, columns.get(uuid));
+				c = columns.get(uuid);
 			} else {
-				indexRecord.getColumns().set(i, findElement(uuid));
+				c = findElement(uuid);
 			}
+			indexRecord.getColumns().set(i, c);
+			c.setParent(indexRecord);
 		}
 	}
     

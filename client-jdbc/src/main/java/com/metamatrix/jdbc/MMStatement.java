@@ -830,8 +830,8 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Create a request message
         reqMsg.markSubmissionStart();        
         reqMsg.setExecutionPayload(this.payload);        
-        reqMsg.setDoubleQuotedVariableAllowed(Boolean.valueOf(
-                getExecutionProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE))
+        reqMsg.setAnsiQuotedIdentifiers(Boolean.valueOf(
+                getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS))
                 .booleanValue());
         String sqlOptions = getExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS);
         if (sqlOptions != null &&

@@ -54,10 +54,10 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     
     @Test public void testDefect15241() {
 
-    	String sql = "SELECT ModelName, Name, Description FROM System.Groups WHERE Name = 'yyyTestDocument'"; //$NON-NLS-1$
+    	String sql = "SELECT SchemaName, Name, Description FROM System.Tables WHERE Name = 'yyyTestDocument'"; //$NON-NLS-1$
 
     	String[] expected ={
-			"ModelName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
+			"SchemaName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
 			"test13326Doc	yyyTestDocument	null", //$NON-NLS-1$
 			"testDoc	yyyTestDocument	This is a test description of virtual doc yyyTestDocument" //$NON-NLS-1$
     	};
@@ -65,9 +65,9 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     }
 
     @Test public void testDefect15241a() {
-    	String sql = "SELECT GroupName, Name, Description FROM System.Elements WHERE Name = 'IntKey'"; //$NON-NLS-1$
+    	String sql = "SELECT TableName, Name, Description FROM System.Columns WHERE Name = 'IntKey'"; //$NON-NLS-1$
     	String[] expected ={
-		    "GroupName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
+		    "TableName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
 		    "HugeA	IntKey	null", //$NON-NLS-1$
 		    "HugeB	IntKey	null", //$NON-NLS-1$
 		    "LargeA	IntKey	null", //$NON-NLS-1$
@@ -82,11 +82,11 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 
     @Test public void testDefect15241b() {
     	
-    	String sql = "SELECT GroupName, Name, Value, UID FROM System.GroupProperties WHERE ModelName = 'testDoc'"; //$NON-NLS-1$
+    	String sql = "SELECT Name, Value, UID FROM System.Properties"; //$NON-NLS-1$
     	String[] expected ={
-	    "GroupName[string]	Name[string]	Value[string]	UID[string]",	 //$NON-NLS-1$
-	    "yyyTestDocument	NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1", //$NON-NLS-1$
-	    "yyyTestDocument	NugentYAttribute	Nuuuuuge44444	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1" //$NON-NLS-1$
+	    "Name[string]	Value[string]	UID[string]",	 //$NON-NLS-1$
+	    "NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1", //$NON-NLS-1$
+	    "NugentYAttribute	Nuuuuuge44444	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1" //$NON-NLS-1$
     	};
     	executeAndAssertResults(sql, expected);
     }

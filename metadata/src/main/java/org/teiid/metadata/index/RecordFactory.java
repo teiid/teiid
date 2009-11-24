@@ -632,7 +632,17 @@ public class RecordFactory {
         dt.setBasetypeID(getObjectValue((String)tokens.get(tokenIndex++)));
 
         // Set the fullName/objectID/nameInSource
-        dt.setFullName((String)tokens.get(tokenIndex++));
+        String fullName = (String)tokens.get(tokenIndex++);
+        int indx = fullName.lastIndexOf(Datatype.URI_REFERENCE_DELIMITER);
+        if (indx > -1) {
+            fullName = fullName.substring(indx+1);
+        } else {
+	        indx = fullName.lastIndexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
+	        if (indx > -1) {
+	        	fullName = fullName.substring(indx+1);
+	        }
+        }
+        dt.setName(fullName);
         dt.setUUID(getObjectValue((String)tokens.get(tokenIndex++)));
         dt.setNameInSource(getObjectValue((String)tokens.get(tokenIndex++)));
         
@@ -711,11 +721,22 @@ public class RecordFactory {
         procRd.setVirtual(getBooleanValue(booleanValues[1]));
 
         // The next token are the UUIDs for the param references
-        List uuids = getIDs((String)tokens.get(tokenIndex++), indexVersion);
-        procRd.setParameterIDs(uuids);
+        List<String> uuids = getIDs((String)tokens.get(tokenIndex++), indexVersion);
+        List<ProcedureParameter> columns = new ArrayList<ProcedureParameter>(uuids.size());
+        for (String uuid : uuids) {
+        	ProcedureParameter column = new ProcedureParameter();
+        	column.setUUID(uuid);
+			columns.add(column);
+		}
+        procRd.setParameters(columns);
 
         // The next token is the UUID of the resultSet object
-        procRd.setResultSetID(getObjectValue((String)tokens.get(tokenIndex++)));
+        String rsId = getObjectValue((String)tokens.get(tokenIndex++));
+        if (rsId != null) {
+        	ColumnSet cs = new ColumnSet();
+        	cs.setUUID(rsId);
+            procRd.setResultSet(cs);
+        }
         
         if (includeProcedureUpdateCount(indexVersion)) {
             procRd.setUpdateCount(Integer.parseInt((String)tokens.get(tokenIndex++)));
@@ -1013,7 +1034,7 @@ public class RecordFactory {
         record.setUUID(getObjectValue(objectID));
         if (fullName != null) {
         	String name = fullName;
-            if (record instanceof Column) { //take only the last part
+            if (record instanceof Column || record instanceof ProcedureParameter || record instanceof KeyRecord) { //take only the last part
                 int index = fullName.lastIndexOf(IndexConstants.NAME_DELIM_CHAR);
                 if (index > 0) {
                 	name = fullName.substring(index + 1);
@@ -1026,7 +1047,6 @@ public class RecordFactory {
             }
             record.setName(name);
         }
-        record.setFullName(fullName);
         record.setNameInSource(getObjectValue(nameInSource));
     }
 
@@ -1042,7 +1062,9 @@ public class RecordFactory {
     		((TransformationRecordImpl)record).setResourcePath(getOptionalToken(tokens, tokenIndex));
     	}
     	tokenIndex++;
-        record.setName(getOptionalToken(tokens, tokenIndex++));
+    	if (record.getName() == null) {
+    		record.setName(getOptionalToken(tokens, tokenIndex++));
+    	}
         //placeholder for index version
         getOptionalToken(tokens, tokenIndex++);
     }

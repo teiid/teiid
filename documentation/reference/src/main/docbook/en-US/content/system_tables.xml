@@ -3,7 +3,7 @@
 <chapter id="system_tables">
   <title>System Tables</title>
   <sect1>
-    <title>VDB and Model Metadata</title>
+    <title>VDB, Schema, and Properties</title>
     <sect2>
       <title>System.VirtualDatabases</title>
       <para>This table supplies information about the currently
@@ -52,9 +52,9 @@
       </informaltable>
     </sect2>
     <sect2>
-      <title>System.Models</title>
-      <para>This table supplies information about all the models in
-        the virtual database, including the system model itself
+      <title>System.Schemas</title>
+      <para>This table supplies information about all the schemas in
+        the virtual database, including the system schema itself
         (System).</para>
       <informaltable frame="all">
         <tgroup cols="3">
@@ -74,24 +74,24 @@
           <tbody>
             <row>
               <entry>
+                <para>VDBName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>VDB name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
                 <para>Name</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Version</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model version</para>
+                <para>Schema name</para>
               </entry>
             </row>
             <row>
@@ -102,76 +102,7 @@
                 <para>boolean</para>
               </entry>
               <entry>
-                <para>True if source model, false for view</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SupportsWhereAll</para>
-              </entry>
-              <entry>
-                <para>boolean</para>
-              </entry>
-              <entry>
-                <para>Model supports queries with no criteria
-                </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SupportsOrderBy</para>
-              </entry>
-              <entry>
-                <para>boolean</para>
-              </entry>
-              <entry>
-                <para>Model supports ORDER BY queries</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SupportsJoin</para>
-              </entry>
-              <entry>
-                <para>boolean</para>
-              </entry>
-              <entry>
-                <para>Model supports queries with joins</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SupportsDistinct</para>
-              </entry>
-              <entry>
-                <para>boolean</para>
-              </entry>
-              <entry>
-                <para>Model supports SELECT DISTINCT queries</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SupportsOuterJoin</para>
-              </entry>
-              <entry>
-                <para>boolean</para>
-              </entry>
-              <entry>
-                <para>Model supports queries with outer joins
-                </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>MaxSetSize</para>
-              </entry>
-              <entry>
-                <para>integer</para>
-              </entry>
-              <entry>
-                <para>Max number of values to pass in an IN value set
-                  for a dependent join</para>
+                <para>True if this represents a source</para>
               </entry>
             </row>
             <row>
@@ -204,8 +135,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>URI for the primary metamodel describing this
-                  model</para>
+                <para>URI for the primary metamodel describing the model used for this schema</para>
               </entry>
             </row>
           </tbody>
@@ -213,8 +143,8 @@
       </informaltable>
     </sect2>
     <sect2>
-      <title>System.ModelProperties</title>
-      <para>This table supplies user-defined properties on models
+      <title>System.Properties</title>
+      <para>This table supplies user-defined properties on all objects
         based on metamodel extensions. Normally, this table is empty if
         no metamodel extensions are being used.</para>
       <informaltable frame="all">
@@ -235,24 +165,13 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
                 <para>Name</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Property name</para>
+                <para>Extension property name</para>
               </entry>
             </row>
             <row>
@@ -263,7 +182,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>Property value</para>
+                <para>Extension property value</para>
               </entry>
             </row>
             <row>
@@ -274,7 +193,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model unique ID</para>
+                <para>Key unique ID</para>
               </entry>
             </row>
           </tbody>
@@ -285,7 +204,7 @@
   <sect1>
     <title>Table Metadata</title>
     <sect2>
-      <title>System.Groups</title>
+      <title>System.Tables</title>
       <para>This table supplies information about all the groups
         (tables, views, documents, etc) in the virtual database.</para>
       <informaltable frame="all">
@@ -306,24 +225,24 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
               </entry>
             </row>
             <row>
               <entry>
-                <para>FullName</para>
+                <para>SchemaName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Full group name</para>
+                <para>Schema Name</para>
               </entry>
             </row>
             <row>
@@ -368,19 +287,7 @@
                 <para>boolean</para>
               </entry>
               <entry>
-                <para>True if this is a source model</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper-case full group name for easier
-                  matching</para>
+                <para>True if this is a source table</para>
               </entry>
             </row>
             <row>
@@ -436,7 +343,7 @@
                 <para>boolean</para>
               </entry>
               <entry>
-                <para>True if in system model</para>
+                <para>True if in system table</para>
               </entry>
             </row>
           </tbody>
@@ -444,109 +351,7 @@
       </informaltable>
     </sect2>
     <sect2>
-      <title>System.GroupProperties</title>
-      <para>This table supplies user-defined properties on groups
-        based on metamodel extensions. Normally, this table is empty if
-        no metamodel extensions are being used.</para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupFullName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Full group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Short group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Full upper-case group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Group unique ID</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>
-    <sect2>
-      <title>System.Elements</title>
+      <title>System.Columns</title>
       <para>This table supplies information about all the elements
         (columns, tags, attributes, etc) in the virtual database.</para>
       <informaltable frame="all">
@@ -567,35 +372,35 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
               </entry>
             </row>
             <row>
               <entry>
-                <para>GroupName</para>
+                <para>SchemaName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Short group name</para>
+                <para>Schema Name</para>
               </entry>
             </row>
             <row>
               <entry>
-                <para>GroupFullName</para>
+                <para>TableName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Full group name</para>
+                <para>Table name</para>
               </entry>
             </row>
             <row>
@@ -907,130 +712,6 @@
       </informaltable>
     </sect2>
     <sect2>
-      <title>System.ElementProperties</title>
-      <para>This table supplies user-defined properties on groups
-        based on metamodel extensions. Normally, this table is empty if
-        no metamodel extensions are being used.</para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupFullName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Full group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ElementName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Element name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Short group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ElementUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper-case element name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper-case group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Element unique ID</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>
-    <sect2>
       <title>System.Keys</title>
       <para>This table supplies information about primary, foreign,
         and unique keys.</para>
@@ -1052,24 +733,35 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
               </entry>
             </row>
             <row>
               <entry>
-                <para>GroupFullName</para>
+                <para>SchemaName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Full group name</para>
+                <para>Schema Name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Table Name</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Table name</para>
               </entry>
             </row>
             <row>
@@ -1130,28 +822,6 @@
             </row>
             <row>
               <entry>
-                <para>GroupName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Short group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper-case full group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
                 <para>RefKeyUID</para>
               </entry>
               <entry>
@@ -1160,130 +830,6 @@
               <entry>
                 <para>Referenced key UID (if foreign key)
                 </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Key unique ID</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>
-    <sect2>
-      <title>System.KeyProperties</title>
-      <para>This table supplies user-defined properties on keys
-        based on metamodel extensions. Normally, this table is empty if
-        no metamodel extensions are being used.</para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupFullName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Full group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>KeyName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Key name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Extension property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Extension property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Short group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper-case full group name</para>
               </entry>
             </row>
             <row>
@@ -1323,24 +869,35 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
               </entry>
             </row>
             <row>
               <entry>
-                <para>GroupFullName</para>
+                <para>SchemaName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Full group name</para>
+                <para>Schema Name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>TableName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Table name</para>
               </entry>
             </row>
             <row>
@@ -1375,28 +932,6 @@
               <entry>
                 <para>Key type: "Primary", "Foreign", "Unique", etc
                 </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Short group name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>GroupUpperName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Upper case full group name</para>
               </entry>
             </row>
             <row>
@@ -1463,13 +998,24 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SchemaName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Schema Name</para>
               </entry>
             </row>
             <row>
@@ -1507,17 +1053,6 @@
             </row>
             <row>
               <entry>
-                <para>ModelUID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model UID</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
                 <para>UID</para>
               </entry>
               <entry>
@@ -1536,98 +1071,6 @@
               </entry>
               <entry>
                 <para>Description</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>FullName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Full procedure name</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>
-    <sect2>
-      <title>System.ProcedureProperties
-      </title>
-      <para>This table supplies user-defined properties on
-        procedures based on metamodel extensions. Normally, this table
-        is empty if no metamodel extensions are being used.</para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ProcedureName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Procedure name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Procedure UID</para>
               </entry>
             </row>
           </tbody>
@@ -1656,13 +1099,24 @@
           <tbody>
             <row>
               <entry>
-                <para>ModelName</para>
+                <para>VDBName</para>
               </entry>
               <entry>
                 <para>string</para>
               </entry>
               <entry>
-                <para>Model name</para>
+                <para>VDB name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SchemaName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Schema Name</para>
               </entry>
             </row>
             <row>
@@ -1792,96 +1246,6 @@
         </tgroup>
       </informaltable>
     </sect2>
-    <sect2>
-      <title>System.ProcedureParamProperties</title>
-      <para>This supplies information on procedure parameters.
-      </para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>ModelName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Model name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ProcedureName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Procedure name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ProcedureParamName</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Parameter name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>param unique id</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>    
   </sect1>
   <sect1>
     <title>
@@ -2107,75 +1471,6 @@
               </entry>
               <entry>
                 <para>Description of type</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
-    </sect2>
-    <sect2>
-      <title>System.DataTypeProperties</title>
-      <para>This table supplies user-defined properties on data
-        types based on metamodel extensions. Normally, this table is
-        empty if no metamodel extensions are being used.</para>
-      <informaltable frame="all">
-        <tgroup cols="3">
-          <thead>
-            <row>
-              <entry>
-                <para>Column Name</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>DataType</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Data type name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Name</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property name</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>Value</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Property value</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UID</para>
-              </entry>
-              <entry>
-                <para>string</para>
-              </entry>
-              <entry>
-                <para>Data type UID</para>
               </entry>
             </row>
           </tbody>

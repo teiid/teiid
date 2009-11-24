@@ -161,20 +161,11 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
             info.put(ExecutionProperties.RESULT_SET_CACHE_MODE, BaseDataSource.DEFAULT_RESULT_SET_CACHE_MODE);
         }
 
-        /*
-         * Flag that a double quoted string is treated as a variable
-         * instead of a String litral. for example:
-         * <code>
-         * select "part_color" from parts
-         * </code>
-         * "part_color" will be treated as column name insted of varible, this
-         * is to allow ODBC metadata tools allow to integrate seemlessly 
-         */
-        String allowDblQuotes = info.getProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE);
-        if (allowDblQuotes != null) {
-            info.put(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE, allowDblQuotes);
+        String ansiQuotes = info.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
+        if (ansiQuotes != null) {
+            info.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, ansiQuotes);
         } else {
-            info.put(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE, Boolean.FALSE.toString());
+            info.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
         }
                 
         logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
@@ -483,13 +474,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         return serverConn;
     }
 
-    /**
-     * <p>A schema maps to a VirtualDatabaseName in JDBC. This method returns
-     * the name of the virtualDatabase to which we have a connection.</p>
-     * @return name of the virtual database to which metamatrix connects.
-     * @throws SQLException if there is an error connecting to metamatrix.
-     */
-    String getSchema() throws SQLException {
+    String getVDBName() throws SQLException {
         //Check to see the connection is open
         checkConnection();
         //get the virtual database name to which we are connected.

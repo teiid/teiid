@@ -66,7 +66,7 @@ public class TestMMConnection extends TestCase {
     }
 
     public void testGetSchema() throws Exception {
-        assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_NAME, getMMConnection().getSchema()); //$NON-NLS-1$
+        assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_NAME, getMMConnection().getVDBName()); //$NON-NLS-1$
     }
 
     public void testNativeSql() throws Exception {

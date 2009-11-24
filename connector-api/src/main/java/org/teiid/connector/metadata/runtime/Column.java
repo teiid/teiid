@@ -60,6 +60,16 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private int charOctetLength;
     private int distinctValues = -1;
     private int nullValues = -1;
+    private ColumnSet parent;
+    
+    public void setParent(ColumnSet parent) {
+		this.parent = parent;
+	}
+    
+    @Override
+    public AbstractMetadataRecord getParent() {
+    	return parent;
+    }
 
     @Override
     public int compareTo(Column record) {

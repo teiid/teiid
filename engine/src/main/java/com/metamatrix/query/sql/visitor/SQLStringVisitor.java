@@ -1144,28 +1144,12 @@ public class SQLStringVisitor extends LanguageVisitor {
                 constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
             } else {
             	String strValue = obj.getValue().toString();
-		        strValue = escapeStringValue(strValue, '\'');
-			    constantParts = new Object[] { getStringQuoteBegin(), strValue, getStringQuoteEnd() };
+		        strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
+			    constantParts = new Object[] { "'", strValue, "'" }; //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
 
         replaceStringParts(constantParts);
-    }
-
-	/**
-	 * Get the string to quote the beginning of a string with.  By default this is the ' character.
-	 * @return String quote begin character
-	 */
-    protected String getStringQuoteBegin() {
-    	return "'"; //$NON-NLS-1$
-    }
-
-	/**
-	 * Get the string to quote the end of a string with.  By default this is the ' character.
-	 * @return String quote end character
-	 */
-    protected String getStringQuoteEnd() {
-    	return "'"; //$NON-NLS-1$
     }
 
  	/**
@@ -1173,25 +1157,8 @@ public class SQLStringVisitor extends LanguageVisitor {
  	 * @param str String literal value (unquoted), never null
  	 * @return Escaped string literal value
  	 */
-    protected String escapeStringValue(String str, char tick) {
-        int index = str.indexOf(tick);
-        if(index < 0) {
-            return str;
-        }
-        int last = 0;
-    	StringBuffer temp = new StringBuffer();
-    	while(index >= 0) {
-        	temp.append(str.substring(last, index));
-    		temp.append(tick).append(tick); 
-    		last = index+1;
-    		index = str.indexOf(tick, last);
-    	}
-
-    	if(last <= (str.length()-1)) {
-    		temp.append(str.substring(last));
-    	}
-
-    	return temp.toString();
+    protected String escapeStringValue(String str, String tick) {
+        return StringUtil.replaceAll(str, tick, tick + tick);
     }
 
     public void visit(ElementSymbol obj) {
@@ -1598,7 +1565,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     		}
     	}
     	if (escape) {
-    		return ID_ESCAPE_CHAR + escapeStringValue(part, '"') + ID_ESCAPE_CHAR;
+    		return ID_ESCAPE_CHAR + escapeStringValue(part, "\"") + ID_ESCAPE_CHAR; //$NON-NLS-1$
     	}
     	return part;
     }

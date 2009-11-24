@@ -31,7 +31,6 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -396,32 +395,9 @@ public class XMLQueryResolver implements CommandResolver {
         }
     }
 
-
     static List getElementsInDocument(GroupSymbol group, QueryMetadataInterface metadata)
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-
-        // get all elements from the metadata
-        List elementIDs = metadata.getElementIDsInGroupID(group.getMetadataID());
-
-        if (elementIDs == null){
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0021, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0021, group));
-        }
-
-        // ok for each ELEMENT...
-        List elements = new ArrayList(elementIDs.size());
-        Iterator elementIter = elementIDs.iterator();
-        while(elementIter.hasNext()){
-            Object elementID = elementIter.next();
-            String fullName = metadata.getFullName(elementID);
-
-            // Form an element symbol from the ID
-            ElementSymbol element = new ElementSymbol(fullName);
-            element.setGroupSymbol(group);
-            element.setMetadataID(elementID);
-            element.setType( DataTypeManager.getDataTypeClass(metadata.getElementType(element.getMetadataID())) );
-            elements.add(element);
-        }
-        return elements;
+        return ResolverUtil.resolveElementsInGroup(group, metadata);
     }
     
     static List getElementsUnderNode(ElementSymbol node, List validElements, QueryMetadataInterface metadata) 

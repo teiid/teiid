@@ -127,7 +127,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <sect2 id="access_patterns">
       <title>Access Patterns</title>
       <para>
-		Access patterns are used on both physical and virtual sources to
+		Access patterns are used on both physical tables and views to
 		specify the need for criteria against a set of columns. Failure to supply the criteria will
 		result in a planning error, rather than a run-away source query. Access
 		patterns can be applied in a set such that only one of the access
@@ -760,8 +760,8 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
              There are a set of pre-defined rules that are dynamically
             assembled into a rule stack for every query.  The rule stack is
             assembled based on the contents of the user’s query and its
-            transformations.  For example, if there are no virtual layers, then
-            RuleMergeVirtual, which merges virtual layers together, is not
+            transformations.  For example, if there are no view layers, then
+            RuleMergeVirtual, which merges view layers together, is not
             needed and will not be added to the stack.  This allows the rule
             stack to reflect the complexity of the query.</para>
           <para>Logically the plan node data structure represents a tree of nodes
@@ -883,10 +883,10 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
         </para>
         </listitem>
         <listitem>
-        <para>RuleMergeVirtual - merges virtual layers together.  Virtual
+        <para>RuleMergeVirtual - merges view layers together.  View
           layers are connected by nesting canonical plans under source leaf
           nodes of the parent plan.  Each canonical plan is also sometimes
-          referred to as a “query frame”.  Merge virtual attempts to merge
+          referred to as a “query frame”.  RuleMergeVirtual attempts to merge
           child frames into the parent frame.   The merge involves renaming
           any symbols in the lower frame that overlap with symbols in the
           upper frame.  It also involves merging the join information

@@ -88,12 +88,10 @@ public interface ExecutionProperties {
     public static final String DISABLE_LOCAL_TRANSACTIONS = "disableLocalTxn";  //$NON-NLS-1$
     
     /**
-	 * By default treat the double quoted strings as variables in a
-	 * ODBC connection. This is to allow the metadata tools based on
-	 * ODBC to work seemlessly.
+	 * Overrides the handling of double quoted identifiers to allow them to be strings.
 	 * @since 4.3 
      */
-    public static final String ALLOW_DBL_QUOTED_VARIABLE = "allowDoubleQuotedVariable"; //$NON-NLS-1$   
+    public static final String ANSI_QUOTED_IDENTIFIERS = "ansiQuotedIdentifiers"; //$NON-NLS-1$   
     
     /**
      * Additional options/hints for executing the command

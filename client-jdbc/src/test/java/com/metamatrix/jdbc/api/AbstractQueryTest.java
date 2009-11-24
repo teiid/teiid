@@ -23,22 +23,22 @@
 package com.metamatrix.jdbc.api;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Connection;
 
 import org.junit.After;
 import org.teiid.adminapi.Admin;
@@ -55,6 +55,8 @@ import com.metamatrix.script.io.StringArrayReader;
  */
 public abstract class AbstractQueryTest {
 	
+	//NOTE not all tests will pass with this set to true, only those with scrollable resultsets
+	static boolean WRITE_ACTUAL = false;  
 	
     protected Connection internalConnection = null;
     protected ResultSet internalResultSet = null;
@@ -242,7 +244,11 @@ public abstract class AbstractQueryTest {
         BufferedReader  resultReader = null;
         BufferedReader  expectedReader = null;
         try {
-            resultReader = new BufferedReader(new ResultSetReader(resultSet, DELIMITER));
+        	resultReader = new BufferedReader(new ResultSetReader(resultSet, DELIMITER));
+            writeResultSet(expected, new BufferedReader(new ResultSetReader(resultSet, DELIMITER)));
+            if (resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY) {
+            	resultSet.beforeFirst();
+            }
             expectedReader = new BufferedReader(new FileReader(expected));    
             compareResults(resultReader, expectedReader);
         } catch (Exception e) {
@@ -256,6 +262,20 @@ public abstract class AbstractQueryTest {
             }               
         }
     }
+
+
+	private void writeResultSet(File expected, BufferedReader resultReader)
+			throws IOException {
+		if (WRITE_ACTUAL) {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(expected));
+			String s = null;
+			while ((s = resultReader.readLine()) != null) {
+				bw.write(s);
+				bw.write("\n"); //$NON-NLS-1$
+			}
+			bw.close();
+		}
+	}
 
     public void assertResultsSetEquals(String expected) {
     	assertResultsSetEquals(this.internalResultSet, expected);
@@ -338,6 +358,7 @@ public abstract class AbstractQueryTest {
         BufferedReader  expectedReader = null;
         try {
             resultReader = new BufferedReader(new MetadataReader(metadata, DELIMITER));
+        	writeResultSet(expected, new BufferedReader(new MetadataReader(metadata, DELIMITER)));
             expectedReader = new BufferedReader(new FileReader(expected));    
             compareResults(resultReader, expectedReader);
         } catch (Exception e) {

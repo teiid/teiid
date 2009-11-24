@@ -53,7 +53,7 @@ public class MMJDBCURL {
         ExecutionProperties.PROP_TXN_AUTO_WRAP,
         ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
         ExecutionProperties.RESULT_SET_CACHE_MODE,
-        ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE,
+        ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
         ExecutionProperties.PROP_SQL_OPTIONS,
         ExecutionProperties.PROP_FETCH_SIZE,
         ExecutionProperties.PROP_XML_FORMAT,
@@ -250,8 +250,8 @@ public class MMJDBCURL {
         return properties.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
     }
     
-    public String getAllowDoubleQuotedVariables() {
-        return properties.getProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE);
+    public String getAnsiQuotedIdentifiers() {
+        return properties.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
     }
     
     public String getSQLOptions() {

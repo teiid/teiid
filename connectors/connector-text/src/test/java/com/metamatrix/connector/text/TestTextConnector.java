@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -70,7 +71,7 @@ public class TestTextConnector {
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         connector.getConnectorMetadata(metadata); 
         assertEquals(0, metadata.getMetadataStore().getSchemas().values().iterator().next().getProcedures().size());
-        Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata.summitdata"); //$NON-NLS-1$
+        Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata"); //$NON-NLS-1$
         assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$
         assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
         assertEquals(14, group.getColumns().size());

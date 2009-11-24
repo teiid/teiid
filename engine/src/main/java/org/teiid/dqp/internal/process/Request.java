@@ -333,7 +333,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
 	public static ParseInfo createParseInfo(RequestMessage requestMsg) {
 		ParseInfo parseInfo = new ParseInfo();
-    	parseInfo.ansiQuotedIdentifiers = requestMsg.isDoubleQuotedVariableAllowed();
+    	parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
 		return parseInfo;
 	}
 
@@ -585,7 +585,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 		
 		ParseInfo parseInfo = new ParseInfo();
 		if (isRootXQuery) {
-			parseInfo.ansiQuotedIdentifiers = requestMsg.isDoubleQuotedVariableAllowed();
+			parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
 		}
 		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
         QueryResolver.resolveCommand(newCommand, metadata);            

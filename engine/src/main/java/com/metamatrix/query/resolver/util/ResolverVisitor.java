@@ -39,7 +39,6 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.UnresolvedSymbolDescription;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.internal.core.xml.XPathHelper;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
@@ -136,12 +135,8 @@ public class ResolverVisitor extends LanguageVisitor {
         // look up group and element parts of the potentialID
         String groupContext = metadata.getGroupName(potentialID);
         String elementShortName = metadata.getShortElementName(potentialID);
-        boolean isUUID = false;
         if (groupContext != null) {
             groupContext = groupContext.toUpperCase();
-            if (metadata.getGroupName(elementShortName) != null) {
-                isUUID = true;
-            }
         }
         
         boolean isExternal = false;
@@ -183,10 +178,6 @@ public class ResolverVisitor extends LanguageVisitor {
             if (matchedGroups != null && !matchedGroups.isEmpty()) {
                 groupMatched = true;
                     
-                if (isUUID) {
-                    resolveUsingUUID(potentialID, elementShortName, matches, matchedGroups);
-                    break;
-                }
                 resolveAgainstGroups(shortCanonicalName, matchedGroups, matches);
                 
                 if (matches.size() > 1) {
@@ -223,21 +214,6 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setName(resolvedSymbol.getName());
         elementSymbol.setOutputName(oldName);
    }
-
-    private void resolveUsingUUID(String potentialID,
-                                  String elementShortName,
-                                  LinkedList<ElementMatch> matches,
-                                  Collection<GroupSymbol> matchedGroups) throws MetaMatrixComponentException,
-                                                           QueryMetadataException {
-        Assertion.assertTrue(matchedGroups.size() == 1);
-        GroupSymbol group = matchedGroups.iterator().next();
-        ElementSymbol resolvedSymbol = new ElementSymbol(potentialID);
-        resolvedSymbol.setGroupSymbol(group);
-        String elementID = metadata.getFullElementName( metadata.getFullName(group.getMetadataID()), elementShortName );
-        resolvedSymbol.setMetadataID( metadata.getElementID(elementID) );
-        resolvedSymbol.setType( DataTypeManager.getDataTypeClass(metadata.getElementType(resolvedSymbol.getMetadataID())) );
-        matches.add(new ElementMatch(resolvedSymbol, group));
-    }
 
     private void resolveAgainstGroups(String elementShortName,
                                       Collection<GroupSymbol> matchedGroups, LinkedList<ElementMatch> matches) throws QueryMetadataException,

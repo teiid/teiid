@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * TableRecordImpl
  */
-public class Table extends ColumnSet implements SchemaObject {
+public class Table extends ColumnSet<Schema> {
 
 	public enum Type {
 		Table,
@@ -65,14 +65,8 @@ public class Table extends ColumnSet implements SchemaObject {
 	private List<String> schemaPaths;
 	private String resourcePath;
 	
-	private Schema schema;
-	
 	public Schema getSchema() {
-		return schema;
-	}
-	
-	public void setSchema(Schema schema) {
-		this.schema = schema;
+		return super.getParent();
 	}
 	
     public List<String> getBindings() {

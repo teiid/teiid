@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * ProcedureRecordImpl
  */
-public class ProcedureRecordImpl extends AbstractMetadataRecord implements SchemaObject {
+public class ProcedureRecordImpl extends AbstractMetadataRecord {
     
 	public enum Type {
 		Function,
@@ -37,41 +37,29 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord implements Schem
 		StoredQuery
 	}
 	
-	private List<String> parameterIDs;
     private boolean isFunction;
     private boolean isVirtual;
-    private String resultSetID;
     private int updateCount = 1;
     private List<ProcedureParameter> parameters;
-    private ColumnSet resultSet;
+    private ColumnSet<ProcedureRecordImpl> resultSet;
     private String queryPlan;
     
     private Schema schema;
     
-    @Override
     public Schema getSchema() {
     	return schema;
     }
     
-    @Override
     public void setSchema(Schema schema) {
     	this.schema = schema;
     }
     
-    public List<String> getParameterIDs() {
-        return parameterIDs;
-    }
-
     public boolean isFunction() {
         return isFunction;
     }
 
     public boolean isVirtual() {
         return this.isVirtual;
-    }
-
-    public String getResultSetID() {
-        return resultSetID;
     }
 
     public Type getType() {
@@ -108,20 +96,6 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord implements Schem
 	}
 
     /**
-     * @param list
-     */
-    public void setParameterIDs(List<String> list) {
-        parameterIDs = list;
-    }
-
-    /**
-     * @param object
-     */
-    public void setResultSetID(String object) {
-        resultSetID = object;
-    }
-
-    /**
      * @param b
      */
     public void setFunction(boolean b) {
@@ -139,12 +113,17 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord implements Schem
     	this.updateCount = count;
     }
 
-	public void setResultSet(ColumnSet resultSet) {
+	public void setResultSet(ColumnSet<ProcedureRecordImpl> resultSet) {
 		this.resultSet = resultSet;
 	}
 
-	public ColumnSet getResultSet() {
+	public ColumnSet<ProcedureRecordImpl> getResultSet() {
 		return resultSet;
+	}
+	
+	@Override
+	public AbstractMetadataRecord getParent() {
+		return schema;
 	}
 
 }

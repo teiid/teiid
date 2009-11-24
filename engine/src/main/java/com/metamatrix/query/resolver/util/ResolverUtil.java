@@ -893,16 +893,18 @@ public class ResolverUtil {
 	        int vdbIndex = potentialID.indexOf(ElementSymbol.SEPARATOR);
 	        if(vdbIndex >= 0) {
 	            String potentialVdbName = potentialID.substring(0, vdbIndex);
-	            newPotentialID = potentialID.substring(vdbIndex+1);
-	
-	            try {
-	                groupID = metadata.getGroupID(newPotentialID);
-	                vdbName = potentialVdbName;
-	            } catch(QueryMetadataException e) {
-	                // ignore - just didn't find it
-	            } 
-	            if(groupID != null) {
-	            	potentialID = newPotentialID;
+	            if (potentialVdbName.equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
+		            newPotentialID = potentialID.substring(vdbIndex+1);
+		
+		            try {
+		                groupID = metadata.getGroupID(newPotentialID);
+		                vdbName = potentialVdbName;
+		            } catch(QueryMetadataException e) {
+		                // ignore - just didn't find it
+		            } 
+		            if(groupID != null) {
+		            	potentialID = newPotentialID;
+		            }
 	            }
 	        }
 	    }

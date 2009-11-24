@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,14 +36,14 @@ import java.util.Set;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.metadata.CompositeMetadataStore;
@@ -86,22 +87,16 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private enum SystemTables {
 		VIRTUALDATABASES,
-		MODELS,
-		GROUPS,
+		SCHEMAS,
+		TABLES,
 		DATATYPES,
-		ELEMENTS,
+		COLUMNS,
 		KEYS,
 		PROCEDURES,
-		KEYELEMENTS,
+		KEYCOLUMNS,
 		PROCEDUREPARAMS,
-		MODELPROPERTIES,
-		GROUPPROPERTIES,
-		DATATYPEPROPERTIES,
-		ELEMENTPROPERTIES,
-		KEYPROPERTIES,
-		PROCEDUREPROPERTIES,
-		PROCEDUREPARAMPROPERTIES,
-		REFERENCEKEYCOLUMNS
+		REFERENCEKEYCOLUMNS,
+		PROPERTIES
 	}
 	
 	private enum SystemProcs {
@@ -164,220 +159,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
 
-	@SuppressWarnings("unchecked")
 	public TupleSource registerRequest(Object processorId, Command command,
 			String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
-			String vdbName = workItem.getDqpWorkContext().getVdbName();
-			String vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
-			CompositeMetadataStore metadata = this.metadataService.getMetadataObjectSource(vdbName, vdbVersion);
-			Collection rows = new ArrayList();
-			if (command instanceof Query) {
-				Query query = (Query)command;
-				UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
-				GroupSymbol group = ufc.getGroup();
-				final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
-				switch (sysTable) {
-				case VIRTUALDATABASES:
-					rows.add(Arrays.asList(vdbName, vdbVersion));
-					break;
-				case MODELS:
-				case MODELPROPERTIES:
-					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (Schema model : store.getSchemas().values()) {
-							if(checkVisibility(vdbName, vdbVersion, model.getName())) {
-								if (sysTable == SystemTables.MODELS) {
-									rows.add(Arrays.asList(model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
-								} else {
-									for (Map.Entry<String, String> entry : model.getProperties().entrySet()) {
-										rows.add(Arrays.asList(model.getName(), entry.getKey(), entry.getValue(), model.getUUID()));
-									}
-								}
-					        }
-						}
-					}
-					break;
-				case DATATYPES:
-				case DATATYPEPROPERTIES:
-					rows = new LinkedHashSet(); //System types are duplicated in each indexed vdb... 
-					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (Datatype datatype : store.getDatatypes()) {
-							if (sysTable == SystemTables.DATATYPES) {
-								rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
-										datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
-										datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation()));
-							} else {
-								for (Map.Entry<String, String> entry : datatype.getProperties().entrySet()) {
-									rows.add(Arrays.asList(datatype.getName(), entry.getKey(), entry.getValue(), datatype.getUUID()));
-								}
-							}
-						}
-					}
-					break;
-				case PROCEDURES:
-				case PROCEDUREPROPERTIES:
-				case PROCEDUREPARAMS:
-				case PROCEDUREPARAMPROPERTIES:
-					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (Schema schema : store.getSchemas().values()) {
-							for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
-								if(!checkVisibility(vdbName, vdbVersion, proc.getSchema().getName())) {
-									continue;
-								}
-								switch (sysTable) {
-								case PROCEDURES:
-									Schema model = proc.getSchema();
-									rows.add(Arrays.asList(model.getName(), proc.getName(), proc.getNameInSource(), proc.getResultSetID() != null, model.getUUID(), proc.getUUID(), proc.getAnnotation(), proc.getFullName()));
-									break;
-								case PROCEDUREPROPERTIES:
-									for (Map.Entry<String, String> entry : proc.getProperties().entrySet()) {
-										rows.add(Arrays.asList(proc.getSchema().getName(), proc.getName(), entry.getKey(), entry.getValue(), proc.getUUID()));
-									}
-									break;
-								default:
-									for (ProcedureParameter param : proc.getParameters()) {
-										if (sysTable == SystemTables.PROCEDUREPARAMS) {
-											rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
-													param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
-										} else {
-											for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
-												rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
-											}
-										}
-									}
-									if (proc.getResultSetID() != null) {
-										for (Column param : proc.getResultSet().getColumns()) {
-											if (sysTable == SystemTables.PROCEDUREPARAMS) {
-												rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
-														param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
-											} else {
-												for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
-													rows.add(Arrays.asList(proc.getSchema().getName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
-												}
-											}
-										}
-									}
-									break;
-								}
-							}
-						}
-					}
-					break;				
-				default:
-					for (MetadataStore store : metadata.getMetadataStores()) {
-						for (Schema schema : store.getSchemas().values()) {
-							for (Table table : schema.getTables().values()) {
-								if(!checkVisibility(vdbName, vdbVersion, table.getSchema().getName())) {
-									continue;
-								}
-								switch (sysTable) {
-								case GROUPS:
-									rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
-											table.isPhysical(), table.getName().toUpperCase(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
-									break;
-								case GROUPPROPERTIES:
-									for (Map.Entry<String, String> entry : table.getProperties().entrySet()) {
-										rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), table.getUUID()));
-									}
-									break;
-								case ELEMENTS:
-									for (Column column : table.getColumns()) {
-										if (column.getDatatype() == null) {
-											continue; //some mapping classes don't set the datatype
-										}
-										rows.add(Arrays.asList(table.getSchema().getName(), table.getName(), table.getFullName(), column.getName(), column.getPosition(), column.getNameInSource(), 
-												column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
-												column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
-												column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
-												column.getCharOctetLength(), column.getRadix(), table.getName().toUpperCase(), column.getName().toUpperCase(), column.getUUID(), column.getAnnotation()));
-									}
-									break;
-								case ELEMENTPROPERTIES:
-									for (Column column : table.getColumns()) {
-										for (Map.Entry<String, String> entry : column.getProperties().entrySet()) {
-											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), column.getName(), entry.getKey(), entry.getValue(), table.getName(), column.getName().toUpperCase(), 
-													table.getName().toUpperCase(), column.getUUID()));
-										}	
-									}
-									break;
-								case KEYS:
-									for (KeyRecord key : table.getAllKeys()) {
-										rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
-												false, table.getName(), table.getName().toUpperCase(), (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID()));
-									}
-									break;
-								case KEYPROPERTIES:
-									for (KeyRecord key : table.getAllKeys()) {
-										for (Map.Entry<String, String> entry : key.getProperties().entrySet()) {
-											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), key.getName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), 
-													key.getUUID()));
-										}
-									}
-									break;
-								case KEYELEMENTS:
-									for (KeyRecord key : table.getAllKeys()) {
-										int postition = 1;
-										for (Column column : key.getColumns()) {
-											rows.add(Arrays.asList(table.getSchema().getName(), table.getFullName(), column.getName(), key.getName(), key.getType().toString(), table.getName(), table.getName().toUpperCase(), 
-													(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++));
-										}
-									}
-									break;
-								case REFERENCEKEYCOLUMNS:
-									for (ForeignKey key : table.getForeignKeys()) {
-										int postition = 0;
-										for (Column column : key.getColumns()) {
-											Table pkTable = key.getPrimaryKey().getTable();
-											rows.add(Arrays.asList(null, vdbName, pkTable.getFullName(), key.getPrimaryKey().getColumns().get(postition).getName(), null, vdbName, table.getFullName(), column.getName(),
-													++postition, 3, 3, key.getName(), key.getPrimaryKey().getName(), 5));
-										}
-									}
-									break;
-								}
-							}
-						}
-					}
-					break;
-				}
-			} else {					
-				StoredProcedure proc = (StoredProcedure)command;
-				GroupSymbol group = proc.getGroup();
-				final SystemProcs sysTable = SystemProcs.valueOf(group.getCanonicalName().substring(CoreConstants.SYSTEM_MODEL.length() + 1));
-				switch (sysTable) {
-				case GETVDBRESOURCEPATHS:
-			        Set<String> filePaths = metadata.getMetadataSource().getEntries();
-			        for (String filePath : filePaths) {
-			        	if (vdbService.getFileVisibility(vdbName, vdbVersion, filePath) != ModelInfo.PUBLIC) {
-			        		continue;
-			        	}
-			        	rows.add(Arrays.asList(filePath, filePath.endsWith(".INDEX"))); //$NON-NLS-1$
-			        }
-					break;
-				case GETBINARYVDBRESOURCE:
-					String filePath = (String)proc.getParameter(0).getValue();
-					if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
-						try {
-							rows.add(Arrays.asList(new SerialBlob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).getBytes())));
-						} catch (SQLException e) {
-							throw new MetaMatrixComponentException(e);
-						}
-					}
-					break;
-				case GETCHARACTERVDBRESOURCE:
-					filePath = (String)proc.getParameter(0).getValue();
-					if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
-						try {
-							rows.add(Arrays.asList(new SerialClob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).toCharArray())));
-						} catch (SQLException e) {
-							throw new MetaMatrixComponentException(e);
-						}
-					}
-					break;
-				}
-			}
-			return new CollectionTupleSource(rows.iterator(), command.getProjectedSymbols());
+			return processSystemQuery(command, workItem);
 		}
 		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
@@ -385,12 +172,189 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         tupleSource.open();
         return tupleSource;
 	}
-	
-	private boolean checkVisibility(String vdbName, String vdbVersion,
-			String modelName) throws MetaMatrixComponentException {
-		return vdbService.getModelVisibility(vdbName, vdbVersion, modelName) == ModelInfo.PUBLIC;
-	}
 
+	/**
+	 * TODO: it would be good if processing here was lazy, in response of next batch, rather than up front.
+	 * @param command
+	 * @param workItem
+	 * @return
+	 * @throws MetaMatrixComponentException
+	 */
+	@SuppressWarnings("unchecked")
+	private TupleSource processSystemQuery(Command command,
+			RequestWorkItem workItem) throws MetaMatrixComponentException {
+		String vdbName = workItem.getDqpWorkContext().getVdbName();
+		String vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
+		CompositeMetadataStore metadata = this.metadataService.getMetadataObjectSource(vdbName, vdbVersion);
+		Collection rows = new ArrayList();
+		if (command instanceof Query) {
+			Query query = (Query)command;
+			UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+			GroupSymbol group = ufc.getGroup();
+			final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
+			switch (sysTable) {
+			case DATATYPES:
+				rows = new LinkedHashSet(); //System types are duplicated in each indexed vdb... 
+				for (Datatype datatype : metadata.getDatatypes()) {
+					rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
+							datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
+							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation()));
+				}
+				break;
+			case VIRTUALDATABASES:
+				rows.add(Arrays.asList(vdbName, vdbVersion));
+				break;
+			case SCHEMAS:
+				for (Schema model : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
+				}
+				break;
+			case PROCEDURES:
+				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+						rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation()));
+					}
+				}
+				break;
+			case PROCEDUREPARAMS:
+				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+						for (ProcedureParameter param : proc.getParameters()) {
+							rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
+									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+						}
+						if (proc.getResultSet() != null) {
+							for (Column param : proc.getResultSet().getColumns()) {
+								rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
+										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+							}
+						}
+					}
+				}
+				break;
+			case PROPERTIES: //TODO: consider storing separately in the metadatastore 
+				Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
+				records.addAll(metadata.getDatatypes());
+				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+					records.add(schema);
+					records.addAll(schema.getTables().values());
+					for (Table table : schema.getTables().values()) {
+						records.add(table);
+						records.addAll(table.getColumns());
+						records.addAll(table.getAllKeys());
+					}
+					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+						records.add(proc);
+						records.addAll(proc.getParameters());
+						if (proc.getResultSet() != null) {
+							records.addAll(proc.getResultSet().getColumns());
+						}
+					}
+				}
+				for (AbstractMetadataRecord record : records) {
+					for (Map.Entry<String, String> entry : record.getProperties().entrySet()) {
+						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID()));
+					}
+				}
+				break;
+			default:
+				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+					for (Table table : schema.getTables().values()) {
+						switch (sysTable) {
+						case TABLES:
+							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
+									table.isPhysical(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
+							break;
+						case COLUMNS:
+							for (Column column : table.getColumns()) {
+								if (column.getDatatype() == null) {
+									continue; //some mapping classes don't set the datatype
+								}
+								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), column.getPosition(), column.getNameInSource(), 
+										column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
+										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
+										column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
+										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation()));
+							}
+							break;
+						case KEYS:
+							for (KeyRecord key : table.getAllKeys()) {
+								rows.add(Arrays.asList(vdbName, table.getSchema().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
+										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID()));
+							}
+							break;
+						case KEYCOLUMNS:
+							for (KeyRecord key : table.getAllKeys()) {
+								int postition = 1;
+								for (Column column : key.getColumns()) {
+									rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), key.getName(), key.getType().toString(), 
+											(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++));
+								}
+							}
+							break;
+						case REFERENCEKEYCOLUMNS:
+							for (ForeignKey key : table.getForeignKeys()) {
+								int postition = 0;
+								for (Column column : key.getColumns()) {
+									Table pkTable = key.getPrimaryKey().getTable();
+									rows.add(Arrays.asList(vdbName, pkTable.getSchema().getName(), pkTable.getName(), key.getPrimaryKey().getColumns().get(postition).getName(), vdbName, schema.getName(), table.getName(), column.getName(),
+											++postition, (short)DatabaseMetaData.importedKeyNoAction, (short)DatabaseMetaData.importedKeyNoAction, key.getName(), key.getPrimaryKey().getName(), (short)DatabaseMetaData.importedKeyInitiallyDeferred));
+								}
+							}
+							break;
+						}
+					}
+				}
+				break;
+			}
+		} else {					
+			StoredProcedure proc = (StoredProcedure)command;
+			final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
+			switch (sysTable) {
+			case GETVDBRESOURCEPATHS:
+		        Set<String> filePaths = metadata.getMetadataSource().getEntries();
+		        for (String filePath : filePaths) {
+		        	if (vdbService.getFileVisibility(vdbName, vdbVersion, filePath) != ModelInfo.PUBLIC) {
+		        		continue;
+		        	}
+		        	rows.add(Arrays.asList(filePath, filePath.endsWith(".INDEX"))); //$NON-NLS-1$
+		        }
+				break;
+			case GETBINARYVDBRESOURCE:
+				String filePath = (String)proc.getParameter(0).getValue();
+				if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+					try {
+						rows.add(Arrays.asList(new SerialBlob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).getBytes())));
+					} catch (SQLException e) {
+						throw new MetaMatrixComponentException(e);
+					}
+				}
+				break;
+			case GETCHARACTERVDBRESOURCE:
+				filePath = (String)proc.getParameter(0).getValue();
+				if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+					try {
+						rows.add(Arrays.asList(new SerialClob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).toCharArray())));
+					} catch (SQLException e) {
+						throw new MetaMatrixComponentException(e);
+					}
+				}
+				break;
+			}
+		}
+		return new CollectionTupleSource(rows.iterator(), command.getProjectedSymbols());
+	}
+	
+	private List<Schema> getVisibleSchemas(String vdbName, String vdbVersion, CompositeMetadataStore metadata) throws MetaMatrixComponentException {
+		ArrayList<Schema> result = new ArrayList<Schema>(); 
+		for (Schema schema : metadata.getSchemas().values()) {
+			if(vdbService.getModelVisibility(vdbName, vdbVersion, schema.getName()) == ModelInfo.PUBLIC) {
+				result.add(schema);
+			}
+		}
+		return result;
+	}
+	
 	private AtomicRequestMessage createRequest(Object processorId,
 			Command command, String modelName, String connectorBindingId, int nodeID)
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {

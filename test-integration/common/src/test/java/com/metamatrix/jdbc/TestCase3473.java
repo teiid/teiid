@@ -139,7 +139,7 @@ public class TestCase3473 extends AbstractMMQueryTestCase {
         ResultSet rs = null;
         try { 
             stream.println("getCrossReference1"); //$NON-NLS-1$
-            rs = dbmd.getCrossReference(null,null, "test.all_databases", null,null, "test.all_models");//$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getCrossReference(null,"test", "all_databases", null,"test", "all_models");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -176,7 +176,7 @@ public class TestCase3473 extends AbstractMMQueryTestCase {
         ResultSet rs = null;
         try { 
             stream.println("getImportedKeys1"); //$NON-NLS-1$
-            rs = dbmd.getImportedKeys(null,null, "test.all_models"); //$NON-NLS-1$
+            rs = dbmd.getImportedKeys(null,"test", "all_models"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -203,7 +203,7 @@ public class TestCase3473 extends AbstractMMQueryTestCase {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            rs = dbmd.getExportedKeys(null,null, "test.all_models"); //$NON-NLS-1$
+            rs = dbmd.getExportedKeys(null,"test", "all_models"); //$NON-NLS-1$ //$NON-NLS-2$ 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -229,7 +229,7 @@ public class TestCase3473 extends AbstractMMQueryTestCase {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            rs = dbmd.getPrimaryKeys(null,null, "test.all_models"); //$NON-NLS-1$
+            rs = dbmd.getPrimaryKeys(null,"test", "all_models"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {

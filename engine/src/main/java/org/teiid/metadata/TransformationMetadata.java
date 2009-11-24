@@ -41,10 +41,9 @@ import org.teiid.connector.metadata.runtime.ColumnSet;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
-import org.teiid.connector.metadata.runtime.SchemaObject;
+import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.Column.SearchType;
@@ -145,11 +144,20 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
      */
     public Object getModelID(final Object groupOrElementID) throws MetaMatrixComponentException, QueryMetadataException {
-        if (!(groupOrElementID instanceof SchemaObject)) {
+    	ArgCheck.isInstanceOf(AbstractMetadataRecord.class, groupOrElementID);
+        AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) groupOrElementID;
+        AbstractMetadataRecord parent = metadataRecord.getParent();
+        if (parent instanceof Schema) {
+        	return parent;
+        }
+        if (parent == null) {
         	throw createInvalidRecordTypeException(groupOrElementID);
         }
-        
-        return ((SchemaObject)groupOrElementID).getSchema();
+        parent = metadataRecord.getParent();
+        if (parent instanceof Schema) {
+        	return parent;
+        }
+    	throw createInvalidRecordTypeException(groupOrElementID);
     }
 
     /* (non-Javadoc)
@@ -248,7 +256,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
         // create the storedProcedure info object that would hold procedure's metadata
         procInfo = new StoredProcedureInfo();
-        procInfo.setProcedureCallableName(procRecord.getName());
+        procInfo.setProcedureCallableName(procedureFullName);
         procInfo.setProcedureID(procRecord);
 
         // modelID for the procedure
@@ -259,7 +267,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
             String runtimeType = paramRecord.getRuntimeType();
             int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
             // create a parameter and add it to the procedure object
-            SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
+            SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getName());
             spParam.setMetadataID(paramRecord);
             spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
             procInfo.addParameter(spParam);
@@ -267,10 +275,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
         // if the procedure returns a resultSet, obtain resultSet metadata
         if(procRecord.getResultSet() != null) {
-            ColumnSet resultRecord = procRecord.getResultSet();
+            ColumnSet<ProcedureRecordImpl> resultRecord = procRecord.getResultSet();
             // resultSet is the last parameter in the procedure
             int lastParamIndex = procInfo.getParameters().size() + 1;
-            SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
+            SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getName());
             param.setClassType(java.sql.ResultSet.class);           
             param.setMetadataID(resultRecord);
 
@@ -988,7 +996,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 	}
 
 	private String getCacheKey(String key, AbstractMetadataRecord record) {
-		return record.getUUID() + "/" + record.getFullName() + "/" + key; //$NON-NLS-1$ //$NON-NLS-2$
+		return record.getUUID() + "/" + key; //$NON-NLS-1$
 	}
 
 }

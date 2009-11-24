@@ -557,7 +557,7 @@
             </para>
           </listitem>
           <listitem>
-            <para>The procedure virtual table automatically has an access pattern on its IN and IN_OUT parameters which
+            <para>The procedure view automatically has an access pattern on its IN and IN_OUT parameters which
             allows it to be planned correctly as a dependent join when necessary or fail when sufficient criteria cannot be found.
             </para>
           </listitem>

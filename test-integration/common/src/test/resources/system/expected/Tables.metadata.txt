@@ -1,0 +1,13 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+VDBName	12	string	java.lang.String	1	Tables	System	PartsSupplier	
+SchemaName	12	string	java.lang.String	1	Tables	System	PartsSupplier	
+Name	12	string	java.lang.String	0	Tables	System	PartsSupplier	
+Type	12	string	java.lang.String	0	Tables	System	PartsSupplier	
+NameInSource	12	string	java.lang.String	1	Tables	System	PartsSupplier	
+IsPhysical	-7	boolean	java.lang.Boolean	0	Tables	System	PartsSupplier	
+SupportsUpdates	-7	boolean	java.lang.Boolean	0	Tables	System	PartsSupplier	
+UID	12	string	java.lang.String	0	Tables	System	PartsSupplier	
+Cardinality	4	integer	java.lang.Integer	0	Tables	System	PartsSupplier	
+Description	12	string	java.lang.String	1	Tables	System	PartsSupplier	
+IsSystem	-7	boolean	java.lang.Boolean	1	Tables	System	PartsSupplier	
+IsMaterialized	-7	boolean	java.lang.Boolean	0	Tables	System	PartsSupplier	

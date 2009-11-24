@@ -60,174 +60,39 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				"ORDER BY \"SCOPE\"", //$NON-NLS-1$
 				expected);
 	}
-
-	@Test public void testModels() {
-
-		String[] expected = {
-				"Name[string]	IsPhysical[boolean]	UID[string]	Description[string]	PrimaryMetamodelURI[string]", //$NON-NLS-1$
-				"PartsSupplier	true	mmuuid:19c7f380-73d8-1edc-a81c-ecf397b10590	null	http://www.metamatrix.com/metamodels/Relational", //$NON-NLS-1$
-				"System	true	mmuuid:49b9c0f9-2c4c-42d3-9409-2d847d29a1de	System	http://www.metamatrix.com/metamodels/Relational", //$NON-NLS-1$
-		};
-		executeAndAssertResults("select* from System.Models", expected); //$NON-NLS-1$
+    
+    protected void checkResult(String testName, String query) throws Exception {
+    	execute(query);
+    	super.checkResult(testName, this.internalResultSet, "system"); //$NON-NLS-1$
+    }
+    
+	@Test public void testModels() throws Exception {
+		checkResult("testSchemas", "select* from System.Schemas"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testKeys() {
-
-		String[] expected = {
-				"ModelName[string]	GroupFullName[string]	Name[string]	Description[string]	NameInSource[string]	Type[string]	IsIndexed[boolean]	GroupName[string]	GroupUpperName[string]	RefKeyUID[string]	UID[string]", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PK_PARTS	null	null	Primary	false	PARTS	PARTS	null	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SHIP_VIA	PK_SHIP_VIA	null	null	Primary	false	SHIP_VIA	SHIP_VIA	null	mmuuid:18aa3cc0-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	PK_STATUS	null	null	Primary	false	STATUS	STATUS	null	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	PK_SUPPLIER	null	null	Primary	false	SUPPLIER	SUPPLIER	null	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PK_SUPPLIER_PARTS	null	null	Primary	false	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	FK_SPLIER_STATS	null	FK_SPLIER_STATS	Foreign	false	SUPPLIER	SUPPLIER	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	mmuuid:5ac43c00-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	FK_SPLIER_PRTS_PRTS	null	FK_SPLIER_PRTS_PRTS	Foreign	false	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c0-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	FK_SPLY_PRTS_SPLY	null	FK_SPLY_PRTS_SPLY	Foreign	false	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c1-73ff-1edc-a81c-ecf397b10590", //$NON-NLS-1$
-
-		};
-		executeAndAssertResults("select* from System.Keys order by UID", //$NON-NLS-1$
-				expected);
+	@Test public void testKeys() throws Exception {
+		checkResult("testKeys", "select* from System.Keys order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testGroups() {
-
-		String[] expected = {
-				"ModelName[string]	FullName[string]	Name[string]	Type[string]	NameInSource[string]	IsPhysical[boolean]	UpperName[string]	SupportsUpdates[boolean]	UID[string]	Cardinality[integer]	Description[string]	IsSystem[boolean]	IsMaterialized[boolean]", //$NON-NLS-1$
-				"System	System.Procedures	Procedures	Table	null	true	PROCEDURES	false	mmuuid:0bc132a5-9f8d-4a3c-9f5d-98156a98a962	0	null	true	false", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SHIP_VIA	SHIP_VIA	Table	SHIP_VIA	true	SHIP_VIA	true	mmuuid:0f4e9b80-73ff-1edc-a81c-ecf397b10590	4	null	false	false", //$NON-NLS-1$
-				"System	System.KeyElements	KeyElements	Table	null	true	KEYELEMENTS	false	mmuuid:14946083-3bd5-42d5-8283-1c0694347c29	0	null	true	false", //$NON-NLS-1$
-				"System	System.Elements	Elements	Table	null	true	ELEMENTS	false	mmuuid:1c9a5cb2-17b1-4e4a-8b0e-3a42bd052509	0	null	true	false", //$NON-NLS-1$
-				"System	System.Keys	Keys	Table	null	true	KEYS	false	mmuuid:1e5135dc-ce5d-4b25-a8ff-63f5440b3108	0	null	true	false", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	STATUS	Table	STATUS	true	STATUS	true	mmuuid:1f297200-73ff-1edc-a81c-ecf397b10590	3	null	false	false", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER	Table	SUPPLIER	true	SUPPLIER	true	mmuuid:2c371ec0-73ff-1edc-a81c-ecf397b10590	16	null	false	false", //$NON-NLS-1$
-				"System	System.DataTypeProperties	DataTypeProperties	Table	null	true	DATATYPEPROPERTIES	false	mmuuid:3190c849-907f-4b03-a2ae-3299e52ceee5	0	null	true	false", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_PARTS	Table	SUPPLIER_PARTS	true	SUPPLIER_PARTS	true	mmuuid:3deafb00-73ff-1edc-a81c-ecf397b10590	227	null	false	false", //$NON-NLS-1$
-				"System	System.ProcedureParamProperties	ProcedureParamProperties	Table	null	true	PROCEDUREPARAMPROPERTIES	true	mmuuid:415423c0-64bb-46f6-a80b-8ee37d035e52	0	null	true	false", //$NON-NLS-1$
-				"System	System.VirtualDatabases	VirtualDatabases	Table	null	true	VIRTUALDATABASES	false	mmuuid:47297c72-d621-4f4e-af4e-74060ac5f489	0	null	true	false", //$NON-NLS-1$
-				"System	System.ReferenceKeyColumns	ReferenceKeyColumns	Table	null	true	REFERENCEKEYCOLUMNS	false	mmuuid:6a9653e8-a337-41b2-86fa-77b98f409a29	0	null	true	false", //$NON-NLS-1$
-				"System	System.ModelProperties	ModelProperties	Table	null	true	MODELPROPERTIES	false	mmuuid:7a45e50a-d03f-4548-ba35-761651bbca85	0	null	true	false", //$NON-NLS-1$
-				"System	System.Groups	Groups	Table	null	true	GROUPS	false	mmuuid:8551b3bd-11cc-4049-9bcf-fe91a0eb7ba7	0	null	true	false", //$NON-NLS-1$
-				"System	System.Models	Models	Table	null	true	MODELS	false	mmuuid:8648a554-b2ad-4e8e-84ca-2ec618b311a9	0	null	true	false", //$NON-NLS-1$
-				"System	System.KeyProperties	KeyProperties	Table	null	true	KEYPROPERTIES	false	mmuuid:921e056b-f658-439f-9ab1-cf999c0f3736	0	null	true	false", //$NON-NLS-1$
-				"System	System.ProcedureProperties	ProcedureProperties	Table	null	true	PROCEDUREPROPERTIES	false	mmuuid:9220aa98-e34c-4a7e-b747-e7952a45842a	0	null	true	false", //$NON-NLS-1$
-				"System	System.GroupProperties	GroupProperties	Table	null	true	GROUPPROPERTIES	false	mmuuid:994ff192-9a8a-4ac5-b4f3-138e032df987	0	null	true	false", //$NON-NLS-1$
-				"System	System.DataTypes	DataTypes	Table	null	true	DATATYPES	false	mmuuid:9a8794f9-66f8-49e8-8576-89d212d0f957	0	null	true	false", //$NON-NLS-1$
-				"System	System.ProcedureParams	ProcedureParams	Table	null	true	PROCEDUREPARAMS	false	mmuuid:a56bd7fe-c87a-411c-8f5d-661975a25626	0	null	true	false", //$NON-NLS-1$
-				"System	System.ElementProperties	ElementProperties	Table	null	true	ELEMENTPROPERTIES	false	mmuuid:f1eab72f-0f31-4920-b06b-692e7d6ce023	0	null	true	false", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PARTS	Table	PARTS	true	PARTS	true	mmuuid:f6276601-73fe-1edc-a81c-ecf397b10590	16	null	false	false", //$NON-NLS-1$
-		};
-		executeAndAssertResults("select* from System.Groups order by UID", //$NON-NLS-1$
-				expected);
+	@Test public void testGroups() throws Exception {
+		checkResult("testTables", "select* from System.Tables order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testDataTypes() {
-
-		String[] expected = {
-				"Name[string]	IsStandard[boolean]	IsPhysical[boolean]	TypeName[string]	JavaClass[string]	Scale[integer]	TypeLength[integer]	NullType[string]	IsSigned[boolean]	IsAutoIncremented[boolean]	IsCaseSensitive[boolean]	Precision[integer]	Radix[integer]	SearchType[string]	UID[string]	RuntimeType[string]	BaseType[string]	Description[string]", //$NON-NLS-1$
-				"ENTITIES	false	false	ENTITIES	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:20360100-e742-1e20-8c26-a038c6ed7576	string	ENTITY	null", //$NON-NLS-1$
-				"ENTITY	false	false	ENTITY	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:9fece300-e71a-1e20-8c26-a038c6ed7576	string	NCName	null", //$NON-NLS-1$
-				"ID	false	false	ID	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:88b13dc0-e702-1e20-8c26-a038c6ed7576	string	NCName	null", //$NON-NLS-1$
-				"IDREF	false	false	IDREF	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:dd33ff40-e6df-1e20-8c26-a038c6ed7576	string	NCName	null", //$NON-NLS-1$
-				"IDREFS	false	false	IDREFS	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:3c99f780-e72d-1e20-8c26-a038c6ed7576	string	IDREF	null", //$NON-NLS-1$
-				"NCName	false	false	NCName	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:ac00e000-e676-1e20-8c26-a038c6ed7576	string	Name	null", //$NON-NLS-1$
-				"NMTOKEN	false	false	NMTOKEN	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:4ca2ae00-3a95-1e20-921b-eeee28353879	string	token	null", //$NON-NLS-1$
-				"NMTOKENS	false	false	NMTOKENS	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:4b0f8500-e6a6-1e20-8c26-a038c6ed7576	string	NMTOKEN	null", //$NON-NLS-1$
-				"NOTATION	false	false	NOTATION	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:3dcaf900-e8dc-1e2a-b433-fb67ea35c07e	string	anySimpleType	null", //$NON-NLS-1$
-				"Name	false	false	Name	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:e66c4600-e65b-1e20-8c26-a038c6ed7576	string	token	null", //$NON-NLS-1$
-				"QName	false	false	QName	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:eeb5d780-e8c3-1e2a-b433-fb67ea35c07e	string	anySimpleType	null", //$NON-NLS-1$
-				"XMLLiteral	false	false	XMLLiteral	com.metamatrix.common.types.XMLType	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:43f5274e-55e1-1f87-ba1c-eea49143eb32	xml	string	null", //$NON-NLS-1$
-				"anyURI	false	false	anyURI	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:6247ec80-e8a4-1e2a-b433-fb67ea35c07e	string	anySimpleType	null", //$NON-NLS-1$
-				"base64Binary	false	false	base64Binary	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:b4c99380-ebc6-1e2a-9319-8eaa9b2276c7	string	anySimpleType	null", //$NON-NLS-1$
-				"bigdecimal	false	false	bigdecimal	java.math.BigDecimal	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:f2249740-a078-1e26-9b08-d6079ebe1f0d	bigdecimal	decimal	null", //$NON-NLS-1$
-				"biginteger	false	false	biginteger	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:822b9a40-a066-1e26-9b08-d6079ebe1f0d	biginteger	decimal	null", //$NON-NLS-1$
-				"blob	false	false	blob	com.metamatrix.common.types.BlobType	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:5a793100-1836-1ed0-ba0f-f2334f5fbf95	blob	base64Binary	null", //$NON-NLS-1$
-				"boolean	false	false	boolean	java.lang.Boolean	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:dc476100-c483-1e24-9b01-c8207cd53eb7	boolean	anySimpleType	null", //$NON-NLS-1$
-				"byte	false	false	byte	java.lang.Byte	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:26dc1cc0-b9c8-1e21-b812-969c8fc8b016	byte	short	null", //$NON-NLS-1$
-				"char	false	false	char	java.lang.Character	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:62472700-a064-1e26-9b08-d6079ebe1f0d	char	string	null", //$NON-NLS-1$
-				"clob	false	false	clob	com.metamatrix.common.types.ClobType	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:559646c0-4941-1ece-b22b-f49159d22ad3	clob	string	null", //$NON-NLS-1$
-				"date	false	false	date	java.sql.Date	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:65dcde00-c4ab-1e24-9b01-c8207cd53eb7	date	anySimpleType	null", //$NON-NLS-1$
-				"dateTime	false	false	dateTime	java.sql.Timestamp	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:5c69dec0-b3ea-1e2a-9a03-beb8638ffd21	timestamp	anySimpleType	null", //$NON-NLS-1$
-				"decimal	false	false	decimal	java.math.BigDecimal	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:569dfa00-c456-1e24-9b01-c8207cd53eb7	bigdecimal	anySimpleType	null", //$NON-NLS-1$
-				"double	false	false	double	java.lang.Double	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:1f18b140-c4a3-1e24-9b01-c8207cd53eb7	double	anySimpleType	null", //$NON-NLS-1$
-				"duration	false	false	duration	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:28d98540-b3e7-1e2a-9a03-beb8638ffd21	string	anySimpleType	null", //$NON-NLS-1$
-				"float	false	false	float	java.lang.Float	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:d86b0d00-c48a-1e24-9b01-c8207cd53eb7	float	anySimpleType	null", //$NON-NLS-1$
-				"gDay	false	false	gDay	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:860b7dc0-b3f8-1e2a-9a03-beb8638ffd21	biginteger	anySimpleType	null", //$NON-NLS-1$
-				"gMonth	false	false	gMonth	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:187f5580-b3fb-1e2a-9a03-beb8638ffd21	biginteger	anySimpleType	null", //$NON-NLS-1$
-				"gMonthDay	false	false	gMonthDay	java.sql.Timestamp	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:6e604140-b3f5-1e2a-9a03-beb8638ffd21	timestamp	anySimpleType	null", //$NON-NLS-1$
-				"gYear	false	false	gYear	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:b02c7600-b3f2-1e2a-9a03-beb8638ffd21	biginteger	anySimpleType	null", //$NON-NLS-1$
-				"gYearMonth	false	false	gYearMonth	java.sql.Timestamp	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:17d08040-b3ed-1e2a-9a03-beb8638ffd21	timestamp	anySimpleType	null", //$NON-NLS-1$
-				"hexBinary	false	false	hexBinary	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:d9998500-ebba-1e2a-9319-8eaa9b2276c7	string	anySimpleType	null", //$NON-NLS-1$
-				"int	false	false	int	java.lang.Integer	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:33add3c0-b98d-1e21-b812-969c8fc8b016	integer	long	null", //$NON-NLS-1$
-				"integer	false	false	integer	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:45da3500-e78f-1e20-8c26-a038c6ed7576	biginteger	decimal	null", //$NON-NLS-1$
-				"language	false	false	language	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:d4d980c0-e623-1e20-8c26-a038c6ed7576	string	token	null", //$NON-NLS-1$
-				"long	false	false	long	java.lang.Long	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:8cdee840-b900-1e21-b812-969c8fc8b016	long	integer	null", //$NON-NLS-1$
-				"negativeInteger	false	false	negativeInteger	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:86d29280-b8d3-1e21-b812-969c8fc8b016	biginteger	nonPositiveInteger	null", //$NON-NLS-1$
-				"nonNegativeInteger	false	false	nonNegativeInteger	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:0e081200-b8a4-1e21-b812-969c8fc8b016	biginteger	integer	null", //$NON-NLS-1$
-				"nonPositiveInteger	false	false	nonPositiveInteger	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:cbdd6e40-b9d2-1e21-8c26-a038c6ed7576	biginteger	integer	null", //$NON-NLS-1$
-				"normalizedString	false	false	normalizedString	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:4df43700-3b13-1e20-921b-eeee28353879	string	string	null", //$NON-NLS-1$
-				"object	false	false	object	java.lang.Object	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:051a0640-b4e8-1e26-9f33-b76fd9d5fa79	object	base64Binary	null", //$NON-NLS-1$
-				"positiveInteger	false	false	positiveInteger	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:1cbbd380-b9ea-1e21-b812-969c8fc8b016	biginteger	nonNegativeInteger	null", //$NON-NLS-1$
-				"short	false	false	short	java.lang.Short	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:5bbcf140-b9ae-1e21-b812-969c8fc8b016	short	int	null", //$NON-NLS-1$
-				"string	false	false	string	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7	string	anySimpleType	null", //$NON-NLS-1$
-				"time	false	false	time	java.sql.Time	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:3b892180-c4a7-1e24-9b01-c8207cd53eb7	time	anySimpleType	null", //$NON-NLS-1$
-				"timestamp	false	false	timestamp	java.sql.Timestamp	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:6d9809c0-a07e-1e26-9b08-d6079ebe1f0d	timestamp	string	null", //$NON-NLS-1$
-				"token	false	false	token	java.lang.String	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:3425cb80-d844-1e20-9027-be6d2c3b8b3a	string	normalizedString	null", //$NON-NLS-1$
-				"unsignedByte	false	false	unsignedByte	java.lang.Short	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:cff745c0-baa2-1e21-b812-969c8fc8b016	short	unsignedShort	null", //$NON-NLS-1$
-				"unsignedInt	false	false	unsignedInt	java.lang.Long	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:badcbd80-ba63-1e21-b812-969c8fc8b016	long	unsignedLong	null", //$NON-NLS-1$
-				"unsignedLong	false	false	unsignedLong	java.math.BigInteger	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:54b98780-ba14-1e21-b812-969c8fc8b016	biginteger	nonNegativeInteger	null", //$NON-NLS-1$
-				"unsignedShort	false	false	unsignedShort	java.lang.Integer	0	0	No Nulls	false	false	false	0	0	Searchable	mmuuid:327093c0-ba88-1e21-b812-969c8fc8b016	integer	unsignedInt	null", //$NON-NLS-1$
-
-		};
-		executeAndAssertResults("select * from System.DataTypes order by name", expected); //$NON-NLS-1$
-
+	@Test public void testDataTypes() throws Exception {
+		checkResult("testDataTypes", "select * from System.DataTypes order by name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testProcedureParams() {
-
-		String[] expected = {
-				"ModelName[string]	ProcedureName[string]	Name[string]	DataType[string]	Position[integer]	Type[string]	Optional[boolean]	Precision[integer]	TypeLength[integer]	Scale[integer]	Radix[integer]	NullType[string]	UID[string]", //$NON-NLS-1$
-  	            "System	System.getVDBResourcePaths	ResourcePath	string	1	ResultSet	false	50	50	0	10	Nullable	mmuuid:ebbffdab-ac7e-41ab-974f-62785b3086f9", //$NON-NLS-1$
-  	            "System	System.getBinaryVDBResource	VdbResource	blob	1	ResultSet	false	0	0	0	10	Nullable	mmuuid:90d1f79d-bd98-46f4-ae8f-adacc329cf0b", //$NON-NLS-1$
-  	            "System	System.getCharacterVDBResource	VdbResource	clob	1	ResultSet	false	0	0	0	10	Nullable	mmuuid:111f9fa8-74c9-479a-a184-8db64a1eab3c", //$NON-NLS-1$
-  	            "System	System.getVDBResourcePaths	isBinary	boolean	2	ResultSet	false	1	1	0	10	Nullable	mmuuid:e8d087da-9833-4422-a255-f0e0fea2cb61", //$NON-NLS-1$
-  	            "System	System.getBinaryVDBResource	resourcePath	string	1	In	false	50	50	0	10	No Nulls	mmuuid:25e5065a-454e-4a87-bf71-b6f71b98319f", //$NON-NLS-1$
-  	            "System	System.getCharacterVDBResource	resourcePath	string	1	In	false	50	50	0	10	No Nulls	mmuuid:c54e777f-3cd0-45ad-a18b-e4e93532984f", //$NON-NLS-1$
-
-		};
-		executeAndAssertResults(
-				"select * from System.ProcedureParams order by Name", expected); //$NON-NLS-1$
+	@Test public void testProcedureParams() throws Exception {
+		checkResult("testProcedureParams", "select * from System.ProcedureParams order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testProcedures() {
-
-		String[] expected = {
-				"ModelName[string]	Name[string]	NameInSource[string]	ReturnsResults[boolean]	ModelUID[string]	UID[string]	Description[string]	FullName[string]", //$NON-NLS-1$
-				"System	getBinaryVDBResource	null	true	mmuuid:49b9c0f9-2c4c-42d3-9409-2d847d29a1de	mmuuid:9bc0b701-b36e-4209-a986-9d38420d2c20	null	System.getBinaryVDBResource", //$NON-NLS-1$
-				"System	getCharacterVDBResource	null	true	mmuuid:49b9c0f9-2c4c-42d3-9409-2d847d29a1de	mmuuid:72464082-00fc-44f0-98b9-8c8f637c6570	null	System.getCharacterVDBResource", //$NON-NLS-1$
-				"System	getVDBResourcePaths	null	true	mmuuid:49b9c0f9-2c4c-42d3-9409-2d847d29a1de	mmuuid:1204d4b2-6f92-428d-bcc5-7b3a0da9a113	null	System.getVDBResourcePaths", //$NON-NLS-1$
-		};
-		executeAndAssertResults("select* from System.Procedures", expected); //$NON-NLS-1$
+	@Test public void testProcedures() throws Exception {
+		checkResult("testProcedures", "select* from System.Procedures order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testGroupProperties() {
-
-		String[] expected = { "ModelName[string]	GroupFullName[string]	Name[string]	Value[string]	GroupName[string]	GroupUpperName[string]	UID[string]", }; //$NON-NLS-1$
-		executeAndAssertResults("select* from System.GroupProperties", expected); //$NON-NLS-1$
-	}
-
-	@Test public void testModelProperties() {
-
-		String[] expected = { "ModelName[string]	Name[string]	Value[string]	UID[string]", }; //$NON-NLS-1$
-		executeAndAssertResults("select* from System.ModelProperties", expected); //$NON-NLS-1$
-	}
-
-	@Test public void testProcedureProperties() {
-
-		String[] expected = { "ModelName[string]	ProcedureName[string]	Name[string]	Value[string]	UID[string]", //$NON-NLS-1$
-
-		};
-		executeAndAssertResults("select* from System.ProcedureProperties", //$NON-NLS-1$
-				expected);
+	@Test public void testProperties() {
+		String[] expected = { "Name[string]	Value[string]	UID[string]", }; //$NON-NLS-1$
+		executeAndAssertResults("select* from System.Properties", expected); //$NON-NLS-1$
 	}
 
 	@Test public void testVirtualDatabase() {
@@ -239,32 +104,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				expected);
 	}
 
-	@Test public void testKeyElements() {
-
-		String[] expected = {
-				"ModelName[string]	GroupFullName[string]	Name[string]	KeyName[string]	KeyType[string]	GroupName[string]	GroupUpperName[string]	RefKeyUID[string]	UID[string]	Position[integer]", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PART_ID	PK_PARTS	Primary	PARTS	PARTS	null	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SHIP_VIA	SHIPPER_ID	PK_SHIP_VIA	Primary	SHIP_VIA	SHIP_VIA	null	mmuuid:18aa3cc0-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	STATUS_ID	PK_STATUS	Primary	STATUS	STATUS	null	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_ID	PK_SUPPLIER	Primary	SUPPLIER	SUPPLIER	null	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_STATUS	FK_SPLIER_STATS	Foreign	SUPPLIER	SUPPLIER	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	mmuuid:5ac43c00-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	FK_SPLIER_PRTS_PRTS	Foreign	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c0-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	2", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	FK_SPLY_PRTS_SPLY	Foreign	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c1-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-
-		};
-		executeAndAssertResults(
-				"select* from System.KeyElements order by GroupFullName, Name, KeyName", //$NON-NLS-1$
-				expected);
-	}
-
-	@Test public void testElementProperties() {
-
-		String[] expected = { "ModelName[string]	GroupFullName[string]	ElementName[string]	Name[string]	Value[string]	GroupName[string]	ElementUpperName[string]	GroupUpperName[string]	UID[string]", }; //$NON-NLS-1$
-		executeAndAssertResults("select* from System.ElementProperties", //$NON-NLS-1$
-				expected);
-
+	@Test public void testKeyColumns() throws Exception {
+		checkResult("testKeyColumns", "select* from System.KeyColumns order by Name, KeyName"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testVDBResourcePathsProcedure() {
@@ -272,55 +113,24 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		String[] expected = { "ResourcePath[string]	isBinary[boolean]	", //$NON-NLS-1$
 				"/parts/partsmd/PartsSupplier.xmi	false", //$NON-NLS-1$
 		};
-		execute("exec System.getVDBResourcePaths()",new Object[] {}); //$NON-NLS-1$
+		execute("exec getVDBResourcePaths()",new Object[] {}); //$NON-NLS-1$
 		assertResults(expected);
 	}
 
-	@Test public void testElements() {
-
-		String[] expected = {
-				"ModelName[string]	GroupName[string]	GroupFullName[string]	Name[string]	Position[integer]	NameInSource[string]	DataType[string]	Scale[integer]	ElementLength[integer]	IsLengthFixed[boolean]	SupportsSelect[boolean]	SupportsUpdates[boolean]	IsCaseSensitive[boolean]	IsSigned[boolean]	IsCurrency[boolean]	IsAutoIncremented[boolean]	NullType[string]	MinRange[string]	MaxRange[string]	SearchType[string]	Format[string]	DefaultValue[string]	JavaClass[string]	Precision[integer]	CharOctetLength[integer]	Radix[integer]	GroupUpperName[string]	UpperName[string]	UID[string]	Description[string]", //$NON-NLS-1$
-  	            "System	DataTypes	System.DataTypes	BaseType	17	null	string	0	64	true	true	false	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	64	64	10	DATATYPES	BASETYPE	mmuuid:03beb57c-968b-4821-a6ae-cb1154cfadee	null", //$NON-NLS-1$
-  	            "System	Groups	System.Groups	Cardinality	10	null	integer	0	10	false	true	false	true	true	false	false	No Nulls	null	null	All Except Like	null	null	java.lang.Integer	10	10	10	GROUPS	CARDINALITY	mmuuid:24cdad3a-e8f7-4376-bb32-79f8bc8eeed2	null", //$NON-NLS-1$
-  	            "System	Elements	System.Elements	CharOctetLength	25	null	integer	0	10	true	true	false	false	false	false	false	Nullable	null	null	Searchable	null	null	java.lang.Integer	10	10	10	ELEMENTS	CHAROCTETLENGTH	mmuuid:de5def94-2804-4c91-91ed-26d630ce8afe	null", //$NON-NLS-1$
-  	            "System	ReferenceKeyColumns	System.ReferenceKeyColumns	DEFERRABILITY	14	null	integer	0	10	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.Integer	10	10	10	REFERENCEKEYCOLUMNS	DEFERRABILITY	mmuuid:88380f55-2cbd-4325-b9a3-9dcaa88a690e	null", //$NON-NLS-1$
-  	            "System	ReferenceKeyColumns	System.ReferenceKeyColumns	DELETE_RULE	11	null	integer	0	10	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.Integer	10	10	10	REFERENCEKEYCOLUMNS	DELETE_RULE	mmuuid:9207f4df-a5ce-43bd-b3b2-fee57e459849	null", //$NON-NLS-1$
-  	            "System	DataTypeProperties	System.DataTypeProperties	DataType	1	null	string	0	100	true	true	false	true	true	false	false	No Nulls	null	null	Searchable	null	null	java.lang.String	100	100	10	DATATYPEPROPERTIES	DATATYPE	mmuuid:b9b99be5-1472-4499-84a8-031caf7efee7	null", //$NON-NLS-1$
-  	            "System	Elements	System.Elements	DataType	7	null	string	0	100	true	true	false	true	true	false	false	No Nulls	null	null	Searchable	null	null	java.lang.String	100	100	10	ELEMENTS	DATATYPE	mmuuid:9a8dc0d5-e65c-4032-a066-187f8d2e73ea	null", //$NON-NLS-1$
-  	            "System	ProcedureParams	System.ProcedureParams	DataType	4	null	string	0	25	true	true	false	true	true	false	false	No Nulls	null	null	Searchable	null	null	java.lang.String	25	25	10	PROCEDUREPARAMS	DATATYPE	mmuuid:207a09af-65b8-405f-b1cb-537bc8632fa4	null", //$NON-NLS-1$
-  	            "System	Elements	System.Elements	DefaultValue	22	null	string	0	255	true	true	false	false	false	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	ELEMENTS	DEFAULTVALUE	mmuuid:7e853988-356b-4c7c-83d4-a9f015bff279	null", //$NON-NLS-1$
-  	            "System	DataTypes	System.DataTypes	Description	18	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	DATATYPES	DESCRIPTION	mmuuid:b7d95ef6-63a3-441c-8de5-c98e2e577ea3	null", //$NON-NLS-1$
-  	            "System	Elements	System.Elements	Description	30	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	ELEMENTS	DESCRIPTION	mmuuid:74d73b53-b723-419e-9fea-de56408409ee	null", //$NON-NLS-1$
-  	            "System	Groups	System.Groups	Description	11	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	GROUPS	DESCRIPTION	mmuuid:51605e41-5cb0-40ca-8c4a-4eca52780afc	null", //$NON-NLS-1$
-  	            "System	Keys	System.Keys	Description	4	null	string	0	255	true	true	false	false	false	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	KEYS	DESCRIPTION	mmuuid:175e21b2-24c3-4677-a253-6d7cdb513a9a	null", //$NON-NLS-1$
-  	            "System	Models	System.Models	Description	4	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	MODELS	DESCRIPTION	mmuuid:1cb99300-a527-4a26-b4e6-08ebd92a781d	null", //$NON-NLS-1$
-  	            "System	Procedures	System.Procedures	Description	7	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	225	255	10	PROCEDURES	DESCRIPTION	mmuuid:fa0b5db7-acb1-4975-8410-d5d27df46040	null", //$NON-NLS-1$
-  	            "System	Elements	System.Elements	ElementLength	9	null	integer	0	10	true	true	false	false	false	false	false	No Nulls	null	null	Searchable	null	null	java.lang.Integer	10	10	10	ELEMENTS	ELEMENTLENGTH	mmuuid:b36ea0f6-cbff-4049-bc9c-8ec9928be048	null", //$NON-NLS-1$
-  	            "System	ElementProperties	System.ElementProperties	ElementName	3	null	string	0	255	true	true	false	false	false	false	false	No Nulls	null	null	Searchable	null	null	java.lang.String	255	255	10	ELEMENTPROPERTIES	ELEMENTNAME	mmuuid:7d8118bd-909a-42be-a0e2-30e668c778cf	null", //$NON-NLS-1$
-  	            "System	ElementProperties	System.ElementProperties	ElementUpperName	7	null	string	0	255	true	true	false	true	false	false	false	No Nulls	null	null	Searchable	null	null	java.lang.String	255	255	10	ELEMENTPROPERTIES	ELEMENTUPPERNAME	mmuuid:ec7d4d7d-9514-448d-afd7-d72c95dd732d	null", //$NON-NLS-1$
-  	            "System	ReferenceKeyColumns	System.ReferenceKeyColumns	FKCOLUMN_NAME	8	null	string	0	255	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	255	255	10	REFERENCEKEYCOLUMNS	FKCOLUMN_NAME	mmuuid:f4b2b32c-e411-45e6-a236-fec4718f0874	null", //$NON-NLS-1$    	                 	                  	                        	              	                      	              
-  	            "System	ReferenceKeyColumns	System.ReferenceKeyColumns	FKTABLE_CAT	5	null	string	0	1	false	true	true	true	true	false	false	Nullable	null	null	Searchable	null	null	java.lang.String	1	1	10	REFERENCEKEYCOLUMNS	FKTABLE_CAT	mmuuid:a0095da3-1258-44dc-bab9-33eacf886a28	null", //$NON-NLS-1$
-  	            
-		};
-		executeAndAssertResults("select* from System.Elements order by Name limit 20", //$NON-NLS-1$
-				expected);
+	@Test public void testColumns() throws Exception {
+		checkResult("testColumns", "select* from System.Columns order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testGroupType() {
+	@Test public void testTableType() {
 
 		String[] expected = { "Type[string]	", "Table", }; //$NON-NLS-1$ //$NON-NLS-2$
 		executeAndAssertResults(
-				"select distinct Type from System.Groups order by Type", //$NON-NLS-1$
+				"select distinct Type from System.Tables order by Type", //$NON-NLS-1$
 				expected);
 	}
 
-	@Test public void testGroupIsSystem() {
-
-		String[] expected = { "Name[string]	", "PARTS", "SHIP_VIA", "STATUS", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				"SUPPLIER", "SUPPLIER_PARTS", }; //$NON-NLS-1$ //$NON-NLS-2$
-		executeAndAssertResults(
-				"select Name from System.Groups where IsSystem = 'false' order by Name", //$NON-NLS-1$
-				expected);
+	@Test public void testTableIsSystem() throws Exception {
+		checkResult("testTableIsSystem", "select Name from System.Tables where IsSystem = 'false' order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Ignore("ODBC support to be readded")
@@ -727,27 +537,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 
 	}
 
-	@Test public void testDefect12054() {
-
-		String[] expected = {
-				"PKTABLE_QUALIFIER[string]	PKTABLE_OWNER[string]	PKTABLE_NAME[string]	PKCOLUMN_NAME[string]	FKTABLE_QUALIFIER[string]	FKTABLE_OWNER[string]	FKTABLE_NAME[string]	FKCOLUMN_NAME[string]	KEY_SEQ[short]	UPDATE_RULE[short]	DELETE_RULE[short]	FK_NAME[string]	PK_NAME[string]", //$NON-NLS-1$
-				"		PARTS	PART_ID			SUPPLIER_PARTS	PART_ID	1	null	null	FK_SPLIER_PRTS_PRTS	PK_PARTS", //$NON-NLS-1$
-				"		SHIP_VIA	SHIPPER_ID			null	null	1	null	null	null	PK_SHIP_VIA", //$NON-NLS-1$
-				"		STATUS	STATUS_ID			SUPPLIER	SUPPLIER_STATUS	1	null	null	FK_SPLIER_STATS	PK_STATUS", //$NON-NLS-1$
-				"		SUPPLIER	SUPPLIER_ID			SUPPLIER_PARTS	SUPPLIER_ID	1	null	null	FK_SPLY_PRTS_SPLY	PK_SUPPLIER", //$NON-NLS-1$
-				"		SUPPLIER	SUPPLIER_STATUS			null	null	1	null	null	null	FK_SPLIER_STATS", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	SUPPLIER_ID			null	null	1	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	PART_ID			null	null	2	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	PART_ID			null	null	1	null	null	null	FK_SPLIER_PRTS_PRTS", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	SUPPLIER_ID			null	null	1	null	null	null	FK_SPLY_PRTS_SPLY", //$NON-NLS-1$
-
-		};
-
-		executeAndAssertResults(
-				"select '' AS PKTABLE_QUALIFIER, '' AS PKTABLE_OWNER, PK.GroupName AS PKTABLE_NAME, PK.Name AS PKCOLUMN_NAME, '' AS FKTABLE_QUALIFIER, '' AS FKTABLE_OWNER, FK.GroupName AS FKTABLE_NAME, FK.Name AS FKCOLUMN_NAME, convert(PK.Position, short) AS KEY_SEQ, convert(null, short) AS UPDATE_RULE, convert(null, short) AS DELETE_RULE, FK.KeyName AS FK_NAME, PK.KeyName AS PK_NAME FROM System.KeyElements AS PK LEFT OUTER JOIN System.KeyElements AS FK ON FK.RefKeyUID = PK.UID order by PKTABLE_NAME", //$NON-NLS-1$
-				expected);
-	}
-
 	@Test public void testDefect12064() {
 		String[] expected = { 
 				"KeyName[string]	RefKeyUID[string]	",  //$NON-NLS-1$
@@ -760,32 +549,17 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				
 
 		};
-		executeAndAssertResults("select KeyName, RefKeyUID FROM System.KeyElements WHERE RefKeyUID IS NULL order by KeyName",expected); //$NON-NLS-1$
+		executeAndAssertResults("select KeyName, RefKeyUID FROM System.KeyColumns WHERE RefKeyUID IS NULL order by KeyName",expected); //$NON-NLS-1$
 	}
 
-	@Test public void testSlowSystemQuery() {
-		String[] expected = { "groupFullName[string]	SOURCE_NAME[string]	INFO_CAT_NAME[string]	COMMON_SCHEMA_FLAG[string]", }; //$NON-NLS-1$
-		executeAndAssertResults(
-				"select sgp1.groupFullName, sgp1.groupname AS SOURCE_NAME, sgp1.value AS INFO_CAT_NAME, sgp3.value AS COMMON_SCHEMA_FLAG from System.GroupProperties sgp1, System.GroupProperties sgp2, System.GroupProperties sgp3 where sgp1.groupFullName = sgp2.groupFullName and sgp1.groupFullName = sgp3.groupFullName and sgp2.groupFullName = sgp3.groupFullName and sgp1.name='InformationCategory' and sgp2.name = 'presentationMetadataFlag' and sgp2.value = 'true' and sgp3.name = 'infoCatCommonSchemaFlag'", //$NON-NLS-1$
-				expected);
-	}
-
-	@Test public void testReferenceKeyColumns() {
-		String[] expected = {
-				"PKTABLE_CAT[string]	PKTABLE_SCHEM[string]	PKTABLE_NAME[string]	PKCOLUMN_NAME[string]	FKTABLE_CAT[string]	FKTABLE_SCHEM[string]	FKTABLE_NAME[string]	FKCOLUMN_NAME[string]	KEY_SEQ[short]	UPDATE_RULE[integer]	DELETE_RULE[integer]	FK_NAME[string]	PK_NAME[string]	DEFERRABILITY[integer]", //$NON-NLS-1$
-				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PART_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	1	3	3	FK_SPLIER_PRTS_PRTS	PK_PARTS	5",  //$NON-NLS-1$
-				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	STATUS_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_STATUS	1	3	3	FK_SPLIER_STATS	PK_STATUS	5", //$NON-NLS-1$
-				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	1	3	3	FK_SPLY_PRTS_SPLY	PK_SUPPLIER	5" //$NON-NLS-1$
-		};
-
-		executeAndAssertResults("select* FROM System.ReferenceKeyColumns order by PKTABLE_NAME", //$NON-NLS-1$
-				expected);
+	@Test public void testReferenceKeyColumns() throws Exception {
+		checkResult("testReferenceKeyColumns", "select* FROM System.ReferenceKeyColumns order by PKTABLE_NAME"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testVirtualLookup() {
 		String[] expected = { "expr[string]", "null"}; //$NON-NLS-1$ //$NON-NLS-2$
 		executeAndAssertResults(
-				"select lookup('System.KeyElements', 'RefKeyUID', 'KeyName', 'PK_PARTS')", expected); //$NON-NLS-1$
+				"select lookup('System.KeyColumns', 'RefKeyUID', 'KeyName', 'PK_PARTS')", expected); //$NON-NLS-1$
 		
 	}
 }

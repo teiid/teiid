@@ -38,7 +38,6 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String uuid; //globally unique id
     private String name; //contextually unique name
-    private String fullName;
     
     private String nameInSource;
 	
@@ -61,12 +60,20 @@ public abstract class AbstractMetadataRecord implements Serializable {
 		this.nameInSource = nameInSource;
 	}
 	
+	/**
+     * WARNING - The name returned by this method may be ambiguous and
+     * is not SQL safe - it may need quoted/escaped
+     */
 	public String getFullName() {
-        return this.fullName == null ? this.name : this.fullName;
+        AbstractMetadataRecord parent = getParent();
+        if (parent != null) {
+        	return parent.getFullName() + NAME_DELIM_CHAR + getName();
+        }
+        return name;
 	}
 	
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
+	public AbstractMetadataRecord getParent() {
+		return null;
 	}
 	
 	public String getName() {

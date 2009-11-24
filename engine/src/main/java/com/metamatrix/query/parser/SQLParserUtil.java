@@ -47,7 +47,7 @@ public class SQLParserUtil {
   		}
   		char tickChar = s.charAt(start - 1);
   		s = s.substring(start, s.length() - 1);
-  		return removeEscapeChars(s, tickChar);
+  		return removeEscapeChars(s, String.valueOf(tickChar));
 	}
 	
 	String normalizeId(String s) {
@@ -67,7 +67,7 @@ public class SQLParserUtil {
 					if (end || (escape && s.charAt(i + 1) == '.')) {
 				  		String part = s.substring(1, i);
 				  		s = s.substring(i + (end?1:2));
-				  		nameParts.add(removeEscapeChars(part, '"'));
+				  		nameParts.add(removeEscapeChars(part, "\"")); //$NON-NLS-1$
 				  		break;
 					}
 				}
@@ -91,30 +91,16 @@ public class SQLParserUtil {
 		return sb.toString();
 	}
 	
-    /**
-     * Check that this is a valid function name
-     * @param id Function name string
-     */
-    boolean isFunctionName(String id) throws ParseException {
-        int length = id.length();
+    String validateFunctionName(String id) throws ParseException {
+    	int length = id.length();
         for(int i=0; i<length; i++) { 
             char c = id.charAt(i);
             if(! (c == '_' || StringUtil.isLetterOrDigit(c))) { 
-                return false;    
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_func", id)); //$NON-NLS-1$   
             }
         }
-        return true;
-    } 
-    
-    String validateFunctionName(String id) throws ParseException {
-        if(isFunctionName(id)) {
-            return id;
-        } 
-
-        Object[] params = new Object[] { id };
-        throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_func", params)); //$NON-NLS-1$
+        return id;
     }
-
 
     /**
      * Check if this is a valid string literal
@@ -149,12 +135,11 @@ public class SQLParserUtil {
 
     private String validateName(String id, boolean element) throws ParseException {
         if(id.indexOf('.') != -1) { 
-            Object[] params = new Object[] { id };
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
             if (element) {
                 key = "SQLParser.Invalid_short_name"; //$NON-NLS-1$
             }
-            throw new ParseException(QueryPlugin.Util.getString(key, params)); 
+            throw new ParseException(QueryPlugin.Util.getString(key, id)); 
         }
         return id;
     }
@@ -167,27 +152,8 @@ public class SQLParserUtil {
         return validateName(id, true);
     }
     
-    String removeEscapeChars(String str, char tickChar) {
-        String doubleTick = "" + tickChar + tickChar; //$NON-NLS-1$
-        int index = str.indexOf(doubleTick);
-        if(index < 0) { 
-            return str;
-        } 
-
-        int last = 0;
-        StringBuffer temp = new StringBuffer();         
-        while(index >= 0) {
-            temp.append(str.substring(last, index));
-            temp.append(tickChar);
-            last = index+2;
-            index = str.indexOf(doubleTick, last);
-        }
-        
-        if(last <= (str.length()-1)) {
-            temp.append(str.substring(last));    
-        }
-        
-        return temp.toString();         
+    String removeEscapeChars(String str, String tickChar) {
+        return StringUtil.replaceAll(str, tickChar + tickChar, tickChar);
     }
     
     void setFromClauseOptions(Token groupID, FromClause fromClause){

@@ -1,0 +1,11 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+VDBName	12	string	java.lang.String	0	Keys	System	PartsSupplier	
+SchemaName	12	string	java.lang.String	1	Keys	System	PartsSupplier	
+TableName	12	string	java.lang.String	0	Keys	System	PartsSupplier	
+Name	12	string	java.lang.String	0	Keys	System	PartsSupplier	
+Description	12	string	java.lang.String	1	Keys	System	PartsSupplier	
+NameInSource	12	string	java.lang.String	1	Keys	System	PartsSupplier	
+Type	12	string	java.lang.String	0	Keys	System	PartsSupplier	
+IsIndexed	-7	boolean	java.lang.Boolean	0	Keys	System	PartsSupplier	
+RefKeyUID	12	string	java.lang.String	1	Keys	System	PartsSupplier	
+UID	12	string	java.lang.String	0	Keys	System	PartsSupplier	

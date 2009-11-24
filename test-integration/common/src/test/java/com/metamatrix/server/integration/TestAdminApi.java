@@ -286,7 +286,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    	getConnection(BQT, PROPS_FILE);
 	        execute("SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$
 	        assertRowCount(50);        
-	        execute("SELECT * FROM System.models"); //$NON-NLS-1$
+	        execute("SELECT * FROM System.schemas"); //$NON-NLS-1$
 	        assertRowCount(9);        	        
 	        closeConnection();    
 	    popConnection(); 

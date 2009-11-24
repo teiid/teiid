@@ -69,8 +69,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     private static final String PERCENT = "%"; //$NON-NLS-1$    
     // constant value indicating that there is not limit
     private final static int NO_LIMIT = 0;
-    // constant value giving metamatrix preferred name for a schema
-    private final static String SCHEMA_TERM = "VirtualDatabase"; //$NON-NLS-1$
+    // constant value giving preferred name for a schema
+    private final static String SCHEMA_TERM = "Schema"; //$NON-NLS-1$
     // constant value giving an empty string value
     private final static String EMPTY_STRING = ""; //$NON-NLS-1$
     // constant value giving a string used to escape search strings
@@ -79,11 +79,11 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     //private final static String SINGLE_QUOTE = "\'";
     // constant value giving an identifier quoting string
     private final static String DOUBLE_QUOTE = "\""; //$NON-NLS-1$
-    // constant value giving extra name charchters used in Identifiers
+    // constant value giving extra name characters used in Identifiers
     private final static String EXTRA_CHARS = ".@"; //$NON-NLS-1$
-    // constant value giving the key words used in metamatrix not in SQL-92
+    // constant value giving the key words not in SQL-92
     private final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG"; //$NON-NLS-1$
-    // constant value giving metamatrix preferred name for a procedure
+    // constant value giving preferred name for a procedure
     private final static String PROCEDURE_TERM = "StoredProcedure"; //$NON-NLS-1$
     // constant value giving the names of numeric functions supported
     final static String NUMERIC_FUNCTIONS =
@@ -189,22 +189,23 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".ReferenceKeyColumns").toString(); //$NON-NLS-1$
     
     private final static String QUERY_CROSS_REFERENCES = new StringBuffer(QUERY_REFERENCE_KEYS)
-    	.append(",").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(v.Name) LIKE ?") //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
-    	.append(" AND UCASE(PKTABLE_SCHEM) = UCASE(v.Name) AND ") //$NON-NLS-1$
-        .append(" UCASE(PKTABLE_NAME)").append(LIKE_ESCAPE).append("AND UCASE(FKTABLE_NAME)").append(LIKE_ESCAPE).append("ORDER BY FKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+    	.append(" WHERE UCASE(PKTABLE_CAT)").append(LIKE_ESCAPE).append("AND UCASE(FKTABLE_CAT)").append(LIKE_ESCAPE) //$NON-NLS-1$//$NON-NLS-2$
+    	.append(" AND UCASE(PKTABLE_SCHEM)").append(LIKE_ESCAPE).append("AND UCASE(FKTABLE_SCHEM)").append(LIKE_ESCAPE) //$NON-NLS-1$//$NON-NLS-2$
+        .append(" AND UCASE(PKTABLE_NAME)").append(LIKE_ESCAPE).append("AND UCASE(FKTABLE_NAME)").append(LIKE_ESCAPE) //$NON-NLS-1$//$NON-NLS-2$
+        .append("ORDER BY FKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$ 
     
     private final static String QUERY_EXPORTED_KEYS = new StringBuffer(QUERY_REFERENCE_KEYS)
-    	.append(",").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$ //$NON-NLS-2$
-    	.append(" AND UCASE(PKTABLE_SCHEM) = UCASE(v.Name) AND ") //$NON-NLS-1$
-        .append(" UCASE(PKTABLE_NAME)").append(LIKE_ESCAPE).append("ORDER BY FKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$//$NON-NLS-2$
-    
+	    .append(" WHERE UCASE(PKTABLE_CAT)").append(LIKE_ESCAPE) //$NON-NLS-1$
+		.append(" AND UCASE(PKTABLE_SCHEM)").append(LIKE_ESCAPE) //$NON-NLS-1$    
+	    .append(" AND UCASE(PKTABLE_NAME)").append(LIKE_ESCAPE).append("ORDER BY FKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$//$NON-NLS-2$
+	    
     private final static String QUERY_IMPORTED_KEYS = new StringBuffer(QUERY_REFERENCE_KEYS)
-    	.append(",").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$ //$NON-NLS-2$
-    	.append(" AND UCASE(PKTABLE_SCHEM) = UCASE(v.Name) AND ") //$NON-NLS-1$    
-        .append(" UCASE(FKTABLE_NAME)").append(LIKE_ESCAPE).append("ORDER BY PKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$//$NON-NLS-2$
+    	.append(" WHERE UCASE(FKTABLE_CAT)").append(LIKE_ESCAPE) //$NON-NLS-1$
+    	.append(" AND UCASE(FKTABLE_SCHEM)").append(LIKE_ESCAPE) //$NON-NLS-1$    
+        .append(" AND UCASE(FKTABLE_NAME)").append(LIKE_ESCAPE).append("ORDER BY PKTABLE_NAME, KEY_SEQ").toString(); //$NON-NLS-1$//$NON-NLS-2$
     
-    private final static String QUERY_COLUMNS = new StringBuffer("SELECT NULL AS TABLE_CAT") //$NON-NLS-1$
-        .append(", v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME, e.Name AS COLUMN_NAME") //$NON-NLS-1$
+    private final static String QUERY_COLUMNS = new StringBuffer("SELECT VDBName AS TABLE_CAT") //$NON-NLS-1$
+        .append(", SchemaName AS TABLE_SCHEM, TableName AS TABLE_NAME, Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", convert(decodeString(DataType, '").append(TYPE_MAPPING).append("', ','), short) AS DATA_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", DataType AS TYPE_NAME") //$NON-NLS-1$
         .append(", CASE WHEN (DataType IN (").append(DATATYPES_WITH_NO_PRECISION) //$NON-NLS-1$
@@ -218,53 +219,49 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         .append(", decodeString(NullType, 'No Nulls, YES, Nullable, NO, Unknown, '' ''', ',') AS IS_NULLABLE") //$NON-NLS-1$
     	.append(", NULL AS SCOPE_CATALOG, NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, CASE WHEN e.IsAutoIncremented = 'true' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT") //$NON-NLS-1$
         .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME) //$NON-NLS-1$
-        .append(".Elements e CROSS JOIN ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
-        .append("AND UCASE(GroupFullName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
-        .append("AND UCASE(e.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append(".Columns e") //$NON-NLS-1$
+        .append(" WHERE UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append("AND UCASE(TableName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append("AND UCASE(Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append("AND UCASE(VDBName)").append(LIKE_ESCAPE) //$NON-NLS-1$
         .append(" ORDER BY TABLE_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
 
     private static final String QUERY_INDEX_INFO =
-      new StringBuffer("SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME") //$NON-NLS-1$
+      new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, TableName AS TABLE_NAME") //$NON-NLS-1$
         .append(", case when KeyType = 'Index' then TRUE else FALSE end AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, KeyName AS INDEX_NAME") //$NON-NLS-1$
         .append(", 0 AS TYPE, convert(Position, short) AS ORDINAL_POSITION, k.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", NULL AS ASC_OR_DESC, 0 AS CARDINALITY, 1 AS PAGES, NULL AS FILTER_CONDITION") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyElements k CROSS JOIN ") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v")  //$NON-NLS-1$
-        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND KeyType IN ('Index', ?) AND UCASE(GroupFullName) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyColumns k") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(TableName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append(" AND KeyType IN ('Index', ?)") //$NON-NLS-1$
         .append(" ORDER BY NON_UNIQUE, TYPE, INDEX_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
     
-    private static final String QUERY_MODELS =
-      new StringBuffer("SELECT NULL AS MODEL_CAT, v.name AS MODEL_SCHEM, m.Name AS MODEL_NAME,") //$NON-NLS-1$
-        .append(" Description AS DESCRIPTION, IsPhysical AS IS_PHYSICAL, SupportsWhereAll AS SUP_WHERE_ALL, ") //$NON-NLS-1$
-        .append(" SupportsDistinct AS SUP_DISTINCT, SupportsJoin AS SUP_JOIN, SupportsOuterJoin AS SUP_OUTER_JOIN, ") //$NON-NLS-1$
-        .append(" SupportsOrderBy AS SUP_ORDER_BY ") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Models m CROSS JOIN ") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v ")  //$NON-NLS-1$
-        .append("WHERE UCASE(m.Name)").append(LIKE_ESCAPE).append("ORDER BY MODEL_NAME").toString(); //$NON-NLS-1$//$NON-NLS-2$
-    
     private static final String QUERY_PRIMARY_KEYS =
-      new StringBuffer("SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME") //$NON-NLS-1$
+      new StringBuffer("SELECT VDBName as TABLE_CAT, SchemaName AS TABLE_SCHEM, TableName AS TABLE_NAME") //$NON-NLS-1$
         .append(", k.Name AS COLUMN_NAME, convert(Position, short) AS KEY_SEQ, KeyName AS PK_NAME") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyElements k CROSS JOIN ") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v ")  //$NON-NLS-1$
-        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND KeyType LIKE 'Primary' AND UCASE(GroupFullName) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyColumns k") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(TableName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append(" AND KeyType LIKE 'Primary'") //$NON-NLS-1$
         .append(" ORDER BY COLUMN_NAME, KEY_SEQ").toString(); //$NON-NLS-1$
     
     private final static String QUERY_PROCEDURES =
-      new StringBuffer("SELECT convert(null, string) AS PROCEDURE_CAT, v.Name AS PROCEDURE_SCHEM") //$NON-NLS-1$
-        .append(", p.FullName AS PROCEDURE_NAME, convert(null, string) AS RESERVED_1") //$NON-NLS-1$
+      new StringBuffer("SELECT VDBName AS PROCEDURE_CAT, SchemaName AS PROCEDURE_SCHEM") //$NON-NLS-1$
+        .append(", p.Name AS PROCEDURE_NAME, convert(null, string) AS RESERVED_1") //$NON-NLS-1$
         .append(", convert(null, string) AS RESERVED_2, convert(null, string) AS RESERVED_3, p.Description AS REMARKS") //$NON-NLS-1$
         .append(", convert(decodeString(p.ReturnsResults, 'true, ").append(DatabaseMetaData.procedureReturnsResult) //$NON-NLS-1$
-        .append(", false, ").append(DatabaseMetaData.procedureNoResult).append("'), short) AS PROCEDURE_TYPE, p.FullName AS SPECIFIC_NAME FROM ") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
-        .append(".Procedures as p CROSS JOIN ") //$NON-NLS-1$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
-        .append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(p.FullName)").append(LIKE_ESCAPE) //$NON-NLS-1$//$NON-NLS-2$
+        .append(", false, ").append(DatabaseMetaData.procedureNoResult).append("'), short) AS PROCEDURE_TYPE, p.Name AS SPECIFIC_NAME FROM ") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Procedures as p") //$NON-NLS-1$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(p.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
         .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME").toString(); //$NON-NLS-1$
 
     private final static String QUERY_PROCEDURE_COLUMNS =
-      new StringBuffer("SELECT convert(null, string) AS PROCEDURE_CAT, v.Name AS PROCEDURE_SCHEM") //$NON-NLS-1$
+      new StringBuffer("SELECT VDBName PROCEDURE_CAT, SchemaName AS PROCEDURE_SCHEM") //$NON-NLS-1$
         .append(", ProcedureName AS PROCEDURE_NAME, p.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", convert(decodeString(TYPE, '").append(PARAM_DIRECTION_MAPPING).append("', ','), short) AS COLUMN_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", convert(decodeString(DataType, '").append(TYPE_MAPPING).append("', ','), integer) AS DATA_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
@@ -275,24 +272,32 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
         .append(", convert(null, string) AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
         .append(", NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS CHAR_OCTET_LENGTH, p.Position AS ORDINAL_POSITION") //$NON-NLS-1$
-        .append(", CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE, p.ProcedureName || '.' || p.Name as SPECIFIC_NAME FROM ") //$NON-NLS-1$
+        .append(", CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE, p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
-        .append(".ProcedureParams as p CROSS JOIN ") //$NON-NLS-1$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
-        .append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(p.ProcedureName)").append(LIKE_ESCAPE).append("AND UCASE(p.Name) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+        .append(".ProcedureParams as p") //$NON-NLS-1$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(ProcedureName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append(" AND UCASE(p.Name) LIKE ?") //$NON-NLS-1$
         .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
 
     private static final String QUERY_SCHEMAS =
-      new StringBuffer("SELECT Name AS TABLE_SCHEM, NULL AS TABLE_CATALOG") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases ORDER BY TABLE_SCHEM").toString(); //$NON-NLS-1$ //$NON-NLS-2$
+      new StringBuffer("SELECT Name AS TABLE_SCHEM, VDBName AS TABLE_CATALOG") //$NON-NLS-1$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Schemas") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" ORDER BY TABLE_SCHEM").toString(); //$NON-NLS-1$
+    
+    private final static String TABLE_TYPE = "CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END"; //$NON-NLS-1$
     
     private final static String QUERY_TABLES =
-      new StringBuffer("SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME") //$NON-NLS-1$
-        .append(", CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$
+      new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, Name AS TABLE_NAME") //$NON-NLS-1$
+        .append(", ").append(TABLE_TYPE).append(" AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Groups g CROSS JOIN ")  //$NON-NLS-1$ //$NON-NLS-2$
-        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v")  //$NON-NLS-1$
-        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(FullName) LIKE ?").toString(); //$NON-NLS-1$//$NON-NLS-2$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Tables g ")  //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(Name)") .append(LIKE_ESCAPE).toString(); //$NON-NLS-1$
     
 //    private static final String QUERY_UDT =
 //      new StringBuffer("SELECT NULL AS TYPE_CAT, v.Name AS TYPE_SCHEM, TypeName AS TYPE_NAME") //$NON-NLS-1$
@@ -591,18 +596,13 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      */
     public ResultSet getColumns(String catalog, String schema, String tableNamePattern, String columnNamePattern) throws SQLException {
 
-        // Since catelog is allways null with MM, if nay supplied send empty
-        //result set
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyColumnsResultSet();
+        if (catalog == null) {
+        	catalog = PERCENT;
         }
         
-        // hard wire the schema to the current connection's VDB name, if one
-        // not supplied
         if (schema == null) {
             schema = PERCENT;
         }
-        
         // Get columns in all the tables if tableNamePattern is null
         if(tableNamePattern == null) {
             tableNamePattern = PERCENT; 
@@ -623,6 +623,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             prepareQuery.setObject(1, schema.toUpperCase());
             prepareQuery.setObject(2, tableNamePattern.toUpperCase());
             prepareQuery.setObject(3, columnNamePattern.toUpperCase());
+            prepareQuery.setObject(4, catalog.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -659,60 +660,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * This method returns a empty result for getColumns() request.
-     * @return ResultSet
-     */
-    private ResultSet emptyColumnsResultSet() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.COLUMNS.TABLE_CAT, 
-                JDBCColumnNames.COLUMNS.TABLE_SCHEM,  
-                JDBCColumnNames.COLUMNS.TABLE_NAME,
-                JDBCColumnNames.COLUMNS.COLUMN_NAME, 
-                JDBCColumnNames.COLUMNS.DATA_TYPE,
-                JDBCColumnNames.COLUMNS.TYPE_NAME, 
-                JDBCColumnNames.COLUMNS.COLUMN_SIZE,
-                JDBCColumnNames.COLUMNS.BUFFER_LENGTH,
-                JDBCColumnNames.COLUMNS.DECIMAL_DIGITS,
-                JDBCColumnNames.COLUMNS.NUM_PREC_RADIX,
-                JDBCColumnNames.COLUMNS.NULLABLE,
-                JDBCColumnNames.COLUMNS.REMARKS,
-                JDBCColumnNames.COLUMNS.COLUMN_DEF,
-                JDBCColumnNames.COLUMNS.SQL_DATA_TYPE,
-                JDBCColumnNames.COLUMNS.SQL_DATETIME_SUB,
-                JDBCColumnNames.COLUMNS.CHAR_OCTET_LENGTH,
-                JDBCColumnNames.COLUMNS.ORDINAL_POSITION,
-                JDBCColumnNames.COLUMNS.IS_NULLABLE,
-                // These are added in 1.4
-                //JDBCColumnNames.COLUMNS.SCOPE_CATLOG,
-                //JDBCColumnNames.COLUMNS.SCOPE_SCHEMA,
-                //JDBCColumnNames.COLUMNS.SCOPE_TABLE,
-                //JDBCColumnNames.COLUMNS.SOURCE_DATA_TYPE
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.STRING
-                //,MMJDBCSQLTypeInfo.STRING,MMJDBCSQLTypeInfo.STRING,MMJDBCSQLTypeInfo.STRING,MMJDBCSQLTypeInfo.SHORT
-        };                    
-        return createEmptyResultSet(columnNames, dataTypes);
-    }
-    
-    /**
      * <p>Gets the description of the foreign key columns in the table foreignTable.
      * These foreign key columns reference primary key columns of primaryTable.
      * Catalog and schema information is not used to narrow down the search, but
@@ -729,8 +676,12 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      */
     public ResultSet getCrossReference(String primaryCatalog, String primarySchema,String primaryTable,String foreignCatalog,String foreignSchema, String foreignTable) throws SQLException {
         
-        if (primaryCatalog != null || foreignCatalog != null) {
-            return emptyCrossReference();
+    	if (primaryCatalog == null) {
+            primaryCatalog = PERCENT;
+        }
+    	
+    	if (foreignCatalog == null) {
+            foreignCatalog = PERCENT;
         }
         
         if (primarySchema == null) {
@@ -752,11 +703,12 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         MMResultSet results = null;
         try {
             PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_CROSS_REFERENCES);
-
-            prepareQuery.setObject(1, primarySchema.toUpperCase());
-            prepareQuery.setObject(2, foreignSchema.toUpperCase());
-            prepareQuery.setObject(3, primaryTable.toUpperCase());
-            prepareQuery.setObject(4, foreignTable.toUpperCase());
+            prepareQuery.setObject(1, primaryCatalog.toUpperCase());
+            prepareQuery.setObject(2, foreignCatalog.toUpperCase());
+            prepareQuery.setObject(3, primarySchema.toUpperCase());
+            prepareQuery.setObject(4, foreignSchema.toUpperCase());
+            prepareQuery.setObject(5, primaryTable.toUpperCase());
+            prepareQuery.setObject(6, foreignTable.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -773,46 +725,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         logger.fine(logMsg);
 
         return resultSet;
-    }
-
-    /**
-     * Generate empty result set for Cross Reference
-     * @return
-     */
-    private ResultSet emptyCrossReference() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.REFERENCE_KEYS.PKTABLE_CAT,
-                JDBCColumnNames.REFERENCE_KEYS.PKTABLE_SCHEM,
-                JDBCColumnNames.REFERENCE_KEYS.PKTABLE_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.PKCOLUMN_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.FKTABLE_CAT,
-                JDBCColumnNames.REFERENCE_KEYS.FKTABLE_SCHEM,
-                JDBCColumnNames.REFERENCE_KEYS.FKTABLE_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.FKCOLUMN_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.KEY_SEQ,
-                JDBCColumnNames.REFERENCE_KEYS.UPDATE_RULE,
-                JDBCColumnNames.REFERENCE_KEYS.DELETE_RULE,
-                JDBCColumnNames.REFERENCE_KEYS.FK_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.PK_NAME,
-                JDBCColumnNames.REFERENCE_KEYS.DEFERRABILITY
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT
-        };
-        return createEmptyResultSet(columnNames, dataTypes);        
     }
 
     /**
@@ -925,8 +837,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining server results
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyExportedKeys();
+        if (catalog == null) {
+        	catalog = PERCENT;
         }
         
         if (schema == null) {
@@ -940,9 +852,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         MMResultSet results = null;
         try {
             PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_EXPORTED_KEYS);
-            
-            prepareQuery.setObject(1, schema.toUpperCase());
-            prepareQuery.setObject(2, table.toUpperCase());
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schema.toUpperCase());
+            prepareQuery.setObject(3, table.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -957,14 +869,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
 
         return resultSet;
-    }
-
-    /**
-     * @return
-     */
-    private ResultSet emptyExportedKeys() throws SQLException {
-        // Same as cross reference.
-        return emptyCrossReference();
     }
 
     /**
@@ -999,8 +903,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining server results
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyImportedKeys();
+    	if (catalog == null) {
+        	catalog = PERCENT;
         }
         
         if (schema == null) {
@@ -1014,9 +918,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         MMResultSet results = null;
         try {
             PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_IMPORTED_KEYS);
-
-            prepareQuery.setObject(1, schema.toUpperCase());
-            prepareQuery.setObject(2, table.toUpperCase());
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schema.toUpperCase());
+            prepareQuery.setObject(3, table.toUpperCase());
 
 
             // make a query against runtimemetadata and get results
@@ -1034,13 +938,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * @return
-     */
-    private ResultSet emptyImportedKeys() throws SQLException {
-        return emptyCrossReference();
-    }
-
-    /**
      * <p>Gets a description of the indexes that are present on a given table.
      *
      * @param name of the catalog which contains the given table.
@@ -1052,8 +949,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if catalog/schema info does not match for this connection.
      */
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyIndexInfo();
+        if (catalog == null) {
+        	catalog = PERCENT;
         }
         
         if (schema == null) {
@@ -1071,10 +968,11 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         try {
             prepareQuery = driverConnection.prepareStatement(QUERY_INDEX_INFO); 
-
-            prepareQuery.setObject(1, schema.toUpperCase());
-            prepareQuery.setObject(2, unique?null:"NonUnique"); //$NON-NLS-1$
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schema.toUpperCase());
             prepareQuery.setObject(3, table.toUpperCase());
+            prepareQuery.setObject(4, unique?null:"NonUnique"); //$NON-NLS-1$
+            
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -1105,43 +1003,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
-    }
-
-    /**
-     * @return
-     */
-    private ResultSet emptyIndexInfo() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.INDEX_INFO.TABLE_CAT,
-                JDBCColumnNames.INDEX_INFO.TABLE_SCHEM,                
-                JDBCColumnNames.INDEX_INFO.TABLE_NAME,
-                JDBCColumnNames.INDEX_INFO.NON_UNIQUE,
-                JDBCColumnNames.INDEX_INFO.INDEX_QUALIFIER,
-                JDBCColumnNames.INDEX_INFO.INDEX_NAME,
-                JDBCColumnNames.INDEX_INFO.TYPE,
-                JDBCColumnNames.INDEX_INFO.ORDINAL_POSITION,
-                JDBCColumnNames.INDEX_INFO.COLUMN_NAME,
-                JDBCColumnNames.INDEX_INFO.ASC_OR_DESC,
-                JDBCColumnNames.INDEX_INFO.CARDINALITY,
-                JDBCColumnNames.INDEX_INFO.PAGES,
-                JDBCColumnNames.INDEX_INFO.FILTER_CONDITION
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.BOOLEAN,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.STRING
-        };
-        return createEmptyResultSet(columnNames, dataTypes);   
     }
 
     /**
@@ -1348,8 +1209,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyPrimaryKeys();
+        if (catalog == null) {
+            catalog = PERCENT;
         }
         
         if (schema == null) {
@@ -1368,8 +1229,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         try {
             prepareQuery = driverConnection.prepareStatement(QUERY_PRIMARY_KEYS);
 
-            prepareQuery.setObject(1, schema.toUpperCase());
-            prepareQuery.setObject(2, table.toUpperCase());
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schema.toUpperCase());
+            prepareQuery.setObject(3, table.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -1403,30 +1265,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * create a empty primary keys result set.
-     * @return
-     */
-    private ResultSet emptyPrimaryKeys() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.PRIMARY_KEYS.TABLE_CAT,
-                JDBCColumnNames.PRIMARY_KEYS.TABLE_SCHEM,                
-                JDBCColumnNames.PRIMARY_KEYS.TABLE_NAME,
-                JDBCColumnNames.PRIMARY_KEYS.COLUMN_NAME,
-                JDBCColumnNames.PRIMARY_KEYS.KEY_SEQ,
-                JDBCColumnNames.PRIMARY_KEYS.PK_NAME
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.STRING
-        };
-        return createEmptyResultSet(columnNames, dataTypes);
-    }
-
-    /**
      * <p>Gets a description of the input, output and results associated with certain
      * stored procedures matching the given procedureNamePattern. Catalog and
      * schema names are not used to narrow down the search, but they should match
@@ -1439,8 +1277,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyProcedureColumns();
+        if (catalog == null) {
+            catalog = PERCENT;
         }
         if (schemaPattern == null) {
             schemaPattern = PERCENT;
@@ -1463,10 +1301,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         PreparedStatement prepareQuery = null;
         try {
             prepareQuery = driverConnection.prepareStatement(QUERY_PROCEDURE_COLUMNS);
-
-            prepareQuery.setObject(1, schemaPattern.toUpperCase());
-            prepareQuery.setObject(2, procedureNamePattern.toUpperCase());
-            prepareQuery.setObject(3, columnNamePattern.toUpperCase());
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schemaPattern.toUpperCase());
+            prepareQuery.setObject(3, procedureNamePattern.toUpperCase());
+            prepareQuery.setObject(4, columnNamePattern.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -1497,45 +1335,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * @return
-     */
-    private ResultSet emptyProcedureColumns() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.PROCEDURE_COLUMNS.PROCEDURE_CAT,
-                JDBCColumnNames.PROCEDURE_COLUMNS.PROCEDURE_SCHEM, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.PROCEDURE_NAME, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.COLUMN_NAME, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.COLUMN_TYPE, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.DATA_TYPE, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.TYPE_NAME, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.PRECISION, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.LENGTH, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.SCALE, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.RADIX, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.NULLABLE, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.REMARKS, 
-                JDBCColumnNames.PROCEDURE_COLUMNS.POSITION                
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.INTEGER,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.SHORT,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT
-        };
-        return createEmptyResultSet(columnNames, dataTypes);
-    }
-
-    /**
      * <p>Gets description of all the available stored procedures whose names match
      * the given pattern. Catalog and schemaPattern are not used to narrow down
      * the search, but they should match the virtualdatabasename and version used
@@ -1547,9 +1346,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyProcedures();
-        }
+	    if (catalog == null) {
+	    	catalog = PERCENT;
+	    }
+    	
         if (schemaPattern == null) {
             schemaPattern = PERCENT;
         }
@@ -1567,9 +1367,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         try {
             prepareQuery = driverConnection.prepareStatement(QUERY_PROCEDURES);
-
-            prepareQuery.setObject(1, schemaPattern.toUpperCase());
-            prepareQuery.setObject(2, procedureNamePattern.toUpperCase());
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schemaPattern.toUpperCase());
+            prepareQuery.setObject(3, procedureNamePattern.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
@@ -1604,33 +1404,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * @return
-     */
-    private ResultSet emptyProcedures() throws SQLException {
-        String[] columnNames = new String[] {
-                JDBCColumnNames.PROCEDURES.PROCEDURE_CAT,
-                JDBCColumnNames.PROCEDURES.PROCEDURE_SCHEM, 
-                JDBCColumnNames.PROCEDURES.PROCEDURE_NAME, 
-                JDBCColumnNames.PROCEDURES.RESERVED_1,
-                JDBCColumnNames.PROCEDURES.RESERVED_2, 
-                JDBCColumnNames.PROCEDURES.RESERVED_3, 
-                JDBCColumnNames.PROCEDURES.REMARKS, 
-                JDBCColumnNames.PROCEDURES.PROCEDURE_TYPE 
-        };
-        String[] dataTypes = new String[] {
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.SHORT
-        };
-        return createEmptyResultSet(columnNames, dataTypes);
-    }
-
-    /**
      * <p>Gets MetaMatrix's preferred term for procedures
      * @return String representing metamatrix procedure term.
      * @throws SQLException, should never occur
@@ -1647,41 +1420,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getSchemas() throws SQLException {
-
-        // list which represent records containing schema info
-        List records = new ArrayList ();
-
-        ResultSetMetaData rmetadata = null;
-        MMResultSet results = null;
-        PreparedStatement prepareQuery = null;
-        try {
-            prepareQuery = driverConnection.prepareStatement(QUERY_SCHEMAS);
-            // make a query against runtimemetadata and get results
-            results = (MMResultSet) prepareQuery.executeQuery();
-
-            while (results.next ()) {
-                // each row will have only one column(Virtual database name)
-                List currentRow = new ArrayList (2);
-
-                for(int i = 0; i < JDBCColumnPositions.SCHEMAS.MAX_COLUMNS; i++) {
-                    // get the value at the current index add it to currentRow
-                    currentRow.add(results.getObject(i+1));
-                }
-
-                records.add(currentRow);
-            }
-
-            // Get the metadata for the results
-            rmetadata = results.getMetaData();
-
-        } catch(Exception e) {
-            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage())); //$NON-NLS-1$
-        }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
+    	return getSchemas(null, null);
     }
 
     /**
@@ -1876,8 +1615,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[]) throws SQLException {
-        if ((catalog != null) && (catalog.trim().length() > 0)) {
-            return emptyTablesResultSet();
+        if (catalog == null) {
+        	catalog = PERCENT;
         }
         
         if (schemaPattern == null) {
@@ -1895,26 +1634,22 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // query string to be submitted to get table metadata info
         StringBuffer sqlQuery = new StringBuffer(QUERY_TABLES);
 
-        StringBuffer typesString = new StringBuffer(); // criteria string for different table types
-
+        StringBuffer typesString = new StringBuffer("("); // criteria string for different table types //$NON-NLS-1$
+        
         if (types != null) {
             // construct the criteria string
             for(int i=0; i < types.length; i++) {
                 if (types[i] != null && types[i].length() > 0) {
                     if (i > 0) {
-                        typesString.append(" OR CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END LIKE ?"); //$NON-NLS-1$
-                    } else {
-                        typesString.append("(CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END LIKE ?"); //$NON-NLS-1$
-                    }
+                        typesString.append(" OR "); //$NON-NLS-1$
+                    } 
+                    typesString.append(TABLE_TYPE).append(LIKE_ESCAPE);
                 }
             }
-        }
-
-        if (typesString.length() != 0) {
             typesString.append(")"); //$NON-NLS-1$
-            sqlQuery.append(" AND ").append(typesString.toString()).append(" AND Type IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
-
+            sqlQuery.append(" AND ").append(typesString.toString()); //$NON-NLS-1$
         }
+
         sqlQuery.append(" ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME"); //$NON-NLS-1$
 
 
@@ -1925,6 +1660,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         try {
             prepareQuery = driverConnection.prepareStatement(sqlQuery.toString());
             int columnIndex = 0;
+            prepareQuery.setObject(++columnIndex, catalog.toUpperCase());
             prepareQuery.setObject(++columnIndex, schemaPattern.toUpperCase());
             prepareQuery.setObject(++columnIndex, tableNamePattern.toUpperCase());
 
@@ -1975,39 +1711,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * Return a empty tables resultset
-     * @return
-     */
-    private ResultSet emptyTablesResultSet() throws SQLException {
-        String[] columnNames = {
-                JDBCColumnNames.TABLES.TABLE_CAT,
-                JDBCColumnNames.TABLES.TYPE_SCHEM,
-                JDBCColumnNames.TABLES.TABLE_NAME,
-                JDBCColumnNames.TABLES.TABLE_TYPE,
-                JDBCColumnNames.TABLES.REMARKS,
-                JDBCColumnNames.TABLES.TYPE_CAT,
-                JDBCColumnNames.TABLES.TYPE_SCHEM,
-                JDBCColumnNames.TABLES.TYPE_NAME,
-                JDBCColumnNames.TABLES.SELF_REFERENCING_COL_NAME,
-                JDBCColumnNames.TABLES.REF_GENERATION,
-                JDBCColumnNames.TABLES.ISPHYSICAL
-        };
-        String[] dataTypes = {  
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.STRING,
-                MMJDBCSQLTypeInfo.BOOLEAN
-        };
-        return createEmptyResultSet(columnNames, dataTypes);
-    }
     /**
      * <p>Gets the table types available to metamatrix. The results are ordered by
      * table type
@@ -3163,7 +2866,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
          HardCoding Column metadata details for the given column
         ********************************************************/
 
-        metadataMap.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, driverConnection.getSchema());
+        metadataMap.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, driverConnection.getVDBName());
         metadataMap.put(ResultsMetadataConstants.GROUP_NAME, tableName);
         metadataMap.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
         metadataMap.put(ResultsMetadataConstants.DATA_TYPE, dataType);
@@ -3180,55 +2883,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         metadataMap.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.getMaxDisplaySize(dataType));
 
         return metadataMap;
-    }
-
-    /**
-     * Gets a description of models available in a catalog.
-     *
-     * <P>Only model descriptions matching the catalog, schema, and
-     * model are returned.  They are ordered by MODEL_NAME.
-     *
-     * <P>Each model description has the following columns:
-     *  <OL>
-     *  <LI><B>MODEL_CAT</B> String => model catalog (may be null)
-     *  <LI><B>MODEL_SCHEM</B> String => model schema (may be null)
-     *  <LI><B>MODEL_NAME</B> String => model name
-     *  <LI><B>DESCRIPTION</B> String => explanatory comment on the model (may be null)
-     *  <LI><B>IS_PHYSICAL</B> Boolean => true if the model is a physical model
-     *  <LI><B>SUP_WHERE_ALL</B> Boolean => true if queries without a criteria are allowed
-     *  <LI><B>SUP_DISTINCT</B> Boolean => true if distinct clause can be used
-     *  <LI><B>SUP_JOIN</B> Boolean => true if joins are supported
-     *  <LI><B>SUP_OUTER_JOIN</B> Boolean => true if outer joins are supported
-     *  <LI><B>SUP_ORDER_BY</B> Boolean => true if order by is supported
-     * </OL>
-     *
-     * <P><B>Note:</B> Some databases may not return information for
-     * all models.
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param modelNamePattern a model name pattern
-     * @return <code>ResultSet</code> - each row is a model description
-     * @exception SQLException if a database access error occurs
-     */
-    public ResultSet getModels(String catalog, String schemaPattern, String modelNamePattern) throws SQLException {
-        // Get all models if modelNamePattern is null
-        if(modelNamePattern == null) {
-            modelNamePattern = PERCENT; 
-        }
-        try {
-            PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_MODELS);
-            prepareQuery.setObject(1, modelNamePattern.toUpperCase());
-
-            // make a query against runtimemetadata and get results
-            MMResultSet results = (MMResultSet) prepareQuery.executeQuery();
-
-            return results;
-        } catch (Exception e) {
-            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getModels_error", modelNamePattern, e.getMessage())); //$NON-NLS-1$
-        }
     }
 
     /**
@@ -3290,6 +2944,48 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
 	public ResultSet getSchemas(String catalog, String schemaPattern)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		if (catalog == null) {
+            catalog = PERCENT;
+        }
+        
+        if (schemaPattern == null) {
+            schemaPattern = PERCENT;
+        }
+        // list which represent records containing schema info
+        List records = new ArrayList ();
+
+        ResultSetMetaData rmetadata = null;
+        MMResultSet results = null;
+        PreparedStatement prepareQuery = null;
+        try {
+            prepareQuery = driverConnection.prepareStatement(QUERY_SCHEMAS);
+            prepareQuery.setObject(1, catalog.toUpperCase());
+            prepareQuery.setObject(2, schemaPattern.toUpperCase());
+            // make a query against runtimemetadata and get results
+            results = (MMResultSet) prepareQuery.executeQuery();
+
+            while (results.next ()) {
+                // each row will have only one column(Virtual database name)
+                List currentRow = new ArrayList (2);
+
+                for(int i = 0; i < JDBCColumnPositions.SCHEMAS.MAX_COLUMNS; i++) {
+                    // get the value at the current index add it to currentRow
+                    currentRow.add(results.getObject(i+1));
+                }
+
+                records.add(currentRow);
+            }
+
+            // Get the metadata for the results
+            rmetadata = results.getMetaData();
+
+        } catch(Exception e) {
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage())); //$NON-NLS-1$
+        }
+
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
+
+        // construct results object from column values and their metadata
+        return createResultSet(records, rmetadata);
 	}
 }

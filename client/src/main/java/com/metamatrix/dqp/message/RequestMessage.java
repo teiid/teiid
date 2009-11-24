@@ -66,7 +66,7 @@ public class RequestMessage implements Serializable {
     private boolean useResultSetCache;
         
     // Treat the double quoted strings as variables in the command
-    private boolean dblQuotedVariableAllowed = true;
+    private boolean ansiQuotedIdentifiers = true;
     
     //whether query plan is allowed or not
     private boolean queryPlanAllowed = true;
@@ -307,13 +307,13 @@ public class RequestMessage implements Serializable {
 		return Arrays.deepToString(commands);
 	}
            
-    public void setDoubleQuotedVariableAllowed(boolean allowed) {
-        dblQuotedVariableAllowed = allowed;
-    }
-
-    public boolean isDoubleQuotedVariableAllowed() {
-        return dblQuotedVariableAllowed;
-    }
+	public boolean isAnsiQuotedIdentifiers() {
+		return ansiQuotedIdentifiers;
+	}
+	
+	public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
+		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
+	}
 
     public void setQueryPlanAllowed(boolean allowed) {
     	queryPlanAllowed = allowed;

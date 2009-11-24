@@ -22,7 +22,7 @@
 
 package org.teiid.connector.metadata.runtime;
 
-public class KeyRecord extends ColumnSet {
+public class KeyRecord extends ColumnSet<Table> {
 
 	public enum Type {
 		Primary,
@@ -34,7 +34,6 @@ public class KeyRecord extends ColumnSet {
 	}
 	
 	private Type type;
-	private Table table;
 
 	public KeyRecord(Type type) {
 		this.type = type;
@@ -45,11 +44,7 @@ public class KeyRecord extends ColumnSet {
 	}
 	
 	public Table getTable() {
-		return table;
-	}
-	
-	public void setTable(Table table) {
-		this.table = table;
+		return super.getParent();
 	}
 	
 }

@@ -39,6 +39,7 @@ public class ProcedureParameter extends BaseColumn {
 	
 	private Type type;
 	private boolean optional;
+	private ProcedureRecordImpl procedure;
 	
 	public void setType(Type type) {
 		this.type = type;
@@ -54,6 +55,19 @@ public class ProcedureParameter extends BaseColumn {
 	
 	public boolean isOptional() {
 		return optional;
+	}
+	
+	public ProcedureRecordImpl getProcedure() {
+		return procedure;
+	}
+	
+	public void setProcedure(ProcedureRecordImpl procedure) {
+		this.procedure = procedure;
+	}
+	
+	@Override
+	public AbstractMetadataRecord getParent() {
+		return this.procedure;
 	}
     
 }

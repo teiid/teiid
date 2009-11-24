@@ -495,32 +495,23 @@ public class TestMMDatabaseMetaData {
     }
 
     @Test
-    public void testUcaseMatchReturnsNoRows() throws Exception {
-        initResultSetStreams("testGetColumnsSingleMatchQuery"); //$NON-NLS-1$
+    public void testUcaseMatchReturnsRows() throws Exception {
         ResultSet rs = null;
         try {
             java.sql.Statement stmt = conn.createStatement();
             
-            // Returns 24 rows:
-            //rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE ModelName = 'System' OPTION DEBUG");
-            
             // Returns 0 rows (but should be identical and return 24 rows):
-            rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE UCASE(ModelName) = 'SYSTEM'"); //$NON-NLS-1$
+            rs = stmt.executeQuery("SELECT Name FROM System.Tables WHERE UCASE(SchemaName) = 'SYSTEM'"); //$NON-NLS-1$
 
             int count = 0;
             while(rs.next()) {
                 count++;
-                //System.out.println("table="+rs.getString(1));
             }
-            assertEquals(17, count);
-            
-            //System.out.println(((com.metamatrix.jdbc.api.Statement)stmt).getDebugLog());
-
+            assertEquals(11, count);
         } finally {
             if(rs != null) {
                 rs.close();
             }
-            closeResultSetTestStreams();
         }
     }
 
@@ -531,7 +522,7 @@ public class TestMMDatabaseMetaData {
         try {
             //List expected = getExpectedColumns();
             
-            rs = dbmd.getColumns(null, null, "System.VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getColumns(null, "System", "VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
                          Collections.EMPTY_LIST,
@@ -570,7 +561,7 @@ public class TestMMDatabaseMetaData {
         try { 
             
             stream.println("getCrossReference1"); //$NON-NLS-1$
-            rs = dbmd.getCrossReference(null, null, "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getCrossReference(null, "BQT1", "SmallA", null, "BQT1", "SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -601,7 +592,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = null;
         try { 
             stream.println("getImportedKeys1"); //$NON-NLS-1$
-            rs = dbmd.getImportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getImportedKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -629,7 +620,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            rs = dbmd.getExportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getExportedKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -655,7 +646,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            rs = dbmd.getIndexInfo(null, null, "System.KeyElements", true, true); //$NON-NLS-1$
+            rs = dbmd.getIndexInfo(null, "System", "KeyColumns", true, true); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -681,12 +672,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            //ResultSet rs = dbmd.getPrimaryKeys(null, null, "SYSTEM.VIRTUALDATABASES"); //$NON-NLS-1$
-            
-            // This is only a way to do unit test. Actually, the primary key of BQT.smallA
-            // should be tested here, the only tables should be queried are just system
-            // tables. 
-            rs = dbmd.getPrimaryKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getPrimaryKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -904,7 +890,7 @@ public class TestMMDatabaseMetaData {
         try {
             //List expected = getExpectedColumns();
             
-            rs = dbmd.getTables(null, null, "SYSTEM.VIRTUALDATABASES", null); //$NON-NLS-1$ 
+            rs = dbmd.getTables(null, "SYSTEM", "VIRTUALDATABASES", null); //$NON-NLS-1$ //$NON-NLS-2$ 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
                        Collections.EMPTY_LIST,
@@ -1155,10 +1141,9 @@ public class TestMMDatabaseMetaData {
     
     @Test
     public void testGetColumnsWithEscape() throws Exception {
-        
-        ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSet columns = dbmd.getColumns("QT\\_Ora9DS", "BQT1", "SmallA", "IntKey"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         columns.next();
-        assertEquals("QT_Ora9DS", columns.getString(2));//$NON-NLS-1$  
+        assertEquals("BQT1", columns.getString(2));//$NON-NLS-1$  
         assertFalse(columns.next());
     }
         
@@ -1290,7 +1275,7 @@ public class TestMMDatabaseMetaData {
             // This is only a way to do unit test. Actually, the primary key of BQT.smallA
             // should be tested here, the only tables should be queried are just system
             // tables. 
-            rs = dbmd.getPrimaryKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getPrimaryKeys("QT\\_Ora9DS", "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1318,7 +1303,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = null;
         try {
             
-            rs = dbmd.getProcedures(null, "QT\\_Ora9DS", null); //$NON-NLS-1$
+            rs = dbmd.getProcedures("QT\\_Ora9DS", null, null); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {

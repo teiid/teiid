@@ -1,2 +1,3 @@
-TABLE_SCHEM[string]	TABLE_CATALOG[string]	
-PartsSupplier	null
+TABLE_SCHEM[string]	TABLE_CATALOG[string]
+PartsSupplier	PartsSupplier
+System	PartsSupplier

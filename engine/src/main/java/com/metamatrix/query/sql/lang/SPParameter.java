@@ -100,7 +100,7 @@ public class SPParameter implements Serializable, Cloneable {
     }
 
     /**
-     * Get full parameter name, including procedure name.  If unknown, null is returned.
+     * Get full parameter name,.  If unknown, null is returned.
      * @return Parameter name
      */
     public String getName() {
@@ -108,7 +108,7 @@ public class SPParameter implements Serializable, Cloneable {
     }
 
     /**
-     * Set full parameter name, including procedure name
+     * Set full parameter name
      * @param name Parameter name
      */
     public void setName(String name) {

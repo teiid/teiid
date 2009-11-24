@@ -35,13 +35,13 @@ public class Schema extends AbstractMetadataRecord {
 	private Map<String, ProcedureRecordImpl> procedures = new LinkedHashMap<String, ProcedureRecordImpl>();
 	
 	public void addTable(Table table) {
-		table.setSchema(this);
-		this.tables.put(table.getFullName().toLowerCase(), table);
+		table.setParent(this);
+		this.tables.put(table.getName().toLowerCase(), table);
 	}
 	
 	public void addProcedure(ProcedureRecordImpl procedure) {
 		procedure.setSchema(this);
-		this.procedures.put(procedure.getFullName().toLowerCase(), procedure);
+		this.procedures.put(procedure.getName().toLowerCase(), procedure);
 	}
 
 	/**
@@ -89,5 +89,5 @@ public class Schema extends AbstractMetadataRecord {
     public void setPhysical(boolean physical) {
 		this.physical = physical;
 	}
-
+    
 }

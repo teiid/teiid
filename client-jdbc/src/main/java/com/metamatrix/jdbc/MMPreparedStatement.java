@@ -250,7 +250,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
             } else {
     			MetadataResult results;
 				try {
-					results = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE)).booleanValue());
+					results = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
 				} catch (MetaMatrixComponentException e) {
 					throw MMSQLException.create(e);
 				} catch (MetaMatrixProcessingException e) {

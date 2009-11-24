@@ -24,19 +24,30 @@ package org.teiid.connector.metadata.runtime;
 
 import java.util.List;
 
-/**
- * ColumnSetRecordImpl
- */
-public class ColumnSet extends AbstractMetadataRecord {
+public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
 	
     private List<Column> columns;
+    private T parent;
     
     public List<Column> getColumns() {
     	return columns;
     }
+    
+    public void addColumn(Column column) {
+    	columns.add(column);
+    }
 
     public void setColumns(List<Column> columns) {
 		this.columns = columns;
+	}
+    
+    @Override
+    public T getParent() {
+    	return parent;
+    }
+    
+    public void setParent(T parent) {
+		this.parent = parent;
 	}
 
 }

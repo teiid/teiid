@@ -1,4 +1,4 @@
-TYPE_NAME[string]	DATA_TYPE[integer]	PRECISION[integer]	LITERAL_PREFIX[string]	LITERAL_SUFFIX[string]	CREATE_PARAMS[string]	NULLABLE[short]	CASE_SENSITIVE[boolean]	SEARCHABLE[short]	UNSIGNED_ATTRIBUTE[boolean]	FIXED_PREC_SCALE[boolean]	AUTO_INCREMENT[boolean]	LOCAL_TYPE_NAME[string]	MINIMUM_SCALE[short]	MAXIMUM_SCALE[short]	SQL_DATA_TYPE[integer]	SQL_DATETIME_SUB[integer]	NUM_PREC_RADIX[integer]	
+TYPE_NAME[string]	DATA_TYPE[integer]	PRECISION[integer]	LITERAL_PREFIX[string]	LITERAL_SUFFIX[string]	CREATE_PARAMS[string]	NULLABLE[short]	CASE_SENSITIVE[boolean]	SEARCHABLE[short]	UNSIGNED_ATTRIBUTE[boolean]	FIXED_PREC_SCALE[boolean]	AUTO_INCREMENT[boolean]	LOCAL_TYPE_NAME[string]	MINIMUM_SCALE[short]	MAXIMUM_SCALE[short]	SQL_DATA_TYPE[integer]	SQL_DATETIME_SUB[integer]	NUM_PREC_RADIX[integer]
 boolean	-7	1	{b'	}	null	1	false	3	true	true	false	boolean	0	255	null	null	0
 byte	-6	3	null	null	null	1	false	3	true	true	false	byte	0	255	null	null	0
 long	-5	19	null	null	null	1	false	3	false	false	false	long	0	255	null	null	10

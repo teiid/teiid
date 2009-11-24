@@ -65,8 +65,8 @@ public class TestResultsMetadataWithProvider extends TestCase {
         assertEquals(true, rmd.isSearchable(1));
         assertEquals(true, rmd.isSigned(1));
         assertEquals(true, rmd.isWritable(1));
-        assertEquals(null, rmd.getCatalogName(1));
-        assertEquals("vdb", rmd.getSchemaName(1)); //$NON-NLS-1$
+        assertEquals("vdb", rmd.getCatalogName(1)); //$NON-NLS-1$
+        assertEquals(null, rmd.getSchemaName(1)); 
         assertEquals("table", rmd.getTableName(1)); //$NON-NLS-1$
         assertEquals("col1", rmd.getColumnName(1)); //$NON-NLS-1$
         assertEquals("string", rmd.getColumnTypeName(1)); //$NON-NLS-1$

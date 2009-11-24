@@ -23,11 +23,16 @@
 package com.metamatrix.jdbc.api;
 
 
+import java.io.File;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Stack;
 
 import org.teiid.jdbc.TeiidDriver;
+
+import com.metamatrix.core.util.UnitTestUtil;
 
 
 /** 
@@ -78,6 +83,16 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
         getConnection(vdb, props, urlProperties);
         executeAndAssertResults(query, expected);
         closeConnection();
+    }
+    
+    protected void checkResult(String testName, ResultSet actualResults, String testsuite)  throws Exception {
+    	ResultSetMetaData resultMetadata = actualResults.getMetaData();
+        
+    	String metafilename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".metadata.txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+        assertResultsSetMetadataEquals(resultMetadata, new File(metafilename));
+    	
+        String filename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+        assertResultsSetEquals(actualResults, new File(filename));
     }
  
 }

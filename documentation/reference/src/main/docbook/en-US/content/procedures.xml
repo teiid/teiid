@@ -10,7 +10,7 @@
       . These are similar to stored procedures in relational database
       management systems. You can use this language to define the
       transformation logic for decomposing INSERT, UPDATE, and DELETE
-      commands against virtual tables; these are known as
+      commands against views; these are known as
       <link linkend="update_procedures">update procedures</link>
       .
     </para>
@@ -402,15 +402,15 @@ END
   <sect1 id="update_procedures">
     <title>Update Procedures</title>
     <para>
-      Virtual tables are abstractions above physical sources. They typically
+      Views are abstractions above physical sources. They typically
       union or join information from multiple tables, often from multiple
       data sources or other views. Teiid can perform update operations
-      against virtual tables. Update commands - INSERT, UPDATE, or DELETE -
-      against a virtual table require logic to define how the tables and
-      views integrated by the virtual table are affected by each type of
+      against views. Update commands - INSERT, UPDATE, or DELETE -
+      against a view require logic to define how the tables and
+      views integrated by the view are affected by each type of
       command. This transformation logic is invoked when an update command
-      is issued against a virtual table. Update procedures define the logic
-      for how a user's update command against a virtual table should be
+      is issued against a view. Update procedures define the logic
+      for how a user's update command against a view should be
       decomposed into the individual commands to be executed against the
       underlying physical sources. Similar to
       <link linkend="virtual_procedures">virtual procedures</link>
@@ -437,15 +437,15 @@ END</synopsis>
       <para>You can use a number of special variables when defining your update procedure.</para>
       <sect3 id="input_variables">
         <title>INPUT Variables</title>
-        <para>Every attribute in the virtual table whose UPDATE and INSERT transformations you are defining has an equivalent variable named INPUT.&lt;column_name&gt;</para>
-        <para>When an INSERT or an UPDATE command is executed against the virtual table, these variables are initialized to the values in the INSERT VALUES clause or the UPDATE SET clause respectively.</para>
+        <para>Every attribute in the view whose UPDATE and INSERT transformations you are defining has an equivalent variable named INPUT.&lt;column_name&gt;</para>
+        <para>When an INSERT or an UPDATE command is executed against the view, these variables are initialized to the values in the INSERT VALUES clause or the UPDATE SET clause respectively.</para>
         <para>In an UPDATE procedure, the default value of these variables, if they are not set by the command, is null. In an INSERT procedure, the default value of these variables is the default value of the virtual table attributes, based on their defined types.  See <link linkend="changing_variables">CHANGING Variables</link> for distinguishing defaults from passed values.</para>
       </sect3>
       <sect3 id="changing_variables">
         <title>CHANGING Variables</title>
-        <para>Similar to INPUT Variables, every attribute in the virtual table whose UPDATE and INSERT transformations you are defining has an equivalent variable named CHANGING.&lt;column_name&gt;</para>
-        <para>When an INSERT or an UPDATE command is executed against the virtual table, these variables are initialized to <literal>true</literal> or <literal>false</literal> depending on whether the INPUT variable was set by the command.</para>
-        <para>For example, for a virtual table with columns A, B, C:</para>
+        <para>Similar to INPUT Variables, every attribute in the view whose UPDATE and INSERT transformations you are defining has an equivalent variable named CHANGING.&lt;column_name&gt;</para>
+        <para>When an INSERT or an UPDATE command is executed against the view, these variables are initialized to <literal>true</literal> or <literal>false</literal> depending on whether the INPUT variable was set by the command.</para>
+        <para>For example, for a view with columns A, B, C:</para>
         <informaltable>
           <tgroup cols="2">
             <thead>
@@ -470,9 +470,9 @@ END</synopsis>
       <sect3 id="rowsupdated_variable">
         <title>ROWS_UPDATED Variable</title>
         <para> Teiid returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
-          the virtual table. Your procedure must set the value that returns
-          when an application executes an update command against the virtual
-          table, which triggers invocation of the update procedure. For
+          the view. Your procedure must set the value that returns
+          when an application executes an update command against the view, 
+          which triggers invocation of the update procedure. For
           example, if an UPDATE command is issued that affects 5 records, the
           ROWS_UPDATED should be set appropriately so that the user will
           receive '5' for the count of records affected.</para>
@@ -502,7 +502,7 @@ END</synopsis>
               </para>
             </listitem>
             <listitem>
-              <para>The columns in a HAS CRITERIA ON clause always refer to virtual columns.
+              <para>The columns in a HAS CRITERIA ON clause always refer to view columns.
               </para>
             </listitem>
           </itemizedlist>
@@ -557,7 +557,7 @@ END</synopsis>
               </para>
             </listitem>
             <listitem>
-              <para>The columns in a TRANSLATE CRITERIA ON clause always refer to virtual columns.
+              <para>The columns in a TRANSLATE CRITERIA ON clause always refer to view columns.
               </para>
             </listitem>
           </itemizedlist>
@@ -590,14 +590,14 @@ END</synopsis>
             </tgroup>
           </informaltable>
           <para>
-          The TRANSLATE CRITERIA, ON clause always refers to virtual columns.
+          The TRANSLATE CRITERIA, ON clause always refers to view columns.
           The WITH clause always has items with form &lt;elem&gt; = &lt;expression&gt;, 
-          where the &lt;elem&gt; is a virtual column and the &lt;expression&gt; 
-          specifies what that virtual column should be
-          replaced with when TRANSLATE CRITERIA translates the virtual
+          where the &lt;elem&gt; is a view column and the &lt;expression&gt; 
+          specifies what that view column should be
+          replaced with when TRANSLATE CRITERIA translates the view
           criteria (from UPDATE or DELETE) into a physical criteria in
           the command. By default, a mapping is created based on the
-          SELECT clause of the SELECT transformation (virtual column
+          SELECT clause of the SELECT transformation (view column
           gets mapped to expression in SELECT clause at same
           position). 
           </para>
@@ -611,7 +611,7 @@ END</synopsis>
           </para>
         </listitem>
         <listitem>
-          <para>The virtual table that this SQL command is executed against is detected.
+          <para>The view this SQL command is executed against is detected.
           </para>
         </listitem>
         <listitem>

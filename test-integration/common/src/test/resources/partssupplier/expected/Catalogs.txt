@@ -1,1 +1,1 @@
-TABLE_CAT[string]	
+TABLE_CAT[string]

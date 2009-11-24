@@ -61,47 +61,41 @@ public class TestPartsDatabaseMetadata extends AbstractMMQueryTestCase {
     @After public void tearDown() {
     	closeConnection();
     }
-        
-    private void checkResult(String testName, ResultSet actualResults)  throws Exception {
-    	ResultSetMetaData resultMetadata = actualResults.getMetaData();
-        
-    	String metafilename = UnitTestUtil.getTestDataPath() + File.separator+"partssupplier"+File.separator + "expected" + File.separator+ testName.substring(4) + ".metadata.txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
-        assertResultsSetMetadataEquals(resultMetadata, new File(metafilename));
-    	
-        String filename = UnitTestUtil.getTestDataPath() + File.separator+"partssupplier"+File.separator + "expected" + File.separator+ testName.substring(4) + ".txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
-        assertResultsSetEquals(actualResults, new File(filename));
-    }
-        
+    
     @Test public void testExportedKeys()  throws Exception {
-        checkResult("testExportedKeys", dbMetadata.getExportedKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testExportedKeys", dbMetadata.getExportedKeys(VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Test public void testImportedKeys()  throws Exception {
-        checkResult("testImportedKeys", dbMetadata.getImportedKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
+    private void checkResult(String string, ResultSet exportedKeys) throws Exception {
+    	checkResult(string, exportedKeys, "partssupplier"); //$NON-NLS-1$
+	}
+
+	@Test public void testImportedKeys()  throws Exception {
+        checkResult("testImportedKeys", dbMetadata.getImportedKeys(VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testPrimaryKeys()  throws Exception {
-        checkResult("testPrimaryKeys", dbMetadata.getPrimaryKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testPrimaryKeys", dbMetadata.getPrimaryKeys(VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testProcedures()  throws Exception {
-        checkResult("testProcedures", dbMetadata.getProcedures(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testProcedures", dbMetadata.getProcedures(VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testProcedureColumns()  throws Exception {
-        checkResult("testProcedureColumns", dbMetadata.getProcedureColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        checkResult("testProcedureColumns", dbMetadata.getProcedureColumns(VDB, null, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testUDTs()  throws Exception {
-        checkResult("testUDTs", dbMetadata.getUDTs(null, VDB, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testUDTs", dbMetadata.getUDTs(VDB, null, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testIndexInfo()  throws Exception {
-        checkResult("testIndexInfo", dbMetadata.getIndexInfo(null, VDB, "%", true, true)); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testIndexInfo", dbMetadata.getIndexInfo(VDB, null, "%", true, true)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testCrossReference()  throws Exception {
-        checkResult("testCrossReference", dbMetadata.getCrossReference(null, VDB, "%", null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        checkResult("testCrossReference", dbMetadata.getCrossReference(VDB, null, "%", VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testTypeInfo()  throws Exception {
@@ -117,10 +111,10 @@ public class TestPartsDatabaseMetadata extends AbstractMMQueryTestCase {
     }
 
     @Test public void testTables()  throws Exception {
-        checkResult("testTables", dbMetadata.getTables(null,VDB, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
+        checkResult("testTables", dbMetadata.getTables(VDB, null, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testColumns() throws Exception {
-        checkResult("testColumns", dbMetadata.getColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        checkResult("testColumns", dbMetadata.getColumns(VDB, null, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }    
 }
