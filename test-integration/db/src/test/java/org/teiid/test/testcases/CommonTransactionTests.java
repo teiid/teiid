@@ -399,7 +399,11 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test.execute("select distinct e2 from g1 where e1 > 100");
         
         // NOTE:  if this is an oracle source, it failes because it return varchar2
-        test.assertResultsSetEquals(new String[] {"e2[varchar]", "blah"});
+        if (userTxn.getSource("pm1").getMetaData().getDatabaseProductName().toLowerCase().indexOf("oracle") > -1) {
+            test.assertResultsSetEquals(new String[] {"e2[varchar2]", "blah"});
+        } else {
+            test.assertResultsSetEquals(new String[] {"e2[varchar]", "blah"});
+        }
         test.closeConnection();        
     }
     
