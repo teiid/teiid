@@ -61,34 +61,17 @@
 
 
 	<dependencies>
+
 		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-common-core</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-common-internal</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-metadata</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-client</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
 		</dependency>
 
 		<dependency>
@@ -96,34 +79,13 @@
 			<artifactId>teiid-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-connector-sdk</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-connector-sdk</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-connector-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-client-jdbc</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-engine</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
+
 	    <dependency>
 	      <groupId>org.jboss.teiid</groupId>
 	      <artifactId>teiid-txn-jbossts</artifactId>
@@ -136,12 +98,14 @@
 			<artifactId>teiid-runtime</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
-        </dependency>        
+        </dependency> 
+       
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-loopback</artifactId>
@@ -152,32 +116,100 @@
 			<artifactId>connector-text</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
+
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-jdbc</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+
+        
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency> 
+
+			<dependency>
+				<groupId>com.google.code.guice</groupId>
+				<artifactId>guice</artifactId>
+				<version>1.0</version>
+			</dependency>
+
+<!--
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-internal</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-text</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-jdbc</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+		
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-jdbc</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
 		</dependency>
+		
 
-		<!-- external dependencies -->
+ 
+
 		<dependency>
-			<groupId>org.apache.derby</groupId>
-			<artifactId>derby</artifactId>
-			<version>${derby.version}</version>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-sdk</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>	  
+		
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>	
+		
+	<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-sdk</artifactId>
+			<version>${project.version}</version>
+		</dependency>	 
+		
+   
 
+-->
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client-jdbc</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
 		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+
 <!--
 	</dependencies>
 
@@ -204,6 +236,13 @@
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derbyclient</artifactId>
 			<version>${derby.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>${derby.version}</version>
+
 		</dependency>
 
 	<!-- DBUnit dependencies -->
