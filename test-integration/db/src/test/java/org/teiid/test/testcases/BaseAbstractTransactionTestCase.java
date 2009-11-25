@@ -4,13 +4,10 @@ import junit.framework.TestCase;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 public abstract class BaseAbstractTransactionTestCase extends TestCase {
  
-    protected ConfigPropertyLoader config = null;
     protected TransactionContainer container = null;
-    protected boolean setupData = true;
 
     public BaseAbstractTransactionTestCase(String name) {
 	super(name);
@@ -19,22 +16,27 @@ public abstract class BaseAbstractTransactionTestCase extends TestCase {
     }
         
     protected abstract TransactionContainer getTransactionContainter();
+    
+    
 
-
-    protected ConfigPropertyLoader getConfig() {
-	return this.config;
+     @Override
+    protected void setUp() throws Exception {
+	// TODO Auto-generated method stub
+	super.setUp();
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+	// TODO Auto-generated method stub
+	super.tearDown();
+
+    }
+
+
     protected void addProperty(String key, String value) {
-	if (config == null) {
-	    try {
-		setUp();
-	    } catch (Exception e) {
-		// TODO Auto-generated catch block
-		throw new TransactionRuntimeException(e);
-	    }
-	}
-	config.setProperty(key, value);
+	
+	ConfigPropertyLoader.getInstance().setProperty(key, value);
+	
     }
 
 
