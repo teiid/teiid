@@ -24,7 +24,7 @@ public abstract class TransactionContainer {
     protected Properties props;
 
     protected TransactionContainer() {
-	ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
+	ConfigPropertyLoader config = ConfigPropertyLoader.getInstance();
 	
 	try {
 	    this.connStrategy = ConnectionStrategyFactory
@@ -88,8 +88,7 @@ public abstract class TransactionContainer {
 		// cleanup all connections created for this test.
 		if (connStrategy != null) {
 		    connStrategy.shutdown();
-		}
-	    }
+		}	    
 	}
 
     }

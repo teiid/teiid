@@ -7,6 +7,7 @@ package org.teiid.test.framework.datasource;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
@@ -22,6 +23,8 @@ public class DataStore {
      * @param connStrategy
      */
     public static void initialize(ConnectionStrategy connStrategy) {
+//	ConfigPropertyLoader.cleanup();
+//	ConfigPropertyLoader.getInstance();
 	try {
 	    load(getConnection("pm1", connStrategy));
 	    

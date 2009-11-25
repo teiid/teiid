@@ -24,7 +24,6 @@ public class ConnectionStrategyFactory {
 	    public static ConnectionStrategy createConnectionStrategy(ConfigPropertyLoader configprops) throws QueryTestFailedException {
 	     	ConnectionStrategy strategy = null;
 	     	Properties props = configprops.getProperties();
-	     	DataSourceFactory factory = new DataSourceFactory(configprops);
            
 	        String type = props.getProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
 	        if (type == null) {
@@ -33,15 +32,15 @@ public class ConnectionStrategyFactory {
 	        
 	        if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION)) {
 	        	// pass in null to create new strategy
-	                strategy = new DriverConnection(props, factory);
+	                strategy = new DriverConnection(props, configprops.getDataSourceFactory());
 	                System.out.println("Created Driver Strategy");
 	        }
 	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION)) {
-	            strategy = new DataSourceConnection(props, factory);
+	            strategy = new DataSourceConnection(props, configprops.getDataSourceFactory());
 	            System.out.println("Created DataSource Strategy");
 	        }
 	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.JNDI_CONNECTION)) {
-	            strategy = new JEEConnection(props, factory);
+	            strategy = new JEEConnection(props, configprops.getDataSourceFactory());
 	            System.out.println("Created JEE Strategy");
 	        }   
 	        
@@ -59,7 +58,7 @@ public class ConnectionStrategyFactory {
 			//NOTE: to run this test to validate the DataSourceMgr, do the following:
 			//   ---  need 3 datasources,   Oracle, SqlServer and 1 other
 			
-			ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
+			ConfigPropertyLoader config = ConfigPropertyLoader.getInstance();
 			
 			new DataSourceFactory(config);
 

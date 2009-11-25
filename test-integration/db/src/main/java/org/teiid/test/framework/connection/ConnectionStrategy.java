@@ -56,11 +56,11 @@ public abstract class ConnectionStrategy {
      * @since
      */
     public void shutdown() {    
-	try {
-	    this.dsFactory.cleanup();
-	} catch (Throwable t) {
-	    
-	}
+//	try {
+//	    this.dsFactory.cleanup();
+//	} catch (Throwable t) {
+//	    
+//	}
     }
     
     public Connection getAdminConnection() throws QueryTestFailedException{
@@ -141,7 +141,7 @@ public abstract class ConnectionStrategy {
             throw new TransactionRuntimeException(e.getMessage());
         }  finally {
         	// need to close and flush the connection after restarting
-        	this.shutdown();
+      //  	this.shutdown();
            	
         }
     }    

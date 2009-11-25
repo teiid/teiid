@@ -120,7 +120,7 @@ public class DataSourceFactory {
 
 	
 	public DataSourceFactory(ConfigPropertyLoader config) {
-	    	this.configprops = PropertiesUtils.clone(config.getProperties());
+	    	this.configprops = PropertiesUtils.clone(config.getProperties(), null, true);
 		this.requiredDataBaseTypes = config.getModelAssignedDatabaseTypes();
 		config();
 	}
@@ -191,11 +191,12 @@ public class DataSourceFactory {
 				String dssName = it.next();
 				ds = availDatasources.get(dssName);
 				
-				if (!excludedDBTypes.contains(ds.getDBType())) {
+				if (ds != null && !excludedDBTypes.contains(ds.getDBType())) {
 				
 					useDS.put(String.valueOf(i), dssName);
 				
 					availDS.put(dssName, ds);
+					System.out.println("Using ds: " + dssName);
 				}
 				
 			}
@@ -222,7 +223,7 @@ public class DataSourceFactory {
 
 		
 		
-		if (requiredDataBaseTypes != null) {
+		if (requiredDataBaseTypes != null && requiredDataBaseTypes.size() > 0) {
 			this.hasRequiredDBTypes = true;
 			
 			Iterator<String> rit = this.requiredDataBaseTypes.keySet().iterator();
@@ -312,7 +313,7 @@ public class DataSourceFactory {
 				
 			}
 			
-		} if (useDS != null) {
+		} else if (useDS != null) {
 				String dsname = useDS.get(datasourceid);
 				if (dsname != null) {
 					ds = availDS.get(dsname);
@@ -386,6 +387,7 @@ public class DataSourceFactory {
 
 	public void cleanup() {
 
+	    	dsmgr.clear();
 		assignedDataSources.clear();
 		requiredDataBaseTypes.clear();
 
@@ -398,7 +400,7 @@ public class DataSourceFactory {
 		//NOTE: to run this test to validate the DataSourceMgr, do the following:
 		//   ---  need 3 datasources,   Oracle, SqlServer and 1 other
 		
-		ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
+		ConfigPropertyLoader config = ConfigPropertyLoader.getInstance();
 		
 		DataSourceFactory factory = new DataSourceFactory(config);
 
@@ -413,10 +415,12 @@ public class DataSourceFactory {
 		}
 		
 		factory.cleanup();
+		
+		ConfigPropertyLoader.cleanup();
 
 		
 		// the following verifies that order of "use" datasources is applied to request for datasources.
-		config = ConfigPropertyLoader.createInstance();
+		config = ConfigPropertyLoader.getInstance();
 		
 		config.setProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "oracle,sqlserver");
 				
@@ -455,8 +459,10 @@ public class DataSourceFactory {
 			// returned (excluded)
 			factory.cleanup();
 		
+			ConfigPropertyLoader.cleanup();
 
-			config = ConfigPropertyLoader.createInstance();
+
+			config = ConfigPropertyLoader.getInstance();
 			config.setProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP, "sqlserver");
 
 			
@@ -488,11 +494,13 @@ public class DataSourceFactory {
 				
 				factory.cleanup();
 				
+				ConfigPropertyLoader.cleanup();
+
 				
 				// test required database types
 				// test 1 source
 
-				config = ConfigPropertyLoader.createInstance();
+				config = ConfigPropertyLoader.getInstance();
 				
 				config.setModelAssignedToDatabaseType("pm1", DataSourceFactory.DataBaseTypes.ORACLE);
 			
@@ -506,9 +514,11 @@ public class DataSourceFactory {
 				System.out.println("Test1 Required DS1 " + ds1.getDBType());
 				factory.cleanup();
 				
+				ConfigPropertyLoader.cleanup();
+
 				// test required database types
 				// test 2 sources, 1 required and other ANY
-				config = ConfigPropertyLoader.createInstance();
+				config = ConfigPropertyLoader.getInstance();
 			
 				
 				config.setModelAssignedToDatabaseType("pm2", DataSourceFactory.DataBaseTypes.SQLSERVER);
@@ -523,11 +533,12 @@ public class DataSourceFactory {
 				System.out.println("Test2 Required DS2 " + ds2.getDBType());
 			
 				factory.cleanup();
-				
+				ConfigPropertyLoader.cleanup();
+
 				
 				// test required database types
 				// test 2 sources, 2 required 
-				config = ConfigPropertyLoader.createInstance();
+				config = ConfigPropertyLoader.getInstance();
 			
 				
 				config.setModelAssignedToDatabaseType("pm2", DataSourceFactory.DataBaseTypes.SQLSERVER);

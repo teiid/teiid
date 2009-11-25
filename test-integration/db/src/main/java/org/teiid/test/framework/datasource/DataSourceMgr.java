@@ -43,7 +43,7 @@ public class DataSourceMgr {
      * When run from maven, the {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC} will be assigned
      * to this value because of its a place holder for when a user does set the vm argument.
      */
-    private static final String UNASSIGNEDDSLOC="${datasourceloc}";
+    private static final String UNASSIGNEDDSLOC="${";
 
     private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>(); // key
 											   // =
@@ -93,6 +93,10 @@ public class DataSourceMgr {
 	}
 	return null;
     }
+    
+    void clear() {
+	modelToDatasourceMap.clear();
+    }
 
     public void setDataSource(String modelName, DataSource ds) {
 	modelToDatasourceMap.put(modelName, ds);
@@ -100,10 +104,13 @@ public class DataSourceMgr {
 
     private void loadDataSourceMappings() throws QueryTestFailedException {
 
-	String dsloc = ConfigPropertyLoader.createInstance().getProperty(ConfigPropertyNames.OVERRIDE_DATASOURCES_LOC);
+	String dsloc = ConfigPropertyLoader.getInstance().getProperty(ConfigPropertyNames.OVERRIDE_DATASOURCES_LOC);
 	
-	if (dsloc == null || dsloc.equalsIgnoreCase(UNASSIGNEDDSLOC)) {
+	if (dsloc == null || dsloc.indexOf(UNASSIGNEDDSLOC) > -1) {
 	    dsloc = DEFAULT_DATASOURCES_LOC;
+	    System.out.println("Using default datasource loc: " +dsloc);
+	} else {
+	    System.out.println("Using override for datasources loc: " + dsloc);
 	}
 	
 	File[] dirs = findAllChildDirectories(dsloc);
