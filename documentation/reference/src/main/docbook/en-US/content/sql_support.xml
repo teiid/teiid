@@ -46,17 +46,28 @@
         </para>
       </listitem>
       <listitem>
-        <para> Because different data sources organize tables in different
-          ways, some prepending catalog or schema or user information,
-          Teiid allows the 'table_spec' to be a dot-delimited construct.
+        <para>Identifiers in double quotes can have any contents.  
+        The double quote character can it's be escaped with an additional double quote. e.g. "some "" id"
         </para>
       </listitem>
       <listitem>
-        <para> Identifiers are not case-sensitive in Teiid.</para>
+        <para> Because different data sources organize tables in different
+          ways, some prepending catalog or schema or user information,
+          Teiid allows table specification to be a dot-delimited construct.  
+        </para>
       </listitem>
       <listitem>
-        <para>The separate parts of an identifier can be quoted, with double quotes. This is not required, but some tools do this automatically. Quotes establish another level of grouping, in addition to the dot delimiters. Quotes should not be used in such a way that the table specification, which may itself have multiple parts, is split between two quoted sections.</para>
+        <para> When a table specification contains a dot resolving will allow for the match of
+        a partial name against any number of the end segments in the name.  
+        </para>
       </listitem>
+      <listitem>
+        <para> Columns, schemas, and aliases identifiers cannot contain a dot.  
+        </para>
+      </listitem>
+      <listitem>
+        <para> Identifiers, even when quoted, are not case-sensitive in Teiid.</para>
+      </listitem>      
     </itemizedlist>
     <itemizedlist>
       <para> Some examples of valid fully-qualified table identifiers are:
@@ -774,15 +785,14 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       </para>
       <para>
         Usage:
-        <synopsis label="Usage">ORDER BY column1 [ASC|DESC], ...</synopsis>
+        <synopsis label="Usage">ORDER BY expression [ASC|DESC], ...</synopsis>
       </para>
       <itemizedlist>
         <para>Syntax Rules:
         </para>
         <listitem>
           <para>Sort columns may be specified positionally by a 1 based
-	        integer or string literal, by SELECT clause alias name, or by a column
-	        reference.</para>
+	        integer, by SELECT clause alias name, by SELECT clause expression, or by an unrelated expression.</para>
         </listitem>
         <listitem>
           <para>Column references may appear in the SELECT clause as the
@@ -791,6 +801,11 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 			If the column reference is not in the SELECT clause the query must not
 			be a set operation, specify SELECT DISTINCT, or contain a GROUP BY
 			clause.</para>
+        </listitem>
+        <listitem>
+          <para>Unrelated expressions, expressions not appearing as an aliased expression in the select clause, 
+          are allowed in the order by clause of a non-set QUERY.  The columns referenced in the expression must also follow the prior rule.
+          </para>
         </listitem>
         <listitem>
           <para>The ORDER BY columns must be of a comparable type.</para>
