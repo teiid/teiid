@@ -582,7 +582,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Note: This is producing the below error some times; however this is SQL Server issue.
      * http://support.microsoft.com/?kbid=834849
      */
-    public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
+    public void xtestMultipleSourcePartialProcessingUsingMakedep() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
             public void testCase() throws Exception {
                 execute("select pm1.g1.e1, pm1.g1.e2 from pm1.g1 LEFT OUTER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e2 = pm2.g1.e2 where pm2.g1.e1 >= 50 and pm2.g1.e1 < 100");
