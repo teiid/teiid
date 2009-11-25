@@ -37,6 +37,7 @@ import org.teiid.connector.metadata.runtime.Table.Type;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.query.QueryPlugin;
 
 /**
  * Aggregates the metadata from multiple stores.  
@@ -113,7 +114,7 @@ public class CompositeMetadataStore extends MetadataStore {
 				String fullName = p.getFullName();
 				if (fullName.regionMatches(true, fullName.length() - name.length(), name, 0, name.length())) {
 					if (result != null) {
-						return null; //don't allow ambiguous
+						throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", name.substring(1))); //$NON-NLS-1$
 					}
 					result = p;	
 				}
