@@ -39,7 +39,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsExplicitRollback") {
             public void testCase() throws Exception {
                 for (int i = 200; i < 220; i++) {
                     execute("insert into pm1.g1 (e1, e2) values("+i+",'"+i+"')");
@@ -71,7 +71,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
                 for (int i = 200; i < 220; i++) {
                     Integer val = new Integer(i);
@@ -105,7 +105,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testMultipleSourceMultipleCommandsExplicitRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsExplicitRollback") {
             public void testCase() throws Exception {
 
                 for (int i = 700; i < 720; i++) {
@@ -147,7 +147,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testMultipleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
 
                 for (int i = 700; i < 720; i++) {
@@ -190,7 +190,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = commit 
      */
     public void testMultipleSourceBulkRowInsertRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsertRollback") {
             public void testCase() throws Exception {
                 for (int i = 100; i < 120; i++) {
                     Integer val = new Integer(i);
@@ -231,7 +231,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * result = commit
      */
     public void testMultipleSourceMultipleVirtualCommandsRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommandsRollback") {
             public void testCase() throws Exception {
 
                 for (int i = 600; i < 615; i++) {

@@ -77,7 +77,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testSingleSourceSelect() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceSelect") {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
@@ -98,7 +98,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testSingleSourceUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceUpdate") {
             public void testCase() throws Exception {
                 execute("insert into pm1.g1 (e1, e2) values(100, '100')");
             }
@@ -122,7 +122,8 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testSingleSourcePreparedUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourcePreparedUpdate") {
+            
             public void testCase() throws Exception {
                 execute("insert into pm1.g1 (e1, e2) values(?, ?)", new Object[] {new Integer(102), "102"});                
             }
@@ -145,7 +146,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit
      */
     public void testSingleSourceMultipleCommands() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommands") {
             public void testCase() throws Exception {
                 
                 execute("delete from pm1.g1 where pm1.g1.e1 >= ?", new Object[] {new Integer(100)});
@@ -180,7 +181,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testSingleSourcePartialProcessing() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourcePartialProcessing") {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 where pm1.g1.e1 < 100 limit 10");
                 assertRowCount(10);
@@ -202,7 +203,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testMultipleSourceSelect() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelect") {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
@@ -220,7 +221,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */    
     public void testMultipleSourceVirtualSelect() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceVirtualSelect") {
             public void testCase() throws Exception {
                 execute("select * from vm.g1 where vm.g1.pm1e1 < 100");
                 assertRowCount(100);
@@ -238,7 +239,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testMultipleSourceUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(500, '500', 500, '500')");
             }
@@ -266,7 +267,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testMultipleSourceSelectInto() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelectInto") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(501, '501', 501, '501')");
                 execute("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 = 501");
@@ -295,7 +296,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testMultipleSourceBulkRowInsert() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsert") {
             public void testCase() throws Exception {
                 for (int i = 100; i < 112; i++) {
                     Integer val = new Integer(i);
@@ -329,7 +330,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit 
      */
     public void testMultipleSourcePreparedUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePreparedUpdate") {
             public void testCase() throws Exception {
                 Integer value = new Integer(500);
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {value, value.toString(), value, value.toString()});
@@ -359,7 +360,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit
      */
     public void testMultipleSourceMultipleCommands() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommands") {
             public void testCase() throws Exception {
                 execute("delete from pm1.g2 where e1 >= ?", new Object[] {new Integer(100)});
                 execute("delete from pm1.g1 where e1 >= ?", new Object[] {new Integer(100)});
@@ -409,7 +410,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = commit
      */
     public void testMultipleSourceMultipleVirtualCommands() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommands") {
             public void testCase() throws Exception {
 
                 for (int i = 200; i < 207; i++) {
@@ -453,7 +454,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = rollback
      */    
     public void testMultipleSourceMultipleCommandsCancel() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsCancel") {
             
             public void testCase() throws Exception {
                 Thread t = new Thread("Cancel Thread") {
@@ -499,7 +500,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * result = rollback
      */    
     public void testMultipleSourceTimeout() throws Exception{
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceTimeout") {
             public void testCase() throws Exception {
                 executeBatch(getMultipleSourceBatch(), 1); // time out after 1 sec
             }
@@ -562,7 +563,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * http://support.microsoft.com/?kbid=834849
      */
     public void testMultipleSourcePartialProcessingUsingLimit() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingLimit") {
             public void testCase() throws Exception {
                 execute("select * from vm.g1 where pm1e1 < 100 limit 10");
                 assertRowCount(10);
@@ -582,7 +583,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * http://support.microsoft.com/?kbid=834849
      */
     public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
             public void testCase() throws Exception {
                 execute("select pm1.g1.e1, pm1.g1.e2 from pm1.g1 LEFT OUTER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e2 = pm2.g1.e2 where pm2.g1.e1 >= 50 and pm2.g1.e1 < 100");
                 assertRowCount(50);
