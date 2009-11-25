@@ -32,7 +32,15 @@ public class ConfigPropertyLoader {
 	
 	private static ConfigPropertyLoader _instance = null;
 	private static String LAST_CONFIG_FILE = null;
+	
+	/**
+	 * Contains any overrides specified for the test
+	 */
+	private Properties overrides = new Properties();
 
+	/**
+	 * Contains the properties loaded from the config file
+	 */
 	private Properties props = null;
 	
 	private Map<String, String>modelAssignedDatabaseType = new HashMap<String, String>(5);
@@ -84,6 +92,7 @@ public class ConfigPropertyLoader {
 	}
 	
 	public static synchronized void cleanup() {
+	    _instance.overrides.clear();
 	    _instance.modelAssignedDatabaseType.clear();
 	    _instance.props.clear();
 	    if (_instance.dsfactory != null) {
@@ -93,15 +102,6 @@ public class ConfigPropertyLoader {
 	    LAST_CONFIG_FILE=null;
 	}
 
-//	private void loadConfigurationProperties() {
-//		String filename = System.getProperty(ConfigPropertyNames.CONFIG_FILE);
-//		if (filename == null) {
-//			filename = DEFAULT_CONFIG_FILE_NAME;
-//		}
-//
-//		loadProperties(LAST_CONFIG_FILE);
-//		
-//	}
 	
 	private void initialize() {
 	    loadProperties(LAST_CONFIG_FILE);
@@ -114,15 +114,30 @@ public class ConfigPropertyLoader {
 
 
 	public String getProperty(String key) {
-		return props.getProperty(key);
+	    String rtn = null;
+	    rtn = overrides.getProperty(key);
+	    if (rtn == null) {
+		rtn = props.getProperty(key);
+		
+		if (rtn == null) {
+		    rtn = System.getProperty(key);
+		}
+	    }
+	    return rtn;
 	}
 	
 	public void setProperty(String key, String value) {
-		props.setProperty(key, value);
+	    	overrides.setProperty(key, value);
 	}
 
 	public Properties getProperties() {
-		return props;
+	    
+	    Properties p = new Properties();
+	    p.putAll(System.getProperties());
+	    p.putAll(props);
+	    p.putAll(overrides);
+	    
+		return p;
 	}
 	
 	public Map<String, String> getModelAssignedDatabaseTypes() {
@@ -135,9 +150,7 @@ public class ConfigPropertyLoader {
 
 	private void loadProperties(String filename) {
 		
-		Properties sysprops = PropertiesUtils.clone(System.getProperties());
-		
-		props = PropUtils.loadProperties("/" + filename, sysprops);
+		props = PropUtils.loadProperties("/" + filename, null);
 
 	}
 

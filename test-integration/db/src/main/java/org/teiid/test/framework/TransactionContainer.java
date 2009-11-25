@@ -88,7 +88,8 @@ public abstract class TransactionContainer {
 		// cleanup all connections created for this test.
 		if (connStrategy != null) {
 		    connStrategy.shutdown();
-		}	    
+		}
+	    }
 	}
 
     }
