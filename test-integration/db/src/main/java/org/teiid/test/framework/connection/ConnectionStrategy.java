@@ -56,11 +56,7 @@ public abstract class ConnectionStrategy {
      * @since
      */
     public void shutdown() {    
-//	try {
-//	    this.dsFactory.cleanup();
-//	} catch (Throwable t) {
-//	    
-//	}
+
     }
     
     public Connection getAdminConnection() throws QueryTestFailedException{
@@ -150,66 +146,73 @@ public abstract class ConnectionStrategy {
          
     	try {
     	    
-    	    	VDB vdb = null;
-    		Collection<VDB> vdbs = api.getVDBs("*");
-    		if (vdbs == null) {
-    	  		throw new QueryTestFailedException("GetVDBS returned no vdbs available");
-    	  		 
-    		} else if (vdbs.size() > 0) {
-    	    	    String urlString = this.env.getProperty(DriverConnection.DS_URL);
-     	    	    MMJDBCURL url = new MMJDBCURL(urlString);
-     	    	    System.out.println("Trying to match VDB : " + url.getVDBName());
+    	    VDB vdb = null;
+	    Collection<VDB> vdbs = api.getVDBs("*");
+	    if (vdbs == null || vdbs.isEmpty()) {
+		throw new QueryTestFailedException(
+			"AdminApi.GetVDBS returned no vdbs available");
+	    }
+
+	    String urlString = this.env.getProperty(DriverConnection.DS_URL);
+	    MMJDBCURL url = new MMJDBCURL(urlString);
+	    System.out.println("Trying to match VDB : " + url.getVDBName());
+
+	    for (Iterator iterator = vdbs.iterator(); iterator.hasNext();) {
+		VDB v = (VDB) iterator.next();
+		if (v.getName().equalsIgnoreCase(url.getVDBName())) {
+		    vdb = v;
+		}
+
+	    }
+	    if (vdbs == null) {
+		throw new QueryTestFailedException(
+			"GetVDBS did not return a vdb that matched "
+				+ url.getVDBName());
+	    }
 	    	    
-    	    	    for (Iterator iterator = vdbs.iterator(); iterator
-			    .hasNext();) {
-			VDB v = (VDB) iterator.next();
-			if (v.getName().equalsIgnoreCase(url.getVDBName())) {
-			    vdb = v;
-			} 
-			
-		    }
-    	    	    if (vdbs == null) {
-	  		throw new QueryTestFailedException("GetVDBS did not return a vdb that matched " + url.getVDBName());
-    	    	    }
-    	    	    
-     		} else {
-    		    vdb = (VDB) vdbs.iterator().next();
-    		}
+	    Iterator<Model> modelIt = vdb.getModels().iterator();
+	    while (modelIt.hasNext()) {
+		Model m = modelIt.next();
 
-    		Iterator<Model> modelIt = vdb.getModels().iterator();
-    		while (modelIt.hasNext() ) {
-    			Model m = modelIt.next();
-    			
-    			if (!m.isPhysical()) continue;
-    			
-    			// get the mapping, if defined
-    			String mappedName = this.env.getProperty(m.getName());
-    			
-	        	String useName = m.getName();
-	        	if(mappedName != null) {
-	        		useName = mappedName;
-	        	}
+		if (!m.isPhysical())
+		    continue;
 
-	        	org.teiid.test.framework.datasource.DataSource ds = this.dsFactory.getDatasource(useName, m.getName());
-	        	
-	        	if (ds != null) {
+		// get the mapping, if defined
+		String mappedName = this.env.getProperty(m.getName());
 
-	        	    System.out.println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":"  + ds.getConnectorType()); //$NON-NLS-1$
+		String useName = m.getName();
+		if (mappedName != null) {
+		    useName = mappedName;
+		}
 
-		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
-		        	ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
-		        	
-		        	api.addConnectorBinding(ds.getName(), ds.getConnectorType(), ds.getProperties(), ao);
-		        	
-		        	api.assignBindingToModel(ds.getName(), vdb.getName(), vdb.getVDBVersion(), m.getName());
-		        	
-		        	
-		                api.startConnectorBinding(ds.getName());
-	        	} else {
-	        		throw new QueryTestFailedException("Error: Unable to create binding to map to model : " + m.getName() + ", the mapped name " + useName + " had no datasource properties defined");
-	        	}
+		org.teiid.test.framework.datasource.DataSource ds = this.dsFactory
+			.getDatasource(useName, m.getName());
 
-    		}
+		if (ds != null) {
+
+		    System.out
+			    .println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
+
+		    AdminOptions ao = new AdminOptions(
+			    AdminOptions.OnConflict.OVERWRITE);
+		    ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
+
+		    api.addConnectorBinding(ds.getName(),
+			    ds.getConnectorType(), ds.getProperties(), ao);
+
+		    api.assignBindingToModel(ds.getName(), vdb.getName(), vdb
+			    .getVDBVersion(), m.getName());
+
+		    api.startConnectorBinding(ds.getName());
+		} else {
+		    throw new QueryTestFailedException(
+			    "Error: Unable to create binding to map to model : "
+				    + m.getName() + ", the mapped name "
+				    + useName
+				    + " had no datasource properties defined");
+		}
+
+	    }
     		
     	} catch (QueryTestFailedException qt) {
     		throw qt;

@@ -124,9 +124,10 @@ public abstract class TransactionContainer {
 
 	    if (!test.exceptionExpected()) {
 		e.printStackTrace();
+		debug("Error: " + e.getMessage());
+		throw new TransactionRuntimeException(e.getMessage());
+
 	    }
-	    debug("Error: " + e.getMessage());
-	    throw new TransactionRuntimeException(e.getMessage());
 	}
 
 	if (test.exceptionExpected() && !test.exceptionOccurred()) {
