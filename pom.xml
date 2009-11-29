@@ -87,9 +87,7 @@
 								<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
-                                <!-- 
 								<descriptor>documentation/assembly/docs.xml</descriptor>
-                                 -->
 							</descriptors>
 							<outputDirectory>target/distribution</outputDirectory>
 							<workDirectory>target/assembly/work</workDirectory>
