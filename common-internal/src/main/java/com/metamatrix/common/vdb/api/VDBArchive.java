@@ -44,6 +44,7 @@ import java.util.zip.ZipFile;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.ObjectConverterUtil;
@@ -90,6 +91,10 @@ public class VDBArchive implements MetadataSource {
 	private boolean open;
 	
 	private VDBKey key;
+	
+	public final static boolean isSystemModelWithSystemTableType(String modelName) {
+        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName);
+    }
 		
 	public static VDBArchive loadVDB(URL vdbURL, File deployDirectory) throws IOException {
 		boolean loadedFromDef = false;

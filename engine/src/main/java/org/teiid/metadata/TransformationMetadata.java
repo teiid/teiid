@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -53,11 +52,14 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
+import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingDocument;
 import com.metamatrix.query.mapping.xml.MappingLoader;
@@ -83,20 +85,28 @@ public class TransformationMetadata extends BasicQueryMetadata {
     private static UnmodifiableProperties EMPTY_PROPS = new UnmodifiableProperties(new Properties());
     
     private final CompositeMetadataStore store;
+	private String vdbVersion;
+	private VDBService vdbService;
 
     /*
      * TODO: move caching to jboss cache structure
      */
     private final Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(500));
-    private final Map<String, String> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, String>(1000));
-    private final Map<String, StoredProcedureInfo> procedureCache = Collections.synchronizedMap(new LRUCache<String, StoredProcedureInfo>(200));
+    private final Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
+    private final Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
     /**
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
     public TransformationMetadata(final CompositeMetadataStore store) {
+    	this(store, null, null);
+    }
+    
+    public TransformationMetadata(final CompositeMetadataStore store, VDBService service, String vdbVersion) {
     	ArgCheck.isNotNull(store);
         this.store = store;
+        this.vdbService = service;
+        this.vdbVersion = vdbVersion;
     }
     
     //==================================================================================
@@ -124,20 +134,27 @@ public class TransformationMetadata extends BasicQueryMetadata {
         throws MetaMatrixComponentException, QueryMetadataException {
 		ArgCheck.isNotEmpty(partialGroupName);
 
-		String groupName = this.partialNameToFullNameCache.get(partialGroupName);
+		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
 		
-		if (groupName != null) {
-			return Arrays.asList(groupName);
+		if (matches == null) {
+			String partialName = DELIMITER_CHAR + partialGroupName.toLowerCase(); 
+	
+	        matches = getMetadataStore().getGroupsForPartialName(partialName);
+	        
+        	this.partialNameToFullNameCache.put(partialGroupName, matches);
 		}
 		
-		String partialName = DELIMITER_CHAR + partialGroupName.toLowerCase(); 
-
-        Collection result = getMetadataStore().getGroupsForPartialName(partialName);
-        
-        if (result.size() == 1) {
-        	this.partialNameToFullNameCache.put(partialGroupName, (String)result.iterator().next());
-        }
-        return result;
+		if (matches.isEmpty()) {
+			return Collections.emptyList();
+		}
+		
+		Collection<String> filteredResult = new ArrayList<String>(matches.size());
+		for (Table table : matches) {
+	        if (vdbService == null || vdbService.getModelVisibility(getVirtualDatabaseName(), vdbVersion, table.getParent().getName()) == ModelInfo.PUBLIC) {
+	        	filteredResult.add(table.getFullName());
+	        }
+		}
+		return filteredResult;
     }
 
     /* (non-Javadoc)
@@ -244,64 +261,80 @@ public class TransformationMetadata extends BasicQueryMetadata {
         throws MetaMatrixComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullyQualifiedProcedureName);
         String lowerGroupName = fullyQualifiedProcedureName.toLowerCase();
-        StoredProcedureInfo procInfo = this.procedureCache.get(lowerGroupName);
+        Collection<StoredProcedureInfo> results = this.procedureCache.get(lowerGroupName);
         
-        if (procInfo != null) {
-        	return procInfo;
+        if (results == null) {
+        	Collection<ProcedureRecordImpl> procRecords = getMetadataStore().getStoredProcedure(lowerGroupName); 
+        	results = new ArrayList<StoredProcedureInfo>(procRecords.size());
+        	for (ProcedureRecordImpl procRecord : procRecords) {
+                String procedureFullName = procRecord.getFullName();
+
+                // create the storedProcedure info object that would hold procedure's metadata
+                StoredProcedureInfo procInfo = new StoredProcedureInfo();
+                procInfo.setProcedureCallableName(procedureFullName);
+                procInfo.setProcedureID(procRecord);
+
+                // modelID for the procedure
+                procInfo.setModelID(procRecord.getSchema());
+
+                // get the parameter metadata info
+                for (ProcedureParameter paramRecord : procRecord.getParameters()) {
+                    String runtimeType = paramRecord.getRuntimeType();
+                    int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
+                    // create a parameter and add it to the procedure object
+                    SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getName());
+                    spParam.setMetadataID(paramRecord);
+                    spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
+                    procInfo.addParameter(spParam);
+                }
+
+                // if the procedure returns a resultSet, obtain resultSet metadata
+                if(procRecord.getResultSet() != null) {
+                    ColumnSet<ProcedureRecordImpl> resultRecord = procRecord.getResultSet();
+                    // resultSet is the last parameter in the procedure
+                    int lastParamIndex = procInfo.getParameters().size() + 1;
+                    SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getName());
+                    param.setClassType(java.sql.ResultSet.class);           
+                    param.setMetadataID(resultRecord);
+
+                    for (Column columnRecord : resultRecord.getColumns()) {
+                        String colType = columnRecord.getRuntimeType();
+                        param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
+                    }
+
+                    procInfo.addParameter(param);            
+                }
+
+                // if this is a virtual procedure get the procedure plan
+                if(procRecord.isVirtual()) {
+                    QueryNode queryNode = new QueryNode(procedureFullName, procRecord.getQueryPlan()); 
+                    procInfo.setQueryPlan(queryNode);
+                }
+                
+                //subtract 1, to match up with the server
+                procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
+				results.add(procInfo);
+			}
+        	this.procedureCache.put(lowerGroupName, results);        	
         }
         
-    	ProcedureRecordImpl procRecord = getMetadataStore().getStoredProcedure(lowerGroupName); 
-
-        String procedureFullName = procRecord.getFullName();
-
-        // create the storedProcedure info object that would hold procedure's metadata
-        procInfo = new StoredProcedureInfo();
-        procInfo.setProcedureCallableName(procedureFullName);
-        procInfo.setProcedureID(procRecord);
-
-        // modelID for the procedure
-        procInfo.setModelID(procRecord.getSchema());
-
-        // get the parameter metadata info
-        for (ProcedureParameter paramRecord : procRecord.getParameters()) {
-            String runtimeType = paramRecord.getRuntimeType();
-            int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
-            // create a parameter and add it to the procedure object
-            SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getName());
-            spParam.setMetadataID(paramRecord);
-            spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
-            procInfo.addParameter(spParam);
-        }
-
-        // if the procedure returns a resultSet, obtain resultSet metadata
-        if(procRecord.getResultSet() != null) {
-            ColumnSet<ProcedureRecordImpl> resultRecord = procRecord.getResultSet();
-            // resultSet is the last parameter in the procedure
-            int lastParamIndex = procInfo.getParameters().size() + 1;
-            SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getName());
-            param.setClassType(java.sql.ResultSet.class);           
-            param.setMetadataID(resultRecord);
-
-            for (Column columnRecord : resultRecord.getColumns()) {
-                String colType = columnRecord.getRuntimeType();
-                param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
-            }
-
-            procInfo.addParameter(param);            
-        }
-
-        // if this is a virtual procedure get the procedure plan
-        if(procRecord.isVirtual()) {
-            QueryNode queryNode = new QueryNode(procedureFullName, procRecord.getQueryPlan()); 
-            procInfo.setQueryPlan(queryNode);
-        }
+        StoredProcedureInfo result = null;
         
-        //subtract 1, to match up with the server
-        procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
-
-    	this.procedureCache.put(lowerGroupName, procInfo);
+        for (StoredProcedureInfo storedProcedureInfo : results) {
+        	Schema schema = (Schema)storedProcedureInfo.getModelID();
+	        if(vdbService == null || vdbService.getModelVisibility(getVirtualDatabaseName(), vdbVersion, schema.getName()) == ModelInfo.PUBLIC){
+	        	if (result != null) {
+	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
+	    		}
+	        	result = storedProcedureInfo;
+	        }
+		}
+        
+		if (result == null) {
+			throw new QueryMetadataException(fullyQualifiedProcedureName+NOT_EXISTS_MESSAGE);
+		}
     	
-        return procInfo;
+        return result;
     }
     
     /**

@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.object;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -31,7 +32,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.common.tree.directory.DirectoryEntry;
 import com.metamatrix.core.id.ObjectID;
 
 public final class StandardPropertyTypeValidator implements Serializable {
@@ -331,7 +331,9 @@ class URIValidator implements PropertyTypeValidator, Serializable {
 }
 class DirectoryEntryValidator implements PropertyTypeValidator, Serializable {
     public boolean isValidValue(Object value ) {
-        if ( value instanceof DirectoryEntry ) {
+    	if (value instanceof String) {
+    		return true;
+    	} else if ( value instanceof File ) {
             return true;
         }else if(value instanceof Object[]) {
             return StandardPropertyTypeValidator.isValidValue((Object[])value, this);

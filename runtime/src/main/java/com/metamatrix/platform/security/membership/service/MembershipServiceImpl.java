@@ -58,6 +58,7 @@ import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -334,7 +335,7 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
             return new FailedAuthenticationToken();
         }
         
-        if (isWsdlUser(username)) {
+        if (isAnonUser(username)) {
         	// No need to check credentials. There is no password for the wsdl user. 
             return new SuccessfulAuthenticationToken(trustedPayload, username);
         }
@@ -493,7 +494,7 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
 	        	return new BasicMetaMatrixPrincipal(name, MetaMatrixPrincipal.TYPE_ADMIN,Collections.EMPTY_SET);
 	        }
 	        
-	        if (isWsdlUser(name)) {
+	        if (isAnonUser(name)) {
 	        	return new BasicMetaMatrixPrincipal(name, MetaMatrixPrincipal.TYPE_USER,Collections.EMPTY_SET);
 	        }
         }
@@ -645,8 +646,8 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
         return adminUsername.equalsIgnoreCase(username);
     }
     
-    public boolean isWsdlUser(String username) {
-        return DEFAULT_WSDL_USERNAME.equalsIgnoreCase(username);
+    public boolean isAnonUser(String username) {
+        return CoreConstants.DEFAULT_ANON_USERNAME.equalsIgnoreCase(username);
     }
     
     /** 

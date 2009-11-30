@@ -56,7 +56,6 @@ public interface MembershipServiceInterface extends ApplicationService {
     public static final String DOMAIN_NAME = "domainName"; //$NON-NLS-1$
     
     public static final String DEFAULT_ADMIN_USERNAME = "admin"; //$NON-NLS-1$
-    public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
     public static final String ADMIN_PASSWORD = "membership.superUserPassword"; //$NON-NLS-1$
     public static final String ADMIN_USERNAME = "membership.superUser"; //$NON-NLS-1$

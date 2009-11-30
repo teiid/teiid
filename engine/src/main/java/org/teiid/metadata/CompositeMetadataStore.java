@@ -37,7 +37,6 @@ import org.teiid.connector.metadata.runtime.Table.Type;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
-import com.metamatrix.query.QueryPlugin;
 
 /**
  * Aggregates the metadata from multiple stores.  
@@ -83,44 +82,42 @@ public class CompositeMetadataStore extends MetadataStore {
 	 * @param partialGroupName
 	 * @return
 	 */
-	public Collection<String> getGroupsForPartialName(String partialGroupName) {
-		List<String> result = new LinkedList<String>();
+	public Collection<Table> getGroupsForPartialName(String partialGroupName) {
+		List<Table> result = new LinkedList<Table>();
 		for (Schema schema : getSchemas().values()) {
 			for (Table t : schema.getTables().values()) {
 				String fullName = t.getFullName();
 				if (fullName.regionMatches(true, fullName.length() - partialGroupName.length(), partialGroupName, 0, partialGroupName.length())) {
-					result.add(fullName);	
+					result.add(t);	
 				}
 			}
 		}
 		return result;
 	}
 	
-	public ProcedureRecordImpl getStoredProcedure(String name)
+	public Collection<ProcedureRecordImpl> getStoredProcedure(String name)
 			throws MetaMatrixComponentException, QueryMetadataException {
+		List<ProcedureRecordImpl> result = new LinkedList<ProcedureRecordImpl>();
 		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index > -1) {
 			String schema = name.substring(0, index);
-			ProcedureRecordImpl result = getSchema(schema).getProcedures().get(name.substring(index + 1));
-			if (result != null) {
+			ProcedureRecordImpl proc = getSchema(schema).getProcedures().get(name.substring(index + 1));
+			if (proc != null) {
+				result.add(proc);
 		        return result;
 			}	
 		}
-		ProcedureRecordImpl result = null;
 		//assume it's a partial name
 		name = TransformationMetadata.DELIMITER_STRING + name;
 		for (Schema schema : getSchemas().values()) {
 			for (ProcedureRecordImpl p : schema.getProcedures().values()) {
 				String fullName = p.getFullName();
 				if (fullName.regionMatches(true, fullName.length() - name.length(), name, 0, name.length())) {
-					if (result != null) {
-						throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", name.substring(1))); //$NON-NLS-1$
-					}
-					result = p;	
+					result.add(p);	
 				}
 			}
 		}
-		if (result == null) {
+		if (result.isEmpty()) {
 	        throw new QueryMetadataException(name+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return result;

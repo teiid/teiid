@@ -24,7 +24,6 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -38,7 +37,6 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.common.vdb.api.SystemVdbUtility;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.StringUtil;
@@ -99,18 +97,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         return vdb;
     }
         
-    private ModelInfo getModel(VDBDefn vdb, String modelName) {
-        Collection c = vdb.getModels();
-        Iterator it = c.iterator();
-        while (it.hasNext()) {
-            ModelInfo model = (ModelInfo)it.next();
-            if (model.getName().equals(modelName)) {
-                return model;
-            }
-        }
-        return null;
-    }
-    
     /** 
      * This should changed to connectorBindingNames.
      * @see com.metamatrix.dqp.service.VDBService#getConnectorBindings(java.lang.String, java.lang.String, java.lang.String)
@@ -153,14 +139,14 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         throws MetaMatrixComponentException {
         
         // If this is any of the Public System Models, like JDBC,ODBC system models
-        if(SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
+        if(VDBArchive.isSystemModelWithSystemTableType(modelName)){
             return ModelInfo.PUBLIC;
         }        
         
         VDBArchive vdb = getVDB(vdbName, vdbVersion);
         VDBDefn def = vdb.getConfigurationDef();
         
-        ModelInfo model = getModel(def, modelName);
+        ModelInfo model = def.getModel(modelName);
         if(model != null) {
             return model.getVisibility();
         }
@@ -179,14 +165,14 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
 
         // If this is any of the Public System Models, like JDBC,ODBC system models
-        if(SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
+        if(VDBArchive.isSystemModelWithSystemTableType(modelName)){
             return ModelInfo.PUBLIC;
         }        
         
         VDBArchive vdb = getVDB(vdbName, vdbVersion);
         VDBDefn def = vdb.getConfigurationDef();
         
-        ModelInfo model = getModel(def, modelName);
+        ModelInfo model = def.getModel(modelName);
         if(model != null) {
             return model.getVisibility();
         }        

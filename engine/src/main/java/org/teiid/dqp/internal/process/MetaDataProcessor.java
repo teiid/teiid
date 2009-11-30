@@ -107,9 +107,7 @@ public class MetaDataProcessor {
         this.vdbName = workContext.getVdbName();
         this.vdbVersion = workContext.getVdbVersion();
         
-        QueryMetadataInterface md = metadataService.lookupMetadata(vdbName, vdbVersion);
-        // Defect 15029 - Use the QueryMetadataWrapper to hide models with private visibility when resolving the command.
-        this.metadata = new QueryMetadataWrapper(md, vdbName, vdbVersion, vdbService);
+        this.metadata = metadataService.lookupMetadata(vdbName, vdbVersion);
         
         // If multi-source, use the multi-source wrapper as well
         Collection multiModels = vdbService.getMultiSourceModels(vdbName, vdbVersion);

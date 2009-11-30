@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.mockito.Mockito;
+import org.teiid.dqp.internal.process.Request;
 import org.teiid.dqp.internal.process.validator.AuthorizationValidationVisitor;
 
 import junit.framework.TestCase;
@@ -34,8 +36,12 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.FakeAuthorizationService;
+import com.metamatrix.dqp.service.FakeVDBService;
+import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -119,7 +125,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
         
-        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(CONN_ID, svc);
+        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(CONN_ID, svc, Mockito.mock(VDBService.class), "foo", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         ValidatorReport report = Validator.validate(command, metadata, visitor, true);
         if(report.hasItems()) {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
@@ -215,14 +221,6 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm3.g2.e1", "pm3.g2.e2"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
-    public void testProcGloballyAccessible() throws Exception {
-        AuthorizationValidationVisitor.addGloballyAccessibleProcedure("pm1.sq2");  //$NON-NLS-1$ 
-        helpTest(exampleAuthSvc1(), "EXEC pm1.sq2('xyz')", FakeMetadataFactory.example1Cached(), new String[] {});  //$NON-NLS-1$ 
-        
-        AuthorizationValidationVisitor.removeGloballyAccessibleProcedure("pm1.sq2");  //$NON-NLS-1$
-        helpTest(exampleAuthSvc1(), "EXEC pm1.sq2('xyz')", FakeMetadataFactory.example1Cached(), new String[] {"pm1.sq2"});  //$NON-NLS-1$//$NON-NLS-2$
-    }
-    
     public void testTempTableSelectInto() throws Exception {
         helpTest(exampleAuthSvc1(), "SELECT e1 INTO #temp FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {}); //$NON-NLS-1$
     }
@@ -242,4 +240,31 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     public void testXMLInAccessible() throws Exception {
         helpTest(exampleAuthSvc1(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, MetaMatrixComponentException {
+		FakeVDBService vdbService = new FakeVDBService();
+		String vdbName = "foo"; //$NON-NLS-1$
+		String vdbVersion = "1"; //$NON-NLS-1$
+		String modelName = "pm1"; //$NON-NLS-1$
+		vdbService.addModel(vdbName, vdbVersion, modelName, visible?ModelInfo.PUBLIC:ModelInfo.PRIVATE, false);
+		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(CONN_ID, Mockito.mock(AuthorizationService.class), vdbService, vdbName, vdbVersion);
+		
+		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
+		Command command = QueryParser.getQueryParser().parseCommand(sql);
+		Request.validateWithVisitor(mvvv, FakeMetadataFactory.example1Cached(), command, true);
+	}
+	
+	public void testLookupVisibility() throws Exception {
+		helpTestLookupVisibility(true);
+	}
+	
+	public void testLookupVisibilityFails() throws Exception {
+		try {
+			helpTestLookupVisibility(false);
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (QueryValidatorException e) {
+			assertEquals("Group does not exist: pm1.g1", e.getMessage()); //$NON-NLS-1$
+		}
+	}
+
 }

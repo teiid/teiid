@@ -126,19 +126,6 @@ public class TestMetaDataProcessor extends TestCase {
         assertEquals(0, metadata.length);                
     }
     
-    public void testDefect15029() throws Exception {
-        String sql = "SELECT * FROM g1"; //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel();
-        
-        MetadataResult response = helpTestQuery(metadata, sql);
-
-        Map[] md = response.getColumnMetadata();    
-        assertNotNull(md);
-        assertEquals(1, md.length);
-        assertEquals("e1", md[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
-        assertEquals("vm1.g1", md[0].get(ResultsMetadataConstants.GROUP_NAME)); //$NON-NLS-1$
-    }
-    
     private MetadataResult helpTestQuery(QueryMetadataInterface metadata, String sql) throws Exception {
         FakeVDBService vdbService = new FakeVDBService();
         vdbService.addModel("MyVDB", "1", "pm1", ModelInfo.PRIVATE, false);  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$

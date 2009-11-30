@@ -37,7 +37,6 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.internal.process.validator.AuthorizationValidationVisitor;
-import org.teiid.dqp.internal.process.validator.ModelVisibilityValidationVisitor;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -211,9 +210,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
     
-        //wrap metadata in the wrapper that knows VDBService
-        this.metadata = new QueryMetadataWrapper(this.metadata, this.vdbName, this.vdbVersion, this.vdbService);
-        
         // Check for multi-source models and further wrap the metadata interface
         List multiSourceModelList = vdbService.getMultiSourceModels(this.vdbName, this.vdbVersion);
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
@@ -302,18 +298,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
     	this.userCommand = (Command)command.clone();
     }
         
-    private void validateQuery(Command command, boolean validateVisibility)
+    private void validateQuery(Command command)
         throws QueryValidatorException, MetaMatrixComponentException {
                 
         // Create generic sql validation visitor
         AbstractValidationVisitor visitor = new ValidationVisitor();
         validateWithVisitor(visitor, metadata, command, false);
-
-        if (validateVisibility) {
-	        // Create model visibility validation visitor
-	        visitor = new ModelVisibilityValidationVisitor(this.vdbService, this.vdbName, this.vdbVersion);
-	        validateWithVisitor(visitor, metadata, command, true);
-        }
     }
     
     private Command parseCommand() throws QueryParserException {
@@ -452,7 +442,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         createCommandContext();
         
-        validateQuery(command, true);
+        validateQuery(command);
         
         command = QueryRewriter.rewrite(command, null, metadata, context);
         
@@ -573,7 +563,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         Command processingCommand = generatePlan();
         
-        validateEntitlement(userCommand);
+        validateAccess(userCommand);
         
         setSchemasForXMLPlan(userCommand, metadata);
         
@@ -594,10 +584,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         referenceCheck(references);
         
-        validateQuery(newCommand, isRootXQuery);
+        validateQuery(newCommand);
         
         if (isRootXQuery) {
-        	validateEntitlement(newCommand);
+        	validateAccess(newCommand);
         }
         
         CommandContext copy = (CommandContext) commandContext.clone();
@@ -610,28 +600,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}
 
-	protected void validateEntitlement(Command command)
+	protected void validateAccess(Command command)
 			throws QueryValidatorException, MetaMatrixComponentException {
 		// Validate the query (may only want to validate entitlement)
-		AuthorizationService authSvc = (AuthorizationService) this.env
-				.findService(DQPServiceNames.AUTHORIZATION_SERVICE);
-		if (authSvc != null) {
-			// See if entitlement checking is turned on
-			if (authSvc.checkingEntitlements()) {
-				AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(
-						this.workContext.getConnectionID(), authSvc);
-				validateWithVisitor(visitor, this.metadata, command, true);
-			} else if (workContext.getUserName().equals(
-					AuthorizationService.DEFAULT_WSDL_USERNAME)) {
-				       if (command.getType() == Command.TYPE_STORED_PROCEDURE &&
-					       AuthorizationValidationVisitor.GET_UPDATED_CHARACTER_VDB_RESOURCE.contains(((StoredProcedure) command).getProcedureName())) {
-				    	 // do nothing... this is valid
-				    } else {
-				    	// Throw an exception since the WSDL user is trying to do something other than access the VDB resources
-					    final String message = DQPPlugin.Util.getString("Request.wsdl_user_not_authorized"); //$NON-NLS-1$
-					    throw new QueryValidatorException(message);
-				    }
-			}
-		}
+		AuthorizationService authSvc = (AuthorizationService) this.env.findService(DQPServiceNames.AUTHORIZATION_SERVICE);
+
+		// See if entitlement checking is turned on
+		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getConnectionID(), authSvc, this.vdbService, this.vdbName, this.vdbVersion);
+		validateWithVisitor(visitor, this.metadata, command, true);
 	}
 }

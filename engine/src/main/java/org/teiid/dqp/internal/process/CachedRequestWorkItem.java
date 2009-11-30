@@ -51,7 +51,7 @@ public class CachedRequestWorkItem extends RequestWorkItem {
 	@Override
 	protected void processNew() throws MetaMatrixComponentException, MetaMatrixProcessingException  {
 		request.initMetadata();
-    	request.validateEntitlement(originalCommand);
+    	request.validateAccess(originalCommand);
     	this.request = null;
 	}
 	

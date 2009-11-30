@@ -123,7 +123,7 @@ public class TestRequest extends TestCase {
         
         request.initialize(message, environment, null, null, null, false, null, workContext, 101024);
         request.initMetadata();
-        request.validateEntitlement(command);
+        request.validateAccess(command);
     }
     
     

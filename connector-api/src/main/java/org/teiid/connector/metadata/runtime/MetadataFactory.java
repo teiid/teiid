@@ -53,8 +53,6 @@ public class MetadataFactory {
 		this.importProperties = importProperties;
 		schema = new Schema();
 		schema.setName(modelName);
-		schema.setPhysical(true);
-		schema.setPrimaryMetamodelUri("http://www.metamatrix.com/metamodels/Relational"); //$NON-NLS-1$
 		setUUID(schema);	
 		store.addSchema(schema);
 	}

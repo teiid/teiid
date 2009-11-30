@@ -23,12 +23,10 @@
 package com.metamatrix.platform.admin.api;
 
 import com.metamatrix.core.id.ObjectID;
-import com.metamatrix.common.tree.TreeNode;
-
 import com.metamatrix.platform.admin.api.exception.PermissionNodeNotActionableException;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 
-public interface PermissionNode extends TreeNode {
+public interface PermissionNode {
     /**
      * Display name for node.
      * @return The name of the data node for display.

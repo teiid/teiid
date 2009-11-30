@@ -226,11 +226,6 @@ public class TestDQPCore {
 		helpTestVisibilityFails(xquery);
 	}
     
-	@Test public void testResolvingVisibility() throws Exception {
-		String sql = "SELECT * FROM SmallA"; //$NON-NLS-1$
-    	helpExecute(sql, "a"); //$NON-NLS-1$
-	}
-
     ///////////////////////////Helper method///////////////////////////////////
     private ResultsMessage helpExecute(String sql, String userName) throws Exception {
     	return helpExecute(sql, userName, 1, false);

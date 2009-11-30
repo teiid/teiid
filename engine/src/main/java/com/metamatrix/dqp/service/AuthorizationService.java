@@ -31,7 +31,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -54,8 +53,6 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     public static final int CONTEXT_UPDATE = 2;
     public static final int CONTEXT_DELETE = 3;
     public static final int CONTEXT_PROCEDURE = 4;
-    
-    public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
     public static final String ENTITELEMENTS_ENABLED = "auth.check_entitlements"; //$NON-NLS-1$
     public static final String ADMIN_ROLES_FILE = "auth.adminRolesFile"; //$NON-NLS-1$

@@ -30,15 +30,16 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
+import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -58,66 +59,82 @@ import com.metamatrix.query.validator.AbstractValidationVisitor;
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
-    /**
-     * This virtual procedure must be accessible to all users in order to read the WSDL
-     * for web services.
-     */
-    public final static String GET_UPDATED_CHARACTER_VDB_RESOURCE = "System.getUpdatedCharacterVDBResource"; //$NON-NLS-1$
-
-    /**
-     * Set of procedures which must be available to all users.     
-     */
-    private static Set globallyAccessibleProcedures = new HashSet();
-    
     private String connectionID;
     private AuthorizationService authInterface;
-    
-    
-    static {
-        globallyAccessibleProcedures.add(GET_UPDATED_CHARACTER_VDB_RESOURCE);
-    }
-    
-    
+    private VDBService vdbService;
+    private String vdbName;
+    private String vdbVersion;
+
     public AuthorizationValidationVisitor(
         String connectionID,
-        AuthorizationService authInterface) {
-        super();
-
+        AuthorizationService authInterface,
+        VDBService vdbService,
+        String vdbName,
+        String vdbVersion) {
         this.connectionID = connectionID;
         this.authInterface = authInterface;
+        this.vdbService = vdbService;
+        this.vdbName = vdbName;
+        this.vdbVersion = vdbVersion;
     }
 
     // ############### Visitor methods for language objects ##################
+    
+    @Override
+    public void visit(GroupSymbol obj) {
+    	try {
+    		Object modelID = getMetadata().getModelID(obj.getMetadataID());
+    		this.validateModelVisibility(modelID, obj);
+	    } catch(QueryMetadataException e) {
+	        handleException(e, obj);
+	    } catch(MetaMatrixComponentException e) {
+	        handleException(e, obj);
+	    }
+    }
 
     public void visit(Delete obj) {
-        validateEntitlements(obj);
+    	if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+            validateEntitlements(obj);
+    	}
     }
 
     public void visit(Insert obj) {
-        validateEntitlements(obj);
+    	if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+    		validateEntitlements(obj);
+    	}        
     }
 
     public void visit(Query obj) {
-        validateEntitlements(obj);
+    	if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+    		validateEntitlements(obj);
+    	}
     }
 
     public void visit(Update obj) {
-        validateEntitlements(obj);
+    	if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+    		validateEntitlements(obj);
+    	}
     }
 
     public void visit(StoredProcedure obj) {
-        validateEntitlements(obj);
+    	this.validateModelVisibility(obj.getModelID(), obj.getGroup());
+    	if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+    		validateEntitlements(obj);
+    	}
     }
     
     public void visit(Function obj) {
     	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
-    			List<Symbol> symbols = new LinkedList<Symbol>();
 				ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(obj, this.getMetadata());
-				symbols.add(lookup.getGroup());
-				symbols.add(lookup.getKeyElement());
-				symbols.add(lookup.getReturnElement());
-				validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
+	    		validateModelVisibility(getMetadata().getModelID(lookup.getGroup().getMetadataID()), lookup.getGroup());
+	    		if (this.authInterface != null && this.authInterface.checkingEntitlements()) {
+	    			List<Symbol> symbols = new LinkedList<Symbol>();
+					symbols.add(lookup.getGroup());
+					symbols.add(lookup.getKeyElement());
+					symbols.add(lookup.getReturnElement());
+		    		validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
+	    		}
 			} catch (MetaMatrixComponentException e) {
 				handleException(e, obj);
 			} catch (MetaMatrixProcessingException e) {
@@ -207,31 +224,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(entitledObjects, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
     }
 
-    
-    /**
-     * Add a procedure to the list of globally 
-     * @param name
-     * @since 4.2
-     */
-    public static void addGloballyAccessibleProcedure(String name) {
-        globallyAccessibleProcedures.add(name);  
-    }
-    
-    public static void removeGloballyAccessibleProcedure(String name) {
-        globallyAccessibleProcedures.remove(name);   
-    }
-    
-    
     /**
      * Validate query entitlements
      */
     protected void validateEntitlements(StoredProcedure obj) {
-        //Skip entitlement checking for any globally available procedures.
-        if (globallyAccessibleProcedures.contains(obj.getProcedureName())) {
-            return;
-        }
-        
-        
         List symbols = new ArrayList(1);
         symbols.add(obj.getGroup());
         validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_PROCEDURE);
@@ -306,6 +302,21 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             }
         }
 
+    }
+
+    protected void validateModelVisibility(Object modelID, GroupSymbol group) {
+        if(modelID instanceof TempMetadataID){
+        	return;
+        }
+        try {
+		    String modelName = getMetadata().getFullName(modelID);
+		    int visibility = this.vdbService.getModelVisibility(this.vdbName, this.vdbVersion, modelName);
+		    if(visibility != ModelInfo.PUBLIC) {
+		        handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
+		    }
+        } catch (MetaMatrixComponentException e) {
+			handleException(e, group);
+		}
     }
 
 }

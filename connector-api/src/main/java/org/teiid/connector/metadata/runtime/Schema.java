@@ -29,7 +29,7 @@ public class Schema extends AbstractMetadataRecord {
 
     private boolean physical = true;
     private boolean isVisible = true;
-    private String primaryMetamodelUri;
+    private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
     private Map<String, Table> tables = new LinkedHashMap<String, Table>();
 	private Map<String, ProcedureRecordImpl> procedures = new LinkedHashMap<String, ProcedureRecordImpl>();

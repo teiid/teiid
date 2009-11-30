@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.object;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +74,7 @@ public final class PropertyType implements Comparable, Serializable {
 	public static final PropertyType SET                = new PropertyType(113, SET_NAME,          java.util.Set.class.getName() );
     public static final PropertyType URL                = new PropertyType(114, URL_NAME,          java.net.URL.class.getName() );
 	public static final PropertyType HOSTNAME           = new PropertyType(115, HOSTNAME_NAME,     java.net.InetAddress.class.getName() );
-	public static final PropertyType FILE               = new PropertyType(116, FILE_NAME,         com.metamatrix.common.tree.directory.DirectoryEntry.class.getName() );
+	public static final PropertyType FILE               = new PropertyType(116, FILE_NAME,         File.class.getName() );
 	public static final PropertyType OBJECT_ID          = new PropertyType(117, OBJECT_ID_NAME,    com.metamatrix.core.id.ObjectID.class.getName() );
 	public static final PropertyType PASSWORD           = new PropertyType(119, PASSWORD_NAME,     PASSWORD_CLASS.getName() );
 	public static final PropertyType PROPERTIED_OBJECT  = new PropertyType(120, PROPERTIED_OBJECT_NAME,    com.metamatrix.common.object.PropertiedObject.class.getName() );
