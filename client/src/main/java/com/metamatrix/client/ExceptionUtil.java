@@ -35,7 +35,8 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ExceptionUtil {
 	
-    public static <T extends Throwable> T getExceptionOfType(Throwable ex, Class<T> cls) {
+    @SuppressWarnings("unchecked")
+	public static <T extends Throwable> T getExceptionOfType(Throwable ex, Class<T> cls) {
         while (ex != null) {
             if (cls.isAssignableFrom(ex.getClass())) {
                 return (T)ex;
@@ -50,21 +51,25 @@ public class ExceptionUtil {
 	
 	public static Throwable convertException(Method method, Throwable exception) {
 		boolean canThrowXATransactionException = false;
+		boolean canThrowComponentException = false;
+		boolean canThrowAdminException = false;
         Class<?>[] exceptionClasses = method.getExceptionTypes();
         for (int i = 0; i < exceptionClasses.length; i++) {
 			if (exception.getClass().isAssignableFrom(exceptionClasses[i])) {
 				return exception;
 			}
-			if (MetaMatrixComponentException.class.isAssignableFrom(exceptionClasses[i])) {
-				return new MetaMatrixComponentException(exception);	
-			}
-			if (AdminException.class.isAssignableFrom(exceptionClasses[i])) {
-				if (exception instanceof MetaMatrixProcessingException) {
-					return new AdminProcessingException(exception);
-				}
-	        	return new AdminComponentException(exception);
-			}
+			canThrowComponentException |= MetaMatrixComponentException.class.isAssignableFrom(exceptionClasses[i]);
+			canThrowAdminException |= AdminException.class.isAssignableFrom(exceptionClasses[i]);
 			canThrowXATransactionException |= XATransactionException.class.isAssignableFrom(exceptionClasses[i]);
+        }
+        if (canThrowComponentException) {
+        	return new MetaMatrixComponentException(exception);
+        }
+        if (canThrowAdminException) {
+			if (exception instanceof MetaMatrixProcessingException) {
+				return new AdminProcessingException(exception);
+			}
+        	return new AdminComponentException(exception);
 		}
         if (canThrowXATransactionException) {
         	return new XATransactionException(exception);

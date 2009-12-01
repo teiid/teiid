@@ -265,6 +265,8 @@ public class SocketServerConnection implements ServerConnection {
 				//ignore
 			} catch (TimeoutException e) {
 				//ignore
+			} catch (MetaMatrixComponentException e) {
+				//ignore
 			}
 		}
 		

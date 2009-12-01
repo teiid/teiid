@@ -146,6 +146,8 @@ public class LocalServerConnection implements ServerConnection {
 				//ignore
 			} catch (TimeoutException e) {
 				//ignore
+			} catch (MetaMatrixComponentException e) {
+				//ignore
 			}
 		}
 		this.shutdown = true;
