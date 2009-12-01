@@ -87,8 +87,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
     		"&", "|", "^", "#"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
 	
-    private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$    
-
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
     
@@ -160,8 +158,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @param str the input string
      * @return a SQL-safe string
      */
-    protected String escapeString(String str) {
-        return StringUtil.replaceAll(str, QUOTE, ESCAPED_QUOTE);
+    protected String escapeString(String str, String quote) {
+        return StringUtil.replaceAll(str, quote, quote + quote);
     }
     
     public String toString() {
@@ -735,7 +733,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                       .append("'}"); //$NON-NLS-1$
             } else {
                 buffer.append(QUOTE)
-                      .append(escapeString(val))
+                      .append(escapeString(val, QUOTE))
                       .append(QUOTE);
             }
         }

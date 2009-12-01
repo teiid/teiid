@@ -22,10 +22,6 @@
 
 package com.metamatrix.common.config.util;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import com.metamatrix.api.exception.MetaMatrixException;
 
 public class ConfigObjectsNotResolvableException extends MetaMatrixException{

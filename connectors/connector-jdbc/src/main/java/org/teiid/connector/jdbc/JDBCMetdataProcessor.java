@@ -26,9 +26,12 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.teiid.connector.api.ConnectorException;
@@ -76,8 +79,11 @@ public class JDBCMetdataProcessor {
 	private boolean importIndexes = true;
 	private boolean importApproximateIndexes = true;
 	private boolean importProcedures = true;
+	private boolean widenUnsingedTypes;
+	//TODO add an option to not fully qualify name in source
 	
 	private ConnectorLogger logger;
+	private Set<String> unsignedTypes = new HashSet<String>();
 	
 	public JDBCMetdataProcessor(ConnectorLogger logger) {
 		this.logger = logger;
@@ -86,6 +92,17 @@ public class JDBCMetdataProcessor {
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException, ConnectorException {
 		DatabaseMetaData metadata = conn.getMetaData();
+		
+		if (widenUnsingedTypes) {
+			ResultSet rs = metadata.getTableTypes();
+			while (rs.next()) {
+				String name = rs.getString(1);
+				boolean unsigned = rs.getBoolean(10);
+				if (unsigned) {
+					unsignedTypes.add(name);
+				}
+			}
+		}
 		
 		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
 		
@@ -121,6 +138,8 @@ public class JDBCMetdataProcessor {
 				String columnName = columns.getString(4);
 				short columnType = columns.getShort(5);
 				int sqlType = columns.getInt(6);
+				String typeName = columns.getString(7);
+				sqlType = checkForUnsigned(sqlType, typeName);
 				if (columnType == DatabaseMetaData.procedureColumnUnknown) {
 					continue; //there's a good chance this won't work
 				}
@@ -128,7 +147,7 @@ public class JDBCMetdataProcessor {
 				if (columnType == DatabaseMetaData.procedureColumnResult) {
 					Column column = metadataFactory.addProcedureResultSetColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), procedure);
 					record = column;
-					column.setNativeType(columns.getString(7));
+					column.setNativeType(typeName);
 				} else {
 					record = metadataFactory.addProcedureParameter(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), Type.values()[columnType], procedure);
 				}
@@ -141,6 +160,23 @@ public class JDBCMetdataProcessor {
 			}
 		}
 		procedures.close();
+	}
+
+	private int checkForUnsigned(int sqlType, String typeName) {
+		if (widenUnsingedTypes && unsignedTypes.contains(typeName)) {
+			switch (sqlType) {
+			case Types.TINYINT:
+				sqlType = Types.SMALLINT;
+				break;
+			case Types.SMALLINT:
+				sqlType = Types.INTEGER;
+				break;
+			case Types.INTEGER:
+				sqlType = Types.BIGINT;
+				break;
+			}
+		}
+		return sqlType;
 	}
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
@@ -183,6 +219,8 @@ public class JDBCMetdataProcessor {
 			}
 			String columnName = columns.getString(4);
 			int type = columns.getInt(5);
+			String typeName = columns.getString(6);
+			type = checkForUnsigned(type, typeName);
 			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
 			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
 			column.setNativeType(columns.getString(6));
@@ -363,5 +401,9 @@ public class JDBCMetdataProcessor {
 	public void setImportApproximateIndexes(boolean importApproximateIndexes) {
 		this.importApproximateIndexes = importApproximateIndexes;
 	}
-	
+
+	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
+		this.widenUnsingedTypes = widenUnsingedTypes;
+	}
+
 }

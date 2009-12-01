@@ -97,7 +97,10 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public Column addColumn(String name, String type, ColumnSet table) throws ConnectorException {
+	public Column addColumn(String name, String type, ColumnSet<?> table) throws ConnectorException {
+		if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
+			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.invalid_name", name)); //$NON-NLS-1$
+		}
 		Column column = new Column();
 		column.setName(name);
 		table.getColumns().add(column);
@@ -134,7 +137,7 @@ public class MetadataFactory {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public ColumnSet addPrimaryKey(String name, List<String> columnNames, Table table) throws ConnectorException {
+	public KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) throws ConnectorException {
 		KeyRecord primaryKey = new KeyRecord(KeyRecord.Type.Primary);
 		primaryKey.setParent(table);
 		primaryKey.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -265,7 +268,7 @@ public class MetadataFactory {
 	}
 
 	private void assignColumns(List<String> columnNames, Table table,
-			ColumnSet columns) throws ConnectorException {
+			ColumnSet<?> columns) throws ConnectorException {
 		for (String columnName : columnNames) {
 			boolean match = false;
 			for (Column column : table.getColumns()) {

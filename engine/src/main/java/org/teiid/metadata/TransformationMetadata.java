@@ -117,7 +117,18 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
      */
     public Object getElementID(final String elementName) throws MetaMatrixComponentException, QueryMetadataException {
-    	return getMetadataStore().findElement(elementName.toLowerCase());
+    	int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
+		if (columnIndex == -1) {
+			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		}
+		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
+		String shortElementName = elementName.substring(columnIndex + 1);
+		for (Column column : (List<Column>)getElementIDsInGroupID(table)) {
+			if (column.getName().equalsIgnoreCase(shortElementName)) {
+				return column;
+			}
+        }
+        throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
     }
 
     /* (non-Javadoc)

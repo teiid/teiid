@@ -173,9 +173,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 
-                valuesbuffer.append("'") //$NON-NLS-1$
-                      .append(escapeString(obj.toString()))
-                      .append("'"); //$NON-NLS-1$
+                valuesbuffer.append(QUOTE)
+                      .append(escapeString(obj.toString(), QUOTE))
+                      .append(QUOTE);
             }
         }        
     }

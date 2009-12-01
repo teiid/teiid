@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.Schema;
@@ -128,23 +127,8 @@ public class CompositeMetadataStore extends MetadataStore {
 	}
 	
 	/*
-	 * The next methods are hold overs from XML/UUID resolving and will perform poorly
+	 * The next method is a hold over from XML/UUID resolving and will perform poorly
 	 */
-	
-	public Column findElement(String fullName) throws QueryMetadataException {
-		int columnIndex = fullName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
-		if (columnIndex == -1) {
-			throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		Table table = findGroup(fullName.substring(0, columnIndex));
-		String shortElementName = fullName.substring(columnIndex + 1);
-		for (Column column : table.getColumns()) {
-			if (column.getName().equalsIgnoreCase(shortElementName)) {
-				return column;
-			}
-        }
-        throw new QueryMetadataException(fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-	}
 
 	public Collection<Table> getXMLTempGroups(Table tableRecord) {
 		ArrayList<Table> results = new ArrayList<Table>();
