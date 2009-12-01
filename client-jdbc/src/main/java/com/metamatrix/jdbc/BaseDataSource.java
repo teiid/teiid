@@ -41,7 +41,7 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
- * The MetaMatrix JDBC DataSource implementation class of {@link javax.sql.DataSource} and
+ * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
  * {@link javax.sql.XADataSource}.
  * <p>
  * The {@link javax.sql.DataSource} interface follows the JavaBean design pattern,
@@ -63,14 +63,14 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  *                                                                 down to their underlying data source.
  *                                                                 <p>
  *                                                                 The form and type of the client token is up to the client but it <i>must</i> implement the
- *                                                                 <code>Serializable</code> interface.  MetaMatrix does nothing with this token except to make it
+ *                                                                 <code>Serializable</code> interface.  Teiid does nothing with this token except to make it
  *                                                                 available for authentication/augmentation/replacement upon authentication to the system and to
  *                                                                 connectors that may require it at the data source level.
  *                                                                 </p></td></tr>
  *   <tr><td>databaseName     </td><td><code>String</code></td><td>The name of a particular virtual database on a
- *                                                                 MetaMatrix Server.</td></tr>
+ *                                                                 Teiid Server.</td></tr>
  *   <tr><td>databaseVersion  </td><td><code>String</code></td><td>The <i>optional</i> version of a particular
- *                                                                 virtual database on a MetaMatrix Server;
+ *                                                                 virtual database on a Teiid Server;
  *                                                                 if not supplied, then the latest version is assumed.</td></tr>
  *   <tr><td>dataSourceName   </td><td><code>String</code></td><td>The <i>optional</i> logical name for the underlying
  *                                                                 <code>XADataSource</code> or <code>ConnectionPoolDataSource</code>;
@@ -119,7 +119,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     protected static final int DEFAULT_LOG_LEVEL = 0;
 
     /**
-     * The name of the virtual database on a particular MetaMatrix Server.
+     * The name of the virtual database on a particular Teiid Server.
      * This property name is one of the standard property names defined by the JDBC 2.0 specification,
      * and is <i>required</i>.
      */
@@ -147,7 +147,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This property is <i>optional</i>.
      * <p>
      * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  MetaMatrix does nothing with this token except to make it
+     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
      * available for authentication/augmentation/replacement upon authentication to the system and to
      * connectors that may require it at the data source level.
      * </p>
@@ -171,13 +171,13 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     /**
      * The version number of the virtual database to which a connection is to be established.
      * This property is <i>optional</i>; if not specified, the assumption is that the latest version
-     * on the MetaMatrix Server is to be used.
+     * on the Teiid Server is to be used.
      */
     private String databaseVersion;
 
     /**
      * The name of the application.  Supplying this property may allow an administrator of a
-     * MetaMatrix Server to better identify individual connections and usage patterns.
+     * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      */
     private String applicationName;
@@ -203,8 +203,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
     /**
      * A setting that controls how connections created by this DataSource manage transactions for client
-     * requests when client applications do not use transactions.  Because a MetaMatrix virtual database
-     * will likely deal with multiple underlying information sources, the MetaMatrix XA Server will execute
+     * requests when client applications do not use transactions.  Because a Teiid virtual database
+     * will likely deal with multiple underlying information sources, Teiid will execute
      * all client requests within the contexts of transactions.  This method determines the semantics
      * of creating such transactions when the client does not explicitly do so.
      * <p>
@@ -232,11 +232,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * The {@link #TXN_AUTO_WRAP_OPTIMISTIC} constant value is provided for convenience.</li>
      * </ul>
      * </p>
-     * <p>
-     * This property is important only if connecting to a MetaMatrix XA Server.
-     * </p>
      */
     private String transactionAutoWrap;
+    
+    private boolean ansiQuotedIdentifiers = true;
     
     /**
      * Reference to the logWriter, which is transient and is therefore not serialized with the DataSource.
@@ -541,7 +540,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
     /**
      * Returns the name of the application.  Supplying this property may allow an administrator of a
-     * MetaMatrix Server to better identify individual connections and usage patterns.
+     * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      * @return String the application name; may be null or zero-length
      */
@@ -550,7 +549,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * Returns the name of the virtual database on a particular MetaMatrix Server.
+     * Returns the name of the virtual database on a particular Teiid Server.
      * @return String
      */
     public String getDatabaseName() {
@@ -605,7 +604,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This property is <i>optional</i>.
      * <p>
      * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  MetaMatrix does nothing with this token except to make it
+     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
      * available for authentication/augmentation/replacement upon authentication to the system and to
      * connectors that may require it at the data source level.
      * </p>
@@ -617,7 +616,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
     /**
      * Sets the name of the application.  Supplying this property may allow an administrator of a
-     * MetaMatrix Server to better identify individual connections and usage patterns.
+     * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      * @param applicationName The applicationName to set
      */
@@ -626,7 +625,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * Sets the name of the virtual database on a particular MetaMatrix Server.
+     * Sets the name of the virtual database on a particular Teiid Server.
      * @param databaseName The name of the virtual database
      */
     public void setDatabaseName(final String databaseName) {
@@ -673,7 +672,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This property is <i>optional</i>.
      * <p>
      * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  MetaMatrix does nothing with this token except to make it
+     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
      * available for authentication/augmentation/replacement upon authentication to the system and to
      * connectors that may require it at the data source level.
      * </p>
@@ -734,24 +733,40 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * Returns the current setting for how connections are created by this DataSource manage transactions
-     * for client requests when client applications do not use transactions.
-     * Because a MetaMatrix virtual database will likely deal with multiple underlying information sources,
-     * the MetaMatrix XA Server will execute all client requests within the contexts of transactions.
-     * This method determines the semantics of creating such transactions when the client does not
-     * explicitly do so.
-     * @return the current setting, or null if the property has not been set and the default mode will
-     * be used.
+     * @see #getTxnAutoWrap()
+     * @return
      */
     public String getTransactionAutoWrap() {
         return transactionAutoWrap;
     }
 
     /**
+     * @see #setTxnAutoWrap(String)
+     * @param transactionAutoWrap
+     */
+    public void setTransactionAutoWrap(String transactionAutoWrap) {
+        this.transactionAutoWrap = transactionAutoWrap;
+    }
+
+    /**
+     * Returns the current setting for how connections are created by this DataSource manage transactions
+     * for client requests when client applications do not use transactions.
+     * Because a virtual database will likely deal with multiple underlying information sources,
+     * Teiid will execute all client requests within the contexts of transactions.
+     * This method determines the semantics of creating such transactions when the client does not
+     * explicitly do so.
+     * @return the current setting, or null if the property has not been set and the default mode will
+     * be used.
+     */
+    public String getTxnAutoWrap() {
+		return this.transactionAutoWrap;
+	}
+    
+    /**
      * Sets the setting for how connections are created by this DataSource manage transactions
      * for client requests when client applications do not use transactions.
-     * Because a MetaMatrix virtual database will likely deal with multiple underlying information sources,
-     * the MetaMatrix XA Server will execute all client requests within the contexts of transactions.
+     * Because a virtual database will likely deal with multiple underlying information sources,
+     * Teiid will execute all client requests within the contexts of transactions.
      * This method determines the semantics of creating such transactions when the client does not
      * explicitly do so.
      * <p>
@@ -778,13 +793,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * The {@link #TXN_AUTO_WRAP_OPTIMISTIC} constant value is provided for convenience.</li>
      * </ul>
      * </p>
-     * <p>
-     * This property is important only if connecting to a MetaMatrix XA Server.
-     * </p>
      * @param transactionAutoWrap The transactionAutoWrap to set
      */
-    public void setTransactionAutoWrap(String transactionAutoWrap) {
-        this.transactionAutoWrap = transactionAutoWrap;
+    public void setTxnAutoWrap(String transactionAutoWrap) {
+    	this.transactionAutoWrap = transactionAutoWrap;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -966,6 +978,14 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
 	public String getAdditionalProperties() {
 		return additionalProperties;
+	}
+
+	public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
+		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
+	}
+
+	public boolean isAnsiQuotedIdentifiers() {
+		return ansiQuotedIdentifiers;
 	}
 
 }
