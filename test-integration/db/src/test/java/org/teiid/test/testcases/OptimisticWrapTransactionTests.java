@@ -114,7 +114,7 @@ public class OptimisticWrapTransactionTests extends BaseAbstractTransactionTestC
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
-    public void testSingleSourceBatchCommand() throws Exception {
+    public void xtestSingleSourceBatchCommand() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
             public void testCase() throws Exception {
                 ArrayList list = new ArrayList();
@@ -391,7 +391,7 @@ public class OptimisticWrapTransactionTests extends BaseAbstractTransactionTestC
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
-    public void testMultipleSourceVirtualProceduralSelect() throws Exception {
+    public void xtestMultipleSourceVirtualProceduralSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
             public void testCase() throws Exception {
                 execute("select * from vm.p1");
