@@ -103,7 +103,7 @@ public class JDBCMetdataProcessor {
 		}
 		
 		if (widenUnsingedTypes) {
-			ResultSet rs = metadata.getTableTypes();
+			ResultSet rs = metadata.getTypeInfo();
 			while (rs.next()) {
 				String name = rs.getString(1);
 				boolean unsigned = rs.getBoolean(10);
