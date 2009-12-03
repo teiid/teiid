@@ -46,6 +46,8 @@ import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
+import com.metamatrix.core.util.StringUtil;
+
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
@@ -79,11 +81,13 @@ public class JDBCMetdataProcessor {
 	private boolean importIndexes = true;
 	private boolean importApproximateIndexes = true;
 	private boolean importProcedures = true;
-	private boolean widenUnsingedTypes;
+	private boolean widenUnsingedTypes = true;
+	private boolean quoteNameInSource = true;
 	//TODO add an option to not fully qualify name in source
 	
 	private ConnectorLogger logger;
 	private Set<String> unsignedTypes = new HashSet<String>();
+	private String quoteString;
 	
 	public JDBCMetdataProcessor(ConnectorLogger logger) {
 		this.logger = logger;
@@ -92,6 +96,11 @@ public class JDBCMetdataProcessor {
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException, ConnectorException {
 		DatabaseMetaData metadata = conn.getMetaData();
+		
+		quoteString = metadata.getIdentifierQuoteString();
+		if (quoteString != null && quoteString.trim().length() == 0) {
+			quoteString = null;
+		}
 		
 		if (widenUnsingedTypes) {
 			ResultSet rs = metadata.getTableTypes();
@@ -130,9 +139,9 @@ public class JDBCMetdataProcessor {
 			String procedureCatalog = procedures.getString(1);
 			String procedureSchema = procedures.getString(2);
 			String procedureName = procedures.getString(3);
-			String fullProcedureName = getTableName(procedureCatalog, procedureSchema, procedureName);
+			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
 			ProcedureRecordImpl procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
-			procedure.setNameInSource(fullProcedureName);
+			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName, true));
 			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
 			while (columns.next()) {
 				String columnName = columns.getString(4);
@@ -188,9 +197,9 @@ public class JDBCMetdataProcessor {
 			String tableCatalog = tables.getString(1);
 			String tableSchema = tables.getString(2);
 			String tableName = tables.getString(3);
-			String fullName = getTableName(tableCatalog, tableSchema, tableName);
+			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
-			table.setNameInSource(fullName);
+			table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
 			table.setSupportsUpdate(true);
 			String remarks = tables.getString(5);
 			table.setAnnotation(remarks);
@@ -212,7 +221,7 @@ public class JDBCMetdataProcessor {
 			String tableCatalog = columns.getString(1);
 			String tableSchema = columns.getString(2);
 			String tableName = columns.getString(3);
-			String fullTableName = getTableName(tableCatalog, tableSchema, tableName);
+			String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 			TableInfo tableInfo = tableMap.get(fullTableName);
 			if (tableInfo == null) {
 				continue;
@@ -223,6 +232,7 @@ public class JDBCMetdataProcessor {
 			type = checkForUnsigned(type, typeName);
 			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
 			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
+			column.setNameInSource(quoteName(columnName));
 			column.setNativeType(columns.getString(6));
 			column.setRadix(columns.getInt(10));
 			column.setNullType(NullType.values()[columns.getShort(11)]);
@@ -235,6 +245,13 @@ public class JDBCMetdataProcessor {
 			}
 		}
 		columns.close();
+	}
+	
+	private String quoteName(String name) {
+		if (quoteNameInSource) {
+			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
+		}
+		return name;
 	}
 
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
@@ -291,7 +308,7 @@ public class JDBCMetdataProcessor {
 					String tableCatalog = fks.getString(1);
 					String tableSchema = fks.getString(2);
 					String tableName = fks.getString(3);
-					String fullTableName = getTableName(tableCatalog, tableSchema, tableName);
+					String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 					pkTable = tableMap.get(fullTableName);
 					if (pkTable == null) {
 						throw new ConnectorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
@@ -350,14 +367,17 @@ public class JDBCMetdataProcessor {
 		}
 	}
 
-	private static String getTableName(String tableCatalog, String tableSchema,
-			String tableName) {
-		String fullName = tableName;
-		if (tableSchema != null && tableSchema.length() > 0) {
-			fullName = tableSchema + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName) {
+		return getFullyQualifiedName(catalogName, schemaName, objectName, false);
+	}
+	
+	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
+		String fullName = (quoted?quoteName(objectName):objectName);
+		if (schemaName != null && schemaName.length() > 0) {
+			fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
 		}
-		if (tableCatalog != null && tableCatalog.length() > 0) {
-			fullName = tableCatalog + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+		if (catalogName != null && catalogName.length() > 0) {
+			fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
 		}
 		return fullName;
 	}
@@ -404,6 +424,10 @@ public class JDBCMetdataProcessor {
 
 	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
+	}
+	
+	public void setQuoteNameInSource(boolean quoteIdentifiers) {
+		this.quoteNameInSource = quoteIdentifiers;
 	}
 
 }
