@@ -53,12 +53,14 @@
       <listitem>
         <para> Because different data sources organize tables in different
           ways, some prepending catalog or schema or user information,
-          Teiid allows table specification to be a dot-delimited construct.  
-        </para>
-      </listitem>
-      <listitem>
-        <para> When a table specification contains a dot resolving will allow for the match of
-        a partial name against any number of the end segments in the name.  
+          Teiid allows table specification to be a dot-delimited construct.
+          <note>
+	        <para> When a table specification contains a dot resolving will allow for the match of
+	        a partial name against any number of the end segments in the name.  e.g. a table with the 
+	        fully-qualified name vdbname."sourcescema.sourcetable" would match the partial name
+	        sourcetable.
+	        </para>
+          </note>
         </para>
       </listitem>
       <listitem>
