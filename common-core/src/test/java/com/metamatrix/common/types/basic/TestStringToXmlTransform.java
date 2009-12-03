@@ -46,7 +46,7 @@ public class TestStringToXmlTransform extends TestCase {
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
        
        SQLXML xmlValue = (SQLXML)transform.transformDirect(xml);
-       assertEquals(xml, xmlValue.getString());
+       assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
     }
     
     public void testBadXML() {

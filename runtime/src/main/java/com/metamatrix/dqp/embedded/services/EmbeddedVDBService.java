@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.embedded.services;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -162,8 +163,8 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     public int getFileVisibility(String vdbName, String vdbVersion, String pathInVDB) 
         throws MetaMatrixComponentException {        
 
-    	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
-
+    	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, File.separator), "."); //$NON-NLS-1$ //$NON-NLS-2$
+    	
         // If this is any of the Public System Models, like JDBC,ODBC system models
         if(VDBArchive.isSystemModelWithSystemTableType(modelName)){
             return ModelInfo.PUBLIC;

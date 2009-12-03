@@ -22,6 +22,8 @@
 
 package com.metamatrix.systemmodel;
 
+import java.io.File;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -109,9 +111,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testVDBResourcePathsProcedure() {
-
 		String[] expected = { "ResourcePath[string]	isBinary[boolean]	", //$NON-NLS-1$
-				"/parts/partsmd/PartsSupplier.xmi	false", //$NON-NLS-1$
+				File.separator + "parts" + File.separator + "partsmd" + File.separator + "PartsSupplier.xmi	false"
 		};
 		execute("exec getVDBResourcePaths()",new Object[] {}); //$NON-NLS-1$
 		assertResults(expected);

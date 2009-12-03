@@ -226,7 +226,7 @@ public class TestMaterializedViewScriptGenerator extends TestCase {
     	
         String actual = FileUtil.read(new FileReader(actualFile)).trim();
         String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataFile("/materializedView/expected/" + expectedFileName))).trim(); //$NON-NLS-1$ 
-        assertEquals(StringUtilities.removeChars(expected, new char[] {'\r'}), actual);
+        assertEquals(expected.replaceAll("[\r]", ""), actual.replaceAll("[\r]", ""));
         actualFile.delete();
     }
     

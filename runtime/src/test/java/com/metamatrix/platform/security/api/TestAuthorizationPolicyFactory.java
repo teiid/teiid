@@ -92,9 +92,8 @@ public final class TestAuthorizationPolicyFactory extends TestCase {
         //add doc to test against
         char[] result = AuthorizationPolicyFactory.exportPolicies(policies);
         String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath()+File.separator+"permissions.xml")); //$NON-NLS-1$
-        String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertEquals(expected, actual); 
+        //String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(expected.replaceAll("[\r]", ""), new String(result).replaceAll("[\r]", "")); 
     }
     
     public void testImport() throws Exception {
@@ -122,8 +121,8 @@ public final class TestAuthorizationPolicyFactory extends TestCase {
 
         char[] result = AuthorizationPolicyFactory.exportPolicies(roles);
         String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath() + "/permissions2.xml")); //$NON-NLS-1$
-        String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(expected, actual); 
+        //String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(expected.replaceAll("[\r]", ""), new String(result).replaceAll("[\r]", "")); 
     }
     
     public void testParsingFails() throws Exception {
