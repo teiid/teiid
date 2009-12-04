@@ -158,15 +158,6 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
         return new TransformationMetadata(composite);
     }
     
-    public void updateCostMetadata(String vdbName, String vdbVersion, String modelName) throws MetaMatrixComponentException {
-    	CompositeMetadataStore store = getMetadataObjectSource(vdbName, vdbVersion);
-    	//...
-    }
-    
-    public void updateCostMetadata(String vdbName, String vdbVersion, String objectName, String propertyName, String value) {
-    	
-    }
-    
 	private void saveMetadataStore(final MetadataSource runtimeSelector,
 			MetadataStore connectorMetadata, String savedMetadata)
 			throws IOException {
@@ -194,8 +185,8 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
 			try {
 				ois = new ObjectInputStream(new FileInputStream(f));
 				return (MetadataStore)ois.readObject();
-			} catch (Exception e) {
-				
+			} catch (Throwable e) {
+				LogManager.logDetail(LogConstants.CTX_DQP, e, "invalid metadata in file", savedMetadata);  //$NON-NLS-1$
 			} finally {
 				if (ois != null) {
 					ois.close();
@@ -246,6 +237,8 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
             configSvc.register(listener);
         } catch (IOException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
+        } catch (MetaMatrixComponentException e) {
+        	throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
         }
     }
 

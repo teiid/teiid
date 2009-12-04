@@ -48,7 +48,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 public class FakeMetadataService implements ApplicationService, MetadataService {
     private CompositeMetadataStore compositeMetadataStore;
     
-    public FakeMetadataService(URL vdbFile) throws IOException {
+    public FakeMetadataService(URL vdbFile) throws IOException, MetaMatrixComponentException {
         TempDirectoryMonitor.turnOn();
     	MetadataSource source = new VDBArchive(vdbFile.openStream());
     	compositeMetadataStore = new CompositeMetadataStore(Arrays.asList(new IndexMetadataFactory(source).getMetadataStore()), source);

@@ -96,7 +96,7 @@ public class VDBArchive implements MetadataSource {
         return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName);
     }
 		
-	public static VDBArchive loadVDB(URL vdbURL, File deployDirectory) throws IOException {
+	public static VDBArchive loadVDB(URL vdbURL, File deployDirectory) throws IOException, MetaMatrixComponentException {
 		boolean loadedFromDef = false;
     	BasicVDBDefn def = null;
     	String vdblocation = vdbURL.toString().toLowerCase();
@@ -177,7 +177,7 @@ public class VDBArchive implements MetadataSource {
 	 * @return
 	 * @throws IOException
 	 */
-	public VDBArchive(InputStream vdbStream) throws IOException {
+	public VDBArchive(InputStream vdbStream) throws IOException, MetaMatrixComponentException {
 		this.tempVDB = true;
 		loadFromFile(createTempVDB(vdbStream));
 	}
@@ -187,11 +187,11 @@ public class VDBArchive implements MetadataSource {
 	 * @param vdb
 	 * @throws IOException
 	 */
-	public VDBArchive(File vdb) throws IOException {
+	public VDBArchive(File vdb) throws IOException, MetaMatrixComponentException {
 		loadFromFile(vdb);
 	}
 
-	private void loadFromFile(File vdb) throws ZipException, IOException {
+	private void loadFromFile(File vdb) throws ZipException, IOException, MetaMatrixComponentException {
 		this.vdbFile = vdb;
 		this.archive = new ZipFile(this.vdbFile);
 		this.tempDir = TempDirectory.getTempDirectory(null);
@@ -210,7 +210,7 @@ public class VDBArchive implements MetadataSource {
 	 * @return BasicVDBDefn
 	 * @throws IOException
 	 */
-	private void load() throws IOException{
+	private void load() throws IOException, MetaMatrixComponentException{
 		this.pathsInArchive = Collections.unmodifiableSet(getListOfEntries());
 		
 		// check if manifest file is available then load it.
@@ -311,8 +311,9 @@ public class VDBArchive implements MetadataSource {
 		BasicVDBDefn manifestVdb = manifest.getVDB();
 		
 		// if models defined n the def file; add them the manifest
-		if (models == null || models.isEmpty()) {
+		if (models.isEmpty()) {
 			mydef.setModelInfos(manifestVdb.getModels());
+			models = mydef.getModels();
 		}
 
 		// if they are defined, but incomplete them add that info.
@@ -328,9 +329,9 @@ public class VDBArchive implements MetadataSource {
 	}
 	
 	private static InputStream getStream(String wantedFile, ZipFile archive) throws IOException {
-        Enumeration entries = archive.entries();
+        Enumeration<? extends ZipEntry> entries = archive.entries();
         while(entries.hasMoreElements()) {
-            ZipEntry entry = (ZipEntry)entries.nextElement();
+            ZipEntry entry = entries.nextElement();
             if (entry != null && entry.getName().equalsIgnoreCase(wantedFile)) {
                 return archive.getInputStream(entry);
             }
@@ -341,12 +342,16 @@ public class VDBArchive implements MetadataSource {
 	private HashSet<String> getListOfEntries() {
 		HashSet<String> files = new HashSet<String>();
 		File[] allFiles = FileUtils.findAllFilesInDirectoryRecursively(deployDirectory.getAbsolutePath());
-		int length = deployDirectory.getAbsolutePath().length();
+		int length = getAbstractPath(deployDirectory).length() - 1;
 		for (File file : allFiles) {
-			files.add(file.getAbsolutePath().substring(length));
+			files.add(getAbstractPath(file).substring(length));
 		}
 		return files;
 	}
+	
+    private static String getAbstractPath(File f) {
+    	return f.getAbsoluteFile().toURI().getPath();
+    }
 	
 	private void checkOpen() {
 		if(!open) {
@@ -362,7 +367,7 @@ public class VDBArchive implements MetadataSource {
 	 * @return VDBDefn
 	 * @throws IOException 
 	 */
-	public static BasicVDBDefn readFromDef(InputStream defStream) throws IOException {
+	public static BasicVDBDefn readFromDef(InputStream defStream) throws IOException, MetaMatrixComponentException {
 		DEFReaderWriter reader = new DEFReaderWriter();
 		BasicVDBDefn vdbDefn = reader.read(defStream);
 		return vdbDefn;

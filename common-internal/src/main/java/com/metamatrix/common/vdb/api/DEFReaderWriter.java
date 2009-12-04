@@ -38,6 +38,7 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -55,7 +56,7 @@ public class DEFReaderWriter {
     private static final String TRUE = "true"; //$NON-NLS-1$
 	private final static String UNKNOWN = "Unknown"; //$NON-NLS-1$
     
-    public BasicVDBDefn read(InputStream defStream) throws IOException {
+    public BasicVDBDefn read(InputStream defStream) throws IOException, MetaMatrixComponentException {
     	BasicVDBDefn vdbDefn = null;
         try {
         	XMLReaderWriter reader = new XMLReaderWriterImpl();
@@ -80,7 +81,7 @@ public class DEFReaderWriter {
             loadConnectorBindings(vdbDefn, root);
             
         } catch (JDOMException e) {
-            throw new IOException(CommonPlugin.Util.getString("VDBDefnXMLHelper.Unable_to_read_defn_file"));//$NON-NLS-1$
+            throw new MetaMatrixComponentException(e, CommonPlugin.Util.getString("VDBDefnXMLHelper.Unable_to_read_defn_file"));//$NON-NLS-1$
         } 
         return vdbDefn;
     }

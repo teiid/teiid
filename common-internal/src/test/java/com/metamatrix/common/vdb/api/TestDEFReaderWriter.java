@@ -92,7 +92,7 @@ public class TestDEFReaderWriter extends TestCase {
 		assertNull(defn.getConnectorType("dummy"));
 	}
 	
-	public void testDEFWrite() throws IOException {
+	public void testDEFWrite() throws Exception {
 		File defFile = new File(UnitTestUtil.getTestDataPath()+"/example.def");
 		File exportedFile = new File(UnitTestUtil.getTestDataPath()+"/example.def.exported");
 		

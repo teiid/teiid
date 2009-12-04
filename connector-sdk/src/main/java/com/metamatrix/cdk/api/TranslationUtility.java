@@ -22,7 +22,6 @@
 
 package com.metamatrix.cdk.api;
 
-import java.io.IOException;
 import java.net.URL;
 
 import org.teiid.connector.language.ICommand;
@@ -56,11 +55,7 @@ public class TranslationUtility {
     }
     
     public TranslationUtility(URL url) {
-        try {
-			metadata = VDBMetadataFactory.getVDBMetadata(url);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}     
+		metadata = VDBMetadataFactory.getVDBMetadata(url);
     }
     
     public TranslationUtility(QueryMetadataInterface metadata) {

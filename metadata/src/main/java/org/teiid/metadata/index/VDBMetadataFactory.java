@@ -33,6 +33,7 @@ import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.LRUCache;
@@ -51,16 +52,22 @@ public class VDBMetadataFactory {
 		}
     }
 	
-	public static QueryMetadataInterface getVDBMetadata(URL vdbURL) throws IOException {
+	public static QueryMetadataInterface getVDBMetadata(URL vdbURL) {
 		QueryMetadataInterface vdb = VDB_CACHE.get(vdbURL);
 		if (vdb != null) {
 			return vdb;
 		}
-		MetadataSource source = new VDBArchive(vdbURL.openStream());
-		IndexMetadataFactory selector = new IndexMetadataFactory(source);
-        vdb = new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector.getMetadataStore()), source));
-        VDB_CACHE.put(vdbURL, vdb);
-        return vdb;
+		try {
+			MetadataSource source = new VDBArchive(vdbURL.openStream());
+			IndexMetadataFactory selector = new IndexMetadataFactory(source);
+	        vdb = new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector.getMetadataStore()), source));
+	        VDB_CACHE.put(vdbURL, vdb);
+	        return vdb;
+		} catch (IOException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }	
 	
 	public static QueryMetadataInterface getVDBMetadata(String[] vdbFile) {
@@ -75,6 +82,8 @@ public class VDBMetadataFactory {
 	        	}
 				selectors.add(new IndexMetadataFactory(tempSource).getMetadataStore());
 			} catch (IOException e) {
+				throw new MetaMatrixRuntimeException(e);
+			} catch (MetaMatrixComponentException e) {
 				throw new MetaMatrixRuntimeException(e);
 			}        
         }
