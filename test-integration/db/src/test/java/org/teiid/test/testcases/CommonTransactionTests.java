@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
-import org.teiid.test.framework.transaction.OnWrapTransaction;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -477,9 +476,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
                 executeBatch(getMultipleSourceBatch());
             }
            
-            /** 
-             * @see com.metamatrix.transaction.test.framework.AbstractQueryTest#exceptionExpected()
-             */
+
             public boolean exceptionExpected() {
                 return true;
             }

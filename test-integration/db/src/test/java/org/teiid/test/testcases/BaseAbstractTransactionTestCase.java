@@ -7,8 +7,6 @@ import org.teiid.test.framework.TransactionContainer;
 
 public abstract class BaseAbstractTransactionTestCase extends TestCase {
  
-    protected TransactionContainer container = null;
-
     public BaseAbstractTransactionTestCase(String name) {
 	super(name);
 
