@@ -359,7 +359,7 @@ public class DataTypeManager {
 
 		Map<String, Transform> innerMap = transforms.get(sourceName);
 		if (innerMap == null) {
-			innerMap = new HashMap<String, Transform>();
+			innerMap = new LinkedHashMap<String, Transform>();
 			transforms.put(sourceName, innerMap);
 		}
 		innerMap.put(targetName, transform);

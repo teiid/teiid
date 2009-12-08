@@ -22,6 +22,7 @@
 
 package com.metamatrix.query.eval;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -325,6 +326,14 @@ public class Evaluator {
     			throw new CriteriaEvaluationException(e, e.getMessage());
     		}
         	if (values != null) {
+        		if (leftValue instanceof BigDecimal) {
+        			for (Object object : values) {
+						if (compareValues(leftValue, object) == 0) {
+							return true;
+						}
+					}
+        			return false;
+        		}
         		return values.contains(leftValue);
         	}
         	//there are too many values to justify a linear search or holding

@@ -22,24 +22,19 @@
 
 package com.metamatrix.common.types;
 
+import static org.junit.Assert.*;
+
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.sql.rowset.serial.SerialBlob;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class TestDataTypeManager extends TestCase {
+public class TestDataTypeManager {
 
-	// ################################## FRAMEWORK ################################
-	
-	public TestDataTypeManager(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################
-	
     private void helpDetermineDataType(Object value, Class expectedClass) { 
         Class actualClass = DataTypeManager.determineDataTypeClass(value);
         assertNotNull("Should never receive null when determining data type of object: " + value); //$NON-NLS-1$
@@ -88,7 +83,7 @@ public class TestDataTypeManager extends TestCase {
 
 	// ################################## ACTUAL TESTS ################################
 	
-	public void testTypeMappings() {
+	@Test public void testTypeMappings() {
 		Set dataTypeNames = DataTypeManager.getAllDataTypeNames();
 		Iterator iter = dataTypeNames.iterator();
 		while(iter.hasNext()) { 
@@ -100,7 +95,7 @@ public class TestDataTypeManager extends TestCase {
 		}
 	}
     
-    public void testCheckConversions() {
+    @Test public void testCheckConversions() {
         for (int src = 0; src < dataTypes.length; src++) {
             for (int tgt =0; tgt < dataTypes.length; tgt++) {
                 char c = conversions[src][tgt];
@@ -125,22 +120,22 @@ public class TestDataTypeManager extends TestCase {
     }
 	
     /** Test determine data type for a STRING object. */
-    public void testDetermineDataType1() {
+    @Test public void testDetermineDataType1() {
         helpDetermineDataType("abc", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
     }
 
     /** Test determine data type for a NULL object. */
-    public void testDetermineDataType2() {
+    @Test public void testDetermineDataType2() {
         helpDetermineDataType(null, DataTypeManager.DefaultDataClasses.NULL);
     }
     	
     /** Test determine data type for an unknown object type - should be typed as an OBJECT. */
-    public void testDetermineDataType3() throws Exception {
+    @Test public void testDetermineDataType3() throws Exception {
         java.net.URL url = new java.net.URL("http://fake"); //$NON-NLS-1$
         helpDetermineDataType(url, DataTypeManager.DefaultDataClasses.OBJECT);
     }
     
-    public void testCheckAllConversions() {
+    @Test public void testCheckAllConversions() {
         Set allTypes = DataTypeManager.getAllDataTypeNames();
         Iterator srcIter = allTypes.iterator();
         while(srcIter.hasNext()) { 
@@ -160,7 +155,7 @@ public class TestDataTypeManager extends TestCase {
         }        
     }
     
-    public void testTimeConversions() {
+    @Test public void testTimeConversions() {
         Transform t = DataTypeManager.getTransform(DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.DATE);
         
         assertEquals(DataTypeManager.DefaultDataClasses.DATE, t.getTargetType());
@@ -170,7 +165,7 @@ public class TestDataTypeManager extends TestCase {
         assertEquals(DataTypeManager.DefaultDataClasses.TIMESTAMP, t.getTargetType());
     }
     
-    public void testJDBCSQLTypeInfo() {
+    @Test public void testJDBCSQLTypeInfo() {
         
         String[] types = MMJDBCSQLTypeInfo.getMMTypeNames();
         
@@ -193,7 +188,7 @@ public class TestDataTypeManager extends TestCase {
         assertEquals(Types.CHAR, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
     }
     
-    public void testRuntimeTypeConversion() throws Exception {
+    @Test public void testRuntimeTypeConversion() throws Exception {
     	assertNull(DataTypeManager.convertToRuntimeType(null));
     	
     	assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0])) instanceof BlobType);
@@ -207,10 +202,19 @@ public class TestDataTypeManager extends TestCase {
     	assertEquals(bar, DataTypeManager.convertToRuntimeType(bar));
     }
     
-    public void testObjectType() {
+    @Test public void testObjectType() {
     	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.getDataTypeClass("foo")); //$NON-NLS-1$
     	
     	assertEquals(DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.getDataTypeName(TestDataTypeManager.class));
+    }
+    
+    @Test public void testImplicitConversions() {
+    	assertEquals(Arrays.asList(DataTypeManager.DefaultDataTypes.LONG, 
+    			DataTypeManager.DefaultDataTypes.BIG_INTEGER, 
+    			DataTypeManager.DefaultDataTypes.DOUBLE, 
+    			DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
+    			DataTypeManager.DefaultDataTypes.STRING, 
+    			DataTypeManager.DefaultDataTypes.OBJECT), DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER));
     }
 	
 }
