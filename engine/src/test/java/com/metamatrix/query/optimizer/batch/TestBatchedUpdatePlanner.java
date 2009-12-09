@@ -80,7 +80,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
                 fail("Exception during validation (" + repo); //$NON-NLS-1$
             }                    
             
-            command = QueryRewriter.rewrite(command, null, md, null);
+            command = QueryRewriter.rewrite(command, md, null);
             commands.add(command);
         }
         return commands;

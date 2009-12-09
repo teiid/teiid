@@ -31,7 +31,6 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
@@ -43,7 +42,6 @@ import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
-import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.ProcedureContainerResolver;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.VariableResolver;
@@ -55,7 +53,7 @@ import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
-import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
+import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -65,48 +63,20 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 /**
  */
 public class ExecResolver extends ProcedureContainerResolver implements VariableResolver {
-
-    /**
-     * @see com.metamatrix.query.resolver.CommandResolver#expandCommand(com.metamatrix.query.sql.lang.Command, java.util.Map, com.metamatrix.query.metadata.QueryMetadataInterface, AnalysisRecord)
-     * 
-     * In this method - retrieve the parameter metadata information for the stored procedure, validate
-     * that it matches up with the actual parameters entered by the user, and replace the parsed
-     * expressions with the ones retrieved from metadata (except retain the user's parameter values).
-     * 
-     * The user may have used the more common indexed parameters syntax, or may have used named parameters syntax.
-     * Named parameters are a little more tricky, because the user is free to enter the parameters in
-     * any order and even to leave off optional parameters and/or parameters with default values.
-     */
-    public void expandCommand(Command command, QueryMetadataInterface metadata, AnalysisRecord analysis)
-        throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-
-        StoredProcedure storedProcedureCommand = (StoredProcedure) command;
-
-        StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(storedProcedureCommand.getProcedureName());
-        
-        //if there is a query plan associated with the procedure, get it.
-        QueryNode plan = storedProcedureInfo.getQueryPlan();
-
-        //if there is a query plan, parse and resolve it
-        if(plan != null ){
-            try {
-                Command subCommand = QueryParser.getQueryParser().parseCommand(plan.getQuery());
-                if(subCommand instanceof CreateUpdateProcedureCommand){
-                    CreateUpdateProcedureCommand cupCommand = (CreateUpdateProcedureCommand)subCommand;
-                    //if the subcommand is virtual stored procedure, it must have the same
-                    //projected symbol as its parent.
-                    if(!cupCommand.isUpdateProcedure()){
-                        cupCommand.setProjectedSymbols(storedProcedureCommand.getProjectedSymbols());
-                    }
-                    
-                    cupCommand.setVirtualGroup(storedProcedureCommand.getGroup());
-                }
-                storedProcedureCommand.setSubCommand(subCommand);
-            } catch(QueryParserException e) {
-                throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0008, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0008, storedProcedureCommand.getProcedureName()));
-            }
-        }
-    }
+	
+	@Override
+	public Command expandCommand(ProcedureContainer procCommand,
+			QueryMetadataInterface metadata, AnalysisRecord analysis)
+			throws QueryMetadataException, QueryResolverException,
+			MetaMatrixComponentException {
+		Command command = super.expandCommand(procCommand, metadata, analysis);
+		if (command instanceof XQuery) {
+			XQuery query = (XQuery)command;
+			query.setProcedureGroup(procCommand.getGroup().getCanonicalName());
+			query.setVariables(getVariableValues(procCommand, metadata));
+		}
+		return command;
+	}
 
     /**
      * @see com.metamatrix.query.resolver.CommandResolver#findCommandMetadata(com.metamatrix.query.sql.lang.Command,
@@ -232,15 +202,14 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
         procGroup.setMetadataID(tid);
         storedProcedureCommand.setGroup(procGroup);
     }
+    
+    @Override
+    public GroupContext findChildCommandMetadata(ProcedureContainer container,
+    		Command subCommand, TempMetadataStore discoveredMetadata,
+    		QueryMetadataInterface metadata) throws QueryMetadataException,
+    		QueryResolverException, MetaMatrixComponentException {
 
-    /**
-     * @see com.metamatrix.query.resolver.CommandResolver#findChildCommandMetadata(com.metamatrix.query.sql.lang.
-     * Command, com.metamatrix.query.metadata.QueryMetadataInterface)
-     */
-    public GroupContext findChildCommandMetadata(Command command, TempMetadataStore childMetadata, boolean useMetadataCommands, QueryMetadataInterface metadata)
-    throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-
-        StoredProcedure storedProcedureCommand = (StoredProcedure) command;
+        StoredProcedure storedProcedureCommand = (StoredProcedure) container;
 
         // Create temporary metadata that defines a group based on either the stored proc
         // name or the stored query name - this will be used later during planning
@@ -249,7 +218,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
         GroupContext context = new GroupContext();
 
         // Look through parameters to find input elements - these become child metadata
-        List tempElements = new ArrayList();
+        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>();
         Iterator iter = storedProcedureCommand.getParameters().iterator();
         while(iter.hasNext()) {
             SPParameter param = (SPParameter) iter.next();
@@ -259,21 +228,15 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
             }
         }
 
-        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, context, tempElements);
-        
-        if (storedProcedureCommand.getSubCommand() instanceof CreateUpdateProcedureCommand) {
-            CreateUpdateProcedureCommand cup = (CreateUpdateProcedureCommand)storedProcedureCommand.getSubCommand();
-            
-            cup.setUserCommand(storedProcedureCommand);
-        }
+        ProcedureContainerResolver.addScalarGroup(procName, discoveredMetadata, context, tempElements);
         
         return context;
     }
 
     /** 
-     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
+     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
      */
-    public void resolveProceduralCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         findCommandMetadata(command, metadata.getMetadataStore(), metadata);
@@ -291,7 +254,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                     for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
                         QueryResolver.setChildMetadata(container.getCommand(), command);
                         
-                        QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis);
+                        QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
                     }
                     ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
                     Class paramType = param.getClassType();
@@ -353,6 +316,11 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
     protected String getPlan(QueryMetadataInterface metadata,
                              GroupSymbol group) throws MetaMatrixComponentException,
                                                QueryMetadataException {
-        return null;
+        StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(group.getCanonicalName());
+        
+        //if there is a query plan associated with the procedure, get it.
+        QueryNode plan = storedProcedureInfo.getQueryPlan();
+        
+        return plan.getQuery();
     }
 }

@@ -65,9 +65,9 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
     /**
      * Resolve an INSERT.  Need to resolve elements, constants, types, etc.
-     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
+     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
      */
-    public void resolveProceduralCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
 
@@ -81,7 +81,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         if(insert.getQueryExpression() != null) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
             
-            QueryResolver.resolveCommand(insert.getQueryExpression(), Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis, false);
+            QueryResolver.resolveCommand(insert.getQueryExpression(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
         }
 
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();

@@ -63,9 +63,9 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 public class XMLQueryResolver implements CommandResolver {
 
     /**
-     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, java.util.Collection, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
      */
-	public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+	public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
 		throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
 		Query query = (Query) command;
@@ -96,7 +96,7 @@ public class XMLQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(subCommand, command);
             
-            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis);
+            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
         }
         
 		if(crit != null) {

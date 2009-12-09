@@ -178,7 +178,7 @@ public class FileStorageManager implements StorageManager {
                 return;
             }
             Integer batchKey = new Integer(batch.getBeginRow());
-            if (tsInfo.tupleBatchPointers != null && tsInfo.tupleBatchPointers.containsKey(batchKey)) {
+            if (tsInfo.tupleBatchPointers.containsKey(batchKey)) {
                 return;
             }
             byte[] bytes = convertToBytes(batch, types);
@@ -316,11 +316,6 @@ public class FileStorageManager implements StorageManager {
         }
 
         synchronized(info) {
-            if(info.isRemoved) {
-                // Someone else got here first!
-                return;
-            }
-
             // If open, close the file and decrement the open file counter
             for (int i = 0; i < info.storageFiles.size(); i++) {
                 FileInfo fileInfo = info.storageFiles.get(i);
@@ -358,7 +353,6 @@ public class FileStorageManager implements StorageManager {
     public int getOpenFiles() {
         return this.fileCache.size();
     }
-
 
     private class FileInfo {
     	private File file;

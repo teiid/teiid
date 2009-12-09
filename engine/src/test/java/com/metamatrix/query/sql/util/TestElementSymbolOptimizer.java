@@ -55,7 +55,7 @@ public class TestElementSymbolOptimizer extends TestCase {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
 
         final boolean USE_METADATA_COMMANDS = true;
-        QueryResolver.resolveCommand(command, externalMetadata, USE_METADATA_COMMANDS, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
         
         return command;      
     }

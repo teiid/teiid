@@ -73,7 +73,7 @@ public class CommandBuilder {
         try {
             command = QueryParser.getQueryParser().parseCommand(queryString);
             QueryResolver.resolveCommand(command, metadata);
-            command = QueryRewriter.rewrite(command, null, metadata, null);
+            command = QueryRewriter.rewrite(command, metadata, null);
             expandAllSymbol(command);            
             if (generateAliases) {
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));

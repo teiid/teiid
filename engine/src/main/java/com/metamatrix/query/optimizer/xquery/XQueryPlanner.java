@@ -29,13 +29,10 @@ import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.CommandPlanner;
-import com.metamatrix.query.optimizer.CommandTreeNode;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.xml.XMLPlannerEnvironment;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.xml.XMLProcessorEnvironment;
 import com.metamatrix.query.processor.xquery.XQueryPlan;
-import com.metamatrix.query.sql.lang.ProcedureContainer;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.util.CommandContext;
 
@@ -45,27 +42,12 @@ import com.metamatrix.query.util.CommandContext;
 public class XQueryPlanner implements CommandPlanner {
 
     /**
-     * @see com.metamatrix.query.optimizer.CommandPlanner#generateCanonical(com.metamatrix.query.optimizer.CommandTreeNode, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
+     * @see com.metamatrix.query.optimizer.CommandPlanner#optimize(Command, com.metamatrix.core.id.IDGenerator, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
      */
-    public void generateCanonical(CommandTreeNode node, QueryMetadataInterface metadata, AnalysisRecord analysisRecord, CommandContext context)
+    public ProcessorPlan optimize(Command command, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
-        //indicate child XML results should be as JDOM Documents
-        node.setProperty(XMLPlannerEnvironment.XML_FORM_RESULTS_PROPERTY, XMLProcessorEnvironment.JDOM_DOCUMENT_RESULT);
-    }
-
-    /**
-     * @see com.metamatrix.query.optimizer.CommandPlanner#optimize(com.metamatrix.query.optimizer.CommandTreeNode, com.metamatrix.core.id.IDGenerator, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
-     */
-    public ProcessorPlan optimize(CommandTreeNode node, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
-        throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-
-    	String parentGroup = null;
-    	if (node.getParent() != null && node.getParent().getCommand() instanceof ProcedureContainer) {
-    		parentGroup = ((ProcedureContainer)node.getParent().getCommand()).getGroup().getCanonicalName();
-    	}
-    	
-    	return new XQueryPlan((XQuery)node.getCommand(), parentGroup);        
+    	return new XQueryPlan((XQuery)command);        
     }
 
 }

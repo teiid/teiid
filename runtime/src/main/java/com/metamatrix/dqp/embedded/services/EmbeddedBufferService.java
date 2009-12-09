@@ -57,7 +57,7 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
     private static final String DEFAULT_MAX_OPEN_FILES = "10"; //$NON-NLS-1$
     
     // Instance
-    private BufferManager bufferMgr;
+    private BufferManagerImpl bufferMgr;
 	private File bufferDir;
 	
 	@Inject

@@ -103,6 +103,7 @@ import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.PredicateCollectorVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
@@ -221,7 +222,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
             //if it is select with no from, should not have ScalarSubQuery
             if(obj.getSelect() != null && obj.getFrom() == null){
-                if(!CommandCollectorVisitor.getCommands(obj).isEmpty()){
+                if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(obj.getSelect()).isEmpty()){
                     handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0067),obj);
                 }
             }

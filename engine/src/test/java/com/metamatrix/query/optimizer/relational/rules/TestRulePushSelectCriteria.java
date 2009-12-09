@@ -34,8 +34,7 @@ import org.junit.Test;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
-import com.metamatrix.query.optimizer.relational.PlanHints;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
@@ -69,8 +68,10 @@ public class TestRulePushSelectCriteria {
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata, null); //$NON-NLS-1$
     	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata, null); //$NON-NLS-1$
-    	PlanNode root = GenerateCanonical.generatePlan(command, new PlanHints(), metadata);
-    	PlanNode child = GenerateCanonical.generatePlan(subCommand, new PlanHints(), metadata);
+    	RelationalPlanner p = new RelationalPlanner();
+    	p.initialize(command, null, metadata, null, null, null);
+    	PlanNode root = p.generatePlan(command);
+    	PlanNode child = p.generatePlan(subCommand);
     	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
     	sourceNode.addFirstChild(child);
         sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<SingleElementSymbol>)child.getFirstChild().getProperty(Info.PROJECT_COLS)));

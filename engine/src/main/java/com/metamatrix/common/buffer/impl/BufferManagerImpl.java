@@ -273,6 +273,9 @@ public class BufferManagerImpl implements BufferManager {
      * @since 4.2
      */
     public static String[] getTypeNames(List expressions) {
+    	if (expressions == null) {
+    		return null;
+    	}
         String[] types = new String[expressions.size()];
         for (ListIterator i = expressions.listIterator(); i.hasNext();) {
             Expression expr = (Expression)i.next();
@@ -391,7 +394,7 @@ public class BufferManagerImpl implements BufferManager {
 
 		TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
         int batchSize = this.config.getProcessorBatchSize();
-        return new TupleSourceImpl(this, tupleSourceID, info.getTupleSchema(), batchSize);
+        return new TupleSourceImpl(this, tupleSourceID, info.getTupleSchema());
     }
 
     /**
@@ -745,7 +748,6 @@ public class BufferManagerImpl implements BufferManager {
         }
     }
 
-    //TODO: run asynch
 	private void cleanLobTupleSource() {
 		String tupleSourceId = TupleSourceInfo.getStaleLobTupleSource();
 		if (tupleSourceId != null) {

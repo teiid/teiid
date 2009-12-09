@@ -90,7 +90,7 @@ public class TestProcedureProcessor {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
         }
-        QueryRewriter.rewrite(userCommand, null, metadata, new CommandContext());
+        QueryRewriter.rewrite(userCommand, metadata, new CommandContext());
 
         AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
         try {

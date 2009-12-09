@@ -75,7 +75,7 @@ public class LobWorkItem implements Runnable {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
     	} catch (BlockedOnMemoryException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, new Object[] {"Reenqueueing LOB chunk request due to lack of available memory ###########", requestID}); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.logDetail(LogConstants.CTX_DQP, new Object[] {"Reenqueueing LOB chunk request due to lack of available memory ###########", requestID}); //$NON-NLS-1$ 
 			this.dqpCore.addWork(this);
 			return;
     	} catch (TupleSourceNotFoundException e) {

@@ -37,11 +37,11 @@ import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 public class Validator {
 
     public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        ValidatorReport report1 = Validator.validate(object, metadata, new ValidationVisitor(), false);
+        ValidatorReport report1 = Validator.validate(object, metadata, new ValidationVisitor());
         return report1;
     }
 
-    public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata, AbstractValidationVisitor visitor, boolean validateOnlyEmbedded)
+    public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata, AbstractValidationVisitor visitor)
         throws MetaMatrixComponentException {
 
         // Construct combined runtime / query metadata if necessary
@@ -56,10 +56,10 @@ public class Validator {
             }
             
             // Recursively validate subcommands
-            Iterator iter = CommandCollectorVisitor.getCommands((Command)object, validateOnlyEmbedded).iterator();
+            Iterator iter = CommandCollectorVisitor.getCommands((Command)object).iterator();
             while(iter.hasNext()) {
                 Command subCommand = (Command) iter.next();
-                validate(subCommand, metadata, visitor, validateOnlyEmbedded);
+                validate(subCommand, metadata, visitor);
             }
         }
 

@@ -32,8 +32,8 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
@@ -144,7 +144,7 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
      */
     private boolean pushCriteria(PlanNode joinNode,
                                   Criteria tgtCrit) {
-        PlanNode newCritNode = GenerateCanonical.createSelectNode(tgtCrit, false);
+        PlanNode newCritNode = RelationalPlanner.createSelectNode(tgtCrit, false);
         
         Set<GroupSymbol> groups = newCritNode.getGroups();
         
@@ -156,7 +156,7 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
             if (FrameUtil.findOriginatingNode(innerJoinNodes[i], groups) != null) {
                 if (pushed) {
                     //create a new copy since the old one has been used
-                    newCritNode = GenerateCanonical.createSelectNode(tgtCrit, false);
+                    newCritNode = RelationalPlanner.createSelectNode(tgtCrit, false);
                 }
                 innerJoinNodes[i].addAsParent(newCritNode);
                 pushed = true;

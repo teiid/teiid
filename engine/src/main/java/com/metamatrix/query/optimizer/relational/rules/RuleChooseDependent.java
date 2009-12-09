@@ -35,8 +35,8 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
@@ -307,7 +307,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
             crit.setValueExpression(indepExpr);
             
-            PlanNode selectNode = GenerateCanonical.createSelectNode(crit, false);
+            PlanNode selectNode = RelationalPlanner.createSelectNode(crit, false);
             
             selectNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
             result.add(selectNode);

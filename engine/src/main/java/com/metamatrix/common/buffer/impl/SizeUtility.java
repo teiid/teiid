@@ -48,6 +48,8 @@ public final class SizeUtility {
 	public static final boolean IS_64BIT = System.getProperty("sun.arch.data.model", "32").indexOf("64") != -1; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 //	public static final boolean IS_64BIT = true;
 	public static final int REFERENCE_SIZE = IS_64BIT?8:4;
+	
+	private static final int SAMPLE_RATE = 10;
     
     
     /**
@@ -95,14 +97,14 @@ public final class SizeUtility {
                     || type == DataTypeManager.DefaultDataClasses.TIME
                     || type == DataTypeManager.DefaultDataClasses.TIMESTAMP) { 
                 	// Even though Timestamp contains an extra int, these are 
-                	// the same size because of rounding                                                                               // though
+                	// the same size because of rounding 
                 size += (32*rowLength);            
             } else if (type == DataTypeManager.DefaultDataClasses.NULL) {
             	//do nothing
             }
             else {
-                for (int row = 0; row < rowLength; row++) {
-                    size += getSize(data[row].get(col));
+                for (int row = 0; row < rowLength; row+=SAMPLE_RATE) {
+                    size += getSize(data[row].get(col)) * Math.min(rowLength - row, SAMPLE_RATE);
                 }
             }
         }

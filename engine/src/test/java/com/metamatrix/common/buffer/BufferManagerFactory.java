@@ -122,7 +122,7 @@ public class BufferManagerFactory {
      */
     public static BufferManager getStandaloneBufferManager() throws MetaMatrixComponentException {
     	if (INSTANCE == null) {
-	        BufferManager bufferMgr = new BufferManagerImpl();
+	        BufferManagerImpl bufferMgr = new BufferManagerImpl();
 	        Properties props = new Properties();
 	        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(Long.MAX_VALUE));
 	        props.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, "100"); //$NON-NLS-1$

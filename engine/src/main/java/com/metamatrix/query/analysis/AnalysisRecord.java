@@ -35,7 +35,7 @@ import java.util.*;
  * <li>Debug trace information, if requested</LI>
  * </ul>
  */
-public class AnalysisRecord {
+public class AnalysisRecord implements Serializable {
 
     // Flags regarding what should be recorded
     private boolean recordQueryPlan = false;

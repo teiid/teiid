@@ -49,9 +49,9 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 public class DynamicCommandResolver implements CommandResolver {
 
     /** 
-     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, boolean, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
      */
-    public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         DynamicCommand dynamicCmd = (DynamicCommand)command;

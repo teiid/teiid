@@ -22,44 +22,32 @@
 
 package org.teiid.dqp.internal.cache;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
-public class CacheResults {
+public class CacheResults implements Serializable {
 	private List[] results;
-	private List elements;
 	private AnalysisRecord analysisRecord;
 	private Command command;
-	private Map paramValues;
 	
 	private boolean isFinal;
 	private int firstRow = 1;
     //size of this results in memory
 	private long size= -1;
-	private int finalRow = -1;
 		
 	public CacheResults(List[] results, int firstRow, boolean isFinal){
-		this(results, null, firstRow, isFinal);
-	}
-	
-	public CacheResults(List[] results, List elements, int firstRow, boolean isFinal){
 		this.results = results;
 		this.firstRow = firstRow;
 		this.isFinal = isFinal;
-		this.elements = elements;
 	}
 
-	public CacheResults(Map paramValues, boolean isFinal){
-		this.paramValues = paramValues;
-		this.isFinal = isFinal;
-	}
-	
 	public int getFirstRow() {
 		return firstRow;
 	}
@@ -68,12 +56,15 @@ public class CacheResults {
 		return isFinal;
 	}
 
-	public List[] getResults() {
+	public List<?>[] getResults() {
 		return results;
 	}
 
-	public List getElements() {
-		return elements;
+	public List<SingleElementSymbol> getElements() {
+		if (command == null) {
+			return null;
+		}
+		return command.getProjectedSymbols();
 	}
 
 	public Command getCommand() {
@@ -101,25 +92,12 @@ public class CacheResults {
 	}
 
 	public int getFinalRow() {
-		return finalRow;
-	}
-
-	public void setFinalRow(int finalRow) {
-		this.finalRow = finalRow;
-	}
-
-	public Map getParamValues() {
-		return paramValues;
-	}
-
-	public void setParamValues(Map paramValues) {
-		if(this.paramValues == null){
-			this.paramValues = paramValues;
-		}else if(paramValues != null){
-			this.paramValues.putAll(paramValues);
+		if (this.isFinal) {
+			return results.length;
 		}
+		return -1;
 	}
-		
+
     //add the results to the existing one, this is used
     //when building the batched results
 	boolean addResults(CacheResults cacheResults){
@@ -140,7 +118,6 @@ public class CacheResults {
 			this.analysisRecord = cacheResults.getAnalysisRecord();
 			this.firstRow = 1;
 			this.isFinal = true;
-			this.finalRow = this.results.length;
 		}
 		return true;
 	}

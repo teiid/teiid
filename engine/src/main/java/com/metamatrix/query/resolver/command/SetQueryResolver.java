@@ -50,9 +50,9 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 public class SetQueryResolver implements CommandResolver {
 
     /**
-     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, java.util.Collection, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
      */
-    public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         SetQuery setQuery = (SetQuery) command;
@@ -60,7 +60,7 @@ public class SetQueryResolver implements CommandResolver {
         QueryCommand firstCommand = setQuery.getLeftQuery();
         
         QueryResolver.setChildMetadata(firstCommand, setQuery);
-        QueryResolver.resolveCommand(firstCommand, Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis, false);
+        QueryResolver.resolveCommand(firstCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
 
         List firstProject = firstCommand.getProjectedSymbols();
         List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
@@ -72,7 +72,7 @@ public class SetQueryResolver implements CommandResolver {
         QueryCommand rightCommand = setQuery.getRightQuery();
         
         QueryResolver.setChildMetadata(rightCommand, setQuery);
-        QueryResolver.resolveCommand(rightCommand, Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis, false);
+        QueryResolver.resolveCommand(rightCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
 
         if (firstProject.size() != rightCommand.getProjectedSymbols().size()) {
             throw new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0035, setQuery.getOperation()));

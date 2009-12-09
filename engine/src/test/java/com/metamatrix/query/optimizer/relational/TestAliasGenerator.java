@@ -45,7 +45,7 @@ public class TestAliasGenerator {
                           boolean aliasGroups,
                           QueryMetadataInterface metadata) throws QueryValidatorException {
         Command command = TestResolver.helpResolve(sql, metadata, null);
-        command = QueryRewriter.rewrite(command, null, metadata, null);
+        command = QueryRewriter.rewrite(command, metadata, null);
         command.acceptVisitor(new AliasGenerator(aliasGroups));
         assertEquals(expected, command.toString());
         return command;

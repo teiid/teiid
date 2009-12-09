@@ -42,9 +42,9 @@ import com.metamatrix.query.sql.lang.Command;
 public class BatchedUpdateResolver implements CommandResolver {
     
     /** 
-     * @see com.metamatrix.query.resolver.command.AbstractCommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.command.AbstractCommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.analysis.AnalysisRecord, boolean)
      */
-    public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand) command;
@@ -52,7 +52,7 @@ public class BatchedUpdateResolver implements CommandResolver {
         for (Iterator i = batchedUpdateCommand.getSubCommands().iterator(); i.hasNext();) {
             Command subCommand = (Command)i.next();
             QueryResolver.setChildMetadata(subCommand, command);
-            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis);
+            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
         }
     }
 

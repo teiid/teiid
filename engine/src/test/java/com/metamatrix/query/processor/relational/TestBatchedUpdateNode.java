@@ -194,7 +194,7 @@ public class TestBatchedUpdateNode {
         };
         int[] expectedResults = {1};
         FakePDM fpdm = helpTestNextBatch(commands, expectedResults);
-        assertEquals("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES (null, 1, TRUE, 1.0)", ((BatchedUpdateCommand)fpdm.actualCommands.get(0)).getContainedCommands().get(0).toString()); //$NON-NLS-1$
+        assertEquals("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES (null, 1, TRUE, 1.0)", ((BatchedUpdateCommand)fpdm.actualCommands.get(0)).getUpdateCommands().get(0).toString()); //$NON-NLS-1$
     }
     
     private static final class FakePDM implements ProcessorDataManager {

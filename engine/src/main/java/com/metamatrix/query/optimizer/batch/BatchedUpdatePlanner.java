@@ -35,11 +35,10 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.CommandPlanner;
-import com.metamatrix.query.optimizer.CommandTreeNode;
+import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.rules.CapabilitiesUtil;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.batch.BatchedUpdatePlan;
@@ -65,17 +64,6 @@ import com.metamatrix.query.util.CommandContext;
 public class BatchedUpdatePlanner implements CommandPlanner {
 
     /** 
-     * @see com.metamatrix.query.optimizer.CommandPlanner#generateCanonical(com.metamatrix.query.optimizer.CommandTreeNode, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
-     * @since 4.2
-     */
-    public void generateCanonical(CommandTreeNode rootNode,
-                                  QueryMetadataInterface metadata,
-                                  AnalysisRecord analysisRecord, CommandContext context)
-    throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-        // do nothing. the planner framework takes care of generating the canonical plan for each of the child commands
-    }
-
-    /** 
      * Optimizes batched updates by batching all contiguous commands that relate to the same physical model.
      * For example, for the following batch of commands:
      * <br/>
@@ -95,21 +83,20 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * </ol>
      * <br/> this implementation will batch as follows: (1,2), (5, 6, 7), (8 thru 12).
      * The remaining commands/plans will be executed individually.
-     * @see com.metamatrix.query.optimizer.CommandPlanner#optimize(com.metamatrix.query.optimizer.CommandTreeNode, com.metamatrix.core.id.IDGenerator, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
+     * @see com.metamatrix.query.optimizer.CommandPlanner#optimize(Command, com.metamatrix.core.id.IDGenerator, com.metamatrix.query.metadata.QueryMetadataInterface, com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder, com.metamatrix.query.analysis.AnalysisRecord, CommandContext)
      * @since 4.2
      */
-    public ProcessorPlan optimize(CommandTreeNode node,
+    public ProcessorPlan optimize(Command command,
                                   IDGenerator idGenerator,
                                   QueryMetadataInterface metadata,
                                   CapabilitiesFinder capFinder,
                                   AnalysisRecord analysisRecord, CommandContext context)
     throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-        List children = node.getChildren();
-        List childPlans = new ArrayList(children.size());
-        BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand)node.getCommand();
+        BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand)command;
+        List childPlans = new ArrayList(batchedUpdateCommand.getUpdateCommands().size());
         List updateCommands = batchedUpdateCommand.getUpdateCommands();
         int numCommands = updateCommands.size();
-        List<VariableContext> allContexts = (List<VariableContext>)node.getProperty(RelationalPlanner.VARIABLE_CONTEXTS);
+        List<VariableContext> allContexts = batchedUpdateCommand.getVariableContexts();
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             // Potentially the first command of a batch
             Command updateCommand = (Command)updateCommands.get(commandIndex);
@@ -174,10 +161,15 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 }
             }
             if (!commandWasBatched) { // If the command wasn't batched, just add the plan for this command to the list of plans
-                childPlans.add(((CommandTreeNode)children.get(commandIndex)).getProcessorPlan()); // Assumes the command index is the same as the plan node index
+            	Command cmd = (Command)batchedUpdateCommand.getUpdateCommands().get(commandIndex);
+            	ProcessorPlan plan = cmd.getProcessorPlan();
+            	if (plan == null) {
+            		plan = QueryOptimizer.optimizePlan(cmd, metadata, idGenerator, capFinder, analysisRecord, context);
+            	}
+                childPlans.add(plan);
             }
         }
-        return new BatchedUpdatePlan(childPlans, children.size());
+        return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size());
     }
     
     /**

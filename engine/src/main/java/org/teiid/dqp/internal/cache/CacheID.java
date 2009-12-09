@@ -22,16 +22,16 @@
 
 package org.teiid.dqp.internal.cache;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.metamatrix.core.util.HashCodeUtil;
 
-public class CacheID {
+public class CacheID implements Serializable {
 	private String scopeID;
 	private String command;
 	private int hashCode;
 	private List preparedStatementValues;
-	private long size=0L;
 	
 	public CacheID(String scopeID, String command){
 		this(scopeID, command, null);
@@ -51,7 +51,7 @@ public class CacheID {
 	public boolean equals(Object obj){
         if(obj == this) {
             return true;
-        } else if(obj == null || ! (obj instanceof CacheID)) {
+        } else if(! (obj instanceof CacheID)) {
             return false;
         } else {
         	CacheID that = (CacheID)obj;
@@ -65,31 +65,14 @@ public class CacheID {
 		if(thisPreparedStatementValues == null && thatPreparedStatementValues == null){
 			return true;
 		}
-		if((thisPreparedStatementValues == null && thatPreparedStatementValues != null)
-				|| thisPreparedStatementValues != null && thatPreparedStatementValues == null){
+		if(thisPreparedStatementValues == null || thatPreparedStatementValues == null){
 			return false;
 		}
-		int size = thisPreparedStatementValues.size();
-		if(size != thatPreparedStatementValues.size()){
-			return false;
-		}
-		for(int i=0; i< size; i++){
-			if(!thisPreparedStatementValues.get(i).equals(thatPreparedStatementValues.get(i))){
-				return false;
-			}
-		}
-		return true;
+		return thisPreparedStatementValues.equals(thatPreparedStatementValues);
 	}
 
 	public int hashCode() {
         return hashCode;
     }
 	
-	public long getMemorySize() {
-		return size;
-	}
-	
-	public void setMemorySize(long size) {
-		this.size = size;
-	}
 }

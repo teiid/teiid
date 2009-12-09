@@ -120,8 +120,6 @@ public abstract class Command implements LanguageObject {
 
     private boolean isResolved;
     
-    private GroupSymbol virtualGroup;
-    
 	/** The option clause */
 	private Option option;
 	
@@ -228,7 +226,6 @@ public abstract class Command implements LanguageObject {
         if(this.tempGroupIDs != null) {
             copy.setTemporaryMetadata(new HashMap(this.tempGroupIDs));
         }
-        copy.setVirtualGroup(getVirtualGroup());
         
         copy.setIsResolved(this.isResolved());
         copy.plan = this.plan;
@@ -339,14 +336,6 @@ public abstract class Command implements LanguageObject {
             }
         }
         return 0;
-    }
-
-    public GroupSymbol getVirtualGroup() {
-        return this.virtualGroup;
-    }
-
-    public void setVirtualGroup(GroupSymbol virtualGroup) {
-        this.virtualGroup = virtualGroup;
     }
     
     public ProcessorPlan getProcessorPlan() {

@@ -36,6 +36,7 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -72,6 +73,9 @@ public class CachedRequestWorkItem extends RequestWorkItem {
 			}
 		}
 		CacheResults cResult = rsCache.getResults(cid, new int[] {this.resultsCursor.begin, this.resultsCursor.end});
+		if (cResult == null) {
+			throw new MetaMatrixComponentException(DQPPlugin.Util.getString("CachedRequestWorkItem.not_available")); //$NON-NLS-1$
+		}
 		List results[] = cResult.getResults();
 		int firstRow = cResult.getFirstRow();
 

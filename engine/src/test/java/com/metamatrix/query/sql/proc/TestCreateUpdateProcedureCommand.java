@@ -182,9 +182,6 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
         field = clazz.getDeclaredField("projectedSymbols"); //$NON-NLS-1$
         field.setAccessible( true );
         assertNotNull(field.get(cloned));
-        field = clazz.getDeclaredField("resultsCommand"); //$NON-NLS-1$
-        field.setAccessible( true );
-        assertNotNull(field.get(cloned));
     }
     
     /**

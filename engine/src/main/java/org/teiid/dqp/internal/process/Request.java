@@ -335,7 +335,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         throws QueryValidatorException, MetaMatrixComponentException {
 
         // Validate with visitor
-        ValidatorReport report = Validator.validate(command, metadata, visitor, validateOnlyEmbedded);
+        ValidatorReport report = Validator.validate(command, metadata, visitor);
         if (report.hasItems()) {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
@@ -444,7 +444,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         validateQuery(command);
         
-        command = QueryRewriter.rewrite(command, null, metadata, context);
+        command = QueryRewriter.rewrite(command, metadata, context);
         
         /*
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
@@ -467,6 +467,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 finder = new MultiSourceCapabilitiesFinder(finder, this.multiSourceModels);
             }
             
+            boolean debug = analysisRecord.recordDebug();
+    		if(debug) {
+    			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
+                analysisRecord.println("USER COMMAND:\n" + command);		 //$NON-NLS-1$
+            }
             // Run the optimizer
             try {
                 processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
@@ -595,7 +600,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	copy.pushCall(recursionGroup);
         }
         
-        newCommand = QueryRewriter.rewrite(newCommand, null, metadata, copy);
+        newCommand = QueryRewriter.rewrite(newCommand, metadata, copy);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}

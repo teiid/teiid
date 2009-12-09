@@ -85,11 +85,14 @@ public class MetaDataProcessor {
     private String vdbVersion;
     private RequestID requestID;
     
-    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, PreparedPlanCache planCache, ApplicationEnvironment env) {
+    
+    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, PreparedPlanCache planCache, ApplicationEnvironment env, String vdbName, String vdbVersion) {
         this.metadataService = metadataService;    
         this.requestManager = requestManager;
         this.planCache = planCache;
         this.env = env;
+        this.vdbName = vdbName;
+        this.vdbVersion = vdbVersion;
     }
         
     /**
@@ -104,8 +107,6 @@ public class MetaDataProcessor {
     MetadataResult processMessage(RequestID requestId, DQPWorkContext workContext, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         final VDBService vdbService = (VDBService)env.findService(DQPServiceNames.VDB_SERVICE);
         this.requestID = requestId;
-        this.vdbName = workContext.getVdbName();
-        this.vdbVersion = workContext.getVdbVersion();
         
         this.metadata = metadataService.lookupMetadata(vdbName, vdbVersion);
         
@@ -220,14 +221,14 @@ public class MetaDataProcessor {
             command = plan.getCommand();
         } else {
         	command = QueryParser.getQueryParser().parseCommand(sql, info);
-            QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, false, this.metadata, AnalysisRecord.createNonRecordingRecord());                        
+            QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, this.metadata, AnalysisRecord.createNonRecordingRecord());                        
         }
         return getMetadataForCommand(command);            
     }
 
     private Map createXMLColumnMetadata(Query xmlCommand) {
         GroupSymbol doc = (GroupSymbol) xmlCommand.getFrom().getGroups().get(0);
-        Map xmlMetadata = getDefaultColumn(vdbName, vdbVersion, doc.getName(), ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
+        Map xmlMetadata = getDefaultColumn(doc.getName(), ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
 
         // Override size as XML may be big        
         xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.XML_COLUMN_LENGTH);
@@ -236,7 +237,7 @@ public class MetaDataProcessor {
     }
 
     private Map createXQueryColumnMetadata(XQuery xqueryCommand) {
-        Map xqueryMetadata = getDefaultColumn(vdbName, vdbVersion, null, ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
+        Map xqueryMetadata = getDefaultColumn(null, ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
 
         // Override size as XML may be big        
         xqueryMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.XML_COLUMN_LENGTH);
@@ -333,7 +334,7 @@ public class MetaDataProcessor {
     }
 
     private Map createTypedMetadata(String shortColumnName, SingleElementSymbol symbol) {
-        return getDefaultColumn(vdbName, vdbVersion, null, shortColumnName, symbol.getType());
+        return getDefaultColumn(null, shortColumnName, symbol.getType());
     }
     
     private int getColumnPrecision(Class dataType, Object elementID) throws QueryMetadataException, MetaMatrixComponentException {
@@ -403,10 +404,10 @@ public class MetaDataProcessor {
        return ResultsMetadataDefaults.getMaxDisplaySize(dataType);
     }
 
-    public Map getDefaultColumn(String vdbName, String vdbVersion, 
-        String tableName, String columnName, Class javaType) {
+    public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, 
+        Class javaType) {
             
-        Map column = new HashMap();
+        Map<Integer, Object> column = new HashMap<Integer, Object>();
         
         // set defaults
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, vdbName);

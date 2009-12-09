@@ -38,7 +38,6 @@ public interface CommandResolver {
     /**
      * Resolve the command using the metadata.  
      * @param command The command to resolve
-     * @param useMetadataCommands true if the resolver should use metadata commands to completely resolve
      * @param metadata Metadata
      * @param analysis
      * @param resolveNullLiterals true if the resolver should consider replacing null literals with more appropriate types 
@@ -47,7 +46,7 @@ public interface CommandResolver {
      * @throws QueryResolverException If the query cannot be resolved
      * @throws MetaMatrixComponentException If there is an internal error     
      */        
-    void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
     throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException;
     
 }

@@ -58,7 +58,7 @@ public class TestOrderByRewrite  {
         
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
         
-        return QueryRewriter.rewrite(command, null, FakeMetadataFactory.example1Cached(), null);
+        return QueryRewriter.rewrite(command, FakeMetadataFactory.example1Cached(), null);
     }
 
     private void helpCheckElements(OrderBy langObj,

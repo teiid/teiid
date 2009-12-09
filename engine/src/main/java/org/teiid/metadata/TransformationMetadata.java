@@ -65,6 +65,7 @@ import com.metamatrix.query.mapping.xml.MappingDocument;
 import com.metamatrix.query.mapping.xml.MappingLoader;
 import com.metamatrix.query.mapping.xml.MappingNode;
 import com.metamatrix.query.metadata.BasicQueryMetadata;
+import com.metamatrix.query.metadata.GroupInfo;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -91,7 +92,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
     /*
      * TODO: move caching to jboss cache structure
      */
-    private final Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(500));
+    private final Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
+    private final Map<String, Object> groupInfoCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
     private final Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
     private final Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
     /**
@@ -1027,7 +1029,11 @@ public class TransformationMetadata extends BasicQueryMetadata {
 	public Object addToMetadataCache(Object metadataID, String key, Object value)
 			throws MetaMatrixComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
+        boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
+        if (groupInfo) {
+        	return this.groupInfoCache.put(key, value); 
+        }
     	return this.metadataCache.put(key, value); 
 	}
 
@@ -1035,7 +1041,11 @@ public class TransformationMetadata extends BasicQueryMetadata {
 	public Object getFromMetadataCache(Object metadataID, String key)
 			throws MetaMatrixComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
+        boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
+        if (groupInfo) {
+        	return this.groupInfoCache.get(key); 
+        }
     	return this.metadataCache.get(key);
 	}
 

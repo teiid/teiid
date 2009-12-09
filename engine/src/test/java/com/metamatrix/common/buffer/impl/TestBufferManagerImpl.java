@@ -70,7 +70,7 @@ public class TestBufferManagerImpl {
         Properties bmProps = new Properties();                        
         bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(bytesAvailable));
         bmProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
-        BufferManager bufferManager = new BufferManagerImpl();
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.initialize("local", bmProps); //$NON-NLS-1$
 
         if(sm2 != null) { 

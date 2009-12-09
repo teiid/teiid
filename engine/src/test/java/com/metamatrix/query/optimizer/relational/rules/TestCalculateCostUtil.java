@@ -34,7 +34,7 @@ import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
@@ -82,7 +82,7 @@ public class TestCalculateCostUtil {
     
     void helpTestEstimateCost(String critString, float childCost, float expectedResult, QueryMetadataInterface metadata) throws Exception {
         Criteria crit = helpGetCriteria(critString, metadata);
-        PlanNode select = GenerateCanonical.createSelectNode(crit, false);
+        PlanNode select = RelationalPlanner.createSelectNode(crit, false);
         
         float resultCost = NewCalculateCostUtil.recursiveEstimateCostOfCriteria(childCost, select, crit, metadata);
         assertEquals((int)expectedResult, (int)resultCost);

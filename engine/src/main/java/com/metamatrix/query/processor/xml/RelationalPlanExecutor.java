@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -33,17 +32,14 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
 
 
@@ -104,22 +100,16 @@ class RelationalPlanExecutor implements PlanExecutor {
             throw e;
         } catch (MetaMatrixProcessingException e) {
         	throw e;
-        } catch (MetaMatrixCoreException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0047,QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0047,e.getMessage()));
         }
     }    
     
-    void setReferenceValues(Map referencesValues) throws MetaMatrixComponentException {
-        if (this.resultInfo.hasReferences() && (referencesValues != null && !referencesValues.isEmpty()) ) {
-            for (final Iterator i = this.resultInfo.getReferences().iterator(); i.hasNext();) {
-                Reference ref = (Reference)i.next();
-                ElementSymbol expr = ref.getExpression();
-                if(!referencesValues.containsKey(expr)) {
-                    throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("unmapped_reference", expr.getName())); //$NON-NLS-1$
-                }
-                this.internalProcessor.getContext().getVariableContext().setValue(expr, referencesValues.get(expr));
-            }
+    void setReferenceValues(Map<ElementSymbol, Object> referencesValues) throws MetaMatrixComponentException {
+        if (referencesValues == null || referencesValues.isEmpty()) {
+        	return;
         }
+        for (Map.Entry<ElementSymbol, Object> entry : referencesValues.entrySet()) {
+            this.internalProcessor.getContext().getVariableContext().setValue(entry.getKey(), entry.getValue());
+		}
     }    
     
     /**

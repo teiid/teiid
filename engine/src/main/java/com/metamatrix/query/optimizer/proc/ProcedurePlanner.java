@@ -23,18 +23,18 @@
 package com.metamatrix.query.optimizer.proc;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.core.id.IDGenerator;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.CommandPlanner;
-import com.metamatrix.query.optimizer.CommandTreeNode;
+import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.proc.AbstractAssignmentInstruction;
@@ -66,6 +66,7 @@ import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.proc.WhileStatement;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -76,25 +77,9 @@ import com.metamatrix.query.util.CommandContext;
 public final class ProcedurePlanner implements CommandPlanner {
 	
 	/**
-	 * <p>This method does nothing as the method call to {@link #optimize} directly produces
-	 * the ProcessorPlan for the given procedure.</p>
-	 *
-	 * @param rootNode tree of CommandTreeNode object(s) rooted at rootNode
-	 * @param debug whether or not to generate verbose debug output during planning
-	 * @throws QueryPlannerException indicating a problem in planning
-     * @throws MetaMatrixComponentException indicating an unexpected exception
-	 */
-	public void generateCanonical(CommandTreeNode rootNode, QueryMetadataInterface metadata, AnalysisRecord analysisRecord, CommandContext context)
-	throws QueryPlannerException, MetaMatrixComponentException {
-		// does nothing
-	}
-
-	/**
 	 * <p>Produce a ProcessorPlan for the CreateUpdateProcedureCommand on the current node
 	 * of the CommandTreeNode, the procedure plan construction involves using the child
 	 * processor plans.</p>
-	 * @param node root of a tree (or subtree) of CommandTreeNode objects, each of
-	 * which should have its canonical plan
 	 * @param metadata source of metadata
 	 * @param debug whether or not to generate verbose debug output during planning
 	 * @return ProcessorPlan This processorPlan is a <code>ProcedurePlan</code>
@@ -102,29 +87,30 @@ public final class ProcedurePlanner implements CommandPlanner {
      * @throws QueryMetadataException indicating an exception in accessing the metadata
      * @throws MetaMatrixComponentException indicating an unexpected exception
 	 */
-	public ProcessorPlan optimize(CommandTreeNode node, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
+	public ProcessorPlan optimize(Command procCommand, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
 	throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-
-		// get the current command on the current node of the tree
-		Command procCommand = node.getCommand();
-        
-		// set state of the planner with child nodes
-		// to be used while planning
-		List<CommandTreeNode> childNodes = node.getChildren();
 
         boolean debug = analysisRecord.recordDebug();
         if(debug) {
             analysisRecord.println("\n####################################################"); //$NON-NLS-1$
-            analysisRecord.println("PROCEDURE COMMAND: " + node.getCommand()); //$NON-NLS-1$
+            analysisRecord.println("PROCEDURE COMMAND: " + procCommand); //$NON-NLS-1$
         }
 
-        if(!(procCommand instanceof CreateUpdateProcedureCommand)) {
-        	throw new QueryPlannerException(QueryExecPlugin.Util.getString("ProcedurePlanner.wrong_type", procCommand.getType())); //$NON-NLS-1$
+        Assertion.isInstanceOf(procCommand, CreateUpdateProcedureCommand.class, "Wrong command type"); //$NON-NLS-1$
+
+        if(debug) {
+            analysisRecord.println("OPTIMIZING SUB-COMMANDS: "); //$NON-NLS-1$
+        }
+        
+        for (Command command : CommandCollectorVisitor.getCommands(procCommand)) {
+        	if (!(command instanceof DynamicCommand)) {
+        		command.setProcessorPlan(QueryOptimizer.optimizePlan(command, metadata, idGenerator, capFinder, analysisRecord, context));
+        	}
         }
 
         Block block = ((CreateUpdateProcedureCommand) procCommand).getBlock();
 
-		Program programBlock = planBlock(((CreateUpdateProcedureCommand)procCommand), block, metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+		Program programBlock = planBlock(((CreateUpdateProcedureCommand)procCommand), block, metadata, debug, idGenerator, capFinder, analysisRecord, context);
 
         if(debug) {
             analysisRecord.println("\n####################################################"); //$NON-NLS-1$
@@ -170,7 +156,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws MetaMatrixComponentException if unexpected error occurs
 	 */
-    private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, List<CommandTreeNode> childNodes, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
+    private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
         Iterator stmtIter = block.getStatements().iterator();
@@ -183,7 +169,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
 			Statement statement = (Statement) stmtIter.next();
-			Object instruction = planStatement(parentProcCommand, statement, metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+			Object instruction = planStatement(parentProcCommand, statement, metadata, debug, idGenerator, capFinder, analysisRecord, context);
 			//childIndex = ((Integer) array[0]).intValue();
             if(instruction instanceof ProgramInstruction){
                 programBlock.addInstruction((ProgramInstruction)instruction);
@@ -215,7 +201,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws MetaMatrixComponentException if unexpected error occurs
 	 */
-    private Object planStatement(CreateUpdateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, List<CommandTreeNode> childNodes, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
+    private Object planStatement(CreateUpdateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
 		int stmtType = statement.getType();
@@ -284,10 +270,10 @@ public final class ProcedurePlanner implements CommandPlanner {
 			case Statement.TYPE_IF:
             {
 				IfStatement ifStmt = (IfStatement)statement;
-				Program ifProgram = planBlock(parentProcCommand, ifStmt.getIfBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+				Program ifProgram = planBlock(parentProcCommand, ifStmt.getIfBlock(), metadata, debug, idGenerator, capFinder, analysisRecord, context);
 				Program elseProgram = null;
 				if(ifStmt.hasElseBlock()) {
-					elseProgram = planBlock(parentProcCommand, ifStmt.getElseBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+					elseProgram = planBlock(parentProcCommand, ifStmt.getElseBlock(), metadata, debug, idGenerator, capFinder, analysisRecord, context);
 				}
 				instruction = new IfInstruction(ifStmt.getCondition(), ifProgram, elseProgram);
 				if(debug) {
@@ -318,16 +304,17 @@ public final class ProcedurePlanner implements CommandPlanner {
                 	analysisRecord.println("\tLOOP STATEMENT:\n" + statement); //$NON-NLS-1$
                 }
                 String rsName = loopStmt.getCursorName();
+
                 ProcessorPlan commandPlan = loopStmt.getCommand().getProcessorPlan();
 
-                Program loopProgram = planBlock(parentProcCommand, loopStmt.getBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+                Program loopProgram = planBlock(parentProcCommand, loopStmt.getBlock(), metadata, debug, idGenerator, capFinder, analysisRecord, context);
                 instruction = new LoopInstruction(loopProgram, rsName, commandPlan);
                 break;
             }
             case Statement.TYPE_WHILE:
             {
                 WhileStatement whileStmt = (WhileStatement)statement;
-                Program whileProgram = planBlock(parentProcCommand, whileStmt.getBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+                Program whileProgram = planBlock(parentProcCommand, whileStmt.getBlock(), metadata, debug, idGenerator, capFinder, analysisRecord, context);
                 if(debug) {
                 	analysisRecord.println("\tWHILE STATEMENT:\n" + statement); //$NON-NLS-1$
                 }

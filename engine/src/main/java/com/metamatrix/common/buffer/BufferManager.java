@@ -23,7 +23,6 @@
 package com.metamatrix.common.buffer;
 
 import java.util.List;
-import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.lob.LobChunk;
@@ -69,16 +68,6 @@ public interface BufferManager {
 	}
 
     /**
-	 * Prompts this implementation to initialize itself with the supplied
-	 * Properties.  The implementation Class should document what properties
-	 * are necessary, if any.
-     * @param lookup Class used to determine identity and lookup other managers
-     * @param properties Properties required to initialize the Buffer Manager
-     * @throws BufferException if there was a problem initializing
-	 */
-	void initialize(String location, Properties properties) throws MetaMatrixComponentException;
-	
-    /**
      * Get the batch size to use during query processing.  
      * @return Batch size (# of rows)
      */
@@ -90,12 +79,6 @@ public interface BufferManager {
      */
     int getConnectorBatchSize();
     
-	/**
-	 * Adds a {@link StorageManager} to this BufferManager instance.
-     * @param storageManager Storage manager to add
-	 */
-	void setStorageManager(StorageManager storageManager);
-
 	/**
 	 * Creates a tuple source based on a schema and properties describing
 	 * hints about the source
@@ -259,8 +242,6 @@ public interface BufferManager {
     LobChunk getStreamablePart(TupleSourceID tupleSourceID, int beginRow)
     throws TupleSourceNotFoundException, MetaMatrixComponentException;
         
-    void stop();
-    
     /**
      * Release batches that have been pinned by this thread.
      * This method should be called when processing is terminated

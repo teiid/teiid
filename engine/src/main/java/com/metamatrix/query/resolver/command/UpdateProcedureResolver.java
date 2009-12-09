@@ -79,7 +79,7 @@ import com.metamatrix.query.util.LogConstants;
  */
 public class UpdateProcedureResolver implements CommandResolver {
 
-    public void resolveVirtualGroupElements(CreateUpdateProcedureCommand procCommand, boolean useMetadataCommands, QueryMetadataInterface metadata)
+    public void resolveVirtualGroupElements(CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata)
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
 		// virtual group on procedure
@@ -109,26 +109,23 @@ public class UpdateProcedureResolver implements CommandResolver {
 
 		ResolveVirtualGroupCriteriaVisitor.resolveCriteria(procCommand, virtualGroup, metadata);
 
-		// symbol map need not be checked as we are not validating
-		// in the modeler
-		if(useMetadataCommands) {
-	    	// get a symbol map between virtual elements and the elements that define
-	    	// then in the query transformation, this info is used in evaluating/validating
-	    	// has criteria/trnaslate criteria clauses
-			Command transformCmd = getQueryTransformCmd(virtualGroup, metadata);
-			Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, (List<SingleElementSymbol>)transformCmd.getProjectedSymbols()).asMap();
-	        // set the symbolMap on the procedure
-			procCommand.setSymbolMap(symbolMap);
-		}
+    	// get a symbol map between virtual elements and the elements that define
+    	// then in the query transformation, this info is used in evaluating/validating
+    	// has criteria/translate criteria clauses
+        Command transformCmd = getQueryTransformCmd(virtualGroup, metadata);
+		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, (List<SingleElementSymbol>)transformCmd.getProjectedSymbols()).asMap();
+		procCommand.setSymbolMap(symbolMap);
     }
-
-	/**
+    
+    /**
 	 * Get the command for the transformation query that defines this virtual group.
 	 */
     private Command getQueryTransformCmd(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-
-        Command transformCmd = null;
+    	Command transformCmd = (Command)metadata.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/select"); //$NON-NLS-1$
+    	if (transformCmd != null) {
+    		return transformCmd;
+    	}
     	QueryNode queryNode = metadata.getVirtualPlan(virtualGroup.getMetadataID());
     	String transformQuery = queryNode.getQuery();
         try {
@@ -143,9 +140,9 @@ public class UpdateProcedureResolver implements CommandResolver {
     }
 
     /**
-     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, java.util.Collection, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
      */
-    public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         CreateUpdateProcedureCommand procCommand = (CreateUpdateProcedureCommand) command;
@@ -157,7 +154,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         // virtual group elements in HAS and TRANSLATE criteria have to be resolved
         if(procCommand.isUpdateProcedure()){
-            resolveVirtualGroupElements(procCommand, useMetadataCommands, metadata);
+            resolveVirtualGroupElements(procCommand, metadata);
 
             //add the default variables
             String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWS_UPDATED;
@@ -167,11 +164,11 @@ public class UpdateProcedureResolver implements CommandResolver {
             ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
         }
         
-        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, useMetadataCommands, procCommand.isUpdateProcedure(), analysis);
+        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, procCommand.isUpdateProcedure(), analysis);
     }
 
 	private void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata, boolean useMetadataCommands, boolean isUpdateProcedure, AnalysisRecord analysis)
+                              TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
         LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
@@ -185,11 +182,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         Iterator stmtIter = block.getStatements().iterator();
         while(stmtIter.hasNext()) {
-            resolveStatement(command, (Statement)stmtIter.next(), externalGroups, variables, metadata, useMetadataCommands, isUpdateProcedure, analysis);
+            resolveStatement(command, (Statement)stmtIter.next(), externalGroups, variables, metadata, isUpdateProcedure, analysis);
         }
     }
 
-	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, boolean expandCommand, boolean isUpdateProcedure, AnalysisRecord analysis)
+	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
         LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -198,19 +195,19 @@ public class UpdateProcedureResolver implements CommandResolver {
                 IfStatement ifStmt = (IfStatement) statement;
                 Criteria ifCrit = ifStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ifCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                 }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
-            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
+            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
                 if(ifStmt.hasElseBlock()) {
-                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
+                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
                 }
                 break;
             case Statement.TYPE_COMMAND:
                 CommandStatement cmdStmt = (CommandStatement) statement;
                 Command subCommand = cmdStmt.getCommand();
                 
-                TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand, expandCommand, analysis);
+                TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand, analysis);
                 
                 if (discoveredMetadata != null) {
                     metadata.getMetadataStore().getData().putAll(discoveredMetadata.getData());
@@ -220,12 +217,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 if (subCommand instanceof DynamicCommand) {
                     DynamicCommand dynCommand = (DynamicCommand)subCommand;
                     
-                    if(dynCommand.getIntoGroup() == null && !command.isUpdateProcedure() && !dynCommand.isAsClauseSet()) {
-                        if (command.getProjectedSymbols().size() > 0) {
-                            dynCommand.setAsColumns(command.getProjectedSymbols());
-                        } else if (command.getParentProjectSymbols() != null) {
-                            dynCommand.setAsColumns(command.getParentProjectSymbols());
-                        }
+                    if(dynCommand.getIntoGroup() == null && !command.isUpdateProcedure() 
+                    		&& !dynCommand.isAsClauseSet() && !command.getProjectedSymbols().isEmpty()) {
+                        dynCommand.setAsColumns(command.getProjectedSymbols());
                     }
                 }
                 
@@ -251,11 +245,11 @@ public class UpdateProcedureResolver implements CommandResolver {
             	if (assStmt.getValue() != null) {
 					if (assStmt.hasCommand()) {
 						Command cmd = assStmt.getCommand();
-						resolveEmbeddedCommand(metadata, externalGroups, cmd, expandCommand, analysis);
+						resolveEmbeddedCommand(metadata, externalGroups, cmd, analysis);
 					} else if (assStmt.hasExpression()) {
                         Expression expr = assStmt.getExpression();
                         for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                        	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                        	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                         }
                         ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
                     }
@@ -291,10 +285,10 @@ public class UpdateProcedureResolver implements CommandResolver {
                 WhileStatement whileStmt = (WhileStatement) statement;
                 Criteria whileCrit = whileStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(whileCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                 }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
-                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
+                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
                 break;
             case Statement.TYPE_LOOP:
                 LoopStatement loopStmt = (LoopStatement) statement;
@@ -310,7 +304,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        		throw new QueryResolverException(errorMsg);
 	        	}
                 Command cmd = loopStmt.getCommand();
-                resolveEmbeddedCommand(metadata, externalGroups, cmd, expandCommand, analysis);
+                resolveEmbeddedCommand(metadata, externalGroups, cmd, analysis);
                 List symbols = cmd.getProjectedSymbols();
                 
                 //add the loop cursor group into its own context
@@ -320,7 +314,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols);
                 
-                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
+                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
                 break;
             case Statement.TYPE_BREAK:
             case Statement.TYPE_CONTINUE:
@@ -331,11 +325,11 @@ public class UpdateProcedureResolver implements CommandResolver {
     }
 
     private TempMetadataStore resolveEmbeddedCommand(TempMetadataAdapter metadata, GroupContext groupContext,
-                                Command cmd, boolean expandCommand, AnalysisRecord analysis) throws MetaMatrixComponentException,
+                                Command cmd, AnalysisRecord analysis) throws MetaMatrixComponentException,
                                             QueryResolverException {
         QueryResolver.setChildMetadata(cmd, metadata.getMetadataStore().getData(), groupContext);
         
-        return QueryResolver.resolveCommand(cmd, Collections.EMPTY_MAP, expandCommand, metadata.getMetadata(), analysis);
+        return QueryResolver.resolveCommand(cmd, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
     }
         
     private void collectDeclareVariable(DeclareStatement obj, GroupSymbol variables, TempMetadataAdapter metadata, GroupContext externalGroups) throws QueryResolverException, MetaMatrixComponentException {

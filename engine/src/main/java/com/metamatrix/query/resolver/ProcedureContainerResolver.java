@@ -51,7 +51,6 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 public abstract class ProcedureContainerResolver implements CommandResolver {
 
     public abstract void resolveProceduralCommand(Command command,
-                                                  boolean useMetadataCommands,
                                                   TempMetadataAdapter metadata,
                                                   AnalysisRecord analysis) throws QueryMetadataException,
                                                                           QueryResolverException,
@@ -70,29 +69,50 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
      * @throws QueryResolverException If the query cannot be resolved
      * @throws MetaMatrixComponentException If there is an internal error
      */
-    public void expandCommand(Command command, QueryMetadataInterface metadata, AnalysisRecord analysis)
+    public Command expandCommand(ProcedureContainer procCommand, QueryMetadataInterface metadata, AnalysisRecord analysis)
     throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-        // Cast to known type
-        ProcedureContainer procCommand = (ProcedureContainer) command;
-
+    	
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
 
-        if(!group.isTempGroupSymbol() && metadata.isVirtualGroup(group.getMetadataID())) {
-            String plan = getPlan(metadata, group);
-            
-            if(plan == null) {
-                String name = command.getClass().getName();
-                name = name.substring(name.lastIndexOf('.') + 1);
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0009, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0009, group, name));
-            }
-            QueryParser parser = QueryParser.getQueryParser();
-            try {
-                procCommand.setSubCommand(parser.parseCommand(plan));
-            } catch(QueryParserException e) {
-                throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0045, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0045, group));
-            }
+        Command subCommand = null;
+        
+        String plan = getPlan(metadata, procCommand);
+        
+        if (plan == null) {
+            return null;
         }
+        
+        QueryParser parser = QueryParser.getQueryParser();
+        try {
+            subCommand = parser.parseCommand(plan);
+        } catch(QueryParserException e) {
+            throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0045, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0045, group));
+        }
+        
+        if(subCommand instanceof CreateUpdateProcedureCommand){
+            CreateUpdateProcedureCommand cupCommand = (CreateUpdateProcedureCommand)subCommand;
+            //if the subcommand is virtual stored procedure, it must have the same
+            //projected symbol as its parent.
+            if(!cupCommand.isUpdateProcedure()){
+                cupCommand.setProjectedSymbols(procCommand.getProjectedSymbols());
+            } 
+            
+            cupCommand.setVirtualGroup(procCommand.getGroup());
+            cupCommand.setUserCommand(procCommand);
+        } 
+        
+        //find the childMetadata using a clean metadata store
+        TempMetadataStore childMetadata = new TempMetadataStore();
+        QueryMetadataInterface resolveMetadata = new TempMetadataAdapter(metadata, childMetadata);
+
+        GroupContext externalGroups = findChildCommandMetadata(procCommand, subCommand, childMetadata, resolveMetadata);
+        
+        QueryResolver.setChildMetadata(subCommand, childMetadata.getData(), externalGroups);
+        
+        QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata, analysis);
+        
+        return subCommand;
     }
 
     /** 
@@ -113,99 +133,75 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
      * in the childMetadata object.  Typical uses of this are for stored queries that define parameter
      * variables valid in subcommands. only used for inserts, updates, and deletes
      * @param command The command to find metadata on
-     * @param childMetadata The store to collect child metadata in 
-     * @param useMetadataCommands True if resolver should use metadata commands to completely resolve
      * @param metadata Metadata access
+     * @param childMetadata The store to collect child metadata in 
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
      * @throws MetaMatrixComponentException If there is an internal error    
      */ 
-    public GroupContext findChildCommandMetadata(Command command, TempMetadataStore discoveredMetadata, boolean useMetadataCommands, QueryMetadataInterface metadata)
+    public GroupContext findChildCommandMetadata(ProcedureContainer container, Command subCommand, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-        // Cast to known type
-        ProcedureContainer container = (ProcedureContainer) command;
-
         // get the group on the delete statement
         GroupSymbol group = container.getGroup();
         // proceed further if it is a virtual group
-        if(metadata.isVirtualGroup(group.getMetadataID())) {
-            CreateUpdateProcedureCommand procCmd = (CreateUpdateProcedureCommand) container.getSubCommand();
-            if (procCmd == null) {
-                return null;
-            }
             
-            GroupContext externalGroups = new GroupContext();
-            
-            // set the user's command on the procedure
-            procCmd.setUserCommand(container);
-            
-            //Look up elements for the virtual group
-            List elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-
-            // Create the INPUT variables
-            List inputElments = new ArrayList(elements.size());
-            for(int i=0; i<elements.size(); i++) {
-                ElementSymbol virtualElmnt = (ElementSymbol)elements.get(i);
-                ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
-                inputElments.add(inputElement);
-            }
-
-            addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments);
-
-            // Switch type to be boolean for all CHANGING variables
-            List changingElements = new ArrayList(elements.size());
-            for(int i=0; i<elements.size(); i++) {
-                ElementSymbol virtualElmnt = (ElementSymbol)elements.get(i);
-                ElementSymbol changeElement = (ElementSymbol)virtualElmnt.clone();
-                changeElement.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-                changingElements.add(changeElement);
-            }
-
-            addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements);
-            
-            // set the virtual group on the procedure
-            procCmd.setVirtualGroup(group);
-            
-            return externalGroups;
-        }
+        GroupContext externalGroups = new GroupContext();
         
-        return null;
+        //Look up elements for the virtual group
+        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
+
+        // Create the INPUT variables
+        List<ElementSymbol> inputElments = new ArrayList<ElementSymbol>(elements.size());
+        for(int i=0; i<elements.size(); i++) {
+            ElementSymbol virtualElmnt = elements.get(i);
+            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
+            inputElments.add(inputElement);
+        }
+
+        addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments);
+
+        // Switch type to be boolean for all CHANGING variables
+        List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
+        for(int i=0; i<elements.size(); i++) {
+            ElementSymbol virtualElmnt = elements.get(i);
+            ElementSymbol changeElement = (ElementSymbol)virtualElmnt.clone();
+            changeElement.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
+            changingElements.add(changeElement);
+        }
+
+        addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements);
+        
+        return externalGroups;
     }
         
     /** 
-     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord, boolean)
+     * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord, boolean)
      */
-    public void resolveCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
         
         ProcedureContainer procCommand = (ProcedureContainer)command;
         
         resolveGroup(metadata, procCommand);
         
-        resolveProceduralCommand(procCommand, useMetadataCommands, metadata, analysis);
+        resolveProceduralCommand(procCommand, metadata, analysis);
         
-        if (!useMetadataCommands) {
-            return;
-        }
-        
-        expandCommand(procCommand, metadata, analysis);
-
-        Command subCommand = procCommand.getSubCommand();
-        
-        if (subCommand == null) {
-            return;
-        }
-        
-        //find the childMetadata using a clean metadata store
-        TempMetadataStore childMetadata = new TempMetadataStore();
-        QueryMetadataInterface resolveMetadata = new TempMetadataAdapter(metadata.getMetadata(), childMetadata);
-
-        GroupContext externalGroups = findChildCommandMetadata(procCommand, childMetadata, useMetadataCommands, resolveMetadata);
-        
-        QueryResolver.setChildMetadata(subCommand, childMetadata.getData(), externalGroups);
-        
-        QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis);
+        getPlan(metadata, procCommand);
     }
+
+	private String getPlan(QueryMetadataInterface metadata, ProcedureContainer procCommand)
+			throws MetaMatrixComponentException, QueryMetadataException,
+			QueryResolverException {
+		if(!procCommand.getGroup().isTempGroupSymbol() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
+            String plan = getPlan(metadata, procCommand.getGroup());
+            
+            if(plan == null) {
+                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0009, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0009, procCommand.getGroup(), procCommand.getClass().getSimpleName()));
+            }
+            return plan;
+        }
+		return null;
+	}
     
     /** 
      * @param metadata

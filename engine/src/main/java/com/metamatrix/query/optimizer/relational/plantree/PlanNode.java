@@ -343,7 +343,7 @@ public class PlanNode {
 				break;
 			}
 		}
-		return (List<SubqueryContainer>) ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
+		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
 	}
         
 }

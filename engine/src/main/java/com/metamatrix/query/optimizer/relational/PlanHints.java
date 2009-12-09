@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.optimizer.relational;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public final class PlanHints { 
 
@@ -39,21 +37,12 @@ public final class PlanHints {
     // This flag indicates that the plan has a sort somewhere
     public boolean hasSort = false;
     
-    // flag added to indentify that the plan generated if for an updated
-    public boolean isUpdate = false;
-    
-    // List of groups to make dependent
-    public List makeDepGroups = null;
-    
     // flag indicates that the plan has a union somewhere
     public boolean hasSetQuery = false;
     
     // flag indicating that the plan has a grouping node somewhere
     public boolean hasAggregates = false;
         
-    // List of groups that should not be dependent
-    public List makeNotDepGroups = null;
-    
     public boolean hasLimit = false;
     
     public boolean hasOptionalJoin = false;
@@ -61,26 +50,6 @@ public final class PlanHints {
     public boolean hasRelationalProc = false;
     
     public PlanHints() { }    
-    
-    public void addMakeDepGroups(List groups) {
-        if(groups == null) {
-            return;
-        }
-        if(this.makeDepGroups == null) {
-            this.makeDepGroups = new ArrayList();
-        } 
-        this.makeDepGroups.addAll(groups);
-    }
-    
-    public void addMakeNotDepGroups(List groups) {
-        if(groups == null) {
-            return;
-        }
-        if(this.makeNotDepGroups == null) {
-            this.makeNotDepGroups = new ArrayList();
-        } 
-        this.makeNotDepGroups.addAll(groups);
-    }
     
     public String toString(){
     	return "PlanHints"; //$NON-NLS-1$

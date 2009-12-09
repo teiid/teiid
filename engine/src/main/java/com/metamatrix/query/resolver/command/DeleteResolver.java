@@ -37,6 +37,7 @@ import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.GroupContext;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 /**
@@ -45,15 +46,15 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 public class DeleteResolver extends ProcedureContainerResolver {
 
     /** 
-     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, boolean, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
+     * @see com.metamatrix.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(com.metamatrix.query.sql.lang.Command, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord)
      */
-    public void resolveProceduralCommand(Command command, boolean useMetadataCommands, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
         throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
 
         //Cast to known type
         Delete delete = (Delete) command;
 
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(delete.getGroup());
         ResolverVisitor.resolveLanguageObject(delete, groups, delete.getExternalGroupContexts(), metadata);
 
@@ -73,12 +74,10 @@ public class DeleteResolver extends ProcedureContainerResolver {
     }
     
     @Override
-    public GroupContext findChildCommandMetadata(Command command,
-    		TempMetadataStore discoveredMetadata, boolean useMetadataCommands,
+    public GroupContext findChildCommandMetadata(ProcedureContainer container,
+    		Command subCommand, TempMetadataStore discoveredMetadata,
     		QueryMetadataInterface metadata) throws QueryMetadataException,
     		QueryResolverException, MetaMatrixComponentException {
-    	super.findChildCommandMetadata(command, discoveredMetadata,
-    			useMetadataCommands, metadata);
     	//defect 16451: don't expose input and changing variables to delete procedures
     	return null;
     }

@@ -25,6 +25,7 @@ package com.metamatrix.query.util;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import java.util.TimeZone;
 
@@ -98,6 +99,8 @@ public class CommandContext implements Cloneable {
     private CommandContext parent;
     
     private boolean sessionFunctionEvaluated;
+    
+    private Set<String> groups;
     
     /**
      * Construct a new context.
@@ -447,6 +450,14 @@ public class CommandContext implements Cloneable {
 			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
 		}
 		return value;
+	}
+	
+	public Set<String> getGroups() {
+		return groups;
+	}
+	
+	public void setGroups(Set<String> groups) {
+		this.groups = groups;
 	}
 	
 }

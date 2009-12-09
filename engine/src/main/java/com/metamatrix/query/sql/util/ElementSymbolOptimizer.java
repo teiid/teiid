@@ -67,7 +67,7 @@ public class ElementSymbolOptimizer {
         } else {
             commandList.add(command);
 
-            List subCommands = CommandCollectorVisitor.getCommands(command, true);
+            List subCommands = CommandCollectorVisitor.getCommands(command);
             if(subCommands != null && subCommands.size() > 0) {
                 for(int i=0; i<subCommands.size(); i++) {
                     Command subCommand = (Command) subCommands.get(i);

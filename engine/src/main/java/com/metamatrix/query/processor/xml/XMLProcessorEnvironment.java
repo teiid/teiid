@@ -262,17 +262,6 @@ public class XMLProcessorEnvironment {
     }
 
     /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getXMLResultsForm
-     */
-    public String getXMLResultsForm(){
-        return this.xmlResultsForm;
-    }
-
-    public void setXMLResultsForm(String xmlResultsForm){
-        this.xmlResultsForm = xmlResultsForm;
-    }
-   
-    /**
      * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getDataManager()
      */
     public ProcessorDataManager getDataManager() {
@@ -319,7 +308,6 @@ public class XMLProcessorEnvironment {
                
         // XML results form and format
         clone.setXMLFormat(this.getXMLFormat());
-        clone.setXMLResultsForm(this.getXMLResultsForm());
     }
 
     public GroupSymbol getDocumentGroup() {

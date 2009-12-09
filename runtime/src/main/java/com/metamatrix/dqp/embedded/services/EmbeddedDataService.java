@@ -239,15 +239,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @since 4.3
      */
     public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {
-    	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
-    	if (binding != null) {
-            ConnectorManager mgr = getConnectorManager(binding, false);
-            if (mgr != null ) {            
-                mgr.clearCache();
-                return;
-            }
-        }
-        throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorBindingName })); //$NON-NLS-1$       
     }    
 
     /** 

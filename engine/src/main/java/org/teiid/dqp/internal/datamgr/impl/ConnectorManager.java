@@ -46,11 +46,10 @@ import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
-import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -97,14 +96,11 @@ import com.metamatrix.query.sql.lang.Command;
 public class ConnectorManager implements ApplicationService {
 
 	public static final int DEFAULT_MAX_THREADS = 20;
-    private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
-    private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
     //state constructed in start
     private ConnectorWrapper connector;
     private ConnectorID connectorID;
     private WorkerPool connectorWorkerPool;
-    private ResultSetCache rsCache;
     private ConnectorWorkItemFactory workItemFactory;
 	private String connectorName;
     private int maxResultRows;
@@ -209,12 +205,6 @@ public class ConnectorManager implements ApplicationService {
         }
     }
     
-    public void clearCache() {
-        if (rsCache != null) {
-        	rsCache.clear();
-        }
-    }
-     
     public void executeRequest(ResultsReceiver<AtomicResultsMessage> receiver, AtomicRequestMessage message) {
         // Set the connector ID to be used; if not already set. 
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
@@ -359,15 +349,7 @@ public class ConnectorManager implements ApplicationService {
      	this.bufferService = (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE);
         // Initialize and start the connector
         initStartConnector(connectorEnv);
-        //check result set cache
-        if(PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.USE_RESULTSET_CACHE, false)) {
-            Properties rsCacheProps = new Properties();
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE)); 
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE)); 
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-    		this.rsCache = new ResultSetCache(rsCacheProps, env.getCacheFactory());
-        }
-		this.workItemFactory = new ConnectorWorkItemFactory(this, this.rsCache, synchWorkers);
+		this.workItemFactory = new ConnectorWorkItemFactory(this, synchWorkers);
     	this.state = ConnectorStatus.OPEN;
     }
     
@@ -529,11 +511,6 @@ public class ConnectorManager implements ApplicationService {
                 currentThread.setContextClassLoader(threadContextLoader);
             }
             
-        }
-        
-        if (this.rsCache != null) {
-        	this.rsCache.shutDown();
-        	this.rsCache = null;
         }
     }
 

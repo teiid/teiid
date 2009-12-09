@@ -30,6 +30,7 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -37,38 +38,14 @@ import com.metamatrix.query.util.CommandContext;
  * object and produce a 
  * {@link com.metamatrix.query.processor.ProcessorPlan ProcessorPlan} 
  * object, which is a plan for executing the query.</p>
- * 
- * <p>Implementations need to be stateless; state can be stored in the
- * {@link CommandTreeNode CommandTreeNode} objects during planning.  
- * The main client of this interface, {@link QueryOptimizer}, will assume
- * the planners to be stateless and therefore thread safe.</p>
  */
 public interface CommandPlanner {
-	
-	/**
-	 * <p>Requests that the planner generate the canonical plan(s) for the 
-	 * Command object(s) represented by the CommandTreeNode tree parameter.
-	 * The canonical plan(s) should be added to the node(s) of the tree rooted
-	 * at rootNode.</p>
-	 * 
-	 * <p>It may or may not make sense for a specific implementation of this
-	 * Class to create a canonical plan.  It may be that all planning can be done
-	 * during the call to {@link #optimize}</p>
-	 * @param rootNode tree of CommandTreeNode object(s) rooted at rootNode
-	 * @param context 
-	 * @param debug whether or not to generate verbose debug output during planning
-	 * @throws QueryPlannerException indicating a problem in planning
-     * @throws MetaMatrixComponentException indicating an unexpected exception
-	 */
-	void generateCanonical(CommandTreeNode rootNode, QueryMetadataInterface metadata, AnalysisRecord analysisRecord, CommandContext context)
-	throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException;
 	
 	/**
 	 * Allows the planner a chance to optimize the canonical plan(s) stored in
 	 * the CommandTreeNode tree.  This method should be called in a bottom-up
 	 * manner; from leaf nodes up to the root node.
-	 * @param node root of a tree (or subtree) of CommandTreeNode objects, each of 
-	 * which should have its canonical plan
+	 * @param command TODO
 	 * @param metadata source of metadata
 	 * @param capFinder Class usable to find the connector capabilities for a particular model
 	 * @param context 
@@ -78,7 +55,7 @@ public interface CommandPlanner {
      * @throws QueryMetadataException indicating an exception in accessing the metadata
      * @throws MetaMatrixComponentException indicating an unexpected exception
 	 */
-	ProcessorPlan optimize(CommandTreeNode node, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
+	ProcessorPlan optimize(Command command, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
 	throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException;
 
 }

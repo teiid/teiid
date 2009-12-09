@@ -45,7 +45,7 @@ class TupleSourceImpl implements IndexedTupleSource {
     private int mark = 1;
 	private List<?> currentTuple;
 
-    TupleSourceImpl(BufferManagerImpl bufferManagerImpl, TupleSourceID tupleSourceID, List schema, int batchSize){
+    TupleSourceImpl(BufferManagerImpl bufferManagerImpl, TupleSourceID tupleSourceID, List schema){
         this.bufferManagerImpl = bufferManagerImpl;
 		this.tupleSourceID = tupleSourceID;
         this.schema = schema;

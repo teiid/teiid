@@ -119,7 +119,7 @@ public class TestInstructions extends TestCase {
         Command command = parser.parseCommand(sql);
         
         QueryResolver.resolveCommand(command, metadata);
-        command = QueryRewriter.rewrite(command, null, metadata, null);
+        command = QueryRewriter.rewrite(command, metadata, null);
         
         return command;        
     }

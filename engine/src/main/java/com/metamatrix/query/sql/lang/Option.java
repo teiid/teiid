@@ -42,10 +42,10 @@ public class Option implements LanguageObject {
 
 	private boolean showPlan = false;
 	private boolean debug = false;
-    private List makeDependentGroups = null;        // of String
-    private List makeNotDependentGroups = null;        // of String
+    private List<String> makeDependentGroups;
+    private List<String> makeNotDependentGroups;
     private boolean planOnly = false;
-	private List noCacheGroups;	// List of String
+	private List<String> noCacheGroups;
     private boolean noCache;
 
 	/**
@@ -108,7 +108,7 @@ public class Option implements LanguageObject {
      */
     public void addDependentGroup(String group) {
         if(this.makeDependentGroups == null) {
-            this.makeDependentGroups = new ArrayList();
+            this.makeDependentGroups = new ArrayList<String>();
         }
         this.makeDependentGroups.add(group);    
     }
@@ -117,7 +117,7 @@ public class Option implements LanguageObject {
      * Get all groups to make dependent
      * @return List of String defining groups to be made dependent, may be null if no groups
      */
-    public List getDependentGroups() {
+    public List<String> getDependentGroups() {
         return this.makeDependentGroups;
     }
     
@@ -127,7 +127,7 @@ public class Option implements LanguageObject {
      */
     public void addNotDependentGroup(String group) {
         if(this.makeNotDependentGroups == null) {
-            this.makeNotDependentGroups = new ArrayList();
+            this.makeNotDependentGroups = new ArrayList<String>();
         }
         this.makeNotDependentGroups.add(group);    
     }
@@ -136,7 +136,7 @@ public class Option implements LanguageObject {
      * Get all groups to make dependent
      * @return List of String defining groups to be made dependent, may be null if no groups
      */
-    public List getNotDependentGroups() {
+    public List<String> getNotDependentGroups() {
         return this.makeNotDependentGroups;
     }
     
@@ -148,7 +148,7 @@ public class Option implements LanguageObject {
      */
     public void addNoCacheGroup(String group) {
         if(this.noCacheGroups == null) {
-            this.noCacheGroups = new ArrayList();
+            this.noCacheGroups = new ArrayList<String>();
         }
         this.noCacheGroups.add(group);    
     }
@@ -160,7 +160,7 @@ public class Option implements LanguageObject {
      * @return List of String defining groups that overrides the default behavior of 
      * Materialized View, may be null if there are no groups
      */
-    public List getNoCacheGroups() {
+    public List<String> getNoCacheGroups() {
         return this.noCacheGroups;
     }
 	
@@ -242,24 +242,15 @@ public class Option implements LanguageObject {
         newOption.setNoCache(noCache);
         
         if(getDependentGroups() != null) {
-            Iterator iter = getDependentGroups().iterator();
-            while(iter.hasNext()) {
-                newOption.addDependentGroup( (String) iter.next() );
-            }
+        	newOption.makeDependentGroups = new ArrayList<String>(getDependentGroups());
         }
             
         if(getNotDependentGroups() != null) {
-            Iterator iter = getNotDependentGroups().iterator();
-            while(iter.hasNext()) {
-                newOption.addNotDependentGroup( (String) iter.next() );
-            }
+        	newOption.makeNotDependentGroups = new ArrayList<String>(getNotDependentGroups());
         }
             
         if(getNoCacheGroups() != null) {
-            Iterator iter = getNoCacheGroups().iterator();
-            while(iter.hasNext()) {
-                newOption.addNoCacheGroup( (String) iter.next() );
-            }
+        	newOption.noCacheGroups = new ArrayList<String>(getNoCacheGroups());
         }
         
 		return newOption;

@@ -40,9 +40,9 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.cache.CacheID;
+import org.teiid.dqp.internal.cache.CacheResults;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
-import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -88,7 +88,6 @@ import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -136,8 +135,6 @@ public class DQPCore implements ClientSideDQP {
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
-    private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "50"; //$NON-NLS-1$
-    private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
     // System properties for Code Table
     private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
@@ -273,12 +270,14 @@ public class DQPCore implements ClientSideDQP {
         
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         
-        if (areResultsInCache(requestMsg)) {
-            CacheID cID = ResultSetCacheUtil.createCacheID(requestMsg, this.rsCache);
-            Command command = this.rsCache.getResults(cID, new int[]{1, 1}).getCommand();
-        	workItem = new CachedRequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext, command);
+        if(this.rsCache != null && requestMsg.useResultSetCache()) {
+        	CacheID cID = this.rsCache.createCacheID(workContext, requestMsg.getCommandString(), requestMsg.getParameterValues());
+            CacheResults cr = this.rsCache.getResults(cID, new int[]{1, 1});
+            if (cr != null) {
+            	workItem = new CachedRequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext, cr.getCommand());
+            }
         }
-        else {            
+        if (workItem == null) {
             workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
         }
         
@@ -313,17 +312,6 @@ public class DQPCore implements ClientSideDQP {
     		state.removeRequest(workItem.requestID);
     	}
     	contextCache.removeRequestScopedCache(workItem.requestID.toString());
-    }
-           
-    boolean areResultsInCache(final RequestMessage requestMsg) {
-        if(this.rsCache == null){
-            return false;
-        }
-        if(!requestMsg.useResultSetCache()){
-            return false;
-        }
-        CacheID cID = ResultSetCacheUtil.createCacheID(requestMsg, this.rsCache);
-        return rsCache.hasResults(cID);        
     }
            
     void addWork(Runnable r) {
@@ -645,11 +633,9 @@ public class DQPCore implements ClientSideDQP {
         
         //result set cache
         if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
-        	Properties rsCacheProps = new Properties();
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE));
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE));
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPEmbeddedProperties.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-			this.rsCache = new ResultSetCache(rsCacheProps, cacheFactory);
+			this.rsCache = new ResultSetCache();
+			PropertiesUtils.setBeanProperties(this.rsCache, props, "ResultSetCache"); //$NON-NLS-1$
+			this.rsCache.start(cacheFactory);
         }
 
         //prepared plan cache
@@ -763,7 +749,7 @@ public class DQPCore implements ClientSideDQP {
 	public MetadataResult getMetadata(long requestID)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment);
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, null, true);
 	}
 
@@ -771,7 +757,7 @@ public class DQPCore implements ClientSideDQP {
 			boolean allowDoubleQuotedVariable)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment);
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
 	}
 	

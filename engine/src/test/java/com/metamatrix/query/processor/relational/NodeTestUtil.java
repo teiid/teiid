@@ -63,7 +63,7 @@ public class NodeTestUtil {
     }
     
     static BufferManager createBufferManager(Properties bmProps) {
-        BufferManager bufferManager = new TestableBufferManagerImpl();
+        BufferManagerImpl bufferManager = new TestableBufferManagerImpl();
         bmProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
         try {
             bufferManager.initialize("local", bmProps); //$NON-NLS-1$

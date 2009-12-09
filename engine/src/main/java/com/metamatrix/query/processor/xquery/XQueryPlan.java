@@ -59,7 +59,6 @@ public class XQueryPlan extends BaseProcessorPlan {
     private XQuery xQuery;
     private BufferManager bufferMgr;
     private String xmlFormat;
-    private String parentGroup;
     private ProcessorDataManager dataManager;
 
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
@@ -70,10 +69,9 @@ public class XQueryPlan extends BaseProcessorPlan {
      * @param xmlPlans Map of XQuery doc() args to XMLPlan for
      * that virtual doc
      */
-    public XQueryPlan(XQuery xQuery, String parentGroup) {
+    public XQueryPlan(XQuery xQuery) {
         super();
         this.xQuery = xQuery;
-        this.parentGroup = parentGroup;
     }
 
     /**
@@ -81,7 +79,7 @@ public class XQueryPlan extends BaseProcessorPlan {
      */
     public Object clone() {
         XQuery clonedQuery = (XQuery)this.xQuery.clone();
-        return new XQueryPlan(clonedQuery, parentGroup);
+        return new XQueryPlan(clonedQuery);
     }
 
     /**
@@ -122,7 +120,7 @@ public class XQueryPlan extends BaseProcessorPlan {
     	XQueryExpression expr = this.xQuery.getCompiledXQuery();    
         expr.setXMLFormat(xmlFormat);
         
-        SqlEval sqlEval = new SqlEval(bufferMgr, this.dataManager, getContext(), this.parentGroup, this.xQuery.getVariables());
+        SqlEval sqlEval = new SqlEval(bufferMgr, this.dataManager, getContext(), this.xQuery.getProcedureGroup(), this.xQuery.getVariables());
         try {
         	SQLXML xml = expr.evaluateXQuery(sqlEval);
             TupleBatch batch = packResultsIntoBatch(xml);        

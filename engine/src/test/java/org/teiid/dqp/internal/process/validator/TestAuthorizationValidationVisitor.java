@@ -126,7 +126,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         QueryResolver.resolveCommand(command, metadata);
         
         AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(CONN_ID, svc, Mockito.mock(VDBService.class), "foo", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        ValidatorReport report = Validator.validate(command, metadata, visitor, true);
+        ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
             

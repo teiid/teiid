@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.xml;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -31,7 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import junit.framework.TestCase;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -86,13 +89,9 @@ import com.metamatrix.query.util.CommandContext;
  * metadata, and then that XMLPlan being processed with metadata, a 
  * ProcessorDataManager and a QueryProcessor.
  */
-public class TestXMLProcessor extends TestCase {
+public class TestXMLProcessor {
     private static final boolean DEBUG = false;
     
-    public TestXMLProcessor(String name) {
-        super(name);
-    }
-
     /**
      * Construct some fake metadata.  Basic conceptual tree is:
      * 
@@ -2929,7 +2928,7 @@ public class TestXMLProcessor extends TestCase {
         QueryParser parser = new QueryParser();
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
-        command = QueryRewriter.rewrite(command, null, metadata, null);
+        command = QueryRewriter.rewrite(command, metadata, null);
         return command;
     }
 
@@ -3079,7 +3078,7 @@ public class TestXMLProcessor extends TestCase {
     // T E S T S 
     // =============================================================================================
 
-    public void test1() throws Exception {
+    @Test public void test1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -3106,7 +3105,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testOrderBy1() throws Exception {
+    @Test public void testOrderBy1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -3133,7 +3132,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 ORDER BY Catalogs.Catalog.Items.Item.Quantity ASC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testOrderBy1a() throws Exception {
+    @Test public void testOrderBy1a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -3160,7 +3159,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT \"xml\" FROM xmltest.doc1 ORDER BY Catalogs.Catalog.Items.Item.Quantity ASC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testOrderBy1b() throws Exception {
+    @Test public void testOrderBy1b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -3187,7 +3186,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT xmltest.doc1.xml FROM xmltest.doc1 ORDER BY Catalogs.Catalog.Items.Item.Quantity ASC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
                
-    public void testOrderBy2() throws Exception {
+    @Test public void testOrderBy2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -3214,7 +3213,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 ORDER BY Catalogs.Catalog.Items.Item.Quantity DESC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testOrderBy3() throws Exception {
+    @Test public void testOrderBy3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -3279,7 +3278,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 ORDER BY Catalogs.Catalog.Items.Item.ItemID DESC, Catalogs.Catalog.Items.Item.Suppliers.Supplier.SupplierID ASC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }   
     
-    public void testOrderBy3a() throws Exception {
+    @Test public void testOrderBy3a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -3344,7 +3343,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 ORDER BY Catalogs.Catalog.Items.Item.ItemID ASC, Catalogs.Catalog.Items.Item.Suppliers.Supplier.SupplierID DESC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }      
     
-    public void testOrderBy4() throws Exception {
+    @Test public void testOrderBy4() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -3364,7 +3363,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE ItemID='001' AND Quantity < 60 ORDER BY ItemID", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }     
      
-    public void testOrderBy5() throws Exception {
+    @Test public void testOrderBy5() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
          String expectedDoc = 
@@ -3391,7 +3390,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 ORDER BY ItemID", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     } 
     
-    public void testOrderBy6() throws Exception {
+    @Test public void testOrderBy6() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -3499,14 +3498,14 @@ public class TestXMLProcessor extends TestCase {
     }   
    
     //order by with temp group at the root    
-    public void testOrderBy7() throws Exception {
+    @Test public void testOrderBy7() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc9a ORDER BY ItemID DESC", EXPECTED_ORDERED_DOC9A, metadata, dataMgr);         //$NON-NLS-1$
     }   
            
     //order by with multiple elements and criteria with long name, short name doesn't work
-    public void testOrderBy8() throws Exception {
+    @Test public void testOrderBy8() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -3577,7 +3576,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /*    
-    public void testOrderBy9() throws Exception {
+    @Test public void testOrderBy9() throws Exception {
         FakeMetadataFacade metadata = exampleMetadata();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = "";
@@ -3590,7 +3589,7 @@ public class TestXMLProcessor extends TestCase {
     }
     */
   
-    public void testOrderBy10() throws Exception {
+    @Test public void testOrderBy10() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -3614,13 +3613,13 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Quantity < 60 ORDER BY Name DESC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }     
     
-     public void testOrderBy11() throws Exception {
+     @Test public void testOrderBy11() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc9a WHERE ItemID='001' OR ItemID='002' OR ItemID='003' ORDER BY ItemID DESC", EXPECTED_ORDERED_DOC9A, metadata, dataMgr);         //$NON-NLS-1$
     }   
 
-    public void testOrderBy13() throws Exception {
+    @Test public void testOrderBy13() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -3648,7 +3647,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 ORDER BY Name DESC, Quantity ASC ", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
         
-    public void testOrderBy14() throws Exception {
+    @Test public void testOrderBy14() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -3755,7 +3754,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 ORDER BY Catalogs.Catalog.Items.Item.Suppliers.Supplier.SupplierID ASC, OrderID DESC, Catalogs.Catalog.Items.Item.ItemID DESC", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }   
      
-    public void testOrderBy15() throws Exception {
+    @Test public void testOrderBy15() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -3784,7 +3783,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** test null elements*/
-    public void testOrderBy17() throws Exception {
+    @Test public void testOrderBy17() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         
@@ -3813,7 +3812,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /**  test duplicate elements*/
-    public void testOrderBy18() throws Exception {
+    @Test public void testOrderBy18() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithDuplicates(metadata);
         
@@ -3842,7 +3841,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /**  test more than two parallel elements*/
-    public void testOrderBy19() throws Exception {
+    @Test public void testOrderBy19() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithDuplicates1(metadata);
         
@@ -3870,7 +3869,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 ORDER BY ItemID ASC, Name ASC, Quantity DESC ", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testOrderBy20() throws Exception {
+    @Test public void testOrderBy20() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
@@ -3928,7 +3927,7 @@ public class TestXMLProcessor extends TestCase {
      * Doc nodes that are not mapped to data cannot be used in the 
      * ORDER BY clause of an XML doc query
      */
-    public void testOrderBy_defect9803() throws Exception {
+    @Test public void testOrderBy_defect9803() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
                
@@ -3944,7 +3943,7 @@ public class TestXMLProcessor extends TestCase {
     }    
         
     //defect 8130
-    public void test1CriteriaWithUnmappedElementFails() throws Exception {
+    @Test public void test1CriteriaWithUnmappedElementFails() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
@@ -3952,14 +3951,14 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     //defect 8130
-    public void test1CriteriaWithUnmappedElementFails2() throws Exception {
+    @Test public void test1CriteriaWithUnmappedElementFails2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Item = 'something'", null, metadata, dataMgr, false, QueryPlannerException.class, null);         //$NON-NLS-1$
     }  
     
-    public void testNested() throws Exception {
+    @Test public void testNested() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4165,7 +4164,7 @@ public class TestXMLProcessor extends TestCase {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
             
-    public void testNested2() throws Exception {
+    @Test public void testNested2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2;
@@ -4176,14 +4175,14 @@ public class TestXMLProcessor extends TestCase {
      * Tests a couple temp groups at the root - B selects from A, and a mapping class
      * selects from B
      */
-    public void testNested2aTempGroup() throws Exception {
+    @Test public void testNested2aTempGroup() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2;
         helpTestProcess("SELECT * FROM xmltest.doc9a", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }   
 
-    public void testNested2aTempGroupCriteria() throws Exception {
+    @Test public void testNested2aTempGroupCriteria() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4263,7 +4262,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /** defect 13172, CSE Case 1811 */
-    public void testNested2aTempGroupCompoundCriteria() throws Exception {
+    @Test public void testNested2aTempGroupCompoundCriteria() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4344,7 +4343,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** defect 13172, CSE Case 1811 */
-    public void testNested2aTempGroupCompoundCriteria1() throws Exception {
+    @Test public void testNested2aTempGroupCompoundCriteria1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4425,7 +4424,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** defect 13172, CSE Case 1811 */
-    public void testNested2aTempGroupCompoundCriteria2() throws Exception {
+    @Test public void testNested2aTempGroupCompoundCriteria2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4511,7 +4510,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9a WHERE tempGroup.orders.orderNum = '1' OR tempGroup.orders.orderStatus = 'processing'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2cTempGroup() throws Exception {
+    @Test public void testNested2cTempGroup() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_3;
@@ -4529,7 +4528,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9b", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }   
 
-    public void testNested2WithCriteria() throws Exception {
+    @Test public void testNested2WithCriteria() throws Exception {
 
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -4587,7 +4586,7 @@ public class TestXMLProcessor extends TestCase {
      * 
      * @see #testNested2WithCriteria2a
      */
-    public void testNested2WithCriteria2() throws Exception {
+    @Test public void testNested2WithCriteria2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4647,7 +4646,7 @@ public class TestXMLProcessor extends TestCase {
      * 
      * @see #testNested2WithCriteria2a
      */
-    public void testNested2WithCriteria2_defect9802() throws Exception {
+    @Test public void testNested2WithCriteria2_defect9802() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4697,7 +4696,7 @@ public class TestXMLProcessor extends TestCase {
      * shows a similar
      * @see #testNested2WithCriteria2
      */
-    public void testNested2WithCriteria2_function() throws Exception {
+    @Test public void testNested2WithCriteria2_function() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
@@ -4753,7 +4752,7 @@ public class TestXMLProcessor extends TestCase {
      * at "Item" node) will be limited by default, instead of the one
      * the criteria is actually specified on.</p>
      */
-    public void testNested2WithCriteria2a() throws Exception {
+    @Test public void testNested2WithCriteria2a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4802,7 +4801,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
 
-    public void testNested2WithContextCriteria() throws Exception {
+    @Test public void testNested2WithContextCriteria() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4849,7 +4848,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, SupplierID)='52'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria2() throws Exception {
+    @Test public void testNested2WithContextCriteria2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4902,7 +4901,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria3() throws Exception {
+    @Test public void testNested2WithContextCriteria3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -4995,7 +4994,7 @@ public class TestXMLProcessor extends TestCase {
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
 
-    public void testNested2WithContextCriteria4() throws Exception {
+    @Test public void testNested2WithContextCriteria4() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
@@ -5003,7 +5002,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(Item, OrderID)='6'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria4a() throws Exception {
+    @Test public void testNested2WithContextCriteria4a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
@@ -5011,7 +5010,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR OrderID='6'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria4b() throws Exception {
+    @Test public void testNested2WithContextCriteria4b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_4;
@@ -5097,7 +5096,7 @@ public class TestXMLProcessor extends TestCase {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
-    public void testNested2WithContextCriteria5() throws Exception {
+    @Test public void testNested2WithContextCriteria5() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
@@ -5105,7 +5104,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(Item, OrderID)='2'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria5a() throws Exception {
+    @Test public void testNested2WithContextCriteria5a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
@@ -5113,7 +5112,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE OrderID='5' OR context(Item, OrderID)='2'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria5b() throws Exception {
+    @Test public void testNested2WithContextCriteria5b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_5;
@@ -5134,7 +5133,7 @@ public class TestXMLProcessor extends TestCase {
         return baos.toString();
     }
 
-    public void testNested2WithContextCriteria5Fail() throws Exception {
+    @Test public void testNested2WithContextCriteria5Fail() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = ""; //doesn't matter //$NON-NLS-1$
@@ -5146,7 +5145,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(SupplierID, OrderID)='2'", expectedDoc, metadata, dataMgr, shouldSucceed, expectedException, shouldFailMsg);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria6() throws Exception {
+    @Test public void testNested2WithContextCriteria6() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5159,7 +5158,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' AND context(Item, OrderID)='2'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria6b() throws Exception {
+    @Test public void testNested2WithContextCriteria6b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5209,14 +5208,14 @@ public class TestXMLProcessor extends TestCase {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
-    public void testNested2WithContextCriteria7() throws Exception {
+    @Test public void testNested2WithContextCriteria7() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE CONTEXT(SupplierID, OrderID)='5' AND context(OrderID, OrderID)='5'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria7b() throws Exception {
+    @Test public void testNested2WithContextCriteria7b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
@@ -5225,7 +5224,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess(query, expectedDoc, metadata, dataMgr);        
     }
 
-    public void testNested2WithContextCriteria7c() throws Exception {
+    @Test public void testNested2WithContextCriteria7c() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = EXPECTED_DOC_NESTED_2_WITH_CONTEXT_CRITERIA_7;
@@ -5237,7 +5236,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * per defect 7333
      */
-    public void testNested2WithContextCriteria_7333() throws Exception {
+    @Test public void testNested2WithContextCriteria_7333() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5276,7 +5275,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * per defect 7333
      */
-    public void testNested2WithContextCriteria_7333b() throws Exception {
+    @Test public void testNested2WithContextCriteria_7333b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5315,7 +5314,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * per defect 7333
      */
-    public void testNested2WithContextCriteria_7333c() throws Exception {
+    @Test public void testNested2WithContextCriteria_7333c() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5331,7 +5330,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * per defect 7333
      */
-    public void testNested2WithContextCriteria_7333d() throws Exception {
+    @Test public void testNested2WithContextCriteria_7333d() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5347,7 +5346,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * Select a single item, and then limit the suppliers based on an order #
      */
-    public void testNested2WithContextCriteria8() throws Exception {
+    @Test public void testNested2WithContextCriteria8() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5383,7 +5382,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc9 WHERE ItemID='002' AND Context(Supplier,OrderID)='5'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNestedWithChoice() throws Exception {
+    @Test public void testNestedWithChoice() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5472,7 +5471,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * Does not use 'context' operator
      */
-    public void testNestedWithChoiceAndCriteria2_6796() throws Exception {
+    @Test public void testNestedWithChoiceAndCriteria2_6796() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5516,7 +5515,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * Uses the 'context' operator
      */
-    public void testNestedWithChoiceAndCriteria2a_6796() throws Exception {
+    @Test public void testNestedWithChoiceAndCriteria2a_6796() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5594,7 +5593,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * Does not use 'context' operator
      */
-    public void testNestedWithLookupChoice() throws Exception {
+    @Test public void testNestedWithLookupChoice() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -5641,7 +5640,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc10L where Catalogs.Catalog.Items.Item.Suppliers.Supplier.ProcessingOrders.OtherOrder.OrderID='5'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }    
     
-    public void test1Unformatted() throws Exception {
+    @Test public void test1Unformatted() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5671,7 +5670,7 @@ public class TestXMLProcessor extends TestCase {
 
     // jhTODO: complete this
 
-    public void testChoice_5266a() throws Exception {
+    @Test public void testChoice_5266a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -5750,7 +5749,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     
-    public void test1WithCriteriaShortName() throws Exception {
+    @Test public void test1WithCriteriaShortName() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5773,7 +5772,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE quantity < 50", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test1WithCriteriaLongName() throws Exception {
+    @Test public void test1WithCriteriaLongName() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5796,7 +5795,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE catalogs.catalog.items.item.quantity < 50", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test2() throws Exception {
+    @Test public void test2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5815,7 +5814,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc2", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test2a() throws Exception {
+    @Test public void test2a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5842,13 +5841,13 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc2a", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test2b() throws Exception {
+    @Test public void test2b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc2b", null, metadata, dataMgr, false, MetaMatrixComponentException.class, "Should have failed on default");         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void test2c() throws Exception {
+    @Test public void test2c() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5871,7 +5870,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc2c", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test2d() throws Exception {
+    @Test public void test2d() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5898,7 +5897,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc2d", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void test2e() throws Exception {
+    @Test public void test2e() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -5925,7 +5924,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc2e", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testWithNillableNode() throws Exception {
+    @Test public void testWithNillableNode() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
@@ -5952,7 +5951,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testWithDefault() throws Exception {
+    @Test public void testWithDefault() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
@@ -5979,7 +5978,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc3", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testWithNamespaces() throws Exception {
+    @Test public void testWithNamespaces() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
         String expectedDoc = 
@@ -6012,7 +6011,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc4", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testWithNewIter3Properties() throws Exception {
+    @Test public void testWithNewIter3Properties() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerDuJour(metadata);
         String expectedDoc = 
@@ -6051,7 +6050,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc5", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testWithNewIter3PropertiesException() throws Exception {
+    @Test public void testWithNewIter3PropertiesException() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerDuJour(metadata);
         
@@ -6069,10 +6068,10 @@ public class TestXMLProcessor extends TestCase {
             failOnDefaultException = e;
         }
         
-        super.assertNotNull("Query processing should have failed on default of choice node.", failOnDefaultException); //$NON-NLS-1$
+        assertNotNull("Query processing should have failed on default of choice node.", failOnDefaultException); //$NON-NLS-1$
     }
 
-    public void testAttributeBug() throws Exception {
+    @Test public void testAttributeBug() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
@@ -6096,7 +6095,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc7", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testMultipleDocs() throws Exception {
+    @Test public void testMultipleDocs() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6165,7 +6164,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc11", expectedDocs, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testRecursive() throws Exception {
+    @Test public void testRecursive() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6250,7 +6249,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc12", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
 
-    public void testRecursiveA() throws Exception {
+    @Test public void testRecursiveA() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6348,7 +6347,7 @@ public class TestXMLProcessor extends TestCase {
      * See commented out section below for previous expected results. 
      * @throws Exception
      */
-    public void testRecursive2() throws Exception {
+    @Test public void testRecursive2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6410,7 +6409,7 @@ public class TestXMLProcessor extends TestCase {
 
         helpTestProcess("SELECT * FROM xmltest.doc13", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
-    public void testRecursive3() throws Exception {
+    @Test public void testRecursive3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6472,7 +6471,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc14", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
 
-    public void testRecursive4Exception() throws Exception {
+    @Test public void testRecursive4Exception() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         helpTestProcess("SELECT * FROM xmltest.doc15", null, metadata, dataMgr, false, MetaMatrixComponentException.class, "Query processing should have failed on recursion limit."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6481,7 +6480,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * Seems to be failing as a result of changes for defect 12288 
      */
-    public void testRecursive5() throws Exception {
+    @Test public void testRecursive5() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6532,7 +6531,7 @@ public class TestXMLProcessor extends TestCase {
      * See commented out section below for previous expected results. 
      * @throws Exception
      */
-    public void testRecursiveWithStagingTable_defect15607() throws Exception {
+    @Test public void testRecursiveWithStagingTable_defect15607() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
 
@@ -6599,7 +6598,7 @@ public class TestXMLProcessor extends TestCase {
      * Tests a recursive nested mapping class within a recursive mapping class, where
      * all nested "anchor" nodes are named "srcNestedRecursive".  Test of defect #5988
      */
-    public void testXQTRecursive_5988() throws Exception {
+    @Test public void testXQTRecursive_5988() throws Exception {
         FakeMetadataFacade metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
@@ -6727,7 +6726,7 @@ public class TestXMLProcessor extends TestCase {
      * Tests a non-recursive nested mapping class within a recursive mapping class, where
      * all nested "anchor" nodes are named "srcNested".  Test of defect #5988
      */
-    public void testXQTRecursive2_5988() throws Exception {
+    @Test public void testXQTRecursive2_5988() throws Exception {
         FakeMetadataFacade metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
@@ -6779,7 +6778,7 @@ public class TestXMLProcessor extends TestCase {
     /**
      * for defect 5988
      */
-    public void testXQTRecursiveSiblings_5988() throws Exception {
+    @Test public void testXQTRecursiveSiblings_5988() throws Exception {
         FakeMetadataFacade metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
 
@@ -6915,7 +6914,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xqttest.doc2", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
 
-    public void testSelectElement1() throws Exception {
+    @Test public void testSelectElement1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -6939,7 +6938,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT Name FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
      
-    public void testSelectElement2() throws Exception {
+    @Test public void testSelectElement2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -7016,7 +7015,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** select element in the reverse order of depth*/
-    public void testSelectElement3() throws Exception {
+    @Test public void testSelectElement3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -7093,7 +7092,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** two select elements at the same level*/
-    public void testSelectElement4() throws Exception {
+    @Test public void testSelectElement4() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7123,7 +7122,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** defect 9756 */
-    public void testSelectElement4_defect9756() throws Exception {
+    @Test public void testSelectElement4_defect9756() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7143,7 +7142,7 @@ public class TestXMLProcessor extends TestCase {
     }    
     
     /** three select elements with two of them at the same level and there are other nodes with the same name*/
-    public void testSelectElement5() throws Exception {
+    @Test public void testSelectElement5() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -7228,7 +7227,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** check element.* case */
-    public void testSelectElement6() throws Exception {
+    @Test public void testSelectElement6() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7256,7 +7255,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** check element.* case without attribute in order by*/
-    public void testSelectElement6a() throws Exception {
+    @Test public void testSelectElement6a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7284,7 +7283,7 @@ public class TestXMLProcessor extends TestCase {
             + " FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testSelectElement7() throws Exception {
+    @Test public void testSelectElement7() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7312,7 +7311,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     }
     
-    public void testSelectElement8() throws Exception {
+    @Test public void testSelectElement8() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7341,7 +7340,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** SELECT clause has element.*, but the sibling elements should not be included, only subtree should */
-    public void testSelectElement9() throws Exception {
+    @Test public void testSelectElement9() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -7377,7 +7376,7 @@ public class TestXMLProcessor extends TestCase {
           expectedDoc, metadata, dataMgr);        
     }         
     
-    public void testSelectElement9a() throws Exception {
+    @Test public void testSelectElement9a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -7410,7 +7409,7 @@ public class TestXMLProcessor extends TestCase {
     }    
              
     /** check element.* case with criteria and order by clause */
-    public void testSelectElement10() throws Exception {
+    @Test public void testSelectElement10() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -7438,7 +7437,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     }
     
-    public void testSelectElement12() throws Exception {
+    @Test public void testSelectElement12() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -7491,7 +7490,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);                
     }
     
-    public void testSelectElement13() throws Exception {
+    @Test public void testSelectElement13() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -7513,7 +7512,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);                
     }
 
-    public void testSelectElement14() throws Exception {
+    @Test public void testSelectElement14() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
@@ -7567,7 +7566,7 @@ public class TestXMLProcessor extends TestCase {
                 expectedDoc, metadata, dataMgr);        
     }
     
-    public void testSelectElement15() throws Exception {
+    @Test public void testSelectElement15() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
@@ -7620,7 +7619,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     }
 
-    public void testSelectElement16() throws Exception {
+    @Test public void testSelectElement16() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc =
@@ -7674,7 +7673,7 @@ public class TestXMLProcessor extends TestCase {
     }         
 
     /**  CSE query 0 */
-    public void testSelectElement17() throws Exception {
+    @Test public void testSelectElement17() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
@@ -7775,7 +7774,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /**  CSE query 1 */
-    public void testSelectElement18() throws Exception {
+    @Test public void testSelectElement18() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -7820,7 +7819,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /**  CSE query 2 */
-    public void testSelectElement19() throws Exception {
+    @Test public void testSelectElement19() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -7866,7 +7865,7 @@ public class TestXMLProcessor extends TestCase {
             
 
     /**  CSE query 3 */
-    public void testSelectElement20() throws Exception {
+    @Test public void testSelectElement20() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -7899,7 +7898,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /**  CSE query 3a */
-    public void testSelectElement20a() throws Exception {
+    @Test public void testSelectElement20a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -7929,7 +7928,7 @@ public class TestXMLProcessor extends TestCase {
     }   
 
     /**  CSE query 4 */
-    public void testSelectElement21() throws Exception {
+    @Test public void testSelectElement21() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8016,7 +8015,7 @@ public class TestXMLProcessor extends TestCase {
     }  
 
     /**  CSE query 4a */
-    public void testSelectElement21a() throws Exception {
+    @Test public void testSelectElement21a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8079,7 +8078,7 @@ public class TestXMLProcessor extends TestCase {
     }  
     
     /**  CSE query 5 */
-    public void testSelectElement22() throws Exception {
+    @Test public void testSelectElement22() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
@@ -8138,7 +8137,7 @@ public class TestXMLProcessor extends TestCase {
     } 
     
     /**  CSE query 5a */
-    public void testSelectElement22a() throws Exception {
+    @Test public void testSelectElement22a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
@@ -8194,7 +8193,7 @@ public class TestXMLProcessor extends TestCase {
     } 
     
     /**  CSE query 6 */
-    public void testSelectElement23() throws Exception {
+    @Test public void testSelectElement23() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
 
@@ -8236,7 +8235,7 @@ public class TestXMLProcessor extends TestCase {
     } 
     
     /**  CSE query 6a */
-    public void testSelectElement23a() throws Exception {
+    @Test public void testSelectElement23a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8275,7 +8274,7 @@ public class TestXMLProcessor extends TestCase {
     }
                      
     /** test with order by and the element in the criteria is not in the select elements*/
-    public void testSelectElement24() throws Exception {
+    @Test public void testSelectElement24() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8315,7 +8314,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** test element.* with order by and the element in the criteria is not in the select elements*/
-    public void testSelectElement24a() throws Exception {
+    @Test public void testSelectElement24a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8376,7 +8375,7 @@ public class TestXMLProcessor extends TestCase {
     }
                          
     /** test with order by with only necessary sub-mapping classes are queried*/
-    public void testSelectElement25() throws Exception {
+    @Test public void testSelectElement25() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8417,7 +8416,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** test element.* with order by with only necessary sub-mapping classes are queried*/
-    public void testSelectElement25a() throws Exception {
+    @Test public void testSelectElement25a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8484,7 +8483,7 @@ public class TestXMLProcessor extends TestCase {
     /** Test element.* with order by with only necessary sub-mapping classes are queried 
      *  and case_insensitive nodes in the mapping tree
      */
-    public void testSelectElement25b() throws Exception {
+    @Test public void testSelectElement25b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8548,7 +8547,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     }
     
-    public void testSelectElement26() throws Exception {
+    @Test public void testSelectElement26() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8615,7 +8614,7 @@ public class TestXMLProcessor extends TestCase {
     /** test special elements: result set name, and name with format of "document.fully.qualified.element" 
      * --> refer to Defect9497, this should fail
      */
-    public void testSelectElement27() throws Exception {
+    @Test public void testSelectElement27() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8643,7 +8642,7 @@ public class TestXMLProcessor extends TestCase {
     }
         
     /** test special element, root element */
-    public void testSelectElement28() throws Exception {
+    @Test public void testSelectElement28() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8667,7 +8666,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** test special element */
-    public void testSelectElement28a() throws Exception {
+    @Test public void testSelectElement28a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc =  
@@ -8693,7 +8692,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** test model.document.* */
-    public void testSelectElement28b() throws Exception {
+    @Test public void testSelectElement28b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -8724,7 +8723,7 @@ public class TestXMLProcessor extends TestCase {
     }
         
     /** test special element, root element */
-    public void testSelectElement29() throws Exception {
+    @Test public void testSelectElement29() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8749,7 +8748,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** test simple case for two elements in a mapping class */
-    public void testSelectElement30() throws Exception {
+    @Test public void testSelectElement30() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -8770,7 +8769,7 @@ public class TestXMLProcessor extends TestCase {
     }     
                         
     /** test NullPointerException*/
-    public void testDefect_9496_1() throws Exception {
+    @Test public void testDefect_9496_1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8834,7 +8833,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     }
 
-    public void testDefect_9496_2() throws Exception {
+    @Test public void testDefect_9496_2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8891,7 +8890,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** test StringIndexOutOfBoundsException */
-    public void testDefect_9496_3() throws Exception {
+    @Test public void testDefect_9496_3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -8996,7 +8995,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** should fail: because there are other element other than "xml" */
-    /*public void testResolver1() throws Exception {
+    /*@Test public void testResolver1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
@@ -9012,7 +9011,7 @@ public class TestXMLProcessor extends TestCase {
     }*/
 
     /** should fail: partial qualified element name and "model.document.xml" */
-    /*public void testResolver2() throws Exception {
+    /*@Test public void testResolver2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
@@ -9028,7 +9027,7 @@ public class TestXMLProcessor extends TestCase {
     }*/
 
     /** should fail: test XMLResolver validatation for model.* */
-    /*public void testDefect_9498_1() throws Exception {
+    /*@Test public void testDefect_9498_1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
@@ -9041,7 +9040,7 @@ public class TestXMLProcessor extends TestCase {
     }*/
 
     /** should fail: test XMLResolver validatation for model.document.* */
-    /*public void testDefect_9498_2() throws Exception {
+    /*@Test public void testDefect_9498_2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
@@ -9054,7 +9053,7 @@ public class TestXMLProcessor extends TestCase {
     }*/
 
     /** should fail: test XMLResolver validatation for xml.* */
-    /*public void testDefect_9498_3() throws Exception {
+    /*@Test public void testDefect_9498_3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = ""; 
@@ -9069,7 +9068,7 @@ public class TestXMLProcessor extends TestCase {
     /** Test element.* with order by with only necessary sub-mapping classes are queried 
      *  and case_insensitive nodes in the mapping tree
      */
-    public void testCommentNodeInDoc() throws Exception {
+    @Test public void testCommentNodeInDoc() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9118,7 +9117,7 @@ public class TestXMLProcessor extends TestCase {
         "    <Catalog6/>\r\n" +  //$NON-NLS-1$
         "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
-    public void testDefect8917() throws Exception {
+    @Test public void testDefect8917() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         
@@ -9129,7 +9128,7 @@ public class TestXMLProcessor extends TestCase {
     /*
      * jhTODO
      */
-    public void testNillableOptional() throws Exception {
+    @Test public void testNillableOptional() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -9148,7 +9147,7 @@ public class TestXMLProcessor extends TestCase {
     /*
      * jhTODO
      */
-    public void testNillableNonOptional() throws Exception {
+    @Test public void testNillableNonOptional() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
@@ -9170,7 +9169,7 @@ public class TestXMLProcessor extends TestCase {
      * NON-empty whitespace string, which will NOT be treated as null
      * see also defect 15117
      */
-    public void testDefect11789() throws Exception {
+    @Test public void testDefect11789() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917a(metadata);
 
@@ -9232,7 +9231,7 @@ public class TestXMLProcessor extends TestCase {
      * Related to defect 8917 - the result should be the same as 
      * testDefect8917
      */
-    public void testDefect11789b() throws Exception {
+    @Test public void testDefect11789b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917b(metadata);
 
@@ -9240,7 +9239,7 @@ public class TestXMLProcessor extends TestCase {
             EXPECTED_DOC_DEFECT_8917_AND_11789, metadata, dataMgr);        
     }    
     
-    public void testDefect9446() throws Exception {
+    @Test public void testDefect9446() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         String expectedDoc = 
@@ -9261,7 +9260,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     } 
 
-    public void testDefect9446_2() throws Exception {
+    @Test public void testDefect9446_2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager_8917(metadata);
         String expectedDoc = 
@@ -9276,7 +9275,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     } 
 
-    public void testDefect_9530() throws Exception {
+    @Test public void testDefect_9530() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9307,7 +9306,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr);        
     } 
 
-    public void testSubqueryInXMLQueryCriteria() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteria() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9334,7 +9333,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE ItemID IN (SELECT itemNum FROM stock.items WHERE itemNum = '001')", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testSubqueryInXMLQueryCriteria2() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteria2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9361,7 +9360,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE ItemID > ANY (SELECT itemNum FROM stock.items WHERE itemNum IN ('001','002') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testSubqueryInXMLQueryCriteria3() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteria3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9415,7 +9414,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE EXISTS (SELECT itemNum FROM stock.items WHERE itemNum = '001')", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testSubqueryInXMLQueryCriteriaNestedSubquery() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedSubquery() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9442,7 +9441,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1 WHERE ItemID > ANY (SELECT itemNum FROM stock.items WHERE itemNum IN (SELECT itemNum FROM stock.items WHERE itemNum IN ('001','002') ) )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testSubqueryInXMLQueryCriteriaNestedMappingClass() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9507,7 +9506,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE ItemID > ANY (SELECT itemNum FROM stock.items WHERE itemNum IN ('001','002') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }  
 
-    public void testSubqueryInXMLQueryCriteriaNestedMappingClass2() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass2() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9572,7 +9571,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID > ANY (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('53','54') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     } 
 
-    public void testSubqueryInXMLQueryCriteriaNestedMappingClass3() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9637,7 +9636,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID < ALL (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('52','54') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testSubqueryInXMLQueryCriteriaNestedMappingClass3a() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9703,7 +9702,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
 
-    public void testSubqueryInXMLQueryCriteriaNestedMappingClass4() throws Exception {
+    @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass4() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9770,7 +9769,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE context(SupplierID, SupplierID) < SOME (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('52','54') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testCritNestedMappingClass() throws Exception {
+    @Test public void testCritNestedMappingClass() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9835,7 +9834,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID = '52'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testDefect_9893() throws Exception{
+    @Test public void testDefect_9893() throws Exception{
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9850,7 +9849,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr); 
     }
 
-    public void testDefect_9893_2() throws Exception{
+    @Test public void testDefect_9893_2() throws Exception{
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9865,7 +9864,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr); 
     }
 
-    public void testDefect_9893_3() throws Exception{
+    @Test public void testDefect_9893_3() throws Exception{
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
@@ -9880,7 +9879,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr); 
     }
 
-    public void testDefect_9893_4() throws Exception{
+    @Test public void testDefect_9893_4() throws Exception{
         FakeMetadataFacade metadata = exampleMetadataNestedWithSibling();
         FakeDataManager dataMgr = exampleDataManagerNestedWithSibling(metadata);
         String expectedDoc = 
@@ -9900,7 +9899,7 @@ public class TestXMLProcessor extends TestCase {
             expectedDoc, metadata, dataMgr, SHOULD_SUCCEED, null, null);       
     }
 
-    public void testNestedWithStoredQueryInMappingClass() throws Exception {
+    @Test public void testNestedWithStoredQueryInMappingClass() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -9966,7 +9965,7 @@ public class TestXMLProcessor extends TestCase {
     }
 
     /** homegenous, simple array elements */
-    public void testWithSOAPEncoding1() throws Exception {
+    @Test public void testWithSOAPEncoding1() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataSoap1();
         FakeDataManager dataMgr = exampleDataManagerForSoap1(metadata, false);
          
@@ -10000,7 +9999,7 @@ public class TestXMLProcessor extends TestCase {
      * (e.g. ORG:ArrayOfTaxID) and the schema allows it, eliminate the 
      * whole fragment
      */        
-    public void testWithSOAPEncodingNoRows() throws Exception {
+    @Test public void testWithSOAPEncodingNoRows() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataSoap1();
         FakeDataManager dataMgr = exampleDataManagerForSoap1(metadata, true);
          
@@ -10026,7 +10025,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.docSoap", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }  
     
-    public void testDefect12260() throws Exception{
+    @Test public void testDefect12260() throws Exception{
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -10065,7 +10064,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc12260", expectedDoc, metadata, dataMgr, true, MetaMatrixComponentException.class, null, capFinder); //$NON-NLS-1$
     }
     
-    public void testDefect8373() throws Exception{
+    @Test public void testDefect8373() throws Exception{
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
@@ -10106,7 +10105,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8373", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testDefect8373a() throws Exception{
+    @Test public void testDefect8373a() throws Exception{
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
@@ -10147,7 +10146,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8373a", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testDefect8373b() throws Exception{
+    @Test public void testDefect8373b() throws Exception{
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerWithNulls(metadata);
@@ -10188,7 +10187,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8373b", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }    
 
-    public void testDefect13617() throws Exception {
+    @Test public void testDefect13617() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager13617(metadata);
         String expectedDoc = 
@@ -10212,7 +10211,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT Item.Name FROM xmltest.doc13617", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }       
 
-    public void testDefect13617a() throws Exception {
+    @Test public void testDefect13617a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager13617(metadata);
         String expectedDoc = 
@@ -10243,7 +10242,7 @@ public class TestXMLProcessor extends TestCase {
      * @throws Exception
      * @since 4.2
      */
-    public void testDefect14905() throws Exception {
+    @Test public void testDefect14905() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager14905(metadata);
         String expectedDoc = 
@@ -10270,7 +10269,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }    
 
-    public void testTextUnnormalizedDefect15117() throws Exception {
+    @Test public void testTextUnnormalizedDefect15117() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager15117(metadata);
         String expectedDoc = 
@@ -10297,7 +10296,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testTextUnnormalizedDefect15117a() throws Exception {
+    @Test public void testTextUnnormalizedDefect15117a() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager15117a(metadata);
         String expectedDoc = 
@@ -10324,7 +10323,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }      
     
-    public void testRecursiveGroupDoc() throws Exception {
+    @Test public void testRecursiveGroupDoc() throws Exception {
 
         FakeMetadataFacade metadata = exampleMetadata2();
         FakeDataManager dataMgr = exampleXQTDataManager(metadata);
@@ -10358,7 +10357,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xqttest.groupDoc WHERE pseudoID = 2", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testCase2951MaxRows() throws Exception {
+    @Test public void testCase2951MaxRows() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10425,7 +10424,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** test rowlimitexception() doesn't throw exception is rowlimit isn't passed */
-    public void testDefect19173RowLimitException() throws Exception {
+    @Test public void testDefect19173RowLimitException() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10492,7 +10491,7 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     /** test criteria can be written backwards */
-    public void testDefect19173RowLimitExceptionBackwardsCriteria() throws Exception {
+    @Test public void testDefect19173RowLimitExceptionBackwardsCriteria() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10558,7 +10557,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE 4 = rowlimitexception(supplier)", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }    
     
-    public void testCase2951MaxRows2() throws Exception {
+    @Test public void testCase2951MaxRows2() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10613,7 +10612,7 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     /** test processing exception is thrown if row limit is passed */
-    public void testDefect19173RowLimitException2() throws Exception {
+    @Test public void testDefect19173RowLimitException2() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10622,7 +10621,7 @@ public class TestXMLProcessor extends TestCase {
     }      
     
     /** Two row limits on the same mapping class should be harmless as long as the row limits are identical. */
-    public void testCase2951MaxRows2a() throws Exception {
+    @Test public void testCase2951MaxRows2a() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10677,7 +10676,7 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     /** test processing exception is thrown if row limit is passed */
-    public void testDefect19173RowLimitException2a() throws Exception {
+    @Test public void testDefect19173RowLimitException2a() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10686,7 +10685,7 @@ public class TestXMLProcessor extends TestCase {
     }      
     
     /** compound criteria */
-    public void testCase2951MaxRows3() throws Exception {
+    @Test public void testCase2951MaxRows3() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10717,7 +10716,7 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     /** compound criteria */
-    public void testDefect19173RowLimitException3() throws Exception {
+    @Test public void testDefect19173RowLimitException3() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10725,7 +10724,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE ItemID='002' AND rowlimitexception(supplier) = 2", null, metadata, dataMgr, false, MetaMatrixProcessingException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
     }     
     
-    public void testCase2951MaxRows4() throws Exception {
+    @Test public void testCase2951MaxRows4() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10769,7 +10768,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimit(item) = 2", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }     
 
-    public void testCase2951AndDefect19173MixTwoFunctions() throws Exception {
+    @Test public void testCase2951AndDefect19173MixTwoFunctions() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10824,7 +10823,7 @@ public class TestXMLProcessor extends TestCase {
     }     
     
     /** arg to rowlimit function isn't in the scope of any mapping class */
-    public void testCase2951MaxRowsFails() throws Exception {
+    @Test public void testCase2951MaxRowsFails() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10833,7 +10832,7 @@ public class TestXMLProcessor extends TestCase {
     }     
 
     /** two conflicting row limits on the same mapping class */
-    public void testCase2951MaxRowsFails2() throws Exception {
+    @Test public void testCase2951MaxRowsFails2() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10842,7 +10841,7 @@ public class TestXMLProcessor extends TestCase {
     }
     
     /** arg to rowlimitexception function isn't in the scope of any mapping class */
-    public void testDefect19173RowLimitExceptionFails() throws Exception {
+    @Test public void testDefect19173RowLimitExceptionFails() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10851,7 +10850,7 @@ public class TestXMLProcessor extends TestCase {
     }     
 
     /** two conflicting rowlimitexceptions on the same mapping class */
-    public void testDefect19173RowLimitExceptionFails2() throws Exception {
+    @Test public void testDefect19173RowLimitExceptionFails2() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10860,7 +10859,7 @@ public class TestXMLProcessor extends TestCase {
     }    
     
     /** two conflicting rowlimit and rowlimitexceptions on the same mapping class fails planning */
-    public void testDefect19173RowLimitAndRowLimitExceptionMixFails2() throws Exception {
+    @Test public void testDefect19173RowLimitAndRowLimitExceptionMixFails2() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10869,7 +10868,7 @@ public class TestXMLProcessor extends TestCase {
     }    
 
     /** try rowlimit criteria written the reverse way */
-    public void testCase2951MaxRows5() throws Exception {
+    @Test public void testCase2951MaxRows5() throws Exception {
         
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
@@ -10924,7 +10923,7 @@ public class TestXMLProcessor extends TestCase {
     } 
     
     
-    public void testNormalizationCollapse() throws Exception {
+    @Test public void testNormalizationCollapse() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization(metadata);
         String expectedDoc = 
@@ -10963,7 +10962,7 @@ public class TestXMLProcessor extends TestCase {
         helpTestProcess("SELECT * FROM xmltest.normDoc1", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testNormalizationReplace() throws Exception {
+    @Test public void testNormalizationReplace() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization(metadata);
         String expectedDoc = 
@@ -11001,7 +11000,7 @@ public class TestXMLProcessor extends TestCase {
  
         helpTestProcess("SELECT * FROM xmltest.normDoc2", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
-    public void testNormalizationPreserve() throws Exception {
+    @Test public void testNormalizationPreserve() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNormalization2(metadata);
         String expectedDoc = 
@@ -11268,7 +11267,7 @@ public class TestXMLProcessor extends TestCase {
      * Test of doc model w/o criteria, just as a baseline 
      * @throws Exception
      */
-    public void testCase3225() throws Exception {
+    @Test public void testCase3225() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
@@ -11586,7 +11585,7 @@ public class TestXMLProcessor extends TestCase {
      * the combined criteria should limit returned items to item 001.
      * @throws Exception
      */
-    public void testCase3225WithCriteria() throws Exception {
+    @Test public void testCase3225WithCriteria() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         helpTestProcess("select * from xmltest.itemsdoc where employee.@supervisorID='1004' and order.orderquantity > 1", CASE_3225_WITH_CRITERIA_EXPECTED_DOC, metadata, dataMgr);         //$NON-NLS-1$
@@ -11608,7 +11607,7 @@ public class TestXMLProcessor extends TestCase {
      * the combined criteria should limit returned items to item 001.
      * @throws Exception
      */
-    public void testCase3225WithCriteriaReversed() throws Exception {
+    @Test public void testCase3225WithCriteriaReversed() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         helpTestProcess("select * from xmltest.itemsdoc where order.orderquantity > 1 and employee.@supervisorID='1004'", CASE_3225_WITH_CRITERIA_EXPECTED_DOC, metadata, dataMgr);         //$NON-NLS-1$
@@ -11620,7 +11619,7 @@ public class TestXMLProcessor extends TestCase {
      * to make sure all of the criteria is processed correctly. 
      * @throws Exception
      */
-    public void testCase3225WithEmptyDocCriteria() throws Exception {
+    @Test public void testCase3225WithEmptyDocCriteria() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
         String expectedDoc = 
@@ -11639,7 +11638,7 @@ public class TestXMLProcessor extends TestCase {
      * @throws Exception
      * @since 4.3
      */
-    public void testBaseballPlayersDoc() throws Exception {
+    @Test public void testBaseballPlayersDoc() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
@@ -11731,7 +11730,7 @@ public class TestXMLProcessor extends TestCase {
      * @throws Exception
      * @since 4.3
      */
-    public void testBaseballPlayersDocCriteria() throws Exception {
+    @Test public void testBaseballPlayersDocCriteria() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
@@ -11786,7 +11785,7 @@ public class TestXMLProcessor extends TestCase {
      * @throws Exception
      * @since 4.3
      */
-    public void testBaseballPlayersDocContextCriteria() throws Exception {
+    @Test public void testBaseballPlayersDocContextCriteria() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
@@ -11847,7 +11846,8 @@ public class TestXMLProcessor extends TestCase {
         
     }    
     
-    public void testProcedureAndXML() throws Exception {
+    @Ignore("stored procedure wrapper removal has been disabled")
+    @Test public void testProcedureAndXML() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 

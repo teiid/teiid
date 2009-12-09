@@ -25,14 +25,17 @@ package org.teiid.dqp.internal.cache;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
-import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.impl.BufferManagerImpl;
+import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -67,34 +70,33 @@ public class ResultSetCache {
 	}
 	
 	//configurable parameters
-	public static final String RS_CACHE_MAX_SIZE = "maxSize"; //$NON-NLS-1$
+	public static final String RS_CACHE_MAX_ENTRIES = "maxEntries"; //$NON-NLS-1$
+	public static final String RS_CACHE_MAX_SIZE = "maxEntrySize"; //$NON-NLS-1$
 	public static final String RS_CACHE_MAX_AGE = "maxAge"; //$NON-NLS-1$
 	public static final String RS_CACHE_SCOPE = "scope"; //$NON-NLS-1$
 		
 	//constants
 	public static final String RS_CACHE_SCOPE_VDB = "vdb"; //$NON-NLS-1$
 	public static final String RS_CACHE_SCOPE_CONN = "connection"; //$NON-NLS-1$
-
-	private Cache<CacheID, CacheResults> cache; 
-	private String scope;
-	private Map<TempKey, CacheResults> tempBatchResults = new HashMap<TempKey, CacheResults>();
-	private int maxSize = 50 * 1024 * 1024; //bytes
-	private int maxAge = 60 * 60; // seconds
-	private int maxEntries = 20 * 1024; 
+	private static final char DELIMITOR = '.';
 	
-	public ResultSetCache(Properties props, CacheFactory cacheFactory) {
-		PropertiesUtils.setBeanProperties(this, props, null);
+	private Cache<CacheID, CacheResults> cache; 
+	private String scope = RS_CACHE_SCOPE_VDB;
+	private Map<TempKey, CacheResults> tempBatchResults = new HashMap<TempKey, CacheResults>();
+	private int maxEntrySize = 100 * 1024; //bytes
+	private int maxAge = 60 * 60; // seconds
+	private int maxEntries = 1024;
+	
+	public void start(CacheFactory cacheFactory) {
 		this.cache = cacheFactory.get(Type.RESULTSET, new CacheConfiguration(Policy.MRU, maxAge, maxEntries));
 	}
 	
-	public void setMaxSize(int maxSize) {
-		if (maxSize <= 0 ) {
-			this.maxSize = 0;
-			this.maxEntries = Integer.MAX_VALUE;
-		} else {
-			this.maxSize = maxSize * 1024 * 1024;
-			this.maxEntries = this.maxSize * 1024;
-		}
+	public void setMaxEntries(int maxEntries) {
+		this.maxEntries = maxEntries;
+	}
+	
+	public void setMaxEntrySize(int maxEntrySize) {
+		this.maxEntrySize = maxEntrySize;
 	}
 	
 	public void setMaxAge(int maxAge) {
@@ -115,6 +117,9 @@ public class ResultSetCache {
 		if(cacheResults == null){
 			return null;
 		}
+		if (interval == null) {
+			return cacheResults;
+		}
 		int firstRow = interval[0] - 1;
 		int resultSize = cacheResults.getResults().length;
 		int finalRow = resultSize - 1;
@@ -126,15 +131,9 @@ public class ResultSetCache {
 		int batchSize = lastRow - firstRow + 1;
 		List<?>[] resultsPart = new List[batchSize];
 		System.arraycopy(cacheResults.getResults(), firstRow, resultsPart, 0, batchSize);
-		boolean isFinal = lastRow == finalRow;
-		CacheResults newCacheResults = new CacheResults(resultsPart, cacheResults.getElements(), firstRow + 1, lastRow == finalRow);
+		CacheResults newCacheResults = new CacheResults(resultsPart, firstRow + 1, lastRow == finalRow);
 		newCacheResults.setCommand(cacheResults.getCommand());
 		newCacheResults.setAnalysisRecord(cacheResults.getAnalysisRecord());
-		newCacheResults.setParamValues(cacheResults.getParamValues());
-        
-		if(isFinal){
-			newCacheResults.setFinalRow(resultSize);
-		}
 		return newCacheResults;
 	}
 	
@@ -149,15 +148,13 @@ public class ResultSetCache {
      */
 	public boolean setResults(CacheID cacheID, CacheResults cacheResults, Object requestID){	
 		List<?>[] results = cacheResults.getResults();
-		if(cacheResults.getSize() == -1){
-			cacheResults.setSize(ResultSetCacheUtil.getResultsSize(results, true));
+		if(cacheResults.getSize() == TupleBatch.UNKNOWN_SIZE){
+			cacheResults.setSize(SizeUtility.getBatchSize(BufferManagerImpl.getTypeNames(cacheResults.getElements()), results));
 		}
-		
-		long currentCacheSize = getCacheSize();
 		
 		TempKey key = new TempKey(cacheID, requestID);
 		//do not cache if it is over cache limit
-		if(isOverCacheLimit(currentCacheSize, cacheResults.getSize())){
+		if(isOverCacheLimit(cacheResults.getSize())){
 			removeTempResults(key);
 			return false;
 		}
@@ -165,6 +162,9 @@ public class ResultSetCache {
 		synchronized(tempBatchResults){
 			CacheResults savedResults = tempBatchResults.get(key);
 			if(savedResults == null){
+				if (tempBatchResults.size() >= maxEntries) {
+					return false;
+				}
 				savedResults = cacheResults; 
 				tempBatchResults.put(key, cacheResults);
 			} else if(!savedResults.addResults(cacheResults)){
@@ -173,14 +173,13 @@ public class ResultSetCache {
 			}
 			
 			//do not cache if it is over cache limit
-			if(isOverCacheLimit(currentCacheSize, savedResults.getSize())){
+			if(isOverCacheLimit(savedResults.getSize())){
 				removeTempResults(key);
 				return false;
 			}
 		
 			if(savedResults.isFinal()){
 				tempBatchResults.remove(cacheID);
-				cacheID.setMemorySize(savedResults.getSize());
 				cache.put(cacheID, savedResults);
 			}
 		}
@@ -188,14 +187,11 @@ public class ResultSetCache {
 		return true;
 	}
 
-	private boolean isOverCacheLimit(long recentCacheSize, long sizeToAdd) {
-		if(maxSize == 0 || sizeToAdd == 0){
+	private boolean isOverCacheLimit(long sizeToAdd) {
+		if(maxEntrySize == 0 || sizeToAdd == 0){
 			return false;
 		}
-		if(sizeToAdd + recentCacheSize > maxSize){
-			return true;
-		}
-		return false;
+		return sizeToAdd > maxEntrySize;
 	}
 	
 	public void removeTempResults(CacheID cacheID, Object requestID){
@@ -215,14 +211,6 @@ public class ResultSetCache {
 		}
 	}
 
-	private long getCacheSize(){
-		long size = 0L;
-		for(CacheID key:cache.keySet()) {
-			size += key.getMemorySize();
-		}
-		return size;
-	}
-	
 	public void shutDown(){
 		clear();
 	}
@@ -230,4 +218,15 @@ public class ResultSetCache {
 	public String getCacheScope(){
 		return scope;
 	}
+
+	public CacheID createCacheID(DQPWorkContext workContext, String command, List<?> parameterValues){
+		String scopeID = null;
+		if(RS_CACHE_SCOPE_VDB.equalsIgnoreCase(getCacheScope())){
+			scopeID = workContext.getVdbName() + DELIMITOR + workContext.getVdbVersion();
+		}else{
+			scopeID = workContext.getConnectionID();
+		}
+		return new CacheID(scopeID, command, parameterValues);
+	}
+
 }

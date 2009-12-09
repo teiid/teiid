@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.resolver;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -38,17 +40,13 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
@@ -59,7 +57,6 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
-import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
@@ -69,7 +66,6 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.OrderBy;
-import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.Select;
@@ -80,11 +76,8 @@ import com.metamatrix.query.sql.lang.SubqueryFromClause;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
-import com.metamatrix.query.sql.proc.AssignmentStatement;
-import com.metamatrix.query.sql.proc.Block;
 import com.metamatrix.query.sql.proc.CommandStatement;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
-import com.metamatrix.query.sql.proc.LoopStatement;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -120,46 +113,7 @@ public class TestResolver {
             throw new RuntimeException(e);
         }
 	}
-    
-    public static Map getProcedureExternalMetadata(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
-    throws QueryMetadataException, MetaMatrixComponentException {
-        Map externalMetadata = new HashMap();
-
-        // Look up elements for the virtual group
-        List elements = ResolverUtil.resolveElementsInGroup(virtualGroup, metadata);
-        // virtual group metadata info
-        externalMetadata.put(virtualGroup, elements);
-
-        // INPUT group metadata info
-        GroupSymbol inputGroup = new GroupSymbol(ProcedureReservedWords.INPUT);
-        List inputElments = new ArrayList(elements.size());
-        List elementIds = new ArrayList();
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol virtualElmnt = (ElementSymbol)elements.get(i);
-            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
-            inputElments.add(inputElement);
-            elementIds.add(new TempMetadataID(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + virtualElmnt.getShortName(), virtualElmnt.getType()));
-        }
-        inputGroup.setMetadataID(new TempMetadataID(ProcedureReservedWords.INPUT, elementIds));
-        externalMetadata.put(inputGroup, inputElments);
-
-        // CHANGING group metadata info
-        // Switch type to be boolean for all CHANGING variables
-        GroupSymbol changeGroup = new GroupSymbol(ProcedureReservedWords.CHANGING);
-        List changingElments = new ArrayList(elements.size());
-        elementIds = new ArrayList();
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol changeElement = (ElementSymbol)((ElementSymbol)elements.get(i)).clone();
-            changeElement.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-            changingElments.add(changeElement);
-            elementIds.add(new TempMetadataID(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + changeElement.getShortName(), changeElement.getType()));
-        }
-        changeGroup.setMetadataID(new TempMetadataID(ProcedureReservedWords.CHANGING, elementIds));
-        externalMetadata.put(changeGroup, changingElments);
-
-        return externalMetadata;
-    }
-	
+    	
     /**
      * Helps resolve command, then check that the actual resolved Elements variables are the same as
      * the expected variable names.  The variableNames param will be empty unless the subquery
@@ -209,39 +163,6 @@ public class TestResolver {
 		return helpResolve(helpParse(sql));
 	}
 	
-	private Command helpResolveUpdateProcedure(String procedure, String userUpdateStr, String procedureType) {
-        metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
-
-        return helpResolve(userUpdateStr, metadata, AnalysisRecord.createNonRecordingRecord());
-    }
-	
-    private void helpFailUpdateProcedure(String procedure, String userUpdateStr, String procedureType) {
-        helpFailUpdateProcedure(procedure, userUpdateStr, procedureType, null);
-    }
-    
-	private void helpFailUpdateProcedure(String procedure, String userUpdateStr, String procedureType, String msg) {
-        metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
-
-        Command userCommand;
-		try {
-			userCommand = QueryParser.getQueryParser().parseCommand(userUpdateStr);
-		} catch (QueryParserException e) {
-			throw new RuntimeException(e);
-		}
-
-        // resolve
-        try {
-            QueryResolver.resolveCommand(userCommand, metadata);
-            fail("Expected a QueryResolverException but got none."); //$NON-NLS-1$
-        } catch(QueryResolverException ex) {
-        	if (msg != null) {
-                assertEquals(msg, ex.getMessage());
-            }
-        } catch (MetaMatrixComponentException e) {
-        	throw new RuntimeException(e);
-		} 
-	}	
-
     private Command helpResolve(Command command) {    
         return helpResolve(command, this.metadata, AnalysisRecord.createNonRecordingRecord());  
     }	
@@ -1052,7 +973,7 @@ public class TestResolver {
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
         
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
@@ -1072,7 +993,7 @@ public class TestResolver {
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
                     
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
@@ -1092,7 +1013,7 @@ public class TestResolver {
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
 
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
 
         // Verify results
         Collection vars = getVariables(command);
@@ -1113,7 +1034,7 @@ public class TestResolver {
             Map externalMetadata = new HashMap();
             externalMetadata.put(sqGroup, sqParams);
 
-            QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+            QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
             
             fail("Expected exception on invalid variable pm1.sq2.in"); //$NON-NLS-1$
         } catch(QueryResolverException e) {
@@ -1416,948 +1337,6 @@ public class TestResolver {
 
         helpResolve(sql);
 	}	
-
-	// variable resolution
-    @Test public void testCreateUpdateProcedure1() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable resolution, variable used in if statement
-    @Test public void testCreateUpdateProcedure3() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable resolution, variable used in if statement, variable comapred against
-	// differrent datatype element
-    @Test public void testCreateUpdateProcedure4() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1);\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable resolution, variable used in if statement, invalid operation on variable
-    @Test public void testCreateUpdateProcedure5() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = var1 + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 whwre var1 = var1+var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }    
-    
-	// variable resolution, variables declared in different blocks local variables
-	// should not override
-    @Test public void testCreateUpdateProcedure6() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where var1 = pm1.g1.e3;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Variable var1 was previously declared."); //$NON-NLS-1$
-    }
-    
-	// variable resolution, variables declared in different blocks local variables
-	// inner block using outer block variables
-    @Test public void testCreateUpdateProcedure7() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var2;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where var1 = pm1.g1.e1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable resolution, variables declared in differrent blocks local variables
-	// outer block cannot use inner block variables
-    @Test public void testCreateUpdateProcedure8() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where var1 = pm1.g1.e1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "var2 = 1\n";                 //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }     
-    
-	// variable resolution, variables declared in differrent blocks local variables
-	// should override, outer block variables still valid afetr inner block is declared
-    @Test public void testCreateUpdateProcedure9() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where var1 = pm1.g1.e3;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = var1 +1;\n";                 //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }    
-    
-	// special variable ROWS_UPDATED resolution
-    @Test public void testCreateUpdateProcedure10() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable ROWS_UPDATED used with declared variable
-    @Test public void testCreateUpdateProcedure11() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable INPUT used with declared variable
-    @Test public void testCreateUpdateProcedure12() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable CHANGING used with declared variable
-    @Test public void testCreateUpdateProcedure14() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1 = 'true')\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable CHANGING and INPUT used in conpound criteria
-    @Test public void testCreateUpdateProcedure15() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1='false' and INPUT.e1=1)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable CHANGING and INPUT used in conpound criteria, with declared variables
-    @Test public void testCreateUpdateProcedure16() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e4 ='true' and INPUT.e2=1 or var1 < 30)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure17() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e4 = {d'2000-01-01'})\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
-    }       
-    
-	// virtual group elements used in procedure(HAS CRITERIA)
-    @Test public void testCreateUpdateProcedure18() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// virtual group elements used in procedure in if statement(HAS CRITERIA)
-    @Test public void testCreateUpdateProcedure19() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1))\n";                 //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where HAS CRITERIA ON (vm1.g1.e1, vm1.g1.e1);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }    
-    
-	// virtual group elements used in procedure(TRANSLATE CRITERIA)
-    @Test public void testCreateUpdateProcedure20() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// virtual group elements used in procedure(TRANSLATE CRITERIA)
-    @Test public void testCreateUpdateProcedure21() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using undefined variable should fail
-    @Test public void testCreateUpdateProcedure22() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-//        procedure = procedure + "DECLARE integer var1;\n";
-        procedure = procedure + "var3 = var2+var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "var2 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using undefined variable declared is of invalid datatype
-    @Test public void testCreateUpdateProcedure23() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE struct var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using declare variable that has parts
-    @Test public void testCreateUpdateProcedure24() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var2.var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using declare variable is qualified
-    @Test public void testCreateUpdateProcedure26() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer VARIABLES.var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using declare variable is qualified but has more parts
-    @Test public void testCreateUpdateProcedure27() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer VARIABLES.var1.var2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using a variable that has not been declared in an assignment stmt
-    @Test public void testCreateUpdateProcedure28() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using a variable that has not been declared in an assignment stmt
-    @Test public void testCreateUpdateProcedure29() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = 1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using invalid function in assignment expr
-    @Test public void testCreateUpdateProcedure30() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Declare integer var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "var1 = 'x' + ROWS_UPDATED;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }    
-    
-	// using invalid function in assignment expr
-    @Test public void testCreateUpdateProcedure31() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Declare integer var1;\n";         //$NON-NLS-1$
-        procedure = procedure + "var1 = 'x' + ROWS_UPDATED;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// using a variable being used inside a subcomand
-    @Test public void testCreateUpdateProcedure32() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Declare integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select var1 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable resolution, variables declared in differrent blocks local variables
-	// should override, outer block variables still valid afetr inner block is declared
-	// fails as variable being compared against incorrect type
-    @Test public void testCreateUpdateProcedure33() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE timestamp var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where var1 = pm1.g1.e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = var1 +1;\n";                 //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// physical elements used on criteria of the if statement
-    @Test public void testCreateUpdateProcedure34() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
-    }
-    
-	// virtual elements used on criteria of the if statement
-    @Test public void testCreateUpdateProcedure35() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.e1) and var1=1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// physical elements used on criteria of the if statement
-    @Test public void testCreateUpdateProcedure36() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }          
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure37() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(TRANSLATE CRITERIA ON (vm1.g1.e1) WITH (vm1.g1.e1 = 1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// validating Translate CRITERIA, elements on it should be virtual group elements
-	// but can use variables
-    @Test public void testCreateUpdateProcedure38() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (pm1.g1.e2 = var1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// physical elements used on criteria of the if statement
-    @Test public void testCreateUpdateProcedure39() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure40() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure41() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure42() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// TranslateCriteria on criteria of the if statement
-    @Test public void testCreateUpdateProcedure43() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n";         //$NON-NLS-1$
-//        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n";
-//        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n";
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        
-        metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, true, metadata, AnalysisRecord.createNonRecordingRecord());
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure44() {
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.INSERT_PROCEDURE);
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure45() throws Exception {
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-        
-        metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.INSERT_PROCEDURE, procedure);        
-        
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-		
-    	Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, true, metadata, AnalysisRecord.createNonRecordingRecord());
-    }
-    
-	// special variable CHANGING compared against integer no implicit conversion available
-    @Test public void testCreateUpdateProcedure46() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
-        
-        metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);        
-        
-		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
-		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
-    }
-
-	// TranslateCriteria on criteria of the if statement
-	@Test public void testCreateUpdateProcedure47() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(HAS CRITERIA ON (e1))\n"; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (vm1.g1.e1 = pm1.g1.e1);\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// validating Translate CRITERIA, elements(left elements on  on it should be virtual group elements
-	@Test public void testCreateUpdateProcedure48() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, INPUT.e2 = 2);\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// resolving Translate CRITERIA, right element should be present on the command
-	@Test public void testCreateUpdateProcedure49() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = pm1.g2.e1);\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// resolving criteria selector(on HAS CRITERIA), elements on it should be virtual group elements
-	@Test public void testCreateUpdateProcedure50() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.E1, vm1.g1.e1, INPUT.e1))\n";                 //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// resolving Translate CRITERIA, right side expression in the translate criteria should be elements on the command
-	@Test public void testCreateUpdateProcedure51() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1=1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e2 = var1+vm1.g1.e2, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// validating Translate CRITERIA, elements on it should be virtual group elements
-	// but can use variables, gut left exprs should always be virtual elements
-	@Test public void testCreateUpdateProcedure52() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (var1 = vm1.g1.e2, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// resolving AssignmentStatement, variable type and assigned type 
-	// do not match and no implicit conversion available
-	@Test public void testCreateUpdateProcedure53() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUT.e4;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// resolving AssignmentStatement, variable type and assigned type 
-	// do not match, but implicit conversion available
-	@Test public void testCreateUpdateProcedure54() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = 1+1;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-    
-	// resolving AssignmentStatement, variable type and assigned type 
-	// do not match, but implicit conversion available
-	@Test public void testCreateUpdateProcedure55() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = 1+ROWS_UPDATED;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
-
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}	
-
-    // no user command provided - should throw resolver exception
-    @Test public void testCreateUpdateProcedure56() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = 1+ROWS_UPDATED;"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        helpResolveException(procedure, FakeMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0012 Message:Unable to resolve update procedure as the virtual group context is ambiguous."); //$NON-NLS-1$
-    }
-    
-    @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
-        // Tests that the function params are resolved before the function for assignment statements
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = badFunction(badElement);"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        String userCommand = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        helpFailUpdateProcedure(procedure, userCommand, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
-    }
-    
-	// addresses Cases 4624.  Before change to UpdateProcedureResolver,
-    // this case failed with assertion exception.
-    @Test public void testCase4624() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "VARIABLES.ROWS_UPDATED = 0;\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = {b'false'};\n"; //$NON-NLS-1$
-        procedure = procedure + "IF(var1 = {b 'true'})\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "SELECT Rack_ID, RACK_MDT_TYPE INTO #racks FROM Bert_MAP.BERT3.RACK;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        String userCommand = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        helpFailUpdateProcedure(procedure, userCommand, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Group does not exist: Bert_MAP.BERT3.RACK"); //$NON-NLS-1$
-    }
-
-	// addresses Cases 5474.  
-    @Test public void testCase5474() {
-        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer VARIABLES.NLEVELS;\n"; //$NON-NLS-1$
-        procedure = procedure + "VARIABLES.NLEVELS = SELECT COUNT(*) FROM (SELECT oi.e1 AS Col1, oi.e2 AS Col2, oi.e3 FROM pm1.g2 AS oi) AS TOBJ, pm2.g2 AS TModel WHERE TModel.e3 = TOBJ.e3;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        helpResolve(procedure, FakeMetadataFactory.example1Cached(), null);
-    }
-    
-    @Test public void testIssue174102() throws Exception {
-        String procedure = "CREATE VIRTUAL PROCEDURE  \n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string crit = 'WHERE pm1.sq2.in = \"test\"';\n"; //$NON-NLS-1$
-        procedure = procedure + "CREATE LOCAL TEMPORARY TABLE #TTable (e1 string);"; //$NON-NLS-1$
-        procedure = procedure + "EXECUTE STRING ('SELECT e1 FROM pm1.sq2 ' || crit ) AS e1 string INTO #TTable;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        helpResolve(procedure, FakeMetadataFactory.example1Cached(), null);
-    }
-    
-    // Address Issue 174519.
-    // Expected result is resolver failure, but with different error.
-    @Test public void testIssue174519() {
-        String procedure = "CREATE VIRTUAL PROCEDURE  \n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string VARIABLES.l_in = pm1.sq1.in;\n"; //$NON-NLS-1$
-        procedure = procedure + "INSERT INTO #temp \n"; //$NON-NLS-1$
-        procedure = procedure + "SELECT pm1.sq3.e1 FROM pm1.sq3 WHERE pm1.sq3.in = VARIABLES.l_in;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = exampleStoredProcedure(procedure);
-        helpResolveException("EXEC pm1.sq1(1)", metadata, "Error Code:ERR.015.008.0010 Message:INSERT statement must have the same number of elements and values specified.  This statement has 0 elements and 0 values."); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
- 	private QueryMetadataInterface exampleStoredProcedure(String procedure) {
-		FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("pm1.sq1", procedure); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        
-        return metadata;
-	}
     
     @Test public void testIsXMLQuery1() throws Exception {
         helpTestIsXMLQuery("SELECT * FROM pm1.g1", false);     //$NON-NLS-1$
@@ -2508,7 +1487,7 @@ public class TestResolver {
         e1.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
                
         // Expected right expression
-        Constant e2 = new Constant(new TimestampUtil().createDate(96, 0, 31), DataTypeManager.DefaultDataClasses.DATE);
+        Constant e2 = new Constant(TimestampUtil.createDate(96, 0, 31), DataTypeManager.DefaultDataClasses.DATE);
         Function f1 = new Function("convert", new Expression[] { e2, new Constant(DataTypeManager.DefaultDataTypes.TIMESTAMP)}); //$NON-NLS-1$
         f1.makeImplicit();
                
@@ -2526,20 +1505,7 @@ public class TestResolver {
         
     @Test public void testFailedConversion_defect9725() throws Exception{
     	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available:  pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /**
-     *  Constants will now auto resolve if they are consistently representable in the target type
-     */
-    @Test public void testDefect23257() throws Exception{
-    	StoredProcedure command = (StoredProcedure)helpResolve("EXEC pm5.vsp59()"); //$NON-NLS-1$
-        
-        CommandStatement cs = (CommandStatement)((CreateUpdateProcedureCommand)command.getSubCommand()).getBlock().getStatements().get(1);
-        
-        Insert insert = (Insert)cs.getCommand();
-        
-        assertEquals(DataTypeManager.DefaultDataClasses.SHORT, ((Expression)insert.getValues().get(1)).getType());
-    }  
+    } 
             
     @Test public void testLookupFunction() {     
         String sql = "SELECT lookup('pm1.g1', 'e1', 'e2', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
@@ -2627,39 +1593,6 @@ public class TestResolver {
         assertEquals("Did not match expected criteria", expected, actual); //$NON-NLS-1$
     }    
     
-    @Test public void testVirtualProcedure(){
-        helpResolve("EXEC pm1.vsp1()");   //$NON-NLS-1$
-    }
-    
-    @Test public void testVirtualProcedure2(){
-        helpResolve("EXEC pm1.vsp14()");   //$NON-NLS-1$
-    }
-    
-    @Test public void testVirtualProcedurePartialParameterReference() {
-        helpResolve("EXEC pm1.vsp58(5)"); //$NON-NLS-1$
-    }
-    
-    //cursor starts with "#" Defect14924
-    @Test public void testVirtualProcedureInvalid1(){
-    	helpResolveException("EXEC pm1.vsp32()","Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testVirtualProcedureWithOrderBy() {
-        helpResolve("EXEC pm1.vsp29()");   //$NON-NLS-1$
-    }
-    
-    @Test public void testVirtualProcedureWithTempTableAndOrderBy() {
-        helpResolve("EXEC pm1.vsp33()");   //$NON-NLS-1$
-    }
-    
-    @Test public void testVirtualProcedureWithConstAndOrderBy() {
-        helpResolve("EXEC pm1.vsp34()");   //$NON-NLS-1$
-    }
-    
-    @Test public void testVirtualProcedureWithNoFromAndOrderBy() {
-        helpResolve("EXEC pm1.vsp28()");   //$NON-NLS-1$
-    }
-
     /** select e1 from pm1.g1 where e2 BETWEEN 1000 AND 2000 */
     @Test public void testBetween1(){
         String sql = "select e1 from pm1.g1 where e2 BETWEEN 1000 AND 2000"; //$NON-NLS-1$
@@ -3107,52 +2040,6 @@ public class TestResolver {
             example_12968(), AnalysisRecord.createNonRecordingRecord());
     }
 
-    @Test public void testDefect13029_CorrectlySetUpdateProcedureTempGroupIDs() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
-            .append("\nBEGIN") //$NON-NLS-1$
-            .append("\nDECLARE string var1;") //$NON-NLS-1$
-            .append("\nvar1 = '';") //$NON-NLS-1$
-            .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
-            .append("\n  BEGIN") //$NON-NLS-1$
-            .append("\n    LOOP ON (SELECT pm1.g2.e1 FROM pm1.g2 WHERE loopCursor.e1 = pm1.g2.e1) AS loopCursor2") //$NON-NLS-1$
-            .append("\n    BEGIN") //$NON-NLS-1$
-            .append("\n      var1 = CONCAT(var1, CONCAT(' ', loopCursor2.e1));") //$NON-NLS-1$
-            .append("\n    END") //$NON-NLS-1$
-            .append("\n  END") //$NON-NLS-1$
-            .append("\nEND"); //$NON-NLS-1$
-            
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, proc.toString());
-
-        // parse
-        Command userCommand = helpParse(userUpdateStr);
-
-        // resolve
-        try {
-            QueryResolver.resolveCommand(userCommand, metadata);
-        } catch(MetaMatrixException e) {
-            fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
-        Command command = ((ProcedureContainer)userCommand).getSubCommand();
-        Map tempIDs = command.getTemporaryMetadata();
-        assertNotNull(tempIDs);
-        assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
-        assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
-        
-        Command subCommand = (Command)command.getSubCommands().get(0);
-        tempIDs = subCommand.getTemporaryMetadata();
-        assertNotNull(tempIDs);
-        assertNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
-        assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
-
-        subCommand = (Command)command.getSubCommands().get(1);
-        tempIDs = subCommand.getTemporaryMetadata();
-        assertNotNull(tempIDs);
-        assertNotNull(tempIDs.get("LOOPCURSOR")); //$NON-NLS-1$
-        assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
-
-    }
 
     @Test public void testUnionQueryWithNull() throws Exception{
     	helpResolve("SELECT NULL, e2 FROM pm1.g2 UNION ALL SELECT e1, e2 FROM pm1.g3"); //$NON-NLS-1$
@@ -3200,99 +2087,7 @@ public class TestResolver {
         helpResolve("SELECT 'a', 19, {b'true'}, 13.999 INTO #myTempTable"); //$NON-NLS-1$
         helpResolve("SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g1"); //$NON-NLS-1$
     }
-    
-    @Test public void testSelectIntoInProcNoFrom() {
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                            .append("BEGIN\n") //$NON-NLS-1$
-                                            .append("SELECT 'a', 19, {b'true'}, 13.999 INTO pm1.g1;\n") //$NON-NLS-1$
-                                            .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                            .append("END\n"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
-        
-        procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                .append("BEGIN\n") //$NON-NLS-1$
-                                .append("SELECT 'a', 19, {b'true'}, 13.999 INTO #myTempTable;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                .append("END\n"); //$NON-NLS-1$
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    @Test public void testSelectIntoInProc() {
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                            .append("BEGIN\n") //$NON-NLS-1$
-                                            .append("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2;\n") //$NON-NLS-1$
-                                            .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                            .append("END\n"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
-        
-        procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                .append("BEGIN\n") //$NON-NLS-1$
-                                .append("SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                .append("END\n"); //$NON-NLS-1$
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    //baseline test to ensure that a declare assignment cannot contain the declared variable
-    @Test public void testDeclareStatement() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer VARIABLES.var1 = VARIABLES.var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        helpFailUpdateProcedure(procedure, userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    @Test public void testDynamicIntoInProc() {
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                .append("BEGIN\n") //$NON-NLS-1$
-                                .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2' as e1 string, e2 string, e3 string, e4 string INTO #myTempTable;\n") //$NON-NLS-1$
-                                .append("select e1 from #myTempTable;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                .append("END\n"); //$NON-NLS-1$
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    @Test public void testDynamicStatement() {
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                .append("BEGIN\n") //$NON-NLS-1$
-                                .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2';\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                .append("END\n"); //$NON-NLS-1$
-        helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    @Test public void testDynamicStatementType() {
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-                                .append("BEGIN\n") //$NON-NLS-1$
-                                .append("DECLARE object VARIABLES.X = null;\n") //$NON-NLS-1$
-                                .append("execute string VARIABLES.X;\n") //$NON-NLS-1$
-                                .append("ROWS_UPDATED =0;\n") //$NON-NLS-1$
-                                .append("END\n"); //$NON-NLS-1$
-        helpFailUpdateProcedure(procedure.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
+                
     //procedural relational mapping
     @Test public void testProcInVirtualGroup1(){
         String sql = "select e1 from pm1.vsp26 where param1=1 and param2='a'"; //$NON-NLS-1$
@@ -3334,122 +2129,6 @@ public class TestResolver {
         helpResolve(sql);
     }
         
-    @Test public void testMaterializedTransformation() {
-        String userSql = "SELECT MATVIEW.E1 FROM MATVIEW"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, false);
-        
-        Command command = helpResolve(userSql, metadata, analysis);
-
-        assertEquals("Command different than user sql", "SELECT MATVIEW.E1 FROM MATVIEW", command.toString().toUpperCase()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue("Command contains no subcommands", 1 == command.getSubCommands().size()); //$NON-NLS-1$
-        
-        String expectedTransformationSql = "SELECT * FROM MatTable.MatTable"; //$NON-NLS-1$
-        Command transCommand = (Command) command.getSubCommands().get(0);
-
-        assertEquals("Commands don't match", expectedTransformationSql, transCommand.toString()); //$NON-NLS-1$
-        
-        assertEquals("Wrong number of projected symbols", 1, transCommand.getProjectedSymbols().size()); //$NON-NLS-1$
-        assertEquals("wrong projected symbol", "MatTable.MatTable.e1", transCommand.getProjectedSymbols().get(0).toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        Collection annotations = analysis.getAnnotations();
-        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
-
-        //System.out.println(annotations);
-
-    }
-
-    @Test public void testMaterializedTransformationLoading() {
-        String userSql = "SELECT MATVIEW.E1 INTO MatTable.MatStage FROM MATVIEW"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, false);
-        
-        Command command = helpResolve(userSql, metadata, analysis);
-        assertEquals("Command different than user sql", "SELECT MATVIEW.E1 INTO MATTABLE.MATSTAGE FROM MATVIEW", command.toString().toUpperCase()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue("Command contains no subcommands", 1 == command.getSubCommands().size()); //$NON-NLS-1$
-        
-        String expectedTransformationSql = "SELECT x FROM MatSrc.MatSrc"; //$NON-NLS-1$
-        Command transCommand = (Command) command.getSubCommands().get(0);
-        assertEquals("Commands don't match", expectedTransformationSql, transCommand.toString()); //$NON-NLS-1$
-        
-        assertEquals("Wrong number of projected symbols", 1, transCommand.getProjectedSymbols().size()); //$NON-NLS-1$
-        assertEquals("wrong projected symbol", "x", transCommand.getProjectedSymbols().get(0).toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        Collection annotations = analysis.getAnnotations();
-        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
-        
-        //System.out.println(annotations);
-        
-    }    
-    
-    @Test public void testMaterializedTransformationNoCache() {
-        String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MatView.MatView"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, false);
-        
-        Command command = helpResolve(userSql, metadata, analysis);
-        assertEquals("Command different than user sql", "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MATVIEW.MATVIEW", command.toString().toUpperCase()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue("Command contains no subcommands", 1 == command.getSubCommands().size()); //$NON-NLS-1$
-        
-        String expectedTransformationSql = "SELECT x FROM MatSrc.MatSrc OPTION NOCACHE"; //$NON-NLS-1$
-        Command transCommand = (Command) command.getSubCommands().get(0);
-        assertEquals("Commands don't match", expectedTransformationSql, transCommand.toString()); //$NON-NLS-1$
-        
-        assertEquals("Wrong number of projected symbols", 1, transCommand.getProjectedSymbols().size()); //$NON-NLS-1$
-        assertEquals("wrong projected symbol", "x", transCommand.getProjectedSymbols().get(0).toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        Collection annotations = analysis.getAnnotations();
-        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
-    }
-    
-    //related to defect 14423
-    @Test public void testMaterializedTransformationNoCache2() {
-        String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, false);
-        
-        Command command = helpResolve(userSql, metadata, analysis);
-        assertEquals("Command different than user sql", "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE", command.toString().toUpperCase()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue("Command contains no subcommands", 1 == command.getSubCommands().size()); //$NON-NLS-1$
-        
-        String expectedTransformationSql = "SELECT x FROM MatSrc.MatSrc OPTION NOCACHE"; //$NON-NLS-1$
-        Command transCommand = (Command) command.getSubCommands().get(0);
-        assertEquals("Commands don't match", expectedTransformationSql, transCommand.toString()); //$NON-NLS-1$
-        
-        assertEquals("Wrong number of projected symbols", 1, transCommand.getProjectedSymbols().size()); //$NON-NLS-1$
-        assertEquals("wrong projected symbol", "x", transCommand.getProjectedSymbols().get(0).toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        Collection annotations = analysis.getAnnotations();
-        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
-    }
-    
-    @Test public void testNoCacheInTransformation(){
-        String userSql = "SELECT VGROUP.E1 FROM VGROUP"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, false);
-        
-        Command command = helpResolve(userSql, metadata, analysis);
-        assertEquals("Command different than user sql", "SELECT VGROUP.E1 FROM VGROUP", command.toString().toUpperCase()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue("Command contains no subcommands", 1 == ((Command)command.getSubCommands().get(0)).getSubCommands().size()); //$NON-NLS-1$
-        
-        String expectedTransformationSql = "SELECT x FROM MatSrc.MatSrc OPTION NOCACHE"; //$NON-NLS-1$
-        Command transCommand = (Command)((Command) command.getSubCommands().get(0)).getSubCommands().get(0);
-        assertEquals("Commands don't match", expectedTransformationSql, transCommand.toString()); //$NON-NLS-1$
-    }
-	
     @Test public void testProcParamComparison_defect13653() {
         String userSql = "SELECT * FROM (EXEC mmspTest1.MMSP5('a')) AS a, (EXEC mmsptest1.mmsp6('b')) AS b"; //$NON-NLS-1$
         
@@ -3518,7 +2197,7 @@ public class TestResolver {
     	inputSetElements.add(inputSetElement);
     	externalMetadata.put(inputSet, inputSetElements);
         Query command = (Query)helpParse(sql);
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
         Collection groups = GroupCollectorVisitor.getGroups(command, false);
         assertFalse(groups.contains(inputSet));
     }
@@ -3536,7 +2215,7 @@ public class TestResolver {
     	param.setType(String.class);
     	procPrarms.add(param);
     	externalMetadata.put(procGroup, procPrarms);
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
         CreateUpdateProcedureCommand proc = (CreateUpdateProcedureCommand)command;
         Query query = (Query)proc.getSubCommands().get(0);
         ElementSymbol inElement = (ElementSymbol)((CompareCriteria)query.getCriteria()).getLeftExpression();
@@ -3606,39 +2285,9 @@ public class TestResolver {
         assertEquals(0, command.updatingModelCount(metadata));
     }
     
-    @Test public void testCommandUpdating3() throws Exception{
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
-        .append("BEGIN\n") //$NON-NLS-1$
-        .append("INSERT INTO pm1.g1 (e1) VALUES (input.e1);\n") //$NON-NLS-1$
-        .append("ROWS_UPDATED = INSERT INTO pm1.g2 (e1) VALUES (input.e1);\n") //$NON-NLS-1$
-        .append("END\n"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        Command command = helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
-                                   FakeMetadataObject.Props.UPDATE_PROCEDURE);
-        assertEquals(2, command.updatingModelCount(metadata));
-    }
-    
     @Test public void testCommandUpdatingCount5() throws Exception{
         Command command = helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY e1"); //$NON-NLS-1$
         assertEquals(0, command.updatingModelCount(metadata));
-    }
-
-    @Test public void testCommandUpdatingCount6() throws Exception{
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "INSERT INTO pm1.g1 (e2) VALUES (Input.e2);\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-
-        String userUpdateStr = "INSERT into vm1.g1 (e1) values('x')"; //$NON-NLS-1$
-        
-        Command command = helpResolveUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.INSERT_PROCEDURE);
-        assertEquals(2, command.updatingModelCount(metadata));
     }
     
     /** case 3955 */
@@ -3688,20 +2337,7 @@ public class TestResolver {
         
         assertEquals(2, command.updatingModelCount(new TempMetadataAdapter(metadata, new TempMetadataStore())));
     }
-	
-	@Test public void testCommandUpdatingCountFromLastStatement() throws Exception {
-        String procedure = "CREATE VIRTUAL PROCEDURE  \n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "declare integer x = convert(pm1.sq1.in, integer) + 5;\n"; //$NON-NLS-1$
-        procedure = procedure + "insert into pm1.g1 values (null, null, null, null);"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = exampleStoredProcedure(procedure);
-        Command command = helpResolve(helpParse("exec pm1.sq1(1)"), metadata, null); //$NON-NLS-1$
-        
-        assertEquals(1, command.updatingModelCount(new TempMetadataAdapter(metadata, new TempMetadataStore())));
-	}
-		    
+			    
     @Test public void testCommandUpdatingCountFromMetadata() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject proc = metadata.getStore().findObject("pm1.sp1", FakeMetadataObject.PROCEDURE); //$NON-NLS-1$
@@ -3903,205 +2539,6 @@ public class TestResolver {
         helpResolveException(sql, "Group does not exist: temp_table"); //$NON-NLS-1$ 
     }
     
-    @Test public void testInvalidVirtualProcedure2(){
-        helpResolveException("EXEC pm1.vsp12()", FakeMetadataFactory.example1Cached(), "Symbol mycursor.e2 is specified with an unknown group context"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    // variable declared is of special type ROWS_RETURNED
-    @Test public void testDeclareRowsUpdated() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer rows_updated;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Variable rows_updated was previously declared."); //$NON-NLS-1$
-    }
-    
-    // validating INPUT element assigned
-    @Test public void testAssignInput() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "INPUT.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"INPUT.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
-    }
-    
-    // validating CHANGING element assigned
-    @Test public void testAssignChanging() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "CHANGING.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"CHANGING.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
-    }
-    
-    // variables cannot be used among insert elements
-    @Test public void testVariableInInsert() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, var1) values (1, 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
-
-        helpFailUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
-    }
-    
-    // variables cannot be used among insert elements
-    @Test public void testVariableInInsert2() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, INPUT.x) values (1, 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
-
-        helpFailUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUT.x': Symbol INPUT.x is specified with an unknown group context]"); //$NON-NLS-1$
-    }
-    
-    //should resolve first to the table's column
-    @Test public void testVariableInInsert3() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer e2;\n"; //$NON-NLS-1$
-        procedure = procedure + "Insert into pm1.g1 (e2) values (1);\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
-
-        helpResolveUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE); 
-    }
-    
-    @Test public void testAmbigousInput() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "select e1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element \"e1\" is ambiguous, it exists in two or more groups."); //$NON-NLS-1$
-    }
-    
-    @Test public void testLoopRedefinition() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  declare string var1;") //$NON-NLS-1$
-        .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
-        .append("\n  BEGIN") //$NON-NLS-1$
-        .append("\n    LOOP ON (SELECT pm1.g2.e1 FROM pm1.g2 WHERE loopCursor.e1 = pm1.g2.e1) AS loopCursor") //$NON-NLS-1$
-        .append("\n    BEGIN") //$NON-NLS-1$
-        .append("\n      var1 = CONCAT(var1, CONCAT(' ', loopCursor.e1));") //$NON-NLS-1$
-        .append("\n    END") //$NON-NLS-1$
-        .append("\n  END") //$NON-NLS-1$
-        .append("\n  END"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
-    }
-    
-    @Test public void testLoopRedefinition2(){
-        helpResolveException("EXEC pm1.vsp11()", FakeMetadataFactory.example1Cached(), "Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testTempGroupElementShouldNotBeResolable() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
-        .append("\n  select #temp.a from pm1.g1;") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
-    }
-    
-    @Test public void testTempGroupElementShouldNotBeResolable1() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
-        .append("\n  insert into #temp (a) values (#temp.a);") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
-    }
-    
-    @Test public void testVariableResolutionWithIntervening() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  declare string x;") //$NON-NLS-1$
-        .append("\n  x = '1';") //$NON-NLS-1$
-        .append("\n  declare string y;") //$NON-NLS-1$
-        .append("\n  y = '1';") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        helpResolve(proc.toString()); 
-    }
-    
-    @Test public void testProcedureScoping() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        //note that this declare takes presedense over the proc INPUT.e1 and CHANGING.e1 variables
-        .append("\n  declare integer e1 = 1;") //$NON-NLS-1$
-        .append("\n  e1 = e1;") //$NON-NLS-1$
-        .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
-        .append("\n  BEGIN") //$NON-NLS-1$
-        //inside the scope of the loop, an unqualified e1 should resolve to the loop variable group
-        .append("\n    variables.e1 = convert(e1, integer);") //$NON-NLS-1$
-        .append("\n  END") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        Update command = (Update)helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
-        
-        Block block = ((CreateUpdateProcedureCommand)command.getSubCommand()).getBlock();
-        
-        AssignmentStatement assStmt = (AssignmentStatement)block.getStatements().get(1);
-        assertEquals(ProcedureReservedWords.VARIABLES, assStmt.getVariable().getGroupSymbol().getCanonicalName());
-        assertEquals(ProcedureReservedWords.VARIABLES, ((ElementSymbol)assStmt.getValue()).getGroupSymbol().getCanonicalName());
-        
-        Block inner = ((LoopStatement)block.getStatements().get(2)).getBlock();
-        
-        assStmt = (AssignmentStatement)inner.getStatements().get(0);
-        
-        ElementSymbol value = ElementCollectorVisitor.getElements(assStmt.getValue(), false).iterator().next();
-        
-        assertEquals("LOOPCURSOR", value.getGroupSymbol().getCanonicalName()); //$NON-NLS-1$
-    }
-    
     @Test public void testResolveUnqualifiedCriteria() throws Exception{
         Criteria criteria = QueryParser.getQueryParser().parseCriteria("e1 = 1"); //$NON-NLS-1$
            
@@ -4136,64 +2573,9 @@ public class TestResolver {
         param.setType(DataTypeManager.DefaultDataClasses.STRING);
         procPrarms.add(param);
         externalMetadata.put(proc, procPrarms);
-        QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
     }
-    
-    @Test public void testProcedureCreate() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
-        .append("\n  select e1 from t1;") //$NON-NLS-1$
-        .append("\n  create local temporary table t1 (e1 string, e2 integer);") //$NON-NLS-1$
-        .append("\n  select e2 from t1;") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
         
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
-    }
-    
-    /**
-     * it is not ok to redefine the loopCursor 
-     */
-    @Test public void testProcedureCreate1() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
-        .append("\n  BEGIN") //$NON-NLS-1$
-        .append("\n  create local temporary table loopCursor (e1 string);") //$NON-NLS-1$
-        .append("\nEND") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Cannot create temporary table \"loopCursor\". A table with the same name already exists."); //$NON-NLS-1$
-    }
-    
-    @Test public void testProcedureCreateDrop() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n drop table t1;") //$NON-NLS-1$
-        .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE, "Group does not exist: t1"); //$NON-NLS-1$
-    }
-    
-    @Test public void testProcedureCreateDrop1() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
-        .append("\n  drop table t1;") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
     @Test public void testBatchedUpdateResolver() throws Exception {
         String update1 = "update pm1.g1 set e1 =1"; //$NON-NLS-1$
         String update2 = "update pm2.g1 set e1 =1"; //$NON-NLS-1$
@@ -4259,31 +2641,7 @@ public class TestResolver {
         
         helpResolveException(sql);
     }
-            
-    @Test public void testCreateAfterImplicitTempTable() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  select e1 into #temp from pm1.g1;") //$NON-NLS-1$
-        .append("\n  create local temporary table #temp (e1 string);") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
-    }
-    
-    @Test public void testInsertAfterCreate() {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
-        .append("\nBEGIN") //$NON-NLS-1$
-        .append("\n  create local temporary table #temp (e1 string, e2 string);") //$NON-NLS-1$
-        .append("\n  insert into #temp (e1) values ('a');") //$NON-NLS-1$
-        .append("\nEND"); //$NON-NLS-1$
-        
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveUpdateProcedure(proc.toString(), userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE); 
-    }
-    
+                
     @Test public void testUpdateError() {
         String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
         
@@ -4313,7 +2671,7 @@ public class TestResolver {
     }
     
     @Test public void testXMLJoinFail() {
-        String query = "select * from xmltest.doc1, xmltest.doc1"; //$NON-NLS-1$
+        String query = "select * from xmltest.doc1, xmltest.doc2"; //$NON-NLS-1$
          
         helpResolveException(query, "Error Code:ERR.015.008.0003 Message:Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
     }
@@ -4497,57 +2855,7 @@ public class TestResolver {
 		
 		TestResolver.helpResolveException(sql, FakeMetadataFactory.exampleBQTCached(), "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
 	}	
-	
-	/**
-	 * delete procedures should not reference input or changing vars.
-	 */
-	@Test public void testDefect16451() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure += "BEGIN\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = input.e1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = 0;"; //$NON-NLS-1$
-        procedure += "END\n"; //$NON-NLS-1$
-        
-        String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.DELETE_PROCEDURE, "Symbol input.e1 is specified with an unknown group context"); //$NON-NLS-1$
-	}
-	
-    @Test public void testInvalidVirtualProcedure3() throws Exception {
-    	helpResolveException("EXEC pm1.vsp18()", "Group does not exist: temptable"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    // variable resolution, variable comapred against
-    // differrent datatype element for which there is no implicit transformation)
-    @Test public void testCreateUpdateProcedure2() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure += "BEGIN\n"; //$NON-NLS-1$
-        procedure += "DECLARE boolean var1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e4 = convert(var1, string), pm1.g1.e1 = var1;\n"; //$NON-NLS-1$
-        procedure += "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
-    }
-    
-    // special variable INPUT compared against invalid type
-    @Test public void testInvalidInputInUpdate() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure += "BEGIN\n"; //$NON-NLS-1$
-        procedure += "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e1;\n"; //$NON-NLS-1$
-        procedure += "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUT.e1'"); //$NON-NLS-1$
-    }
-    
+	    
     @Test public void testUpdateSetClauseReferenceType() {
     	String sql = "UPDATE pm1.g1 SET pm1.g1.e1 = 1, pm1.g1.e2 = ?;"; //$NON-NLS-1$
     	

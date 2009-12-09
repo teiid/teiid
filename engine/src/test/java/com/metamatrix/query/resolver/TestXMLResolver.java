@@ -398,7 +398,7 @@ public class TestXMLResolver extends TestCase {
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
         
-        QueryResolver.resolveCommand(command, externalMetadata, false, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, externalMetadata, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
     
         // Verify results        
         Collection vars = TestResolver.getVariables(command);

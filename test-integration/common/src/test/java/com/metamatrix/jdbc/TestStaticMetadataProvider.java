@@ -44,10 +44,10 @@ public class TestStaticMetadataProvider extends TestCase {
     }
 
     private StaticMetadataProvider example1() throws Exception {
-        MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null);
+    	MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null, "vdb", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         Map[] columnMetadata = new Map[] { 
-            processor.getDefaultColumn("vdb", "1", "table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            processor.getDefaultColumn("vdb", "1", "table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            processor.getDefaultColumn("table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$ 
+            processor.getDefaultColumn("table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$ 
         };               
         
         return StaticMetadataProvider.createWithData(columnMetadata, 0);
@@ -81,7 +81,7 @@ public class TestStaticMetadataProvider extends TestCase {
 
     public void testGetIntValue() throws Exception {
         Integer property = ResultsMetadataConstants.VIRTUAL_DATABASE_NAME;
-        Integer value = new Integer(10); //$NON-NLS-1$
+        Integer value = new Integer(10); 
         
         Map columnMetadata = new HashMap();
         columnMetadata.put(property, value); 
@@ -94,7 +94,7 @@ public class TestStaticMetadataProvider extends TestCase {
 
     public void testGetBooleanValue() throws Exception {
         Integer property = ResultsMetadataConstants.VIRTUAL_DATABASE_NAME;
-        Boolean value = Boolean.TRUE; //$NON-NLS-1$
+        Boolean value = Boolean.TRUE; 
         
         Map columnMetadata = new HashMap();
         columnMetadata.put(property, value); 

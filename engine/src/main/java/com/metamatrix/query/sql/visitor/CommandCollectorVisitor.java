@@ -23,9 +23,7 @@
 package com.metamatrix.query.sql.visitor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
@@ -33,12 +31,10 @@ import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.Insert;
-import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
-import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.CommandStatement;
@@ -55,21 +51,7 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
  */
 public class CommandCollectorVisitor extends LanguageVisitor {
 
-	private enum Mode {
-		EMBEDDED,
-		NON_EMBEDDED
-	}
-	
     private List<Command> commands = new ArrayList<Command>();
-    private Set<Mode> modes;
-
-    /**
-     * Construct a new visitor with the default collection type, which is a 
-     * {@link java.util.HashSet}.  
-     */
-    public CommandCollectorVisitor(Set<Mode> modes) { 
-        this.modes = modes;
-    }   
 
     /**
      * Get the commands collected by the visitor.  This should best be called 
@@ -84,27 +66,21 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.ExistsCriteria)
      */
     public void visit(ExistsCriteria obj) {
-        if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
+        this.commands.add(obj.getCommand());
     }
 
     /**
      * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.ScalarSubquery)
      */
     public void visit(ScalarSubquery obj) {
-    	if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-    	}
+        this.commands.add(obj.getCommand());
     }
 
     /**
      * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.SubqueryCompareCriteria)
      */
     public void visit(SubqueryCompareCriteria obj) {
-    	if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
+        this.commands.add(obj.getCommand());
     }
 
     /**
@@ -113,9 +89,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(SubqueryFromClause obj) {
-    	if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
+        this.commands.add(obj.getCommand());
     }
 
     /**
@@ -124,9 +98,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(SubquerySetCriteria obj) {
-    	if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
+        this.commands.add(obj.getCommand());
     }
 
     /**
@@ -135,9 +107,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(CommandStatement obj) {
-    	if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
+        this.commands.add(obj.getCommand());
     }    
 
     /**
@@ -146,7 +116,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(AssignmentStatement obj) {
-    	if(modes.contains(Mode.EMBEDDED) && obj.hasCommand()) {
+    	if(obj.hasCommand()) {
 	        this.commands.add(obj.getCommand());
     	}
     }
@@ -157,27 +127,11 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(LoopStatement obj) {
-        if (modes.contains(Mode.EMBEDDED)) {
-            this.commands.add(obj.getCommand());
-        }
-    }
-    
-    public void visit(UnaryFromClause obj) {
-        if (modes.contains(Mode.NON_EMBEDDED) && obj.getExpandedCommand() != null) {
-            this.commands.add(obj.getExpandedCommand());
-        }
+        this.commands.add(obj.getCommand());
     }
     
     public void visit(BatchedUpdateCommand obj) {
-        if (modes.contains(Mode.NON_EMBEDDED)) {
-            this.commands.addAll(obj.getUpdateCommands());
-        }
-    }
-    
-    public void visit(ProcedureContainer obj) {
-        if (modes.contains(Mode.NON_EMBEDDED) && obj.getSubCommand() != null) {
-            this.commands.add(obj.getSubCommand());
-        }
+        this.commands.addAll(obj.getUpdateCommands());
     }
     
     /**
@@ -185,23 +139,8 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect commands in
      */
-    public static final List<Command> getCommands(Command obj) {
-        return getCommands(obj, true, true);
-    }
-
-    public static final List<Command> getCommands(Command obj, boolean embeddedOnly) {
-        return getCommands(obj, true, !embeddedOnly);
-    }
-    
-    private static final List<Command> getCommands(Command command, boolean embedded, boolean nonEmbedded) {
-    	HashSet<Mode> modes = new HashSet<Mode>();
-    	if (embedded) {
-    		modes.add(Mode.EMBEDDED);
-    	}
-    	if (nonEmbedded) {
-    		modes.add(Mode.NON_EMBEDDED);
-    	}
-        CommandCollectorVisitor visitor = new CommandCollectorVisitor(modes);
+    public static final List<Command> getCommands(Command command) {
+        CommandCollectorVisitor visitor = new CommandCollectorVisitor();
         final boolean visitCommands = command instanceof SetQuery || command instanceof Insert;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 
@@ -218,8 +157,4 @@ public class CommandCollectorVisitor extends LanguageVisitor {
         return visitor.getCommands();
     }
     
-    public static final List<Command> getNonEmbeddedCommands(Command obj) {
-        return getCommands(obj, false, true);
-    }
-
 }

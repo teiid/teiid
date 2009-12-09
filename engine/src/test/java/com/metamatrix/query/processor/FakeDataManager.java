@@ -38,7 +38,6 @@ import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.CommandContainer;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.Insert;
@@ -103,15 +102,7 @@ public class FakeDataManager implements ProcessorDataManager {
         LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", processorID, ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         
-        if ( command instanceof CommandContainer ) {
-        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
-            	for ( Iterator<Command> it = ((CommandContainer) command).getContainedCommands().iterator(); it.hasNext(); ) {
-            		this.queries.add(it.next().toString());
-            	}
-        	} else {
-        		this.queries.add(command.toString());
-        	}
-        } else {
+        if (! (command instanceof BatchedUpdateCommand) ) {
         	this.queries.add(command.toString());
         }
 
@@ -128,10 +119,11 @@ public class FakeDataManager implements ProcessorDataManager {
 		} else if (command instanceof ProcedureContainer) {
 			group = ((ProcedureContainer) command).getGroup();
 		} else if ( command instanceof BatchedUpdateCommand ) {
-        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
-        		if ( command.getSubCommands().get(0) instanceof Update ) {
-        			group = ((Update)command.getSubCommands().get(0)).getGroup();
-        		}
+    		if ( command.getSubCommands().get(0) instanceof Update ) {
+    			group = ((Update)command.getSubCommands().get(0)).getGroup();
+    		}
+        	for ( Iterator<Command> it = ((BatchedUpdateCommand) command).getUpdateCommands().iterator(); it.hasNext(); ) {
+        		this.queries.add(it.next().toString());
         	}
 		}
 		
@@ -184,10 +176,8 @@ public class FakeDataManager implements ProcessorDataManager {
 			// add single update command to a list to be executed
 			updateCommands.add(command);
 		} else if ( command instanceof BatchedUpdateCommand ) {
-        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
-				// add all update commands to a list to be executed
-        		updateCommands.addAll(((CommandContainer) command).getContainedCommands());
-        	}
+			// add all update commands to a list to be executed
+    		updateCommands.addAll(((BatchedUpdateCommand) command).getUpdateCommands());
 		}
 		
 		// if we had update commands added to the list, execute them now

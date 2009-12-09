@@ -152,7 +152,7 @@ public class TestProcessor {
 	        if (failures.size() > 0){
 	            fail("Exception during validation (" + repo); //$NON-NLS-1$
 	        }        
-			command = QueryRewriter.rewrite(command, null, metadata, createCommandContext());
+			command = QueryRewriter.rewrite(command, metadata, createCommandContext());
 	        ProcessorPlan process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
 			if(DEBUG) System.out.println("\n" + process); //$NON-NLS-1$
 	        //per defect 10022, clone this plan before processing, just to make sure

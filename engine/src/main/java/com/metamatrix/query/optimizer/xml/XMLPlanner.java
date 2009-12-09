@@ -46,7 +46,6 @@ import com.metamatrix.query.mapping.xml.Navigator;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.CommandPlanner;
-import com.metamatrix.query.optimizer.CommandTreeNode;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.xml.Program;
@@ -79,31 +78,15 @@ public final class XMLPlanner implements CommandPlanner{
 	 */
 	public XMLPlanner() {}
 
-    /**
-	 * @see com.metamatrix.query.optimizer.CommandPlanner#generateCanonical
-	 */
-	public void generateCanonical(CommandTreeNode rootNode, QueryMetadataInterface metadata, AnalysisRecord analysisRecord, CommandContext context)
-	throws QueryPlannerException, MetaMatrixComponentException {
-		//Nothing to do here
-	}
-
 	/**
 	 * @see com.metamatrix.query.optimizer.CommandPlanner#optimize
 	 */
-	public ProcessorPlan optimize(CommandTreeNode node,IDGenerator idGenerator,QueryMetadataInterface metadata,CapabilitiesFinder capFinder,AnalysisRecord analysisRecord,CommandContext context)
+	public ProcessorPlan optimize(Command command,IDGenerator idGenerator,QueryMetadataInterface metadata,CapabilitiesFinder capFinder,AnalysisRecord analysisRecord,CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
         XMLPlannerEnvironment env = new XMLPlannerEnvironment(metadata);
 
-        // Check for XML results form property in parent CommandTreeNode (if any)
-        if (node.getParent() != null && node.getParent().getCommandType() == CommandTreeNode.TYPE_XQUERY_COMMAND){
-            String xmlFormResults = (String)node.getParent().getProperty(XMLPlannerEnvironment.XML_FORM_RESULTS_PROPERTY);
-            if (xmlFormResults != null){
-                env.xmlFormResults = xmlFormResults;
-            }
-        }
-
-		return XMLPlanner.preparePlan(node.getCommand(), metadata, analysisRecord, env, idGenerator, capFinder, context);
+		return XMLPlanner.preparePlan(command, metadata, analysisRecord, env, idGenerator, capFinder, context);
 	}
 
     /**

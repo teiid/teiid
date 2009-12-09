@@ -37,7 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.AccessPattern;
@@ -152,7 +152,7 @@ class JoinRegion {
         }
         for (Iterator i = joinCriteria.iterator(); i.hasNext();) {
             Criteria crit = (Criteria)i.next();
-            criteriaNodes.add(GenerateCanonical.createSelectNode(crit, false));
+            criteriaNodes.add(RelationalPlanner.createSelectNode(crit, false));
         }
     }
     

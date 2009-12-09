@@ -80,7 +80,7 @@ public class TestProcedurePlanner extends TestCase {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
         }
-        userCommand = QueryRewriter.rewrite(userCommand, null, metadata, null);
+        userCommand = QueryRewriter.rewrite(userCommand, metadata, null);
         
         AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
         

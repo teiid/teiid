@@ -22,13 +22,22 @@
 
 package com.metamatrix.query.processor.dynamic;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Source;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamSource;
+
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -40,6 +49,7 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -57,12 +67,58 @@ import com.metamatrix.query.xquery.XQuerySQLEvaluator;
  */
 public class SqlEval implements XQuerySQLEvaluator {
 
+    private static final String NO_RESULTS_DOCUMENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><results/>"; //$NON-NLS-1$
+	
     private BufferManager bufferMgr;
     private CommandContext context;
     private ArrayList<TupleSourceID> openTupleList;
     private String parentGroup;
     private Map<String, Expression> params;
     private ProcessorDataManager dataManager;
+        
+    public static Source createSource(TupleSource source) 
+        throws  MetaMatrixProcessingException {
+
+        try {
+            // we only want to return the very first document from the result set
+            // as XML we expect in doc function to have single XML document
+            List tuple = source.nextTuple();
+            if (tuple != null) {                        
+                Object value = tuple.get(0);
+                if (value != null) {
+                    // below we will catch any invalid LOB refereces and return them
+                    // as processing excceptions.
+                    if (value instanceof XMLType) {
+                        XMLType xml = (XMLType)value;
+                        return xml.getSource(null);
+                    }
+                    return new StreamSource(new StringReader((String)value));
+                }
+            }
+        } catch (Exception e) { 
+            throw new MetaMatrixProcessingException(e);
+        }
+        return new StreamSource(new StringReader(NO_RESULTS_DOCUMENT));
+    }
+    
+    public static SAXSource createSource(String[] columns, Class[] types, TupleSource source) throws  MetaMatrixProcessingException, MetaMatrixComponentException {
+
+        try {
+            // get the sax parser and the its XML reader and replace with 
+            // our own. and then supply the customized input source.            
+            SAXParserFactory spf = SAXParserFactory.newInstance();
+            spf.setNamespaceAware(true);            
+            SAXParser sp = spf.newSAXParser();            
+            XMLReader reader = sp.getXMLReader();
+            
+            return new SAXSource(new TupleXMLReader(reader), new TupleInputSource(columns, types, source));
+            
+        } catch (ParserConfigurationException e) {
+            throw new MetaMatrixComponentException(e);
+        } catch (SAXException e) {
+            throw new MetaMatrixProcessingException(e);
+        }        
+    }
     
     public SqlEval(BufferManager bufferMgr, ProcessorDataManager dataManager, CommandContext context, String parentGroup, Map<String, Expression> params) {
         this.bufferMgr = bufferMgr;
@@ -101,9 +157,9 @@ public class SqlEval implements XQuerySQLEvaluator {
         }            
         
         if (xml) {
-            return XMLSource.createSource(columns, types, src, this.bufferMgr);
+            return createSource(src);
         }
-        return SQLSource.createSource(columns, types, src);
+        return createSource(columns, types, src);
     }
     
     @Override

@@ -35,6 +35,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Option;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
 /**
@@ -59,7 +60,7 @@ public class CreateUpdateProcedureCommand extends Command {
     
     private List projectedSymbols;
     
-    private List parentProjectSymbols;
+    private GroupSymbol virtualGroup;
 
     //command that returns resultset. For virtual procedure only.
     private Command resultsCommand;
@@ -167,11 +168,8 @@ public class CreateUpdateProcedureCommand extends Command {
         if (this.projectedSymbols != null) {
             copy.setProjectedSymbols(new ArrayList(this.projectedSymbols));
         }
-        if (getResultsCommand() != null) {
-            copy.setResultsCommand((Command)this.getResultsCommand().clone());
-        } 
-        if (parentProjectSymbols != null) {
-            copy.parentProjectSymbols = new ArrayList(this.parentProjectSymbols);
+        if (this.virtualGroup != null) {
+        	copy.virtualGroup = (GroupSymbol)this.virtualGroup.clone();
         }
         this.copyMetadataState(copy);
 		return copy;
@@ -313,20 +311,12 @@ public class CreateUpdateProcedureCommand extends Command {
         return 0;
     }
 
-    
-    /** 
-     * @return Returns the parentProjectSymbols.
-     */
-    public List getParentProjectSymbols() {
-        return this.parentProjectSymbols;
+    public GroupSymbol getVirtualGroup() {
+        return this.virtualGroup;
     }
 
-    
-    /** 
-     * @param parentProjectSymbols The parentProjectSymbols to set.
-     */
-    public void setParentProjectSymbols(List parentProjectSymbols) {
-        this.parentProjectSymbols = parentProjectSymbols;
+    public void setVirtualGroup(GroupSymbol virtualGroup) {
+        this.virtualGroup = virtualGroup;
     }
 
 } // END CLASS

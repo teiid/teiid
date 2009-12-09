@@ -107,7 +107,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 
             // Rewrite the command now that criteria may have been simplified
             try {
-                command = QueryRewriter.rewrite(command, null, metadata, null);                    
+                command = QueryRewriter.rewrite(command, metadata, null);                    
                 instanceNode.setCommand(command);
             } catch(QueryValidatorException e) {
                 // ignore and use original command

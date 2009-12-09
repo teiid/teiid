@@ -33,7 +33,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -58,10 +57,10 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.GroupContext;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
 
 /**
@@ -85,6 +84,11 @@ public class QueryResolver {
     private static final CommandResolver BATCHED_UPDATE_RESOLVER = new BatchedUpdateResolver();
     private static final CommandResolver DYNAMIC_COMMAND_RESOLVER = new DynamicCommandResolver();
     private static final CommandResolver TEMP_TABLE_RESOLVER = new TempTableResolver();
+    
+    public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
+    	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
+    	return cr.expandCommand(proc, metadata, analysisRecord);
+    }
 
     /**
      * This implements an algorithm to resolve all the symbols created by the parser into real metadata IDs
@@ -95,7 +99,7 @@ public class QueryResolver {
      public static void resolveCommand(Command command, QueryMetadataInterface metadata, AnalysisRecord analysis)
          throws QueryResolverException, MetaMatrixComponentException {
 
-         resolveCommand(command, Collections.EMPTY_MAP, true, metadata, analysis);
+         resolveCommand(command, Collections.EMPTY_MAP, metadata, analysis);
      }
 
      /**
@@ -106,28 +110,26 @@ public class QueryResolver {
       public static void resolveCommand(Command command, QueryMetadataInterface metadata)
           throws QueryResolverException, MetaMatrixComponentException {
 
-          resolveCommand(command, Collections.EMPTY_MAP, true, metadata, AnalysisRecord.createNonRecordingRecord());
+          resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
       }
 
    /**
     * This implements an algorithm to resolve all the symbols created by the parser into real metadata IDs
-    * @param command Command the SQL command we are running (Select, Update, Insert, Delete)
-    * @param externalMetadata Map of GroupSymbol to a List of ElementSymbol that identifies
+ * @param externalMetadata Map of GroupSymbol to a List of ElementSymbol that identifies
     * valid external groups that can be resolved against. Any elements resolved against external
     * groups will be treated as variables
-    * @param useMetadataCommands True if resolver should use metadata commands to completely resolve
-    * the command tree all the way to physical.  False if resolver should resolve only the visible command
-    * @param metadata QueryMetadataInterface the metadata
-    * @param analysis The analysis record which can be used to add anotations and debug information.
+ * @param metadata QueryMetadataInterface the metadata
+ * @param analysis The analysis record which can be used to add anotations and debug information.
+ * @param command Command the SQL command we are running (Select, Update, Insert, Delete)
     */
-    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, boolean useMetadataCommands, 
-                                                     QueryMetadataInterface metadata, AnalysisRecord analysis)
+    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, QueryMetadataInterface metadata, 
+                                                     AnalysisRecord analysis)
                        throws QueryResolverException, MetaMatrixComponentException {
-        return resolveCommand(currentCommand, externalMetadata, useMetadataCommands, metadata, analysis, true);
+        return resolveCommand(currentCommand, externalMetadata, metadata, analysis, true);
     }
       
-    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, boolean useMetadataCommands, 
-                                      QueryMetadataInterface metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, QueryMetadataInterface metadata, 
+                                      AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryResolverException, MetaMatrixComponentException {
 
 		LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
@@ -171,7 +173,7 @@ public class QueryResolver {
             CommandResolver resolver = chooseResolver(currentCommand, resolverMetadata);
 
             // Resolve this command
-            resolver.resolveCommand(currentCommand, useMetadataCommands, resolverMetadata, analysis, resolveNullLiterals);            
+            resolver.resolveCommand(currentCommand, resolverMetadata, analysis, resolveNullLiterals);            
         } catch(QueryMetadataException e) {
             throw new QueryResolverException(e, e.getMessage());
         }
@@ -211,7 +213,7 @@ public class QueryResolver {
             case Command.TYPE_CREATE:               return TEMP_TABLE_RESOLVER;
             case Command.TYPE_DROP:                 return TEMP_TABLE_RESOLVER;
             default:
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0002, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0002, command.getType()));
+                throw new AssertionError("Unknown command type"); //$NON-NLS-1$
         }
     }
 
@@ -220,7 +222,7 @@ public class QueryResolver {
      * @param query the query to check
      * @param metadata QueryMetadataInterface the metadata
      */
-    static boolean isXMLQuery(Query query, QueryMetadataInterface metadata)
+    public static boolean isXMLQuery(Query query, QueryMetadataInterface metadata)
      throws MetaMatrixComponentException, QueryMetadataException, QueryResolverException {
 
         // Check first group

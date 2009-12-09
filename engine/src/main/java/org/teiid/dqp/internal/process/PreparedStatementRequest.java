@@ -41,10 +41,8 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.optimizer.CommandTreeNode;
 import com.metamatrix.query.optimizer.batch.BatchedUpdatePlanner;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
@@ -202,7 +200,6 @@ public class PreparedStatementRequest extends Request {
 		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
 			}
 		}
-		CommandTreeNode ctn = new CommandTreeNode();
 		List<Command> commands = new LinkedList<Command>();
 		List<VariableContext> contexts = new LinkedList<VariableContext>();
 		List<List<Object>> multiValues = new ArrayList<List<Object>>(this.prepPlan.getReferences().size());
@@ -223,10 +220,7 @@ public class PreparedStatementRequest extends Request {
 			}
 			Command c = (Command)this.prepPlan.getRewritenCommand().clone();
 			commands.add(c);
-			CommandTreeNode child = new CommandTreeNode();
-			child.setCommand(c);
-			child.setProcessorPlan((ProcessorPlan)this.processPlan.clone());
-			ctn.addLastChild(child);
+			c.setProcessorPlan((ProcessorPlan)this.processPlan.clone());
 		}
 		
 		if (paramValues.size() > 1) {
@@ -247,10 +241,9 @@ public class PreparedStatementRequest extends Request {
 		}
 		
 		BatchedUpdateCommand buc = new BatchedUpdateCommand(commands);
-		ctn.setCommand(buc);
-		ctn.setProperty(RelationalPlanner.VARIABLE_CONTEXTS, contexts);
+		buc.setVariableContexts(contexts);
 		BatchedUpdatePlanner planner = new BatchedUpdatePlanner();
-		this.processPlan = planner.optimize(ctn, idGenerator, metadata, capabilitiesFinder, analysisRecord, context);
+		this.processPlan = planner.optimize(buc, idGenerator, metadata, capabilitiesFinder, analysisRecord, context);
 	}
 
 	/** 

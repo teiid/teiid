@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.optimizer;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,8 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.connector.api.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -88,7 +89,7 @@ import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.validator.Validator;
 import com.metamatrix.query.validator.ValidatorReport;
 
-public class TestOptimizer extends TestCase {
+public class TestOptimizer {
 
     public interface DependentJoin {}
     public interface DependentSelectNode {}
@@ -117,12 +118,6 @@ public class TestOptimizer extends TestCase {
     
     public static final boolean SHOULD_SUCCEED = true;
     public static final boolean SHOULD_FAIL = false;
-
-	// ################################## FRAMEWORK ################################
-	
-	public TestOptimizer(String name) { 
-		super(name);
-	}	
 
 	// ################################## TEST HELPERS ################################
 
@@ -218,7 +213,7 @@ public class TestOptimizer extends TestCase {
         }                       	
 
 		// rewrite
-		command = QueryRewriter.rewrite(command, null, md, new CommandContext());
+		command = QueryRewriter.rewrite(command, md, new CommandContext());
 
         return command;
     }
@@ -758,12 +753,12 @@ public class TestOptimizer extends TestCase {
 	/**
 	 * Test defect 8096 - query a virtual group with subquery of another virtual group 
 	 */
-	public void testVirtualSubqueryINClause_8096() { 
+	@Test public void testVirtualSubqueryINClause_8096() { 
 		helpPlan("SELECT * FROM vm1.sub1", example1(), //$NON-NLS-1$
 			new String[] {"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
 	}
 
-	public void testQueryPhysical() { 
+	@Test public void testQueryPhysical() { 
 		ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
 
@@ -772,58 +767,58 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);
 	}
     
-	public void testSelectStarPhysical() { 
+	@Test public void testSelectStarPhysical() { 
 		ProcessorPlan plan = helpPlan("SELECT * FROM pm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
 
-	public void testQuerySingleSourceVirtual() { 
+	@Test public void testQuerySingleSourceVirtual() { 
 		ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
 	
-	public void testQueryMultiSourceVirtual() { 
+	@Test public void testQueryMultiSourceVirtual() { 
 		ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "SELECT g_0.e1, g_0.e2, g_1.e3, g_1.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
 
-	public void testPhysicalVirtualJoinWithCriteria() throws Exception { 
+	@Test public void testPhysicalVirtualJoinWithCriteria() throws Exception { 
 		ProcessorPlan plan = helpPlan("SELECT vm1.g2.e1 from vm1.g2, pm1.g3 where vm1.g2.e1=pm1.g3.e1 and vm1.g2.e2 > 0", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = g_2.e1) AND (g_0.e2 > 0)" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
     
-    public void testQueryWithExpression() { 
+    @Test public void testQueryWithExpression() { 
         helpPlan("SELECT e4 FROM pm3.g1 WHERE e4 < convert('2001-11-01 10:30:40.42', timestamp)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "SELECT e4 FROM pm3.g1 WHERE e4 < {ts'2001-11-01 10:30:40.42'}"} ); //$NON-NLS-1$
     }
     
-    public void testInsert() { 
+    @Test public void testInsert() { 
         helpPlan("Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)"} ); //$NON-NLS-1$
     }
     
-    public void testUpdate1() { 
+    @Test public void testUpdate1() { 
       	helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e3= 'true'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e3 = TRUE"} ); //$NON-NLS-1$
   	}
   	
-    public void testUpdate2() { 
+    @Test public void testUpdate2() { 
         helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e2= convert(pm1.g1.e4, integer)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"} ); //$NON-NLS-1$
     }
     
-    public void testDelete() { 
+    @Test public void testDelete() { 
     	helpPlan("Delete from pm1.g1 where pm1.g1.e1 = cast(pm1.g1.e2 AS string)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] { "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = cast(pm1.g1.e2 AS string)"} ); //$NON-NLS-1$
   	}
 
 	// ############################# TESTS ON EXAMPLE 1 ############################
 	
-    public void testCopyInAcrossJoin() throws Exception {
+    @Test public void testCopyInAcrossJoin() throws Exception {
         ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0", //$NON-NLS-1$
         				   "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -846,75 +841,75 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCopyMatchAcrossJoin() throws Exception {
+    @Test public void testCopyMatchAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 LIKE '%1'", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0", //$NON-NLS-1$
         					"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
  
-    public void testCopyOrAcrossJoin() throws Exception {
+    @Test public void testCopyOrAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and (pm1.g1.e1 = 'abc' OR pm1.g1.e1 = 'def')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e1 = 'def')", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e1 = 'def')" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
  
-    public void testCopyMultiElementCritAcrossJoin() throws Exception {
+    @Test public void testCopyMultiElementCritAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and pm1.g1.e2=pm1.g2.e2 and (pm1.g1.e1 = 'abc' OR pm1.g1.e2 = 5)", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCantCopyAcrossJoin1() throws Exception {
+    @Test public void testCantCopyAcrossJoin1() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and concat(pm1.g1.e1, pm1.g1.e2) = 'abc'", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
 
-    public void testCantCopyAcrossJoin2() throws Exception {
+    @Test public void testCantCopyAcrossJoin2() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and (pm1.g1.e1 = 'abc' OR pm1.g1.e2 = 5)", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
 
-    public void testPushingCriteriaThroughFrame1() { 
+    @Test public void testPushingCriteriaThroughFrame1() { 
     	helpPlan("select * from vm1.g1, vm1.g2 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughFrame2() throws Exception { 
+    @Test public void testPushingCriteriaThroughFrame2() throws Exception { 
     	helpPlan("select * from vm1.g1, vm1.g3 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g3.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'",  //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughFrame3() { 
+    @Test public void testPushingCriteriaThroughFrame3() { 
     	helpPlan("select * from vm1.g1, vm1.g2, vm1.g1 as a where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1 and vm1.g1.e1=a.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT g1__2.e1, g1__2.e2, g1__2.e3, g1__2.e4 FROM pm1.g1 AS g1__2 WHERE g1__2.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughUnion1() { 
+    @Test public void testPushingCriteriaThroughUnion1() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughUnion2() { 
+    @Test public void testPushingCriteriaThroughUnion2() { 
     	helpPlan("select e1 from vm1.u2 where e1='abc'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughUnion3() { 
+    @Test public void testPushingCriteriaThroughUnion3() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' and e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') AND (pm1.g3.e2 = 5)", //$NON-NLS-1$
 							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughUnion4() { 
+    @Test public void testPushingCriteriaThroughUnion4() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' or e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') OR (pm1.g3.e2 = 5)", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
@@ -922,38 +917,38 @@ public class TestOptimizer extends TestCase {
   	}
 
 	// expression in a subquery of the union
-    public void testPushingCriteriaThroughUnion5() { 
+    @Test public void testPushingCriteriaThroughUnion5() { 
     	helpPlan("select e1 from vm1.u3 where e1='abc'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT DISTINCT e1 FROM pm1.g1 WHERE e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     /** defect #4956 */
-    public void testPushCriteriaThroughUnion6() { 
+    @Test public void testPushCriteriaThroughUnion6() { 
         helpPlan("select v1 from vm1.u4 where vm1.u4.v1='x'", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT e1 FROM pm1.g2 WHERE e1 = 'x'" } ); //$NON-NLS-1$
     }
 
-    public void testPushCriteriaThroughUnion7() { 
+    @Test public void testPushCriteriaThroughUnion7() { 
         helpPlan("select v1 from vm1.u5 where vm1.u5.v1='x'", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT e1 FROM pm1.g2" } ); //$NON-NLS-1$
     }
 
-    public void testPushCriteriaThroughUnion8() { 
+    @Test public void testPushCriteriaThroughUnion8() { 
         helpPlan("select v1 from vm1.u5 where length(v1) > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT e1 FROM pm1.g2" } ); //$NON-NLS-1$
     }
     
-    public void testPushCriteriaThroughUnion11() {
+    @Test public void testPushCriteriaThroughUnion11() {
         helpPlan("select * from vm1.u8 where const = 's3' or e1 is null", example1(), //$NON-NLS-1$
             new String[] { "SELECT 's3', e1 FROM pm1.g3", //$NON-NLS-1$
                             "SELECT 's2', e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
                             "SELECT 's1', e1 FROM pm1.g1 WHERE e1 IS NULL" } );     //$NON-NLS-1$
     }
 
-    public void testPushCriteriaThroughUnion12() {
+    @Test public void testPushCriteriaThroughUnion12() {
         helpPlan("select * from vm1.u8 where const = 's1' or e1 is null", example1(), //$NON-NLS-1$
             new String[] { "SELECT 's3', e1 FROM pm1.g3 WHERE e1 IS NULL", //$NON-NLS-1$
                             "SELECT 's2', e1 FROM pm1.g2 WHERE e1 IS NULL", //$NON-NLS-1$
@@ -961,7 +956,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** defect #4997 */
-    public void testCountStarNoRows() { 
+    @Test public void testCountStarNoRows() { 
         ProcessorPlan plan = helpPlan("select count(*) from vm1.u4", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g2",  //$NON-NLS-1$
                             "SELECT e1 FROM pm1.g1" } ); //$NON-NLS-1$
@@ -983,7 +978,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testPushingCriteriaWithCopy() { 
+    @Test public void testPushingCriteriaWithCopy() { 
     	ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
@@ -1007,84 +1002,84 @@ public class TestOptimizer extends TestCase {
         }); 
   	}
 
-    public void testVirtualGroupWithAliasedElement() {
+    @Test public void testVirtualGroupWithAliasedElement() {
         helpPlan("select elem FROM vm1.u6 where elem='abc' and const='xyz'", example1(), //$NON-NLS-1$
             new String[] { "SELECT x1.e1 FROM pm1.g1 AS x1 WHERE x1.e1 = 'abc'" } );     //$NON-NLS-1$
     }
 
-    public void testPushThroughGroup1() {
+    @Test public void testPushThroughGroup1() {
         helpPlan("select * FROM vm1.a1 WHERE e1 = 'x'", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1 WHERE e1 = 'x'" } );     //$NON-NLS-1$
     }
  
-    public void testPushThroughGroup2() {
+    @Test public void testPushThroughGroup2() {
         helpPlan("select * FROM vm1.a2 WHERE e1 = 'x'", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1 WHERE e1 = 'x'" } );     //$NON-NLS-1$
     }
 
-    public void testPushThroughGroup3() {
+    @Test public void testPushThroughGroup3() {
         helpPlan("select * FROM vm1.a3 WHERE sum_e2 > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT e2 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
-    public void testPushMultiGroupCriteria() { 
+    @Test public void testPushMultiGroupCriteria() { 
         ProcessorPlan plan = helpPlan("select pm2.g1.e1 from pm2.g1, pm2.g2 where pm2.g1.e1 = pm2.g2.e1 and (pm2.g1.e2 = 1 OR pm2.g2.e2 = 2)", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1 FROM pm2.g1, pm2.g2 WHERE (pm2.g1.e1 = pm2.g2.e1) AND ((pm2.g1.e2 = 1) OR (pm2.g2.e2 = 2))" } ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
 
-    public void testSimpleCrossJoin1() throws Exception {
+    @Test public void testSimpleCrossJoin1() throws Exception {
         helpPlan("select pm1.g1.e1 FROM pm1.g1, pm1.g2", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                 "SELECT pm1.g2.e1 FROM pm1.g2" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING );     //$NON-NLS-1$
     }
 
-    public void testSimpleCrossJoin2() {
+    @Test public void testSimpleCrossJoin2() {
         helpPlan("select pm2.g1.e1 FROM pm2.g1, pm2.g2", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1 FROM pm2.g1, pm2.g2"} ); //$NON-NLS-1$
                
     }
 
-    public void testSimpleCrossJoin3() {
+    @Test public void testSimpleCrossJoin3() {
         helpPlan("select pm2.g1.e1 FROM pm2.g1 CROSS JOIN pm2.g2", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1 FROM pm2.g1, pm2.g2"} ); //$NON-NLS-1$
                
     }
 
-    public void testMultiSourceCrossJoin() throws Exception {
+    @Test public void testMultiSourceCrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                 "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
                 "SELECT pm1.g3.e1 FROM pm1.g3" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING );     //$NON-NLS-1$
     }
 
-    public void testSingleSourceCrossJoin() {
+    @Test public void testSingleSourceCrossJoin() {
         helpPlan("select pm2.g1.e1 FROM pm2.g1, pm2.g2, pm2.g3", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1 FROM pm2.g1, pm2.g2, pm2.g3"} ); //$NON-NLS-1$
     }
 
-    public void testSelfJoins() {
+    @Test public void testSelfJoins() {
         helpPlan("select pm2.g1.e1 FROM pm2.g1 JOIN pm2.g1 AS x ON pm2.g1.e1=x.e1", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1 FROM pm2.g1 order by e1", //$NON-NLS-1$
                 "SELECT x.e1 FROM pm2.g1 AS x order by e1" } );     //$NON-NLS-1$
     }
 
-    public void testDefect5282_1() {
+    @Test public void testDefect5282_1() {
         helpPlan("select * FROM vm1.a4 WHERE vm1.a4.count > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
-    public void testDefect5282_2() {
+    @Test public void testDefect5282_2() {
         helpPlan("select count(*) FROM vm1.a4", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
-    public void testDefect5282_3() {
+    @Test public void testDefect5282_3() {
         helpPlan("select * FROM vm1.a5 WHERE vm1.a5.count > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
     
-    public void testDepJoinHintBaseline() throws Exception {
+    @Test public void testDepJoinHintBaseline() throws Exception {
         ProcessorPlan plan = helpPlan("select * FROM vm1.g4", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
@@ -1106,37 +1101,37 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testDefect6425_1() {
+    @Test public void testDefect6425_1() {
         helpPlan("select * from vm1.u9", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1, e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT e1, e1 FROM pm1.g2" } );     //$NON-NLS-1$
     }
 
-    public void testDefect6425_2() {
+    @Test public void testDefect6425_2() {
         helpPlan("select count(*) from vm1.u9", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT e1 FROM pm1.g2" } );     //$NON-NLS-1$
     }
     
-    public void testPushMatchCritWithReference() {
+    @Test public void testPushMatchCritWithReference() {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         helpPlan("select e1 FROM pm1.g1 WHERE e1 LIKE ?", example1(), bindings, null,  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 LIKE ?" }, true ); //$NON-NLS-1$
     }
     
-    public void testDefect6517() {
+    @Test public void testDefect6517() {
         helpPlan("select count(*) from vm1.g5", example1(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm1.g1.e1 FROM pm1.g1" });     //$NON-NLS-1$
     }
     
-    public void testDefect5283() {        
+    @Test public void testDefect5283() {        
         helpPlan("select * from vm1.a6", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
     }
     
-    public void testManyJoinsOverThreshold() throws Exception {
+    @Test public void testManyJoinsOverThreshold() throws Exception {
         long begin = System.currentTimeMillis();
         helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4, pm1.g5, pm1.g6, pm1.g7, pm1.g8, pm1.g1 AS x, pm1.g2 AS y WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1 AND pm1.g5.e1=pm1.g6.e1 AND pm1.g6.e1=pm1.g7.e1 AND pm1.g7.e1=pm1.g8.e1", //$NON-NLS-1$
             example1(), 
@@ -1155,7 +1150,7 @@ public class TestOptimizer extends TestCase {
         assertTrue("Did not plan many join query in reasonable time frame: " + elapsed + " ms", elapsed < 4000); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testAggregateWithoutGroupBy() {
+    @Test public void testAggregateWithoutGroupBy() {
         ProcessorPlan plan = helpPlan("select count(e2) from pm1.g1", example1(), //$NON-NLS-1$
             new String[] { "SELECT e2 FROM pm1.g1" } );         //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1176,7 +1171,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testHavingWithoutGroupBy() {
+    @Test public void testHavingWithoutGroupBy() {
         ProcessorPlan plan = helpPlan("select count(e2) from pm1.g1 HAVING count(e2) > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT e2 FROM pm1.g1" } );         //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1197,7 +1192,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testHavingAndGroupBy() {
+    @Test public void testHavingAndGroupBy() {
         ProcessorPlan plan = helpPlan("select e1, count(e2) from pm1.g1 group by e1 having count(e2) > 0 and sum(e2) > 0", example1(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1" } );         //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1218,7 +1213,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testAllJoinsInSingleClause() throws Exception {
+    @Test public void testAllJoinsInSingleClause() throws Exception {
         ProcessorPlan plan = helpPlan("select pm1.g1.e1 FROM pm1.g1 join (pm1.g2 right outer join pm1.g3 on pm1.g2.e1=pm1.g3.e1) on pm1.g1.e1=pm1.g3.e1", example1(),  //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1",  //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
@@ -1241,7 +1236,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testSelectCountStarFalseCriteria() {
+    @Test public void testSelectCountStarFalseCriteria() {
         ProcessorPlan plan = helpPlan("Select count(*) from pm1.g1 where 1=0", example1(),  //$NON-NLS-1$
             new String[] { });
         checkNodeTypes(plan, new int[] {
@@ -1262,31 +1257,31 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testSubquery1() {
+    @Test public void testSubquery1() {
         ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1) AS x", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testSubquery2() {
+    @Test public void testSubquery2() {
         ProcessorPlan plan = helpPlan("Select e1, a from (select e1 FROM pm1.g1) AS x, (select e1 as a FROM pm1.g2) AS y WHERE x.e1=y.a", example1(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_1.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-	public void testSubquery3() {
+	@Test public void testSubquery3() {
 		ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1) AS x WHERE x.e1 = 'a'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-	public void testSubquery4() {
+	@Test public void testSubquery4() {
 		ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1 WHERE e1 = 'a') AS x", example1(), //$NON-NLS-1$
 			new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testSubqueryInClause1() {
+    @Test public void testSubqueryInClause1() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1307,7 +1302,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCompareSubquery1() {
+    @Test public void testCompareSubquery1() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 < any (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1328,7 +1323,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCompareSubquery2() {
+    @Test public void testCompareSubquery2() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 <= some (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1349,7 +1344,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCompareSubquery3() {
+    @Test public void testCompareSubquery3() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 >= all (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1370,7 +1365,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCompareSubquery4() {
+    @Test public void testCompareSubquery4() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1391,7 +1386,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testExistsSubquery1() {
+    @Test public void testExistsSubquery1() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where exists (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1412,7 +1407,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testScalarSubquery1() {
+    @Test public void testScalarSubquery1() {
         ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1433,7 +1428,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }    
 
-    public void testScalarSubquery2() {
+    @Test public void testScalarSubquery2() {
         ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') as X from pm1.g1", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1454,7 +1449,7 @@ public class TestOptimizer extends TestCase {
         }); 
     } 
     
-    public void testTempGroup() {
+    @Test public void testTempGroup() {
         ProcessorPlan plan = helpPlan("select e1 from tm1.g1 where e1 = 'x'", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM tm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1475,7 +1470,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testNotPushDistinct() throws Exception {
+    @Test public void testNotPushDistinct() throws Exception {
         ProcessorPlan plan = helpPlan("select distinct e1 from pm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1496,73 +1491,73 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testPushDistinct() {
+    @Test public void testPushDistinct() {
         ProcessorPlan plan = helpPlan("select distinct e1 from pm3.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT e1 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctSort() {
+    @Test public void testPushDistinctSort() {
         ProcessorPlan plan = helpPlan("select distinct e1 from pm3.g1 order by e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT e1 FROM pm3.g1 ORDER BY e1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctWithCriteria() {
+    @Test public void testPushDistinctWithCriteria() {
         ProcessorPlan plan = helpPlan("select distinct e1 from pm3.g1 where e1 = 'x'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT e1 FROM pm3.g1 WHERE e1 = 'x'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual1() {
+    @Test public void testPushDistinctVirtual1() {
         ProcessorPlan plan = helpPlan("select * from vm1.g12", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual2() {
+    @Test public void testPushDistinctVirtual2() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g12", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual3() {
+    @Test public void testPushDistinctVirtual3() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g12 ORDER BY e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 ORDER BY pm3.g1.e1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual4() {
+    @Test public void testPushDistinctVirtual4() {
         ProcessorPlan plan = helpPlan("select * from vm1.g13", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual5() {
+    @Test public void testPushDistinctVirtual5() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g13", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual6() {
+    @Test public void testPushDistinctVirtual6() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g13 ORDER BY e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 ORDER BY pm3.g1.e1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual7() {
+    @Test public void testPushDistinctVirtual7() {
         ProcessorPlan plan = helpPlan("select * from vm1.g14", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual8() {
+    @Test public void testPushDistinctVirtual8() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g14", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushDistinctVirtual9() {
+    @Test public void testPushDistinctVirtual9() {
         ProcessorPlan plan = helpPlan("select DISTINCT * from vm1.g14 ORDER BY e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 ORDER BY pm3.g1.e1" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
@@ -1571,7 +1566,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Defect #7819
      */
-    public void testPushDistinctWithExpressions() {
+    @Test public void testPushDistinctWithExpressions() {
         ProcessorPlan plan = helpPlan("SELECT DISTINCT * FROM vm1.g15", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm3.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1592,7 +1587,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testNestedSubquery() {
+    @Test public void testNestedSubquery() {
         ProcessorPlan plan = helpPlan("SELECT IntKey, LongNum FROM (SELECT IntKey, LongNum FROM (SELECT IntKey, LongNum, DoubleNum FROM BQT2.SmallA ) AS x ) AS y ORDER BY IntKey", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { "SELECT IntKey, LongNum FROM BQT2.SmallA order by intkey" }); //$NON-NLS-1$
 
@@ -1600,7 +1595,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** Tests a user's order by is pushed to the source */
-    public void testPushOrderBy() {
+    @Test public void testPushOrderBy() {
         ProcessorPlan plan = helpPlan("SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY pm3.g1.e1"}); //$NON-NLS-1$
 
@@ -1608,7 +1603,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** Tests an order by is not pushed to source due to join */
-    public void testDontPushOrderByWithJoin() {
+    @Test public void testDontPushOrderByWithJoin() {
         ProcessorPlan plan = helpPlan("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 INNER JOIN pm2.g2 ON pm3.g1.e1 = pm2.g2.e1 ORDER BY pm3.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e1", //$NON-NLS-1$
                            "SELECT pm2.g2.e1 FROM pm2.g2 ORDER BY pm2.g2.e1"}); //$NON-NLS-1$
@@ -1635,7 +1630,7 @@ public class TestOptimizer extends TestCase {
      * Tests that user's order by gets pushed to the source, but query
      * transformation order by is discarded 
      */
-    public void testPushOrderByThroughFrame() {
+    @Test public void testPushOrderByThroughFrame() {
         ProcessorPlan plan = helpPlan("SELECT e1, e2 FROM vm1.g14 ORDER BY e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e2"}); //$NON-NLS-1$
 
@@ -1645,7 +1640,7 @@ public class TestOptimizer extends TestCase {
     /** 
      * Tests that query transformation order by is discarded by
      */
-    public void testPushOrderByThroughFrame2() {
+    @Test public void testPushOrderByThroughFrame2() {
         ProcessorPlan plan = helpPlan("SELECT e1, e2 FROM vm1.g1 ORDER BY e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 order by e2"}); //$NON-NLS-1$
 
@@ -1657,7 +1652,7 @@ public class TestOptimizer extends TestCase {
      * user order by, and that user order by is discarded because
      * of the function in the query transformation 
      */
-    public void testPushOrderByThroughFrame3() {
+    @Test public void testPushOrderByThroughFrame3() {
         ProcessorPlan plan = helpPlan("SELECT e, e2 FROM vm1.g16 ORDER BY e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm3.g1"}); //$NON-NLS-1$
 
@@ -1683,7 +1678,7 @@ public class TestOptimizer extends TestCase {
      * Tests that a user's order by does not get pushed to the source
      * if there is a UNION in the query transformation 
      */
-    public void testPushOrderByThroughFrame4_Union() {
+    @Test public void testPushOrderByThroughFrame4_Union() {
         ProcessorPlan plan = helpPlan("SELECT e1, e2 FROM vm1.g17 ORDER BY e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1", //$NON-NLS-1$
                            "SELECT pm3.g2.e1, pm3.g2.e2 FROM pm3.g2"}); //$NON-NLS-1$
@@ -1707,7 +1702,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** Tests outer join defect #7945 - see also defect #10050*/
-    public void testOuterJoinDefect7945() {
+    @Test public void testOuterJoinDefect7945() {
         ProcessorPlan plan = helpPlan(
             "SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey, BQT3.MediumB.IntKey AS MediumC_IntKey " +  //$NON-NLS-1$
             "FROM (BQT1.SmallA RIGHT OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey) " +  //$NON-NLS-1$
@@ -1738,7 +1733,7 @@ public class TestOptimizer extends TestCase {
     }    
 
     /** Tests outer join defect #7945 */
-    public void testFunctionSimplification1() {
+    @Test public void testFunctionSimplification1() {
         ProcessorPlan plan = helpPlan(
             "SELECT x FROM vm1.g18 WHERE x = 92.0",   //$NON-NLS-1$
             FakeMetadataFactory.example1Cached(),
@@ -1763,7 +1758,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }    
             
-    public void testCantPushJoin1() {
+    @Test public void testCantPushJoin1() {
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1, b.e2 FROM pm1.g1 a, pm1.g2 b WHERE a.e1 = b.e1",  //$NON-NLS-1$
             FakeMetadataFactory.example1Cached(),
@@ -1789,7 +1784,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
 
-    public void testCantPushJoin2() {
+    @Test public void testCantPushJoin2() {
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1, b.e2 FROM pm1.g1 a, pm1.g2 b, pm2.g1 c WHERE a.e1 = b.e1 AND b.e1 = c.e1",  //$NON-NLS-1$
             FakeMetadataFactory.example1Cached(),
@@ -1817,7 +1812,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    public void testPushSelfJoin1() {
+    @Test public void testPushSelfJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -1838,7 +1833,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
 
-    public void testPushSelfJoin2() {
+    @Test public void testPushSelfJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -1874,7 +1869,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
         
-    public void testPushOuterJoin1() {
+    @Test public void testPushOuterJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -1894,7 +1889,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
 
-    public void testPushOuterJoin2() {
+    @Test public void testPushOuterJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
@@ -1929,7 +1924,7 @@ public class TestOptimizer extends TestCase {
     }
 
     // With join expression that can't be pushed
-    public void testPushOuterJoin3() {
+    @Test public void testPushOuterJoin3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -1966,7 +1961,7 @@ public class TestOptimizer extends TestCase {
                                
     }
 
-    public void testPushGroupBy1() {
+    @Test public void testPushGroupBy1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -1983,7 +1978,7 @@ public class TestOptimizer extends TestCase {
                                
     }
 
-    public void testPushGroupBy2() {
+    @Test public void testPushGroupBy2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2001,7 +1996,7 @@ public class TestOptimizer extends TestCase {
                                
     }
 
-    public void testPushGroupBy3() {
+    @Test public void testPushGroupBy3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
@@ -2033,7 +2028,7 @@ public class TestOptimizer extends TestCase {
                                
     }
 
-    public void testPushGroupBy4() {
+    @Test public void testPushGroupBy4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2066,7 +2061,7 @@ public class TestOptimizer extends TestCase {
                                
     }
     
-    public void testPushHaving1() {
+    @Test public void testPushHaving1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2084,7 +2079,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
 
-    public void testPushHaving2() {
+    @Test public void testPushHaving2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
@@ -2115,7 +2110,7 @@ public class TestOptimizer extends TestCase {
         });                                                                  
     }
 
-    public void testPushHaving3() {
+    @Test public void testPushHaving3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2147,7 +2142,7 @@ public class TestOptimizer extends TestCase {
         });                                                                  
     }
 
-    public void testPushAggregate1() {
+    @Test public void testPushAggregate1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2164,7 +2159,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
     
-    public void testPushAggregate2() {
+    @Test public void testPushAggregate2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2181,7 +2176,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
 
-    public void testPushAggregate3() {
+    @Test public void testPushAggregate3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2198,7 +2193,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
 
-    public void testPushAggregate4() {
+    @Test public void testPushAggregate4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
@@ -2220,7 +2215,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Can't push aggs due to not being able to push COUNT in the HAVING clause.
      */
-    public void testPushAggregate5() {
+    @Test public void testPushAggregate5() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
@@ -2257,7 +2252,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Can't push aggs due to not being able to push function inside the aggregate
      */
-    public void testPushAggregate6() {
+    @Test public void testPushAggregate6() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2292,7 +2287,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Can't push aggs due to not being able to push function inside having
      */
-    public void testPushAggregate7() {
+    @Test public void testPushAggregate7() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -2327,7 +2322,7 @@ public class TestOptimizer extends TestCase {
     /**
      * BQT query that is failing
      */
-    public void testPushAggregate8() {
+    @Test public void testPushAggregate8() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2357,7 +2352,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
     
-    public void testQueryManyJoin() throws Exception { 
+    @Test public void testQueryManyJoin() throws Exception { 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1 FROM pm1.g1 JOIN ((pm1.g2 JOIN pm1.g3 ON pm1.g2.e1=pm1.g3.e1) JOIN pm1.g4 ON pm1.g3.e1=pm1.g4.e1) ON pm1.g1.e1=pm1.g4.e1",  //$NON-NLS-1$
             metadata,
@@ -2365,7 +2360,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
-    public void testPushSelectDistinct() { 
+    @Test public void testPushSelectDistinct() { 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = helpPlan("SELECT DISTINCT e1 FROM pm3.g1",  //$NON-NLS-1$
             metadata,
@@ -2373,7 +2368,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 
-    public void testPushFunctionInCriteria1() {
+    @Test public void testPushFunctionInCriteria1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2393,7 +2388,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
 
-    public void testPushFunctionInSelect1() {
+    @Test public void testPushFunctionInSelect1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2415,7 +2410,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
 
-    public void testPushFunctionInSelect2() {
+    @Test public void testPushFunctionInSelect2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2437,7 +2432,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
     
-    public void testPushFunctionInSelect3() {
+    @Test public void testPushFunctionInSelect3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2473,7 +2468,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }    
 
-    public void testPushFunctionInSelect4() {
+    @Test public void testPushFunctionInSelect4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2495,7 +2490,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }    
 
-    public void testPushFunctionInSelect5() {
+    @Test public void testPushFunctionInSelect5() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2517,7 +2512,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }    
 
-    public void testPushFunctionInSelect6_defect_10081() {
+    @Test public void testPushFunctionInSelect6_defect_10081() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setFunctionSupport("upper", true); //$NON-NLS-1$
@@ -2552,7 +2547,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
             
-    public void testPushFunctionInSelectWithOrderBy1() {
+    @Test public void testPushFunctionInSelectWithOrderBy1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2576,7 +2571,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** defect 13336 */
-    public void testPushFunctionInSelectWithOrderBy1a() {
+    @Test public void testPushFunctionInSelectWithOrderBy1a() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2600,7 +2595,7 @@ public class TestOptimizer extends TestCase {
     }    
     
     /** defect 13336 */
-    public void testPushFunctionInSelectWithOrderBy2() {
+    @Test public void testPushFunctionInSelectWithOrderBy2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2623,7 +2618,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
     
-    public void testPushFunctionInJoin1() {
+    @Test public void testPushFunctionInJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2645,7 +2640,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }    
 
-    public void testPushFunctionInJoin2() {
+    @Test public void testPushFunctionInJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2683,7 +2678,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }    
 
-    public void testPushFunctionInJoin3() {
+    @Test public void testPushFunctionInJoin3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -2721,7 +2716,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }    
 
-    public void testUnionOverFunctions() {
+    @Test public void testUnionOverFunctions() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2760,7 +2755,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }    
 
-    public void testDefect9827() { 
+    @Test public void testDefect9827() { 
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan("SELECT intkey, c FROM (SELECT DISTINCT b.intkey, b.intnum, a.stringkey AS c FROM bqt1.smalla AS a, bqt1.smallb AS b WHERE a.INTKEY = b.INTKEY) AS x ORDER BY x.intkey", metadata, //$NON-NLS-1$
@@ -2789,7 +2784,7 @@ public class TestOptimizer extends TestCase {
      * but instead is cleaned up properly later
      * See defect 9865
      */
-    public void testCrossJoinNoElementCriteriaOptimization2() {
+    @Test public void testCrossJoinNoElementCriteriaOptimization2() {
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} = {b'true'}", example1(),  //$NON-NLS-1$
             new String[]{"SELECT g1__1.e1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
@@ -2813,7 +2808,7 @@ public class TestOptimizer extends TestCase {
     /**
      * <p>This tests that a SELECT node with no groups is not pushed down without the capability to have a subquery in the where clause.
      */
-    public void testCrossJoinNoElementCriteriaOptimization3() {
+    @Test public void testCrossJoinNoElementCriteriaOptimization3() {
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} in (select e3 FROM vm1.g1)", example1(),  //$NON-NLS-1$
             new String[]{"SELECT g1__1.e1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
@@ -2837,7 +2832,7 @@ public class TestOptimizer extends TestCase {
     /**
      * <p>This tests that a SELECT node with no groups is pushed down.
      */
-    public void testCrossJoinNoElementCriteriaOptimization4() {
+    @Test public void testCrossJoinNoElementCriteriaOptimization4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
@@ -2867,7 +2862,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Criteria should be copied across this join
      */
-    public void testCopyCriteriaWithOuterJoin_defect10050(){
+    @Test public void testCopyCriteriaWithOuterJoin_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 left outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1 where pm2.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1 LEFT OUTER JOIN pm2.g2 ON pm2.g1.e1 = pm2.g2.e1 AND pm2.g2.e1 IN ('a', 'b') WHERE pm2.g1.e1 IN ('a', 'b')" }); //$NON-NLS-1$
@@ -2877,7 +2872,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Criteria should be copied across this join
      */
-    public void testCopyCriteriaWithOuterJoin2_defect10050(){
+    @Test public void testCopyCriteriaWithOuterJoin2_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 left outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2=pm2.g2.e2 where pm2.g1.e1 = 'a' and pm2.g1.e2 = 1", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2 AND g_1.e2 = 1 AND g_1.e1 = 'a' WHERE (g_0.e1 = 'a') AND (g_0.e2 = 1)" }); //$NON-NLS-1$
@@ -2887,7 +2882,7 @@ public class TestOptimizer extends TestCase {
     /**
      * See also case 2912.
      */
-    public void testCopyCriteriaWithOuterJoin5_defect10050(){
+    @Test public void testCopyCriteriaWithOuterJoin5_defect10050(){
         
         ProcessorPlan plan = helpPlan(
             "select pm2.g1.e1, pm2.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1) right outer join pm2.g3 on pm2.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
@@ -2898,7 +2893,7 @@ public class TestOptimizer extends TestCase {
     /**
      * 
      */
-    public void testCopyCriteriaWithOuterJoin6_defect10050(){
+    @Test public void testCopyCriteriaWithOuterJoin6_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 left outer join pm2.g2 on pm2.g2.e1=pm2.g1.e1 where pm2.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1 LEFT OUTER JOIN pm2.g2 ON pm2.g2.e1 = pm2.g1.e1 AND pm2.g2.e1 IN ('a', 'b') WHERE pm2.g1.e1 IN ('a', 'b')" }); //$NON-NLS-1$
@@ -2908,28 +2903,28 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as previous test, only right outer join
      */
-    public void testCopyCriteriaWithOuterJoin7_defect10050(){
+    @Test public void testCopyCriteriaWithOuterJoin7_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 right outer join pm2.g2 on pm2.g2.e1=pm2.g1.e1 where pm2.g2.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g2 LEFT OUTER JOIN pm2.g1 ON pm2.g2.e1 = pm2.g1.e1 AND pm2.g1.e1 IN ('a', 'b') WHERE pm2.g2.e1 IN ('a', 'b')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }         
     
-    public void testCleanCriteria(){
+    @Test public void testCleanCriteria(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2 where pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1, pm2.g2 WHERE (pm2.g1.e1 = pm2.g2.e1) AND (pm2.g1.e2 IN (1, 2))" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 
-    public void testCleanCriteria2(){
+    @Test public void testCleanCriteria2(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2 where pm2.g1.e1=pm2.g2.e1 and pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 
-    public void testCleanCriteria3(){
+    @Test public void testCleanCriteria3(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 inner join pm2.g2 on pm2.g1.e1=pm2.g2.e1 where pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a')" }); //$NON-NLS-1$
@@ -2937,7 +2932,7 @@ public class TestOptimizer extends TestCase {
     }
     
     
-    public void testPushSubqueryInWhereClause1() {
+    @Test public void testPushSubqueryInWhereClause1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
@@ -2949,7 +2944,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
-    public void testPushSubqueryInWhereClause2() {
+    @Test public void testPushSubqueryInWhereClause2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
@@ -2966,7 +2961,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Check that subquery is pushed if the subquery selects a function that is pushed
      */
-    public void testPushSubqueryInWhereClause3() {
+    @Test public void testPushSubqueryInWhereClause3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2985,7 +2980,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Check that subquery is pushed if the subquery selects an aliased function that is pushed
      */
-    public void testPushSubqueryInWhereClause4() {
+    @Test public void testPushSubqueryInWhereClause4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -3003,7 +2998,7 @@ public class TestOptimizer extends TestCase {
     }   
 
     /** Case 1456, defect 10492*/
-    public void testAliasingDefect1(){
+    @Test public void testAliasingDefect1(){
         // Create query
         String sql = "SELECT e1 FROM vm1.g1 X WHERE e2 = (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1)";//$NON-NLS-1$
 
@@ -3026,7 +3021,7 @@ public class TestOptimizer extends TestCase {
     }   
 
     /** Case 1456, defect 10492*/
-    public void testAliasingDefect2(){
+    @Test public void testAliasingDefect2(){
         // Create query
         String sql = "SELECT X.e1 FROM vm1.g1 X, vm1.g1 Z WHERE X.e2 = (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1 AND Y.e2 = Z.e2) AND X.e1 = Z.e1";//$NON-NLS-1$
 
@@ -3051,7 +3046,7 @@ public class TestOptimizer extends TestCase {
     }   
 
     /** Case 1456, defect 10492*/
-    public void testAliasingDefect3(){
+    @Test public void testAliasingDefect3(){
         // Create query
         String sql = "SELECT X.e1 FROM pm1.g2, vm1.g1 X WHERE X.e2 = ANY (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1) AND X.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -3077,7 +3072,7 @@ public class TestOptimizer extends TestCase {
     }
         
     /** Should use merge join since neither access node is "strong" - order by's pushed to source */
-    public void testUseMergeJoin3(){
+    @Test public void testUseMergeJoin3(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -3114,7 +3109,7 @@ public class TestOptimizer extends TestCase {
     }    
 
     /** Model supports order by, should be pushed to the source */
-    public void testUseMergeJoin4(){
+    @Test public void testUseMergeJoin4(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -3153,7 +3148,7 @@ public class TestOptimizer extends TestCase {
     } 
 
     /** Should use merge join, since costs are not known, neither access node is "strong" */
-    public void testUseMergeJoin5_CostsNotKnown(){
+    @Test public void testUseMergeJoin5_CostsNotKnown(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -3187,7 +3182,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** one side of join supports order by, the other doesn't*/
-    public void testUseMergeJoin7(){
+    @Test public void testUseMergeJoin7(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g2 WHERE pm1.g1.e1 = pm2.g2.e1";//$NON-NLS-1$
 
@@ -3228,7 +3223,7 @@ public class TestOptimizer extends TestCase {
     }     
 
     /** reverse of testUseMergeJoin7 */
-    public void testUseMergeJoin7a(){
+    @Test public void testUseMergeJoin7a(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g2 WHERE pm1.g1.e1 = pm2.g2.e1";//$NON-NLS-1$
 
@@ -3269,7 +3264,7 @@ public class TestOptimizer extends TestCase {
     }   
 
     /** function on one side of join should prevent order by from being pushed down*/
-    public void testUseMergeJoin8(){
+    @Test public void testUseMergeJoin8(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g2 WHERE concat(pm1.g1.e1, 'x') = pm2.g2.e1";//$NON-NLS-1$
 
@@ -3311,7 +3306,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** Model supports order by, functions in join criteria */
-    public void testUseMergeJoin9(){
+    @Test public void testUseMergeJoin9(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE concat(pm1.g1.e1, 'x') = concat(pm1.g2.e1, 'x')";//$NON-NLS-1$
 
@@ -3352,7 +3347,7 @@ public class TestOptimizer extends TestCase {
     } 
 
     /** should be one dependent join */
-    public void testMultiMergeJoin1(){
+    @Test public void testMultiMergeJoin1(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1";//$NON-NLS-1$
 
@@ -3393,7 +3388,7 @@ public class TestOptimizer extends TestCase {
         });         
     } 
 
-    public void testLargeSetCriteria() {
+    @Test public void testLargeSetCriteria() {
         //      Create query
         String sql = "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA INNER JOIN BQT2.SmallB ON BQT1.SmallA.IntKey = BQT2.SmallB.IntKey WHERE BQT1.SmallA.IntKey IN (1,2,3,4,5)";     //$NON-NLS-1$
 
@@ -3427,7 +3422,7 @@ public class TestOptimizer extends TestCase {
         });            
     }
     
-    public void testMergeJoin_defect11236(){
+    @Test public void testMergeJoin_defect11236(){
         // Create query
         String sql = "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA, BQT1.SmallB WHERE BQT1.SmallA.IntKey = (BQT1.SmallB.IntKey + 1)";     //$NON-NLS-1$
 
@@ -3464,7 +3459,7 @@ public class TestOptimizer extends TestCase {
         });         
     }
         
-    public void testNoFrom() { 
+    @Test public void testNoFrom() { 
         ProcessorPlan plan = helpPlan("SELECT 1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] {} ); 
 
@@ -3486,7 +3481,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
 
-    public void testINCriteria_defect10718(){
+    @Test public void testINCriteria_defect10718(){
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -3528,7 +3523,7 @@ public class TestOptimizer extends TestCase {
         });         
     }
     
-    public void testDefect10711(){
+    @Test public void testDefect10711(){
         ProcessorPlan plan = helpPlan("SELECT * from vm1.g1a as X", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] {"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
 
@@ -3537,7 +3532,7 @@ public class TestOptimizer extends TestCase {
     }
     
     // SELECT 5, SUM(IntKey) FROM BQT1.SmallA
-    public void testAggregateNoGroupByWithExpression() {
+    @Test public void testAggregateNoGroupByWithExpression() {
         ProcessorPlan plan = helpPlan("SELECT 5, SUM(IntKey) FROM BQT1.SmallA", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { "SELECT IntKey FROM BQT1.SmallA"  }); //$NON-NLS-1$
 
@@ -3560,7 +3555,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** defect 11630 - note that the lookup function is not pushed down, it will actually be evaluated before being sent to the connector */
-    public void testLookupFunction() {
+    @Test public void testLookupFunction() {
 
         ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1', 'e1', 'e2', 1) IS NULL"  }); //$NON-NLS-1$
@@ -3570,7 +3565,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** case 5213 - note here that the lookup cannot be pushed down since it is dependent upon an element symbol*/
-    public void testLookupFunction2() throws Exception {
+    @Test public void testLookupFunction2() throws Exception {
 
         ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', e2) IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e2, g_0.e1 FROM pm1.g2 AS g_0"  }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -3595,7 +3590,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** defect 21965 */
-    public void testLookupFunctionInSelect() {
+    @Test public void testLookupFunctionInSelect() {
         ProcessorPlan plan = helpPlan("SELECT e1, LOOKUP('pm1.g1','e1', 'e2', 1) FROM pm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1, LOOKUP('pm1.g1','e1', 'e2', 1) FROM pm1.g2"  }); //$NON-NLS-1$
 
@@ -3603,7 +3598,7 @@ public class TestOptimizer extends TestCase {
     }
     
     // SELECT * FROM (SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT DISTINCT IntNum FROM BQT1.SmallA) AS x WHERE IntKey = 0
-    public void testCase1649() {
+    @Test public void testCase1649() {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT DISTINCT IntKey FROM BQT1.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA) AS x WHERE IntKey = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { "SELECT DISTINCT IntKey FROM BQT1.SmallA WHERE IntKey = 0", "SELECT IntNum FROM BQT1.SmallA WHERE IntNum = 0"  }); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -3625,7 +3620,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }   
 
-    public void testDefect12298() throws Exception {      
+    @Test public void testDefect12298() throws Exception {      
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -3666,7 +3661,7 @@ public class TestOptimizer extends TestCase {
     }
     
     // SELECT * FROM (SELECT IntKey a, IntNum b FROM BQT1.SmallA UNION ALL SELECT Intkey, Intkey FROM BQT1.SmallA) as x WHERE b = 0
-    public void testCase1727_1() {
+    @Test public void testCase1727_1() {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT IntKey a, IntNum b FROM BQT1.SmallA UNION ALL SELECT Intkey, Intkey FROM BQT1.SmallA) as x WHERE b = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { 
                 "SELECT IntKey, IntNum FROM BQT1.SmallA WHERE IntNum = 0", //$NON-NLS-1$
@@ -3691,7 +3686,7 @@ public class TestOptimizer extends TestCase {
     }
 
     // SELECT * FROM (SELECT IntKey a, IntNum b FROM BQT1.SmallA UNION ALL SELECT Intkey, Intkey FROM BQT1.SmallA) as x WHERE b = 0
-    public void testCase1727_2() {
+    @Test public void testCase1727_2() {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT IntKey a, IntKey b FROM BQT1.SmallA UNION ALL SELECT IntKey, IntNum FROM BQT1.SmallA) as x WHERE b = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { 
                 "SELECT IntKey, IntNum FROM BQT1.SmallA WHERE IntNum = 0", //$NON-NLS-1$
@@ -3715,7 +3710,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    public void testCountStarOverSelectDistinct() {
+    @Test public void testCountStarOverSelectDistinct() {
         ProcessorPlan plan = helpPlan("SELECT COUNT(*) FROM (SELECT DISTINCT IntNum, Intkey FROM bqt1.smalla) AS x", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
                                       new String[] { 
                                           "SELECT DISTINCT IntNum, Intkey FROM bqt1.smalla" }); //$NON-NLS-1$ 
@@ -3739,14 +3734,14 @@ public class TestOptimizer extends TestCase {
     }
 
     //virtual group with two elements. One selectable, one not
-    public void testVirtualGroup1() {
+    @Test public void testVirtualGroup1() {
         ProcessorPlan plan = helpPlan("select e2 from vm1.g35", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e2 FROM pm1.g1" } ); //$NON-NLS-1$
 
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);     
     }
     
-    public void testBQT9500_126() {
+    @Test public void testBQT9500_126() {
         String sql = "SELECT IntKey, LongNum, expr FROM (SELECT IntKey, LongNum, concat(LongNum, 'abc') FROM BQT2.SmallA ) AS x ORDER BY IntKey"; //$NON-NLS-1$
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
@@ -3837,39 +3832,39 @@ public class TestOptimizer extends TestCase {
     /**
      * Query has union but no order by and no capabilities.
      */
-    public void testUnionPushdown1() {
+    @Test public void testUnionPushdown1() {
         helpTestUnionPushdown(false, false, false);
     }
 
     /**
      * Query has union but no order by and only union capability.
      */
-    public void testUnionPushdown2() {
+    @Test public void testUnionPushdown2() {
         helpTestUnionPushdown(false, true, false);
     }
 
     /**
      * Query has union with order by and no capabilities.
      */
-    public void testUnionPushdown3() {
+    @Test public void testUnionPushdown3() {
         helpTestUnionPushdown(true, false, false);
     }
 
     /**
      * Query has union with order by and just union capability.
      */
-    public void testUnionPushdown4() {
+    @Test public void testUnionPushdown4() {
         helpTestUnionPushdown(true, true, false);
     }
 
     /**
      * Query has union with order by and both capabilities.
      */
-    public void testUnionPushdown5() {
+    @Test public void testUnionPushdown5() {
         helpTestUnionPushdown(true, true, true);
     }
 
-    public void testUnionPushdownWithSelectNoFrom() {        
+    @Test public void testUnionPushdownWithSelectNoFrom() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -3899,7 +3894,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
 
-    public void testUnionPushdownWithSelectNoFromFirstBranch() {        
+    @Test public void testUnionPushdownWithSelectNoFromFirstBranch() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -3929,7 +3924,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
 
-    public void testUnionPushdownWithSelectNoFromSecondBranch() {        
+    @Test public void testUnionPushdownWithSelectNoFromSecondBranch() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -3959,7 +3954,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
     
-    public void testUnionPushdownMultipleBranches() {        
+    @Test public void testUnionPushdownMultipleBranches() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -3976,7 +3971,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
     
-    public void testUnionPushdownMultipleBranchesMixedModels1() {        
+    @Test public void testUnionPushdownMultipleBranchesMixedModels1() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4009,7 +4004,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
     
-    public void testUnionPushdownMultipleBranchesNoDupRemoval() {        
+    @Test public void testUnionPushdownMultipleBranchesNoDupRemoval() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4026,7 +4021,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
     
-    public void testAggregateOverUnionPushdown() {        
+    @Test public void testAggregateOverUnionPushdown() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4058,7 +4053,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
 
-    public void testUnionPushdownWithFunctionsAndAliases() {        
+    @Test public void testUnionPushdownWithFunctionsAndAliases() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -4077,7 +4072,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
     
-    public void testUnionPushdownWithInternalOrderBy() {        
+    @Test public void testUnionPushdownWithInternalOrderBy() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4096,7 +4091,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }    
 
-    public void testUnionPushdownWithInternalDistinct() {        
+    @Test public void testUnionPushdownWithInternalDistinct() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4117,7 +4112,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     } 
     
-    public void testUnionNoAllPushdownInInlineView() {        
+    @Test public void testUnionNoAllPushdownInInlineView() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -4151,7 +4146,7 @@ public class TestOptimizer extends TestCase {
         });                                                   
     }
 
-    public void testUnionAllPushdownInInlineView() {        
+    @Test public void testUnionAllPushdownInInlineView() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4169,7 +4164,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
 
-    public void testUnionAllPushdownVirtualGroup() {        
+    @Test public void testUnionAllPushdownVirtualGroup() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -4188,7 +4183,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
 
-    public void testUnionAllPushdownVirtualGroup2() {        
+    @Test public void testUnionAllPushdownVirtualGroup2() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4205,7 +4200,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
 
-    public void testUnionAllPushdownVirtualGroup3() {        
+    @Test public void testUnionAllPushdownVirtualGroup3() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4239,7 +4234,7 @@ public class TestOptimizer extends TestCase {
     }
 
     // Allow pushing literals
-    public void testUnionAllPushdownVirtualGroup4() {        
+    @Test public void testUnionAllPushdownVirtualGroup4() {        
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -4258,7 +4253,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                   
     }
 
-    public void testPushCaseInSelect() {
+    @Test public void testPushCaseInSelect() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -4280,7 +4275,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testCantPushCaseInSelectWithFunction() {
+    @Test public void testCantPushCaseInSelectWithFunction() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -4315,7 +4310,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
 
-    public void testPushSearchedCaseInSelect() {
+    @Test public void testPushSearchedCaseInSelect() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -4336,7 +4331,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
 
-    public void testCantPushSearchedCaseInSelectWithFunction() {
+    @Test public void testCantPushSearchedCaseInSelectWithFunction() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -4371,7 +4366,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
 
-    public void testPushdownFunctionNotEvaluated() {
+    @Test public void testPushdownFunctionNotEvaluated() {
         FakeFunctionMetadataSource.setupFunctionLibrary();
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -4394,7 +4389,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
 
-    public void testNoSourceQuery() {
+    @Test public void testNoSourceQuery() {
         ProcessorPlan plan = helpPlan("SELECT * FROM (select parsetimestamp(x,'yyyy-MM-dd') as c1 from (select '2004-10-20' as x) as y) as z " +//$NON-NLS-1$ 
                                       "WHERE c1= '2004-10-20 00:00:00.0'", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] {  }); 
@@ -4418,7 +4413,7 @@ public class TestOptimizer extends TestCase {
     }
     
     /** defect 14510 */
-    public void testDefect14510LookupFunction() {
+    @Test public void testDefect14510LookupFunction() {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -4461,7 +4456,7 @@ public class TestOptimizer extends TestCase {
     }    
 
     /** defect 14510 */
-    public void testDefect14510LookupFunction2() {
+    @Test public void testDefect14510LookupFunction2() {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -4505,7 +4500,7 @@ public class TestOptimizer extends TestCase {
     }
 
     /** defect 14510 */
-    public void testDefect14510LookupFunction3() {
+    @Test public void testDefect14510LookupFunction3() {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -4548,7 +4543,7 @@ public class TestOptimizer extends TestCase {
         });
     }    
     
-    public void testCase2125() throws Exception {
+    @Test public void testCase2125() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -4596,7 +4591,7 @@ public class TestOptimizer extends TestCase {
                                     });
     }
     
-    public void testPushdownLiteralInSelectUnderAggregate() {  
+    @Test public void testPushdownLiteralInSelectUnderAggregate() {  
         String sql = "SELECT COUNT(*) FROM (SELECT '' AS y, a.IntKey FROM BQT1.SmallA a union all select '', b.intkey from bqt1.smallb b) AS x"; //$NON-NLS-1$
 
         // Plan query
@@ -4635,7 +4630,7 @@ public class TestOptimizer extends TestCase {
                                     });
     }
 
-    public void testPushdownLiteralInSelectUnderAggregate2() {  
+    @Test public void testPushdownLiteralInSelectUnderAggregate2() {  
         String sql = "SELECT SUM(z) FROM (SELECT '' AS y, a.IntKey as z FROM BQT1.SmallA a union all select b.stringkey, 0 from bqt1.smallb b) AS x group by z"; //$NON-NLS-1$
 
         // Plan query
@@ -4674,7 +4669,7 @@ public class TestOptimizer extends TestCase {
                                     });
     }
 
-    public void testPushdownLiteralInSelectUnderAggregate3() {  
+    @Test public void testPushdownLiteralInSelectUnderAggregate3() {  
         String sql = "SELECT code, SUM(ID) FROM (SELECT IntKey AS ID, '' AS Code FROM BQT1.SmallA union all select intkey, stringkey from bqt1.smallb b) AS x group by code"; //$NON-NLS-1$
 
         // Plan query
@@ -4713,7 +4708,7 @@ public class TestOptimizer extends TestCase {
                                     });
     }
 
-    public void testPushdownLiteralInSelectWithOrderBy() {  
+    @Test public void testPushdownLiteralInSelectWithOrderBy() {  
         String sql = "SELECT 1, concat('a', 'b' ) AS X FROM BQT1.SmallA where intkey = 0 " +  //$NON-NLS-1$
             "UNION ALL " +  //$NON-NLS-1$
             "select 2, 'Hello2' from BQT1.SmallA where intkey = 1 order by X desc"; //$NON-NLS-1$
@@ -4736,7 +4731,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
     
-    public void testUpdateWithElement() {
+    @Test public void testUpdateWithElement() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -4754,7 +4749,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }            
     
-    public void testCase2187() {
+    @Test public void testCase2187() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -4781,7 +4776,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }        
     
-    public void testMultiUnionMergeVirtual() throws Exception {
+    @Test public void testMultiUnionMergeVirtual() throws Exception {
         String sql = "SELECT * FROM " +  //$NON-NLS-1$
             "(SELECT IntKey, 'a' AS s FROM (SELECT intkey, stringkey from BQT1.SmallA) as a union all " +  //$NON-NLS-1$
             "select IntKey, 'b' FROM (SELECT intkey, stringkey from BQT1.SmallA) as b union all " +  //$NON-NLS-1$
@@ -4806,7 +4801,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);        
     }
     
-    public void testDefect16848_groupAliasNotSupported_1() {
+    @Test public void testDefect16848_groupAliasNotSupported_1() {
         String sql = "SELECT sa.intkey, sa.objectvalue FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey IN (46)) AND (sa.datevalue = (SELECT MAX(sb.datevalue) FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
         // Plan query
@@ -4870,7 +4865,7 @@ public class TestOptimizer extends TestCase {
 
     }
 
-    public void testFunctionOfAggregate1() {
+    @Test public void testFunctionOfAggregate1() {
         String sql = "SELECT SUM(IntKey) + 1 AS x FROM BQT1.SmallA GROUP BY IntKey"; //$NON-NLS-1$
 
         // Plan query
@@ -4891,7 +4886,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);        
     }
 
-    public void testFunctionOfAggregateCantPush1() {
+    @Test public void testFunctionOfAggregateCantPush1() {
         String sql = "SELECT SUM(IntKey) + 1 AS x FROM BQT1.SmallA GROUP BY IntKey"; //$NON-NLS-1$
 
         // Plan query
@@ -4923,7 +4918,7 @@ public class TestOptimizer extends TestCase {
                                     });        
     }
 
-    public void testFunctionOfAggregateCantPush3() {
+    @Test public void testFunctionOfAggregateCantPush3() {
         String sql = "SELECT avg(intkey) * 2 FROM BQT1.SmallA "; //$NON-NLS-1$
 
         // Plan query
@@ -5023,7 +5018,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);          
     }
     
-    public void testCase2589() throws Exception {  
+    @Test public void testCase2589() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589 ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
         
@@ -5032,7 +5027,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }     
 
-    public void testCase2589a() throws Exception {  
+    @Test public void testCase2589a() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589a ON MediumA.IntKey = SmallA_2589a.IntKey"; //$NON-NLS-1$
         
@@ -5040,7 +5035,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }    
 
-    public void testCase2589b() throws Exception {  
+    @Test public void testCase2589b() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey"; //$NON-NLS-1$
         
@@ -5048,7 +5043,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }     
     
-    public void testCase2589c() throws Exception {  
+    @Test public void testCase2589c() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB, BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey " + //$NON-NLS-1$
                      "WHERE BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
@@ -5057,7 +5052,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }    
 
-    public void testCase2589d() throws Exception {  
+    @Test public void testCase2589d() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB INNER JOIN " + //$NON-NLS-1$
                      "(BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " + //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
@@ -5066,7 +5061,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }     
     
-    public void testCase2589e() throws Exception {  
+    @Test public void testCase2589e() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN " +  //$NON-NLS-1$
                      "(BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " +  //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
@@ -5075,7 +5070,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }     
     
-    public void testCase2589f() throws Exception {  
+    @Test public void testCase2589f() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN " + //$NON-NLS-1$
                      "(BQT1.MediumA INNER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " + //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
@@ -5084,7 +5079,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }    
 
-    public void testCase2589g() throws Exception {  
+    @Test public void testCase2589g() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN " + //$NON-NLS-1$ 
                      "(BQT1.MediumA INNER JOIN VQT.SmallA_2589c ON MediumA.IntKey = SmallA_2589c.IntKey) " + //$NON-NLS-1$ 
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
@@ -5097,7 +5092,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }    
     
-    public void testCase2589h() throws Exception {  
+    @Test public void testCase2589h() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589c " + //$NON-NLS-1$ 
                      "ON MediumA.IntKey = SmallA_2589c.IntKey"; //$NON-NLS-1$
         
@@ -5105,7 +5100,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2589(sql, expected);
     }
     
-    public void testCase2589i() throws Exception {  
+    @Test public void testCase2589i() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589d " + //$NON-NLS-1$ 
                      "ON MediumA.IntKey = SmallA_2589d.IntKey"; //$NON-NLS-1$
         
@@ -5116,7 +5111,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Test optimization doesn't happen if an outer join isn't involved 
      */
-    public void testCase2589j() throws Exception {  
+    @Test public void testCase2589j() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA INNER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589 ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
         
@@ -5128,7 +5123,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Test optimization doesn't happen if an outer join isn't involved 
      */
-    public void testCase2589k() throws Exception {  
+    @Test public void testCase2589k() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA INNER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey"; //$NON-NLS-1$
 
@@ -5141,7 +5136,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as testCase2589 except right outer join
      */
-    public void testCase2589l() throws Exception {  
+    @Test public void testCase2589l() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM VQT.SmallA_2589 RIGHT OUTER JOIN " + //$NON-NLS-1$
                      "BQT1.MediumA ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
         
@@ -5154,7 +5149,7 @@ public class TestOptimizer extends TestCase {
      * Same as testCase2589 except full outer join - criteria "below" full outer join cannot be
      * raised into the join criteria, so basically the virtual groups cannot be merged in this test.
      */
-    public void testCase2589m() {  
+    @Test public void testCase2589m() {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM VQT.SmallA_2589 FULL OUTER JOIN " + //$NON-NLS-1$
                      "BQT1.MediumA ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
         
@@ -5169,7 +5164,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as testCase2589b except full outer join
      */
-    public void testCase2589n() {  
+    @Test public void testCase2589n() {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA FULL OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey"; //$NON-NLS-1$
         
@@ -5184,7 +5179,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as testCase2589 except with two virtual layers instead of one 
      */
-    public void testCase2589o() throws Exception {  
+    @Test public void testCase2589o() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589f ON MediumA.IntKey = SmallA_2589f.IntKey"; //$NON-NLS-1$
         
@@ -5196,7 +5191,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as testCase2589b except with two virtual layers instead of one 
      */
-    public void testCase2589p() throws Exception {  
+    @Test public void testCase2589p() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589g ON MediumA.IntKey = SmallA_2589g.IntKey"; //$NON-NLS-1$
         
@@ -5208,7 +5203,7 @@ public class TestOptimizer extends TestCase {
      * Test 3 frames, where top frame has outer join, middle frame has inner join, and
      * bottom frame has criteria that must be made into join criteria.  
      */
-    public void testCase2589q() throws Exception {  
+    @Test public void testCase2589q() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589h ON MediumA.IntKey = SmallA_2589h.IntKey"; //$NON-NLS-1$
         
@@ -5220,7 +5215,7 @@ public class TestOptimizer extends TestCase {
      * Similar to testCase2589b, except virtual transformation has criteria on an 
      * element from each physical table
      */
-    public void testCase2589r() throws Exception {  
+    @Test public void testCase2589r() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589i ON MediumA.IntKey = SmallA_2589i.IntKey"; //$NON-NLS-1$
         
@@ -5231,7 +5226,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Test user criteria that should NOT be moved into join clause 
      */
-    public void testCase2589s() throws Exception {  
+    @Test public void testCase2589s() throws Exception {  
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589 ON MediumA.IntKey = SmallA_2589.IntKey " + //$NON-NLS-1$
                      "WHERE BQT1.MediumA.IntNum = 10"; //$NON-NLS-1$
@@ -5243,7 +5238,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Test user criteria that should NOT be moved into join clause 
      */
-    public void testCase2589t() throws Exception {  
+    @Test public void testCase2589t() throws Exception {  
         String sql = "SELECT z.IntKey FROM (SELECT IntKey FROM BQT1.MediumA WHERE BQT1.MediumA.IntNum = 10) as z " + //$NON-NLS-1$
                      "LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589 ON z.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
@@ -5258,7 +5253,7 @@ public class TestOptimizer extends TestCase {
      * that the same results are produced?  More specifically, where should the criteria
      * go - WHERE clause or FROM clause? 
      */
-    public void testCase2589u() throws Exception {  
+    @Test public void testCase2589u() throws Exception {  
         String sql = "SELECT z.IntKey FROM (SELECT IntKey FROM BQT1.MediumA WHERE IntNum = 10) as z " + //$NON-NLS-1$
                      "LEFT OUTER JOIN " + //$NON-NLS-1$
                      "(SELECT IntKey FROM BQT1.SmallA WHERE StringNum = '10') as y " + //$NON-NLS-1$
@@ -5272,7 +5267,7 @@ public class TestOptimizer extends TestCase {
      * Same sql as testCase2589, but the model doesn't support outer joins, so 
      * case 2589 optimization shouldn't happen. 
      */
-    public void testCase2589v() {  
+    @Test public void testCase2589v() {  
 
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
         "VQT.SmallA_2589 ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
@@ -5324,7 +5319,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Same as previous testCase2589v, but with full outer join. 
      */
-    public void testCase2589w() {  
+    @Test public void testCase2589w() {  
 
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA FULL OUTER JOIN " + //$NON-NLS-1$
         "VQT.SmallA_2589 ON MediumA.IntKey = SmallA_2589.IntKey"; //$NON-NLS-1$
@@ -5379,7 +5374,7 @@ public class TestOptimizer extends TestCase {
      * to be put in the join criteria, not the where clause, of the second atomic
      * query, because in the user query it is on the inner side of an outer join.
      */
-    public void testCase2589x() throws Exception {  
+    @Test public void testCase2589x() throws Exception {  
 
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT2.SmallA INNER JOIN " + //$NON-NLS-1$
         "(BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
@@ -5469,7 +5464,7 @@ public class TestOptimizer extends TestCase {
      *  MedB   MedA           
      * </pre>
      */
-    public void testCase2589y() throws Exception {  
+    @Test public void testCase2589y() throws Exception {  
         String sql = "SELECT L.IntKey, y.IntKey, z.IntKey " + //$NON-NLS-1$
                      "FROM (BQT1.MediumB as L LEFT OUTER JOIN " + //$NON-NLS-1$
                      "(SELECT IntKey FROM BQT1.MediumA as M WHERE M.IntNum = 4) as y ON y.IntKey = L.IntKey) " + //$NON-NLS-1$
@@ -5491,7 +5486,7 @@ public class TestOptimizer extends TestCase {
      * to be put in the join criteria, not the where clause, of the second atomic
      * query, because in the user query it is on the inner side of an outer join.
      */
-    public void testCase2589z() {  
+    @Test public void testCase2589z() {  
 
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT2.SmallA INNER JOIN " + //$NON-NLS-1$
         "(BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
@@ -5548,7 +5543,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Union with multiple joins underneath 
      */
-    public void testCase2589aa() throws Exception {  
+    @Test public void testCase2589aa() throws Exception {  
         String sql = "SELECT * FROM (SELECT z.IntKey FROM (SELECT IntKey FROM BQT1.MediumA WHERE IntNum = 10) as z " + //$NON-NLS-1$
                      "LEFT OUTER JOIN " + //$NON-NLS-1$
                      "(SELECT IntKey FROM BQT1.SmallA WHERE StringNum = '10') as y " + //$NON-NLS-1$
@@ -5565,7 +5560,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Since can now guarantee unique select column names, it's ok to have repeated entries in the order by clause.
      */
-    public void testOrderByDuplicates() throws Exception {
+    @Test public void testOrderByDuplicates() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -5593,7 +5588,7 @@ public class TestOptimizer extends TestCase {
     }
 
     //Test use of OrderBy with expression
-    public void testCase2507() {
+    @Test public void testCase2507() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -5623,7 +5618,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
     
-    public void testCase2507A() {
+    @Test public void testCase2507A() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -5652,7 +5647,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }  
     
-    public void testCase2507B() {
+    @Test public void testCase2507B() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -5685,7 +5680,7 @@ public class TestOptimizer extends TestCase {
      * RulePlanJoins does not initially allow the cross join push.
      * The subsequent RuleRaiseAccess does since we believe it was the intent of the user
      */
-    public void testPushCrossJoins() throws Exception {
+    @Test public void testPushCrossJoins() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -5712,7 +5707,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);        
     }
     
-    public void testCase3023() {
+    @Test public void testCase3023() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -5739,7 +5734,7 @@ public class TestOptimizer extends TestCase {
                                       SHOULD_SUCCEED );
     }
     
-    public void testCase3367() {
+    @Test public void testCase3367() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
 
@@ -5763,7 +5758,7 @@ public class TestOptimizer extends TestCase {
      * of a virtual table containing a join in it's transformation.  All virtual 
      * models use the same physical model pm1.
      */
-    public void testCase3778() throws Exception {
+    @Test public void testCase3778() throws Exception {
     	
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
@@ -5785,7 +5780,7 @@ public class TestOptimizer extends TestCase {
     /** 
      * Ensures that order by expressions are not repeated when multiple criteria span a merge join 
      */ 
-    public void testCase3832() throws Exception { 
+    @Test public void testCase3832() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true); 
@@ -5815,7 +5810,7 @@ public class TestOptimizer extends TestCase {
     /*
      * Functions containing exec statements should not be evaluated
      */
-    public void testDefect21972() { 
+    @Test public void testDefect21972() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -5835,7 +5830,7 @@ public class TestOptimizer extends TestCase {
              
     }
     
-    public void testExpressionSymbolPreservation() throws Exception { 
+    @Test public void testExpressionSymbolPreservation() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true); 
@@ -5882,7 +5877,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Order by's will be added to the atomic queries
      */
-    public void testCrossSourceInlineView() throws Exception {
+    @Test public void testCrossSourceInlineView() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
         
@@ -5910,7 +5905,7 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);
     }
     
-    public void testAliasPreservationWithInlineView() {
+    @Test public void testAliasPreservationWithInlineView() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
         
@@ -5923,7 +5918,7 @@ public class TestOptimizer extends TestCase {
     }
     
     //since this does not support convert, it should not be collapsed
-    public void testBadCollapseUnion() {
+    @Test public void testBadCollapseUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -5954,7 +5949,7 @@ public class TestOptimizer extends TestCase {
         
     }
     
-    public void testCase3966() {
+    @Test public void testCase3966() {
         ProcessorPlan plan = helpPlan("insert into vm1.g37 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )", FakeMetadataFactory.example1(), //$NON-NLS-1$
                                       new String[] {} ); 
 
@@ -5981,7 +5976,7 @@ public class TestOptimizer extends TestCase {
     /*
      * Select literals created by runtime evaluation should not be pushed down.
      */
-    public void testCase4017() throws Exception {
+    @Test public void testCase4017() throws Exception {
         
         String sql = "SELECT env('soap_host') AS HOST, intkey from bqt2.smalla"; //$NON-NLS-1$
         
@@ -5993,7 +5988,7 @@ public class TestOptimizer extends TestCase {
      * Test of RuleCopyCriteria.  Criteria should NOT be copied across a join if the join has any other operator
      * other than an equality operator, but if the single group criteria is equality, then we can copy into a join criteria   
      */
-    public void testCase4265() throws Exception {
+    @Test public void testCase4265() throws Exception {
         String sql = "SELECT X.intkey, Y.intkey FROM BQT1.SmallA X, BQT1.SmallA Y WHERE X.IntKey <> Y.IntKey and Y.IntKey = 1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
@@ -6024,7 +6019,7 @@ public class TestOptimizer extends TestCase {
      * Test of RuleCopyCriteria.  Criteria should be copied across a join only for an equality operator in
      * the join criteria.
      */
-    public void testCase4265ControlTest() throws Exception {
+    @Test public void testCase4265ControlTest() throws Exception {
         String sql = "SELECT X.intkey, Y.intkey FROM BQT1.SmallA X, BQT1.SmallA Y WHERE X.IntKey = Y.IntKey and Y.IntKey = 1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
@@ -6053,7 +6048,7 @@ public class TestOptimizer extends TestCase {
     /**
      * The bug was in FrameUtil.convertCriteria() method, where ExistsCriteria was not being checked for. 
      */
-    public void testExistsCriteriaInSelect() {
+    @Test public void testExistsCriteriaInSelect() {
         String sql = "select intkey, case when exists (select stringkey from bqt1.smallb) then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
@@ -6082,7 +6077,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Try substituting "is not null" for "exists" criteria 
      */
-    public void testScalarSubQueryInSelect() {
+    @Test public void testScalarSubQueryInSelect() {
         String sql = "select intkey, case when (select stringkey from bqt1.smallb) is not null then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
@@ -6108,7 +6103,7 @@ public class TestOptimizer extends TestCase {
         
     }
     
-    public void testCase4263() {
+    @Test public void testCase4263() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
         
@@ -6129,7 +6124,7 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);        
     }
     
-    public void testCase4263b() {
+    @Test public void testCase4263b() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
         
@@ -6165,7 +6160,7 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 1);        
     }
     
-    public void testCase4279() throws Exception {
+    @Test public void testCase4279() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
         
@@ -6187,7 +6182,7 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);        
     }
     
-    public void testCase4312() {
+    @Test public void testCase4312() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -6200,7 +6195,7 @@ public class TestOptimizer extends TestCase {
 
     }    
     
-    public void testCase2507_2(){
+    @Test public void testCase2507_2(){
 
         String sql = "SELECT a FROM (SELECT concat(BQT1.SmallA.StringKey, BQT1.SmallA.StringNum) as a " +  //$NON-NLS-1$
                      "FROM BQT1.SmallA, BQT1.SmallB WHERE SmallA.IntKey = SmallB.IntKey) as X ORDER BY X.a"; //$NON-NLS-1$
@@ -6263,7 +6258,7 @@ public class TestOptimizer extends TestCase {
     }
     
     //Test use of OrderBy with Alias
-    public void testCase2430D() {
+    @Test public void testCase2430D() {
         String sql = "SELECT bqt1.smalla.longnum + bqt1.smalla.longnum as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "bqt1.smalla.doublenum as EXPR FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890, EXPR "; //$NON-NLS-1$
 
@@ -6276,7 +6271,7 @@ public class TestOptimizer extends TestCase {
      * If expressionsymbol comparison would ignore expression names then this should just select a single column,
      * but for now it will select 2.
      */
-    public void testCase2430E() {
+    @Test public void testCase2430E() {
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS EXPR FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890, EXPR "; //$NON-NLS-1$
 
@@ -6285,7 +6280,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2430and2507(sql, expected);
     }     
     
-    public void testCase2430G() {
+    @Test public void testCase2430G() {
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) AS EXPR FROM bqt1.smalla ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
 
@@ -6294,7 +6289,7 @@ public class TestOptimizer extends TestCase {
         helpTestCase2430and2507(sql, expected);
     }  
     
-    public void testCase2507_1(){
+    @Test public void testCase2507_1(){
 
         String sql = "SELECT a FROM (SELECT concat(BQT1.SmallA.StringKey, BQT1.SmallA.StringNum) as a " +  //$NON-NLS-1$
                      "FROM BQT1.SmallA) as X ORDER BY X.a"; //$NON-NLS-1$
@@ -6325,7 +6320,7 @@ public class TestOptimizer extends TestCase {
      * This is taken from testPushCorrelatedSubquery1.  However this subquery is not expected to be pushed down since the correlated
      * reference expression cannot be evaluated by the source.
      */
-    public void testDefect23614() {
+    @Test public void testDefect23614() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -6366,7 +6361,7 @@ public class TestOptimizer extends TestCase {
      * Normally the following queries would plan as if they were federated, but setting the connector_id source property
      * allows them to be planned as if they were the same source. 
      */
-    public void testSameConnector() {
+    @Test public void testSameConnector() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -6402,7 +6397,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Test changes to RuleCollapseSource for removing aliases 
      */
-    public void testCase4898() {
+    @Test public void testCase4898() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -6421,7 +6416,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
     
-    public void testDefect13971() {
+    @Test public void testDefect13971() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
@@ -6455,7 +6450,7 @@ public class TestOptimizer extends TestCase {
     /**
      * Ensures that aliases are not stripped from projected symbols if they might conflict with an order by element
      */
-    public void testCase5067() {
+    @Test public void testCase5067() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -6473,7 +6468,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
         
-    public void testDontPushConvertObject() {
+    @Test public void testDontPushConvertObject() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -6508,7 +6503,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    public void testDontPushConvertClobToString() {
+    @Test public void testDontPushConvertClobToString() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -6543,7 +6538,7 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    public void testSelectIntoWithDistinct() throws Exception {
+    @Test public void testSelectIntoWithDistinct() throws Exception {
         String sql = "select distinct e1 into #temp from pm1.g1"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -6558,7 +6553,7 @@ public class TestOptimizer extends TestCase {
     /**
      * previously the subqueries were being pushed too far and then not having the appropriate correlated references
      */
-    public void testCorrelatedSubqueryOverJoin() {
+    @Test public void testCorrelatedSubqueryOverJoin() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -6579,7 +6574,7 @@ public class TestOptimizer extends TestCase {
     /**
      * see testSimpleCrossJoin3
      */
-    public void testMaxFromGroups() {
+    @Test public void testMaxFromGroups() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(1));
@@ -6590,7 +6585,7 @@ public class TestOptimizer extends TestCase {
                
     }
     
-    public void testCase6249() {
+    @Test public void testCase6249() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -6612,7 +6607,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
         
-    public void testCase6181() throws Exception {
+    @Test public void testCase6181() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -6651,7 +6646,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testCase6325() {
+    @Test public void testCase6325() {
         String sql = "select e1 into #temp from pm4.g1 where e1='1'"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -6661,7 +6656,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
-    public void testAliasCreationWithInlineView() {
+    @Test public void testAliasCreationWithInlineView() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
         
@@ -6673,7 +6668,7 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);
     }
     
-    public void testCase6364() {
+    @Test public void testCase6364() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -6690,7 +6685,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
-    public void testExceptPushdown() throws Exception {
+    @Test public void testExceptPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_EXCEPT, true);
@@ -6704,7 +6699,7 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }    
    
-    public void testCase6597() { 
+    @Test public void testCase6597() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
@@ -6735,7 +6730,7 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testCopyCriteriaWithIsNull() {
+    @Test public void testCopyCriteriaWithIsNull() {
     	String sql = "select * from (select a.intnum, a.intkey y, b.intkey from bqt1.smalla a, bqt2.smalla b where a.intkey = b.intkey) x where intkey is null"; //$NON-NLS-1$
     	
     	helpPlan(sql, FakeMetadataFactory.exampleBQT(), new String[] {});
@@ -6750,7 +6745,7 @@ public class TestOptimizer extends TestCase {
      * <p>
      * SELECT * FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2
      */
-    public void testBetween() { 
+    @Test public void testBetween() { 
         helpPlan("select * from pm1.g1 where e2 between 1 and 2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
     			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (e2 >= 1) AND (e2 <= 2)"} ); //$NON-NLS-1$
     }
@@ -6765,7 +6760,7 @@ public class TestOptimizer extends TestCase {
      * <p>
      * SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1
      */
-    public void testBetweenInCase() { 
+    @Test public void testBetweenInCase() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
@@ -6787,7 +6782,7 @@ public class TestOptimizer extends TestCase {
      * <p>
      * SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1
      */
-    public void testBetweenInCaseInSum() { 
+    @Test public void testBetweenInCaseInSum() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
@@ -6812,7 +6807,7 @@ public class TestOptimizer extends TestCase {
      * SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) 
      * FROM pm1.g1 GROUP BY e1
      */
-    public void testBetweenInCaseInSumWithGroupBy() { 
+    @Test public void testBetweenInCaseInSumWithGroupBy() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);

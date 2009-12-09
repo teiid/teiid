@@ -100,18 +100,6 @@ public class ResultSetInfo {
         this.rsPlan = plan;
     }
     
-    public List getReferences() {
-        return boundReferences;
-    }
-    
-    public void setReferences(List references) {
-        this.boundReferences = references;
-    }
-    
-    public boolean hasReferences() {
-        return boundReferences != null;
-    }
-    
     public int getUserRowLimit() {
         return userRowLimit;
     }

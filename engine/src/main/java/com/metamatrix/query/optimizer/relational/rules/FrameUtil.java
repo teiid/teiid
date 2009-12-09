@@ -68,7 +68,7 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class FrameUtil {
 
-    static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata) 
+    public static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata) 
         throws QueryPlannerException {
 
         PlanNode current = startNode;

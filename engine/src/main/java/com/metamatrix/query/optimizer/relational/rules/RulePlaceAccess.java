@@ -35,7 +35,6 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.OptimizerContext;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
@@ -68,7 +67,11 @@ public final class RulePlaceAccess implements
                                                    MetaMatrixComponentException,
                                                    QueryPlannerException {
 
-        Set<String> groups = OptimizerContext.getOptimizerContext().getGroups();
+        Set<String> groups = context.getGroups();
+        if (groups == null) {
+        	groups = new HashSet<String>();
+        	context.setGroups(groups);
+        }
 
         boolean[] addtionalRules = new boolean[2];
 

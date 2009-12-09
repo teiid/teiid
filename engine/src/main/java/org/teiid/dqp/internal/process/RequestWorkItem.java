@@ -39,7 +39,6 @@ import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.cache.CacheID;
 import org.teiid.dqp.internal.cache.CacheResults;
 import org.teiid.dqp.internal.cache.ResultSetCache;
-import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -169,7 +168,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
         this.rsCache = dqpCore.getRsCache();
         if (this.rsCache != null) {
-        	this.cid = ResultSetCacheUtil.createCacheID(requestMsg, rsCache);
+        	this.cid = this.rsCache.createCacheID(workContext, requestMsg.getCommandString(), requestMsg.getParameterValues());
         }
         this.transactionService = dqpCore.getTransactionServiceDirect();
         this.dqpCore = dqpCore;
@@ -369,12 +368,9 @@ public class RequestWorkItem extends AbstractWorkItem {
 			public void batchProduced(TupleBatch batch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
 	            //if there is a cache, and it is a query, save it
 	            if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable() && transactionState == TransactionState.NONE && !rsCache.hasResults(cid)){
-            		CacheResults cr = new CacheResults(batch.getAllTuples(), processor.getProcessorPlan().getOutputElements(), batch.getBeginRow(), !doneProducingBatches);
+            		CacheResults cr = new CacheResults(batch.getAllTuples(), batch.getBeginRow(), !doneProducingBatches);
                     cr.setCommand(originalCommand);
                     cr.setSize(batch.getSize());
-                    if(batch.getSize() != TupleBatch.UNKNOWN_SIZE){
-                    	cr.setSize(batch.getSize());
-                    }
                     cr.setAnalysisRecord(analysisRecord);
             		if (!rsCache.setResults(cid, cr, requestID)) {
             			rsCache = null; //disable caching if we are over size

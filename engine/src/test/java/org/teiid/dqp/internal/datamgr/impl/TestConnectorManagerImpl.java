@@ -42,7 +42,6 @@ import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
-import org.teiid.dqp.internal.pooling.connector.ConnectionPool;
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -50,7 +49,6 @@ import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeMetadataService;
@@ -155,44 +153,7 @@ public final class TestConnectorManagerImpl {
         }
         cm.stop();
     }
-    
-    @Test public void testCaching() throws Exception {
-    	ConnectorManager cm = new ConnectorManager();
-        Properties props = new Properties();
-        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
-        props.setProperty(ConnectorPropertyNames.USE_RESULTSET_CACHE, Boolean.TRUE.toString());
-        props.setProperty(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, String.valueOf(-1));
-        startConnectorManager(cm, props);
-        ConnectorWrapper wrapper = cm.getConnector();
-        FakeConnector fc = (FakeConnector)wrapper.getActualConnector();
-        assertEquals(0, fc.getConnectionCount());
-        assertEquals(0, fc.getExecutionCount());
-        AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
-        request.setUseResultSetCache(true);
-        QueueResultsReceiver receiver = new QueueResultsReceiver();
-        cm.executeRequest(receiver, request);
-        AtomicResultsMessage arm = receiver.getResults().poll(1000, TimeUnit.MILLISECONDS);
-        assertEquals(-1, arm.getFinalRow());
-        //get the last batch - it will be 0 sized
-        cm.requstMore(request.getAtomicRequestID());
-        assertNotNull(receiver.getResults().poll(1000, TimeUnit.MILLISECONDS));
-        cm.closeRequest(request.getAtomicRequestID());
-        assertEquals(1, fc.getConnectionCount());
-        assertEquals(1, fc.getExecutionCount());
-
-        //this request should hit the cache
-        AtomicRequestMessage request1 = TestConnectorWorkItem.createNewAtomicRequestMessage(2, 1);
-        request1.setUseResultSetCache(true);
-        QueueResultsReceiver receiver1 = new QueueResultsReceiver();
-        cm.executeRequest(receiver1, request1);
-        arm = receiver1.getResults().poll(1000, TimeUnit.MILLISECONDS);
-        assertEquals(5, arm.getFinalRow());
-        assertEquals(1, fc.getConnectionCount());
-        assertEquals(1, fc.getExecutionCount());
         
-        cm.stop();
-    }
-    
     @Test public void testDefect19049() throws Exception {
         ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();

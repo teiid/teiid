@@ -22,14 +22,15 @@
 
 package com.metamatrix.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.sql.*;
+import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 import com.metamatrix.query.xquery.XQueryExpression;
@@ -42,6 +43,7 @@ public class XQuery extends Command {
     private String xQuery;
     private XQueryExpression compiledXQuery;
     private Map variables;
+    private String procedureGroup;
     
     public XQuery(){
     }
@@ -50,6 +52,10 @@ public class XQuery extends Command {
         this.xQuery = xQuery;
         this.compiledXQuery = compiledXQuery;
     }
+    
+    public void setProcedureGroup(String procedureGroup) {
+		this.procedureGroup = procedureGroup;
+	}
     
     public void setVariables(Map variables) {
 		this.variables = variables;
@@ -110,7 +116,7 @@ public class XQuery extends Command {
      * @return Hash code
      */
     public int hashCode() {
-        return HashCodeUtil.hashCode(0, getXQuery());
+        return xQuery.hashCode();
     }
 
     /**
@@ -120,6 +126,7 @@ public class XQuery extends Command {
     public Object clone() {
         XQuery copy = new XQuery(getXQuery(), this.compiledXQuery);
         copy.variables = variables;
+        copy.procedureGroup = procedureGroup;
         copyMetadataState(copy);
         return copy;
     }
@@ -146,4 +153,8 @@ public class XQuery extends Command {
     public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
         return 2; //since there may be dynamic sql, just assume a transaction is required
     }
+
+	public String getProcedureGroup() {
+		return procedureGroup;
+	}
 }

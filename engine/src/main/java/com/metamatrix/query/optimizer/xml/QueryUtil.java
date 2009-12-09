@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +56,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -91,16 +89,6 @@ public class QueryUtil {
         return query;
     }
 
-    static Command parseQuery(String queryStr) throws QueryPlannerException {
-        Command query = null;
-        try {
-            query = QueryParser.getQueryParser().parseCommand(queryStr);            
-        } catch (QueryParserException e) {
-            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0054, new Object[]{queryStr}));
-        }
-        return query;
-    }
-    
     /** 
      * Resolve a command using the metadata in the planner environment.
      * @param query The query to resolve
@@ -113,7 +101,7 @@ public class QueryUtil {
         throws MetaMatrixComponentException, QueryPlannerException {
         // Run resolver
         try {
-            QueryResolver.resolveCommand(query, Collections.EMPTY_MAP, true, metadata, AnalysisRecord.createNonRecordingRecord());
+            QueryResolver.resolveCommand(query, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
         } catch(QueryResolverException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }
@@ -129,7 +117,7 @@ public class QueryUtil {
     static Command rewriteQuery(Command query, QueryMetadataInterface metadata, CommandContext context) 
         throws QueryPlannerException {
         try {
-            return QueryRewriter.rewrite(query, null, metadata, context);
+            return QueryRewriter.rewrite(query, metadata, context);
         } catch(QueryValidatorException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }
@@ -236,33 +224,21 @@ public class QueryUtil {
     }
 
     
-    static List getReferences(Command query, boolean embeddedOnly) {
+    static List getReferences(Command command) {
         List boundList = new ArrayList();
         
-        Collection commands = null;
-        
-        if (embeddedOnly) {
-            commands = new LinkedList();
-        } else {
-            commands = new LinkedList(CommandCollectorVisitor.getNonEmbeddedCommands(query));
-        }
-        commands.add(query);
-        
-        for (Iterator cmds = commands.iterator(); cmds.hasNext();) {
-            Command command = (Command)cmds.next();
-            for (Iterator refs = ReferenceCollectorVisitor.getReferences(command).iterator(); refs.hasNext();) {
-                Reference ref = (Reference) refs.next();
-                Expression expr = ref.getExpression();
-                if (!(expr instanceof ElementSymbol)){
-                    continue;
-                }
-                ElementSymbol elem = (ElementSymbol)expr;
-                
-                if (!query.getExternalGroupContexts().getGroups().contains(elem.getGroupSymbol())) {
-                    continue;
-                }                
-                boundList.add(ref);
+        for (Iterator refs = ReferenceCollectorVisitor.getReferences(command).iterator(); refs.hasNext();) {
+            Reference ref = (Reference) refs.next();
+            Expression expr = ref.getExpression();
+            if (!(expr instanceof ElementSymbol)){
+                continue;
             }
+            ElementSymbol elem = (ElementSymbol)expr;
+            
+            if (!command.getExternalGroupContexts().getGroups().contains(elem.getGroupSymbol())) {
+                continue;
+            }                
+            boundList.add(ref);
         }
         return boundList;
     }     

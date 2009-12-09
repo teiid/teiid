@@ -89,13 +89,6 @@ public final class XMLPlannerEnvironment{
     // Context this command is running in
     CommandContext context;
     
-    /*
-     * The form the result documents should be in, either
-     * String or JDOM Document, see
-     * {@link XML_FORM_RESULTS_PROPERTY} 
-     */
-    String xmlFormResults;
-    
     // ################## Planning state ################## 
     private HashMap stagingResultsInfo = new HashMap();
     
@@ -119,9 +112,6 @@ public final class XMLPlannerEnvironment{
     XMLProcessorEnvironment createProcessorEnvironment(Program mainProgram) {
         XMLProcessorEnvironment processorEnv = new XMLProcessorEnvironment(mainProgram);
         
-        if (this.xmlFormResults != null){
-            processorEnv.setXMLResultsForm(xmlFormResults);
-        }  
         processorEnv.setDocumentGroup(documentGroup);
         return processorEnv;
     }

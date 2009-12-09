@@ -30,18 +30,16 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-import com.metamatrix.cache.FakeCache.FakeCacheFactory;
+import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class TestResultSetCache {
     
     @Test public void testSetAndGetResultsForSession() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.setScope(ResultSetCache.RS_CACHE_SCOPE_CONN);
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("12345", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	List[] result1 = new List[]{new ArrayList()};
     	cache.setResults(id1, new CacheResults(result1, 1, true ), "req1");  //$NON-NLS-1$
@@ -53,11 +51,8 @@ public class TestResultSetCache {
     }
     
     @Test public void testSetAndGetResultsForVDB() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	List[] result1 = new List[]{new ArrayList()};
     	cache.setResults(id1, new CacheResults(result1, 1, true) , "req1");  //$NON-NLS-1$
@@ -68,44 +63,9 @@ public class TestResultSetCache {
     	assertEquals(cache.getResults(id2, new int[]{1, 500}).getResults(), result2); 
     }
     
-//    @Test public void testRemoveConnection() throws Exception{
-//    	Properties props = new Properties();
-//    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-//    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-//    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-//    	ResultSetCache cache = new ResultSetCache(props);
-//    	CacheID id1 = new CacheID("12345", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
-//    	List[] result1 = new List[]{new ArrayList()};
-//    	cache.setResults(id1, new CacheResults(result1, 0, true ));  //$NON-NLS-1$//$NON-NLS-2$
-//    	CacheID id2 = new CacheID("12346",  "select * from table2");  //$NON-NLS-1$//$NON-NLS-2$
-//    	List[] result2 = new List[]{new ArrayList()};
-//    	cache.setResults(id2, new CacheResults(result2, 0, true) );  //$NON-NLS-1$//$NON-NLS-2$
-//    	cache.removeConnection(id1.getScopeID());
-//    	assertNull(cache.getResults(id1, new int[]{0, 500})); //$NON-NLS-1$
-//    }
-//    
-//    @Test public void testRemoveVDB() throws Exception{
-//    	Properties props = new Properties();
-//    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-//    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-//    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB);
-//    	ResultSetCache cache = new ResultSetCache(props);
-//    	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
-//    	List[] result1 = new List[]{new ArrayList()};
-//    	cache.setResults(id1, new CacheResults(result1, 0, true ));  //$NON-NLS-1$//$NON-NLS-2$
-//    	CacheID id2 = new CacheID("vdb2", "select * from table2");  //$NON-NLS-1$//$NON-NLS-2$
-//    	List[] result2 = new List[]{new ArrayList()};
-//    	cache.setResults(id2, new CacheResults(result2, 0, true ));  //$NON-NLS-1$//$NON-NLS-2$
-//    	cache.removeVDB(id1.getScopeID());
-//    	assertNull(cache.getResults(id1, new int[]{0, 500})); //$NON-NLS-1$
-//    }
-    
     @Test public void testClearAllCache() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	List[] result1 = new List[]{new ArrayList()};
     	cache.setResults(id1, new CacheResults(result1, 1, true), "req1" );  //$NON-NLS-1$
@@ -117,11 +77,9 @@ public class TestResultSetCache {
     }
     
     @Test public void testSetAndGetResultsForSession1() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.setScope(ResultSetCache.RS_CACHE_SCOPE_CONN);
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("12345", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	List row1 = new ArrayList();
     	row1.add("1"); //$NON-NLS-1$
@@ -138,11 +96,9 @@ public class TestResultSetCache {
     }
     
     @Test public void testSetAndGetResultsForSession2() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.setScope(ResultSetCache.RS_CACHE_SCOPE_CONN);
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("12345", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	List row1 = new ArrayList();
     	row1.add("1"); //$NON-NLS-1$
@@ -163,17 +119,15 @@ public class TestResultSetCache {
     }
     
     @Test public void testMaxSize() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "1"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.setMaxEntrySize(600000);
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	CacheResults result1 = createResults(500000, 1, 1, true);
     	CacheID id2 = new CacheID("vdb2", "select * from table2");  //$NON-NLS-1$//$NON-NLS-2$
     	CacheResults result2 = createResults(500000, 1, 1, true);
     	CacheID id3 = new CacheID("vdb1", "select * from table3");  //$NON-NLS-1$//$NON-NLS-2$
-    	CacheResults result3 = createResults(500000, 1, 1, true);
+    	CacheResults result3 = createResults(700000, 1, 1, true);
     	//add two results
     	cache.setResults(id1, result1, "req1" );   //$NON-NLS-1$
     	cache.setResults(id2, result2, "req2" );   //$NON-NLS-1$
@@ -200,7 +154,6 @@ public class TestResultSetCache {
     	return cr;
     }
     
-    
     @Test public void testComputeSize() throws Exception{
     	int cnt = 1000000;
     	List[] results = new List[cnt];
@@ -215,21 +168,18 @@ public class TestResultSetCache {
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	CacheResults result = new CacheResults(results, 1, true);
     	cache.setResults(id1, result, "req1" );  //$NON-NLS-1$
     	
-        int size = (SizeUtility.IS_64BIT ? 296000000 : 256000000);
+        int size = (SizeUtility.IS_64BIT ? 304000016 : 260000016);
     	assertEquals(size, result.getSize());
     }
     
     @Test(expected=MetaMatrixRuntimeException.class) public void testBatchNotContiguous() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
+    	ResultSetCache cache = new ResultSetCache();
+    	cache.start(new FakeCache.FakeCacheFactory());
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	CacheResults result1 = createResults(1000, 1, 100, false);
     	CacheResults result3 = createResults(2000, 102, 200, true);

@@ -111,7 +111,7 @@ public class TestRequest extends TestCase {
         
         Request request = new Request();
         Command command = QueryParser.getQueryParser().parseCommand(QUERY);
-        QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, true, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
         
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = new DQPWorkContext();

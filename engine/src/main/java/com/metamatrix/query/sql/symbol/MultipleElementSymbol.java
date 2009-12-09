@@ -28,7 +28,7 @@ import java.util.*;
  * <p>This is a subclass of Symbol representing multiple output columns.</p>
  */
 public abstract class MultipleElementSymbol extends SelectSymbol {
-    private List elementSymbols;
+    private List<ElementSymbol> elementSymbols;
 
     /**
      * Passthrough constructor used for cloning 
@@ -52,7 +52,7 @@ public abstract class MultipleElementSymbol extends SelectSymbol {
      * Set the {@link ElementSymbol}s that this symbol refers to
      * @param elementSymbols List of {@link ElementSymbol}
      */
-    public void setElementSymbols(List elementSymbols){
+    public void setElementSymbols(List<ElementSymbol> elementSymbols){
         this.elementSymbols = elementSymbols;
     }
 
@@ -60,7 +60,7 @@ public abstract class MultipleElementSymbol extends SelectSymbol {
      * Get the element symbols referred to by this multiple element symbol
      * @return List of {@link ElementSymbol}s, may be null
      */
-    public List getElementSymbols(){
+    public List<ElementSymbol> getElementSymbols(){
         return this.elementSymbols;
     }
 
@@ -70,7 +70,7 @@ public abstract class MultipleElementSymbol extends SelectSymbol {
      */
     public void addElementSymbol(ElementSymbol symbol) {
 		if(getElementSymbols() == null) { 
-			setElementSymbols(new LinkedList());
+			setElementSymbols(new LinkedList<ElementSymbol>());
 		}
 		getElementSymbols().add(symbol);
     }

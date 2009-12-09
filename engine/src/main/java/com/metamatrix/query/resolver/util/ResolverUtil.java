@@ -708,8 +708,8 @@ public class ResolverUtil {
      * @throws MetaMatrixComponentException
      * @throws QueryMetadataException
      */
-    public static List findMatchingGroups(String groupContext,
-                            Collection groups,
+    public static List<GroupSymbol> findMatchingGroups(String groupContext,
+                            Collection<GroupSymbol> groups,
                             QueryMetadataInterface metadata) throws MetaMatrixComponentException,
                                                             QueryMetadataException {
 
@@ -717,14 +717,12 @@ public class ResolverUtil {
             return null;
         }
 
-        LinkedList matchedGroups = new LinkedList();
+        LinkedList<GroupSymbol> matchedGroups = new LinkedList<GroupSymbol>();
 
         if (groupContext == null) {
             matchedGroups.addAll(groups);
         } else {
-            Iterator iter = groups.iterator();
-            while (iter.hasNext()) {
-                GroupSymbol group = (GroupSymbol)iter.next();
+        	for (GroupSymbol group : groups) {
                 String fullName = group.getCanonicalName();
                 if (nameMatchesGroup(groupContext, matchedGroups, group, fullName)) {
                     if (groupContext.length() == fullName.length()) {
@@ -767,7 +765,7 @@ public class ResolverUtil {
     }
     
     private static boolean nameMatchesGroup(String groupContext,
-                                            LinkedList matchedGroups,
+                                            LinkedList<GroupSymbol> matchedGroups,
                                             GroupSymbol group,
                                             String fullName) {
         if (nameMatchesGroup(groupContext, fullName)) {

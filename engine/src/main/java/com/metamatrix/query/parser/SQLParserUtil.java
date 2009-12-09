@@ -106,7 +106,7 @@ public class SQLParserUtil {
      * Check if this is a valid string literal
      * @param id Possible string literal
      */
-    boolean isStringLiteral(String str, ParseInfo info) throws ParseException {
+    boolean isStringLiteral(String str, ParseInfo info) {
     	if (info.useAnsiQuotedIdentifiers() || str.charAt(0) != '"' || str.charAt(str.length() - 1) != '"') {
     		return false;
     	}

@@ -52,7 +52,6 @@ import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -64,7 +63,6 @@ import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -76,9 +74,9 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
+import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.CommandContainer;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -96,9 +94,7 @@ import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
-import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.OrderBy;
-import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -115,7 +111,6 @@ import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.Update;
-import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
@@ -224,8 +219,8 @@ public class QueryRewriter {
 		return rewriter.rewriteCommand(command, false);
 	}
     
-	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
-		return rewrite(command, procCommand, metadata, context, null, Command.TYPE_UNKNOWN);
+	public static Command rewrite(Command command, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
+		return rewrite(command, null, metadata, context, null, Command.TYPE_UNKNOWN);
     }
 
     /**
@@ -275,125 +270,42 @@ public class QueryRewriter {
                 procCommand = (CreateUpdateProcedureCommand) command;
                 command = rewriteUpdateProcedure((CreateUpdateProcedureCommand) command);
                 break;
-            case Command.TYPE_XQUERY:
-            	((XQuery)command).setVariables(this.variables);
-            	break;
+            case Command.TYPE_BATCHED_UPDATE:
+            	List subCommands = ((BatchedUpdateCommand)command).getUpdateCommands();
+                for (int i = 0; i < subCommands.size(); i++) {
+                    Command subCommand = (Command)subCommands.get(i);
+                    subCommand = rewriteCommand(subCommand, false);
+                    subCommands.set(i, subCommand);
+                }
+                break;
+            	
 		}
         
-        //recursively rewrite simple containers - after the container itself was rewritten
-        if (command instanceof CommandContainer) {
-            Map oldVariables = variables;
-        	List subCommands = ((CommandContainer)command).getContainedCommands();
-            for (int i = 0; i < subCommands.size(); i++) {
-                Command subCommand = (Command)subCommands.get(i);
-                
-                if (command instanceof ProcedureContainer) {
-                       
-                    try {
-    	                variables = QueryResolver.getVariableValues(command, metadata);                        
-    	                commandType = command.getType();
-                    } catch (QueryMetadataException err) {
-                        throw new QueryValidatorException(err, err.getMessage());
-                    } catch (QueryResolverException err) {
-                        throw new QueryValidatorException(err, err.getMessage());
-                    } catch (MetaMatrixComponentException err) {
-                        throw new QueryValidatorException(err, err.getMessage());
-                    }
-                }
-                
-                subCommand = rewriteCommand(subCommand, false);
-                subCommands.set(i, subCommand);
-            }
-            variables = oldVariables;
-        }
-
-        Command result = removeProceduralWrapper(command);
         this.metadata = oldMetadata;
         this.procCommand = oldProcCommand;
-        return result;
+        return command;
 	}
     
-    private void mergeOptions( Option sourceOption, Option targetOption ) {
-        if ( sourceOption.getPlanOnly()) {
-            targetOption.setPlanOnly( true );
-        }
-        if ( sourceOption.getDebug()) {
-            targetOption.setDebug( true );
-        }
-        if ( sourceOption.getShowPlan()) {
-            targetOption.setShowPlan( true );
-        }
-    }
-	
-    private Command removeProceduralWrapper(Command command) throws QueryValidatorException {
-        
-        if (!(command instanceof StoredProcedure)) {
-            return command;
-        }
-        
-        StoredProcedure container = (StoredProcedure)command;
-        if (container.isProcedureRelational()) {
-            return command;
-        }
-        
-        if (!(container.getSubCommand() instanceof CreateUpdateProcedureCommand)) {
-            return command;
-        }
-        
-        CreateUpdateProcedureCommand subCommand = (CreateUpdateProcedureCommand)container.getSubCommand();
-        
-        if (subCommand == null) {
-            return command;
-        }
-        
-        //if all parameters can be evaluated, we need to validate their values before removing the procedure wrapper
-        for (Iterator iter = container.getInputParameters().iterator(); iter.hasNext();) {
-            SPParameter param = (SPParameter)iter.next();
-            Expression expr = param.getExpression();
-            if (!EvaluatableVisitor.isFullyEvaluatable(expr, true)) {
-                return command;
-            }
-            try {
-                Object value = new Evaluator(Collections.emptyMap(), this.dataMgr, context).evaluate(expr, Collections.emptyList());
-
-                //check contraint
-                if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
-                    throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
-                }
-            } catch (ExpressionEvaluationException err) {
-            } catch (BlockedException err) {
-            } catch (MetaMatrixComponentException err) {            
-            }
-        } 
-        
-        Block block = subCommand.getBlock();
-        
-        if (block.getStatements().size() != 1) {
-            return command;
-        }
-        Statement statement = (Statement)block.getStatements().get(0);
-        if (statement.getType() != Statement.TYPE_COMMAND) {
-            return command;
-        }
-        
-        Command child = (((CommandStatement)statement).getCommand());
-        
-        if (child != null && child.getType() != Command.TYPE_DYNAMIC) {
-            if ( child.getOption() == null ) {
-                child.setOption( command.getOption() );                
-            } else if (command.getOption() != null) {
-                mergeOptions( command.getOption(), child.getOption() );
-            }
-            return child;        
-        }
-        return command;
-    }
-
 	private Command rewriteUpdateProcedure(CreateUpdateProcedureCommand command)
 								 throws QueryValidatorException {
-		
+        Map oldVariables = variables;
+        try {
+        	if (command.getUserCommand() != null) {
+	            variables = QueryResolver.getVariableValues(command.getUserCommand(), metadata);                        
+	            commandType = command.getUserCommand().getType();
+        	}
+        } catch (QueryMetadataException err) {
+            throw new QueryValidatorException(err, err.getMessage());
+        } catch (QueryResolverException err) {
+            throw new QueryValidatorException(err, err.getMessage());
+        } catch (MetaMatrixComponentException err) {
+            throw new QueryValidatorException(err, err.getMessage());
+        }
+
 		Block block = rewriteBlock(command.getBlock());
         command.setBlock(block);
+
+        variables = oldVariables;
         
         return command;
 	}
@@ -1054,23 +966,11 @@ public class QueryRewriter {
 			 throws QueryValidatorException {
 		if(clause instanceof JoinPredicate) {
 			return rewriteJoinPredicate(parent, (JoinPredicate) clause);
-        } else if (clause instanceof UnaryFromClause) {
-            rewriteUnaryFromClause((UnaryFromClause)clause);
         } else if (clause instanceof SubqueryFromClause) {
             rewriteSubqueryContainer((SubqueryFromClause)clause, true);
         }
         return clause;
 	}
-
-    private void rewriteUnaryFromClause(UnaryFromClause ufc) throws QueryValidatorException {
-        Command nestedCommand = ufc.getExpandedCommand();
-        
-        if (nestedCommand == null) {
-            return;
-        }
-            
-        ufc.setExpandedCommand(rewriteCommand(nestedCommand, true));
-    }
 
 	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate)
 			 throws QueryValidatorException {

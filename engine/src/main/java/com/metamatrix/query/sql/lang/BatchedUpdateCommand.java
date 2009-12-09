@@ -33,15 +33,17 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.util.VariableContext;
 
 
 /** 
  * Represents a batch of INSERT, UPDATE, DELETE, and SELECT INTO commands
  * @since 4.2
  */
-public class BatchedUpdateCommand extends Command implements CommandContainer {
+public class BatchedUpdateCommand extends Command {
     
     protected List commands;
+    private List<VariableContext> variableContexts; //processing state
     
     /**
      * Add sub command
@@ -216,11 +218,12 @@ public class BatchedUpdateCommand extends Command implements CommandContainer {
         return '?';
     }
 
-    /** 
-     * @see com.metamatrix.query.sql.lang.CommandContainer#getContainedCommands()
-     */
-    public List getContainedCommands() {
-        return getSubCommands();
-    }
+	public void setVariableContexts(List<VariableContext> variableContexts) {
+		this.variableContexts = variableContexts;
+	}
+
+	public List<VariableContext> getVariableContexts() {
+		return variableContexts;
+	}
 
 }

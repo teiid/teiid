@@ -34,7 +34,7 @@ import com.metamatrix.query.mapping.xml.MappingSourceNode;
 import com.metamatrix.query.mapping.xml.MappingVisitor;
 import com.metamatrix.query.mapping.xml.Navigator;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
-import com.metamatrix.query.resolver.command.SimpleQueryResolver;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -114,24 +114,24 @@ public class XMLStagaingQueryPlanner {
         
         //id as mapping class
         Object metadataID = planEnv.getGlobalMetadata().getGroupID(sourceNode.getResultName());
-        if (SimpleQueryResolver.isNoCacheGroup(planEnv.getGlobalMetadata(), metadataID, option)) {
+        if (RelationalPlanner.isNoCacheGroup(planEnv.getGlobalMetadata(), metadataID, option)) {
             return false;
         }
 
         //id as generated mapping class name
         metadataID = planEnv.getGlobalMetadata().getGroupID(sourceNode.getActualResultSetName());
-        if (SimpleQueryResolver.isNoCacheGroup(planEnv.getGlobalMetadata(), metadataID, option)) {
+        if (RelationalPlanner.isNoCacheGroup(planEnv.getGlobalMetadata(), metadataID, option)) {
             return false;
         }
         
         // get the original transformation of the mapping class before planning. 
         Query stagableQuery = (Query)QueryUtil.getQueryFromQueryNode(groupName, planEnv);
         
-        Collection groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(stagableQuery, false);
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(stagableQuery, false);
         
         //check for already staged queries
         if (groups.size() == 1) {
-            GroupSymbol group = (GroupSymbol)groups.iterator().next();
+            GroupSymbol group = groups.iterator().next();
             group = QueryUtil.createResolvedGroup((GroupSymbol)group.clone(), planEnv.getGlobalMetadata());
             if (planEnv.isStagingTable(group.getMetadataID()) && stagableQuery.getCriteria() == null) {
                 return false;

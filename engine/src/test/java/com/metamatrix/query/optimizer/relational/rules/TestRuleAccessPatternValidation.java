@@ -35,7 +35,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.PlanHints;
 import com.metamatrix.query.optimizer.relational.RelationalPlanner;
@@ -47,6 +46,7 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
+import com.metamatrix.query.util.CommandContext;
 
 /**
  * Tests {@link RuleChooseAccessPattern}
@@ -58,6 +58,8 @@ public class TestRuleAccessPatternValidation extends TestCase {
     private PlanHints planHints;
     
     private static final boolean DEBUG = false;
+
+	private static CapabilitiesFinder FINDER = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());;
    
     // ################################## FRAMEWORK ################################
     
@@ -106,7 +108,9 @@ public class TestRuleAccessPatternValidation extends TestCase {
 		GroupCollectorVisitor.getGroups(query, groups);
 		
 		//Generate canonical plan
-		PlanNode planNode = GenerateCanonical.generatePlan(query, planHints, METADATA);
+    	RelationalPlanner p = new RelationalPlanner();
+    	p.initialize(query, null, METADATA, FINDER, null, null);
+    	PlanNode planNode = p.generatePlan(query);
 
 		final RuleStack rules = RelationalPlanner.buildRules(planHints);
 
@@ -120,7 +124,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
 	 */
 	private static PlanNode helpExecuteRules(RuleStack rules, PlanNode plan, QueryMetadataInterface metadata, boolean debug)
 		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-
+		CommandContext context = new CommandContext();
 		while(! rules.isEmpty()) {
 			if(debug) {
 				System.out.println("\n============================================================================"); //$NON-NLS-1$
@@ -129,9 +133,8 @@ public class TestRuleAccessPatternValidation extends TestCase {
 			if(debug) {
 				System.out.println("EXECUTING " + rule); //$NON-NLS-1$
 			}
-
-            CapabilitiesFinder finder = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());             
-            plan = rule.execute(plan, metadata, finder, rules, new AnalysisRecord(false, false, debug), null);
+             
+            plan = rule.execute(plan, metadata, FINDER, rules, new AnalysisRecord(false, false, debug), context);
 			if(debug) {
 				System.out.println("\nAFTER: \n" + plan); //$NON-NLS-1$
 			}

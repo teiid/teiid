@@ -72,7 +72,6 @@ import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.sql.visitor.StaticSymbolMappingVisitor;
 
 public class XMLQueryPlanner {
@@ -124,9 +123,6 @@ public class XMLQueryPlanner {
                     prepareQuery(sourceNode, planEnv, command);
                     
                     QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
-                    
-                    List references = QueryUtil.getReferences(command, false);
-                    rsInfo.setReferences(references);    
                     
                     // Plan the result set.
                     ProcessorPlan queryPlan = optimizePlan(command, planEnv);
@@ -362,7 +358,7 @@ public class XMLQueryPlanner {
             QueryUtil.rewriteQuery(contextQuery, planEnv.getGlobalMetadata(), planEnv.context);
 
             //selectively replace correlated references with their actual element symbols
-            List bindings = QueryUtil.getReferences(contextQuery, true);
+            List bindings = QueryUtil.getReferences(contextQuery);
             
             QueryNode modifiedNode = new QueryNode(rsInfo.getResultSetName(), null);
             modifiedNode.setCommand(contextQuery);
@@ -425,13 +421,6 @@ public class XMLQueryPlanner {
         query.setInto(new Into(intoGroupSymbol));
         
         QueryUtil.resolveQuery(query, planEnv.getGlobalMetadata());
-        
-        if (!implicit) {
-	        UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
-	        if (!ReferenceCollectorVisitor.getReferences(ufc.getExpandedCommand()).isEmpty()) {
-	        	throw new QueryPlannerException(QueryExecPlugin.Util.getString("XMLQueryPlanner.staging_table_has_input_set", stageGroupName)); //$NON-NLS-1$
-	        }
-        }
         
         Command cmd = QueryUtil.rewriteQuery(query, planEnv.getGlobalMetadata(), planEnv.context);
                 

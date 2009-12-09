@@ -35,24 +35,24 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
  */
 public class GroupContext implements Cloneable {
     
-    private Collection groups;
+    private Collection<GroupSymbol> groups;
     
-    private GroupContext parent = null;
+    private GroupContext parent;
     
     public GroupContext() {
         this(null, null);
     }
     
-    public GroupContext(GroupContext parent, Collection groups) {
+    public GroupContext(GroupContext parent, Collection<GroupSymbol> groups) {
         this.parent = parent;
         if (groups == null) {
-            this.groups = new LinkedList();
+            this.groups = new LinkedList<GroupSymbol>();
         } else {
             this.groups = groups;    
         }
     }
 
-    public Collection getGroups() {
+    public Collection<GroupSymbol> getGroups() {
         return this.groups;
     }
     
@@ -69,8 +69,8 @@ public class GroupContext implements Cloneable {
      *  
      * @return
      */
-    public List getAllGroups() {
-        LinkedList result = new LinkedList();
+    public List<GroupSymbol> getAllGroups() {
+        LinkedList<GroupSymbol> result = new LinkedList<GroupSymbol>();
         
         GroupContext root = this;
         while (root != null) {
