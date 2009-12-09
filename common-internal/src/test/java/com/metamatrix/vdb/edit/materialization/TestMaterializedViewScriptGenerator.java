@@ -39,7 +39,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.core.util.FileUtil;
-import com.metamatrix.core.util.StringUtilities;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.vdb.materialization.DatabaseDialect;
 import com.metamatrix.vdb.materialization.MaterializedViewScriptGenerator;

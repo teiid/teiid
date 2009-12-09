@@ -50,7 +50,7 @@ $connProps()$
 temp( it ) ::= "$it$_TEMP"
 
 populateLoad() ::= <<
-SELECT $columnNames; separator=", "$ INTO $materializationStageTableName$ FROM $virtualGroupName$ OPTION NOCACHE;>>
+SELECT $columnNames; separator=", "$ INTO $materializationStageTableName$ FROM $virtualGroupName$ OPTION NOCACHE $virtualGroupName$;>>
 
 renameTables() ::= <<
 $rename(old=materializationTableNameInSrc, new=materializationTableNameInSrc:temp())$
