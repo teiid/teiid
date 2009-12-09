@@ -14,6 +14,8 @@ public class GetUserInfoResult  implements java.io.Serializable {
 
     private java.lang.String orgDefaultCurrencyIsoCode;
 
+    private boolean orgDisallowHtmlAttachments;
+
     private boolean orgHasPersonAccounts;
 
     private java.lang.String organizationId;
@@ -53,6 +55,7 @@ public class GetUserInfoResult  implements java.io.Serializable {
            boolean accessibilityMode,
            java.lang.String currencySymbol,
            java.lang.String orgDefaultCurrencyIsoCode,
+           boolean orgDisallowHtmlAttachments,
            boolean orgHasPersonAccounts,
            java.lang.String organizationId,
            boolean organizationMultiCurrency,
@@ -72,6 +75,7 @@ public class GetUserInfoResult  implements java.io.Serializable {
            this.accessibilityMode = accessibilityMode;
            this.currencySymbol = currencySymbol;
            this.orgDefaultCurrencyIsoCode = orgDefaultCurrencyIsoCode;
+           this.orgDisallowHtmlAttachments = orgDisallowHtmlAttachments;
            this.orgHasPersonAccounts = orgHasPersonAccounts;
            this.organizationId = organizationId;
            this.organizationMultiCurrency = organizationMultiCurrency;
@@ -148,6 +152,26 @@ public class GetUserInfoResult  implements java.io.Serializable {
      */
     public void setOrgDefaultCurrencyIsoCode(java.lang.String orgDefaultCurrencyIsoCode) {
         this.orgDefaultCurrencyIsoCode = orgDefaultCurrencyIsoCode;
+    }
+
+
+    /**
+     * Gets the orgDisallowHtmlAttachments value for this GetUserInfoResult.
+     * 
+     * @return orgDisallowHtmlAttachments
+     */
+    public boolean isOrgDisallowHtmlAttachments() {
+        return orgDisallowHtmlAttachments;
+    }
+
+
+    /**
+     * Sets the orgDisallowHtmlAttachments value for this GetUserInfoResult.
+     * 
+     * @param orgDisallowHtmlAttachments
+     */
+    public void setOrgDisallowHtmlAttachments(boolean orgDisallowHtmlAttachments) {
+        this.orgDisallowHtmlAttachments = orgDisallowHtmlAttachments;
     }
 
 
@@ -489,6 +513,7 @@ public class GetUserInfoResult  implements java.io.Serializable {
             ((this.orgDefaultCurrencyIsoCode==null && other.getOrgDefaultCurrencyIsoCode()==null) || 
              (this.orgDefaultCurrencyIsoCode!=null &&
               this.orgDefaultCurrencyIsoCode.equals(other.getOrgDefaultCurrencyIsoCode()))) &&
+            this.orgDisallowHtmlAttachments == other.isOrgDisallowHtmlAttachments() &&
             this.orgHasPersonAccounts == other.isOrgHasPersonAccounts() &&
             ((this.organizationId==null && other.getOrganizationId()==null) || 
              (this.organizationId!=null &&
@@ -551,6 +576,7 @@ public class GetUserInfoResult  implements java.io.Serializable {
         if (getOrgDefaultCurrencyIsoCode() != null) {
             _hashCode += getOrgDefaultCurrencyIsoCode().hashCode();
         }
+        _hashCode += (isOrgDisallowHtmlAttachments() ? Boolean.TRUE : Boolean.FALSE).hashCode();
         _hashCode += (isOrgHasPersonAccounts() ? Boolean.TRUE : Boolean.FALSE).hashCode();
         if (getOrganizationId() != null) {
             _hashCode += getOrganizationId().hashCode();
@@ -622,6 +648,12 @@ public class GetUserInfoResult  implements java.io.Serializable {
         elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgDefaultCurrencyIsoCode"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
         elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("orgDisallowHtmlAttachments");
+        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgDisallowHtmlAttachments"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
+        elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("orgHasPersonAccounts");

@@ -39,6 +39,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _CANT_UNSET_CORP_CURRENCY = "CANT_UNSET_CORP_CURRENCY";
     public static final java.lang.String _CHILD_SHARE_FAILS_PARENT = "CHILD_SHARE_FAILS_PARENT";
     public static final java.lang.String _CIRCULAR_DEPENDENCY = "CIRCULAR_DEPENDENCY";
+    public static final java.lang.String _COMMUNITY_NOT_ACCESSIBLE = "COMMUNITY_NOT_ACCESSIBLE";
     public static final java.lang.String _CUSTOM_CLOB_FIELD_LIMIT_EXCEEDED = "CUSTOM_CLOB_FIELD_LIMIT_EXCEEDED";
     public static final java.lang.String _CUSTOM_ENTITY_OR_FIELD_LIMIT = "CUSTOM_ENTITY_OR_FIELD_LIMIT";
     public static final java.lang.String _CUSTOM_FIELD_INDEX_LIMIT_EXCEEDED = "CUSTOM_FIELD_INDEX_LIMIT_EXCEEDED";
@@ -55,6 +56,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _DUPLICATE_DEVELOPER_NAME = "DUPLICATE_DEVELOPER_NAME";
     public static final java.lang.String _DUPLICATE_EXTERNAL_ID = "DUPLICATE_EXTERNAL_ID";
     public static final java.lang.String _DUPLICATE_MASTER_LABEL = "DUPLICATE_MASTER_LABEL";
+    public static final java.lang.String _DUPLICATE_SENDER_DISPLAY_NAME = "DUPLICATE_SENDER_DISPLAY_NAME";
     public static final java.lang.String _DUPLICATE_USERNAME = "DUPLICATE_USERNAME";
     public static final java.lang.String _DUPLICATE_VALUE = "DUPLICATE_VALUE";
     public static final java.lang.String _EMAIL_NOT_PROCESSED_DUE_TO_PRIOR_ERROR = "EMAIL_NOT_PROCESSED_DUE_TO_PRIOR_ERROR";
@@ -67,6 +69,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _FAILED_ACTIVATION = "FAILED_ACTIVATION";
     public static final java.lang.String _FIELD_CUSTOM_VALIDATION_EXCEPTION = "FIELD_CUSTOM_VALIDATION_EXCEPTION";
     public static final java.lang.String _FIELD_INTEGRITY_EXCEPTION = "FIELD_INTEGRITY_EXCEPTION";
+    public static final java.lang.String _FILTERED_LOOKUP_LIMIT_EXCEEDED = "FILTERED_LOOKUP_LIMIT_EXCEEDED";
     public static final java.lang.String _HTML_FILE_UPLOAD_NOT_ALLOWED = "HTML_FILE_UPLOAD_NOT_ALLOWED";
     public static final java.lang.String _IMAGE_TOO_LARGE = "IMAGE_TOO_LARGE";
     public static final java.lang.String _INACTIVE_OWNER_OR_USER = "INACTIVE_OWNER_OR_USER";
@@ -77,6 +80,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _INVALID_ASSIGNEE_TYPE = "INVALID_ASSIGNEE_TYPE";
     public static final java.lang.String _INVALID_ASSIGNMENT_RULE = "INVALID_ASSIGNMENT_RULE";
     public static final java.lang.String _INVALID_BATCH_OPERATION = "INVALID_BATCH_OPERATION";
+    public static final java.lang.String _INVALID_CONTENT_TYPE = "INVALID_CONTENT_TYPE";
     public static final java.lang.String _INVALID_CREDIT_CARD_INFO = "INVALID_CREDIT_CARD_INFO";
     public static final java.lang.String _INVALID_CROSS_REFERENCE_KEY = "INVALID_CROSS_REFERENCE_KEY";
     public static final java.lang.String _INVALID_CROSS_REFERENCE_TYPE_FOR_FIELD = "INVALID_CROSS_REFERENCE_TYPE_FOR_FIELD";
@@ -94,6 +98,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _INVALID_INET_ADDRESS = "INVALID_INET_ADDRESS";
     public static final java.lang.String _INVALID_LINEITEM_CLONE_STATE = "INVALID_LINEITEM_CLONE_STATE";
     public static final java.lang.String _INVALID_MASTER_OR_TRANSLATED_SOLUTION = "INVALID_MASTER_OR_TRANSLATED_SOLUTION";
+    public static final java.lang.String _INVALID_MESSAGE_ID_REFERENCE = "INVALID_MESSAGE_ID_REFERENCE";
     public static final java.lang.String _INVALID_OPERATION = "INVALID_OPERATION";
     public static final java.lang.String _INVALID_OPERATOR = "INVALID_OPERATOR";
     public static final java.lang.String _INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST = "INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST";
@@ -108,6 +113,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _INVALID_TYPE_ON_FIELD_IN_RECORD = "INVALID_TYPE_ON_FIELD_IN_RECORD";
     public static final java.lang.String _IP_RANGE_LIMIT_EXCEEDED = "IP_RANGE_LIMIT_EXCEEDED";
     public static final java.lang.String _LICENSE_LIMIT_EXCEEDED = "LICENSE_LIMIT_EXCEEDED";
+    public static final java.lang.String _LIGHT_PORTAL_USER_EXCEPTION = "LIGHT_PORTAL_USER_EXCEPTION";
     public static final java.lang.String _LIMIT_EXCEEDED = "LIMIT_EXCEEDED";
     public static final java.lang.String _MALFORMED_ID = "MALFORMED_ID";
     public static final java.lang.String _MANAGER_NOT_DEFINED = "MANAGER_NOT_DEFINED";
@@ -133,6 +139,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _NONUNIQUE_SHIPPING_ADDRESS = "NONUNIQUE_SHIPPING_ADDRESS";
     public static final java.lang.String _NO_APPLICABLE_PROCESS = "NO_APPLICABLE_PROCESS";
     public static final java.lang.String _NO_ATTACHMENT_PERMISSION = "NO_ATTACHMENT_PERMISSION";
+    public static final java.lang.String _NO_INACTIVE_DIVISION_MEMBERS = "NO_INACTIVE_DIVISION_MEMBERS";
     public static final java.lang.String _NO_MASS_MAIL_PERMISSION = "NO_MASS_MAIL_PERMISSION";
     public static final java.lang.String _NUMBER_OUTSIDE_VALID_RANGE = "NUMBER_OUTSIDE_VALID_RANGE";
     public static final java.lang.String _NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED = "NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED";
@@ -161,6 +168,7 @@ public class StatusCode implements java.io.Serializable {
     public static final java.lang.String _UNKNOWN_EXCEPTION = "UNKNOWN_EXCEPTION";
     public static final java.lang.String _UNSPECIFIED_EMAIL_ADDRESS = "UNSPECIFIED_EMAIL_ADDRESS";
     public static final java.lang.String _UNSUPPORTED_APEX_TRIGGER_OPERATON = "UNSUPPORTED_APEX_TRIGGER_OPERATON";
+    public static final java.lang.String _UNVERIFIED_SENDER_ADDRESS = "UNVERIFIED_SENDER_ADDRESS";
     public static final java.lang.String _WEBLINK_SIZE_LIMIT_EXCEEDED = "WEBLINK_SIZE_LIMIT_EXCEEDED";
     public static final java.lang.String _WRONG_CONTROLLER_TYPE = "WRONG_CONTROLLER_TYPE";
     public static final StatusCode ALREADY_IN_PROCESS = new StatusCode(_ALREADY_IN_PROCESS);
@@ -185,6 +193,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode CANT_UNSET_CORP_CURRENCY = new StatusCode(_CANT_UNSET_CORP_CURRENCY);
     public static final StatusCode CHILD_SHARE_FAILS_PARENT = new StatusCode(_CHILD_SHARE_FAILS_PARENT);
     public static final StatusCode CIRCULAR_DEPENDENCY = new StatusCode(_CIRCULAR_DEPENDENCY);
+    public static final StatusCode COMMUNITY_NOT_ACCESSIBLE = new StatusCode(_COMMUNITY_NOT_ACCESSIBLE);
     public static final StatusCode CUSTOM_CLOB_FIELD_LIMIT_EXCEEDED = new StatusCode(_CUSTOM_CLOB_FIELD_LIMIT_EXCEEDED);
     public static final StatusCode CUSTOM_ENTITY_OR_FIELD_LIMIT = new StatusCode(_CUSTOM_ENTITY_OR_FIELD_LIMIT);
     public static final StatusCode CUSTOM_FIELD_INDEX_LIMIT_EXCEEDED = new StatusCode(_CUSTOM_FIELD_INDEX_LIMIT_EXCEEDED);
@@ -201,6 +210,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode DUPLICATE_DEVELOPER_NAME = new StatusCode(_DUPLICATE_DEVELOPER_NAME);
     public static final StatusCode DUPLICATE_EXTERNAL_ID = new StatusCode(_DUPLICATE_EXTERNAL_ID);
     public static final StatusCode DUPLICATE_MASTER_LABEL = new StatusCode(_DUPLICATE_MASTER_LABEL);
+    public static final StatusCode DUPLICATE_SENDER_DISPLAY_NAME = new StatusCode(_DUPLICATE_SENDER_DISPLAY_NAME);
     public static final StatusCode DUPLICATE_USERNAME = new StatusCode(_DUPLICATE_USERNAME);
     public static final StatusCode DUPLICATE_VALUE = new StatusCode(_DUPLICATE_VALUE);
     public static final StatusCode EMAIL_NOT_PROCESSED_DUE_TO_PRIOR_ERROR = new StatusCode(_EMAIL_NOT_PROCESSED_DUE_TO_PRIOR_ERROR);
@@ -213,6 +223,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode FAILED_ACTIVATION = new StatusCode(_FAILED_ACTIVATION);
     public static final StatusCode FIELD_CUSTOM_VALIDATION_EXCEPTION = new StatusCode(_FIELD_CUSTOM_VALIDATION_EXCEPTION);
     public static final StatusCode FIELD_INTEGRITY_EXCEPTION = new StatusCode(_FIELD_INTEGRITY_EXCEPTION);
+    public static final StatusCode FILTERED_LOOKUP_LIMIT_EXCEEDED = new StatusCode(_FILTERED_LOOKUP_LIMIT_EXCEEDED);
     public static final StatusCode HTML_FILE_UPLOAD_NOT_ALLOWED = new StatusCode(_HTML_FILE_UPLOAD_NOT_ALLOWED);
     public static final StatusCode IMAGE_TOO_LARGE = new StatusCode(_IMAGE_TOO_LARGE);
     public static final StatusCode INACTIVE_OWNER_OR_USER = new StatusCode(_INACTIVE_OWNER_OR_USER);
@@ -223,6 +234,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode INVALID_ASSIGNEE_TYPE = new StatusCode(_INVALID_ASSIGNEE_TYPE);
     public static final StatusCode INVALID_ASSIGNMENT_RULE = new StatusCode(_INVALID_ASSIGNMENT_RULE);
     public static final StatusCode INVALID_BATCH_OPERATION = new StatusCode(_INVALID_BATCH_OPERATION);
+    public static final StatusCode INVALID_CONTENT_TYPE = new StatusCode(_INVALID_CONTENT_TYPE);
     public static final StatusCode INVALID_CREDIT_CARD_INFO = new StatusCode(_INVALID_CREDIT_CARD_INFO);
     public static final StatusCode INVALID_CROSS_REFERENCE_KEY = new StatusCode(_INVALID_CROSS_REFERENCE_KEY);
     public static final StatusCode INVALID_CROSS_REFERENCE_TYPE_FOR_FIELD = new StatusCode(_INVALID_CROSS_REFERENCE_TYPE_FOR_FIELD);
@@ -240,6 +252,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode INVALID_INET_ADDRESS = new StatusCode(_INVALID_INET_ADDRESS);
     public static final StatusCode INVALID_LINEITEM_CLONE_STATE = new StatusCode(_INVALID_LINEITEM_CLONE_STATE);
     public static final StatusCode INVALID_MASTER_OR_TRANSLATED_SOLUTION = new StatusCode(_INVALID_MASTER_OR_TRANSLATED_SOLUTION);
+    public static final StatusCode INVALID_MESSAGE_ID_REFERENCE = new StatusCode(_INVALID_MESSAGE_ID_REFERENCE);
     public static final StatusCode INVALID_OPERATION = new StatusCode(_INVALID_OPERATION);
     public static final StatusCode INVALID_OPERATOR = new StatusCode(_INVALID_OPERATOR);
     public static final StatusCode INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST = new StatusCode(_INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST);
@@ -254,6 +267,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode INVALID_TYPE_ON_FIELD_IN_RECORD = new StatusCode(_INVALID_TYPE_ON_FIELD_IN_RECORD);
     public static final StatusCode IP_RANGE_LIMIT_EXCEEDED = new StatusCode(_IP_RANGE_LIMIT_EXCEEDED);
     public static final StatusCode LICENSE_LIMIT_EXCEEDED = new StatusCode(_LICENSE_LIMIT_EXCEEDED);
+    public static final StatusCode LIGHT_PORTAL_USER_EXCEPTION = new StatusCode(_LIGHT_PORTAL_USER_EXCEPTION);
     public static final StatusCode LIMIT_EXCEEDED = new StatusCode(_LIMIT_EXCEEDED);
     public static final StatusCode MALFORMED_ID = new StatusCode(_MALFORMED_ID);
     public static final StatusCode MANAGER_NOT_DEFINED = new StatusCode(_MANAGER_NOT_DEFINED);
@@ -279,6 +293,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode NONUNIQUE_SHIPPING_ADDRESS = new StatusCode(_NONUNIQUE_SHIPPING_ADDRESS);
     public static final StatusCode NO_APPLICABLE_PROCESS = new StatusCode(_NO_APPLICABLE_PROCESS);
     public static final StatusCode NO_ATTACHMENT_PERMISSION = new StatusCode(_NO_ATTACHMENT_PERMISSION);
+    public static final StatusCode NO_INACTIVE_DIVISION_MEMBERS = new StatusCode(_NO_INACTIVE_DIVISION_MEMBERS);
     public static final StatusCode NO_MASS_MAIL_PERMISSION = new StatusCode(_NO_MASS_MAIL_PERMISSION);
     public static final StatusCode NUMBER_OUTSIDE_VALID_RANGE = new StatusCode(_NUMBER_OUTSIDE_VALID_RANGE);
     public static final StatusCode NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED = new StatusCode(_NUM_HISTORY_FIELDS_BY_SOBJECT_EXCEEDED);
@@ -307,6 +322,7 @@ public class StatusCode implements java.io.Serializable {
     public static final StatusCode UNKNOWN_EXCEPTION = new StatusCode(_UNKNOWN_EXCEPTION);
     public static final StatusCode UNSPECIFIED_EMAIL_ADDRESS = new StatusCode(_UNSPECIFIED_EMAIL_ADDRESS);
     public static final StatusCode UNSUPPORTED_APEX_TRIGGER_OPERATON = new StatusCode(_UNSUPPORTED_APEX_TRIGGER_OPERATON);
+    public static final StatusCode UNVERIFIED_SENDER_ADDRESS = new StatusCode(_UNVERIFIED_SENDER_ADDRESS);
     public static final StatusCode WEBLINK_SIZE_LIMIT_EXCEEDED = new StatusCode(_WEBLINK_SIZE_LIMIT_EXCEEDED);
     public static final StatusCode WRONG_CONTROLLER_TYPE = new StatusCode(_WRONG_CONTROLLER_TYPE);
     public java.lang.String getValue() { return _value_;}

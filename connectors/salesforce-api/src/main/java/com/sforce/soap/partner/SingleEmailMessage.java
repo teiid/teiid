@@ -18,9 +18,15 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
 
     private java.lang.String htmlBody;
 
+    private java.lang.String inReplyTo;
+
     private com.sforce.soap.partner.EmailFileAttachment[] fileAttachments;
 
+    private java.lang.String orgWideEmailAddressId;
+
     private java.lang.String plainTextBody;
+
+    private java.lang.String references;
 
     private java.lang.String targetObjectId;
 
@@ -46,8 +52,11 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
            java.lang.String charset,
            java.lang.String[] documentAttachments,
            java.lang.String htmlBody,
+           java.lang.String inReplyTo,
            com.sforce.soap.partner.EmailFileAttachment[] fileAttachments,
+           java.lang.String orgWideEmailAddressId,
            java.lang.String plainTextBody,
+           java.lang.String references,
            java.lang.String targetObjectId,
            java.lang.String templateId,
            java.lang.String[] toAddresses,
@@ -65,8 +74,11 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
         this.charset = charset;
         this.documentAttachments = documentAttachments;
         this.htmlBody = htmlBody;
+        this.inReplyTo = inReplyTo;
         this.fileAttachments = fileAttachments;
+        this.orgWideEmailAddressId = orgWideEmailAddressId;
         this.plainTextBody = plainTextBody;
+        this.references = references;
         this.targetObjectId = targetObjectId;
         this.templateId = templateId;
         this.toAddresses = toAddresses;
@@ -199,6 +211,26 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
 
 
     /**
+     * Gets the inReplyTo value for this SingleEmailMessage.
+     * 
+     * @return inReplyTo
+     */
+    public java.lang.String getInReplyTo() {
+        return inReplyTo;
+    }
+
+
+    /**
+     * Sets the inReplyTo value for this SingleEmailMessage.
+     * 
+     * @param inReplyTo
+     */
+    public void setInReplyTo(java.lang.String inReplyTo) {
+        this.inReplyTo = inReplyTo;
+    }
+
+
+    /**
      * Gets the fileAttachments value for this SingleEmailMessage.
      * 
      * @return fileAttachments
@@ -227,6 +259,26 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
 
 
     /**
+     * Gets the orgWideEmailAddressId value for this SingleEmailMessage.
+     * 
+     * @return orgWideEmailAddressId
+     */
+    public java.lang.String getOrgWideEmailAddressId() {
+        return orgWideEmailAddressId;
+    }
+
+
+    /**
+     * Sets the orgWideEmailAddressId value for this SingleEmailMessage.
+     * 
+     * @param orgWideEmailAddressId
+     */
+    public void setOrgWideEmailAddressId(java.lang.String orgWideEmailAddressId) {
+        this.orgWideEmailAddressId = orgWideEmailAddressId;
+    }
+
+
+    /**
      * Gets the plainTextBody value for this SingleEmailMessage.
      * 
      * @return plainTextBody
@@ -243,6 +295,26 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
      */
     public void setPlainTextBody(java.lang.String plainTextBody) {
         this.plainTextBody = plainTextBody;
+    }
+
+
+    /**
+     * Gets the references value for this SingleEmailMessage.
+     * 
+     * @return references
+     */
+    public java.lang.String getReferences() {
+        return references;
+    }
+
+
+    /**
+     * Sets the references value for this SingleEmailMessage.
+     * 
+     * @param references
+     */
+    public void setReferences(java.lang.String references) {
+        this.references = references;
     }
 
 
@@ -360,12 +432,21 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
             ((this.htmlBody==null && other.getHtmlBody()==null) || 
              (this.htmlBody!=null &&
               this.htmlBody.equals(other.getHtmlBody()))) &&
+            ((this.inReplyTo==null && other.getInReplyTo()==null) || 
+             (this.inReplyTo!=null &&
+              this.inReplyTo.equals(other.getInReplyTo()))) &&
             ((this.fileAttachments==null && other.getFileAttachments()==null) || 
              (this.fileAttachments!=null &&
               java.util.Arrays.equals(this.fileAttachments, other.getFileAttachments()))) &&
+            ((this.orgWideEmailAddressId==null && other.getOrgWideEmailAddressId()==null) || 
+             (this.orgWideEmailAddressId!=null &&
+              this.orgWideEmailAddressId.equals(other.getOrgWideEmailAddressId()))) &&
             ((this.plainTextBody==null && other.getPlainTextBody()==null) || 
              (this.plainTextBody!=null &&
               this.plainTextBody.equals(other.getPlainTextBody()))) &&
+            ((this.references==null && other.getReferences()==null) || 
+             (this.references!=null &&
+              this.references.equals(other.getReferences()))) &&
             ((this.targetObjectId==null && other.getTargetObjectId()==null) || 
              (this.targetObjectId!=null &&
               this.targetObjectId.equals(other.getTargetObjectId()))) &&
@@ -428,6 +509,9 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
         if (getHtmlBody() != null) {
             _hashCode += getHtmlBody().hashCode();
         }
+        if (getInReplyTo() != null) {
+            _hashCode += getInReplyTo().hashCode();
+        }
         if (getFileAttachments() != null) {
             for (int i=0;
                  i<java.lang.reflect.Array.getLength(getFileAttachments());
@@ -439,8 +523,14 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
                 }
             }
         }
+        if (getOrgWideEmailAddressId() != null) {
+            _hashCode += getOrgWideEmailAddressId().hashCode();
+        }
         if (getPlainTextBody() != null) {
             _hashCode += getPlainTextBody().hashCode();
+        }
+        if (getReferences() != null) {
+            _hashCode += getReferences().hashCode();
         }
         if (getTargetObjectId() != null) {
             _hashCode += getTargetObjectId().hashCode();
@@ -507,6 +597,13 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
         elemField.setNillable(true);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("inReplyTo");
+        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "inReplyTo"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
+        elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("fileAttachments");
         elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fileAttachments"));
         elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "EmailFileAttachment"));
@@ -515,9 +612,23 @@ public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implemen
         elemField.setMaxOccursUnbounded(true);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("orgWideEmailAddressId");
+        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgWideEmailAddressId"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
+        elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("plainTextBody");
         elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "plainTextBody"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("references");
+        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "references"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
         elemField.setNillable(true);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
