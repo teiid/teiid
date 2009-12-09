@@ -64,7 +64,9 @@ public class TestClient  {
 
     public static final SimpleDateFormat TSFORMAT = new SimpleDateFormat(
 	    "HH:mm:ss.SSS"); //$NON-NLS-1$
-
+    
+    
+    private Properties overrides = new Properties();
 
     public TestClient() {
 
@@ -100,6 +102,10 @@ public class TestClient  {
 //	    FileUtils.removeDirectoryAndChildren(f);
 //	}
 	
+	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
+	
+	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
+	
 	String scenaios_dir = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_DIR);
 	if (scenaios_dir == null) {
 	    throw new TransactionRuntimeException("scenariodir property was not defined");
@@ -115,6 +121,9 @@ public class TestClient  {
 	
 	// List<String> queryFiles = new ArrayList<String>(files.length);
 	for (int i = 0; i < files.length; i++) {
+	    // overrides need to be reset because all overrides are cleared out after each query set
+	    ConfigPropertyLoader.getInstance().setProperties(overrides);
+	    
 	    runTest(files[i]);
 	}
 	
@@ -129,7 +138,11 @@ public class TestClient  {
 	TestLogger.log("Starting scenario " + scenario_name);
 	
 	Properties sc_props = PropertiesUtils.load(scenariofile.getAbsolutePath());
-//	updateProps(sc_props);
+	
+	Properties sc_updates = getSubstitutedProperties(sc_props);
+	if (!sc_updates.isEmpty()) {
+	    sc_props.putAll(sc_props);
+	}
 	
 	// add the scenario props to the configuration
 	ConfigPropertyLoader.getInstance().setProperties(sc_props);
@@ -250,8 +263,11 @@ public class TestClient  {
 
     }
     
-    private void updateProps(Properties props) {
-	Properties configProps = ConfigPropertyLoader.getInstance().getProperties();
+    private Properties getSubstitutedProperties(Properties props) {
+	Properties or = new Properties();
+	
+	Properties configprops = ConfigPropertyLoader.getInstance().getProperties();
+
 	
 	Iterator it = props.keySet().iterator();
 	while (it.hasNext()) {
@@ -259,14 +275,14 @@ public class TestClient  {
 	    String value = props.getProperty( key );
 	    String newValue = null;
 	    int loc = value.indexOf("${");
-	    while (loc >= -1) {
+	    while (loc > -1) {
 
-		String prop_name = value.substring(loc, value.indexOf("}", loc) );
+		String prop_name = value.substring(loc + 2, value.indexOf("}", loc) );
 		
-		String prop_value = configProps.getProperty(prop_name);
+		String prop_value = configprops.getProperty(prop_name);
 		if (prop_value != null) {
 		
-		    String newvalue = StringUtil.replace(value, "${" + prop_name + "}", prop_value);
+		    newValue = StringUtil.replace(value, "${" + prop_name + "}", prop_value);
 		    
 		    
 		}
@@ -275,11 +291,13 @@ public class TestClient  {
 		
 	    }
 	    if (newValue != null) {
-		ConfigPropertyLoader.getInstance().setProperty(key, newValue);
+		or.setProperty(key, newValue);
 	    }
 	    		
 	}
 	
+	return or;
+
     }
 
     

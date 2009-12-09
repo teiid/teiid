@@ -32,10 +32,12 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 public class TestResultsSummary  {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
@@ -47,7 +49,9 @@ public class TestResultsSummary  {
     private int total_queries = 0;
     private int total_pass = 0;
     private int total_fail = 0;
-    private int total_scenarios = 0;
+    private int total_querysets = 0;
+    private Set<String> failed_queries = new HashSet<String>(10);
+    private Set<String> query_sets = new HashSet<String>(10);
  
     private static PrintStream getSummaryStream(String outputDir,
 	    String summaryName) throws IOException {
@@ -165,24 +169,42 @@ public class TestResultsSummary  {
 	return passFailGenMap;
     }
     
-    private void addTotalPassFailGen(Collection results) {
+    private void addTotalPassFailGen(String scenario_name, Collection results) {
+	int queries = 0;
+	int pass = 0;
+	int fail = 0;
+	
+	String queryset = null;
 
-	total_scenarios++;
+	total_querysets++;
 	for (Iterator resultsItr = results.iterator(); resultsItr.hasNext();) {
 	    TestResult stat = (TestResult) resultsItr.next();
-	    ++total_queries;
+	    
+	    if (queryset == null){
+		queryset = stat.getQuerySetID();
+	    }
+	    
+	    ++queries;
 	    switch (stat.getStatus()) {
 	    case TestResult.RESULT_STATE.TEST_EXCEPTION:
-		++total_fail;
+		++fail;
+		
+		this.failed_queries.add(stat.getQueryID());
 		break;
 	    case TestResult.RESULT_STATE.TEST_SUCCESS:
-		++total_pass;
+		++pass;
 		break;
 	    case TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION:
-		++total_pass;
+		++pass;
 		break;
 	    }
 	}
+	
+	this.query_sets.add("\t" + queryset + "\t\t" + pass + "\t" + fail + "\t" + queries);
+	
+	total_fail = total_fail + fail;
+	total_pass = total_pass + pass;
+	total_queries = total_queries + queries;
 
     }
 
@@ -214,7 +236,7 @@ public class TestResultsSummary  {
 		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
 		throw e;
 	    }
-	    addTotalPassFailGen(testResults);
+	    addTotalPassFailGen(testname, testResults);
 	    // Text File output
 	    printQueryTestResults(outputStream, testStartTS, endTS,
 		    numberOfClients, TestClient.TSFORMAT, testResults);
@@ -295,13 +317,47 @@ public class TestResultsSummary  {
 		outputStream.println("=================="); //$NON-NLS-1$
 		
 		outputStream
-		.println("Number of Scenarios: " + total_scenarios); //$NON-NLS-1$ //$NON-NLS-2$
+		.println("Number of Query Sets: " + total_querysets); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		outputStream.println("=================="); //$NON-NLS-1$
+		outputStream.println("Query Sets"); //$NON-NLS-1$
+		outputStream.println("\t" + "Name" + "\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total"); //$NON-NLS-1$
+
+		if (!this.query_sets.isEmpty()) {
+			
+			for (Iterator<String> it=this.query_sets.iterator(); it.hasNext();) {
+				outputStream
+				.println(it.next()); //$NON-NLS-1$ //$NON-NLS-2$
+		    
+			}
+
+		}	
+		outputStream.println("=================="); //$NON-NLS-1$
+		
+		
 		outputStream
-			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
-		outputStream
-			.println("Number Passed    : " + total_pass); //$NON-NLS-1$ //$NON-NLS-2$
-		outputStream
-			.println("Number Failed    : " + total_fail); //$NON-NLS-1$ //$NON-NLS-2$
+		.println("\t" + "Totals" + "\t\t" + total_pass + "\t" + total_fail + "\t" + total_queries);
+		
+//		outputStream
+//			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
+//		outputStream
+//			.println("Number Passed    : " + total_pass); //$NON-NLS-1$ //$NON-NLS-2$
+//		outputStream
+//			.println("Number Failed    : " + total_fail); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		if (!this.failed_queries.isEmpty()) {
+			outputStream.println("\n\n=================="); //$NON-NLS-1$
+			outputStream.println("Failed Queries"); //$NON-NLS-1$		    
+			
+			for (Iterator<String> it=this.failed_queries.iterator(); it.hasNext();) {
+				outputStream
+				.println("\t - " + it.next()); //$NON-NLS-1$ //$NON-NLS-2$
+		    
+			}
+				    
+			outputStream.println("=================="); //$NON-NLS-1$
+		    
+		}
 
 		    outputStream.close();
 
