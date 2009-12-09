@@ -106,13 +106,13 @@ public interface TransactionQueryTestCase {
     String getTestName();
 
     /**
-     * Called to set the current connection strategy being used.
+     * Called to get the current connection strategy being used.
      * 
-     * @param connStrategy
+     * @return connStrategy
      * 
      * @since
      */
-    void setConnectionStrategy(ConnectionStrategy connStrategy)  throws QueryTestFailedException;
+    ConnectionStrategy getConnectionStrategy() ;
 
     /**
      * Called by the {@link TransactionContainer} prior to testcase processing

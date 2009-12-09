@@ -6,13 +6,10 @@ package org.teiid.test.framework.transaction;
 
 import java.util.Random;
 
-import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
-import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.common.xa.MMXid;
@@ -28,7 +25,7 @@ public class XATransaction extends TransactionContainer {
     protected void before(TransactionQueryTestCase test) {
         try {          
         	xid = createXid();
-        	XAResource xaResource = getXAConnection().getXAResource();
+        	XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
         	xaResource.setTransactionTimeout(120);
         	xaResource.start(xid, XAResource.TMNOFLAGS);
         	debug("Start transaction using XID: " + xid.toString());
@@ -53,9 +50,9 @@ public class XATransaction extends TransactionContainer {
         XAResource xaResource = null;
         boolean exception = false;
         try {
-        	xaResource = getXAConnection().getXAResource();
+        	xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
             
-			xaResource.end(xid, XAResource.TMSUCCESS);
+		xaResource.end(xid, XAResource.TMSUCCESS);
             
             if (!test.exceptionExpected() && xaResource.prepare(xid) == XAResource.XA_OK) {
             	commit = true;
@@ -80,8 +77,4 @@ public class XATransaction extends TransactionContainer {
         }
     }    
     
-  
-    protected XAConnection getXAConnection() throws QueryTestFailedException {
-    	return this.connStrategy.getXAConnection();
-    }
 }

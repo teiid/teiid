@@ -21,7 +21,7 @@ public class OptimisticWrapTransaction extends TransactionContainer {
     }
     
     public void before(TransactionQueryTestCase test) {
-	this.setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OPTIMISTIC);
+	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OPTIMISTIC);
 
     }
     

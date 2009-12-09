@@ -1,5 +1,6 @@
 package org.teiid.test.framework;
 
+import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 
@@ -62,6 +63,18 @@ public interface ConfigPropertyNames {
 	 * 
 	 */
 	public static final String OVERRIDE_DATASOURCES_LOC = "datasourceloc";
+	
+	/**
+	 * If {@link DISABLE_DATASTORES} is specified, then the assumption is that configuration related
+	 * to the datastores is being handled out side of the test framework.
+	 * This include not performing the following:
+	 * <li>{@link DataStore} will not called to configure the data prior to running a test</li>
+	 * <li>The connector bindings will not be configured as part of the {@link ConnectionStrategy} vdb configuration.
+	 * The vdb must have the binding(s) defined. </li>
+	 * 
+	 * The {@link TestClientTransaction} will be using this option because the data is already assumed configured in its respective database.
+	 */
+	public static final String DISABLE_DATASTORES = "disable_datastore";
 	
 	/**
 	 * Connection Type indicates the type of connection (strategy) to use when 

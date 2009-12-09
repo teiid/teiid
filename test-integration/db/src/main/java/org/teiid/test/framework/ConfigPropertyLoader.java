@@ -8,20 +8,17 @@ import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.PropUtils;
 
-import com.metamatrix.common.util.PropertiesUtils;
-
 
 /**
  * The ConfigProperteryLoader will load the configuration properties to be used by a test.
- * These properties only live for the duration of one test.
- * 
- * NOTE: System properties set by the VM will be considered long living.   This is so the 
- * 		-Dusedatasources ( {@link ConfigPropertyNames#USE_DATASOURCES_PROP} ) option can be maintained for the duration of a set of tests. 
+ * Unless a different configuraton file is specified, subsequent loading of the configuration
+ * fill will not occur.  However, <code>overrides</code> that are applied per test
  * 
  * 
  * @author vanhalbert
  *
  */
+
 public class ConfigPropertyLoader {
 
 	/**
@@ -57,7 +54,6 @@ public class ConfigPropertyLoader {
 	    	if (_instance != null && !diff) {
 	    	    return _instance;
 	    	}
-
 	    	if (_instance != null) {
 	    	    cleanup();
 	    	}
@@ -91,20 +87,33 @@ public class ConfigPropertyLoader {
 
 	}
 	
-	public static synchronized void cleanup() {
-	    _instance.overrides.clear();
+	private static synchronized void cleanup() {
+	    
 	    _instance.modelAssignedDatabaseType.clear();
 	    _instance.props.clear();
+
 	    if (_instance.dsfactory != null) {
 		_instance.dsfactory.cleanup();
 	    }
+	    
+	    reset();
+	    
 	    _instance = null;
 	    LAST_CONFIG_FILE=null;
+	}
+	
+	/**
+	 * Called after each test to reset any per test settings.
+	 */
+	public static synchronized void reset() {
+	    _instance.overrides.clear();
+
 	}
 
 	
 	private void initialize() {
-	    loadProperties(LAST_CONFIG_FILE);
+
+	    props = PropUtils.loadProperties("/" + LAST_CONFIG_FILE, null);
 	    dsfactory = new DataSourceFactory(this);
 	}
 	
@@ -129,6 +138,10 @@ public class ConfigPropertyLoader {
 	public void setProperty(String key, String value) {
 	    	overrides.setProperty(key, value);
 	}
+	
+	public void setProperties(Properties props) {
+	    overrides.putAll(props);
+	}
 
 	public Properties getProperties() {
 	    
@@ -148,11 +161,6 @@ public class ConfigPropertyLoader {
 		this.modelAssignedDatabaseType.put(modelname, dbtype);
 	}
 
-	private void loadProperties(String filename) {
-		
-		props = PropUtils.loadProperties("/" + filename, null);
-
-	}
 
 	public static void main(String[] args) {
 		System.setProperty("test", "value");
@@ -166,6 +174,22 @@ public class ConfigPropertyLoader {
 		if (!p.getProperty("test").equalsIgnoreCase("value")) {
 			throw new RuntimeException("Failed to pickup system property");
 		}
+		
+		_instance.setProperty("override", "ovalue");
+		
+		if (!_instance.getProperties().getProperty("override").equalsIgnoreCase("ovalue")) {
+				throw new RuntimeException("Override value wasnt found");
+		}
+		
+		ConfigPropertyLoader.reset();
+		if (_instance.getProperties().getProperty("override") != null) {
+			throw new RuntimeException("Override value was found, should have been removed on reset");
+		}
+		
+		if (!p.getProperty("test").equalsIgnoreCase("value")) {
+			throw new RuntimeException("Failed to pickup system property");
+		}
+		
 		System.out.println("Loaded Config Properties " + p.toString());
 
 	}

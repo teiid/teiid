@@ -4,49 +4,19 @@
  */
 package org.teiid.test.framework;
 
-import java.util.Properties;
-
-import org.teiid.test.framework.connection.ConnectionStrategy;
-import org.teiid.test.framework.connection.ConnectionStrategyFactory;
-import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.core.util.StringUtil;
 
 public abstract class TransactionContainer {
 
-    private boolean debug = false;
-   
- 
     private String testClassName = null;
 
-    protected ConnectionStrategy connStrategy;
-    protected Properties props;
 
     protected TransactionContainer() {
-	ConfigPropertyLoader config = ConfigPropertyLoader.getInstance();
 	
-	try {
-	    this.connStrategy = ConnectionStrategyFactory
-		    .createConnectionStrategy(config);
-	} catch (QueryTestFailedException e) {
-	    // TODO Auto-generated catch block
-	    throw new TransactionRuntimeException(e);
-	}
-	this.props = new Properties();
-	this.props.putAll(this.connStrategy.getEnvironment());
-
     }
 
-
-    public ConnectionStrategy getConnectionStrategy() {
-	return this.connStrategy;
-    }
-    
-    
-    public void setEnvironmentProperty(String key, String value) {
-	this.getConnectionStrategy().getEnvironment().setProperty(key, value);
-    }
 
     protected void before(TransactionQueryTestCase test) {
     }
@@ -63,10 +33,14 @@ public abstract class TransactionContainer {
 	    detail("Start transaction test: " + test.getTestName());
 
 	    try {
-		test.setConnectionStrategy(connStrategy);
 
 		test.setup();
 
+	    } catch (TransactionRuntimeException tre) {  
+			if (!test.exceptionExpected()) {
+			    tre.printStackTrace();
+			}
+        		throw tre;
 	    } catch (Throwable e) {
 		if (!test.exceptionExpected()) {
 		    e.printStackTrace();
@@ -81,15 +55,8 @@ public abstract class TransactionContainer {
 	} finally {
 	    debug("	test.cleanup");
 
-	    try {
 		test.cleanup();
-	    } finally {
 
-		// cleanup all connections created for this test.
-		if (connStrategy != null) {
-		    connStrategy.shutdown();
-		}
-	    }
 	}
 
     }
@@ -120,6 +87,8 @@ public abstract class TransactionContainer {
 
 	    debug("End runTest: " + test.getTestName());
 
+	} catch (TransactionRuntimeException tre) {    
+	    throw tre;
 	} catch (Throwable e) {
 
 	    if (!test.exceptionExpected()) {
@@ -141,14 +110,11 @@ public abstract class TransactionContainer {
 
 
     protected void debug(String message) {
-	if (debug) {
-	    System.out.println("[" + this.testClassName + "] " + message);
-	}
-
+	TestLogger.logDebug("[" + this.testClassName + "] " + message);
     }
 
     protected void detail(String message) {
-	System.out.println("[" + this.testClassName + "] " + message);
+	TestLogger.log("[" + this.testClassName + "] " + message);
     }
 
     protected boolean done() {

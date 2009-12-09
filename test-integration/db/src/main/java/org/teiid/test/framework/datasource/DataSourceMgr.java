@@ -7,13 +7,13 @@ package org.teiid.test.framework.datasource;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
+import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -108,9 +108,9 @@ public class DataSourceMgr {
 	
 	if (dsloc == null || dsloc.indexOf(UNASSIGNEDDSLOC) > -1) {
 	    dsloc = DEFAULT_DATASOURCES_LOC;
-	    System.out.println("Using default datasource loc: " +dsloc);
+	    TestLogger.log("Using default datasource loc: " +dsloc);
 	} else {
-	    System.out.println("Using override for datasources loc: " + dsloc);
+	    TestLogger.log("Using override for datasources loc: " + dsloc);
 	}
 	
 	File[] dirs = findAllChildDirectories(dsloc);
@@ -135,7 +135,7 @@ public class DataSourceMgr {
  
 	}
 
-	System.out.println("Number of total datasource mappings loaded "
+	TestLogger.logDebug("Number of total datasource mappings loaded "
 		+ allDatasourcesMap.size());
 
     }
@@ -178,10 +178,8 @@ public class DataSourceMgr {
 
     }
 
-    private void addDataSource(File datasourcedir, //String dirname, String dirloc,
+    private void addDataSource(File datasourcedir, 
 	    Map<String, DataSource> datasources) {
-	
-//	String dirname = datasourcefile.getName();
 	
 	File dsfile = new File(datasourcedir, "connection.properties");
 	
@@ -189,14 +187,13 @@ public class DataSourceMgr {
 	    return;
 	}
 
-//	String dsfile = "/datasources/" + dirname + "/connection.properties";
 	Properties dsprops = loadProperties(dsfile);
 
 	if (dsprops != null) {
 
 	    DataSource ds = new DataSource(datasourcedir.getName(), "dsgroup", dsprops);
 	    datasources.put(ds.getName(), ds);
-	    System.out.println("Loaded datasource " + ds.getName());
+	    TestLogger.log("Loaded datasource " + ds.getName());
 
 	}
 
@@ -210,13 +207,6 @@ public class DataSourceMgr {
 	    props = PropertiesUtils.load(dsfile.getAbsolutePath());
 	    return props;
 	    
-//	    InputStream in = DataSourceMgr.class.getResourceAsStream(dsfile.getAbsolutePath());
-//	    if (in != null) {
-//		props = new Properties();
-//		props.load(in);
-//		return props;
-//	    }
-//	    return null;
 	} catch (IOException e) {
 	    throw new TransactionRuntimeException(
 		    "Error loading properties from file '" + dsfile.getAbsolutePath() + "'"

@@ -4,15 +4,18 @@
  */
 package org.teiid.test.framework.connection;
 
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
 import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+
 
 /**
  * The DriverConnection strategy that can get connections in standalone mode or
@@ -111,9 +114,9 @@ public class DriverConnection extends ConnectionStrategy {
     private Connection getJDBCConnection(String driver, String url,
 	    String user, String passwd) throws QueryTestFailedException {
 
-	System.out.println("Creating Driver Connection: \"" + url + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+	TestLogger.log("Creating Driver Connection: \"" + url + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 
-	Connection conn;
+	Connection conn = null;
 	try {
 	    // Create a connection
 	    if (user != null && user.length() > 0) {
@@ -121,9 +124,12 @@ public class DriverConnection extends ConnectionStrategy {
 	    } else {
 		conn = DriverManager.getConnection(url);
 	    }
+	    
+	conn = (Connection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {java.sql.Connection.class}, new CloseInterceptor(conn)); 
 
-	} catch (SQLException e) {
-	    throw new QueryTestFailedException(e);
+
+//	} catch (SQLException e) {
+ 
 	} catch (Throwable t) {
 	    t.printStackTrace();
 	    throw new QueryTestFailedException(t.getMessage());

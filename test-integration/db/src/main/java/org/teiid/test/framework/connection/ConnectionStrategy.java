@@ -18,6 +18,8 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.test.framework.ConfigPropertyNames;
+import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceFactory;
@@ -73,13 +75,29 @@ public abstract class ConnectionStrategy {
         return null;
     }
     
+    /**
+     * In certain testcases, the data that being provided is already preconfigured and should not
+     * be touched by the {@link DataStore} processing.
+     * @return
+     */
+    public boolean isDataStoreDisabled() {
+	String disable_config =  getEnvironment().getProperty(ConfigPropertyNames.DISABLE_DATASTORES, null);
+	if (disable_config != null) {
+	    return true;
+	}
+	return false;
+    }
+    
 
     
     
     public Properties getEnvironment() {
     	return env;
     }
-    
+
+    public void setEnvironmentProperty(String key, String value) {
+	this.env.setProperty(key, value);
+    }
    
     class CloseInterceptor implements InvocationHandler {
 
@@ -103,6 +121,11 @@ public abstract class ConnectionStrategy {
    
     void configure() throws QueryTestFailedException  {
     	
+	if (this.isDataStoreDisabled()) {
+	    return;
+	}
+
+	
     	String ac = this.env.getProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
     	this.autoCommit = Boolean.getBoolean(ac);
     	
@@ -127,9 +150,9 @@ public abstract class ConnectionStrategy {
             
             int sleep = 5;
  
-            System.out.println("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
+            TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
             Thread.sleep(1000*sleep);
-            System.out.println("done."); //$NON-NLS-1$
+            TestLogger.log("done."); //$NON-NLS-1$
 
         } catch (Throwable e) {
         	e.printStackTrace();
@@ -155,9 +178,9 @@ public abstract class ConnectionStrategy {
 
 	    String urlString = this.env.getProperty(DriverConnection.DS_URL);
 	    MMJDBCURL url = new MMJDBCURL(urlString);
-	    System.out.println("Trying to match VDB : " + url.getVDBName());
+	    TestLogger.logDebug("Trying to match VDB : " + url.getVDBName());
 
-	    for (Iterator iterator = vdbs.iterator(); iterator.hasNext();) {
+	    for (Iterator<VDB> iterator = vdbs.iterator(); iterator.hasNext();) {
 		VDB v = (VDB) iterator.next();
 		if (v.getName().equalsIgnoreCase(url.getVDBName())) {
 		    vdb = v;
@@ -190,8 +213,7 @@ public abstract class ConnectionStrategy {
 
 		if (ds != null) {
 
-		    System.out
-			    .println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
+		    TestLogger.logInfo("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
 
 		    AdminOptions ao = new AdminOptions(
 			    AdminOptions.OnConflict.OVERWRITE);
@@ -272,9 +294,9 @@ public abstract class ConnectionStrategy {
 	
 	ConnectionStrategy cs = null;
 	if (identifier == null) {
-	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+	    cs = new DataSourceConnection(ds.getProperties(), this.dsFactory);
 	} else {
-	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+	    cs = new DataSourceConnection(ds.getProperties(), this.dsFactory);
 	}
 	
 	ds.setXAConnection(cs);

@@ -7,7 +7,6 @@ package org.teiid.test.framework.transaction;
 
 import java.sql.SQLException;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
@@ -24,13 +23,13 @@ public class LocalTransaction extends TransactionContainer {
 	super();
     }
     protected void before(TransactionQueryTestCase test) {
-	this.setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
 	
         try {
-        	debug("Autocommit: " + this.connStrategy.getAutocommit());
-            test.getConnection().setAutoCommit(this.connStrategy.getAutocommit());
+       		debug("Autocommit: " + test.getConnectionStrategy().getAutocommit());
+            test.getConnection().setAutoCommit(test.getConnectionStrategy().getAutocommit());
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new TransactionRuntimeException(e);
         }        
     }
     
@@ -42,9 +41,10 @@ public class LocalTransaction extends TransactionContainer {
                 
             }
             else {
-                test.getConnection().commit();
+                 test.getConnection().commit();
             }
         } catch (SQLException se) {
+             se.printStackTrace();
         	exception =  true;
         	// if exception, try to trigger the rollback
         	try {
@@ -62,7 +62,7 @@ public class LocalTransaction extends TransactionContainer {
 	            try {
 	                test.getConnection().setAutoCommit(true);
 	            } catch (SQLException e) {
-	                throw new RuntimeException(e);
+	                throw new TransactionRuntimeException(e);
 	            }
         	}
         }

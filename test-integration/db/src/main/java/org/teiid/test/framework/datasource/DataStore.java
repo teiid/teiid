@@ -7,7 +7,6 @@ package org.teiid.test.framework.datasource;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
@@ -15,16 +14,18 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * This class loads the data in the databases specified, to a known state
  */
 public class DataStore {
-
-    /**
+    
+     /**
      * Called at the start of all the tests to initialize the database to ensure
      * it's in the proper state.
      * 
      * @param connStrategy
      */
     public static void initialize(ConnectionStrategy connStrategy) {
-//	ConfigPropertyLoader.cleanup();
-//	ConfigPropertyLoader.getInstance();
+	
+	if (connStrategy.isDataStoreDisabled()) {
+	    return;
+	}
 	try {
 	    load(getConnection("pm1", connStrategy));
 	    
@@ -87,6 +88,9 @@ public class DataStore {
      * @param connStrategy
      */
     public static void setup(ConnectionStrategy connStrategy) {
+	if (connStrategy.isDataStoreDisabled()) {
+	    return;
+	}
 	try {
 	    setUpTest(getConnection("pm1", connStrategy));
 	    

@@ -25,9 +25,8 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
     protected void before(TransactionQueryTestCase test) {
         try {          
         	xid = createXid();
-        	XAResource xaResource = this.getConnectionStrategy().getXAConnection().getXAResource();
-  //      	    getXAConnection().getXAResource();
-        	xaResource.setTransactionTimeout(120);
+        	XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
+         	xaResource.setTransactionTimeout(120);
         	xaResource.start(xid, XAResource.TMNOFLAGS);
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
@@ -46,7 +45,7 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
         boolean delistSuccessful = false;
         boolean commit = false;
         try {
-            XAResource xaResource = this.getConnectionStrategy().getXAConnection().getXAResource();
+            XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
             
 			xaResource.end(xid, XAResource.TMSUCCESS);
             
@@ -59,11 +58,10 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
         } finally {
             try {
                 if (!delistSuccessful || test.rollbackAllways()|| test.exceptionOccurred()) {
-                    this.getConnectionStrategy().getXAConnection().getXAResource().rollback(xid);
-                //getXAConnection().getXAResource().rollback(xid);
-                }
+                    test.getConnectionStrategy().getXAConnection().getXAResource().rollback(xid);
+                 }
                 else if (commit) {
-                    this.getConnectionStrategy().getXAConnection().getXAResource().commit(xid, true);
+                    test.getConnectionStrategy().getXAConnection().getXAResource().commit(xid, true);
                 }            
             } catch (Exception e) {
                 throw new TransactionRuntimeException(e);            

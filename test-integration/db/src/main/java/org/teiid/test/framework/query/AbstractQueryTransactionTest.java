@@ -11,10 +11,13 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.connection.ConnectionStrategy;
+import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
@@ -55,10 +58,13 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 
     public AbstractQueryTransactionTest() {
 	super();
+	
+	this.connStrategy = ConnectionStrategyFactory
+	    .createConnectionStrategy();
     }
 
     public AbstractQueryTransactionTest(String testname) {
-	super();
+	this();
 	this.testname = testname;
     }
 
@@ -67,21 +73,19 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 	
     }
     
-
-    @Override
-    public void setConnectionStrategy(ConnectionStrategy connStrategy) throws QueryTestFailedException {
-	this.connStrategy = connStrategy;
-	
-	this.setConnection(connStrategy.getConnection());
-
-    }
-
+    
 //    @Override
 //    protected void compareResults(BufferedReader resultReader,
 //	    BufferedReader expectedReader) throws IOException {
 //	assertEquals(read(expectedReader, compareResultsCaseSensitive()), read(
 //		resultReader, compareResultsCaseSensitive()));
 //    }
+
+    @Override
+    public ConnectionStrategy getConnectionStrategy() {
+	// TODO Auto-generated method stub
+	return this.connStrategy;
+    }
 
     @Override
     protected void assignExecutionProperties(Statement stmt) {
@@ -107,7 +111,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 		    try {
 			fetchSize = Integer.parseInt(fetchSizeStr);
 			
-			this.print("FetchSize = " + fetchSize);
+			TestLogger.log("FetchSize = " + fetchSize);
 		    } catch (NumberFormatException e) {
 			fetchSize = -1;
 		    // this.print("Invalid fetch size value: " + fetchSizeStr
@@ -123,7 +127,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 		try {
 		    statement.setFetchSize(this.fetchSize);
 		} catch (SQLException e) {
-//		    this.print(e);
+		    TestLogger.log(e.getMessage());
 		}
 	    }
 
@@ -131,7 +135,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 		try {
 		    statement.setQueryTimeout(this.queryTimeout);
 		} catch (SQLException e) {
-//		    this.print(e);
+		    TestLogger.log(e.getMessage());
 		}
 	    }
 	}
@@ -151,15 +155,28 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
      */
     @Override
     public void setup() throws QueryTestFailedException {
-
-	if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
-	    initialized = this.getClass().getSimpleName();
-	    DataStore.initialize(connStrategy);
-	    
+	
+	this.setConnection(connStrategy.getConnection());
+	setupDataStore();
+	
+    }
+    
+    protected void setupDataStore() {
+	
+	
+	if (! this.getConnectionStrategy().isDataStoreDisabled()) {
+	    TestLogger.logDebug("Perform DataStore setup for test: " + this.testname );
+        	if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
+        	    initialized = this.getClass().getSimpleName();
+        	    DataStore.initialize(connStrategy);
+        	    
+        	}
+        	
+        	DataStore.setup(connStrategy);
+	} else {
+	    TestLogger.logDebug("DataStore setup is disabled for test: " + this.testname );
 	}
-	
-	DataStore.setup(connStrategy);
-	
+
     }
 
     /**
@@ -242,6 +259,13 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
      * end of the test.
      */
     public void cleanup() {
+	
+	ConfigPropertyLoader.reset();
+	
+	// cleanup all connections created for this test.
+	if (connStrategy != null) {
+	    connStrategy.shutdown();
+	}
 
     }
 
