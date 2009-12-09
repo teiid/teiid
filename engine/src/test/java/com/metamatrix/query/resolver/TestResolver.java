@@ -1055,6 +1055,10 @@ public class TestResolver {
         Object[] expectedParameterExpressions = new Object[] {new Constant("xyz")};//$NON-NLS-1$
         helpResolveExec("EXEC pm1.sq2(\"in\" = 'xyz')", expectedParameterExpressions);//$NON-NLS-1$
     }
+    
+    @Test public void testExecNamedParamDup() {
+        helpResolveException("EXEC pm1.sq2(\"in\" = 'xyz', \"in\" = 'xyz1')");//$NON-NLS-1$
+    }
 
     /** Should get exception because param name is wrong. */
     @Test public void testExecWrongParamName() {

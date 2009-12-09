@@ -25,6 +25,7 @@ package com.metamatrix.query.resolver.command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -118,9 +119,10 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
         while(oldParamIter.hasNext()) {
             SPParameter param = (SPParameter) oldParamIter.next();
             if(param.getExpression() != null) {
-                
                 if (namedParameters) {
-                    inputExpressions.put(param.getName().toUpperCase(), param.getExpression());
+                    if (inputExpressions.put(param.getName().toUpperCase(), param.getExpression()) != null) {
+                    	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
+                    }
                 } else {
                     inputExpressions.put(new Integer(param.getIndex()), param.getExpression());
                 }
@@ -159,6 +161,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
         // input parameters
         paramIter = clonedMetadataParams.iterator();
         int exprIndex = 1;
+        HashSet<String> expected = new HashSet<String>();
         while(paramIter.hasNext()) {
             SPParameter param = (SPParameter) paramIter.next();
             if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT) {
@@ -172,7 +175,8 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                     if (expr == null) {
                     	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
                     	param.setUsingDefault(true);
-                    }
+                    	expected.add(nameKey);
+                    } 
                     param.setExpression(expr);                    
                 } else {
                     Expression expr = (Expression)inputExpressions.remove(new Integer(exprIndex));
@@ -184,7 +188,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
         
         // Check for leftovers, i.e. params entered by user w/ wrong/unknown names
         if (namedParameters && !inputExpressions.isEmpty()) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", inputExpressions.keySet())); //$NON-NLS-1$
+            throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", inputExpressions.keySet(), expected)); //$NON-NLS-1$
         }
         
         // Create temporary metadata that defines a group based on either the stored proc
