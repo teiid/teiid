@@ -51,7 +51,7 @@ public interface ExpectedResults {
      * will coming from other projects.
      */
 
-    public static final String PROP_EXPECTED_RESULTS_ROOT_DIR = "results.dir.loc";
+    public static final String PROP_EXPECTED_RESULTS_ROOT_DIR = "results.root.dir";
 
 
     
