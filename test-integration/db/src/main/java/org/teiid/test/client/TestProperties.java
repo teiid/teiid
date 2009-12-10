@@ -28,10 +28,9 @@ package org.teiid.test.client;
 public class TestProperties {
     
     /**
-     * PROP_SCENARIO_DIR indicates where to find the scenario properties files.
-     * These files must have the .properties extension.
+     * PROP_SCENARIO_FILE indicates the scenario properties file to load.
      */
-    public static final String PROP_SCENARIO_DIR = "scenariodir";
+    public static final String PROP_SCENARIO_FILE = "scenariofile";
     
     /**
      * PROP_RESULT_MODE controls what to do with the execution results.

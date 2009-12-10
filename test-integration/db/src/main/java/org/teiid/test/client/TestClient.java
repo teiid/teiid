@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.teiid.test.client.ctc.CTCQueryScenario;
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.connection.DataSourceConnection;
@@ -67,6 +68,13 @@ public class TestClient  {
     
     
     private Properties overrides = new Properties();
+    
+    static {
+	if (System.getProperty(ConfigPropertyNames.CONFIG_FILE ) == null) {
+		System.setProperty(ConfigPropertyNames.CONFIG_FILE,"qe-test.properties");
+	}
+
+    }
 
     public TestClient() {
 
@@ -85,7 +93,9 @@ public class TestClient  {
 	
 	try {
     
-	    testScenarios();
+//	    testScenarios();
+	    
+	    runScenario();
 	    
 	} catch (Throwable t) {
 	    t.printStackTrace();
@@ -93,59 +103,118 @@ public class TestClient  {
 	
     }
  
-    private void testScenarios() throws Exception {
-	
-	
-//	String teiid_home = deployProperties.getProperty("teiid.home");
-//	File f = new File(teiid_home);
-//	if (f.exists() && f.isDirectory()) {
-//	    FileUtils.removeDirectoryAndChildren(f);
+//    private void testScenarios() throws Exception {
+//	
+//	
+////	String teiid_home = deployProperties.getProperty("teiid.home");
+////	File f = new File(teiid_home);
+////	if (f.exists() && f.isDirectory()) {
+////	    FileUtils.removeDirectoryAndChildren(f);
+////	}
+//	
+//	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
+//	
+//	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
+//	
+//	String scenaios_dir = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_DIR);
+//	if (scenaios_dir == null) {
+//	    throw new TransactionRuntimeException("scenariodir property was not defined");
 //	}
-	
-	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
-	
-	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
-	
-	String scenaios_dir = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_DIR);
-	if (scenaios_dir == null) {
-	    throw new TransactionRuntimeException("scenariodir property was not defined");
-	}
-	
-	File files[] = FileUtils.findAllFilesInDirectoryHavingExtension(scenaios_dir,
-		".properties");
-	if (files == null || files.length == 0)
-	    throw new QueryTestFailedException((new StringBuilder()).append(
-		    "No scenario files found in directory ").append(scenaios_dir)
-		    .toString());
-	
-	
-	// List<String> queryFiles = new ArrayList<String>(files.length);
-	for (int i = 0; i < files.length; i++) {
-	    // overrides need to be reset because all overrides are cleared out after each query set
-	    ConfigPropertyLoader.getInstance().setProperties(overrides);
-	    
-	    runTest(files[i]);
-	}
-	
-
-    }
+//	
+//	File files[] = FileUtils.findAllFilesInDirectoryHavingExtension(scenaios_dir,
+//		".properties");
+//	if (files == null || files.length == 0)
+//	    throw new QueryTestFailedException((new StringBuilder()).append(
+//		    "No scenario files found in directory ").append(scenaios_dir)
+//		    .toString());
+//	
+//	
+//	// List<String> queryFiles = new ArrayList<String>(files.length);
+//	for (int i = 0; i < files.length; i++) {
+//	    // overrides need to be reset because all overrides are cleared out after each query set
+//	    ConfigPropertyLoader.getInstance().setProperties(overrides);
+//	    
+//	    runTest(files[i]);
+//	}
+//	
+//
+//    }
+    
+//    private void runScenariox() throws Exception {
+//	String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
+//	if (scenario_file == null) {
+//	    throw new TransactionRuntimeException(TestProperties.PROP_SCENARIO_FILE + " property was not defined");
+//	}
+//	
+//	Properties sc_props = PropertiesUtils.load(scenario_file);
+//	Properties sc_updates = getSubstitutedProperties(sc_props);
+//	if (!sc_updates.isEmpty()) {
+//	    sc_props.putAll(sc_props);
+//	}	
+//	
+//	String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenario_file);
+//	
+//	TestLogger.log("Starting scenario " + scenario_name);
+//	
+//	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
+//
+//	
+//	// update the URL with the vdb that is to be used
+//	String url = ConfigPropertyLoader.getInstance().getProperty(DriverConnection.DS_URL);
+//	String vdb_name = ConfigPropertyLoader.getInstance().getProperty(DataSourceConnection.DS_DATABASENAME);
+//	
+//	Assert.assertNotNull(DataSourceConnection.DS_DATABASENAME + " property not set, need it for the vdb name", vdb_name);
+//	url = StringUtil.replace(url, "${vdb}", vdb_name);
+//	
+//	this.overrides.setProperty(DriverConnection.DS_URL, url);
+//	
+//	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
+//	
+//	QueryScenario set = new CTCQueryScenario(scenario_name, ConfigPropertyLoader.getInstance().getProperties());
+//	
+//	TransactionContainer tc = getTransactionContainter();
+//
+//	runTestCase(set,  tc);
+//
+//	TestLogger.log("Completed scenario " + scenario_name);
+//
+//
+//    }
     
     
-    private void runTest(File scenariofile) throws Exception {
+    private void runScenario() throws Exception {
+	
+	
+	
+	String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
+	if (scenario_file == null) {
+	    throw new TransactionRuntimeException(TestProperties.PROP_SCENARIO_FILE + " property was not defined");
+	}
 
-	String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenariofile.getAbsolutePath());
+	String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenario_file);
 	
 	TestLogger.log("Starting scenario " + scenario_name);
 	
-	Properties sc_props = PropertiesUtils.load(scenariofile.getAbsolutePath());
+	Properties sc_props = PropertiesUtils.load(scenario_file);
 	
+	// 1st perform substitution on the scenario file based on the config and system properties file 
+	// because the next substitution is based on the scenario file
 	Properties sc_updates = getSubstitutedProperties(sc_props);
 	if (!sc_updates.isEmpty()) {
-	    sc_props.putAll(sc_props);
+	    sc_props.putAll(sc_updates);
+	    this.overrides.putAll(sc_props);
+	    
 	}
-	
-	// add the scenario props to the configuration
 	ConfigPropertyLoader.getInstance().setProperties(sc_props);
+	
+	// 2nd perform substitution on current configuration - which will be based on the config properties file
+	Properties config_updates = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
+	if (!config_updates.isEmpty()) {
+	    this.overrides.putAll(config_updates);
+	    ConfigPropertyLoader.getInstance().setProperties(config_updates);
+	}
+
+
 	
 	// update the URL with the vdb that is to be used
 	String url = ConfigPropertyLoader.getInstance().getProperty(DriverConnection.DS_URL);
@@ -273,24 +342,33 @@ public class TestClient  {
 	while (it.hasNext()) {
 	    String key = (String) it.next();
 	    String value = props.getProperty( key );
-	    String newValue = null;
+	    String newValue = value;
 	    int loc = value.indexOf("${");
+	    boolean sub = true;
 	    while (loc > -1) {
 
-		String prop_name = value.substring(loc + 2, value.indexOf("}", loc) );
+		int endidx = newValue.indexOf("}", loc);
+		String prop_name = newValue.substring(loc + 2, endidx );
 		
-		String prop_value = configprops.getProperty(prop_name);
+		String prop_value = or.getProperty(prop_name);
+		if (prop_value == null) {
+			prop_value = configprops.getProperty(prop_name);
+		}	
 		if (prop_value != null) {
 		
-		    newValue = StringUtil.replace(value, "${" + prop_name + "}", prop_value);
-		    
-		    
+		    newValue = StringUtil.replace(newValue, "${" + prop_name + "}", prop_value);
+		    sub = true;
+		    		    
 		}
-		loc = value.indexOf("${", loc + 1);
+		if (newValue.length() > loc + 1 ) {
+		    loc = newValue.indexOf("${", loc + 1);
+		} else {
+		    loc = -1;
+		}
 		
 		
 	    }
-	    if (newValue != null) {
+	    if (sub) {
 		or.setProperty(key, newValue);
 	    }
 	    		
