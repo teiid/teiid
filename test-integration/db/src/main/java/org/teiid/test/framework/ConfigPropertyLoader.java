@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.test.framework.datasource.DataSourceFactory;
+import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.PropUtils;
 
@@ -152,6 +153,22 @@ public class ConfigPropertyLoader {
 	    
 		return p;
 	}
+
+        /**
+         * In certain testcases, the data that being provided is already
+         * preconfigured and should not be touched by the {@link DataStore}
+         * processing.
+         * 
+         * @return
+         */
+        public boolean isDataStoreDisabled() {
+        	String disable_config = this.getProperty(
+        		ConfigPropertyNames.DISABLE_DATASTORES);
+        	if (disable_config != null) {
+        	    return true;
+        	}
+        	return false;
+        }
 	
 	public Map<String, String> getModelAssignedDatabaseTypes() {
 		return this.modelAssignedDatabaseType;

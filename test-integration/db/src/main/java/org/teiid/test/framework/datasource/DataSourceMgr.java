@@ -103,6 +103,9 @@ public class DataSourceMgr {
     }
 
     private void loadDataSourceMappings() throws QueryTestFailedException {
+	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
+	    return;
+	}
 
 	String dsloc = ConfigPropertyLoader.getInstance().getProperty(ConfigPropertyNames.OVERRIDE_DATASOURCES_LOC);
 	

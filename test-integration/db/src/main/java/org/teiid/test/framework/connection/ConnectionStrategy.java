@@ -18,12 +18,13 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
-import org.teiid.test.framework.ConfigPropertyNames;
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataSourceMgr;
+import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -81,12 +82,8 @@ public abstract class ConnectionStrategy {
      * @return
      */
     public boolean isDataStoreDisabled() {
-	String disable_config =  getEnvironment().getProperty(ConfigPropertyNames.DISABLE_DATASTORES, null);
-	if (disable_config != null) {
-	    return true;
+	return ConfigPropertyLoader.getInstance().isDataStoreDisabled();
 	}
-	return false;
-    }
     
 
     
