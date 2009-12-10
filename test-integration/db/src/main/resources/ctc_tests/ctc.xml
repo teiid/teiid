@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ctc" default="main" >
+
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+	  <classpath>
+	  	<pathelement path="${maven.runtime.classpath}" />
+	  </classpath>
+	</taskdef>
+	
+	<target name="main" depends="init" if="" unless="" description="create all property files">
+		<antcall target="run.all.test" inheritall="true" />
+		<antcall target="run.single.test" inheritall="true" />
+	</target>
+
+
+	<target name="init" depends="" >
+		<path id="test.classpath">
+			<pathelement path="${maven.runtime.classpath}" />
+			<pathelement location="${basedir}/lib/*.jar" />
+		</path>
+		
+		
+		<available file="${scenario.dir}" type="dir" property="dir.exist"/>
+		<fail unless="dir.exist" message="Scenario directory ${scenario.dir} does not exist" />
+
+		<!--		
+		<pathconvert targetos="unix" property="install_dir" >
+           		 <map from="\" to="/"/>
+           		<path location="${install.dir}"/>
+        	 </pathconvert>
+		-->
+		<!--   
+			Load the default connection properties.   These connection properties can be used in cases
+			when automation isn't being used.
+			Its expected that when run from Hudson, that the properties will set at the system level
+			
+			<loadproperties srcFile="${install_dir}/bin/connection.properties"/>
+		-->
+		
+		
+		<condition property="all">
+			<not>
+				<isset property="single"/>
+			</not>
+		</condition>
+
+	</target>
+
+    <target name="run.all.test"
+    		if="all" >
+    	<echo>Executing ALL Scenarios</echo>
+    	
+    	<for param="file">
+    	  <path>
+    	    <fileset dir="${scenario.dir}" includes="*.properties"/>
+    	  </path>
+    	  <sequential>
+    	  	<antcall target="exec.scenario" inheritall="true" >
+   				<param name="scenario.file" value="@{file}" />
+			</antcall>
+	  	
+    	  	<!--
+    		<antcall target="exec.scenario" inheritall="true" >
+    			<param name="scenario.file" value="@{file}" />
+			</antcall>
+	  	-->
+    	  </sequential>
+    	</for>
+    	
+    </target>
+	
+    <target name="run.single.test"
+    		if="single" >
+    	<echo>Executing Scenario ${test.scenario}</echo>
+		<property name="include.what" value="${scenario.dir}/${scenario.file}" />
+
+        <iterate target="run.scenario"/>
+    </target>
+	
+	<target name="exec.scenario" depends="" >
+
+		
+		<echo>Scenario property file ${scenario.file}</echo>
+		<!--
+		jvm="${java.home}/bin/java"
+		-->
+
+          <java classname="org.teiid.test.client.TestClient" fork="true" >
+          	<classpath>
+        		<pathelement path="${maven.runtime.classpath}" />
+                <fileset dir="${proj.dir}/lib">
+                  <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+            <jvmarg value="-Xmx256m" />
+    	    <jvmarg value="-Dmetamatrix.sockets=true" />
+          	<jvmarg value="-Dconfig=${config.file}" />
+          	<jvmarg value="-Dscenariofile=${scenario.file}" />
+          	<jvmarg value="-Dqueryset.artifacts.dir=${queryset.artifacts.dir}" />
+        	<jvmarg value="-Dvdb.artifacts.dir=${vdb.artifacts.dir}" />
+
+      	  </java>
+
+	</target>
+
+
+</project>		
