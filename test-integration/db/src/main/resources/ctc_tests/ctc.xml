@@ -93,7 +93,7 @@
                   <include name="**/*.jar"/>
                 </fileset>
             </classpath>
-            <jvmarg value="-Xmx256m" />
+            <jvmarg value="-Xmx1024m" />
     	    <jvmarg value="-Dmetamatrix.sockets=true" />
           	<jvmarg value="-Dconfig=${config.file}" />
           	<jvmarg value="-Dscenariofile=${scenario.file}" />
