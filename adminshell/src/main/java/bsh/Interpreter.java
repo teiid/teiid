@@ -89,6 +89,8 @@ import java.lang.reflect.InvocationTargetException;
 	<p>
 
 	See the BeanShell User's Manual for more information.
+	
+	PrintStackTrace were removed from run method, from original version.
 */
 public class Interpreter 
 	implements Runnable, ConsoleInterface,Serializable
@@ -493,14 +495,16 @@ public class Interpreter
             catch(InterpreterError e)
             {
                 error("Internal Error: " + e.getMessage());
-                e.printStackTrace();
+                if ( DEBUG ) {
+                	e.printStackTrace();
+                }
                 if(!interactive)
                     eof = true;
             }
             catch(TargetError e)
             {
                 error("// Uncaught Exception: " + e );
-				if ( e.inNativeCode() )
+				if ( DEBUG && e.inNativeCode() )
 					e.printStackTrace( DEBUG, err );
                 if(!interactive)
                     eof = true;

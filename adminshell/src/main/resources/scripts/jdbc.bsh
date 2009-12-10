@@ -182,7 +182,7 @@ void executeBatch(String[] cmds) throws SQLException {
 
 
 int FETCHSIZE=1000;
-int MAXROWS=500;
+int MAXROWS=0;
 
 private void setParameters(Object[] params) {
     if (params != null && params.length > 0) {
