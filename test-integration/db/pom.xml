@@ -139,62 +139,6 @@
 				<version>1.0</version>
 			</dependency>
 
-<!--
-
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-common-internal</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-common-core</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-text</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-jdbc</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
-		
-
- 
-
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-connector-sdk</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>	  
-		
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-metadata</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>	
-		
-	<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-connector-sdk</artifactId>
-			<version>${project.version}</version>
-		</dependency>	 
-		
-   
-
--->
 
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -210,11 +154,6 @@
 			<type>test-jar</type>
 		</dependency>
 
-<!--
-	</dependencies>
-
-	<dependencies>
--->
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
@@ -242,6 +181,24 @@
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
 			<version>${derby.version}</version>
+
+		</dependency>
+
+		<dependency>
+			<groupId>ant-contrib</groupId>
+			<artifactId>cpptasks</artifactId>
+			<version>1.0b3</version>
+		</dependency>
+		<dependency>
+			<groupId>ant-contrib</groupId>
+			<artifactId>ant-contrib</artifactId>
+			<version>1.0b3</version>
+ 			<exclusions>
+                            <exclusion>
+                                <groupId>ant</groupId>
+                                <artifactId>ant</artifactId>
+                            </exclusion>
+    		</exclusions>
 
 		</dependency>
 
@@ -280,6 +237,9 @@
 
 	</dependencies>	
 
+
+
+
 	 <profiles>
 	    <profile>
 	      <id>default</id>
@@ -314,14 +274,17 @@
 		            <property>
 		              <name>usedatasources</name>
 		              <value>${usedatasources}</value>
+		            </property>
+		            <property>
 		              <name>datasourceloc</name>
 		              <value>${datasourceloc}</value>
 		            </property>
 		          </systemProperties>
 
 
-					<forkMode>always</forkMode>
+					
 <!--
+<forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
 	-->				
 					<includes>
@@ -341,7 +304,23 @@
 			</plugin>
 
 			</plugins>
+
 	      </build>
+
+<!-- 		        <version>2.4.2</version> -->
+
+		  <reporting>
+		    <plugins>
+		      <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-surefire-report-plugin</artifactId>
+
+		        <configuration>
+		           <outputDirectory>${basedir}/target/newsite</outputDirectory>
+		        </configuration>
+		      </plugin>
+		    </plugins>
+		  </reporting>
 	    </profile>
 
 	    <profile>
@@ -377,6 +356,8 @@
 		            <property>
 		              <name>usedatasources</name>
 		              <value>${usedatasources}</value>
+		            </property>
+		            <property>
 		              <name>datasourceloc</name>
 		              <value>${datasourceloc}</value>
 		            </property>
@@ -516,6 +497,54 @@
 	        </plugins>
 	      </build>
 	    </profile>
+
+
+		<profile>
+	      <id>testclient</id>
+    		<activation>
+      			<property>
+       		 		<name>scenario.dir</name>
+      			</property>
+    		</activation>
+			<build>
+				<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>${apache.ant.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>run-client-test</id>
+						<phase>integration-test</phase>
+						<configuration>
+							<tasks>
+								<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
+								<property name="config.file"  value="qe-test.properties"></property>
+								<property name="scenario.dir"  value="${scenario.dir}"></property>
+								<property name="queryset.artifacts.dir"  value="${queryset.artifacts.dir}"></property>
+								<property name="vdb.artifacts.dir"  value="${vdb.artifacts.dir}"></property>
+								<property name="proj.dir" value="${project.basedir}" />
+								<ant antfile="src/main/resources/ctc_tests/ctc.xml" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					
+				</executions>
+			</plugin>
+				</plugins>
+			</build>
+
+		</profile>
+
 
 	</profiles>
 
