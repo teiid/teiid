@@ -89,15 +89,13 @@ import java.lang.reflect.InvocationTargetException;
 	<p>
 
 	See the BeanShell User's Manual for more information.
-	
-	PrintStackTrace were removed from run method, from original version.
 */
 public class Interpreter 
 	implements Runnable, ConsoleInterface,Serializable
 {
 	/* --- Begin static members --- */
 
-	public static final String VERSION = "2.0b5";
+	public static final String VERSION = "2.0b4";
 	/*
 		Debug utils are static so that they are reachable by code that doesn't
 		necessarily have an interpreter reference (e.g. tracing in utils).
@@ -251,7 +249,7 @@ public class Interpreter
 		this( new StringReader(""), 
 			System.out, System.err, false, null );
         evalOnly = true;
-		setu( "bsh.evalOnly", Primitive.TRUE );
+		setu( "bsh.evalOnly", new Primitive(true) );
     }
 
 	// End constructors
@@ -297,9 +295,9 @@ public class Interpreter
 		}
 
 		// bsh.interactive
-		setu( "bsh.interactive", interactive ? Primitive.TRUE : Primitive.FALSE );
+		setu( "bsh.interactive", new Primitive(interactive) );
 		// bsh.evalOnly
-		setu( "bsh.evalOnly", evalOnly ? Primitive.TRUE : Primitive.FALSE );
+		setu( "bsh.evalOnly", new Primitive(evalOnly) );
 	}
 
 	/**
@@ -495,12 +493,15 @@ public class Interpreter
             catch(InterpreterError e)
             {
                 error("Internal Error: " + e.getMessage());
+                e.printStackTrace();
                 if(!interactive)
                     eof = true;
             }
             catch(TargetError e)
             {
                 error("// Uncaught Exception: " + e );
+				if ( e.inNativeCode() )
+					e.printStackTrace( DEBUG, err );
                 if(!interactive)
                     eof = true;
 				setu("$_e", e.getTarget());
@@ -635,14 +636,6 @@ public class Interpreter
                 if (localInterpreter.get_jjtree().nodeArity() > 0)
                 {
                     node = (SimpleNode)localInterpreter.get_jjtree().rootNode();
-					// quick filter for when we're running as a compiler only
-					if ( getSaveClasses()
-						&& !(node instanceof BSHClassDeclaration)
-						&& !(node instanceof BSHImportDeclaration )
-						&& !(node instanceof BSHPackageDeclaration )
-					)
-						continue;
-
 					// nodes remember from where they were sourced
 					node.setSourceFile( sourceFileInfo );
 
@@ -831,13 +824,12 @@ public class Interpreter
 		Get the value of the name.
 		name may be any value. e.g. a variable or field
 	*/
-    public Object get( String name ) throws EvalError
-	{
+    public Object get( String name ) throws EvalError {
 		try {
 			Object ret = globalNameSpace.get( name, this );
 			return Primitive.unwrap( ret );
-		} catch ( UtilEvalError e ) {
-			throw e.toEvalError( SimpleNode.JAVACODE, new CallStack() );
+		} catch ( UtilEvalError e ) { 
+			throw e.toEvalError( SimpleNode.JAVACODE, new CallStack() ); 
 		}
 	}
 
@@ -901,7 +893,7 @@ public class Interpreter
         set(name, new Primitive(value));
 	}
     public void set(String name, boolean value) throws EvalError {
-        set(name, value ? Primitive.TRUE : Primitive.FALSE);
+        set(name, new Primitive(value));
 	}
 
 	/**
@@ -1238,13 +1230,4 @@ public class Interpreter
 	public boolean getShowResults()  {
 		return showResults;
 	}
-
-	public static String getSaveClassesDir() {
-		return System.getProperty("saveClasses");
-	}
-
-	public static boolean getSaveClasses()  {
-		return getSaveClassesDir() != null;
-	}
 }
-
