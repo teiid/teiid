@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +41,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
+
 public class TestResultsSummary  {
+    
+    private static final String PROP_SUMMARY_PRT_DIR="summarydir";
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
 
@@ -50,8 +56,8 @@ public class TestResultsSummary  {
     private int total_pass = 0;
     private int total_fail = 0;
     private int total_querysets = 0;
-    private Set<String> failed_queries = new HashSet<String>(10);
-    private Set<String> query_sets = new HashSet<String>(10);
+    private List<String> failed_queries = new ArrayList<String>();
+    private List<String> query_sets = new ArrayList<String>(10);
  
     private static PrintStream getSummaryStream(String outputDir,
 	    String summaryName) throws IOException {
@@ -304,6 +310,11 @@ public class TestResultsSummary  {
     }
     
     public void printTotals(String outputDir, String scenario_name) throws Exception {
+	
+	String summarydir = ConfigPropertyLoader.getInstance().getProperty(PROP_SUMMARY_PRT_DIR);
+	if (summarydir != null) {
+	    outputDir = summarydir;
+	}
 
 	    PrintStream outputStream = null;
 	    try {
@@ -324,6 +335,9 @@ public class TestResultsSummary  {
 		outputStream.println("\t" + "Name" + "\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total"); //$NON-NLS-1$
 
 		if (!this.query_sets.isEmpty()) {
+		    // sort so that like failed queries are show together
+			Collections.sort(this.query_sets);
+
 			
 			for (Iterator<String> it=this.query_sets.iterator(); it.hasNext();) {
 				outputStream
@@ -346,6 +360,9 @@ public class TestResultsSummary  {
 //			.println("Number Failed    : " + total_fail); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		if (!this.failed_queries.isEmpty()) {
+		    // sort so that like failed queries are show together
+			Collections.sort(this.failed_queries);
+		    
 			outputStream.println("\n\n=================="); //$NON-NLS-1$
 			outputStream.println("Failed Queries"); //$NON-NLS-1$		    
 			
