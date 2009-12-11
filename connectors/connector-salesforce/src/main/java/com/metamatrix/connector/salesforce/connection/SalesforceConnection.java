@@ -40,12 +40,15 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
+import com.metamatrix.connector.salesforce.execution.DeleteExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.DeletedResult;
+import com.metamatrix.connector.salesforce.execution.InsertExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.ProcedureExecutionParentImpl;
 import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
-import com.metamatrix.connector.salesforce.execution.UpdateExecutionParent;
+import com.metamatrix.connector.salesforce.execution.UpdateExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdatedResult;
 import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
 
 public class SalesforceConnection extends BasicConnection {
 
@@ -99,7 +102,15 @@ public class SalesforceConnection extends BasicConnection {
 	public UpdateExecution createUpdateExecution(ICommand command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		return new UpdateExecutionParent(command, this, metadata, executionContext, connectorEnv);
+		UpdateExecution result = null;
+		if(command instanceof org.teiid.connector.language.IDelete) {
+			result = new DeleteExecutionImpl(command, this, metadata, executionContext, connectorEnv);
+		} else if (command instanceof org.teiid.connector.language.IInsert) {
+			result = new InsertExecutionImpl(command, this, metadata, executionContext, connectorEnv);
+		} else if (command instanceof org.teiid.connector.language.IUpdate) {
+			result = new UpdateExecutionImpl(command, this, metadata, executionContext, connectorEnv);
+		}
+		return result;
 
 	}
 	
@@ -157,5 +168,12 @@ public class SalesforceConnection extends BasicConnection {
 	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
 			Calendar endCalendar) throws ConnectorException {
 		return connection.getDeleted(objectName, startCalendar, endCalendar);
+	}
+	
+	public QueryResult retrieve(String fieldList, String sObjectType, String[] ids) throws ConnectorException {
+		SObject[] objects = connection.retrieve(fieldList, sObjectType, ids);
+		QueryResult result = new QueryResult(true, "teiid_created_result",
+		           objects, objects.length);
+		return result;
 	}
 }

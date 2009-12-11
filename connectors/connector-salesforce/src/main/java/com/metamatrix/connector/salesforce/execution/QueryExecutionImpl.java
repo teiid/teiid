@@ -118,18 +118,28 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 		connectorEnv.getLogger().logInfo(
 				getLogPreamble() + "Incoming Query: " + query.toString());
 		IFrom from = ((IQuery)query).getFrom();
+		String finalQuery;
 		if(from.getItems().get(0) instanceof IJoin) {
 			visitor = new JoinQueryVisitor(metadata);
+			visitor.visitNode(query);
+			finalQuery = visitor.getQuery().trim();
+			connectorEnv.getLogger().logInfo(
+					getLogPreamble() + "Executing Query: " + finalQuery);
+			
+			results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 		} else {
 			visitor = new SelectVisitor(metadata);
+			visitor.visitNode(query);
+			if(visitor.canRetrieve()) {
+				results = connection.retrieve(visitor.getRetrieveFieldList(),
+						visitor.getTableName(), visitor.getIdInCriteria());
+			} else {
+				finalQuery = visitor.getQuery().trim();
+				connectorEnv.getLogger().logInfo(
+						getLogPreamble() + "Executing Query: " + finalQuery);
+				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
+			}
 		}
-		visitor.visitNode(query);
-		String finalQuery;
-		finalQuery = visitor.getQuery().trim();
-		connectorEnv.getLogger().logInfo(
-				getLogPreamble() + "Executing Query: " + finalQuery);
-		
-		results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 	}
 	
 	@SuppressWarnings("unchecked")

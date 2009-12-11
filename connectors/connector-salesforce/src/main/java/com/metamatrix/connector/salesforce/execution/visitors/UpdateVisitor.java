@@ -21,8 +21,6 @@
  */
 package com.metamatrix.connector.salesforce.execution.visitors;
 
-import java.util.Iterator;
-
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;

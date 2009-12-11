@@ -330,4 +330,14 @@ public class ConnectionImpl {
 			throw new ConnectorException(e, e.getMessage());
 		}
 	}
+	
+	public SObject[] retrieve(String fieldList, String sObjectType, String[] ids) throws ConnectorException {
+		try {
+			return binding.retrieve(fieldList, sObjectType, ids);
+		} catch (ApiFault e) {
+			throw new ConnectorException(e.getMessage());
+		} catch (RemoteException e) {
+			throw new ConnectorException(e, e.getMessage());
+		}
+	}
 }

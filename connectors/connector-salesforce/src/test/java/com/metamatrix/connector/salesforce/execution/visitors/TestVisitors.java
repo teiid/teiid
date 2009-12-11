@@ -132,23 +132,37 @@ public class TestVisitors {
 		visitor.visit(command);
 		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE (NOT (Account.AccountName LIKE '%foo')) OR (Account.Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
+
 	
-	// I can't really write this test until I see what teiid is going to pass the connectro based upon the user query.
-	// SELECT Account.Name AS c_0, Contact.Name AS c_1 FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId
+	@Test public void testIN() throws Exception {
+		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where Industry IN (1,2,3)"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertFalse(visitor.hasOnlyIDCriteria());
+		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE Industry IN('1','2','3')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		
+	}
+
+	@Test public void testOnlyIDsIN() throws Exception {
+		// this can resolve to a better performing retrieve call
+		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where ID IN (1,2,3)"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertTrue(visitor.hasOnlyIdInCriteria());
+		assertEquals("Account", visitor.getTableName());
+		assertEquals("Account.id, Account.AccountName, Account.Stuff, Account.Industry", visitor.getRetrieveFieldList());
+		assertEquals(new String[]{"1", "2", "3"}, visitor.getIdInCriteria());	
+	}
+	
 	@Test public void testJoin() throws Exception {
 		IQuery command = (IQuery)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
-		
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Account.AccountName, Contact.ContactName FROM Contact", visitor.getQuery().toString().trim()); //$NON-NLS-1$
-		// SELECT Contact.Id, Contact.Name, Account.Name FROM Contact WHERE Account.Industry != 'media'
-		// Looks like using q names will work, but we need to distinguish between the parent and child table somehow cannot send
-		// SELECT Contact.Id, Contact.Name, Account.Name FROM Contact, Account WHERE Account.Industry != 'media'
 	}
 	
 	@Test public void testJoin2() throws Exception {
 		IQuery command = (IQuery)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Account LEFT OUTER JOIN Contact ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
-		
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Account.AccountName, (SELECT Contact.ContactName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$

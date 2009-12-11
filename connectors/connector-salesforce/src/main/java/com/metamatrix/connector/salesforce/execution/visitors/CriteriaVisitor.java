@@ -76,6 +76,10 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     protected Group table;
     boolean onlyIDCriteria;
     protected Boolean queryAll = Boolean.FALSE;
+	
+    // support for invoking a retrieve when possible.
+    protected IInCriteria idInCriteria = null;
+	
 
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
@@ -322,8 +326,11 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     private void appendCriteria( IInCriteria criteria ) throws ConnectorException {
         StringBuffer queryString = new StringBuffer();
-        queryString.append(' ');
-        queryString.append(getValue(criteria.getLeftExpression()));
+        IExpression leftExp = criteria.getLeftExpression();
+        if(isIdColumn(leftExp)) {
+        	idInCriteria  = criteria;
+        }
+        queryString.append(getValue(leftExp));
         queryString.append(' ');
         if (criteria.isNegated()) {
             queryString.append("NOT ");
@@ -354,7 +361,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    private String getValue( IExpression expr ) throws ConnectorException {
+    protected String getValue( IExpression expr ) throws ConnectorException {
         String result;
         if (expr instanceof IElement) {
             IElement element = (IElement)expr;
@@ -378,7 +385,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
         List<Element> columnIds = table.getChildren();
         for (Element element : columnIds) {
-            String name = table.getName() + '.' + element.getName();
+            String name = table.getName() + '.' + element.getNameInSource();
             columnElementsByName.put(name, element);
 
             // influences queryAll behavior

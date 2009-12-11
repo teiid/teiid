@@ -51,6 +51,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	private int idIndex = -1; // index of the ID select symbol.
 	protected List<ISelectSymbol> selectSymbols;
 	protected StringBuffer limitClause = new StringBuffer();
+	private Boolean supportsRetrieve;
 	
 	public SelectVisitor(RuntimeMetadata metadata) {
 		super(metadata);
@@ -112,6 +113,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			if(fromItem instanceof IGroup) {
 				table = ((IGroup)fromItem).getMetadataObject();
 		        String supportsQuery = (String)table.getProperties().get(Constants.SUPPORTS_QUERY);
+		        supportsRetrieve = Boolean.valueOf((String)table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
 		        if (!Boolean.valueOf(supportsQuery)) {
 		            throw new ConnectorException(table.getNameInSource() + " "
 		                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
@@ -196,6 +198,39 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
 	public Boolean getQueryAll() {
 		return queryAll;
+	}
+
+
+	public String getRetrieveFieldList() throws ConnectorException {
+		assertRetrieveValidated();
+		StringBuffer result = new StringBuffer();
+		addSelectSymbols(table.getNameInSource(), result);
+		return result.toString();
+	}
+
+
+	public String[] getIdInCriteria() throws ConnectorException {
+		assertRetrieveValidated();
+		List<IExpression> expressions = this.idInCriteria.getRightExpressions();
+		String[] result = new String[expressions.size()];
+		for(int i = 0; i < expressions.size(); i++) {
+			result[i] = getValue(expressions.get(i));
+		}      
+		return result;
+	}
+
+	private void assertRetrieveValidated() throws AssertionError {
+		if(!hasOnlyIDCriteria()) {
+			throw new AssertionError("Must call hasOnlyIdInCriteria() before this method");
+		}
+	}
+
+	public boolean hasOnlyIdInCriteria() {
+		return hasOnlyIDCriteria() && idInCriteria != null;
+	}
+	
+	public boolean canRetrieve() {
+		return supportsRetrieve && hasOnlyIDCriteria();
 	}
 
 }

@@ -45,5 +45,7 @@ public interface Constants {
 	public static final String RESTRICTED_MULTISELECT_PICKLIST_TYPE = "restrictedmultiselectpicklist"; //$NON-NLS-1$
 
 	public static final String SUPPORTS_QUERY = "Supports Query";
+	
+	public static final String SUPPORTS_RETRIEVE = "Supports Retrieve";
 
 }

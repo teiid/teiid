@@ -22,21 +22,32 @@
 package com.metamatrix.connector.salesforce.execution;
 
 
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
+import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.InsertVisitor;
 
-public class InsertExecutionImpl {
+public class InsertExecutionImpl extends AbstractUpdateExecution {
 
-	public int execute(IInsert insert,
-			UpdateExecutionParent salesforceUpdateExecution) throws ConnectorException {
-		
-		InsertVisitor visitor = new InsertVisitor(salesforceUpdateExecution.getMetadata());
-		visitor.visit(insert);
+	public InsertExecutionImpl(ICommand command,
+			SalesforceConnection salesforceConnection,
+			RuntimeMetadata metadata, ExecutionContext context,
+			ConnectorEnvironment connectorEnv) {
+		super(command, salesforceConnection, metadata, context, connectorEnv);
+	}
+
+	@Override
+	public void execute() throws ConnectorException {
+		InsertVisitor visitor = new InsertVisitor(getMetadata());
+		visitor.visit((IInsert)command);
 		DataPayload data = new DataPayload();
 		data.setType(visitor.getTableName());
 		data.setMessageElements(visitor.getMessageElements());
-		return salesforceUpdateExecution.getConnection().create(data);
+		result = getConnection().create(data);		
 	}
 }

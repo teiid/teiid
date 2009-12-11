@@ -21,22 +21,33 @@
  */
 package com.metamatrix.connector.salesforce.execution;
 
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IDelete;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
+import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.DeleteVisitor;
 
-public class DeleteExecutionImpl {
+public class DeleteExecutionImpl extends AbstractUpdateExecution {
 
-	public int execute(IDelete delete, UpdateExecutionParent parent) throws ConnectorException {
-		
-		int result = 0;
-		DeleteVisitor dVisitor = new DeleteVisitor(parent.getMetadata());
-		dVisitor.visitNode(delete);
-		String[] Ids = parent.getIDs(delete.getCriteria(), dVisitor);
+
+	public DeleteExecutionImpl(ICommand command,
+			SalesforceConnection salesforceConnection,
+			RuntimeMetadata metadata, ExecutionContext context,
+			ConnectorEnvironment connectorEnv) {
+		super(command, salesforceConnection, metadata, context, connectorEnv);
+	}
+
+	@Override
+	public void execute() throws ConnectorException {
+		DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
+		dVisitor.visitNode(command);
+		String[] Ids = getIDs(((IDelete)command).getCriteria(), dVisitor);
 		if(null != Ids && Ids.length > 0) {
-			result = parent.getConnection().delete(Ids);
+			result = getConnection().delete(Ids);
 		}
-		return result;
 	}
 }

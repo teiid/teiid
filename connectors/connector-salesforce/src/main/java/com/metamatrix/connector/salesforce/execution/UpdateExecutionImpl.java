@@ -27,29 +27,39 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.ISetClause;
 import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Util;
+import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.UpdateVisitor;
 
-public class UpdateExecutionImpl {
+public class UpdateExecutionImpl extends AbstractUpdateExecution {
 
-	public int execute(IUpdate update, UpdateExecutionParent parent)
-			throws ConnectorException {
-		int result = 0;
-		UpdateVisitor visitor = new UpdateVisitor(parent
-				.getMetadata());
-		visitor.visit(update);
-		String[] Ids = parent.getIDs(update.getCriteria(), visitor);
+	public UpdateExecutionImpl(ICommand command,
+			SalesforceConnection salesforceConnection,
+			RuntimeMetadata metadata, ExecutionContext context,
+			ConnectorEnvironment connectorEnv) {
+		super(command, salesforceConnection, metadata, context, connectorEnv);
+	}
+
+	@Override
+	public void execute() throws ConnectorException {
+		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
+		visitor.visit((IUpdate)command);
+		String[] Ids = getIDs(((IUpdate)command).getCriteria(), visitor);
 
 		if (null != Ids && Ids.length > 0) {
 			List<MessageElement> elements = new ArrayList<MessageElement>();
-			for (ISetClause clause : update.getChanges().getClauses()) {
+			for (ISetClause clause : ((IUpdate)command).getChanges().getClauses()) {
 				IElement element = clause.getSymbol();
 				Element column = element.getMetadataObject();
 				String val = ((ILiteral) clause.getValue())
@@ -69,9 +79,7 @@ public class UpdateExecutionImpl {
 				updateDataList.add(data);
 			}
 
-			result = parent.getConnection().update(updateDataList);
+			result = getConnection().update(updateDataList);
 		}
-		return result;
 	}
-
 }

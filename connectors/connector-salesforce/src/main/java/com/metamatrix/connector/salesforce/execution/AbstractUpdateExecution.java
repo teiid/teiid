@@ -32,9 +32,6 @@ import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Util;
@@ -50,16 +47,16 @@ import com.sforce.soap.partner.sobject.SObject;
  * get IDs of Salesforce objects.
  *
  */
-public class UpdateExecutionParent extends BasicExecution implements UpdateExecution {
+public abstract class AbstractUpdateExecution extends BasicExecution implements UpdateExecution {
 
-	private SalesforceConnection connection;
-	private RuntimeMetadata metadata;
-	private ExecutionContext context;
-	private ConnectorEnvironment connectorEnv;
-	private ICommand command;
-	private int result;
+	protected SalesforceConnection connection;
+	protected RuntimeMetadata metadata;
+	protected ExecutionContext context;
+	protected ConnectorEnvironment connectorEnv;
+	protected ICommand command;
+	protected int result;
 
-	public UpdateExecutionParent(ICommand command, SalesforceConnection salesforceConnection,
+	public AbstractUpdateExecution(ICommand command, SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		this.connection = salesforceConnection;
@@ -75,20 +72,6 @@ public class UpdateExecutionParent extends BasicExecution implements UpdateExecu
 
 	@Override
 	public void close() throws ConnectorException {
-	}
-
-	@Override
-	public void execute() throws ConnectorException {
-		if(command instanceof org.teiid.connector.language.IDelete) {
-			DeleteExecutionImpl ex = new DeleteExecutionImpl();
-			result = ex.execute(((IDelete)command), this);
-		} else if (command instanceof org.teiid.connector.language.IInsert) {
-			InsertExecutionImpl ex = new InsertExecutionImpl();
-			result = ex.execute(((IInsert)command), this);
-		} else if (command instanceof org.teiid.connector.language.IUpdate) {
-			UpdateExecutionImpl ex = new UpdateExecutionImpl();
-			result = ex.execute(((IUpdate)command), this);
-		}
 	}
 	
 	@Override
