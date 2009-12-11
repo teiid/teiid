@@ -56,8 +56,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     private TestResult rs = null;
 
     private boolean errorExpected = false;
-
-    private Throwable resultException = null;
     
     private String sql = null;
 
@@ -81,7 +79,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	rs = null;
 
 	errorExpected = false;
-	resultException = null;
 
     }
 
@@ -125,7 +122,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	TestLogger.logDebug("expected error: " + this.errorExpected);
 
 	try {
-	    System.out.println("QueryID: " + this.querySetID + ":"
+	    System.out.println(this.querySet.getQueryScenarioIdentifier()  + ":" + this.querySetID + ":"
 		    + this.queryIdentifier);
 	    // need to set this so the underlying query execution handles an
 	    // error properly.
@@ -134,8 +131,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	    execute(sql);
 
 	} catch (Throwable t) {
-
-	    resultException = t;
+	    this.setApplicationException(t);
 
 	} finally {
 	    // Capture resp time
@@ -156,18 +152,25 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	// this.internalResultSet;
 
 	ResultsGenerator genResults = this.querySet.getResultsGenerator();
+	
+	Throwable resultException = null;
 
 	resultException = (this.getLastException() != null ? this
-		.getLastException() : resultException);
+		    .getLastException() : this.getApplicationException());
+
+	    
 
 	if (resultException != null) {
-	    if (this.exceptionExpected()) {
-		testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
-	    } else {
-		testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
-	    }
+		    if (this.exceptionExpected()) {
+			testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
+		    } else {
+			testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
+		    }
 
 	}
+
+
+
 
 	if (this.querySet.getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
@@ -271,5 +274,8 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	// after cleanup
 
     }
+
+
+    
 
 }

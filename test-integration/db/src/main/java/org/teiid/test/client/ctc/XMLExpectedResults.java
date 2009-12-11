@@ -162,7 +162,7 @@ public class XMLExpectedResults implements ExpectedResults {
 
 		            if (!expectedResults.isException()) {
 		                // The actual exception was expected, but the expected results was not
-		                throw new QueryTestFailedException(eMsg + "TThe actual exception was expected, but the Expected results wasn't an exception.  Actual exception: '" //$NON-NLS-1$
+		                throw new QueryTestFailedException(eMsg + "The actual result was an exception, but the Expected results wasn't an exception.  Actual exception: '" //$NON-NLS-1$
 		                                                   + actualException.getMessage() + "'"); //$NON-NLS-1$
 		            }
 		            // We got an exception that we expected - convert actual exception to ResultsHolder
@@ -198,7 +198,11 @@ public class XMLExpectedResults implements ExpectedResults {
 		            
 		            compareExceptions(actualResults, expectedResults, eMsg);
 
+			} else if (expectedResults.isException()) {
 
+		                throw new QueryTestFailedException(eMsg + "The Expected result was an exception, but the Actual results wasn't an exception.  Expected exception: '" //$NON-NLS-1$
+                                        + expectedResults.getExceptionMsg() + "'"); //$NON-NLS-1$
+			    
 				
 			} else {
 				

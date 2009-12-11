@@ -64,7 +64,6 @@ public abstract class TransactionContainer {
     protected void runTest(TransactionQueryTestCase test) {
 	debug("Start runTest: " + test.getTestName());
 
-	try {
 
 	    debug("	before(test)");
 
@@ -74,9 +73,31 @@ public abstract class TransactionContainer {
 	    test.before();
 
 	    debug("	test.testcase");
+	    
+	try {
+
 
 	    // run the test
 	    test.testCase();
+	    
+	} catch (Throwable e) {
+
+	    if (!test.exceptionExpected()) {
+		e.printStackTrace();
+		debug("Error: " + e.getMessage());
+		test.setApplicationException(e);
+ 
+	    }
+	}
+	
+	if (test.exceptionExpected() && !test.exceptionOccurred()) {
+	    TransactionRuntimeException t  = new TransactionRuntimeException(
+		    "Expected exception, but one did not occur for test: "
+			    + this.getClass().getName() + "."
+			    + test.getTestName());
+	    test.setApplicationException(t);
+	}
+
 
 	    debug("	test.after");
 
@@ -87,24 +108,8 @@ public abstract class TransactionContainer {
 
 	    debug("End runTest: " + test.getTestName());
 
-	} catch (TransactionRuntimeException tre) {    
-	    throw tre;
-	} catch (Throwable e) {
 
-	    if (!test.exceptionExpected()) {
-		e.printStackTrace();
-		debug("Error: " + e.getMessage());
-		throw new TransactionRuntimeException(e.getMessage());
 
-	    }
-	}
-
-	if (test.exceptionExpected() && !test.exceptionOccurred()) {
-	    throw new TransactionRuntimeException(
-		    "Expected exception, but one did not occur for test: "
-			    + this.getClass().getName() + "."
-			    + test.getTestName());
-	}
 
     }
 

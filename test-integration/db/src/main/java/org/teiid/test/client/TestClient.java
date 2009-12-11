@@ -103,87 +103,8 @@ public class TestClient  {
 	
     }
  
-//    private void testScenarios() throws Exception {
-//	
-//	
-////	String teiid_home = deployProperties.getProperty("teiid.home");
-////	File f = new File(teiid_home);
-////	if (f.exists() && f.isDirectory()) {
-////	    FileUtils.removeDirectoryAndChildren(f);
-////	}
-//	
-//	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
-//	
-//	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
-//	
-//	String scenaios_dir = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_DIR);
-//	if (scenaios_dir == null) {
-//	    throw new TransactionRuntimeException("scenariodir property was not defined");
-//	}
-//	
-//	File files[] = FileUtils.findAllFilesInDirectoryHavingExtension(scenaios_dir,
-//		".properties");
-//	if (files == null || files.length == 0)
-//	    throw new QueryTestFailedException((new StringBuilder()).append(
-//		    "No scenario files found in directory ").append(scenaios_dir)
-//		    .toString());
-//	
-//	
-//	// List<String> queryFiles = new ArrayList<String>(files.length);
-//	for (int i = 0; i < files.length; i++) {
-//	    // overrides need to be reset because all overrides are cleared out after each query set
-//	    ConfigPropertyLoader.getInstance().setProperties(overrides);
-//	    
-//	    runTest(files[i]);
-//	}
-//	
-//
-//    }
-    
-//    private void runScenariox() throws Exception {
-//	String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
-//	if (scenario_file == null) {
-//	    throw new TransactionRuntimeException(TestProperties.PROP_SCENARIO_FILE + " property was not defined");
-//	}
-//	
-//	Properties sc_props = PropertiesUtils.load(scenario_file);
-//	Properties sc_updates = getSubstitutedProperties(sc_props);
-//	if (!sc_updates.isEmpty()) {
-//	    sc_props.putAll(sc_props);
-//	}	
-//	
-//	String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenario_file);
-//	
-//	TestLogger.log("Starting scenario " + scenario_name);
-//	
-//	this.overrides = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
-//
-//	
-//	// update the URL with the vdb that is to be used
-//	String url = ConfigPropertyLoader.getInstance().getProperty(DriverConnection.DS_URL);
-//	String vdb_name = ConfigPropertyLoader.getInstance().getProperty(DataSourceConnection.DS_DATABASENAME);
-//	
-//	Assert.assertNotNull(DataSourceConnection.DS_DATABASENAME + " property not set, need it for the vdb name", vdb_name);
-//	url = StringUtil.replace(url, "${vdb}", vdb_name);
-//	
-//	this.overrides.setProperty(DriverConnection.DS_URL, url);
-//	
-//	ConfigPropertyLoader.getInstance().setProperties(this.overrides);
-//	
-//	QueryScenario set = new CTCQueryScenario(scenario_name, ConfigPropertyLoader.getInstance().getProperties());
-//	
-//	TransactionContainer tc = getTransactionContainter();
-//
-//	runTestCase(set,  tc);
-//
-//	TestLogger.log("Completed scenario " + scenario_name);
-//
-//
-//    }
-    
     
     private void runScenario() throws Exception {
-	
 	
 	
 	String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
@@ -273,8 +194,8 @@ public class TestClient  {
             	    userTxn.init(querySetID, queryidentifier, sqlObject);
             	    
         	    // run test
-            	    
             	    tc.runTransaction(userTxn);
+
             	    
             	    testResults.add(userTxn.getTestResult());
 	             

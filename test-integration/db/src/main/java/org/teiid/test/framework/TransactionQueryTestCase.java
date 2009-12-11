@@ -135,15 +135,6 @@ public interface TransactionQueryTestCase {
     void setConnection(Connection conn);
 
     /**
-     * Called to set the properties used to initialize prior to execution.
-     * 
-     * @param props
-     * 
-     * @since
-     */
-//    void setExecutionProperties(Properties props);
-
-    /**
      * Override <code>before</code> if there is behavior that needs to be
      * performed prior to {@link #testCase()} being called.
      * 
@@ -203,5 +194,9 @@ public interface TransactionQueryTestCase {
     boolean exceptionExpected();
 
     boolean exceptionOccurred();
+    
+    void setApplicationException(Throwable t);
+    
+    Throwable getApplicationException();
 
 }
