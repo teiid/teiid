@@ -64,7 +64,7 @@ public class InsertVisitor extends CriteriaVisitor {
 				String val;
 				if(value instanceof ILiteral) {
 					ILiteral literalValue = (ILiteral)value;
-					val = this.stripQutes((String)literalValue.getValue());
+					val = this.stripQutes(literalValue.getValue().toString());
 				} else {
 					val = value.toString();
 				}
