@@ -295,7 +295,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
                     String runtimeType = paramRecord.getRuntimeType();
                     int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
                     // create a parameter and add it to the procedure object
-                    SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getName());
+                    SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
                     spParam.setMetadataID(paramRecord);
                     spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
                     procInfo.addParameter(spParam);
@@ -306,7 +306,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
                     ColumnSet<ProcedureRecordImpl> resultRecord = procRecord.getResultSet();
                     // resultSet is the last parameter in the procedure
                     int lastParamIndex = procInfo.getParameters().size() + 1;
-                    SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getName());
+                    SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
                     param.setClassType(java.sql.ResultSet.class);           
                     param.setMetadataID(resultRecord);
 
