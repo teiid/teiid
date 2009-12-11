@@ -22,24 +22,16 @@
 
 package com.metamatrix.internal.core.index;
 
+import junit.framework.TestCase;
+
 import org.teiid.internal.core.index.GammaCompressedIndexBlock;
 import org.teiid.internal.core.index.IIndexConstants;
 import org.teiid.internal.core.index.IndexBlock;
 import org.teiid.internal.core.index.WordEntry;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 public class TestGammaCompressedIndexBlock extends TestCase {
     public TestGammaCompressedIndexBlock(String name) {
         super(name);
-    }
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite("TestGammaCompressedIndexBlock"); //$NON-NLS-1$
-        suite.addTestSuite(TestGammaCompressedIndexBlock.class);
-        return suite;
     }
 
     public void testAddAndRetrieveEntry() {
