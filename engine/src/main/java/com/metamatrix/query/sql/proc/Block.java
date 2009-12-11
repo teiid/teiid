@@ -22,26 +22,28 @@
 
 package com.metamatrix.query.sql.proc;
 
-import java.util.*;
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.metamatrix.core.util.EquivalenceUtil;
+import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a group of <code>Statement</code> objects. The
  * statements are stored on this object in the order in which they are added.</p>
  */
-public class Block  implements LanguageObject {
+public class Block implements LanguageObject {
 
 	// list of statements on this block
-	private List statements;
+	private List<Statement> statements;
 
 	/**
 	 * Constructor for Block.
 	 */
 	public Block() {
-		statements = new ArrayList();
+		statements = new ArrayList<Statement>();
 	}
 
 	/**
@@ -57,7 +59,7 @@ public class Block  implements LanguageObject {
 	 * Get all the statements contained on this block.
 	 * @return A list of <code>Statement</code>s contained in this block
 	 */
-	public List getStatements() {
+	public List<Statement> getStatements() {
 		return statements;
 	}
 
@@ -65,7 +67,7 @@ public class Block  implements LanguageObject {
 	 * Set the statements contained on this block.
 	 * @param statements A list of <code>Statement</code>s contained in this block
 	 */
-	public void setStatements(List statements) {
+	public void setStatements(List<Statement> statements) {
 		this.statements = statements;
 	}
 
@@ -91,11 +93,8 @@ public class Block  implements LanguageObject {
 	 */
 	public Object clone() {		
 		Block copy = new Block();
-		if(!statements.isEmpty()) {
-			Iterator stmtIter = statements.iterator();
-			while(stmtIter.hasNext()) {
-				copy.addStatement((Statement) stmtIter.next());
-			}
+		for (Statement statement : statements) {
+			copy.addStatement((Statement)statement.clone());
 		}
 		return copy;
 	}
@@ -129,18 +128,7 @@ public class Block  implements LanguageObject {
      * @return Hash code
      */
     public int hashCode() {
-    	// For speed, this hash code relies only on the hash codes of its select
-    	// and criteria clauses, not on the from, order by, or option clauses
-    	int myHash = 0;
-    	
-    	myHash = HashCodeUtil.hashCode(myHash, this.getStatements());
-		if(!this.getStatements().isEmpty()) {
-			Iterator stmtIter = this.getStatements().iterator();
-			while(stmtIter.hasNext()) {
-		    	myHash = HashCodeUtil.hashCode(myHash, stmtIter.next());
-			}
-		}    	
-		return myHash;
+    	return statements.hashCode();
 	}
       
     /**
