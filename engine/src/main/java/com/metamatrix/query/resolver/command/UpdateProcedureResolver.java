@@ -113,7 +113,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     	// then in the query transformation, this info is used in evaluating/validating
     	// has criteria/translate criteria clauses
         Command transformCmd = getQueryTransformCmd(virtualGroup, metadata);
-		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, (List<SingleElementSymbol>)transformCmd.getProjectedSymbols()).asMap();
+		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, (List<SingleElementSymbol>)transformCmd.getProjectedSymbols(), metadata).asMap();
 		procCommand.setSymbolMap(symbolMap);
     }
     

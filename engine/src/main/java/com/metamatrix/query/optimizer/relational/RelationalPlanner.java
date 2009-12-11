@@ -445,7 +445,7 @@ public class RelationalPlanner implements CommandPlanner {
         if(command instanceof Insert){
         	Insert insert = (Insert)command;
         	if (insert.getQueryExpression() != null) {
-	            PlanNode plan = createQueryPlan(insert.getQueryExpression());
+	            PlanNode plan = generatePlan(insert.getQueryExpression());
 	            attachLast(sourceNode, plan);
 	            mergeTempMetadata(insert.getQueryExpression(), insert);
 	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
@@ -694,16 +694,14 @@ public class RelationalPlanner implements CommandPlanner {
 			MetaMatrixComponentException, QueryResolverException,
 			QueryValidatorException, QueryMetadataException {
 		if (nestedCommand instanceof QueryCommand) {
+			//remove unnecessary order by
         	QueryCommand queryCommand = (QueryCommand)nestedCommand;
         	if (queryCommand.getLimit() == null) {
         		queryCommand.setOrderBy(null);
         	}
         }
 		node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
-		// Create symbol map from virtual group to child plan
-		List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
-		node.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(group, projectCols));
-		
+
 		if (merge && nestedCommand instanceof Query && QueryResolver.isXMLQuery((Query)nestedCommand, metadata)) {
 			merge = false;
 		}
@@ -712,6 +710,8 @@ public class RelationalPlanner implements CommandPlanner {
 			mergeTempMetadata(nestedCommand, parentCommand);
 		    PlanNode childRoot = generatePlan(nestedCommand);
 		    node.addFirstChild(childRoot);
+			List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
+			node.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(group, projectCols, metadata));
 		} else {
 			QueryMetadataInterface actualMetadata = metadata;
 			if (actualMetadata instanceof TempMetadataAdapter) {

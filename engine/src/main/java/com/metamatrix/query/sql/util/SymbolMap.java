@@ -26,11 +26,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -100,25 +103,8 @@ public class SymbolMap {
     }
 
     public static final SymbolMap createSymbolMap(GroupSymbol virtualGroup,
-                                                  List<? extends SingleElementSymbol> projectCols) {
-        return createSymbolMap(virtualGroup, projectCols, projectCols);
-    }
-
-    public static final SymbolMap createSymbolMap(GroupSymbol virtualGroup,
-                                                  List<? extends SingleElementSymbol> projectCols,
-                                                  List<? extends SingleElementSymbol> mappedCols) {
-        String virtualGroupName = virtualGroup.getName();
-        List<ElementSymbol> virtualElements = new LinkedList<ElementSymbol>();
-        for (SingleElementSymbol symbol : projectCols) {
-            String name = symbol.getShortName();
-            String virtualElementName = virtualGroupName + ElementSymbol.SEPARATOR + name;
-            ElementSymbol virtualElement = new ElementSymbol(virtualElementName);
-            virtualElement.setGroupSymbol(virtualGroup);
-            virtualElement.setType(symbol.getType());
-            virtualElements.add(virtualElement);
-        }
-
-        return createSymbolMap(virtualElements, mappedCols);
+                                                  List<? extends SingleElementSymbol> projectCols, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+        return createSymbolMap(ResolverUtil.resolveElementsInGroup(virtualGroup, metadata), projectCols);
     }
 
     public static final SymbolMap createSymbolMap(List<ElementSymbol> virtualElements,

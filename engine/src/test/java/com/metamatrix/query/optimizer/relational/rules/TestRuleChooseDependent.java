@@ -71,22 +71,13 @@ public class TestRuleChooseDependent extends TestCase {
     /* Make Neither Side Dependent */
     private static final int NEITHER_SIDE = 3;
 
-    private FakeMetadataFacade metadata;
+    private FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
     // ################################## FRAMEWORK ################################
     
     public TestRuleChooseDependent(String name) { 
         super(name);
     }    
-
-    public void setUp() {
-        // set up resolver metadata
-        metadata = FakeMetadataFactory.example1();
-    }
-
-    public void tearDown() {
-        metadata = null;
-    }
 
     // ################################## TEST HELPERS ################################
     

@@ -22,44 +22,72 @@
 
 package com.metamatrix.query.optimizer;
 
+import static com.metamatrix.query.optimizer.TestOptimizer.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestInlineView extends TestCase {
+public class TestInlineView  {
+    
+    public static FakeMetadataFacade createInlineViewMetadata(FakeCapabilitiesFinder capFinder) {
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
-	public void testANSIJoinInlineView()  throws Exception {
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setFunctionSupport("concat", true); //$NON-NLS-1$
+        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+        caps.setFunctionSupport("case", true); //$NON-NLS-1$
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
+        
+        return metadata;
+    }
+
+	@Test public void testANSIJoinInlineView()  throws Exception {
 		runTest(createANSIJoinInlineView());
 	}	
 	
-	public void testInlineView()  throws Exception {
+	@Test public void testInlineView()  throws Exception {
 		runTest(createInlineView());
 	}
 	
-	public void testInlineViewWithDistinctAndOrderBy() throws Exception {
+	@Test public void testInlineViewWithDistinctAndOrderBy() throws Exception {
 		runTest(createInlineViewWithDistinctAndOrderBy());
 	}	
 	
-	public void testInlineViewOfVirtual() throws Exception{
+	@Test public void testInlineViewOfVirtual() throws Exception{
 		runTest(createInlineViewOfVirtual());
 	}
 	
-	public void testInlineViewWithOuterOrderAndGroup() throws Exception {
+	@Test public void testInlineViewWithOuterOrderAndGroup() throws Exception {
 		runTest(createInlineViewWithOuterOrderAndGroup());
 	}
 	
-	public void testInlineViewsInUnions() throws Exception {
+	@Test public void testInlineViewsInUnions() throws Exception {
 		runTest(crateInlineViewsInUnions());
 	}
 	
-	public void testUnionInInlineView() throws Exception{
+	@Test public void testUnionInInlineView() throws Exception{
 		runTest(createUnionInInlineView());
 	}	
 	
@@ -83,8 +111,6 @@ public class TestInlineView extends TestCase {
 				sourceQueries, expectedResults);
         
 	}
-
-
 	
 	public static InlineViewCase createInlineView()  throws Exception {
 		String userQuery = "select bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa from (select count(bqt1.smalla.intkey) as aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, bqt1.smallb " + //$NON-NLS-1$
@@ -106,8 +132,6 @@ public class TestInlineView extends TestCase {
         return new InlineViewCase("testInlineView", userQuery, optimizedQuery,  //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}	
-
-
 	
 	public static InlineViewCase createInlineViewWithDistinctAndOrderBy() throws Exception {
 		String userQuery = "select Q1.a from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2"; //$NON-NLS-1$
@@ -130,7 +154,6 @@ public class TestInlineView extends TestCase {
         
 	}	
 	
-	
 	public static InlineViewCase createInlineViewOfVirtual() throws Exception{
 		String userQuery = "select q1.A from (select count(intkey) as a, intkey, stringkey from vqt.smalla group by intkey, stringkey) q1 inner join vqt.smallb as q2 on q1.intkey = q2.a12345 where q1.a = 2"; //$NON-NLS-1$
 		String optimizedQuery = "SELECT v_0.c_1 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, g_0.StringKey HAVING COUNT(g_0.IntKey) = 2) AS v_0, BQT1.SmallA AS g_1 WHERE v_0.c_0 = Concat(g_1.StringKey, g_1.StringNum)"; //$NON-NLS-1$
@@ -147,8 +170,6 @@ public class TestInlineView extends TestCase {
         return new InlineViewCase("testInlineViewOfVirtual", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}	
-
-
 	
 	public static InlineViewCase createInlineViewWithOuterOrderAndGroup() throws Exception {
 		String userQuery = "select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b"; //$NON-NLS-1$
@@ -169,8 +190,6 @@ public class TestInlineView extends TestCase {
         return new InlineViewCase("testInlineViewWithOuterOrderAndGroup", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}
-	
-	
 	
 	public static InlineViewCase crateInlineViewsInUnions() throws Exception {
 		String userQuery = "select q1.a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1 union all (select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b)"; //$NON-NLS-1$
@@ -195,8 +214,6 @@ public class TestInlineView extends TestCase {
 				sourceQueries, expectedResults);
 		
 	}
-	
-
 	
 	public static InlineViewCase createUnionInInlineView() throws Exception{
 		
@@ -228,7 +245,7 @@ public class TestInlineView extends TestCase {
 	
 	protected void runTest(InlineViewCase testCase) throws Exception {
 		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-    	FakeMetadataFacade metadata = TestOptimizer.createInlineViewMetadata(capFinder);
+    	FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
     	
 		ProcessorPlan plan = TestOptimizer.helpPlan(testCase.userQuery, metadata, null, capFinder, new String[] {testCase.optimizedQuery}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
 
@@ -236,4 +253,60 @@ public class TestInlineView extends TestCase {
             
         TestOptimizer.checkSubPlanCount(plan, 0);
 	}	
+	
+    @Test public void testAliasCreationWithInlineView() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
+        
+        ProcessorPlan plan = helpPlan("select a, b from (select distinct count(intNum) a, count(stringKey), bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", //$NON-NLS-1$
+                metadata, null, capFinder, new String[] {"SELECT a, b FROM (SELECT DISTINCT COUNT(intNum) AS a, COUNT(stringKey) AS count1, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intkey) AS q1 ORDER BY a"}, true); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);    
+            
+        checkSubPlanCount(plan, 0);
+    }
+    
+    @Test public void testAliasPreservationWithInlineView() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
+        
+        ProcessorPlan plan = helpPlan("select q1.a + 1, q1.b from (select count(bqt1.smalla.intNum) as a, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intNum, bqt1.smalla.intkey order by b) q1 where q1.a = 1", //$NON-NLS-1$
+                metadata, null, capFinder, new String[] {"SELECT (q1.a + 1), q1.b FROM (SELECT COUNT(bqt1.smalla.intNum) AS a, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intNum, bqt1.smalla.intkey HAVING COUNT(bqt1.smalla.intNum) = 1) AS q1"}, true); //$NON-NLS-1$
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);    
+            
+        checkSubPlanCount(plan, 0);
+    }
+    
+    /**
+     * Order by's will be added to the atomic queries
+     */
+    @Test public void testCrossSourceInlineView() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
+        
+        ProcessorPlan plan = helpPlan("select * from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 inner join (select count(bqt2.smallb.intkey) as a, bqt2.smallb.intkey from bqt2.smallb group by bqt2.smallb.intkey) as q2 on q1.intkey = q2.intkey where q1.a = 1", //$NON-NLS-1$
+                metadata, null, capFinder, new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt2.smallb AS g_0 GROUP BY g_0.intkey) AS v_0 ORDER BY c_0", //$NON-NLS-1$
+                                                         "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING COUNT(g_0.intkey) = 1) AS v_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // Join
+                1,      // MergeJoin
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });    
+            
+        checkSubPlanCount(plan, 0);
+    }
+
 }

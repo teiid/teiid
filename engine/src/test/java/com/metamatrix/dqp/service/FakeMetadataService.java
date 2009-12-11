@@ -48,9 +48,9 @@ public class FakeMetadataService extends FakeAbstractService implements Metadata
         super();
         
         // Load some default VDBs
-        addVdb(null, null, FakeMetadataFactory.exampleBQT());
-        addVdb("bqt", "1", FakeMetadataFactory.exampleBQT()); //$NON-NLS-1$ //$NON-NLS-2$
-        addVdb("example1", "1", FakeMetadataFactory.example1()); //$NON-NLS-1$ //$NON-NLS-2$
+        addVdb(null, null, FakeMetadataFactory.exampleBQTCached());
+        addVdb("bqt", "1", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ //$NON-NLS-2$
+        addVdb("example1", "1", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     private String getKey(String vdbName, String vdbVersion) {

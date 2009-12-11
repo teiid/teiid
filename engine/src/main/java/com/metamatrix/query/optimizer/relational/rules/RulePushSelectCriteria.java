@@ -25,7 +25,6 @@ package com.metamatrix.query.optimizer.relational.rules;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -415,7 +414,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 
         Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         
-        Collection elements = getElementsIncriteria(crit);
+        Collection<ElementSymbol> elements = getElementsIncriteria(crit);
                         
         boolean removeAps = satisfyAccessPatterns(aps, elements);
         if (removeAps) {
@@ -426,8 +425,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         Collections.sort(aps);
     }
     
-    static Collection getElementsIncriteria(Criteria crit) {
-        Collection elements = new HashSet();
+    static Collection<ElementSymbol> getElementsIncriteria(Criteria crit) {
+        Collection<ElementSymbol> elements = new HashSet<ElementSymbol>();
         boolean first = true;
         if(crit instanceof CompoundCriteria) {
             CompoundCriteria compCrit = (CompoundCriteria) crit;
@@ -450,7 +449,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @param elements
      * @return
      */
-    static boolean satisfyAccessPatterns(List<AccessPattern> aps, Collection elements) {
+    static boolean satisfyAccessPatterns(List<AccessPattern> aps, Collection<ElementSymbol> elements) {
     	for (AccessPattern ap : aps) {
             ap.getUnsatisfied().removeAll(elements);
             if (ap.getUnsatisfied().isEmpty()) {
@@ -484,39 +483,28 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         satisfyAccessPatterns(critNode, sourceNode);
         
         SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-
+        SymbolMap childMap = symbolMap;
+        
 		// Move criteria to first child of union - names are the same, so no symbol mapping
-		LinkedList unionChildren = new LinkedList();
+		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
 		collectUnionChildren(setOp, unionChildren);
 
         int movedCount = 0;
-		Iterator childIter = unionChildren.iterator();
-		PlanNode firstChild = (PlanNode) childIter.next();
-        GroupSymbol sourceGroup = sourceNode.getGroups().iterator().next();
-        
-        PlanNode firstBranchNode = NodeEditor.findNodePreOrder(firstChild, NodeConstants.Types.PROJECT);
-        
-        if(createConvertedSelectNode(critNode, virtualGroup, firstBranchNode, symbolMap)) {
-            movedCount++;
-        }
 
-        // Find project cols on first branch
-        List firstProjectCols = (List) firstBranchNode.getProperty(NodeConstants.Info.PROJECT_COLS);
-
-		// For each of the remaining children of the union, push separately
-		while(childIter.hasNext()) {
-		    PlanNode childNode = (PlanNode) childIter.next();
-
+        for (PlanNode planNode : unionChildren) {
 		      // Find first project node
-	        PlanNode projectNode = NodeEditor.findNodePreOrder(childNode, NodeConstants.Types.PROJECT);
+	        PlanNode projectNode = NodeEditor.findNodePreOrder(planNode, NodeConstants.Types.PROJECT);
 		    
-	        // Create symbol map
-            symbolMap = SymbolMap.createSymbolMap(sourceGroup, firstProjectCols, (List) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
+	        if (childMap == null) {
+	        	childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), (List) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
+	        }
 		    
 			// Move the node
-			if(createConvertedSelectNode(critNode, virtualGroup, projectNode, symbolMap)) {
+			if(createConvertedSelectNode(critNode, virtualGroup, projectNode, childMap)) {
                 movedCount++;
             }
+			
+			childMap = null; //create a new symbol map for the other children
 		}
         
 		//TODO - the logic here could be made more intelligent about EXCEPT and INTERSECT.
@@ -588,7 +576,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 return false;
             }
             
-            Collection scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(converted);
+            Collection<SubqueryContainer> scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(converted);
             if (!scalarSubqueries.isEmpty()){
                 return false;
             }

@@ -481,9 +481,8 @@ public class TestProcessor {
                     } );       
             
             
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }    
     
@@ -505,9 +504,8 @@ public class TestProcessor {
                 new List[] { 
                     Arrays.asList(new Object[] { new Integer(1) }),                    
                     } );    
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        }catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }
 
@@ -1990,7 +1988,7 @@ public class TestProcessor {
 		sampleData1(dataManager);
 
 		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1());
+		ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
 
 		// Run query
 		helpProcess(plan, dataManager, expected);
@@ -3915,7 +3913,7 @@ public class TestProcessor {
         sampleData1(dataManager);
 
         // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1());
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -6515,7 +6513,7 @@ public class TestProcessor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);

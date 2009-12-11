@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -182,13 +181,13 @@ public class TestOptimizer {
             throw new MetaMatrixRuntimeException(err);
         }
 
-        return helpPlanCommand(command, md, capFinder, expectedAtomic, shouldSucceed ? ComparisonMode.CORRECTED_COMMAND_STRING : ComparisonMode.FAILED_PLANNING);
+        return helpPlanCommand(command, md, capFinder, null, expectedAtomic, shouldSucceed ? ComparisonMode.CORRECTED_COMMAND_STRING : ComparisonMode.FAILED_PLANNING);
     } 
     
     public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
         Command command = helpGetCommand(sql, md, bindings);
 
-        return helpPlanCommand(command, md, capFinder, expectedAtomic, mode);
+        return helpPlanCommand(command, md, capFinder, null, expectedAtomic, mode);
     } 
 
     
@@ -218,13 +217,13 @@ public class TestOptimizer {
         return command;
     }
 
-    public static ProcessorPlan helpPlanCommand(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) {
+    public static ProcessorPlan helpPlanCommand(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, String[] expectedAtomic, ComparisonMode mode) {
         if (capFinder == null){
             capFinder = getGenericFinder();
         }
         
         // Collect atomic queries
-        ProcessorPlan plan = getPlan(command, md, capFinder, mode != ComparisonMode.FAILED_PLANNING);
+        ProcessorPlan plan = getPlan(command, md, capFinder, analysisRecord, mode != ComparisonMode.FAILED_PLANNING);
                
         if (mode == ComparisonMode.CORRECTED_COMMAND_STRING) {
             checkAtomicQueries(expectedAtomic, plan, md, capFinder);
@@ -237,14 +236,14 @@ public class TestOptimizer {
     
     public static void checkAtomicQueries(String[] expectedAtomic,
                                           ProcessorPlan plan) {
-       Set actualQueries = getAtomicQueries(plan);
+       Set<String> actualQueries = getAtomicQueries(plan);
        
        if (actualQueries.size() != 1 || expectedAtomic.length != 1) {
            // Compare atomic queries
            HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(expectedAtomic));
            assertEquals("Did not get expected atomic queries: ", expectedQueries, actualQueries); //$NON-NLS-1$
        } else {
-           assertEquals("Did not get expected atomic query: ", expectedAtomic[0], (String)actualQueries.iterator().next()); //$NON-NLS-1$
+           assertEquals("Did not get expected atomic query: ", expectedAtomic[0], actualQueries.iterator().next()); //$NON-NLS-1$
        }
    }
 
@@ -274,10 +273,12 @@ public class TestOptimizer {
         assertEquals("Did not get expected atomic queries: ", expectedQueries, actualQueries); //$NON-NLS-1$
     }
     
-    public static ProcessorPlan getPlan(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) {
+    static ProcessorPlan getPlan(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean shouldSucceed) {
 		// plan
 		ProcessorPlan plan = null;
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+		if (analysisRecord == null) {
+        	analysisRecord = new AnalysisRecord(false, false, DEBUG);
+		}
 		if (shouldSucceed) {
 			try {
 				//do planning
@@ -318,27 +319,22 @@ public class TestOptimizer {
 		return plan;
 	}
     
-    public static Set getAtomicQueries(ProcessorPlan plan) {
-        Iterator atomicQueries = getAtomicCommands(plan).iterator();
+    public static Set<String> getAtomicQueries(ProcessorPlan plan) {
+    	Set<Command> atomicQueries = new HashSet<Command>();        
+        if(plan instanceof RelationalPlan) {
+            getAtomicCommands( ((RelationalPlan)plan).getRootNode(), atomicQueries );    
+        } 
         
-        Set stringQueries = new HashSet();
+        Set<String> stringQueries = new HashSet<String>();
         
-        while (atomicQueries.hasNext()) {
-           stringQueries.add(atomicQueries.next().toString());
+        for (Command command : atomicQueries) {
+           stringQueries.add(command.toString());
         }
         
         return stringQueries;
     }
     
-    public static Set getAtomicCommands(ProcessorPlan plan) {
-        Set atomicQueries = new HashSet();        
-        if(plan instanceof RelationalPlan) {
-            getAtomicCommands( ((RelationalPlan)plan).getRootNode(), atomicQueries );    
-        }   
-        return atomicQueries;        
-    }
-    
-    private static void getAtomicCommands(RelationalNode node, Set atomicQueries) {
+    private static void getAtomicCommands(RelationalNode node, Set<Command> atomicQueries) {
         if(node instanceof AccessNode) {
             AccessNode accessNode = (AccessNode) node;
             atomicQueries.add( accessNode.getCommand());   
@@ -397,7 +393,7 @@ public class TestOptimizer {
      * @param relationalNode
      * @return int[]
      */
-    public static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
+    static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
         Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
         	JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
@@ -608,7 +604,7 @@ public class TestOptimizer {
 			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         List vm1g4e = FakeMetadataFactory.createElements(vm1g4, 
-            new String[] { "e1", "e1" }, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         List vm1g5e = FakeMetadataFactory.createElements(vm1g5, 
             new String[] { "e1" }, //$NON-NLS-1$
@@ -4262,8 +4258,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT CASE WHEN e1 = 'a' THEN 10 ELSE 0 END FROM pm1.g1",  //$NON-NLS-1$
@@ -4282,8 +4277,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT CASE e1 WHEN 'a' THEN 10 ELSE (e2+0) END FROM pm1.g1",  //$NON-NLS-1$
@@ -4318,8 +4312,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT CASE WHEN e1 = 'a' THEN 10 ELSE 0 END FROM pm1.g1",  //$NON-NLS-1$
@@ -4338,8 +4331,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT CASE WHEN e1 = 'a' THEN 10 ELSE (e2+0) END FROM pm1.g1",  //$NON-NLS-1$
@@ -4840,7 +4832,7 @@ public class TestOptimizer {
         ProcessorPlan subplan = (ProcessorPlan) subplans.iterator().next();
         
         // Collect atomic queries
-        Set actualQueries = getAtomicQueries(subplan);
+        Set<String> actualQueries = getAtomicQueries(subplan);
         
         // Compare atomic queries
         HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT bqt1.smalla.datevalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smalla.intkey) AND (bqt1.smalla.stringkey = bqt1.smalla.stringkey)"})); //$NON-NLS-1$
@@ -5770,7 +5762,7 @@ public class TestOptimizer {
                 
         ProcessorPlan plan = helpPlan(
         		"select a.e1, b.e1 from vm2.g1 a, vm2.g1 b where a.e1 = b.e1 and a.e2 in (select e2 from vm1.g1)",  //$NON-NLS-1$
-        		metadata, null, capFinder, new String[] {"SELECT g_1.e1, g_3.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_1.e1 = g_3.e1) AND (g_1.e2 IN (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        		metadata, null, capFinder, new String[] {"SELECT g_0.e1, g_2.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_0.e1 = g_2.e1) AND (g_0.e2 IN (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
         
@@ -5851,72 +5843,7 @@ public class TestOptimizer {
                                       ComparisonMode.EXACT_COMMAND_STRING ); 
              
     } 
-    
-    public static FakeMetadataFacade createInlineViewMetadata(FakeCapabilitiesFinder capFinder) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
-
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
-        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setFunctionSupport("concat", true); //$NON-NLS-1$
-        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
-        caps.setFunctionSupport("case", true); //$NON-NLS-1$
-        caps.setFunctionSupport("+", true); //$NON-NLS-1$
-        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
-        
-        return metadata;
-    }
             
-    /**
-     * Order by's will be added to the atomic queries
-     */
-    @Test public void testCrossSourceInlineView() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
-        
-        ProcessorPlan plan = helpPlan("select * from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 inner join (select count(bqt2.smallb.intkey) as a, bqt2.smallb.intkey from bqt2.smallb group by bqt2.smallb.intkey) as q2 on q1.intkey = q2.intkey where q1.a = 1", //$NON-NLS-1$
-                metadata, null, capFinder, new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt2.smallb AS g_0 GROUP BY g_0.intkey) AS v_0 ORDER BY c_0", //$NON-NLS-1$
-                                                         "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING COUNT(g_0.intkey) = 1) AS v_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-
-        checkNodeTypes(plan, new int[] {
-                2,      // Access
-                0,      // DependentAccess
-                0,      // DependentSelect
-                0,      // DependentProject
-                0,      // DupRemove
-                0,      // Grouping
-                0,      // Join
-                1,      // MergeJoin
-                0,      // Null
-                0,      // PlanExecution
-                1,      // Project
-                0,      // Select
-                0,      // Sort
-                0       // UnionAll
-            });    
-            
-        checkSubPlanCount(plan, 0);
-    }
-    
-    @Test public void testAliasPreservationWithInlineView() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
-        
-        ProcessorPlan plan = helpPlan("select q1.a + 1, q1.b from (select count(bqt1.smalla.intNum) as a, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intNum, bqt1.smalla.intkey order by b) q1 where q1.a = 1", //$NON-NLS-1$
-                metadata, null, capFinder, new String[] {"SELECT (q1.a + 1), q1.b FROM (SELECT COUNT(bqt1.smalla.intNum) AS a, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intNum, bqt1.smalla.intkey HAVING COUNT(bqt1.smalla.intNum) = 1) AS q1"}, true); //$NON-NLS-1$
-
-        checkNodeTypes(plan, FULL_PUSHDOWN);    
-            
-        checkSubPlanCount(plan, 0);
-    }
-    
     //since this does not support convert, it should not be collapsed
     @Test public void testBadCollapseUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -5950,7 +5877,7 @@ public class TestOptimizer {
     }
     
     @Test public void testCase3966() {
-        ProcessorPlan plan = helpPlan("insert into vm1.g37 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )", FakeMetadataFactory.example1(), //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("insert into vm1.g37 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
                                       new String[] {} ); 
 
         checkNodeTypes(plan, new int[] {
@@ -6655,19 +6582,7 @@ public class TestOptimizer {
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
-    
-    @Test public void testAliasCreationWithInlineView() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = createInlineViewMetadata(capFinder);
         
-        ProcessorPlan plan = helpPlan("select a, b from (select distinct count(intNum) a, count(stringKey), bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", //$NON-NLS-1$
-                metadata, null, capFinder, new String[] {"SELECT a, b FROM (SELECT DISTINCT COUNT(intNum) AS a, COUNT(stringKey) AS count1, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intkey) AS q1 ORDER BY a"}, true); //$NON-NLS-1$
-
-        checkNodeTypes(plan, FULL_PUSHDOWN);    
-            
-        checkSubPlanCount(plan, 0);
-    }
-    
     @Test public void testCase6364() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -6821,6 +6736,6 @@ public class TestOptimizer {
     			TestOptimizer.SHOULD_SUCCEED);
     }
 
-	private static final boolean DEBUG = false;
+	public static final boolean DEBUG = false;
 
 }

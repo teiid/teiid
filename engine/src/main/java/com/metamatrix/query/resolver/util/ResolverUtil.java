@@ -551,18 +551,6 @@ public class ResolverUtil {
 		return groupInfo;
 	}
     
-    public static List resolveElements(GroupSymbol group, QueryMetadataInterface metadata, List elementIDs) throws MetaMatrixComponentException, QueryMetadataException {
-    	GroupInfo groupInfo = getGroupInfo(group, metadata);
-    	List result = new ArrayList(elementIDs.size());
-    	for (Iterator iterator = elementIDs.iterator(); iterator.hasNext();) {
-			Object id = iterator.next();
-			ElementSymbol symbol = groupInfo.getSymbol(id);
-			assert symbol != null;
-			result.add(symbol);
-		}
-    	return result;
-    }
-        
     /**
      * When access patterns are flattened, they are an approximation the user
      * may need to enter as criteria.
@@ -590,11 +578,18 @@ public class ResolverUtil {
 		        }
 		        while (j.hasNext()) {
 		        	List elements = metadata.getElementIDsInAccessPattern(j.next());
-		        	elements = resolveElements(group, metadata, elements);
+		        	GroupInfo groupInfo = getGroupInfo(group, metadata);
+		        	List result = new ArrayList(elements.size());
+		        	for (Iterator iterator = elements.iterator(); iterator.hasNext();) {
+		    			Object id = iterator.next();
+		    			ElementSymbol symbol = groupInfo.getSymbol(id);
+		    			assert symbol != null;
+		    			result.add(symbol);
+		    		}
 		        	if (flatten) {
-		        		accessPatterns.addAll(elements);
+		        		accessPatterns.addAll(result);
 		        	} else {
-		        		accessPatterns.add(new AccessPattern(elements));
+		        		accessPatterns.add(new AccessPattern(result));
 		        	}
 		        }
 		    }

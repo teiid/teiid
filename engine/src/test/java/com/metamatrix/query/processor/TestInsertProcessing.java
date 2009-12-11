@@ -100,7 +100,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 
@@ -259,7 +259,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 
@@ -340,7 +340,7 @@ public class TestInsertProcessing {
 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
 

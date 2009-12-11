@@ -642,7 +642,7 @@ public class TestDependentJoins extends TestCase {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -711,8 +711,6 @@ public class TestDependentJoins extends TestCase {
         capFinder.addCapabilities("pm4", depcaps); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Slightly modify metadata to set max set size to just a few rows - this
-        // will allow us to test the dependent overflow case
         FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
 
         Command command = TestProcessor.helpParse(sql);

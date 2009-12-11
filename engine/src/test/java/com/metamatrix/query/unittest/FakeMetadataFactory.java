@@ -237,7 +237,7 @@ public class FakeMetadataFactory {
 		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm2g1n1 = new QueryNode("vm2.g1", "SELECT * FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm2g1n1 = new QueryNode("vm2.g1", "SELECT pm1.g1.* FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm2g1 = FakeMetadataFactory.createUpdatableVirtualGroup("vm2.g1", vm2, vm2g1n1); //$NON-NLS-1$		
 		
         QueryNode vm1g1n1_defect10711 = new QueryNode("vm1.g1a", "SELECT * FROM vm1.g1 as X"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -405,8 +405,8 @@ public class FakeMetadataFactory {
             new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         List vm1g11e = createElements(vm1g11,
-            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+            new String[] { "e1", "e2", "e3", "e4", "e5", "e6"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         List vm1g12e = createElements(vm1g12,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -480,8 +480,8 @@ public class FakeMetadataFactory {
              new String[] { "ve1", "ve2" }, //$NON-NLS-1$ //$NON-NLS-2$
              new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         List vm1g37e = createElements(vm1g37,
-              new String[] { "e1", "e2", "e3", "e4", "e5" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-              new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.DOUBLE });
+              new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+              new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         List vm1g38e = createElements(vm1g38,
               new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
               new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
@@ -1008,7 +1008,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject vgvp6e4 = FakeMetadataFactory.createElement("vm1.vgvp6.ve4", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER, 3); //$NON-NLS-1$
 
         //virtual group with two elements. One selectable, one not.
-        QueryNode vm1g35n1 = new QueryNode("vm1.g35", "SELECT e2 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g35n1 = new QueryNode("vm1.g35", "SELECT e1, e2 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g35 = createVirtualGroup("vm1.g35", vm1, vm1g35n1); //$NON-NLS-1$
         FakeMetadataObject vm1g35e1 = FakeMetadataFactory.createElement("vm1.g35.e1", vm1g35, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
         vm1g35e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -2007,7 +2007,7 @@ public class FakeMetadataFactory {
         QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM vm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-        QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         // Create virtual elements
@@ -2016,9 +2016,9 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
             new Object[] { "xyz", Integer.getInteger("123"), Boolean.valueOf("true"), Double.valueOf("123.456")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         List vm1g2e = createElementsWithDefaults(vm1g2, 
-            new String[] { "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN },
-            new Object[] { "abc", Integer.getInteger("456"), Boolean.valueOf("false")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
+            new Object[] { "abc", Integer.getInteger("456"), Boolean.valueOf("false"), null}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         vm1g1.putProperty(procedureType, procedure1);
         vm1g2.putProperty(procedureType, procedure2);
@@ -3302,12 +3302,22 @@ public class FakeMetadataFactory {
                                       new String[] { "e1" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        FakeMetadataObject physGroup1 = createPhysicalGroup("MatTable.MatTable1", physModel); //$NON-NLS-1$
+        List physElements1 = createElements(physGroup,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        FakeMetadataObject physGroupStage1 = createPhysicalGroup("MatTable.MatStage1", physModel); //$NON-NLS-1$
+        List physStageElements1 = createElements(physGroupStage,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
         FakeMetadataObject physGroup_virtSrc = createPhysicalGroup("MatSrc.MatSrc", physModel_virtSrc); //$NON-NLS-1$
         List physElements_virtSrc = createElements(physGroup_virtSrc,
                                       new String[] { "X" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
-        QueryNode virtTrans = new QueryNode("MatView.MatView", "SELECT x FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode virtTrans = new QueryNode("MatView.MatView", "SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject virtGroup = createVirtualGroup("MatView.MatView", virtModel, virtTrans); //$NON-NLS-1$
         List virtElements = createElements(virtGroup,
                                       new String[] { "e1" }, //$NON-NLS-1$
@@ -3323,6 +3333,15 @@ public class FakeMetadataFactory {
                                       new String[] { "e1" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        QueryNode virtTrans1 = new QueryNode("MatView.MatView1", "SELECT e1 FROM MatView.MatView where e1 = 1");         //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject virtGroup1 = createVirtualGroup("MatView.MatView1", virtModel, virtTrans1); //$NON-NLS-1$
+        List virtElements1 = createElements(virtGroup1,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        virtGroup1.putProperty(FakeMetadataObject.Props.MAT_GROUP, physGroup1);
+        virtGroup1.putProperty(FakeMetadataObject.Props.MAT_STAGE, physGroupStage1);
+
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(virtModel);
         store.addObject(physModel);
@@ -3331,13 +3350,18 @@ public class FakeMetadataFactory {
         store.addObjects(physElements);
         store.addObject(physGroupStage);
         store.addObjects(physStageElements);
+        store.addObject(physGroup1);
+        store.addObjects(physElements1);
+        store.addObject(physGroupStage1);
+        store.addObjects(physStageElements1);
         store.addObject(physGroup_virtSrc);
         store.addObjects(physElements_virtSrc);
         store.addObject(virtGroup);
         store.addObjects(virtElements);
         store.addObject(vGroup);
         store.addObjects(vElements);
-        
+        store.addObject(virtGroup1);
+        store.addObjects(virtElements1);
         return new FakeMetadataFacade(store);
     }
     

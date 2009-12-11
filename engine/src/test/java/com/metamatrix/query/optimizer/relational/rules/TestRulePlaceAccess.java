@@ -26,8 +26,6 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
@@ -41,7 +39,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestRulePlaceAccess extends TestCase {
 
-    private static final QueryMetadataInterface METADATA = FakeMetadataFactory.example1();
+    private static final QueryMetadataInterface METADATA = FakeMetadataFactory.example1Cached();
 
     // ################################## FRAMEWORK ################################
 
@@ -58,7 +56,7 @@ public class TestRulePlaceAccess extends TestCase {
      * Object element ids) for a physical group will be found and added
      * as a property of an ACCESS node.
      */
-    public void testAddAccessPatterns2(){
+    public void testAddAccessPatterns2() throws Exception {
         Query query = new Query();
         
         From from = new From();
@@ -70,31 +68,17 @@ public class TestRulePlaceAccess extends TestCase {
         select.addSymbol(new AllSymbol());
         query.setSelect(select);
 
-        try {
-            group.setMetadataID(METADATA.getGroupID("pm4.g2")); //$NON-NLS-1$
-        } catch (QueryMetadataException e) {
-            fail(e.getMessage());
-        } catch (MetaMatrixComponentException e) {
-            fail(e.getMessage());
-        }
+        group.setMetadataID(METADATA.getGroupID("pm4.g2")); //$NON-NLS-1$
                 
         PlanNode n1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         n1.setProperty(NodeConstants.Info.ATOMIC_REQUEST, query);
         n1.addGroup(group);
         
-        try {
-            RulePlaceAccess.addAccessPatternsProperty(n1, METADATA);
-        } catch (QueryMetadataException e) {
-            fail(e.getMessage());
-        } catch (MetaMatrixComponentException e) {
-            fail(e.getMessage());
-        }
+        RulePlaceAccess.addAccessPatternsProperty(n1, METADATA);
 
         Collection accessPatterns = (Collection)n1.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         assertNotNull(accessPatterns);
         assertTrue("Expected two access patterns, got " + accessPatterns.size(), accessPatterns.size() == 2); //$NON-NLS-1$
-//        assertTrue(accessPatterns.contains(FakeMetadata.ELEMENT_IDS_1));
-//        assertTrue(accessPatterns.contains(FakeMetadata.ELEMENT_IDS_2));
     }   
     
 

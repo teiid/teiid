@@ -208,7 +208,20 @@ public class RulePushAggregates implements
 		
 		//update the parent plan with the staged aggregates and the new projected symbols
 		List<SingleElementSymbol> projectedViewSymbols = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
-		SymbolMap newParentMap = SymbolMap.createSymbolMap(child.getGroups().iterator().next(), projectedViewSymbols);
+		List<ElementSymbol> updatedVirturalElement = new ArrayList<ElementSymbol>(virtualElements);
+		
+		//hack to introduce aggregate symbols to the parent view TODO: this should change the metadata properly.
+		GroupSymbol virtualGroup = child.getGroups().iterator().next();
+		for (int i = updatedVirturalElement.size(); i < projectedViewSymbols.size(); i++) {
+			SingleElementSymbol symbol = projectedViewSymbols.get(i);
+			String name = symbol.getShortName();
+            String virtualElementName = virtualGroup.getCanonicalName() + ElementSymbol.SEPARATOR + name;
+            ElementSymbol virtualElement = new ElementSymbol(virtualElementName);
+            virtualElement.setGroupSymbol(virtualGroup);
+            virtualElement.setType(symbol.getType());
+            updatedVirturalElement.add(virtualElement);
+		}
+		SymbolMap newParentMap = SymbolMap.createSymbolMap(updatedVirturalElement, projectedViewSymbols);
 		child.setProperty(NodeConstants.Info.SYMBOL_MAP, newParentMap);
 		Map<AggregateSymbol, ElementSymbol> projectedMap = new HashMap<AggregateSymbol, ElementSymbol>();
 		Iterator<AggregateSymbol> aggIter = aggregates.iterator();
@@ -303,7 +316,7 @@ public class RulePushAggregates implements
 
         List<SingleElementSymbol> projectedViewSymbols = QueryRewriter.deepClone(projectedSymbols, SingleElementSymbol.class);
 
-        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols);
+        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols, metadata);
         for (AggregateSymbol agg : aggregates) {
         	agg = (AggregateSymbol)agg.clone();
         	ExpressionMappingVisitor.mapExpressions(agg, viewMapping.asMap());

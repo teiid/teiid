@@ -22,10 +22,13 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.teiid.dqp.internal.process.TestPreparedStatement;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -51,31 +54,14 @@ import com.metamatrix.query.util.CommandContext;
 /**
  * Tests {@link RuleChooseAccessPattern}
  */
-public class TestRuleAccessPatternValidation extends TestCase {
+public class TestRuleAccessPatternValidation {
 
-    private static final FakeMetadataFacade METADATA = FakeMetadataFactory.example1();
+    private static final FakeMetadataFacade METADATA = FakeMetadataFactory.example1Cached();
 
-    private PlanHints planHints;
-    
     private static final boolean DEBUG = false;
 
-	private static CapabilitiesFinder FINDER = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());;
+	private static CapabilitiesFinder FINDER = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());
    
-    // ################################## FRAMEWORK ################################
-    
-    /**
-     * Constructor for TestRuleChooseAccessPattern.
-     */
-    public TestRuleAccessPatternValidation(String name) {
-        super(name);
-    }
-
-    public void setUp() {
-    	this.planHints = new PlanHints();
-    }
-
-    // ################################## TEST HELPERS ################################
-
 	/**
 	 * @param command the query to be turned into a test query plan
 	 * @param expectedChosenPredicates expected criteria predicates that should
@@ -112,7 +98,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
     	p.initialize(query, null, METADATA, FINDER, null, null);
     	PlanNode planNode = p.generatePlan(query);
 
-		final RuleStack rules = RelationalPlanner.buildRules(planHints);
+		final RuleStack rules = RelationalPlanner.buildRules(new PlanHints());
 
 		PlanNode testPlan = helpExecuteRules(rules, planNode, METADATA, DEBUG);
 		
@@ -149,7 +135,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * This test demonstrates that APs are ignored for inserts
      * CASE 3966
      */
-    public void testInsertWithAccessPattern_Case3966() throws Exception {
+    @Test public void testInsertWithAccessPattern_Case3966() throws Exception {
         this.helpTestAccessPatternValidation( "insert into pm4.g1 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )" ); //$NON-NLS-1$
     }
     
@@ -157,7 +143,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * This test demonstrates that a satisfied AP does not fail.  
      * Found testing fix for 3966.
      */
-    public void testDeleteWithAccessPattern_Case3966() throws Exception {
+    @Test public void testDeleteWithAccessPattern_Case3966() throws Exception {
         this.helpTestAccessPatternValidation( "delete from pm4.g1 where e1 = 'test' and e2 = 1" ); //$NON-NLS-1$ 
     }
     
@@ -165,7 +151,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * This test demonstrates that unsatisfied AP fails.  
      * Found testing fix for 3966.
      */
-    public void testDeleteWithAccessPattern_Case3966_2() throws Exception {
+    @Test public void testDeleteWithAccessPattern_Case3966_2() throws Exception {
         try {
             this.helpTestAccessPatternValidation( "delete from pm4.g1" ); //$NON-NLS-1$ 
             fail("Expected QueryPlannerException, but did not get one"); //$NON-NLS-1$
@@ -177,7 +163,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
         }
     }
     
-    public void testUpdateWithAccessPattern_Case3966() throws Exception {
+    @Test public void testUpdateWithAccessPattern_Case3966() throws Exception {
         this.helpTestAccessPatternValidation( "update pm4.g1 set e1 = 'test1' where e1 = 'test' and e2 = 1" ); //$NON-NLS-1$ 
     }
     
@@ -185,7 +171,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * This test demonstrates that unsatisfied AP fails.  
      * Found testing fix for 3966.
      */
-    public void testUpdateWithAccessPattern_Case3966_2() throws Exception {
+    @Test public void testUpdateWithAccessPattern_Case3966_2() throws Exception {
         try {
             this.helpTestAccessPatternValidation( "update pm4.g1 set e1 = 'test'" ); //$NON-NLS-1$ 
             fail("Expected QueryPlannerException, but did not get one"); //$NON-NLS-1$
@@ -201,7 +187,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * This test demonstrates that APs are ignored for inserts through a virtual layer
      * CASE 3966
      */
-    public void testInsertWithAccessPattern_Case3966_VL() throws Exception {
+    @Test public void testInsertWithAccessPattern_Case3966_VL() throws Exception {
         this.helpTestAccessPatternValidation( "insert into vm1.g37 (e1, e2, e3, e4) values('test', 1, convert('true', boolean) , convert('12', double) )" ); //$NON-NLS-1$
     }
     
@@ -210,7 +196,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
      * through a virtual layer does not fail.  
      * Found testing fix for 3966.
      */
-    public void testDeleteWithAccessPattern_Case3966_VL() throws Exception {
+    @Test public void testDeleteWithAccessPattern_Case3966_VL() throws Exception {
         this.helpTestAccessPatternValidation( "delete from vm1.g37 where e1 = 'test' and e2 = 1" ); //$NON-NLS-1$ 
     }
 }

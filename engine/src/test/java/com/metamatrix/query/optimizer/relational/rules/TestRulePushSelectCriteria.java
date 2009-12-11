@@ -32,6 +32,9 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.TempMetadataAdapter;
+import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.RelationalPlanner;
@@ -46,7 +49,6 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.util.CommandContext;
 
@@ -65,7 +67,7 @@ public class TestRulePushSelectCriteria {
     }
     
     @Test public void testPushAcrossFrameWithAccessNode() throws Exception {
-    	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+    	QueryMetadataInterface metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), new TempMetadataStore());
     	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata, null); //$NON-NLS-1$
     	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata, null); //$NON-NLS-1$
     	RelationalPlanner p = new RelationalPlanner();
@@ -74,7 +76,7 @@ public class TestRulePushSelectCriteria {
     	PlanNode child = p.generatePlan(subCommand);
     	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
     	sourceNode.addFirstChild(child);
-        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<SingleElementSymbol>)child.getFirstChild().getProperty(Info.PROJECT_COLS)));
+        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<SingleElementSymbol>)child.getFirstChild().getProperty(Info.PROJECT_COLS), metadata));
     	//add a dummy access node
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode.addGroups(child.getFirstChild().getGroups());

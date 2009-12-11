@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -41,7 +40,6 @@ import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -137,13 +135,7 @@ public class TestDependentJoins extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        Command command = TestOptimizer.helpGetCommand("select pm1.g1.e1 from pm1.g1, pm2.g1 where pm1.g1.e1 = pm2.g1.e1", FakeMetadataFactory.example1Cached(), Collections.EMPTY_LIST); //$NON-NLS-1$
-
-        Option option = new Option();
-        option.addDependentGroup("pm2.g1"); //$NON-NLS-1$
-        command.setOption(option);
-        
-        ProcessorPlan plan = TestOptimizer.helpPlanCommand(command, FakeMetadataFactory.example1Cached(), capFinder,
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm2.g1 where pm1.g1.e1 = pm2.g1.e1 option makedep pm2.g1", FakeMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         checkDependentGroups(plan, new String[] {"pm2.g1"}); //$NON-NLS-1$
@@ -173,10 +165,8 @@ public class TestDependentJoins extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        Command command = TestOptimizer.helpGetCommand("select pm1.g1.e1, pm2.g1.e1 from pm1.g1 MAKEDEP INNER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e1 = pm2.g1.e1", FakeMetadataFactory.example1Cached(), Collections.EMPTY_LIST); //$NON-NLS-1$
-
-        ProcessorPlan plan = TestOptimizer.helpPlanCommand(command, FakeMetadataFactory.example1Cached(), capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm2.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1, pm2.g1.e1 from pm1.g1 MAKEDEP INNER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e1 = pm2.g1.e1", FakeMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm2.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         checkDependentGroups(plan, new String[] {"pm1.g1"}); //$NON-NLS-1$
         checkNotDependentGroups(plan, new String[] {"pm2.g1"}); //$NON-NLS-1$
