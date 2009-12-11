@@ -378,14 +378,15 @@ public class SimpleQueryResolver implements CommandResolver {
 			    
 			    id = metadata.getMetadataStore().getTempGroupID(queryName);
 			    id.setOriginalMetadataID(storedProcedureCommand.getProcedureID());
-			    List accessPatternIds = new LinkedList();
-			    
-			    for (Iterator i = accessPatternElementNames.iterator(); i.hasNext();) {
-			        String name = (String)i.next();
-			        accessPatternIds.add(metadata.getMetadataStore().getTempElementID(name));
+			    if (!accessPatternElementNames.isEmpty()) {
+				    List<TempMetadataID> accessPatternIds = new LinkedList<TempMetadataID>();
+				    
+				    for (String name : accessPatternElementNames) {
+				        accessPatternIds.add(metadata.getMetadataStore().getTempElementID(name));
+				    }
+				    
+				    id.setAccessPatterns(Arrays.asList(new TempMetadataID("procedure access pattern", accessPatternIds))); //$NON-NLS-1$
 			    }
-			    
-			    id.setAccessPatterns(Arrays.asList(new TempMetadataID("procedure access pattern", accessPatternIds))); //$NON-NLS-1$
 			}
 			
 			group.setMetadataID(id);

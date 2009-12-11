@@ -738,4 +738,20 @@ public class TestProcedureRelational {
                
     }
     
+    @Test public void testProcRelationalWithNoInputs() {
+    	String sql = "select e1 from pm1.vsp2 order by e1 desc limit 1"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] {
+        		Arrays.asList("c") //$NON-NLS-1$
+        };        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);       
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());  
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }
