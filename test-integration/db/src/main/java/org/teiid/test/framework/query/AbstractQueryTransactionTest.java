@@ -55,6 +55,8 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
     protected int queryTimeout = -1;
 
     protected ConnectionStrategy connStrategy;
+    
+    private Throwable applicationException=null;
 
     public AbstractQueryTransactionTest() {
 	super();
@@ -156,6 +158,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
     @Override
     public void setup() throws QueryTestFailedException {
 	
+	this.applicationException = null;
 	this.setConnection(connStrategy.getConnection());
 	setupDataStore();
 	
@@ -272,6 +275,30 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
     @Override
     public XAConnection getXAConnection() {
 	return null;
+	
     }
+
+    @Override
+    public void setApplicationException(Throwable t) {
+	this.applicationException = t;
+	
+    }
+
+    @Override
+    public boolean exceptionOccurred() {
+	return (super.exceptionOccurred() ? super.exceptionOccurred() : this.applicationException != null);
+
+    }
+
+    @Override
+    public Throwable getApplicationException() {
+	// TODO Auto-generated method stub
+	return this.applicationException;
+    }
+
+    
+    
+    
+    
 
 }
