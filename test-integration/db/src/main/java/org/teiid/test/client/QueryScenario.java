@@ -94,6 +94,18 @@ public interface QueryScenario {
      * Return the root output directory where comparison reports or newly generated expected results should be located.
      */
     String getOutputDirectory();
+    
+    /**
+     * Add a {@link TestResult} to the query set for tracking and reporting.
+     * @param result
+     */
+    void addTestResult(String querySetID, TestResult result);
+    
+    /**
+     * Call to get a collection of the currently completed {@link TestResult}s
+     * @return
+     */
+    Collection<TestResult> getTestResults(String querySetID);
 
 
 

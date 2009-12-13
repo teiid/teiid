@@ -223,10 +223,15 @@ public class TestResultsSummary  {
      *            The test end time.
      * @throws Exception
      */
-    public void printResults(String testname,
-	    List<TestResult> testResults, Properties props, long testStartTS,
-	    long endTS, int numberOfClients, int runNumber, String outputDir,
-	    String querySetID) throws Exception {
+    public void printResults(QueryScenario scenario, String querySetID,
+	    long testStartTS,
+	    long endTS, int numberOfClients, int runNumber) throws Exception {
+	
+	String testname = scenario.getQueryScenarioIdentifier();
+	Collection<TestResult> testResults = scenario.getTestResults(querySetID);
+//	Properties props = scenario.getProperties();
+	String outputDir = scenario.getResultsGenerator().getOutputDir();
+	
 	//       CombinedTestClient.log("Calculating and printing result statistics"); //$NON-NLS-1$
 	if (testResults.size() > 0) {
 	    // Create output file
@@ -309,7 +314,9 @@ public class TestResultsSummary  {
 	}
     }
     
-    public void printTotals(String outputDir, String scenario_name) throws Exception {
+    public void printTotals(QueryScenario scenario ) throws Exception {
+	    String outputDir = scenario.getResultsGenerator().getOutputDir(); 
+	    String scenario_name = scenario.getQueryScenarioIdentifier();
 	
 	String summarydir = ConfigPropertyLoader.getInstance().getProperty(PROP_SUMMARY_PRT_DIR);
 	if (summarydir != null) {

@@ -49,6 +49,7 @@ import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
+
 import com.metamatrix.core.util.StringUtil;
 
 
@@ -145,20 +146,18 @@ public class XMLExpectedResults implements ExpectedResults {
 
         final String eMsg = "CompareResults Error: "; //$NON-NLS-1$
    	
-	   	ResultsHolder expectedResults = (ResultsHolder) getResults(queryIdentifier);
-        ResultsHolder actualResults;
-        String actualExceptionClass = null;
+	ResultsHolder expectedResults = (ResultsHolder) getResults(queryIdentifier);
 
-	       
-        switch (testStatus) {
+	ResultsHolder actualResults;
+
+	switch (testStatus) {
 		case TestResult.RESULT_STATE.TEST_EXCEPTION:
-			
-			
-			break;
+			throw new QueryTestFailedException(
+				eMsg
+					+ "Test resulted in unexpected exception " + actualException.getMessage()); //$NON-NLS-1$
+
 			
 		case TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION:
-		    
-		           actualExceptionClass = actualException.getClass().getName();
 
 		            if (!expectedResults.isException()) {
 		                // The actual exception was expected, but the expected results was not
@@ -173,57 +172,31 @@ public class XMLExpectedResults implements ExpectedResults {
 		            
 		            compareExceptions(actualResults, expectedResults, eMsg);
 
-			
-			break;
-
-			// default success
-		default:
-			
-			
-			// is an expected exception
-			if (actualException != null) {
-				
-		           actualExceptionClass = actualException.getClass().getName();
-
-		            if (!expectedResults.isException()) {
-		                // We didn't get results but there was no expected exception either
-		                throw new QueryTestFailedException(eMsg + "Actual was an exception, but expected results was not. '" //$NON-NLS-1$
-		                	 + actualException.getMessage() + "'"); //$NON-NLS-1$
-		            }
-		            // We got an exception that we expected - convert actual exception to ResultsHolder
-		            actualResults = new ResultsHolder(TagNames.Elements.EXCEPTION);
-		            actualResults.setQueryID(expectedResults.getQueryID());
-
-		            actualResults = convertException(actualException, actualResults);
+		            break;
 		            
-		            compareExceptions(actualResults, expectedResults, eMsg);
+		  default: 
+			    // DEBUG:
+			    // debugOut.println("*** Expected Results (holder): " +
+			    // expectedResults);
+			    // DEBUG:
+			    // debugOut.println("*** Actual Results (ResultSet): " +
+			    // printResultSet(results));
 
-			} else if (expectedResults.isException()) {
+			    // Convert results to ResultsHolder
+			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
+			    actualResults.setQueryID(expectedResults.getQueryID());
+			    convertResults(resultSet, batchSize,   actualResults);
 
-		                throw new QueryTestFailedException(eMsg + "The Expected result was an exception, but the Actual results wasn't an exception.  Expected exception: '" //$NON-NLS-1$
-                                        + expectedResults.getExceptionMsg() + "'"); //$NON-NLS-1$
-			    
-				
-			} else {
-				
-		           actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
-		            actualResults.setQueryID(expectedResults.getQueryID());
-		          long firstBatchResponseTime = 
-		            	convertResults(resultSet, batchSize, actualResults);
-			
-		           compareResultSets(actualResults.getRows(),
-		        	   actualResults.getTypes(),
-		        	   actualResults.getIdentifiers(),
-		        	   expectedResults.getRows(),
-		        	   expectedResults.getTypes(),
-		        	   expectedResults.getIdentifiers(),
-		        	   eMsg);
+			    // DEBUG:
+			    // debugOut.println("*** Actual Results (holder): " +
+			    // actualResults);
 
-				
-			}
-			
+			// Compare expected results with actual results, record by record
+			compareResults(actualResults, expectedResults, eMsg, isOrdered);
+
 			break;
-		}
+		    
+	       }
 
     	
     }
@@ -312,10 +285,12 @@ public class XMLExpectedResults implements ExpectedResults {
                                       final ResultsHolder expectedResults,
                                       final String eMsg,
                                       boolean isOrdered) throws QueryTestFailedException {
-        if (actualResults.isException() && expectedResults.isException()) {
-            // Compare exceptions
-            compareExceptions(actualResults, expectedResults, eMsg);
-        } else if (actualResults.isResult() && expectedResults.isResult()) {
+//        if (actualResults.isException() && expectedResults.isException()) {
+//            // Compare exceptions
+//            compareExceptions(actualResults, expectedResults, eMsg);
+//        } else 
+            
+ //           if (actualResults.isResult() && expectedResults.isResult()) {
             // Compare results
             if (isOrdered == false && actualResults.hasRows() && expectedResults.hasRows()) {
                 // If the results are not ordered, we can sort both
@@ -341,11 +316,11 @@ public class XMLExpectedResults implements ExpectedResults {
                               expectedResults.getTypes(),
                               expectedResults.getIdentifiers(),
                               eMsg);
-        } else if (actualResults.isResult() && expectedResults.isException()) {
-            // Error - expected exception but got result
-        } else if (actualResults.isException() && expectedResults.isResult()) {
-            // Error - expected result but got exception
-        }
+//        } else if (actualResults.isResult() && expectedResults.isException()) {
+//            // Error - expected exception but got result
+//        } else if (actualResults.isException() && expectedResults.isResult()) {
+//            // Error - expected result but got exception
+//        }
     }
      
      /**
@@ -774,6 +749,106 @@ public class XMLExpectedResults implements ExpectedResults {
 
 	}
     
-    
+	private  long compareResults(final ResultsHolder expectedResults,
+	    final ResultSet results, final int testStatus, final Throwable actualException,
+	    final boolean isOrdered, final int batchSize)
+	    throws QueryTestFailedException {
+
+	ResultsHolder actualResults;
+	long firstBatchResponseTime = 0;
+	final String eMsg = "CompareResults Error: "; //$NON-NLS-1$
+	
+	       switch (testStatus) {
+		case TestResult.RESULT_STATE.TEST_EXCEPTION:
+	                throw new QueryTestFailedException(eMsg + "TestResult indicates test exception occured, the process should not have passed it in for comparison."); //$NON-NLS-1$
+			
+			
+//			break;
+			
+		case TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION:
+		//    String actualExceptionClass = actualException.getClass().getName();
+
+		            if (!expectedResults.isException()) {
+		                // The actual exception was expected, but the expected results was not
+		                throw new QueryTestFailedException(eMsg + "The actual result was an exception, but the Expected results wasn't an exception.  Actual exception: '" //$NON-NLS-1$
+		                                                   + actualException.getMessage() + "'"); //$NON-NLS-1$
+		            }
+		            // We got an exception that we expected - convert actual exception to ResultsHolder
+		            actualResults = new ResultsHolder(TagNames.Elements.EXCEPTION);
+		            actualResults.setQueryID(expectedResults.getQueryID());
+
+		            actualResults = convertException(actualException, actualResults);
+		            
+		            compareExceptions(actualResults, expectedResults, eMsg);
+
+		            return firstBatchResponseTime;
+		    
+//		    	break;
+		    
+	       }
+	       
+
+
+//	if (results == null) {
+//	    // The result is an exception - compare exceptions
+//
+//	    String actualExceptionClass = null;
+//	    if (actualException != null) {
+//		actualExceptionClass = actualException.getClass().getName();
+//	    } else {
+//		// We didn't get results but there was no exception either
+//		throw new QueryTestFailedException(eMsg
+//			+ "Didn't get results or exception '"); //$NON-NLS-1$
+//	    }
+//
+//	    if (!expectedResults.isException()) {
+//		// We didn't get results but there was no expected exception
+//		// either
+//		throw new QueryTestFailedException(
+//			eMsg
+//				+ "Expected results but didn't get results or exception '" //$NON-NLS-1$
+//				+ actualExceptionClass + "'"); //$NON-NLS-1$
+//	    }
+//	    // We got an exception that we expected - convert actual exception
+//	    // to ResultsHolder
+//	    actualResults = new ResultsHolder(TagNames.Elements.EXCEPTION);
+//	    actualResults.setQueryID(expectedResults.getQueryID());
+//
+//	    actualResults = convertException(actualException, actualResults);
+//
+//	} else {
+	    // The result is a ResultSet - compare actual results with expected
+
+	    if (expectedResults.isException()) {
+		throw new QueryTestFailedException(
+			eMsg
+				+ "Expected exception " + expectedResults.getExceptionMsg() //$NON-NLS-1$
+				+ " but got results"); //$NON-NLS-1$
+	    }
+	    // DEBUG:
+	    // debugOut.println("*** Expected Results (holder): " +
+	    // expectedResults);
+	    // DEBUG:
+	    // debugOut.println("*** Actual Results (ResultSet): " +
+	    // printResultSet(results));
+
+	    // Convert results to ResultsHolder
+	    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
+	    actualResults.setQueryID(expectedResults.getQueryID());
+	    firstBatchResponseTime = convertResults(results, batchSize,
+		    actualResults);
+
+	    // DEBUG:
+	    // debugOut.println("*** Actual Results (holder): " +
+	    // actualResults);
+//	} // end is resultSet
+
+	// Compare expected results with actual results, record by record
+	compareResults(actualResults, expectedResults, eMsg, isOrdered);
+
+	return firstBatchResponseTime;
+    }
+
+
 
 }

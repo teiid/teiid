@@ -23,7 +23,11 @@ package org.teiid.test.client.ctc;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,6 +37,7 @@ import org.teiid.test.client.QueryReader;
 import org.teiid.test.client.QueryScenario;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
+import org.teiid.test.client.TestResult;
 import org.teiid.test.client.TestProperties.RESULT_MODES;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
@@ -58,6 +63,9 @@ public class CTCQueryScenario implements QueryScenario {
 
     private QueryReader reader = null;
     private ResultsGenerator genResults = null;    
+    private Map<String, Collection<TestResult>> testResults = Collections.synchronizedMap(new HashMap<String, Collection<TestResult>>());
+
+
     private Properties props;
     private String outputDir = null;
     
@@ -193,6 +201,28 @@ public class CTCQueryScenario implements QueryScenario {
     @Override
     public String getOutputDirectory() {
 	return outputDir;
+    }
+
+
+
+    @Override
+    public synchronized void addTestResult(String querySetID, TestResult result) {
+	Collection<TestResult> results = null;
+	if (this.testResults.containsKey(querySetID)) {
+	    results = this.testResults.get(querySetID);
+	} else {
+	    results = new ArrayList<TestResult>();
+	    this.testResults.put(querySetID, results);
+	}
+	results.add(result);
+	
+    }
+
+
+
+    @Override
+    public Collection<TestResult> getTestResults(String querySetID) {
+	return this.testResults.get(querySetID);
     }
 
 

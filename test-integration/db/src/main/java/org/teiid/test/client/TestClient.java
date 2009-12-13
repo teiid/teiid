@@ -22,11 +22,8 @@
 
 package org.teiid.test.client;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -178,8 +175,6 @@ public class TestClient  {
 	    Iterator<String> queryTestIt = null;
 	    queryTestIt = queryTests.keySet().iterator();
 	    
-	    List<TestResult> testResults = new ArrayList<TestResult>();
-
 	    
 	    
 	    long beginTS = System.currentTimeMillis();
@@ -195,9 +190,6 @@ public class TestClient  {
             	    
         	    // run test
             	    tc.runTransaction(userTxn);
-
-            	    
-            	    testResults.add(userTxn.getTestResult());
 	             
         	}
         	
@@ -205,13 +197,13 @@ public class TestClient  {
         	
         	TestLogger.logInfo("End Query Set [" + querySetID + "]");	
         	
-        	printResultsForSet(summary, testResults, querySetID, queryset, beginTS, endTS);
+        	printResultsForSet(summary, querySetID, queryset, beginTS, endTS);
         	
-        	testResults.clear();
+  
 	}
 	
 	
-	summary.printTotals(queryset.getResultsGenerator().getOutputDir(), queryset.getQueryScenarioIdentifier());
+	summary.printTotals(queryset);
 	
 	// cleanup all connections created for this test.
 	userTxn.getConnectionStrategy().shutdown();
@@ -234,22 +226,16 @@ public class TestClient  {
     }
 
         
-    private void printResultsForSet(final TestResultsSummary summary ,final List<TestResult> testResults, final String querySetID, final QueryScenario querySet, final long beginTS, final long endTS) {
+    private void printResultsForSet(final TestResultsSummary summary , final String querySetID, final QueryScenario querySet, final long beginTS, final long endTS) {
 	    TestLogger.logDebug("Print results for Query Set [" + querySetID
 		    + "]");
+
 	    try {
-		summary.printResults(querySet.getQueryScenarioIdentifier(), 
-			testResults, 
-			querySet.getProperties(),
-			beginTS, endTS, 1, 1, 
-			querySet.getResultsGenerator().getOutputDir(),
-			querySetID);
+		summary.printResults(querySet, querySetID,beginTS, endTS, 1, 1);
 	    } catch (Exception e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    }
-
-	    testResults.clear();
 
     }
     

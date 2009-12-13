@@ -53,8 +53,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
     private int testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
 
-    private TestResult rs = null;
-
     private boolean errorExpected = false;
     
     private String sql = null;
@@ -76,7 +74,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
 
-	rs = null;
 
 	errorExpected = false;
 
@@ -149,7 +146,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	// TODO: uncomment
 	ResultSet erResultSet = null;
-	// this.internalResultSet;
+	TestResult rs = null;
 
 	ResultsGenerator genResults = this.querySet.getResultsGenerator();
 	
@@ -227,13 +224,11 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	rs = new TestResultStat(querySetID, this.queryIdentifier, sql,
 		testStatus, beginTS, endTS, resultException, errorfile);
+	
+	this.querySet.addTestResult(this.querySetID, rs);
 
     }
 
-    public TestResult getTestResult() {
-	return this.rs;
-
-    }
 
     @Override
     protected Statement createStatement() throws SQLException {
