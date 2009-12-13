@@ -60,8 +60,8 @@ public class BatchedUpdateNode extends RelationalNode {
     
     /** Set containing the indexes of commands that weren't executed. */
     private Set<Integer> unexecutedCommands;
-    /** Flag indicating that at least one command was sent to the DataManager. */
-    private boolean commandsWereExecuted = true;
+
+	private int commandCount;
     
     /**
      *  
@@ -107,9 +107,7 @@ public class BatchedUpdateNode extends RelationalNode {
                 unexecutedCommands.add(Integer.valueOf(i));
             }
         }
-        if (commandsToExecute.isEmpty()) {
-            commandsWereExecuted = false;
-        } else {
+        if (!commandsToExecute.isEmpty()) {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
             tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, modelName, null, getID());
         }
@@ -122,28 +120,19 @@ public class BatchedUpdateNode extends RelationalNode {
      */
     public TupleBatch nextBatchDirect() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         int numExpectedCounts = updateCommands.size();
-        // If we don't have the tuple source yet, then we're blocked
-        if (commandsWereExecuted) {
-            // Otherwise, this tuple source has all the data we need
-            List tuple;
-            for ( int i = 0; i < numExpectedCounts; i++) {
-                // If the command at this index was not executed
-                if (unexecutedCommands.contains(Integer.valueOf(i))) {
-                    addBatchRow(ZERO_COUNT_TUPLE);
-                } else { // Otherwise, get the next count in the batch
-                    tuple = tupleSource.nextTuple();
-                    if (tuple != null) {
-                        // Assumption: the number of returned tuples exactly equals the number of commands submitted
-                        addBatchRow(Arrays.asList(new Object[] {tuple.get(0)}));
-                    } else {
-                        // Should never happen since the number of expected results is known
-                        throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("BatchedUpdateNode.unexpected_end_of_batch")); //$NON-NLS-1$
-                    }
-                }
-            }
-        } else { // No commands were executed, so the counts are all 0.
-            for (int i = 0; i < numExpectedCounts; i++) {
+        for (;commandCount < numExpectedCounts; commandCount++) {
+            // If the command at this index was not executed
+            if (tupleSource == null || unexecutedCommands.contains(Integer.valueOf(commandCount))) {
                 addBatchRow(ZERO_COUNT_TUPLE);
+            } else { // Otherwise, get the next count in the batch
+                List<?> tuple = tupleSource.nextTuple();
+                if (tuple != null) {
+                    // Assumption: the number of returned tuples exactly equals the number of commands submitted
+                    addBatchRow(Arrays.asList(new Object[] {tuple.get(0)}));
+                } else {
+                    // Should never happen since the number of expected results is known
+                    throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("BatchedUpdateNode.unexpected_end_of_batch", commandCount, numExpectedCounts)); //$NON-NLS-1$
+                }
             }
         }
         // This is the only tuple batch we need.
@@ -174,7 +163,7 @@ public class BatchedUpdateNode extends RelationalNode {
         super.reset();
         tupleSource = null;
         unexecutedCommands = null;
-        commandsWereExecuted = true;
+        commandCount = 0;
     }
     
     /** 

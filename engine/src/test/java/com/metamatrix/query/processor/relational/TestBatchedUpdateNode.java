@@ -84,7 +84,12 @@ public class TestBatchedUpdateNode {
         }
         FakePDM fakePDM = new FakePDM(numExecutedCommands);
         BatchedUpdateNode node = helpOpen(commands, fakePDM);
-        TupleBatch batch = node.nextBatch();
+        TupleBatch batch = null;
+        try {
+        	batch = node.nextBatch();
+        } catch (BlockedException e) {
+        	batch = node.nextBatch();
+        }
         assertNotNull(batch);
         assertTrue(batch.getTerminationFlag());
         assertEquals(expectedResults.length, batch.getRowCount());
@@ -180,12 +185,12 @@ public class TestBatchedUpdateNode {
     }
     
     @Test public void testNextBatchSomeCommandsExecuted() throws Exception {
-        String[] commands = {"UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
-                             "DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
+        String[] commands = {"DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
+        					 "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE e1 = 'myrow'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE 1 = 0" //$NON-NLS-1$
         };
-        int[] expectedResults = {1,0,1,0};
+        int[] expectedResults = {0,1,1,0};
         helpTestNextBatch(commands, expectedResults);
     }
     
@@ -221,13 +226,18 @@ public class TestBatchedUpdateNode {
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;
         private int numCommands;
+        private boolean first = true;
         private FakeTupleSource(int numCommands) {
             this.numCommands = numCommands;
         }
         public void closeSource() throws MetaMatrixComponentException {}
         public List getSchema() {return null;}
         public List nextTuple() throws MetaMatrixComponentException {
-            if (currentTuple < numCommands) {
+            if (first) {
+            	first = false;
+            	throw BlockedException.INSTANCE;
+            }
+        	if (currentTuple++ < numCommands) {
                 return Arrays.asList(new Object[] {new Integer(1)});
             }
             return null;

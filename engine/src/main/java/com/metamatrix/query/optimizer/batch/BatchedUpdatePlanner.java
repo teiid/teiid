@@ -49,7 +49,6 @@ import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Insert;
-import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -186,8 +185,6 @@ public class BatchedUpdatePlanner implements CommandPlanner {
             return ((Update)command).getGroup();
         } else if (type == Command.TYPE_DELETE) {
             return ((Delete)command).getGroup();
-        } else if (type == Command.TYPE_QUERY) { 
-            return ((Query)command).getInto().getGroup();
         }
         throw new MetaMatrixRuntimeException(QueryExecPlugin.Util.getString("BatchedUpdatePlanner.unrecognized_command", command)); //$NON-NLS-1$
     }
@@ -202,10 +199,6 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * @since 4.2
      */
     public static boolean isEligibleForBatching(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
-        // If it's a SELECT INTO, it shouldn't be part of a connector batch.
-        if (command.getType() == Command.TYPE_QUERY) {
-            return false;
-        }
         // If the command updates a physical group, it's eligible
         return !metadata.isVirtualGroup(getUpdatedGroup(command).getMetadataID());
     }
