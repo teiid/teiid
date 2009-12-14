@@ -152,7 +152,7 @@ public final class MMDriver extends BaseDriver {
      * These include required and any optional properties specified in the URL.
      * Expected URL format -- jdbc:metamatrix:local:VDB@server:port;version=1;user=logon;
      * password=pw;logFile=<logFile.log>;
-     * logLevel=<logLevel>;txnAutoWrap=<?>;credentials=mycredentials
+     * logLevel=<logLevel>;credentials=mycredentials
      * @param The URL needed to be parsed.
      * @param The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
@@ -195,7 +195,7 @@ public final class MMDriver extends BaseDriver {
      * Typically drivers will return true if they understand the subprotocol specified
      * in the URL and false if they don't.
      * Expected URL format is
-     * jdbc:metamatrix:subprotocol:VDB@server:port;version=1;logFile=<logFile.log>;logLevel=<logLevel>;txnAutoWrap=<?>
+     * jdbc:metamatrix:subprotocol:VDB@server:port;version=1;logFile=<logFile.log>;logLevel=<logLevel>;
      * @param The URL used to establish a connection.
      * @return A boolean value indicating whether the driver understands the subprotocol.
      * @throws SQLException, should never occur

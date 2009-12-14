@@ -26,7 +26,7 @@
 					<entry>
 						Treats the user command as if all source commands are executed
 						within the scope of the same transaction. The
-						<link linkend="autowrap">AutoWrap</link>
+						<link linkend="autowrap">AutoCommitTxn</link>
 						execution property controls the behavior of command level
 						transactions.
 					</entry>
@@ -45,13 +45,13 @@
 		</tgroup>
 	</table>
 	<sect1 id="autowrap">
-		<title>AutoWrap Execution Property</title>
+		<title>AutoCommitTxn Execution Property</title>
 		<para>Since user level commands may execute multiple source
-			commands, users can specify the AutoWrap execution property to
+			commands, users can specify the AutoCommitTxn execution property to
 			control the transactional behavior of a user command when not in a
 			local or global transaction.</para>
 		<table>
-			<title>AutoWrap Settings</title>
+			<title>AutoCommitTxn Settings</title>
 			<tgroup cols="2">
 				<colspec colwidth="1*" />
 				<colspec colwidth="3*" />
@@ -74,19 +74,9 @@
 							safest, but may be burdonsome on performance.</entry>
 					</row>
 					<row>
-						<entry>OPTIMISTIC</entry>
+						<entry>AUTO</entry>
 						<entry>
-							<emphasis>This is the default setting.</emphasis>
-							Will not automatically wrap a command in a transaction, instead
-							throw an exception if the command executed is
-							<link linkend="updating_model_count">transactionally unsafe.</link>
-							to execute outside of a transaction.
-						</entry>
-					</row>
-					<row>
-						<entry>PESSIMISTIC</entry>
-						<entry>
-							Will automatically wrap commands in a transaction, but only if
+						    This is the default setting. Will automatically wrap commands in a transaction, but only if
 							the command seems to be
 							<link linkend="updating_model_count">transactionally unsafe.</link>
 						</entry>

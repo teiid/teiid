@@ -178,7 +178,7 @@ final class EmbeddedProfile {
      * This method parses the URL and adds properties to the the properties object. These include required and any optional
      * properties specified in the URL. 
      * Expected URL format -- 
-     * jdbc:metamatrix:local:VDB@<pathToConfigFile>logFile=<logFile.log>; logLevel=<logLevel>;txnAutoWrap=<?>;credentials=mycredentials;
+     * jdbc:metamatrix:local:VDB@<pathToConfigFile>logFile=<logFile.log>; logLevel=<logLevel>;credentials=mycredentials;
      * 
      * @param The URL needed to be parsed.
      * @param The properties object which is to be updated with properties in the URL.

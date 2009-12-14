@@ -109,14 +109,12 @@ public class TestProcedureProcessor {
         }
     }
     
-    static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, 
-    		ProcessorDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
+    static void helpTestProcess(ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, ProcessorDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
         // Process twice, testing reset and clone method of Processor plan
         for (int i=1; i<=2; i++) {
 	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
             CommandContext context = new CommandContext("pID", null, null, null, null); //$NON-NLS-1$
             context.getNextRand(0);
-            context.setOptimisticTransaction(optimistic);
             context.setProcessDebug(DEBUG);
             QueryProcessor processor = new QueryProcessor(procPlan, context, bufferMgr, dataMgr);
             TupleSourceID tsID = processor.getResultsID();  
@@ -194,12 +192,12 @@ public class TestProcedureProcessor {
     }
     
     private void helpTestProcess(ProcessorPlan procPlan, int expectedRows, FakeDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
-        helpTestProcess(false, procPlan, expectedRows, null, false, dataMgr);
+        helpTestProcess(procPlan, expectedRows, null, false, dataMgr);
     }
     
     static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, List[] expectedResults, 
     		ProcessorDataManager dataMgr, boolean shouldFail) throws SQLException, MetaMatrixCoreException {
-        helpTestProcess(optimistic, procPlan, 0, expectedResults, shouldFail, dataMgr);
+        helpTestProcess(procPlan, 0, expectedResults, shouldFail, dataMgr);
     }
 
     // Helper to create a list of elements - used in creating sample data
@@ -1654,38 +1652,7 @@ public class TestProcedureProcessor {
     	
         helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'."); //$NON-NLS-1$
      }
- 
-    @Test public void testDynamicCommandInvalidModelUpdateCountEqualOne() throws Exception {
-    	//Test invalid update model count
-    	//Set update model count to 1 while actual is 2   
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("pm1.sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "INSERT INTO pm1.g1 (e1) VALUES (pm1.sq1.in);UPDATE pm1.g2 SET e1 = 'Next'; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
-        
-        QueryNode sq2n2 = new QueryNode("pm1.sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                + "execute string 'EXEC pm1.sq1(''First'')' as e1 string  UPDATE 1; END"); //$NON-NLS-1$ 
-        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n2);  //$NON-NLS-1$
-
-        metadata.getStore().addObject(rs2);
-        metadata.getStore().addObject(sq1);
-        metadata.getStore().addObject(sq2);
-        
-        String userUpdateStr = "EXEC pm1.sq2('test')"; //$NON-NLS-1$
-        
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-    	
-        helpTestProcessFailure(true, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string UPDATE 1\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The actual model update count '2' is greater than the expected value of '1'.  This is potentially unsafe in OPTIMISTIC transaction mode.  Please adjust the UPDATE clause of the dynamic SQL statement."); //$NON-NLS-1$ 
-      }
-    
+     
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
     	//Tests dynamic query with two consecutive DynamicCommands. The first without an AS clause and returning different results. 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();

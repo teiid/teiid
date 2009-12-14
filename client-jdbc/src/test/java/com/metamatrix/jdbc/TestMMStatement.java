@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -57,6 +58,15 @@ public class TestMMStatement {
 		statement.addBatch("delete from table"); //$NON-NLS-1$
 		statement.addBatch("delete from table1"); //$NON-NLS-1$
 		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
+	}
+	
+	@Test public void testSetStatement() throws Exception {
+		MMConnection conn = Mockito.mock(MMConnection.class);
+		Properties p = new Properties();
+		Mockito.stub(conn.getConnectionProperties()).toReturn(p);
+		MMStatement statement = new MMStatement(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertFalse(statement.execute("set foo = bar")); //$NON-NLS-1$
+		assertEquals("bar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 }

@@ -201,38 +201,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     
     private String disableLocalTxn;
 
-    /**
-     * A setting that controls how connections created by this DataSource manage transactions for client
-     * requests when client applications do not use transactions.  Because a Teiid virtual database
-     * will likely deal with multiple underlying information sources, Teiid will execute
-     * all client requests within the contexts of transactions.  This method determines the semantics
-     * of creating such transactions when the client does not explicitly do so.
-     * <p>
-     * The allowable values for this property are:
-     * <ul>
-     *   <li>"<code>OFF</code>" - Nothing is ever wrapped in a transaction and the server will execute
-     * multi-source updates happily but outside a transaction.  This is least safe but highest performance.
-     * The {@link #TXN_AUTO_WRAP_OFF} constant value is provided for convenience.</li>
-     *   <li>"<code>ON</code>" - Always wrap every command in a transaction.  This is most safe but lowest
-     * performance.
-     * The {@link #TXN_AUTO_WRAP_ON} constant value is provided for convenience.</li>
-     *   <li>"<code>PESSIMISTIC</code>" - Assume that any command might require a transaction.  Make a server
-     * call to check whether the command being executed needs a transaction and wrap the command in a
-     * transaction if necessary.  This will auto wrap in exactly the cases where it is needed but requires
-     * an extra server call on every command execution (including queries).  This is as safe as ON, but
-     * lower performance than OFF for cases where no transaction is actually needed (like queries).
-     * This is the default value.
-     * The {@link #TXN_AUTO_WRAP_PESSIMISTIC} constant value is provided for convenience.</li>
-     *   <li>"<code>OPTIMISTIC</code>" - same as OFF but assume that no command not in a transaction actually
-     * needs one.  In other words, we're letting the user decide when to use and not use a transaction and
-     * assuming they are doing it correctly.  Only difference from OFF is that if the user executes a command
-     * that requires a transaction but they don't use one, we will detect this and throw an exception.  This
-     * provides the safety of ON or PESSIMISTIC mode but better performance in the common case of queries
-     * that are not multi-source.
-     * The {@link #TXN_AUTO_WRAP_OPTIMISTIC} constant value is provided for convenience.</li>
-     * </ul>
-     * </p>
-     */
     private String transactionAutoWrap;
     
     private boolean ansiQuotedIdentifiers = true;
@@ -252,33 +220,19 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * Transaction auto wrap constant - never wrap a command execution in a transaction
      * and allow multi-source updates to occur outside of a transaction.
      */
-    public static final String TXN_AUTO_WRAP_OFF = "OFF"; //$NON-NLS-1$
+    public static final String TXN_WRAP_OFF = ExecutionProperties.TXN_WRAP_OFF;
 
     /**
      * Transaction auto wrap constant - always wrap every non-transactional command
      * execution in a transaction.
      */
-    public static final String TXN_AUTO_WRAP_ON = "ON"; //$NON-NLS-1$
+    public static final String TXN_WRAP_ON = ExecutionProperties.TXN_WRAP_ON;
 
     /**
-     * Transaction auto wrap constant - pessimistic mode assumes that any command
-     * execution might require a transaction to be wrapped around it.  To determine
-     * this an extra server call is made to check whether the command requires
-     * a transaction and a transaction will be automatically started.  This is most
-     * accurate and safe, but has a performance impact.
+     * Transaction auto wrap constant - checks if a command
+     * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_AUTO_WRAP_PESSIMISTIC = "PESSIMISTIC"; //$NON-NLS-1$
-
-    /**
-     * Transaction auto wrap constant - optimistic mode assumes that non-transactional
-     * commands typically do not require a transaction due to a multi-source update,
-     * so no transaction is created.  In this respect, this mode is identical to
-     * {@link #TXN_AUTO_WRAP_OFF}.  However, these modes differ because if we
-     * discover during server execution that multiple sources will be updated by
-     * a particular command, an exception is thrown to indicate that the command
-     * cannot be executed.  This is the default mode.
-     */
-    public static final String TXN_AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC"; //$NON-NLS-1$
+    public static final String TXN_WRAP_AUTO = ExecutionProperties.TXN_WRAP_AUTO;
 
     /**
      * String to hold additional properties that are not represented with an explicit getter/setter
@@ -733,7 +687,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * @see #getTxnAutoWrap()
+     * @deprecated
+     * @see #getAutoCommitTxn()
      * @return
      */
     public String getTransactionAutoWrap() {
@@ -741,7 +696,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * @see #setTxnAutoWrap(String)
+     * @deprecated
+     * @see #setAutoCommitTxn(String)
      * @param transactionAutoWrap
      */
     public void setTransactionAutoWrap(String transactionAutoWrap) {
@@ -758,13 +714,13 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @return the current setting, or null if the property has not been set and the default mode will
      * be used.
      */
-    public String getTxnAutoWrap() {
+    public String getAutoCommitTxn() {
 		return this.transactionAutoWrap;
 	}
     
     /**
      * Sets the setting for how connections are created by this DataSource manage transactions
-     * for client requests when client applications do not use transactions.
+     * for client requests with autoCommit = true.
      * Because a virtual database will likely deal with multiple underlying information sources,
      * Teiid will execute all client requests within the contexts of transactions.
      * This method determines the semantics of creating such transactions when the client does not
@@ -774,28 +730,18 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * <ul>
      *   <li>"<code>OFF</code>" - Nothing is ever wrapped in a transaction and the server will execute
      * multi-source updates happily but outside a transaction.  This is least safe but highest performance.
-     * The {@link #TXN_AUTO_WRAP_OFF} constant value is provided for convenience.</li>
+     * The {@link #TXN_WRAP_OFF} constant value is provided for convenience.</li>
      *   <li>"<code>ON</code>" - Always wrap every command in a transaction.  This is most safe but lowest
      * performance.
-     * The {@link #TXN_AUTO_WRAP_ON} constant value is provided for convenience.</li>
-     *   <li>"<code>PESSIMISTIC</code>" - Assume that any command might require a transaction.  Make a server
-     * call to check whether the command being executed needs a transaction and wrap the command in a
-     * transaction if necessary.  This will auto wrap in exactly the cases where it is needed but requires
-     * an extra server call on every command execution (including queries).  This is as safe as ON, but
-     * lower performance than OFF for cases where no transaction is actually needed (like queries).
-     * The {@link #TXN_AUTO_WRAP_PESSIMISTIC} constant value is provided for convenience.</li>
-     *   <li>"<code>OPTIMISTIC</code>" - same as OFF but assume that no command not in a transaction actually
-     * needs one.  In other words, we're letting the user decide when to use and not use a transaction and
-     * assuming they are doing it correctly.  Only difference from OFF is that if the user executes a command
-     * that requires a transaction but they don't use one, we will detect this and throw an exception.  This
-     * provides the safety of ON or PESSIMISTIC mode but better performance in the common case of queries
-     * that are not multi-source.
-     * The {@link #TXN_AUTO_WRAP_OPTIMISTIC} constant value is provided for convenience.</li>
+     * The {@link #TXN_WRAP_ON} constant value is provided for convenience.</li>
+     *   <li>"<code>AUTO</code>" - checks if a command requires a transaction and will be automatically wrap it.
+     * This is the default mode.
+     * The {@link #TXN_WRAP_AUTO} constant value is provided for convenience.</li>
      * </ul>
      * </p>
      * @param transactionAutoWrap The transactionAutoWrap to set
      */
-    public void setTxnAutoWrap(String transactionAutoWrap) {
+    public void setAutoCommitTxn(String transactionAutoWrap) {
     	this.transactionAutoWrap = transactionAutoWrap;
     }
 
@@ -865,21 +811,18 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
             return null;    // no longer require an app server name, 'cause will look on classpath
         }
         final String trimmedAutoWrap = autoWrap.trim();
-        if( TXN_AUTO_WRAP_ON.equals(trimmedAutoWrap) ) {
+        if( TXN_WRAP_ON.equals(trimmedAutoWrap) ) {
             return null;
         }
-        if( TXN_AUTO_WRAP_OFF.equals(trimmedAutoWrap) ) {
+        if( TXN_WRAP_OFF.equals(trimmedAutoWrap) ) {
             return null;
         }
-        if( TXN_AUTO_WRAP_OPTIMISTIC.equals(trimmedAutoWrap) ) {
-            return null;
-        }
-        if( TXN_AUTO_WRAP_PESSIMISTIC.equals(trimmedAutoWrap) ) {
+        if( TXN_WRAP_AUTO.equals(trimmedAutoWrap) ) {
             return null;
         }
 
         Object[] params = new Object[] {
-            TXN_AUTO_WRAP_ON, TXN_AUTO_WRAP_OFF, TXN_AUTO_WRAP_OPTIMISTIC, TXN_AUTO_WRAP_PESSIMISTIC };
+            TXN_WRAP_ON, TXN_WRAP_OFF, TXN_WRAP_AUTO };
         return JDBCPlugin.Util.getString("MMDataSource.Invalid_trans_auto_wrap_mode", params); //$NON-NLS-1$
     }
          

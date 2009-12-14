@@ -82,8 +82,6 @@ public class CommandContext implements Cloneable {
     
     private Stack<String> recursionStack = null;
     
-    private boolean optimisticTransaction = false;
-    
     private SecurityFunctionEvaluator securityFunctionEvaluator;
     
     private Object tempTableStore;
@@ -148,7 +146,6 @@ public class CommandContext implements Cloneable {
         if (context.recursionStack != null) {
             this.recursionStack = (Stack)context.recursionStack.clone();
         }
-        setOptimisticTransaction(context.isOptimisticTransaction());
         this.setSecurityFunctionEvaluator(context.getSecurityFunctionEvaluator());
         this.planToProcessConverter = context.planToProcessConverter;
         this.queryProcessorFactory = context.queryProcessorFactory;
@@ -370,20 +367,6 @@ public class CommandContext implements Cloneable {
         if (recursionStack != null) {
             recursionStack.pop();
         }
-    }
-
-    /** 
-     * @param optimisticTransaction The optimisticTransaction to set.
-     */
-    public void setOptimisticTransaction(boolean optimisticTransaction) {
-        this.optimisticTransaction = optimisticTransaction;
-    }
-
-    /** 
-     * @return Returns the optimisticTransaction.
-     */
-    public boolean isOptimisticTransaction() {
-        return optimisticTransaction;
     }
 
     /** 

@@ -209,7 +209,7 @@ public class TestDQPCore {
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
-        reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_OFF);
+        reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_OFF);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage results = message.get(50000, TimeUnit.MILLISECONDS);
         assertEquals("[QueryValidatorException]Group does not exist: BQT3.SmallA", results.getException().toString()); //$NON-NLS-1$
@@ -235,7 +235,7 @@ public class TestDQPCore {
         RequestMessage reqMsg = exampleRequestMessage(sql);
         DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(sessionid), userName));
         if (txnAutoWrap) {
-        	reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_ON);
+        	reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_ON);
         }
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);

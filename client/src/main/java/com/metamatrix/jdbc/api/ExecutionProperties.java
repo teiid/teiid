@@ -30,8 +30,6 @@ package com.metamatrix.jdbc.api;
  */
 public interface ExecutionProperties {
 
-    
-    
     /** Execution property name for XML format */
     public static final String PROP_XML_FORMAT = "XMLFormat"; //$NON-NLS-1$
     
@@ -39,7 +37,7 @@ public interface ExecutionProperties {
     public static final String PROP_XML_VALIDATION = "XMLValidation"; //$NON-NLS-1$
 
     /** Execution property name for transaction auto wrap mode */
-    public static final String PROP_TXN_AUTO_WRAP = "txnAutoWrap"; //$NON-NLS-1$
+    public static final String PROP_TXN_AUTO_WRAP = "autoCommitTxn"; //$NON-NLS-1$
 
     /** Execution property name for partial results mode */
     public static final String PROP_PARTIAL_RESULTS_MODE = "partialResultsMode"; //$NON-NLS-1$
@@ -52,21 +50,17 @@ public interface ExecutionProperties {
 
     /** Transaction auto wrap constant - never wrap a command execution in a transaction
      *  and allow multi-source updates to occur outside of a transaction. */
-    public static final String AUTO_WRAP_OFF = "OFF"; //$NON-NLS-1$
+    public static final String TXN_WRAP_OFF = "OFF"; //$NON-NLS-1$
 
     /** Transaction auto wrap constant - always wrap every non-transactional command
      *  execution in a transaction. */
-    public static final String AUTO_WRAP_ON = "ON"; //$NON-NLS-1$
+    public static final String TXN_WRAP_ON = "ON"; //$NON-NLS-1$
 
-    /** Transaction auto wrap constant - pessimistic mode assumes that any command
-     *  execution might require a transaction to be wrapped around it.  To determine
-     *  this an extra server call is made to check whether the command requires
-     *  a transaction and a transaction will be automatically started.  This is most
-     *  accurate and safe, but has a performance impact. */
-    public static final String AUTO_WRAP_PESSIMISTIC = "PESSIMISTIC"; //$NON-NLS-1$
-
-    /** Transaction auto wrap constant */
-    public static final String AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC"; //$NON-NLS-1$
+    /**
+     * Transaction auto wrap constant - checks if a command
+     * requires a transaction and will be automatically wrap it.
+     */
+    public static final String TXN_WRAP_AUTO = "AUTO"; //$NON-NLS-1$
 
     /** 
      * Whether to use result set cache if it is available 
@@ -104,6 +98,5 @@ public interface ExecutionProperties {
      */
     public static final String SQL_OPTION_SHOWPLAN = "SHOWPLAN"; //$NON-NLS-1$
     
-    public static final String PLAN_NOT_ALLOWED = "planNotAllowed"; //$NON-NLS-1$
 }
     

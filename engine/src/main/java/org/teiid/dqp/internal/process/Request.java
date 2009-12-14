@@ -359,21 +359,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
             
             boolean startAutoWrapTxn = false;
             
-            if(ExecutionProperties.AUTO_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
+            if(ExecutionProperties.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
             } else if ( processingCommand.updatingModelCount(metadata) > 1) { 
-                if (ExecutionProperties.AUTO_WRAP_OPTIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){ 
-                    String msg = DQPPlugin.Util.getString("Request.txn_needed_wrong_mode", requestId); //$NON-NLS-1$
-                    throw new MetaMatrixComponentException(msg);
-                } else if (ExecutionProperties.AUTO_WRAP_PESSIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){
+                if (ExecutionProperties.TXN_WRAP_AUTO.equals(requestMsg.getTxnAutoWrapMode())){
                     startAutoWrapTxn = true;
-                } else if (ExecutionProperties.AUTO_WRAP_OFF.equals(requestMsg.getTxnAutoWrapMode())) {
+                } else if (ExecutionProperties.TXN_WRAP_OFF.equals(requestMsg.getTxnAutoWrapMode())) {
                     LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("Request.potentially_unsafe")); //$NON-NLS-1$ 
                 }
             } 
-            if(ExecutionProperties.AUTO_WRAP_OPTIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){
-                this.context.setOptimisticTransaction(true);
-            }
             
             if (startAutoWrapTxn) {
                 if (transactionService == null) {
@@ -542,7 +536,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
 
-    private void createAnalysisRecord(Command command) throws QueryValidatorException{
+    private void createAnalysisRecord(Command command) {
         Option option = command.getOption();
         boolean getPlan = requestMsg.getShowPlan();
         boolean debug = false;
@@ -550,11 +544,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
             getPlan = getPlan || option.getShowPlan() || option.getPlanOnly();          
             debug = option.getDebug();
         }
-        
-        if (getPlan && !requestMsg.isQueryPlanAllowed()){
-          	final String message = DQPPlugin.Util.getString("Request.query_plan_not_allowed"); //$NON-NLS-1$
-            throw new QueryValidatorException(message);
-        }       
         
         this.analysisRecord = new AnalysisRecord(getPlan, getPlan, debug);
     }

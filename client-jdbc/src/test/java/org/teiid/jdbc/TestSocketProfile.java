@@ -48,12 +48,12 @@ public class TestSocketProfile {
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234,localhost2:12342,localhost3:12343;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mms://localhost:1234;logLevel=1;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@mm://localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
-        assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;txnAutoWrap=OFF;paritalResultsMode=true")); //$NON-NLS-1$
+        assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;autoCommitTxn=OFF;paritalResultsMode=true")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:jvdb@mms://localhost:1234")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234;version=x")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234,localhost2:12342,localhost3:12343")); //$NON-NLS-1$       
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mms://localhost:1234,localhost2:12342,localhost3:12343;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
-        assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mms://localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;txnAutoWrap=OFF;paritalResultsMode=true")); //$NON-NLS-1$
+        assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mms://localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;autoCommitTxn=OFF;paritalResultsMode=true")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://127.0.0.1:1234;logLevel=2")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mms://127.0.0.1:1234")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://127.0.0.1:1234,localhost.mydomain.com:63636;logLevel=2")); //$NON-NLS-1$
@@ -76,7 +76,7 @@ public class TestSocketProfile {
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234,localhost2:12342,localhost3:12343;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234;logLevel=1;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
-        assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;txnAutoWrap=OFF;paritalResultsMode=true")); //$NON-NLS-1$
+        assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;autoCommitTxn=OFF;paritalResultsMode=true")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:@localhost:1234;stickyConnections=false;socketsPerVM=4")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://my_host.mydomain.com:53535,127.0.0.1:1234")); //$NON-NLS-1$        
     }
@@ -110,7 +110,7 @@ public class TestSocketProfile {
     
     @Test public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        SocketProfile.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;txnAutoWrap=ON;partialResultsMode=YES;ApplicationName=Client", p); //$NON-NLS-1$
+        SocketProfile.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;autoCommitTxn=ON;partialResultsMode=YES;ApplicationName=Client", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));         //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$

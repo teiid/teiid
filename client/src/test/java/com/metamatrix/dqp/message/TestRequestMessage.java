@@ -60,7 +60,7 @@ public class TestRequestMessage extends TestCase {
         message.setStyleSheet("myStyleSheet"); //$NON-NLS-1$
         message.setExecutionPayload("myExecutionPayload"); //$NON-NLS-1$
         try {
-			message.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_ON);
+			message.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_ON);
 		} catch (MetaMatrixProcessingException e) {
 			throw new RuntimeException(e);
 		} 
@@ -89,7 +89,7 @@ public class TestRequestMessage extends TestCase {
         assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
         assertEquals("myStyleSheet", copy.getStyleSheet()); //$NON-NLS-1$
         assertEquals("myExecutionPayload", copy.getExecutionPayload()); //$NON-NLS-1$
-        assertEquals(ExecutionProperties.AUTO_WRAP_ON, copy.getTxnAutoWrapMode()); //$NON-NLS-1$
+        assertEquals(ExecutionProperties.TXN_WRAP_ON, copy.getTxnAutoWrapMode()); //$NON-NLS-1$
         assertTrue(copy.getValidationMode());
         assertEquals("xMLFormat", copy.getXMLFormat()); //$NON-NLS-1$
         assertTrue(copy.getShowPlan());

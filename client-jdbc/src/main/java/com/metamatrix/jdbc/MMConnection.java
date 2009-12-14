@@ -134,7 +134,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         // set default properties if not overridden
         String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         if ( overrideProp == null || overrideProp.trim().length() == 0 ) {
-            info.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.AUTO_WRAP_OPTIMISTIC);
+            info.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_AUTO);
         }
 
         // Get default fetch size
@@ -175,6 +175,10 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         this.propInfo = info;
         
         this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
+    }
+    
+    protected Properties getConnectionProperties() {
+        return this.propInfo;
     }
     
     ClientSideDQP getDQP() {

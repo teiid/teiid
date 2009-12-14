@@ -45,12 +45,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.message.ParameterInfo;
@@ -154,6 +155,8 @@ public class MMStatement extends WrapperImpl implements Statement {
     //Map<out/inout/return param index --> index in results>
     protected Map outParamIndexMap = new HashMap();
     
+    private Pattern setStatement = Pattern.compile("\\s*set\\s*(\\w+)\\s*=\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    
     /**
      * Factory Constructor 
      * @param driverConnection
@@ -174,7 +177,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         this.driverConnection = driverConnection;
         this.resultSetType = resultSetType;
         this.resultSetConcurrency = resultSetConcurrency;
-        this.execProps = PropertiesUtils.clone(getConnectionProperties());
+        this.execProps = new Properties(this.driverConnection.getConnectionProperties());
         
         // Set initial fetch size
         String fetchSizeStr = this.execProps.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
@@ -403,8 +406,20 @@ public class MMStatement extends WrapperImpl implements Statement {
         throws SQLException, MMSQLException {
         checkStatement();
         resetExecutionState();
-        RequestMessage reqMessage = createRequestMessage(commands,
-				isBatchedCommand, requiresResultSet);
+        
+        //handle set statement
+        if (commands.length == 1 && requiresResultSet != Boolean.TRUE) {
+        	Matcher match = setStatement.matcher(commands[0]);
+        	if (match.matches()) {
+        		String key = match.group(1);
+        		String value = match.group(2);
+        		this.driverConnection.getConnectionProperties().setProperty(key, value);
+        		this.updateCounts = new int[] {1};
+        		return;
+        	}
+        }
+        
+        RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, requiresResultSet);
     	ResultsMessage resultsMsg = null;
         try {
         	resultsMsg = sendRequestMessageAndWait(reqMessage);
@@ -704,17 +719,12 @@ public class MMStatement extends WrapperImpl implements Statement {
         }
     }
 
-    protected Properties getConnectionProperties() {
-        return driverConnection.propInfo;
-    }
-
     /**
      * Helper method for copy the connection properties to request message.
      * @param res Request message that these properties to be copied to.
-     * @param props Connection properties.
      * @throws MMSQLException 
      */
-    protected void copyPropertiesToRequest(RequestMessage res, Properties props) throws MMSQLException {
+    protected void copyPropertiesToRequest(RequestMessage res) throws MMSQLException {
         // Get partial mode
         String partial = getExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         res.setPartialResults(Boolean.valueOf(partial).booleanValue());
@@ -748,8 +758,6 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Get result set cache mode
         String rsCache = getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         res.setUseResultSetCache(Boolean.valueOf(rsCache).booleanValue());
-        
-        res.setQueryPlanAllowed(!Boolean.valueOf(getExecutionProperty(ExecutionProperties.PLAN_NOT_ALLOWED)).booleanValue());
     }
 
     /**
@@ -844,7 +852,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         reqMsg.setRowLimit(this.maxRows);
 
         // Get connection properties and set them onto request message
-        copyPropertiesToRequest(reqMsg, getConnectionProperties());
+        copyPropertiesToRequest(reqMsg);
 
         reqMsg.setExecutionId(this.currentRequestID);
     	

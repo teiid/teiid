@@ -32,9 +32,6 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.XQuery;
-import com.metamatrix.query.sql.proc.Block;
-import com.metamatrix.query.sql.proc.CriteriaSelector;
-import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.xquery.XQueryExpression;
 import com.metamatrix.query.xquery.saxon.SaxonXQueryExpression;
@@ -44,9 +41,6 @@ import com.metamatrix.query.xquery.saxon.SaxonXQueryExpression;
  * QueryParser can be reused but is NOT thread-safe as the parser uses an
  * input stream.  Putting multiple queries into the same stream will result
  * in unpredictable and most likely incorrect behavior.</p>
- *
- * <p>In the future this class may hide a single- or multi-thread cache
- * of parsed queries. </p>
  */
 public class QueryParser {
     
@@ -66,7 +60,7 @@ public class QueryParser {
     
     private static final String XQUERY_DECLARE = "declare"; //$NON-NLS-1$
     private static final String XML_OPEN_BRACKET = "<"; //$NON-NLS-1$
-    private static final String BOGUS_SELECT = "select x "; //$NON-NLS-1$
+    private static final String XML_CLOSE_BRACKET = ">"; //$NON-NLS-1$
 
 	private SQLParser parser;
     
@@ -119,37 +113,39 @@ public class QueryParser {
             throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
         }
         
-        // For XQueries
-        int type = getCommandType(sql);
-        if (type == Command.TYPE_XQUERY || type == Command.TYPE_UNKNOWN){
+        QueryParserException qpe = null;
+        try {
+	        Command result = parseCommandWithParser(sql, parseInfo);
+			return result;
+        } catch (QueryParserException e) {
+        	qpe = e;
+        }
+        
+        try {
+            // Check for OPTION
+            Option option = null;
+            int closeBracket = sql.lastIndexOf(XML_CLOSE_BRACKET);
+            int optionIndex = sql.toUpperCase().lastIndexOf(ReservedWords.OPTION);
+            if (optionIndex != -1 && optionIndex > closeBracket){
+                String optionSQL = sql.substring(optionIndex);
+                option = getOption(optionSQL, parseInfo);
+                sql = sql.substring(0, optionIndex-1);
+            }
             
-            try {
-                
-                // Check for OPTION
-                Option option = null;
-                int optionIndex = sql.toUpperCase().lastIndexOf(ReservedWords.OPTION);
-                if (optionIndex != -1){
-                    String optionSQL = sql.substring(optionIndex);
-                    option = getOption(optionSQL);
-                    sql = sql.substring(0, optionIndex-1);
-                }
-                
-                XQueryExpression expr = new SaxonXQueryExpression();
-                expr.compileXQuery(sql);
-                XQuery xquery = new XQuery(sql, expr);
-                if (option != null){
-                    xquery.setOption(option);
-                }
-                return xquery;        
-            } catch (MetaMatrixProcessingException e) {
-                if (type == Command.TYPE_XQUERY){
-                    throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.xqueryCompilation", e.getMessage())); //$NON-NLS-1$
-                } // else let unknown query type fall through to code below for better error handling
+            XQueryExpression expr = new SaxonXQueryExpression();
+            expr.compileXQuery(sql);
+            XQuery xquery = new XQuery(sql, expr);
+            if (option != null){
+                xquery.setOption(option);
+            }
+            return xquery;        
+        } catch (MetaMatrixProcessingException e) {
+            if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
+            	throw new QueryParserException(e, QueryPlugin.Util.getString("QueryParser.xqueryCompilation")); //$NON-NLS-1$
             }
         }
 
-        Command result = parseCommandWithParser(sql, parseInfo);
-		return result;
+        throw qpe;
 	}
 
     /**
@@ -157,10 +153,18 @@ public class QueryParser {
      * @param optionSQL option SQL
      * @return Option object
      */
-    private Option getOption(String optionSQL) throws QueryParserException {
-        String sql = BOGUS_SELECT + optionSQL;
-        Command command = parseCommandWithParser(sql, new ParseInfo());
-        return command.getOption();
+    private Option getOption(String optionSQL, ParseInfo parseInfo) throws QueryParserException {
+    	Option result = null;
+        try{
+            result = getSqlParser(optionSQL).option(parseInfo);
+            
+        } catch(ParseException pe) {
+            throw convertParserException(pe);
+
+        } catch(TokenMgrError tme) {
+            handleTokenMgrError(tme);
+        }
+        return result;
     }
 
     /**
@@ -182,35 +186,6 @@ public class QueryParser {
         }
         return result;        
     }
-
-    /**
-     * Takes a SQL string representing an SQL statement
-     * and returns the procedure object representation.
-     * @param stmt SQL statement string
-     * @return Statement Procedure object representation
-     * @throws QueryParserException if parsing fails
-     * @throws IllegalArgumentException if stmt is null
-     */
-     Statement parseStatement(String stmt) throws QueryParserException {
-        if(stmt == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.nullSqlCrit")); //$NON-NLS-1$
-        }
-
-        ParseInfo dummyInfo = new ParseInfo();
-
-        Statement result = null;
-        try{
-            result = getSqlParser(stmt).statement(dummyInfo);
-
-        } catch(ParseException pe) {
-            throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
-        }
-        return result;
-    }
-
 
     /**
      * Takes a SQL string representing an SQL criteria (i.e. just the WHERE
@@ -240,62 +215,8 @@ public class QueryParser {
         return result;
     }
 
-    /**
-     * Takes a SQL string representing a block
-     * and returns the object representation.
-     * @param block Block string
-     * @return Block Block object representation
-     * @throws QueryParserException if parsing fails
-     * @throws IllegalArgumentException if sql is null
-     */
-     Block parseBlock(String block) throws QueryParserException {
-        if(block == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.nullBlock")); //$NON-NLS-1$
-        }
-
-        ParseInfo dummyInfo = new ParseInfo();
-
-        Block result = null;
-        try{
-            result = getSqlParser(block).block(dummyInfo);
-
-        } catch(ParseException pe) {
-            throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
-        }
-        return result;
-    }
-     
     private QueryParserException convertParserException(ParseException pe) {
         return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", pe.getMessage())); //$NON-NLS-1$                        
-    }
-
-    /**
-     * Takes a SQL string representing a criteria selector
-     * and returns the object representation.
-     * @param selector criteria selector string
-     * @return CriteriaSelector CriteriaSelector object representation
-     * @throws QueryParserException if parsing fails
-     * @throws IllegalArgumentException if sql is null
-     */
-    CriteriaSelector parseCriteriaSelector(String selector) throws QueryParserException {
-        if(selector == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.nullSqlCrit")); //$NON-NLS-1$
-        }
-
-        CriteriaSelector result = null;
-        try{
-            result = getSqlParser(selector).criteriaSelector();
-
-        } catch(ParseException pe) {
-            throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
-        }
-        return result;
     }
 
     /**
@@ -362,55 +283,5 @@ public class QueryParser {
 
         throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
     }
-
-	/**
-	 * Takes a SQL string and determines the command type, as defined in the constants
-	 * of {@link com.metamatrix.query.sql.lang.Command}.
-	 * @param sql SQL string
-	 * @return Command type code, as defined in {@link com.metamatrix.query.sql.lang.Command}.
-     * Note: not all XQuery queries will necessarily be detected - if type UNKNOWN is indicated
-     * it's possible it is an XQuery.
-	 * @throws IllegalArgumentException if sql is null
-	 */
-	public static int getCommandType(String sql) {
-		if(sql == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
-		}
-
-        // Shortcut for most XQuery commands
-        if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            return Command.TYPE_XQUERY;
-        }
-
-		int startCommand = -1;
-		for(int index = 0; index < sql.length(); index++) {
-			char c = sql.charAt(index);
-			if(Character.isLetter(c) || c == '{') {
-			    startCommand = index;
-			    break;
-			} 
-		}
-
-		if(startCommand == -1) {
-			return Command.TYPE_UNKNOWN;
-		}
-
-		String commandWord = sql.substring(startCommand, Math.min(startCommand+6, sql.length())).toUpperCase();
-        if(commandWord.startsWith(ReservedWords.SELECT)) {
-			return Command.TYPE_QUERY;
-		} else if(commandWord.startsWith(ReservedWords.INSERT)) {
-			return Command.TYPE_INSERT;
-		} else if(commandWord.startsWith(ReservedWords.UPDATE)) {
-			return Command.TYPE_UPDATE;
-		} else if(commandWord.startsWith(ReservedWords.DELETE)) {
-			return Command.TYPE_DELETE;
-		} else if(commandWord.startsWith(ReservedWords.EXEC) || commandWord.startsWith("{")) { //$NON-NLS-1$
-			return Command.TYPE_STORED_PROCEDURE;
-        } else if(commandWord.startsWith(ReservedWords.CREATE)) { 
-            return Command.TYPE_UPDATE_PROCEDURE;
-		} else {
-			return Command.TYPE_UNKNOWN;
-		}
-	}
 
 }

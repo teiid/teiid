@@ -68,9 +68,6 @@ public class RequestMessage implements Serializable {
     // Treat the double quoted strings as variables in the command
     private boolean ansiQuotedIdentifiers = true;
     
-    //whether query plan is allowed or not
-    private boolean queryPlanAllowed = true;
-    
     private boolean showPlan = false;
     
     private int rowLimit;
@@ -204,7 +201,7 @@ public class RequestMessage implements Serializable {
      */
     public String getTxnAutoWrapMode() {
     	if (txnAutoWrapMode == null) {
-    		return ExecutionProperties.AUTO_WRAP_OPTIMISTIC;
+    		return ExecutionProperties.TXN_WRAP_AUTO;
     	}
         return txnAutoWrapMode;
     }
@@ -217,10 +214,9 @@ public class RequestMessage implements Serializable {
     public void setTxnAutoWrapMode(String txnAutoWrapMode) throws MetaMatrixProcessingException {
     	if (txnAutoWrapMode != null) {
     		txnAutoWrapMode = txnAutoWrapMode.toUpperCase();
-    		if (!(txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_OFF)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_ON)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_OPTIMISTIC)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_PESSIMISTIC))) {
+    		if (!(txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_OFF)
+    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_ON)
+    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_AUTO))) {
     			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 
@@ -315,14 +311,6 @@ public class RequestMessage implements Serializable {
 		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
 	}
 
-    public void setQueryPlanAllowed(boolean allowed) {
-    	queryPlanAllowed = allowed;
-    }
-
-    public boolean isQueryPlanAllowed() {
-        return queryPlanAllowed;
-    }
-    
     /** 
      * @return Returns the showPlan.
      * @since 4.3

@@ -310,20 +310,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			}
 		}
 
-		// validate the updating model count if transaction is optimistic
-		// Error if orig = 0 and command > 0 OR if orig = 1 and command <> 1
-		if (procEnv.getContext().isOptimisticTransaction()) {
-			final int origModelCount = dynamicCommand.getUpdatingModelCount();
-			final int newModelCount = command.updatingModelCount(metadata);
-			if ((origModelCount == 0 || origModelCount == 1)
-					&& newModelCount > origModelCount) {
-				Object[] params = new Object[] { new Integer(newModelCount),
-						new Integer(origModelCount) };
-				throw new QueryProcessingException(QueryExecPlugin.Util
-						.getString("ExecDynamicSqlInstruction.1", params)); //$NON-NLS-1$
-			}
-		}
-
 		// do a recursion check
 		// Add group to recursion stack
 		CommandContext context = procEnv.getContext();

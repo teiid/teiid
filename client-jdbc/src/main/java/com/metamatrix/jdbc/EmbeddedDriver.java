@@ -74,7 +74,7 @@ public final class EmbeddedDriver extends TeiidDriver {
     /**
      * Returns true if the driver thinks that it can open a connection to the given URL. Typically drivers will return true if
      * they understand the subprotocol specified in the URL and false if they don't. Expected URL format is
-     * jdbc:metamatrix:VDB@pathToPropertyFile;version=1;logFile=<logFile.log>;logLevel=<logLevel>;txnAutoWrap=<?>
+     * jdbc:metamatrix:VDB@pathToPropertyFile;version=1;logFile=<logFile.log>;logLevel=<logLevel>;property=<?>
      * 
      * @param The URL used to establish a connection.
      * @return A boolean value indicating whether the driver understands the subprotocol.

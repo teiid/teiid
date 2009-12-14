@@ -46,7 +46,7 @@ public class TestMMDataSource extends TestCase {
     protected static final int    STD_PORT_NUMBER           = 7001;
     protected static final String STD_LOG_FILE              = UnitTestUtil.getTestScratchPath() + "/unitTestLogFile"; //$NON-NLS-1$
     protected static final int    STD_LOG_LEVEL             = 2;
-    protected static final String STD_TXN_AUTO_WRAP         = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+    protected static final String STD_TXN_WRAP         = MMDataSource.TXN_WRAP_AUTO;
     protected static final String STD_PARTIAL_MODE         = "false"; //$NON-NLS-1$
     protected static final String STD_CONFIG_FILE          = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties";  //$NON-NLS-1$
     protected static final String STD_ALTERNATE_SERVERS     = "unitTestServerName2:7001,unitTestServerName2:7002,unitTestServerName3:7001"; //$NON-NLS-1$
@@ -70,7 +70,7 @@ public class TestMMDataSource extends TestCase {
         dataSource.setDatabaseName(STD_DATABASE_NAME);
         dataSource.setPortNumber(STD_PORT_NUMBER);
         dataSource.setDataSourceName(STD_DATA_SOURCE_NAME);
-        dataSource.setTransactionAutoWrap(STD_TXN_AUTO_WRAP);
+        dataSource.setTransactionAutoWrap(STD_TXN_WRAP);
         dataSource.setPartialResultsMode(STD_PARTIAL_MODE);
         dataSource.setSecure(true);
         dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
@@ -280,7 +280,7 @@ public class TestMMDataSource extends TestCase {
 
     public void testGetTransactionAutoWrap() {
         final String result = dataSource.getTransactionAutoWrap();
-        assertEquals(result,STD_TXN_AUTO_WRAP);
+        assertEquals(result,STD_TXN_WRAP);
     }
     
     public void testGetShowPlan() {
@@ -393,16 +393,13 @@ public class TestMMDataSource extends TestCase {
 
 
     public void testReasonWhyInvalidTransactionAutoWrap1() {
-        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_AUTO_WRAP_OFF, VALID); //$NON-NLS-1$
+        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_WRAP_OFF, VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidTransactionAutoWrap2() {
-        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_AUTO_WRAP_ON, VALID); //$NON-NLS-1$
+        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_WRAP_ON, VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidTransactionAutoWrap3() {
-        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_AUTO_WRAP_OPTIMISTIC, VALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidTransactionAutoWrap4() {
-        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC, VALID); //$NON-NLS-1$
+        helpTestReasonWhyInvalid("TransactionAutoWrap", MMDataSource.TXN_WRAP_AUTO, VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidTransactionAutoWrap5() {
         helpTestReasonWhyInvalid("TransactionAutoWrap", "off", INVALID);    // lowercase value //$NON-NLS-1$ //$NON-NLS-2$
@@ -523,11 +520,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure, 
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL3() {
@@ -535,11 +532,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     // Test secure protocol
@@ -548,11 +545,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;serverURL=mms://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;serverURL=mms://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -566,11 +563,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2:7001,hostName2:7002"; //$NON-NLS-1$
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -584,11 +581,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2:7001,hostName2:7002"; //$NON-NLS-1$
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -603,11 +600,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2,hostName2:7002"; //$NON-NLS-1$
-        final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
+        final String transactionAutoWrap = MMDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL_AdditionalProperties() {

@@ -24,6 +24,7 @@ package com.metamatrix.query.parser;
 
 import static org.junit.Assert.*;
 
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -139,66 +140,30 @@ public class TestParser {
         }       
     }
     
-    private void helpBlockTest(String block, String expectedString, Block expectedBlock) {
-        Block actualBlock = null;
-        String actualString = null;
-        try {
-            actualBlock = QueryParser.getQueryParser().parseBlock(block);
-            actualString = actualBlock.toString();
-                
-        } catch(Throwable e) { 
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
+    private void helpBlockTest(String block, String expectedString, Block expectedBlock) throws ParseException {
+        Block actualBlock = new SQLParser(new StringReader(block)).block(new ParseInfo());
+        String actualString = actualBlock.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("Block does not match: ", expectedBlock, actualBlock);              //$NON-NLS-1$
     }
     
-    private void helpCriteriaSelectorTest(String selector, String expectedString, CriteriaSelector expectedSelector) {
-        
-        CriteriaSelector actualSelector = null;
-        String actualString = null;
-        try {
-            actualSelector = QueryParser.getQueryParser().parseCriteriaSelector(selector);
-            actualString = actualSelector.toString();
-                             
-        } catch(Throwable e) { 
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
+    private void helpCriteriaSelectorTest(String selector, String expectedString, CriteriaSelector expectedSelector) throws ParseException {
+        CriteriaSelector actualSelector = new SQLParser(new StringReader(selector)).criteriaSelector();
+        String actualString = actualSelector.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("CriteriaSelector does not match: ", expectedSelector, actualSelector);              //$NON-NLS-1$
     }
 	
-    private void helpCriteriaTest(String crit, String expectedString, Criteria expectedCrit) {
-               
-        Criteria actualCrit = null;
-        String actualString = null;
-        try {
-            //actualCrit = QueryParser.getQueryParser().parsePredicateCriteria(crit);
-            actualCrit = QueryParser.getQueryParser().parseCriteria(crit);
-            actualString = actualCrit.toString();
-                
-        } catch(Throwable e) { 
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
+    private void helpCriteriaTest(String crit, String expectedString, Criteria expectedCrit) throws QueryParserException {
+        Criteria actualCrit = QueryParser.getQueryParser().parseCriteria(crit);
+        String actualString = actualCrit.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("Criteria does not match: ", expectedCrit, actualCrit);              //$NON-NLS-1$
-        
     }
     
-    private void helpStmtTest(String stmt, String expectedString, Statement expectedStmt) {
-        Statement actualStmt = null;
-        String actualString = null;
-        try {
-            actualStmt = QueryParser.getQueryParser().parseStatement(stmt);
-            actualString = actualStmt.toString();
-                
-        } catch(Throwable e) { 
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
+    private void helpStmtTest(String stmt, String expectedString, Statement expectedStmt) throws ParseException {
+        Statement actualStmt = new SQLParser(new StringReader(stmt)).statement(new ParseInfo());
+        String actualString = actualStmt.toString();
         assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
         assertEquals("Language objects do not match: ", expectedStmt, actualStmt);              //$NON-NLS-1$
     }
@@ -3184,10 +3149,8 @@ public class TestParser {
     /** 
      * Try nesting subquery in double parentheses - parsing fails.  'exec' is not handled as
      * robustly as other types of commands that can appear in a from clause subquery. 
-     * 
-     * deferred, not important enough 
      */
-    public void DEFERRED_testStoredQuerySubqueryMultipleParens(){
+    public void testStoredQuerySubqueryMultipleParens(){
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
@@ -3205,14 +3168,14 @@ public class TestParser {
         helpTest("SELECT X.A FROM ((exec proc1('param1'))) AS X", "SELECT X.A FROM (EXEC proc1('param1')) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
-    @Test public void testErrorStatement(){
+    @Test public void testErrorStatement() throws Exception {
         RaiseErrorStatement errStmt = new RaiseErrorStatement(new Constant("Test only")); //$NON-NLS-1$
                  
         helpStmtTest("ERROR 'Test only';", "ERROR 'Test only';", //$NON-NLS-1$ //$NON-NLS-2$
             errStmt);           
     }
     
-    @Test public void testIfStatement(){
+    @Test public void testIfStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
         Statement ifStmt = new DeclareStatement(a, shortType);
@@ -3264,7 +3227,7 @@ public class TestParser {
              stmt);     
     }*/   
     
-    @Test public void testCriteriaSelector0(){
+    @Test public void testCriteriaSelector0() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3274,7 +3237,7 @@ public class TestParser {
         helpCriteriaSelectorTest("IS NULL CRITERIA ON (a)", "IS NULL CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector1(){
+    @Test public void testCriteriaSelector1() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3284,7 +3247,7 @@ public class TestParser {
         helpCriteriaSelectorTest("= CRITERIA ON (a)", "= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector2(){
+    @Test public void testCriteriaSelector2() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3294,7 +3257,7 @@ public class TestParser {
         helpCriteriaSelectorTest("<> CRITERIA ON (a)", "<> CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector3(){
+    @Test public void testCriteriaSelector3() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3304,7 +3267,7 @@ public class TestParser {
         helpCriteriaSelectorTest("< CRITERIA ON (a)", "< CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector4(){
+    @Test public void testCriteriaSelector4() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3314,7 +3277,7 @@ public class TestParser {
         helpCriteriaSelectorTest("> CRITERIA ON (a)", "> CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector5(){
+    @Test public void testCriteriaSelector5() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3324,7 +3287,7 @@ public class TestParser {
         helpCriteriaSelectorTest(">= CRITERIA ON (a)", ">= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector6(){
+    @Test public void testCriteriaSelector6() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3334,7 +3297,7 @@ public class TestParser {
         helpCriteriaSelectorTest("<= CRITERIA ON (a)", "<= CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector7(){
+    @Test public void testCriteriaSelector7() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3345,7 +3308,7 @@ public class TestParser {
     }
     
     
-    @Test public void testCriteriaSelector8(){
+    @Test public void testCriteriaSelector8() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3355,7 +3318,7 @@ public class TestParser {
         helpCriteriaSelectorTest("IN CRITERIA ON (a)", "IN CRITERIA ON (a)", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Test public void testCriteriaSelector9(){
+    @Test public void testCriteriaSelector9() throws Exception {
         //ElementSymbol a = new ElementSymbol("a");
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3365,7 +3328,7 @@ public class TestParser {
         helpCriteriaSelectorTest("CRITERIA", "CRITERIA", critSelector);     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCriteriaSelector10(){
+    @Test public void testCriteriaSelector10() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         
         CriteriaSelector critSelector = new CriteriaSelector();
@@ -3376,7 +3339,7 @@ public class TestParser {
     }
 
     /**HAS IS NULL CRITERIA ON (a)*/    
-    @Test public void testHasIsNullCriteria(){
+    @Test public void testHasIsNullCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3393,7 +3356,7 @@ public class TestParser {
     }   
     
     /**HAS LIKE CRITERIA ON (a)*/    
-    @Test public void testHasLikeCriteria(){
+    @Test public void testHasLikeCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3409,7 +3372,7 @@ public class TestParser {
             hasSelector);
     }  
             
-    @Test public void testHasEQCriteria(){
+    @Test public void testHasEQCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3425,7 +3388,7 @@ public class TestParser {
             hasSelector);
     }    
     
-    @Test public void testHasNECriteria(){
+    @Test public void testHasNECriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3442,7 +3405,7 @@ public class TestParser {
     }    
     
     /**HAS IN CRITERIA ON (a)*/    
-    @Test public void testHasInCriteria(){
+    @Test public void testHasInCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3459,7 +3422,7 @@ public class TestParser {
     }   
      
     /**HAS COMPARE_LT CRITERIA ON (a)*/    
-    @Test public void testHasLTCriteria(){
+    @Test public void testHasLTCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3476,7 +3439,7 @@ public class TestParser {
     }   
     
     /**HAS COMPARE_LE CRITERIA ON (a)*/    
-    @Test public void testHasLECriteria(){
+    @Test public void testHasLECriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3493,7 +3456,7 @@ public class TestParser {
     }   
     
     /**HAS COMPARE_GT CRITERIA ON (a)*/    
-    @Test public void testHasGTCriteria(){
+    @Test public void testHasGTCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3510,7 +3473,7 @@ public class TestParser {
     }   
        
     /**HAS COMPARE_GE CRITERIA ON (a)*/    
-    @Test public void testHasGECriteria(){
+    @Test public void testHasGECriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3527,7 +3490,7 @@ public class TestParser {
     }   
          
     /**HAS BETWEEN CRITERIA ON (a)*/    
-    @Test public void testHasBetweenCriteria(){
+    @Test public void testHasBetweenCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3543,7 +3506,7 @@ public class TestParser {
             hasSelector);
     }   
          
-    @Test public void testTranslateCriteria(){
+    @Test public void testTranslateCriteria() throws Exception {
         ElementSymbol a = new ElementSymbol("a");              //$NON-NLS-1$
         List elements = new ArrayList();
         elements.add(a);
@@ -3569,7 +3532,7 @@ public class TestParser {
             
     }
     
-    @Test public void testAssignStatement(){
+    @Test public void testAssignStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
        
         List symbols = new ArrayList();
@@ -3600,7 +3563,7 @@ public class TestParser {
         helpStmtTest("a = 'aString';", "a = 'aString';", exprStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-     @Test public void testAssignStatement2(){
+     @Test public void testAssignStatement2() throws Exception {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
         List vars = new ArrayList();
@@ -3619,7 +3582,7 @@ public class TestParser {
            
     }
     
-    @Test public void testDeclareStatement(){
+    @Test public void testDeclareStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type);
@@ -3627,7 +3590,7 @@ public class TestParser {
         helpStmtTest("DECLARE short a;","DECLARE short a;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testDeclareStatementWithAssignment(){
+    @Test public void testDeclareStatementWithAssignment() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type, new Constant(null));
@@ -3635,7 +3598,7 @@ public class TestParser {
         helpStmtTest("DECLARE short a = null;","DECLARE short a = null;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testDeclareStatementWithAssignment1(){
+    @Test public void testDeclareStatementWithAssignment1() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("string"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type, sampleQuery());
@@ -3643,7 +3606,7 @@ public class TestParser {
         helpStmtTest("DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;","DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
       
-    @Test public void testStatement() {
+    @Test public void testStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement declStmt = new DeclareStatement(a, type);
@@ -3653,7 +3616,7 @@ public class TestParser {
             stmt);
     }
         
-    @Test public void testBlock() {
+    @Test public void testBlock() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("short"); //$NON-NLS-1$
         DeclareStatement declStmt = new DeclareStatement(a, type);
@@ -3664,7 +3627,7 @@ public class TestParser {
             block);
     }
        
-    @Test public void testCommandStatement(){
+    @Test public void testCommandStatement() throws Exception {
         Query query = sampleQuery();
         
         Command sqlCmd = query;
@@ -3695,7 +3658,7 @@ public class TestParser {
         return query;
     }
     
-    @Test public void testDynamicCommandStatement(){
+    @Test public void testDynamicCommandStatement() throws Exception {
         List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
@@ -3718,7 +3681,7 @@ public class TestParser {
     }
     
     //sql is a variable, also uses the as, into, and update clauses
-    @Test public void testDynamicCommandStatement1(){
+    @Test public void testDynamicCommandStatement1() throws Exception {
         List symbols = new ArrayList();
         
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
@@ -3746,7 +3709,7 @@ public class TestParser {
         cmdStmt);       
     }
     
-    @Test public void testDynamicCommandStatementWithUsing(){
+    @Test public void testDynamicCommandStatementWithUsing() throws Exception {
         SetClauseList using = new SetClauseList();
         
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
@@ -5478,7 +5441,7 @@ public class TestParser {
         helpTest(sql, sqlExpected, query);        
     }      
       
-    @Test public void testLoopStatement(){
+    @Test public void testLoopStatement() throws Exception {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5510,7 +5473,7 @@ public class TestParser {
              +"\n"+"END", loopStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }  
 
-    @Test public void testLoopStatementWithOrderBy(){
+    @Test public void testLoopStatementWithOrderBy() throws Exception {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -5546,7 +5509,7 @@ public class TestParser {
              +"\n"+"END", loopStmt);      //$NON-NLS-1$ //$NON-NLS-2$
     }  
     
-    @Test public void testWhileStatement(){
+    @Test public void testWhileStatement() throws Exception {
         ElementSymbol x = new ElementSymbol("x", false); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { x, new Constant(new Integer(1)) }); //$NON-NLS-1$
         Statement assignmentStmt = new AssignmentStatement(x, f);
@@ -5560,12 +5523,12 @@ public class TestParser {
                      +"\n"+"END", whileStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testBreakStatement(){
+    @Test public void testBreakStatement() throws Exception {
         Statement breakStmt = new BreakStatement();
         helpStmtTest("break;", "BREAK;", breakStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testContinueStatement(){
+    @Test public void testContinueStatement() throws Exception {
         Statement contStmt = new ContinueStatement();
         helpStmtTest("continue;", "CONTINUE;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
