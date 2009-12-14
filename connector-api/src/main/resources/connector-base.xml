@@ -12,13 +12,6 @@
             <PropertyDefinition Name="ServiceClassName" DisplayName="Service Class Name" ShortDescription="" DefaultValue="com.metamatrix.server.connector.service.ConnectorService" IsRequired="true" IsModifiable="false" />
             <PropertyDefinition Name="MaxResultRows" DisplayName="Maximum Result Rows" ShortDescription="" DefaultValue="10000" IsRequired="true" PropertyType="Integer" IsExpert="true" />
             <PropertyDefinition Name="SynchWorkers" DisplayName="Synchronous Workers" ShortDescription="Whether worker threads will be bound to connections. Asynch connectors should set this value to false." DefaultValue="true" IsRequired="true" PropertyType="Boolean" IsExpert="true" />
-            <PropertyDefinition Name="ResultSetCacheEnabled" DisplayName="ResultSet Cache Enabled" ShortDescription="" DefaultValue="false"  PropertyType="Boolean"   IsExpert="true"  IsMasked="false"   />
-            <PropertyDefinition Name="ResultSetCacheMaxSize" DisplayName="ResultSet Cache Maximum Size (megabytes)" ShortDescription="" DefaultValue="20" PropertyType="Integer" IsExpert="true" />
-            <PropertyDefinition Name="ResultSetCacheMaxAge" DisplayName="ResultSet Cache Maximum Age (milliseconds)" ShortDescription="" DefaultValue="3600000" PropertyType="Long" IsExpert="true" />
-            <PropertyDefinition Name="ResultSetCacheScope" DisplayName="ResultSet Cache Scope" ShortDescription="" DefaultValue="vdb" IsExpert="true">
-                <AllowedValue>vdb</AllowedValue>
-                <AllowedValue>session</AllowedValue>
-            </PropertyDefinition>
             <PropertyDefinition Name="IsXA" DisplayName="Is XA" ShortDescription="Set to true if this is an XA Connector" DefaultValue="false" IsRequired="true" PropertyType="Boolean" IsExpert="true"  IsMasked="false"  />
             <PropertyDefinition Name="ConnectionPoolEnabled" DisplayName="Connection Pool Enabled" ShortDescription="Enable the use of connection pooling with this connector." DefaultValue="true" IsRequired="true" PropertyType="Boolean" IsExpert="true"  IsMasked="false"  />
             <PropertyDefinition Name="UseCredentialMap" DisplayName="Requires Credential Map" ShortDescription="Set to true if this connector requires credentials to be passed via a credential map." DefaultValue="false" IsRequired="true" PropertyType="Boolean" IsExpert="true"  IsMasked="false"  />
