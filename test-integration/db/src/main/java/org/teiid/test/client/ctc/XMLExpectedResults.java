@@ -183,16 +183,19 @@ public class XMLExpectedResults implements ExpectedResults {
 			    // printResultSet(results));
 
 			    // Convert results to ResultsHolder
-			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
-			    actualResults.setQueryID(expectedResults.getQueryID());
-			    convertResults(resultSet, batchSize,   actualResults);
+		      		if (expectedResults.getRows().size() > 0) {
+        			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
+        			    actualResults.setQueryID(expectedResults.getQueryID());
+        			    convertResults(resultSet, batchSize,   actualResults);
+        			    compareResults(actualResults, expectedResults, eMsg, isOrdered);
+		      		}
 
 			    // DEBUG:
 			    // debugOut.println("*** Actual Results (holder): " +
 			    // actualResults);
 
 			// Compare expected results with actual results, record by record
-			compareResults(actualResults, expectedResults, eMsg, isOrdered);
+			
 
 			break;
 		    

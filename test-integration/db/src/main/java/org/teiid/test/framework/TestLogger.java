@@ -24,6 +24,10 @@ package org.teiid.test.framework;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.ConsoleAppender;
+
+
 /**
  * @author vanhalbert
  *
@@ -34,10 +38,13 @@ public class TestLogger {
     public static final Level DEBUG = Level.FINEST;
     public static final Level IMPORTANT = Level.FINE;
     
-    private static final Logger LOGGER = Logger.getLogger("org.teiid.test");
+   private static final Logger LOGGER = Logger.getLogger("org.teiid.test");
     
     static {
-	LOGGER.setLevel(IMPORTANT);
+	BasicConfigurator.configure(new ConsoleAppender());
+
+	LOGGER.setLevel(INFO);
+
     }
     
     public static final void setLogLevel(Level level) {
@@ -45,16 +52,16 @@ public class TestLogger {
     }
     
     public static final void logDebug(String msg) {
-	log(Level.FINEST, msg, null);
+	log(Level.ALL, msg, null);
     }
     
     public static final void logDebug(String msg, Throwable t) {
-	log(Level.FINEST, msg, t);
+	log(Level.ALL, msg, t);
     }
     
     // info related messages, which
     public static final void logInfo(String msg) {
-	log(Level.FINER, msg, null);
+	log(Level.INFO, msg, null);
     }
     
     // configuration related messages
@@ -64,12 +71,13 @@ public class TestLogger {
     
     // most important messages
     public static final void log(String msg) {
-	log(Level.FINE, msg, null);
+	log(Level.INFO, msg, null);
     }
     
     private static final void log(Level javaLevel, Object msg, Throwable t) {
-
+//	System.out.println(msg);
     	if (LOGGER.isLoggable(javaLevel)) {
+
     		LOGGER.log(javaLevel, msg.toString(), t);
     	}
     }

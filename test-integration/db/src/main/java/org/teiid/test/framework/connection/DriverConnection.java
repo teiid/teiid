@@ -125,8 +125,9 @@ public class DriverConnection extends ConnectionStrategy {
 		conn = DriverManager.getConnection(url);
 	    }
 	    
-	conn = (Connection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {java.sql.Connection.class}, new CloseInterceptor(conn)); 
-
+//	    if (this.useProxy()) {
+//		conn = (Connection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {java.sql.Connection.class}, new CloseInterceptor(conn)); 
+//	    }
 
 //	} catch (SQLException e) {
  

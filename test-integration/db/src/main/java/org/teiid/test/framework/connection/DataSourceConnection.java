@@ -134,9 +134,6 @@ public class DataSourceConnection extends ConnectionStrategy {
 	    ClassNotFoundException {
 	TestLogger.log("Creating Datasource Connection: \"" + this.serverName + " - " + this.databaseName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 
- //   	DataSource dataSource = (DataSource)Class.forName(props.getProperty(prefix+DS_DRIVER)).newInstance();
- 
-
     	DataSource ds = (DataSource)Class.forName(this.driver).newInstance();
 	
 	if (ds instanceof BaseDataSource) {
