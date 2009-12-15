@@ -104,6 +104,7 @@ public class DataSourceMgr {
 
     private void loadDataSourceMappings() throws QueryTestFailedException {
 	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
+	    TestLogger.log("DataStore usage has been disabled");
 	    return;
 	}
 

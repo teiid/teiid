@@ -20,7 +20,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
-import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataSourceMgr;
@@ -37,6 +36,8 @@ public abstract class ConnectionStrategy {
     
     private Properties env = null;
     private DataSourceFactory dsFactory;
+    // the useProxy is used for non-teiid connections so that the sources are closed and reconnected all the time
+    private boolean useProxy = false;
     
 
     public ConnectionStrategy(Properties props, DataSourceFactory dsf) {
@@ -54,6 +55,14 @@ public abstract class ConnectionStrategy {
      * @return Connection
      */
     public abstract Connection getConnection() throws QueryTestFailedException;
+    
+    public boolean useProxy() {
+	return this.useProxy;
+    }
+    
+    void setUseProxy(boolean useproxy) {
+	this.useProxy = useproxy;
+    }
     
     /**
      * @since
@@ -121,25 +130,23 @@ public abstract class ConnectionStrategy {
 	if (this.isDataStoreDisabled()) {
 	    return;
 	}
-
-	
-    	String ac = this.env.getProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
-    	this.autoCommit = Boolean.getBoolean(ac);
-    	
-        com.metamatrix.jdbc.api.Connection c =null;
+	    	
+        com.metamatrix.jdbc.MMConnection c = null;
         try {
         	
         	// the the driver strategy is going to be used to connection directly to the connector binding
         	// source, then no administration can be done
-        	java.sql.Connection conn = getConnection();
-        	if ( conn instanceof com.metamatrix.jdbc.api.Connection) {
-        		c = (com.metamatrix.jdbc.api.Connection) conn;
-        	} else {
-        		return;
-        	}
+            
+    	java.sql.Connection conn = getConnection();
+	if ( conn instanceof com.metamatrix.jdbc.MMConnection) {
+		c = (com.metamatrix.jdbc.MMConnection) conn;
+	} else {
+	    	TestLogger.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
+		return;
+	}
             
             Admin admin = (Admin)c.getAdminAPI();
-            
+           
             setupVDBConnectorBindings(admin);
             
             
@@ -267,7 +274,7 @@ public abstract class ConnectionStrategy {
  	}
 	
 	ds.setConnection(cs);
-	
+		
 	return ds.getConnection();
  
 	
