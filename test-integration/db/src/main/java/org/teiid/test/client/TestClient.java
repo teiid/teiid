@@ -90,8 +90,6 @@ public class TestClient  {
 	
 	try {
     
-//	    testScenarios();
-	    
 	    runScenario();
 	    
 	} catch (Throwable t) {
@@ -243,43 +241,10 @@ public class TestClient  {
 	Properties or = new Properties();
 	
 	Properties configprops = ConfigPropertyLoader.getInstance().getProperties();
-
 	
-	Iterator it = props.keySet().iterator();
-	while (it.hasNext()) {
-	    String key = (String) it.next();
-	    String value = props.getProperty( key );
-	    String newValue = value;
-	    int loc = value.indexOf("${");
-	    boolean sub = true;
-	    while (loc > -1) {
-
-		int endidx = newValue.indexOf("}", loc);
-		String prop_name = newValue.substring(loc + 2, endidx );
-		
-		String prop_value = or.getProperty(prop_name);
-		if (prop_value == null) {
-			prop_value = configprops.getProperty(prop_name);
-		}	
-		if (prop_value != null) {
-		
-		    newValue = StringUtil.replace(newValue, "${" + prop_name + "}", prop_value);
-		    sub = true;
-		    		    
-		}
-		if (newValue.length() > loc + 1 ) {
-		    loc = newValue.indexOf("${", loc + 1);
-		} else {
-		    loc = -1;
-		}
-		
-		
-	    }
-	    if (sub) {
-		or.setProperty(key, newValue);
-	    }
-	    		
-	}
+	configprops.putAll(props);
+	
+	or = PropertiesUtils.resolveNestedProperties(configprops);
 	
 	return or;
 
