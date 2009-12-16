@@ -414,7 +414,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         		String key = match.group(1);
         		String value = match.group(2);
         		this.driverConnection.getConnectionProperties().setProperty(key, value);
-        		this.updateCounts = new int[] {1};
+        		this.updateCounts = new int[] {0};
         		return;
         	}
         }
