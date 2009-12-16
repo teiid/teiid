@@ -60,11 +60,9 @@ public class ConfigPropertyLoader {
 	    	}
 	    	
 		_instance = new ConfigPropertyLoader();
-		try {
-			_instance.initialize();
-		} catch (TransactionRuntimeException e) {
-			throw e;
-		}
+
+		_instance.initialize();
+
 
 		return _instance;
 	}
@@ -148,8 +146,12 @@ public class ConfigPropertyLoader {
 	    
 	    Properties p = new Properties();
 	    p.putAll(System.getProperties());
-	    p.putAll(props);
-	    p.putAll(overrides);
+	    if (props != null) {
+		p.putAll(props);
+	    }
+	    if (overrides != null) {
+		p.putAll(overrides);
+	    }
 	    
 		return p;
 	}

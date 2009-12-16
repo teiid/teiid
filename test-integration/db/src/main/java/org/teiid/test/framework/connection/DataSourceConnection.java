@@ -107,7 +107,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 
     public Connection getConnection() throws QueryTestFailedException {
 	try {
-	    return getXAConnection().getConnection();
+		return getXAConnection().getConnection();		
 	} catch (QueryTestFailedException qtf) {
 	    throw qtf;
 	} catch (Exception e) {
@@ -137,9 +137,9 @@ public class DataSourceConnection extends ConnectionStrategy {
     	DataSource ds = (DataSource)Class.forName(this.driver).newInstance();
 	
 	if (ds instanceof BaseDataSource) {
+	    
         	BaseDataSource dataSource = (BaseDataSource)  ds;
-        	//Class.forName(this.driver).newInstance();
-        
+         
         	dataSource.setDatabaseName(this.databaseName);
         	if (this.applName != null) {
         	    dataSource.setApplicationName(this.applName);
@@ -158,6 +158,7 @@ public class DataSourceConnection extends ConnectionStrategy {
         	    dataSource.setPassword(this.pwd);
         	}
         	
+        		
         	return ((XADataSource) dataSource).getXAConnection(this.username,
         		this.pwd);
 	} else {

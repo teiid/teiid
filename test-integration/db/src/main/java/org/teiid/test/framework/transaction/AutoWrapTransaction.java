@@ -11,23 +11,21 @@ import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 
 
 /** 
- * This transaction type only is valid when
- * AutoCommit = ON
- * txnAutoWrap = PESSIMISTIC
+ * This transction is only valid when 
+ * AutoCommit = ON 
+ * txnAutoWrap = Optimistic.
  */
-public class PessimisticWrapTransaction extends TransactionContainer {
-    public PessimisticWrapTransaction() {
+public class AutoWrapTransaction extends TransactionContainer {
+    public AutoWrapTransaction() {
 	super();
     }
     
     public void before(TransactionQueryTestCase test) {
-	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_PESSIMISTIC);
+	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
 
     }
     
     public void after(TransactionQueryTestCase test) {
 
     }
-    
-
 }

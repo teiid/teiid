@@ -38,17 +38,17 @@ public class TestLogger {
     public static final Level DEBUG = Level.FINEST;
     public static final Level IMPORTANT = Level.FINE;
     
-   private static final Logger LOGGER = Logger.getLogger("org.teiid.test");
+ //  private static final Logger LOGGER = Logger.getLogger("org.teiid.test");
     
     static {
 	BasicConfigurator.configure(new ConsoleAppender());
 
-	LOGGER.setLevel(INFO);
+//	LOGGER.setLevel(INFO);
 
     }
     
     public static final void setLogLevel(Level level) {
-	LOGGER.setLevel(level);
+//	LOGGER.setLevel(level);
     }
     
     public static final void logDebug(String msg) {
@@ -75,11 +75,11 @@ public class TestLogger {
     }
     
     private static final void log(Level javaLevel, Object msg, Throwable t) {
-//	System.out.println(msg);
-    	if (LOGGER.isLoggable(javaLevel)) {
-
-    		LOGGER.log(javaLevel, msg.toString(), t);
-    	}
+	System.out.println(msg);
+//    	if (LOGGER.isLoggable(javaLevel)) {
+//
+//    		LOGGER.log(javaLevel, msg.toString(), t);
+//    	}
     }
 
 }

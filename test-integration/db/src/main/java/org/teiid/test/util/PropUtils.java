@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 public class PropUtils {
 	
@@ -25,10 +26,10 @@ public class PropUtils {
 	        	
 	        }
 	        else {
-	        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
+	        	throw new TransactionRuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
 	        }
 	    } catch (IOException e) {
-	        throw new RuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
+	        throw new TransactionRuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
 	    } finally {
 		try {
 		    in.close();

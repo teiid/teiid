@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
-import org.teiid.test.framework.transaction.OptimisticWrapTransaction;
+import org.teiid.test.framework.transaction.AutoWrapTransaction;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -19,14 +19,14 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
  * The main thing to test in this is, when the single source should is involved it should work
  * fine, when multiple sources involved it should fail.
  */
-public class OptimisticWrapTransactionTests extends BaseAbstractTransactionTestCase {
+public class AutoWrapTransactionTests extends BaseAbstractTransactionTestCase {
 
-    public OptimisticWrapTransactionTests(String testName) {
+    public AutoWrapTransactionTests(String testName) {
         super(testName);
     }
     
     protected TransactionContainer getTransactionContainter() {
-        return new OptimisticWrapTransaction();
+        return new AutoWrapTransaction();
     }
         
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +396,8 @@ public class OptimisticWrapTransactionTests extends BaseAbstractTransactionTestC
             public void testCase() throws Exception {
                 execute("select * from vm.p1");
             }
-            
+            // if vm.p1 needs a transaction, depends on transformation
+            // 
             public void after() {
                 if (exceptionOccurred()) {
                     fail("should have failed to involve multiple sources under optimistic txn");

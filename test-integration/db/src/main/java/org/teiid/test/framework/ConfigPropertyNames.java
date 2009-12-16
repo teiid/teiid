@@ -120,11 +120,10 @@ public interface ConfigPropertyNames {
     }
     
     public interface TXN_AUTO_WRAP_OPTIONS {
-	    public static final String AUTO_WRAP_OFF = "OFF";  //$NON-NLS-1$
-	    public static final String AUTO_WRAP_ON = "ON";  //$NON-NLS-1$
-	    public static final String AUTO_WRAP_PESSIMISTIC = "PESSIMISTIC";  //$NON-NLS-1$
-	    public static final String AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC";  //$NON-NLS-1$
-
+	    public static final String AUTO_WRAP_OFF = ExecutionProperties.TXN_WRAP_OFF;  //$NON-NLS-1$	    
+	    public static final String AUTO_WRAP_ON = ExecutionProperties.TXN_WRAP_ON;  //$NON-NLS-1$
+	    public static final String AUTO_WRAP_AUTO = ExecutionProperties.TXN_WRAP_AUTO;  //$NON-NLS-1$
+	    
     }
 
 }

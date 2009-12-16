@@ -130,25 +130,27 @@ public abstract class ConnectionStrategy {
 	if (this.isDataStoreDisabled()) {
 	    return;
 	}
-	    	
-        com.metamatrix.jdbc.MMConnection c = null;
+
         try {
         	
         	// the the driver strategy is going to be used to connection directly to the connector binding
         	// source, then no administration can be done
-            
+  	Admin admin = null;
+ 
     	java.sql.Connection conn = getConnection();
+    	
 	if ( conn instanceof com.metamatrix.jdbc.MMConnection) {
-		c = (com.metamatrix.jdbc.MMConnection) conn;
+	    com.metamatrix.jdbc.MMConnection c = (com.metamatrix.jdbc.MMConnection) conn;
+	    admin = (Admin)c.getAdminAPI();
+	} else if (conn instanceof com.metamatrix.jdbc.api.Connection) {
+	    com.metamatrix.jdbc.api.Connection c = (com.metamatrix.jdbc.api.Connection) conn;
+	    admin = (Admin)c.getAdminAPI();
 	} else {
 	    	TestLogger.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
 		return;
 	}
-            
-            Admin admin = (Admin)c.getAdminAPI();
-           
-            setupVDBConnectorBindings(admin);
-            
+
+            setupVDBConnectorBindings(admin);            
             
  //          admin.restart();
             

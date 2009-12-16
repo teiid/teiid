@@ -25,12 +25,11 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+import org.teiid.test.framework.transaction.AutoWrapTransaction;
 import org.teiid.test.framework.transaction.JNDITransaction;
 import org.teiid.test.framework.transaction.LocalTransaction;
 import org.teiid.test.framework.transaction.OffWrapTransaction;
 import org.teiid.test.framework.transaction.OnWrapTransaction;
-import org.teiid.test.framework.transaction.OptimisticWrapTransaction;
-import org.teiid.test.framework.transaction.PessimisticWrapTransaction;
 import org.teiid.test.framework.transaction.XATransaction;
 
 
@@ -58,8 +57,7 @@ public class TransactionFactory {
 		public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
 		public static final String OFFWRAP_TRANSACTION = "offwrap"; //$NON-NLS-1$
 		public static final String ONWRAP_TRANSACTION = "onwrap"; //$NON-NLS-1$
-		public static final String OPTIMISTICWRAP_TRANSACTION = "optwrap"; //$NON-NLS-1$
-		public static final String PESSIMISTICWRAP_TRANSACTION = "pesswrap"; //$NON-NLS-1$
+		public static final String AUTOWRAP_TRANSACTION = "autowrap"; //$NON-NLS-1$
    }
 	
 
@@ -92,12 +90,8 @@ public class TransactionFactory {
         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.ONWRAP_TRANSACTION)) {
         	transacton = new OnWrapTransaction();
         }
-            else if (type.equalsIgnoreCase(TRANSACTION_TYPES.OPTIMISTICWRAP_TRANSACTION)) {
-        	transacton = new OptimisticWrapTransaction();
-        }
-        else if (type.equalsIgnoreCase(TRANSACTION_TYPES.PESSIMISTICWRAP_TRANSACTION)) {
-        	transacton = new PessimisticWrapTransaction();
-
+            else if (type.equalsIgnoreCase(TRANSACTION_TYPES.AUTOWRAP_TRANSACTION)) {
+        	transacton = new AutoWrapTransaction();
 
         } else {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
