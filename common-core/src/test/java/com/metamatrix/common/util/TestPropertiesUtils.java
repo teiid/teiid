@@ -651,6 +651,15 @@ public class TestPropertiesUtils extends TestCase {
         } catch(RuntimeException e) {
         	// pass
         }
+        
+        
+        // JIRA:  TEIID-909 - The resolveNestedProperties logic goes in a loop when the key is also in the  value as ${key}.  
+        Properties dups = new Properties();
+        dups.setProperty("usethis", "${usethis}");
+        
+        dups = PropertiesUtils.resolveNestedProperties(dups);
+        
+        
 
     }
     

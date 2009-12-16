@@ -820,12 +820,22 @@ public final class PropertiesUtils {
                     String nestedkey = value.substring(start+2, end);
                     String nestedvalue = original.getProperty(nestedkey);
                     
-                    // this will handle case where we did not resolve, mark it blank
-                    if (nestedvalue == null) {
-                    	throw new MetaMatrixRuntimeException(CorePlugin.Util.getString("PropertiesUtils.failed_to_resolve_property", nestedkey)); //$NON-NLS-1$
-                    }                    
-                    value = value.substring(0,start)+nestedvalue+value.substring(end+1);
-                    modified = true;
+                    // in cases where the key and the nestedkey are the same, this has to be bypassed
+                    // because it will cause an infinite loop, and because there will be no value
+                    // for the nestedkey that doesnt contain ${..} in the value
+                    if (key.equals(nestedkey)) {
+                        matched = false;
+
+                    } else {
+
+                    
+                        // this will handle case where we did not resolve, mark it blank
+                        if (nestedvalue == null) {
+                        	throw new MetaMatrixRuntimeException(CorePlugin.Util.getString("PropertiesUtils.failed_to_resolve_property", nestedkey)); //$NON-NLS-1$
+                        }                    
+                        value = value.substring(0,start)+nestedvalue+value.substring(end+1);
+                        modified = true;
+                   }
                 }
             }
             if(modified) {
