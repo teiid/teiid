@@ -61,10 +61,10 @@ NOTE:  2 Datasource directories, each containing a connection.properties file, a
 	Options are to setup all data sources at once or setup a single data source.
 
 		a.  to setup all data sources at one time, run:   
-				mvn -Psetupdatasources 
+				mvn pre-integration-test -Psetupdatasources 
 				
 		b.	to setup a specific data source, 
-				run: mvn -Ddatasource=<datasourcedir> -Psingledatasource  
+				run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingledatasource  
 				
 				where <datasourcedir> is the name of the directory for the datasource
 					
