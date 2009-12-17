@@ -20,8 +20,9 @@ Creating Unit Tests
 													you want the connection for
 													
 													
-	By default, the datasource assigned to a model will be (somewhat) random.   There is not coding to 
-	specifically control this assignment, as long as the -Dusedatasources option is not used.
+	By default, the datasource assigned to a model will be (somewhat) random when starting the test process.  Once the
+	data source is associated with a model, it will be used for the duration of all tests being performed.   To override
+	this behavior, the -Dusedatasources option can be used.  
 	
 	If the -Dusedatasources option is used, then there is an implied model-to-datasource assignment.
 			To understand how this assignment will be made, find the config properties file being
@@ -50,37 +51,60 @@ Creating Unit Tests
 Setting up a Datasource to be used during Testing
 ==========================================
 
+NOTE:  2 Datasource directories, each containing a connection.properties file, are required in order to run the integration tests.
+		Each data source can be pointing to the same database instance, but the schemas must be different.
+
 1.	DEFINE DATASOURCE:
 	To define a datasource, see the readme.txt in src/main/resources/datasources regarding defining a datasource
 
-2.	CREATE TABLES
-	To create the tables on the defined datasource, run the maven profile to execute the process to create the required tables:
-		a.  to setup all sources at one time, run:   
-				mvn pre-integration-test -P setupdatasources -Dmaven.test.skip=true
-		b.	to setup a specific source, 
-				run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingledatasource -Dmaven.test.skip=true 
+2.	CREATE TABLES IN A DATASOURCE
+	Options are to setup all data sources at once or setup a single data source.
+
+		a.  to setup all data sources at one time, run:   
+				mvn -Psetupdatasources 
+				
+		b.	to setup a specific data source, 
+				run: mvn -Ddatasource=<datasourcedir> -Psingledatasource  
+				
 				where <datasourcedir> is the name of the directory for the datasource
-				
-				
+					
 				Example:
 		
-					mvn pre-integration-test -Ddatasource=oracle -Psingledatasource -Dmaven.test.skip=true 
+					mvn -Ddatasource=oracle -Psingledatasource 
 
 ==========================================
 Executing the db integration tests
 ==========================================
 
-The default profile in the pom.xml is set to compile and run the test.   The following are options for running tests:
+The default setup of the pom.xml is to only compile and assemble the teiid-ctc-test-client jar.  The following are different profile
+options for running tests:
 
-	a.	Run with no regard to which specific datasource to use (only those with connections.properties file are considered):  
-			run:	mvn install
-	b.	To run the tests, but specify which datasource(s) to use:
-			run:	mvn clean install -Dusedatasources=<comma seperated datasource names>
-			Example:  mvn clean install -Dusedatasources=oracle,sqlserver
+	a.	Run All Tests:  Run all tests with no regard to which specific datasource to use (only those with connections.properties file are considered):  
+
+			run:	mvn install -Prunalltests
+			
+	b.	Run a Single Test:  Run one test class with no regard to which specific datasource to use
+
+			run: 	mvn install -Prunsingletest -Dclassname=<classname>      
+
+					Example:   mvn install -Prunsingletest -Dclassname=OffWrapTransactionTests
+		
+
+
+==========================================
+Executing the db integration tests - using the -Dusedatasources  option
+==========================================
+
+When running tests, by default, the process will randomly select which defined datasources it will use and to which model they will be mapped.
+To control which datasources to use, add the -Dusedatasources  option when running either "run" profile (e.g., runalltests or runsingletest).
+	
+	a.	Example
+	
+			run:	mvn install -Prunalltests -Dusedatasources=<comma seperated datasource names>
+
+			Example:  mvn install -Prunalltests -Dusedatasources=oracle,sqlserver
 			
 			
-	c.	To run a single class of tests, run the "singleclass" profile
-			run:	mvn clean install -Psingleclass -Dclassname=<classname>      ====>  don't add .java to classname
 			
 
 

@@ -238,15 +238,11 @@
 	</dependencies>	
 
 
-
+  
 
 	 <profiles>
 	    <profile>
-	      <id>default</id>
-   			<activation>
-      			<activeByDefault>true</activeByDefault>
-    		</activation>
-
+	      <id>runalltests</id>
 	      <build>
 			<plugins>
 	  <!-- Specify the compiler options and settings -->
@@ -260,11 +256,12 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
+			
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 		          <additionalClasspathElements>
-		                <additionalClasspathElement>${basedir}/lib/classes12_g.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/ojdbc6.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
@@ -280,9 +277,7 @@
 		              <value>${datasourceloc}</value>
 		            </property>
 		          </systemProperties>
-
-
-					
+				
 <!--
 <forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
@@ -324,12 +319,8 @@
 	    </profile>
 
 	    <profile>
-	      <id>singleclass</id>
-   			<activation>
-      			<property>
-       		 		<name>classname</name>
-      			</property>
-    		</activation>  
+	      <id>runsingletest</id>
+
 	      <build>
 			<plugins>
 	  <!-- Specify the compiler options and settings -->
@@ -343,11 +334,12 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
+				<configuration>    		
 		          <additionalClasspathElements>
-		                <additionalClasspathElement>${basedir}/lib/classes12_g.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/ojdbc6.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
@@ -363,20 +355,15 @@
 		            </property>
 		          </systemProperties>
 
-
-					<forkMode>always</forkMode>
 <!--
+					<forkMode>always</forkMode>
+
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
 	-->				
 					<includes>
 						<include>**/${classname}.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/*Abstract*TestCase.java</exclude>
-						<exclude>**/*Abstract*Test.java</exclude>
-			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
-						<exclude>**/Test*$*.java</exclude>
-					</excludes>
+
 				</configuration>
 			</plugin>
 
@@ -390,18 +377,13 @@
 	      <build>
 	        <plugins>
 
-	  <!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
-
+    	<plugin>
+      		<groupId>org.apache.maven.plugins</groupId>
+      		<artifactId>maven-surefire-plugin</artifactId>
+      		<configuration>
+        			<skip>true</skip>
+     		</configuration>
+    	</plugin>
 	          <plugin>
 	          	<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-antrun-plugin</artifactId>
@@ -446,18 +428,14 @@
     		</activation>
 	      <build>
 	        <plugins>
-	  <!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
 
+    	<plugin>
+      		<groupId>org.apache.maven.plugins</groupId>
+      		<artifactId>maven-surefire-plugin</artifactId>
+      		<configuration>
+        			<skip>true</skip>
+     		</configuration>
+    	</plugin>
 	          <plugin>
 	          	<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-antrun-plugin</artifactId>
@@ -500,7 +478,7 @@
 
 
 		<profile>
-	      <id>testclient</id>
+	      <id>runclienttests</id>
     		<activation>
       			<property>
        		 		<name>scenario.dir</name>
@@ -518,6 +496,13 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
+    	<plugin>
+      		<groupId>org.apache.maven.plugins</groupId>
+      		<artifactId>maven-surefire-plugin</artifactId>
+      		<configuration>
+        			<skip>true</skip>
+     		</configuration>
+    	</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -555,6 +540,65 @@
 
 		</profile>
 
+		<profile>
+			<id>assemble</id>
+<!-- assemble will compile, but not run the tests prior to assemblying the kit -->
+   			<activation>
+      			<activeByDefault>true</activeByDefault>
+    		</activation>
+			<build>
+			<plugins>
+	  <!-- Specify the compiler options and settings -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+						<showDeprecation>false</showDeprecation>
+						<showWarnings>false</showWarnings>
+					</configuration>
+				</plugin>
+		    	<plugin>
+		      		<groupId>org.apache.maven.plugins</groupId>
+		      		<artifactId>maven-surefire-plugin</artifactId>
+		      		<configuration>
+		        			<skip>true</skip>
+		     		</configuration>
+		    	</plugin>	
+			     <plugin>
+			         <groupId>org.apache.maven.plugins</groupId>
+			         <artifactId>maven-antrun-plugin</artifactId>
+						<dependencies>
+							<dependency>
+								<groupId>org.apache.ant</groupId>
+								<artifactId>ant</artifactId>
+								<version>${apache.ant.version}</version>
+							</dependency>
+						</dependencies>
+			
+			         <executions>
+			            <execution>
+			            	<!--  assemble all the console artifacts that make up the console kit  -->  
+			         		<id>assemble-artifacts</id>           
+			               <phase>package</phase>
+			               <configuration>                             
+			                  <tasks>
+			                 	<property name="product.version" value="${project.version}" />
+			                 	<!-- location to assemble the console artifacts -->
+								<property name="relative.artifact.dir" value="target/distribution/artifacts/teiid-ctc-test-client-${project.version}"></property>
+			                   	<ant antfile="src/assembly/assemble-ctc-client.xml"/>     
+			                  </tasks>
+			               </configuration>
+			               <goals>
+			                  <goal>run</goal>
+			               </goals>
+			            </execution> 
+					  </executions>  
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 
 	</profiles>
 
