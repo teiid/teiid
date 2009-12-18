@@ -90,15 +90,6 @@ public abstract class TransactionContainer {
 	    }
 	}
 	
-	if (test.exceptionExpected() && !test.exceptionOccurred()) {
-	    TransactionRuntimeException t  = new TransactionRuntimeException(
-		    "Expected exception, but one did not occur for test: "
-			    + this.getClass().getName() + "."
-			    + test.getTestName());
-	    test.setApplicationException(t);
-	}
-
-
 	    debug("	test.after");
 
 	    test.after();
