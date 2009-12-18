@@ -237,12 +237,6 @@
 
 	</dependencies>	
 
-
-  
-
-	 <profiles>
-	    <profile>
-	      <id>runalltests</id>
 	      <build>
 			<plugins>
 	  <!-- Specify the compiler options and settings -->
@@ -256,6 +250,15 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
+			</plugins>
+		</build>
+  
+
+	 <profiles>
+	    <profile>
+	      <id>runalltests</id>
+	      <build>
+			<plugins>
 			
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -323,17 +326,6 @@
 
 	      <build>
 			<plugins>
-	  <!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
 
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -486,16 +478,7 @@
     		</activation>
 			<build>
 				<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
+
     	<plugin>
       		<groupId>org.apache.maven.plugins</groupId>
       		<artifactId>maven-surefire-plugin</artifactId>
@@ -543,22 +526,14 @@
 		<profile>
 			<id>assemble</id>
 <!-- assemble will compile, but not run the tests prior to assemblying the kit -->
-   			<activation>
-      			<activeByDefault>true</activeByDefault>
+    		<activation>
+      			<property>
+       		 		<name>qe.artifacts</name>
+      			</property>
     		</activation>
 			<build>
 			<plugins>
-	  <!-- Specify the compiler options and settings -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<configuration>
-						<source>1.6</source>
-						<target>1.6</target>
-						<showDeprecation>false</showDeprecation>
-						<showWarnings>false</showWarnings>
-					</configuration>
-				</plugin>
+
 		    	<plugin>
 		      		<groupId>org.apache.maven.plugins</groupId>
 		      		<artifactId>maven-surefire-plugin</artifactId>
@@ -566,9 +541,10 @@
 		        			<skip>true</skip>
 		     		</configuration>
 		    	</plugin>	
-			     <plugin>
-			         <groupId>org.apache.maven.plugins</groupId>
-			         <artifactId>maven-antrun-plugin</artifactId>
+
+				<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
 						<dependencies>
 							<dependency>
 								<groupId>org.apache.ant</groupId>
@@ -576,26 +552,56 @@
 								<version>${apache.ant.version}</version>
 							</dependency>
 						</dependencies>
-			
-			         <executions>
-			            <execution>
-			            	<!--  assemble all the console artifacts that make up the console kit  -->  
-			         		<id>assemble-artifacts</id>           
-			               <phase>package</phase>
-			               <configuration>                             
-			                  <tasks>
-			                 	<property name="product.version" value="${project.version}" />
-			                 	<!-- location to assemble the console artifacts -->
-								<property name="relative.artifact.dir" value="target/distribution/artifacts/teiid-ctc-test-client-${project.version}"></property>
-			                   	<ant antfile="src/assembly/assemble-ctc-client.xml"/>     
-			                  </tasks>
-			               </configuration>
-			               <goals>
-			                  <goal>run</goal>
-			               </goals>
-			            </execution> 
-					  </executions>  
-					</plugin>
+						<executions>
+							<execution>
+							     	<!--  zip up the qe artificats  -->   		
+							
+								<id>assembly-qe-artifacxts</id>
+								<phase>package</phase>
+								<configuration>
+									<tasks>
+										<zip destfile="target/qe_artifacts.zip">
+											<zipfileset dir="${qe.artifacts}"   prefix="qe_artifacts" />
+										</zip>
+									</tasks>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>						
+							</execution>
+						</executions>
+				</plugin>
+
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.2-beta-2</version>
+					<configuration>
+						<descriptors>
+							<descriptor>src/assembly/binaries.xml</descriptor>
+						</descriptors>
+						<outputDirectory>target/distribution</outputDirectory>
+						<workDirectory>target/assembly/work</workDirectory>
+
+				          <systemProperties>
+				            <property>
+				              <name>qe.artifacts.file</name>
+				              <value>target/qe_artifacts.zip</value>
+				            </property>
+				          </systemProperties>
+
+					</configuration>
+					<executions>
+
+						<execution>
+							<id>make-assembly</id>
+							<phase>package</phase>
+							<goals>
+								<goal>attached</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
 				</plugins>
 			</build>
 		</profile>
