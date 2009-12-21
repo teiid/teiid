@@ -262,17 +262,15 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
      * end of the test.
      */
     public void cleanup() {
+	super.closeConnection();
 	
 	ConfigPropertyLoader.reset();
-	
-	super.closeConnection();
+
 	
 	// cleanup all connections created for this test.
 	if (connStrategy != null) {
 	    connStrategy.shutdown();
 	}
-	
-
 
     }
 
