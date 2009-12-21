@@ -25,7 +25,7 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.framework.transaction.AutoWrapTransaction;
+import org.teiid.test.framework.transaction.AutoCommitTransaction;
 import org.teiid.test.framework.transaction.JNDITransaction;
 import org.teiid.test.framework.transaction.LocalTransaction;
 import org.teiid.test.framework.transaction.OffWrapTransaction;
@@ -91,7 +91,7 @@ public class TransactionFactory {
         	transacton = new OnWrapTransaction();
         }
             else if (type.equalsIgnoreCase(TRANSACTION_TYPES.AUTOWRAP_TRANSACTION)) {
-        	transacton = new AutoWrapTransaction();
+        	transacton = new AutoCommitTransaction();
 
         } else {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
