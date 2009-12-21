@@ -7510,6 +7510,40 @@ public class TestProcessor {
         
         helpProcess(plan, dataManager, expected);
     }
-    
+
+    /**
+     * Test a query that uses ambiguous alias names in the top level query and 
+     * its sub-query and uses columns belonging to the alias as a parameter to a 
+     * function.
+     * <p>
+     * For example, <code>SELECT CONVERT(A.e2, biginteger) AS e2 FROM (SELECT 
+     * CONVERT(e2, long) AS e2 FROM pm1.g1 AS A) AS A</code>
+     * <p>
+     * The test is to ensure that A.e2 from the top level is not confused with 
+     * e2 in the second level.
+     * <p>
+     * Related Defects: JBEDSP-1137
+     */
+    @Test public void testAliasReuseInFunctionInSubQuery() throws Exception {
+        // Create query
+    	String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
+    	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A WHERE e1 = 'a'" + //$NON-NLS-1$
+    	") AS A"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] { new BigInteger("0") }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new BigInteger("3") }), //$NON-NLS-1$ 
+            Arrays.asList(new Object[] { new BigInteger("0") }), //$NON-NLS-1$ 
+        };
+
+        FakeDataManager manager = new FakeDataManager();
+        sampleData1(manager);
+        helpProcess(plan, manager, expected);
+    }
+
     private static final boolean DEBUG = false;
 }

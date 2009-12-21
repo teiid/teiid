@@ -6736,6 +6736,108 @@ public class TestOptimizer {
     			TestOptimizer.SHOULD_SUCCEED);
     }
 
+    /**
+     * Test the query optimizer's ability to properly plan and optimize a query 
+     * that uses ambiguous alias names in the top level query and its sub-query.
+     * <p>
+     * No source table is being used.  For example, <code>SELECT A.e2 FROM 
+     * (SELECT e2 FROM (SELECT 1 AS e2) AS A) AS A</code>
+     * <p>
+     * The test is to ensure that A.e2 from the top level is not confused with 
+     * e2 in the second level.
+     * <p>
+     * Related Defects: JBEDSP-1137
+     */
+    @Test public void testAmbiguousAliasInSubQueryNoSource() {
+        // Create query
+    	String sql = "SELECT A.e2 AS e2 FROM (" + //$NON-NLS-1$
+    	"	SELECT e2 AS e2 FROM (" + //$NON-NLS-1$
+    	"		SELECT 5 AS e2" + //$NON-NLS-1$
+    	"	) AS A" + //$NON-NLS-1$
+    	") AS A"; //$NON-NLS-1$
+
+        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {});
+    }
+         
+    /**
+     * Test the query optimizer's ability to properly plan and optimize a query 
+     * that uses ambiguous alias names in the top level query and its sub-query
+     * and uses columns belonging to the alias as a parameter to a function.
+     * <p>
+     * No source table is being used.  For example, <code>SELECT CONVERT(A.e2, 
+     * biginteger) AS e2 FROM (SELECT CONVERT(e2, long) AS e2 FROM (SELECT 1 AS 
+     * e2) AS A) AS A</code>
+     * <p>
+     * The test is to ensure that A.e2 from the top level is not confused with 
+     * e2 in the second level.
+     * <p>
+     * Related Defects: JBEDSP-1137
+     */
+    @Test public void testAmbiguousAliasFunctionInSubQueryNoSource() {
+        // Create query
+    	String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
+    	"	SELECT CONVERT(e2, long) AS e2 FROM (" + //$NON-NLS-1$
+    	"		SELECT 5 AS e2" + //$NON-NLS-1$
+    	"	) AS A" + //$NON-NLS-1$
+    	") AS A"; //$NON-NLS-1$
+
+    	helpPlan(sql, FakeMetadataFactory.example1(), new String[] {});
+    }
+
+    /**
+     * Test the query optimizer's ability to properly plan and optimize a query 
+     * that uses ambiguous alias names in the top level query and its sub-query.
+     * <p>
+     * For example, <code>SELECT A.e2 FROM (SELECT e12FROM pm1.g1 AS A) AS A</code>
+     * <p>
+     * The test is to ensure that A.e2 from the top level is not confused with 
+     * e2 in the second level.
+     * <p>
+     * Related Defects: JBEDSP-1137
+     */
+    @Test public void testAmbiguousAliasInSubQuerySource() {
+        // Create query
+    	String sql = "SELECT A.e2 AS e2 FROM (" + //$NON-NLS-1$
+    	"   SELECT e2 AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
+    	") AS A"; //$NON-NLS-1$
+
+        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
+    }
+         
+    /**
+     * Test the query optimizer's ability to properly plan and optimize a query 
+     * that uses ambiguous alias names in the top level query and its sub-query
+     * and uses columns belonging to the alias as a parameter to a function.
+     * <p>
+     * For example, <code>SELECT CONVERT(A.e2, biginteger) AS e2 FROM (SELECT 
+     * CONVERT(e2, long) AS e2 FROM pm1.g1 AS A) AS A</code>
+     * <p>
+     * The test is to ensure that A.e2 from the top level is not confused with 
+     * e2 in the second level.
+     * <p>
+     * Related Defects: JBEDSP-1137
+     */
+    @Test public void testAmbiguousAliasFunctionInSubQuerySource() {
+        // Create query
+    	String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
+    	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
+    	") AS A"; //$NON-NLS-1$
+
+        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
+
+        // Add convert capability to pm1 and try it again
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+
+        helpPlan(sql, metadata, null, capFinder,
+            new String[] {"SELECT CONVERT(CONVERT(e2, long), biginteger) FROM pm1.g1 AS A"}, //$NON-NLS-1$
+            SHOULD_SUCCEED );
+    }
+
 	public static final boolean DEBUG = false;
 
 }
