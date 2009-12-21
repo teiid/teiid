@@ -515,7 +515,13 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
                     fail("should have failed with time out exception");
                 }
                 else {
-                    assertTrue(getLastException().getMessage().indexOf("Operation timed out before completion") != -1);
+                    if (getLastException() != null) {
+                	String msg = getLastException().getMessage();
+                	boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
+                	assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
+                    } else {
+                	fail("Program Error: it indicates exception occured, but no exception is found" );
+                    }
                 }
             }             
         };

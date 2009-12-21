@@ -265,10 +265,14 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 	
 	ConfigPropertyLoader.reset();
 	
+	super.closeConnection();
+	
 	// cleanup all connections created for this test.
 	if (connStrategy != null) {
 	    connStrategy.shutdown();
 	}
+	
+
 
     }
 
@@ -289,6 +293,15 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 	return (super.exceptionOccurred() ? super.exceptionOccurred() : this.applicationException != null);
 
     }
+    
+    @Override
+    public SQLException getLastException() {
+	if (super.getLastException() != null) {
+	    return super.getLastException();
+	}
+	
+	return new SQLException(this.applicationException.getClass().getName() + ":" + this.applicationException.getMessage());
+     }
 
     @Override
     public Throwable getApplicationException() {
