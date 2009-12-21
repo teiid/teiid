@@ -22,9 +22,6 @@
 
 package com.metamatrix.api.exception.query;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 
 /**
  * Thrown when a query cannot be parsed.  This is most likely due to not 

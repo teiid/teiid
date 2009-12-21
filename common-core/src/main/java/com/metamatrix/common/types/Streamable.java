@@ -23,7 +23,6 @@
 package com.metamatrix.common.types;
 
 import java.io.Serializable;
-import java.lang.ref.PhantomReference;
 
 import com.metamatrix.core.CorePlugin;
 
