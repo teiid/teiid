@@ -750,29 +750,6 @@ public final class FileUtils {
     }
     
     /**
-     * Compute checksum for the given file. 
-     * @param f The file for which checksum needs to be computed
-     * @return The checksum
-     * @since 4.3
-     */
-    public static long getCheckSum(final File f)  throws Exception {
-        ArgCheck.isNotNull(f);
-        FileInputStream is = null;
-        try {
-            is = new FileInputStream(f);
-            return ChecksumUtil.computeChecksum(is).getValue();
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException err1) {
-                }
-            }
-        }
-    }    
-
-    
-    /**
      * Test whether it's possible to read and write files in the specified directory. 
      * @param dirPath Name of the directory to test
      * @throws MetaMatrixException
