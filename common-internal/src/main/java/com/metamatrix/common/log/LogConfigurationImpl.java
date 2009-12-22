@@ -27,15 +27,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.core.log.MessageLevel;
-
 public class LogConfigurationImpl implements LogConfiguration, Serializable {
 
 	private static final long serialVersionUID = 4626429149431532292L;
 	
 	Map<String, Integer> contextMap = null;
+	private int defaultLevel;
 	
-	public LogConfigurationImpl() {
+	public LogConfigurationImpl(int defaultLevel) {
+		this.defaultLevel = defaultLevel;
 		this.contextMap = new HashMap<String, Integer>();
 	}
 	
@@ -58,7 +58,7 @@ public class LogConfigurationImpl implements LogConfiguration, Serializable {
 		if (level != null) {
 			return level;
 		}
-		return MessageLevel.NONE;
+		return defaultLevel;
 	}
 
 	private String fixContext(String context) {

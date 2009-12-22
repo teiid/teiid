@@ -88,7 +88,7 @@ import com.metamatrix.core.log.MessageLevel;
 public final class LogManager {
 
     @Inject
-    static LogConfiguration configuration = new LogConfigurationImpl(); // either injected or manually set using the set methods
+    static LogConfiguration configuration = new LogConfigurationImpl(MessageLevel.DETAIL); // either injected or manually set using the set methods
     
     @Inject
     static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
