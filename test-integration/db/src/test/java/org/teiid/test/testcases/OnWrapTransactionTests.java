@@ -10,7 +10,7 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
-import org.teiid.test.framework.transaction.AutoCommitTransaction;
+import org.teiid.test.framework.transaction.TxnAutoTransaction;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -26,7 +26,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
     
     @Override
     protected TransactionContainer getTransactionContainter() {
-	return new AutoCommitTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
+	return new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
     }
     
     /**

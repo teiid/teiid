@@ -16,15 +16,15 @@ import com.arjuna.common.internal.util.logging.commonPropertyManager;
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
-public class AutoWrapTransactionTests extends CommonTransactionTests {
+public class PessimisticWrapTransactionTests extends CommonTransactionTests {
 
-    public AutoWrapTransactionTests(String testName) {
+    public PessimisticWrapTransactionTests(String testName) {
         super(testName);
     }
     
     protected TransactionContainer getTransactionContainter() {
 
-	return new TxnAutoTransaction(ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
+	return new TxnAutoTransaction(ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_PESSIMISTIC);
     }
     
     /**

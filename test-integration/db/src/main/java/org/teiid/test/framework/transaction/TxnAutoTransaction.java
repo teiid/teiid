@@ -14,15 +14,15 @@ import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
  * AutoCommit = ON 
  * txnAutoWrap = Optimistic.
  */
-public class AutoCommitTransaction extends TransactionContainer {
+public class TxnAutoTransaction extends TransactionContainer {
     
     private String autocommittxn = null;
     
-    public AutoCommitTransaction() {
+    public TxnAutoTransaction() {
 	super();
     }
     
-    public AutoCommitTransaction(String autocommittxn) {
+    public TxnAutoTransaction(String autocommittxn) {
 	super();
 	this.autocommittxn = autocommittxn;
     }

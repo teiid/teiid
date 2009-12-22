@@ -7,6 +7,7 @@ package org.teiid.test.framework.connection;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.Iterator;
@@ -105,24 +106,7 @@ public abstract class ConnectionStrategy {
 	this.env.setProperty(key, value);
     }
    
-    class CloseInterceptor implements InvocationHandler {
-
-        Connection conn;
-
-        CloseInterceptor(Connection conn) {
-            this.conn = conn;
-        }
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (method.getName().equals("close")) { //$NON-NLS-1$
-                return null;
-            }
-            try {
-                return method.invoke(this.conn, args);
-            } catch (InvocationTargetException e) {
-                throw e.getTargetException();
-            }
-        }
-    }    
+  
     
    
     void configure() throws QueryTestFailedException  {
@@ -269,15 +253,19 @@ public abstract class ConnectionStrategy {
 	
 	ConnectionStrategy cs = null;
 	if (identifier == null) {
-	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+	    cs = new DriverConnection(ds.getProperties(), null);
  		
  	} else {
- 	    cs = new DriverConnection(ds.getProperties(), this.dsFactory);
+ 	    cs = new DriverConnection(ds.getProperties(), null);
  	}
 	
-	ds.setConnection(cs);
+	conn = cs.getConnection();
+	
+	conn = (Connection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {java.sql.Connection.class}, new CloseInterceptor(conn)); 
+	
+	ds.setConnection(conn);
 		
-	return ds.getConnection();
+	return conn;
  
 	
     }
@@ -300,16 +288,45 @@ public abstract class ConnectionStrategy {
 	
 	ConnectionStrategy cs = null;
 	if (identifier == null) {
-	    cs = new DataSourceConnection(ds.getProperties(), this.dsFactory);
+	    cs = new DataSourceConnection(ds.getProperties(), null);
 	} else {
-	    cs = new DataSourceConnection(ds.getProperties(), this.dsFactory);
+	    cs = new DataSourceConnection(ds.getProperties(), null);
 	}
 	
-	ds.setXAConnection(cs);
+	conn = cs.getXAConnection();
 	
-	return ds.getXAConnection();
+	conn = (XAConnection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {javax.sql.XAConnection.class}, new CloseInterceptor(conn)); 
+
+	
+	ds.setXAConnection(conn);
+	
+	return conn;
 	
 
     }
+    
+    class CloseInterceptor implements InvocationHandler {
+
+        Connection conn;
+        XAConnection xaconn;
+
+        CloseInterceptor(Object conn) {
+            if (conn instanceof Connection) {
+        	this.conn = (Connection) conn;
+            } else {
+        	this.xaconn = (XAConnection) conn;
+            }
+        }
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("close")) { //$NON-NLS-1$
+                return null;
+            }
+            try {
+                return method.invoke(this.conn, args);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
+        }
+    }  
     
 }

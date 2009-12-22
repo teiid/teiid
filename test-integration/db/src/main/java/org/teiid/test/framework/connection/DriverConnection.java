@@ -4,7 +4,6 @@
  */
 package org.teiid.test.framework.connection;
 
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -124,13 +123,7 @@ public class DriverConnection extends ConnectionStrategy {
 	    } else {
 		conn = DriverManager.getConnection(url);
 	    }
-	    
-//	    if (this.useProxy()) {
-//		conn = (Connection)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {java.sql.Connection.class}, new CloseInterceptor(conn)); 
-//	    }
-
-//	} catch (SQLException e) {
- 
+	     
 	} catch (Throwable t) {
 	    t.printStackTrace();
 	    throw new QueryTestFailedException(t.getMessage());

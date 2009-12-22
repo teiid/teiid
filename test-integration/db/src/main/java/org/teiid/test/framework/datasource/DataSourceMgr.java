@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -96,6 +97,22 @@ public class DataSourceMgr {
     
     void clear() {
 	modelToDatasourceMap.clear();
+    }
+    
+    public void shutdown() {
+	if (allDatasourcesMap == null || allDatasourcesMap.size() == 0) {
+	    return;
+	}
+	
+	Iterator<String> it=allDatasourcesMap.keySet().iterator();
+	while(it.hasNext()) {
+	    String key = (String) it.next();
+	    DataSource ds = allDatasourcesMap.get(key);
+	    ds.shutdown();
+	}
+	
+	allDatasourcesMap.clear();
+	
     }
 
     public void setDataSource(String modelName, DataSource ds) {

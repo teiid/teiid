@@ -174,7 +174,6 @@ public class DataSourceConnection extends ConnectionStrategy {
         	}
 	    	
 	   	PropertiesUtils.setBeanProperties(ds, props, null);
-	   	Object z = ds.getConnection();
 	   	return ((XADataSource)ds).getXAConnection();
 	}
 

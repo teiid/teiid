@@ -23,9 +23,10 @@ package org.teiid.test.client;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
+import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.framework.transaction.AutoCommitTransaction;
+import org.teiid.test.framework.transaction.TxnAutoTransaction;
 import org.teiid.test.framework.transaction.JNDITransaction;
 import org.teiid.test.framework.transaction.LocalTransaction;
 import org.teiid.test.framework.transaction.OffWrapTransaction;
@@ -85,13 +86,13 @@ public class TransactionFactory {
         	transacton = new JNDITransaction();
         }
      	else if (type.equalsIgnoreCase(TRANSACTION_TYPES.OFFWRAP_TRANSACTION)) {
-            	transacton = new OffWrapTransaction();
+            	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
         }
         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.ONWRAP_TRANSACTION)) {
-        	transacton = new OnWrapTransaction();
+        	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
         }
             else if (type.equalsIgnoreCase(TRANSACTION_TYPES.AUTOWRAP_TRANSACTION)) {
-        	transacton = new AutoCommitTransaction();
+        	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
 
         } else {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
