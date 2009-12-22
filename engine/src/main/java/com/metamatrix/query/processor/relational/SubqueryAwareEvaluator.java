@@ -30,9 +30,8 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -52,6 +51,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 
 	public class SubqueryState {
 		QueryProcessor processor;
+		BatchCollector collector;
 		boolean done;
 		List<?> tuple;
 		ProcessorPlan plan;
@@ -60,13 +60,8 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			if (processor == null) {
 				return;
 			}
-			try {
-				processor.closeProcessing();
-				TupleSourceID id = processor.getResultsID();
-	            manager.removeTupleSource(id);
-			} catch (TupleSourceNotFoundException e) {
-				
-			} 
+			processor.closeProcessing();
+			collector.getTupleBuffer().close();
 			processor = null;
 			this.done = false;
 		}
@@ -125,12 +120,12 @@ public class SubqueryAwareEvaluator extends Evaluator {
 					}
 					state.processor.getContext().pushVariableContext(currentContext);
 				}
+		        state.collector = state.processor.createBatchCollector();
 			}
-			state.processor.process(Integer.MAX_VALUE);
 			state.done = true;
 			state.processor.getProcessorPlan().reset();
 		}
-		return new DependentValueSource(state.processor.getResultsID(), this.manager).getValueIterator(ref.getValueExpression());
+		return new DependentValueSource(state.collector.collectTuples(), this.manager.getProcessorBatchSize() / 2).getValueIterator(ref.getValueExpression());
 	}
 	
 }

@@ -54,7 +54,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.Assertion;
@@ -70,8 +69,8 @@ import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
+import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.ReservedWords;
@@ -80,7 +79,6 @@ import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 public class DataTierManagerImpl implements ProcessorDataManager {
@@ -105,37 +103,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		GETVDBRESOURCEPATHS
 	}
 	
-	private class CollectionTupleSource implements TupleSource {
-		
-		private Iterator<List<Object>> tuples;
-		private List<SingleElementSymbol> schema;
-		
-		public CollectionTupleSource(Iterator<List<Object>> tuples,
-				List<SingleElementSymbol> schema) {
-			this.tuples = tuples;
-			this.schema = schema;
-		}
-
-		@Override
-		public List<?> nextTuple() throws MetaMatrixComponentException,
-				MetaMatrixProcessingException {
-			if (tuples.hasNext()) {
-				return tuples.next();
-			}
-			return null;
-		}
-		
-		@Override
-		public List<SingleElementSymbol> getSchema() {
-			return schema;
-		}
-		
-		@Override
-		public void closeSource() throws MetaMatrixComponentException {
-			
-		}
-	}
-
 	// Resources
 	private DQPCore requestMgr;
     private DataService dataService;
@@ -294,11 +261,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							break;
 						case REFERENCEKEYCOLUMNS:
 							for (ForeignKey key : table.getForeignKeys()) {
-								int postition = 0;
+								short postition = 0;
 								for (Column column : key.getColumns()) {
 									Table pkTable = key.getPrimaryKey().getTable();
 									rows.add(Arrays.asList(vdbName, pkTable.getSchema().getName(), pkTable.getName(), key.getPrimaryKey().getColumns().get(postition).getName(), vdbName, schema.getName(), table.getName(), column.getName(),
-											++postition, (short)DatabaseMetaData.importedKeyNoAction, (short)DatabaseMetaData.importedKeyNoAction, key.getName(), key.getPrimaryKey().getName(), (short)DatabaseMetaData.importedKeyInitiallyDeferred));
+											++postition, DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyNoAction, key.getName(), key.getPrimaryKey().getName(), DatabaseMetaData.importedKeyInitiallyDeferred));
 								}
 							}
 							break;
@@ -467,19 +434,16 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         final CacheKey codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
 
         boolean success = false;
-        QueryProcessor processor = null;
         try {
-            processor = context.getQueryProcessorFactory().createQueryProcessor(query, codeTableName.toUpperCase(), context);
-
-            processor.setBatchHandler(new QueryProcessor.BatchHandler() {
-            	@Override
-            	public void batchProduced(TupleBatch batch) throws MetaMatrixProcessingException {
-               		codeTableCache.loadTable(codeRequestId, batch.getAllTuples());
+        	QueryProcessor processor = context.getQueryProcessorFactory().createQueryProcessor(query, codeTableName.toUpperCase(), context);
+        	processor.setNonBlocking(true); //process lookup as fully blocking
+            while (true) {
+            	TupleBatch batch = processor.nextBatch();
+            	codeTableCache.loadTable(codeRequestId, batch.getAllTuples());	
+            	if (batch.getTerminationFlag()) {
+            		break;
             	}
-            });
-
-        	//process lookup as fully blocking
-        	processor.process();
+            }
         	success = true;
         } finally {
         	Collection requests = null;
@@ -489,13 +453,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		requests = codeTableCache.errorLoadingCache(codeRequestId);        		
         	}
         	notifyWaitingCodeTableRequests(requests);
-        	if (processor != null) {
-	            try {
-	            	this.bufferService.getBufferManager().removeTupleSource(processor.getResultsID());
-	    		} catch (MetaMatrixComponentException e1) {
-	    			LogManager.logDetail(LogConstants.CTX_DQP, "Exception closing code table request"); //$NON-NLS-1$
-	    		}
-        	}
         }
     }
 

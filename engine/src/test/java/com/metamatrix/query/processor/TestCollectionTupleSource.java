@@ -22,40 +22,49 @@
 
 package com.metamatrix.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 /**
  */
-public class TestNullTupleSource extends TestCase {
+public class TestCollectionTupleSource {
 
-    /**
-     * Constructor for TestNullTupleSource.
-     * @param name
-     */
-    public TestNullTupleSource(String name) {
-        super(name);
-    }
-
-    public void testSource() {
-        List elements = new ArrayList();
+    @Test public void testNullSource() {
+        List<SingleElementSymbol> elements = new ArrayList<SingleElementSymbol>();
         elements.add(new ElementSymbol("x")); //$NON-NLS-1$
         elements.add(new ElementSymbol("y")); //$NON-NLS-1$
-        NullTupleSource nts = new NullTupleSource(elements);   
+        CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource(elements);   
         
         // Check schema
         assertEquals("Didn't get expected schema", elements, nts.getSchema()); //$NON-NLS-1$
         
         // Walk it and get no data
-        nts.openSource();
         List tuple = nts.nextTuple();
         nts.closeSource();
 
         assertEquals("Didn't get termination tuple for first tuple", null, tuple);             //$NON-NLS-1$
     }
+    
+    @Test public void testUpdateCountSource() {
+        CollectionTupleSource nts = CollectionTupleSource.createUpdateCountTupleSource(5);   
+        
+        // Check schema
+        assertEquals("Didn't get expected schema", Command.getUpdateCommandSymbol(), nts.getSchema()); //$NON-NLS-1$
+        
+        // Walk it and get no data
+        List tuple = nts.nextTuple();
+        nts.closeSource();
+
+        assertEquals("Didn't get termination tuple for first tuple", Arrays.asList(5), tuple);             //$NON-NLS-1$
+    }
+
 
 }

@@ -303,7 +303,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 
         // Create generic sql validation visitor
         AbstractValidationVisitor visitor = new ValidationVisitor();
-        validateWithVisitor(visitor, metadata, command, false);
+        validateWithVisitor(visitor, metadata, command);
     }
     
     private Command parseCommand() throws QueryParserException {
@@ -330,8 +330,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     public static void validateWithVisitor(
         AbstractValidationVisitor visitor,
         QueryMetadataInterface metadata,
-        Command command,
-        boolean validateOnlyEmbedded)
+        Command command)
         throws QueryValidatorException, MetaMatrixComponentException {
 
         // Validate with visitor
@@ -422,7 +421,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
      * @throws QueryResolverException
      * @throws QueryValidatorException
      */
-    protected Command generatePlan() throws MetaMatrixComponentException, QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException {
+    protected void generatePlan() throws MetaMatrixComponentException, QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException {
         Command command = parseCommand();
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
@@ -486,7 +485,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
             String msg = DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", params); //$NON-NLS-1$
             throw new QueryPlannerException(e, msg);
         }
-        return command;
     }
 
     private void setSchemasForXMLPlan(Command command, QueryMetadataInterface metadata)
@@ -555,13 +553,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
     	
         initMetadata();
         
-        Command processingCommand = generatePlan();
+        generatePlan();
         
         validateAccess(userCommand);
         
         setSchemasForXMLPlan(userCommand, metadata);
         
-        createProcessor(processingCommand);
+        createProcessor(userCommand);
     }
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
@@ -601,6 +599,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
 		// See if entitlement checking is turned on
 		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getConnectionID(), authSvc, this.vdbService, this.vdbName, this.vdbVersion);
-		validateWithVisitor(visitor, this.metadata, command, true);
+		validateWithVisitor(visitor, this.metadata, command);
 	}
 }

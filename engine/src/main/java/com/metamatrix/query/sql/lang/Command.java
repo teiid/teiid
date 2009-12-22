@@ -319,18 +319,9 @@ public abstract class Command implements LanguageObject {
      */
     public abstract int updatingModelCount(QueryMetadataInterface metadata)  throws MetaMatrixComponentException;
     
-    
     protected int getSubCommandsUpdatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        return getSubCommandsUpdatingModelCount(this, metadata);
-    }
-
-    public static int getSubCommandsUpdatingModelCount(Command object, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        List<Command> subCommands = CommandCollectorVisitor.getCommands(object);
-        int numCommands = subCommands.size();
+        List<Command> subCommands = CommandCollectorVisitor.getCommands(this);
         for (Command command : subCommands) {
-            if (numCommands == 1) {
-                return command.updatingModelCount(metadata);
-            }
             if (command.updatingModelCount(metadata) > 0) {
                 return 2; //require a transaction if there is more than 1 statement
             }

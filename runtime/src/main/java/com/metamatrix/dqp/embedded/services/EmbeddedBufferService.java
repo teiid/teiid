@@ -37,7 +37,8 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.storage.file.FileStorageManager;
+import com.metamatrix.common.buffer.impl.FileStorageManager;
+import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.ConfigurationService;
@@ -113,7 +114,7 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
             
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
-            this.bufferMgr.initialize("local", bufferProps); //$NON-NLS-1$
+            this.bufferMgr.initialize(bufferProps);
             
             // If necessary, add disk storage manager
             if(useDisk) {
@@ -125,9 +126,11 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
                 fsm.initialize(fsmProps);        
                 this.bufferMgr.setStorageManager(fsm);
                 
-                // start the file storrage manager in clean state
+                // start the file storage manager in clean state
                 // wise FileStorageManager is smart enough to clen up after itself
                 cleanDirectory(bufferDir);
+            } else {
+            	this.bufferMgr.setStorageManager(new MemoryStorageManager());
             }
             
         } catch(MetaMatrixComponentException e) { 
@@ -141,7 +144,7 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stopService() throws ApplicationLifecycleException {
-        bufferMgr.stop();
+        bufferMgr.shutdown();
 
         // Delete the buffer directory
         if (bufferDir != null) {

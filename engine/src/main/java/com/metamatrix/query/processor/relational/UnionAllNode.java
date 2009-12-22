@@ -28,7 +28,6 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.TupleBatch;
 
 public class UnionAllNode extends RelationalNode {
@@ -81,9 +80,6 @@ public class UnionAllNode extends RelationalNode {
                             sourceDone[i] = true;
                             activeSources--;
                         }
-                        
-                    } catch (BlockedOnMemoryException e) {
-                        throw e;
                     } catch(BlockedException e) {
                     	if(i<children.length-1 && hasDependentProcedureExecutionNode(children[0])){
                     		throw e;

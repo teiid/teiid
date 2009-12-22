@@ -20,42 +20,51 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.query.processor.proc;
+package com.metamatrix.query.processor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
-public class UpdateCountTupleSource implements
-                            TupleSource {
+public class CollectionTupleSource implements TupleSource {
+	
+	private Iterator<? extends List<?>> tuples;
+	private List<SingleElementSymbol> schema;
 
-    private boolean hasNextTuple = true;
-    private List nextTuple;
+	public static CollectionTupleSource createUpdateCountTupleSource(int count) {
+		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator(), Command.getUpdateCommandSymbol());
+	}
+	
+	public static CollectionTupleSource createNullTupleSource(List<SingleElementSymbol> schema) {
+		return new CollectionTupleSource(new ArrayList<List<Object>>(0).iterator(), schema);
+	}
+	
+	public CollectionTupleSource(Iterator<? extends List<?>> tuples,
+			List<SingleElementSymbol> schema) {
+		this.tuples = tuples;
+		this.schema = schema;
+	}
 
-    public UpdateCountTupleSource(List tuple) {
-        nextTuple = tuple;
-    }
-
-    public UpdateCountTupleSource(int count) {
-        nextTuple = new ArrayList(1);
-        nextTuple.add(new Integer(count));
-    }
-
-    public List getSchema() {
-        return Command.getUpdateCommandSymbol();
-    }
-
-    public List nextTuple() throws MetaMatrixComponentException {
-        if (hasNextTuple) {
-            hasNextTuple = false;
-            return nextTuple;
-        }
-        return null;
-    }
-
-    public void closeSource() throws MetaMatrixComponentException {
-    }
+	@Override
+	public List<?> nextTuple() {
+		if (tuples.hasNext()) {
+			return tuples.next();
+		}
+		return null;
+	}
+	
+	@Override
+	public List<SingleElementSymbol> getSchema() {
+		return schema;
+	}
+	
+	@Override
+	public void closeSource() {
+		
+	}
 }

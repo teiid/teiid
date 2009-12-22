@@ -470,7 +470,7 @@ public class RelationalPlanner implements CommandPlanner {
 		if (c == null) {
 			c = QueryResolver.expandCommand(container, metadata, analysisRecord);
 			if (c != null) {
-		        Request.validateWithVisitor(new ValidationVisitor(), metadata, c, true);
+		        Request.validateWithVisitor(new ValidationVisitor(), metadata, c);
 		        metadata.addToMetadataCache(container.getGroup().getMetadataID(), cacheString, c.clone());
 			}
 		} else {
@@ -903,7 +903,7 @@ public class RelationalPlanner implements CommandPlanner {
         	//parse, resolve, validate
         	result = convertToSubquery(qnode, metadata);
 	        QueryResolver.resolveCommand(result, Collections.EMPTY_MAP, metadata, analysisRecord);
-	        Request.validateWithVisitor(new ValidationVisitor(), metadata, result, true);
+	        Request.validateWithVisitor(new ValidationVisitor(), metadata, result);
 	        metadata.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
         }        
         return QueryRewriter.rewrite(result, metadata, context);

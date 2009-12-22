@@ -28,6 +28,7 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.*;
+import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -43,7 +44,7 @@ import com.metamatrix.query.util.CommandContext;
  * the call to {@link #close}.
  * </p>
  */
-public interface ProcessorPlan extends Cloneable, Describable {
+public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
 
 	/**
 	 * Initialize the plan with some required pieces of data for making 

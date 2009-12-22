@@ -147,7 +147,7 @@ public class XQuery extends Command {
 	 * @see com.metamatrix.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
-		return false;
+		return true;
 	}
     
     public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {

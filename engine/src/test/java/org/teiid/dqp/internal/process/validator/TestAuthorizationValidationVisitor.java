@@ -251,7 +251,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
 		
 		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
-		Request.validateWithVisitor(mvvv, FakeMetadataFactory.example1Cached(), command, true);
+		Request.validateWithVisitor(mvvv, FakeMetadataFactory.example1Cached(), command);
 	}
 	
 	public void testLookupVisibility() throws Exception {

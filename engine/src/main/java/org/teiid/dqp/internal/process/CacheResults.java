@@ -20,49 +20,49 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.buffer.impl;
+package org.teiid.dqp.internal.process;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.Serializable;
+import java.util.List;
 
 import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
-
-
-/** 
- * Represents a logical grouping of tuple sources managed by the buffer manager.
- * Tuple sources are typically grouped by session, and the groupName is typically a sessionID/connectionID.
- * @since 4.3
- */
-class TupleGroupInfo {
-    
-    private String groupName;
-    /** The bytes of memory used by this tuple group*/
-    private volatile long memoryUsed;
-    private Set<TupleSourceID> tupleSourceIDs = Collections.synchronizedSet(new HashSet<TupleSourceID>());
-    
-    TupleGroupInfo(String groupName) {
-        this.groupName = groupName;
-    }
-    
-    public Set<TupleSourceID> getTupleSourceIDs() {
-		return tupleSourceIDs;
+public class CacheResults implements Serializable {
+	private TupleSourceID results;
+	private AnalysisRecord analysisRecord;
+	private Command command;
+		
+	public CacheResults(TupleSourceID results){
+		this.results = results;
 	}
-    
-    String getGroupName() {
-        return groupName;
-    }
-    
-    long getGroupMemoryUsed() {
-        return memoryUsed;
-    }
-    
-    long reserveMemory(long bytes) {
-        return memoryUsed += bytes;
-    }
-    
-    long releaseMemory(long bytes) {
-        return memoryUsed -= bytes;
-    }
+	
+	public TupleSourceID getResults() {
+		return results;
+	}
+
+	public List<SingleElementSymbol> getElements() {
+		if (command == null) {
+			return null;
+		}
+		return command.getProjectedSymbols();
+	}
+
+	public Command getCommand() {
+		return command;
+	}
+
+	public void setCommand(Command command) {
+		this.command = command;
+	}
+
+	public AnalysisRecord getAnalysisRecord() {
+		return analysisRecord;
+	}
+
+	public void setAnalysisRecord(AnalysisRecord analysisRecord) {
+		this.analysisRecord = analysisRecord;
+	}
 }

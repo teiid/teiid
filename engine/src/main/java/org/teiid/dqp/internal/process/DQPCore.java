@@ -39,10 +39,7 @@ import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 
 import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.dqp.internal.cache.CacheID;
-import org.teiid.dqp.internal.cache.CacheResults;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.cache.ResultSetCache;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -149,7 +146,7 @@ public class DQPCore implements ClientSideDQP {
     private PreparedPlanCache prepPlanCache;
     private TransactionService transactionService;
     private MetadataService metadataService;
-    private ResultSetCache rsCache;
+    //private ResultSetCache rsCache;
     
     // Query worker pool for processing plans
     private WorkerPool processWorkerPool;
@@ -266,21 +263,10 @@ public class DQPCore implements ClientSideDQP {
 				state.tempTableStoreImpl, workContext,
 				chunkSize);
 		
-        RequestWorkItem workItem = null;
-        
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
-        
-        if(this.rsCache != null && requestMsg.useResultSetCache()) {
-        	CacheID cID = this.rsCache.createCacheID(workContext, requestMsg.getCommandString(), requestMsg.getParameterValues());
-            CacheResults cr = this.rsCache.getResults(cID, new int[]{1, 1});
-            if (cr != null) {
-            	workItem = new CachedRequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext, cr.getCommand());
-            }
-        }
-        if (workItem == null) {
-            workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
-        }
-        
+
+        RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
+
     	logMMCommand(workItem, true, false, 0); //TODO: there is no transaction at this point 
         addRequest(requestID, workItem, state);
         
@@ -423,7 +409,7 @@ public class DQPCore implements ClientSideDQP {
         
         // cleanup the buffer manager
         try {
-            bufferManager.removeTupleSources(sessionId);
+            bufferManager.removeTupleBuffers(sessionId);
         } catch (Exception e) {
             LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to remove buffered tuples for connection " + sessionId); //$NON-NLS-1$
         }
@@ -461,7 +447,7 @@ public class DQPCore implements ClientSideDQP {
         return markCancelled;
     }
     
-	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException {
+	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException, MetaMatrixComponentException {
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         closeRequest(workContext.getRequestID(requestId));
         return null;
@@ -470,8 +456,9 @@ public class DQPCore implements ClientSideDQP {
     /**
      * Close the request with given ID 
      * @param requestID
+     * @throws MetaMatrixComponentException 
      */
-    void closeRequest(RequestID requestID) {
+    void closeRequest(RequestID requestID) throws MetaMatrixComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
         }
@@ -496,9 +483,9 @@ public class DQPCore implements ClientSideDQP {
 
 	public void clearResultSetCache() {
 		//clear cache in server
-		if(rsCache != null){
+		/*if(rsCache != null){
 			rsCache.clear();
-		}
+		}*/
 	}
     
     void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
@@ -569,9 +556,9 @@ public class DQPCore implements ClientSideDQP {
 		return transactionService;
 	}
 
-	ResultSetCache getRsCache() {
+	/*ResultSetCache getRsCache() {
 		return rsCache;
-	}
+	}*/
 	
 	int getProcessorTimeSlice() {
 		return this.processorTimeslice;
@@ -632,11 +619,11 @@ public class DQPCore implements ClientSideDQP {
         this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 10) * 1024;
         
         //result set cache
-        if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
+        /*if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
 			this.rsCache = new ResultSetCache();
 			PropertiesUtils.setBeanProperties(this.rsCache, props, "ResultSetCache"); //$NON-NLS-1$
 			this.rsCache.start(cacheFactory);
-        }
+        }*/
 
         //prepared plan cache
         int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_PLAN_CACHE_SIZE, PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL);

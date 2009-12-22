@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
+import org.teiid.dqp.internal.process.PreparedPlanCache.PreparedPlan;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
@@ -62,7 +63,7 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class PreparedStatementRequest extends Request {
     private PreparedPlanCache prepPlanCache;
-    private PreparedPlanCache.PreparedPlan prepPlan;
+    private PreparedPlan prepPlan;
     
     public PreparedStatementRequest(PreparedPlanCache prepPlanCache) {
     	this.prepPlanCache = prepPlanCache;
@@ -129,20 +130,20 @@ public class PreparedStatementRequest extends Request {
      * @throws QueryPlannerException 
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
-    protected Command generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+    protected void generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
     	String sqlQuery = requestMsg.getCommands()[0];
     	CacheID id = new PreparedPlanCache.CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.getPreparedPlan(id);
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
-            prepPlan = new PreparedPlanCache.PreparedPlan();
+            prepPlan = new PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
         }
 
         ProcessorPlan cachedPlan = prepPlan.getPlan();
         
         if (cachedPlan == null) {
-        	prepPlan.setRewritenCommand(super.generatePlan());
+	        super.generatePlan();
         	if (!this.addedLimit) { //TODO: this is a little problematic
             	prepPlan.setCommand(this.userCommand);
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
@@ -168,7 +169,6 @@ public class PreparedStatementRequest extends Request {
 	
 	    	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
         }
-        return prepPlan.getRewritenCommand();
     }
 
     /**
@@ -191,7 +191,7 @@ public class PreparedStatementRequest extends Request {
 			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
 		}
 		boolean supportPreparedBatchUpdate = false;
-		if (this.processPlan instanceof RelationalPlan && this.prepPlan.getRewritenCommand().getSubCommands().isEmpty()) {
+		if (this.processPlan instanceof RelationalPlan) {
 			RelationalPlan rPlan = (RelationalPlan)this.processPlan;
 			if (rPlan.getRootNode() instanceof AccessNode) {
 				AccessNode aNode = (AccessNode)rPlan.getRootNode();
@@ -218,7 +218,7 @@ public class PreparedStatementRequest extends Request {
 				}
 				continue; 
 			}
-			Command c = (Command)this.prepPlan.getRewritenCommand().clone();
+			Command c = (Command)this.prepPlan.getCommand().clone();
 			commands.add(c);
 			c.setProcessorPlan((ProcessorPlan)this.processPlan.clone());
 		}

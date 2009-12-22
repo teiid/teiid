@@ -25,7 +25,6 @@ package com.metamatrix.query.processor.dynamic;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -44,13 +43,11 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -69,9 +66,8 @@ public class SqlEval implements XQuerySQLEvaluator {
 
     private static final String NO_RESULTS_DOCUMENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><results/>"; //$NON-NLS-1$
 	
-    private BufferManager bufferMgr;
     private CommandContext context;
-    private ArrayList<TupleSourceID> openTupleList;
+    private ArrayList<QueryProcessor> processors;
     private String parentGroup;
     private Map<String, Expression> params;
     private ProcessorDataManager dataManager;
@@ -120,8 +116,7 @@ public class SqlEval implements XQuerySQLEvaluator {
         }        
     }
     
-    public SqlEval(BufferManager bufferMgr, ProcessorDataManager dataManager, CommandContext context, String parentGroup, Map<String, Expression> params) {
-        this.bufferMgr = bufferMgr;
+    public SqlEval(ProcessorDataManager dataManager, CommandContext context, String parentGroup, Map<String, Expression> params) {
         this.dataManager = dataManager;
         this.context = context;
         this.parentGroup = parentGroup;
@@ -136,17 +131,13 @@ public class SqlEval implements XQuerySQLEvaluator {
         throws QueryParserException, MetaMatrixProcessingException, MetaMatrixComponentException {
 
     	QueryProcessor processor = context.getQueryProcessorFactory().createQueryProcessor(sql, parentGroup, context);
-        // keep track of all the tuple sources opened during the 
-        // xquery process; 
-        if (openTupleList == null) {
-            openTupleList = new ArrayList<TupleSourceID>();
+    	processor.setNonBlocking(true);
+        if (processors == null) {
+        	processors = new ArrayList<QueryProcessor>();
         }
-        openTupleList.add(processor.getResultsID());
+        processors.add(processor);
+        TupleSource src = new BatchIterator(processor);
         
-        processor.process();
-        
-        TupleSourceID tsID = processor.getResultsID();
-        TupleSource src = this.bufferMgr.getTupleSource(tsID);
         String[] columns = elementNames(src.getSchema());
         Class[] types= elementTypes(src.getSchema());
         boolean xml = false;
@@ -209,16 +200,10 @@ public class SqlEval implements XQuerySQLEvaluator {
      * Closes any resources opened during the evaluation 
      */
     public void close() throws MetaMatrixComponentException {
-        if (openTupleList != null && !openTupleList.isEmpty()) {
-            for (Iterator i = openTupleList.iterator(); i.hasNext();) {
-                TupleSourceID id = (TupleSourceID)i.next();
-                try {
-                    this.bufferMgr.removeTupleSource(id);
-                } catch (TupleSourceNotFoundException e) {
-                    // ignore and go on..
-                }
-            }
+        if (processors != null) {
+        	for (QueryProcessor processor : processors) {
+				processor.closeProcessing();
+			}
         }
-        
     }
 }

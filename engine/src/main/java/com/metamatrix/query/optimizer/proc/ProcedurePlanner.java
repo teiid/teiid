@@ -41,9 +41,9 @@ import com.metamatrix.query.processor.proc.AbstractAssignmentInstruction;
 import com.metamatrix.query.processor.proc.AssignmentInstruction;
 import com.metamatrix.query.processor.proc.BreakInstruction;
 import com.metamatrix.query.processor.proc.ContinueInstruction;
+import com.metamatrix.query.processor.proc.CreateCursorResultSetInstruction;
 import com.metamatrix.query.processor.proc.ErrorInstruction;
 import com.metamatrix.query.processor.proc.ExecDynamicSqlInstruction;
-import com.metamatrix.query.processor.proc.ExecSqlInstruction;
 import com.metamatrix.query.processor.proc.IfInstruction;
 import com.metamatrix.query.processor.proc.LoopInstruction;
 import com.metamatrix.query.processor.proc.ProcedurePlan;
@@ -52,9 +52,7 @@ import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.DynamicCommand;
-import com.metamatrix.query.sql.lang.Into;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
-import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.Block;
@@ -65,7 +63,6 @@ import com.metamatrix.query.sql.proc.LoopStatement;
 import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.proc.WhileStatement;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -246,19 +243,12 @@ public final class ProcedurePlanner implements CommandPlanner {
             {
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 Command command = cmdStmt.getCommand();
-                GroupSymbol intoGroup = null;
-                if(command instanceof Query){
-                    Into into = ((Query)command).getInto();
-                    if(into != null){
-                        intoGroup = into.getGroup();
-                    }
-                }
 				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();                
                 
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder );
 				}else{
-					instruction = new ExecSqlInstruction(commandPlan, intoGroup);
+					instruction = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan);
 				}
                 
 				if(debug) {

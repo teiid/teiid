@@ -29,12 +29,9 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
 
 /**
  * Extends the basic fully sorted merge join to check for conditions necessary 
@@ -59,8 +56,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 	private List[] endTuples;
 	private List<Boolean> overlap = new ArrayList<Boolean>();
 	private List<Integer> endRows = new ArrayList<Integer>();
-	private List<TupleSourceID> partitionIds = new ArrayList<TupleSourceID>();
-	private List<TupleCollector> tupleCollectors = new ArrayList<TupleCollector>();
+	private List<TupleBuffer> partitionIds = new ArrayList<TupleBuffer>();
 	private int currentPartition;
 	private IndexedTupleSource currentSource;
 	private SourceState sortedSource;
@@ -75,21 +71,15 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 	}
 	
     @Override
-    public void close() throws TupleSourceNotFoundException,
-    		MetaMatrixComponentException {
+    public void close() {
     	super.close();
-    	for (TupleSourceID tupleSourceID : this.partitionIds) {
-    		try {
-    			this.joinNode.getBufferManager().removeTupleSource(tupleSourceID);
-    		} catch (TupleSourceNotFoundException e) {
-    			
-    		}
+    	for (TupleBuffer tupleSourceID : this.partitionIds) {
+			tupleSourceID.remove();
 		}
     	this.endTuples = null;
     	this.overlap.clear();
     	this.endRows.clear();
     	this.partitionIds.clear();
-    	this.tupleCollectors.clear();
     	this.currentSource = null;
     	this.sortedSource = null;
     	this.partitionedSource = null;
@@ -97,8 +87,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     }
     
     @Override
-    public void initialize(JoinNode joinNode)
-    		throws MetaMatrixComponentException {
+    public void initialize(JoinNode joinNode) {
     	super.initialize(joinNode);
     	this.currentPartition = 0;
     	this.partitioned = false;
@@ -106,8 +95,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	this.matchEnd = -1;
     }
 	
-    //TODO: save partial work or combine with the sort operation
-    public void computeBatchBounds(SourceState state) throws TupleSourceNotFoundException, MetaMatrixComponentException {
+    public void computeBatchBounds(SourceState state) throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	if (endTuples != null) {
     		return;
     	}
@@ -115,22 +103,16 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	ArrayList<List<?>> bounds = new ArrayList<List<?>>();
         int beginRow = 1;
         while (beginRow <= state.getRowCount()) {
-        	TupleBatch batch = null;
-        	try {
-        		batch = this.joinNode.getBufferManager().pinTupleBatch(state.getTupleSourceID(), beginRow);
-        		if (batch.getRowCount() == 0) {
-        			break;
-        		}
-        		beginRow = batch.getEndRow() + 1; 
-        		this.joinNode.getBufferManager().unpinTupleBatch(state.getTupleSourceID(), batch.getBeginRow());
-        		if (!bounds.isEmpty()) {
-        			overlap.add(comp.compare(bounds.get(bounds.size() - 1), batch.getTuple(batch.getBeginRow())) == 0);
-        		}
-        		bounds.add(batch.getTuple(batch.getEndRow()));
-        		endRows.add(batch.getEndRow());
-        	} catch (MemoryNotAvailableException e) {
-        		throw BlockedOnMemoryException.INSTANCE;
-        	} 
+        	TupleBatch batch = state.getTupleBuffer().getBatch(beginRow);
+    		if (batch.getRowCount() == 0) {
+    			break;
+    		}
+    		beginRow = batch.getEndRow() + 1; 
+    		if (!bounds.isEmpty()) {
+    			overlap.add(comp.compare(bounds.get(bounds.size() - 1), batch.getTuple(batch.getBeginRow())) == 0);
+    		}
+    		bounds.add(batch.getTuple(batch.getEndRow()));
+    		endRows.add(batch.getEndRow());
         }
         this.endTuples = bounds.toArray(new List[bounds.size()]);
     }
@@ -139,13 +121,13 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     protected void loadLeft() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
     	//always buffer to determine row counts
-    	this.leftSource.collectTuples();
+    	this.leftSource.getTupleBuffer();
     }
     
     @Override
     protected void loadRight() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
-    	super.loadRight();
+    	this.rightSource.getTupleBuffer();
     	int maxRows = this.joinNode.getBatchSize() * MAX_PARTITIONS;
     	if (processingSortRight == SortOption.SORT
     			&& this.leftSource.getRowCount() < maxRows
@@ -156,42 +138,30 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     			&& this.rightSource.getRowCount() * 4 < this.leftSource.getRowCount()) {
     		this.processingSortLeft = SortOption.PARTITION;
     	} 
-        sortRight();
+        super.loadRight(); //sort right if needed
         if (this.processingSortLeft == SortOption.PARTITION) {
         	computeBatchBounds(this.rightSource);
         	this.sortedSource = this.rightSource;
         	this.partitionedSource = this.leftSource;
         }
-    }
-    
-    @Override
-    protected void postLoadLeft() throws MetaMatrixComponentException,
-    		MetaMatrixProcessingException {
-        super.postLoadLeft();
-
+        super.loadLeft(); //sort left if needed
         if (this.processingSortRight == SortOption.PARTITION) {
         	computeBatchBounds(this.leftSource);
         	this.sortedSource = this.leftSource;
         	this.partitionedSource = this.rightSource;
         }
-        
         if (this.processingSortLeft == SortOption.PARTITION) {
         	partitionSource(true);
-        }        
-    }
-    
-    @Override
-    protected void postLoadRight() throws MetaMatrixComponentException,
-    		MetaMatrixProcessingException {
-    	if (this.processingSortRight == SortOption.PARTITION) {
+        } 
+        if (this.processingSortRight == SortOption.PARTITION) {
     		partitionSource(false);
         	if (this.processingSortRight == SortOption.SORT) {
         		//degrade to a merge join
-        		sortRight(); 
+        		super.loadRight(); 
         	}
-    	} 
+    	}
     }
-
+    
 	private void partitionSource(boolean left) throws MetaMatrixComponentException,
 			MetaMatrixProcessingException {
 		if (partitioned) {
@@ -206,14 +176,13 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 			return;
 		}
 		if (endTuples.length < 2) {
-			partitionIds.add(this.partitionedSource.getTupleSourceID());
+			partitionIds.add(this.partitionedSource.getTupleBuffer());
 		} else {
 			if (partitionIds.isEmpty()) {
 				for (int i = 0; i < endTuples.length; i++) {
-					TupleCollector tc = new TupleCollector(this.partitionedSource.createSourceTupleSource(), this.joinNode.getBufferManager());
+					TupleBuffer tc = this.partitionedSource.createSourceTupleBuffer();
 					tc.setBatchSize(Math.max(1, this.joinNode.getBatchSize()/4));
-					this.tupleCollectors.add(tc);
-					this.partitionIds.add(tc.getTupleSourceID());
+					this.partitionIds.add(tc);
 				}
 			}
 			while (this.partitionedSource.getIterator().hasNext()) {
@@ -222,14 +191,14 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 				if (index < 0) {
 					index = -index - 1;
 				}
-				if (index > this.tupleCollectors.size() -1) {
+				if (index > this.partitionIds.size() -1) {
 					continue;
 				}
 				while (index > 0 && this.overlap.get(index - 1) 
 						&& compare(tuple, this.endTuples[index - 1], this.partitionedSource.getExpressionIndexes(), this.sortedSource.getExpressionIndexes()) == 0) {
 					index--;
 				}
-				this.tupleCollectors.get(index).addTuple(tuple);
+				this.partitionIds.get(index).addTuple(tuple);
 			}
 			this.partitionedSource.getIterator().setPosition(1);
 		}
@@ -247,16 +216,15 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	}
     	while (currentPartition < partitionIds.size()) {
     		if (currentSource == null) {
-    			if (!this.tupleCollectors.isEmpty()) {
-    				this.tupleCollectors.get(currentPartition).close();
+    			if (!this.partitionIds.isEmpty()) {
+    				this.partitionIds.get(currentPartition).close();
     			}
-    			currentSource = this.joinNode.getBufferManager().getTupleSource(partitionIds.get(currentPartition));
+    			currentSource = partitionIds.get(currentPartition).createIndexedTupleSource();
     		}
     		
     		int beginIndex = currentPartition>0?endRows.get(currentPartition - 1)+1:1;
     		
-    		this.sortedSource.getIterator().setPosition(beginIndex);
-			List[] batch = this.sortedSource.getIterator().getBatch().getAllTuples();
+			List[] batch = this.sortedSource.getTupleBuffer().getBatch(beginIndex).getAllTuples();
 						
     		while (partitionedTuple != null || currentSource.hasNext()) {
     			if (partitionedTuple == null) {
@@ -283,7 +251,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 		    			}
 	    			}
 	    			if (matchEnd == batch.length - 1 && currentPartition < overlap.size() && overlap.get(currentPartition)) {
-	    				this.tupleCollectors.get(currentPartition + 1).addTuple(partitionedTuple);
+	    				this.partitionIds.get(currentPartition + 1).addTuple(partitionedTuple);
 	    			}
     			}
     			while (matchBegin <= matchEnd) {

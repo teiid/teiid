@@ -28,7 +28,6 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 
 public abstract class JoinStrategy {
             
@@ -36,7 +35,7 @@ public abstract class JoinStrategy {
     protected SourceState leftSource;
     protected SourceState rightSource;
     
-    public void close() throws TupleSourceNotFoundException, MetaMatrixComponentException {
+    public void close() {
         try {
             if (leftSource != null) {
                 leftSource.close();
@@ -53,8 +52,7 @@ public abstract class JoinStrategy {
         }
     }
         
-    public void initialize(JoinNode joinNode) 
-                            throws MetaMatrixComponentException {
+    public void initialize(JoinNode joinNode) {
         this.joinNode = joinNode;
         this.leftSource = new SourceState(joinNode.getChildren()[0], joinNode.getLeftExpressions());
         this.leftSource.markDistinct(this.joinNode.isLeftDistinct());
@@ -63,19 +61,11 @@ public abstract class JoinStrategy {
     }
             
     protected void loadLeft() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        this.leftSource.collectTuples();
-    }
-    
-    protected void postLoadLeft() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     }
     
     protected void loadRight() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        this.rightSource.collectTuples();
     }
     
-    protected void postLoadRight() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    }
-        
     /**
      * Output a combined, projected tuple based on tuple parts from the left and right. 
      * @param leftTuple Left tuple part

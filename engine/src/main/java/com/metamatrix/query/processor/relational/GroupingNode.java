@@ -32,12 +32,9 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
+import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.function.aggregate.Avg;
@@ -65,21 +62,15 @@ public class GroupingNode extends RelationalNode {
     private int phase = COLLECTION;
     private Map elementMap;                    // Map of incoming symbol to index in source elements
     private List collectedExpressions;         // Collected Expressions
-    private TupleBatch sourceBatch;           // Current batch loaded from the source, if blocked
-    private int sourceRow;                    // Current row index in batch, if blocked
-    private List[] collectedRows;             // Rows evaluated and collected 
-    private TupleSourceID collectionID;       // Tuple source collecting the endpoint of collection phase
-    private int rowCount;                     // Row count of incoming rows
        
     // Sort phase
     private SortUtility sortUtility;
-    private TupleSourceID sortedID;
+    private TupleBuffer sortedID;
+    private TupleSource groupTupleSource;
 
     // Group phase
     private Map expressionMap;                 // Index map for all collected expressions (Expression -> index in collectedExpressions)
     private AggregateFunction[] functions;
-    private IndexedTupleSource groupTupleSource;
-    private int groupBegin = 1;
     private List lastRow;
 	private List currentGroupTuple;
 
@@ -97,19 +88,12 @@ public class GroupingNode extends RelationalNode {
         phase = COLLECTION;
         elementMap = null;
         collectedExpressions = null;
-        sourceBatch = null;
-        sourceRow = -1;
-        collectedRows = null;
-        collectionID = null;
-        rowCount = 0;
                 
         sortUtility = null;
         sortedID = null;
         
         expressionMap = null;
         functions = null;
-        groupBegin = 1;
-        groupTupleSource = null;
         lastRow = null;
         currentGroupTuple = null;
     }
@@ -146,8 +130,6 @@ public class GroupingNode extends RelationalNode {
         
         // Determine expressions to build (all grouping expressions + expressions used by aggregates)   
         collectExpressions();
-
-        this.collectionID = getBufferManager().createTupleSource(collectedExpressions, getConnectionID(), TupleSourceType.PROCESSOR);
 
         initializeFunctionAccumulators();
 	}
@@ -213,7 +195,7 @@ public class GroupingNode extends RelationalNode {
                     }
 
                     if(aggSymbol.isDistinct()) {
-                        functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID(), getBatchSize());
+                        functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID());
                     }
                     
                     functions[i] = new NullFilter(functions[i]);
@@ -233,107 +215,108 @@ public class GroupingNode extends RelationalNode {
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        try {
-            // Take inputs, evaluate expressions, and build initial tuple source
-            if(this.phase == COLLECTION) {
-                collectionPhase();
-            }
-
-            // If necessary, sort to determine groups (if no group cols, no need to sort)
-            if(this.phase == SORT) {
-                sortPhase();
-            }
-
-            // Walk through the sorted results and for each group, emit a row
-            if(this.phase == GROUP) {
-                return groupPhase();
-            }
-            
-            TupleBatch terminationBatch = new TupleBatch(1, Collections.EMPTY_LIST);
-            terminationBatch.setTerminationFlag(true);
-            return terminationBatch;
-        } catch(TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e, e.getMessage());
+        // Take inputs, evaluate expressions, and build initial tuple source
+        if(this.phase == COLLECTION) {
+            collectionPhase();
         }
 
+        // If necessary, sort to determine groups (if no group cols, no need to sort)
+        if(this.phase == SORT) {
+            sortPhase();
+        }
+
+        // Walk through the sorted results and for each group, emit a row
+        if(this.phase == GROUP) {
+            return groupPhase();
+        }
+        
+        TupleBatch terminationBatch = new TupleBatch(1, Collections.EMPTY_LIST);
+        terminationBatch.setTerminationFlag(true);
+        return terminationBatch;
     }
+	
+	public TupleSource getCollectionTupleSource() {
+		
+		final RelationalNode sourceNode = this.getChildren()[0];
+		
+		return new TupleSource() {
+		    private TupleBatch sourceBatch;           // Current batch loaded from the source, if blocked
+		    private int sourceRow = 1;                   
 
-    private void collectionPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        RelationalNode sourceNode = this.getChildren()[0];
+			@Override
+			public List<?> nextTuple() throws MetaMatrixComponentException,
+					MetaMatrixProcessingException {
+				while (true) {
+					if(sourceBatch == null) {
+			            // Read next batch
+			            sourceBatch = sourceNode.nextBatch();
+			        }
+			        
+			        if(sourceBatch.getRowCount() > 0 && sourceRow <= sourceBatch.getEndRow()) {
+			            // Evaluate expressions needed for grouping
+		                List tuple = sourceBatch.getTuple(sourceRow);
+		                
+		                int columns = collectedExpressions.size();
+		                List exprTuple = new ArrayList(columns);
+		                for(int col = 0; col<columns; col++) { 
+		                    // The following call may throw BlockedException, but all state to this point
+		                    // is saved in class variables so we can start over on building this tuple
+		                    Object value = new Evaluator(elementMap, getDataManager(), getContext()).evaluate((Expression) collectedExpressions.get(col), tuple);
+		                    exprTuple.add(value);
+		                }
+		                sourceRow++;
+			            return exprTuple;
+			        }
+			        
+			        // Check for termination condition
+			        if(sourceBatch.getTerminationFlag()) {
+			        	sourceBatch = null;			            
+			            return null;
+			        } 
+			        sourceBatch = null;
+				}
+			}
+			
+			@Override
+			public List<SingleElementSymbol> getSchema() {
+				return collectedExpressions;
+			}
+			
+			@Override
+			public void closeSource() throws MetaMatrixComponentException {
+				
+			}
+		};
+		
+	}
 
-        while(true) {
-            if(this.sourceBatch == null) {
-                // Read next batch
-                this.sourceBatch = sourceNode.nextBatch();
-            }
-            
-            if(this.sourceBatch.getRowCount() > 0) {
-                this.rowCount = this.sourceBatch.getEndRow();
-                this.sourceRow = this.sourceBatch.getBeginRow();
-                this.collectedRows = new List[this.sourceBatch.getRowCount()];
-                // Evaluate expressions needed for grouping
-                for(int row=this.sourceRow; row<=this.sourceBatch.getEndRow(); row++) {
-                    List tuple = this.sourceBatch.getTuple(row);
-                    
-                    int columns = this.collectedExpressions.size();
-                    List exprTuple = new ArrayList(columns);
-                    for(int col = 0; col<columns; col++) { 
-                        // The following call may throw BlockedException, but all state to this point
-                        // is saved in class variables so we can start over on building this tuple
-                        Object value = new Evaluator(this.elementMap, getDataManager(), getContext()).evaluate((Expression) this.collectedExpressions.get(col), tuple);
-                        exprTuple.add(value);
-                    }
-                    
-                    collectedRows[row-this.sourceBatch.getBeginRow()] = exprTuple;
-                }
-                
-                // Add collected batch
-                TupleBatch exprBatch = new TupleBatch(this.sourceBatch.getBeginRow(), collectedRows);
-                getBufferManager().addTupleBatch(collectionID, exprBatch);                    
-            }
-            // Clear and setup for next loop
-            this.sourceRow = -1;
-            this.collectedRows = null;
-
-            // Check for termination condition
-            if(this.sourceBatch.getTerminationFlag()) {
-                this.sourceBatch = null;
-                break;
-            } 
-            
-            this.sourceBatch = null;
-        }
-
-    	this.getBufferManager().setStatus(this.collectionID, TupleSourceStatus.FULL);
-
-        if(this.sortElements == null || this.rowCount == 0) {
+    private void collectionPhase() {
+        if(this.sortElements == null) {
             // No need to sort
-            this.sortedID = this.collectionID;
-            this.collectionID = null;
+            this.groupTupleSource = getCollectionTupleSource();
             this.phase = GROUP;
         } else {
-            this.sortUtility = new SortUtility(collectionID, sortElements,
+            this.sortUtility = new SortUtility(getCollectionTupleSource(), sortElements,
                                                 sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
-                                                getConnectionID(), removeDuplicates);
+                                                getConnectionID());
             this.phase = SORT;
         }
     }
 
     private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         this.sortedID = this.sortUtility.sort();
-        this.rowCount = this.getBufferManager().getFinalRowCount(this.sortedID);
+        this.groupTupleSource = this.sortedID.createIndexedTupleSource();
         this.phase = GROUP;
     }
 
-    private TupleBatch groupPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        if (this.groupTupleSource == null) {
-            this.groupTupleSource = this.getBufferManager().getTupleSource(sortedID);
-        }
-        
-        while(groupBegin <= rowCount) {
+    private TupleBatch groupPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+        while(true) {
 
         	if (currentGroupTuple == null) {
         		currentGroupTuple = this.groupTupleSource.nextTuple();
+        		if (currentGroupTuple == null) {
+        			break;
+        		}
         	}
         	
             if(lastRow == null) {
@@ -365,10 +348,8 @@ public class GroupingNode extends RelationalNode {
             // Update function accumulators with new row - can throw blocked exception
             updateAggregates(currentGroupTuple);
             currentGroupTuple = null;
-            groupBegin++;
         }
-        this.groupTupleSource.closeSource();
-        if(rowCount != 0 || sortElements == null) {
+        if(lastRow != null || sortElements == null) {
             // Close last group
             List row = new ArrayList(functions.length);
             for(int i=0; i<functions.length; i++) {
@@ -431,16 +412,6 @@ public class GroupingNode extends RelationalNode {
     public void close() throws MetaMatrixComponentException {
         if (!isClosed()) {
             super.close();
-            try {
-                if(this.collectionID != null) {
-                    getBufferManager().removeTupleSource(collectionID);
-                }
-                if(this.sortedID != null) {
-                    getBufferManager().removeTupleSource(sortedID);
-                }
-            } catch(TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(e, e.getMessage());
-            }
         }
     }
 

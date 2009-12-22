@@ -36,11 +36,11 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -250,43 +250,37 @@ public class TestFileStorageManager extends TestCase {
         
     }
 
-    public void testAddGetBatch1() {
+    public void testAddGetBatch1() throws Exception {
         StorageManager sm = getStorageManager(null);        
         TupleSourceID tsID = new TupleSourceID("local,1:0");     //$NON-NLS-1$
         TupleBatch batch = exampleBatch(1, 10);
-        try {
-            // Add one batch
-            sm.addBatch(tsID, batch, null);
-            
-            // Get that batch
-            TupleBatch actual = sm.getBatch(tsID, batch.getBeginRow(), null);                
-            helpCompareBatches(batch, actual);
-            
-            // Remove the batches
-            sm.removeBatches(tsID);
-            
-        } catch(MetaMatrixException e) {
-            fail("Unexpected exception of type " + e.getClass().getName() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        // Add one batch
+        sm.addBatch(tsID, batch, null);
+        
+        // Get that batch
+        TupleBatch actual = sm.getBatch(tsID, batch.getBeginRow(), null);                
+        helpCompareBatches(batch, actual);
+        
+        // Remove the batches
+        sm.removeBatches(tsID);
     }
 
-    public void testAddGetBatch2() {
+    public void testAddGetBatch2() throws Exception {
         StorageManager sm = getStorageManager(null);
         TupleSourceID tsID = new TupleSourceID("local,1:0");     //$NON-NLS-1$
         
         int numBatches = 20;
         int batchSize = 100;
         
-        try {
-            // Add batches
-            for(int i=0; i<numBatches; i++) {
-                int begin = (i*batchSize)+1;
-                int end = begin + batchSize - 1;
-                TupleBatch batch = exampleBatch(begin, end);
-                sm.addBatch(tsID, batch, null);                    
-            }
+        // Add batches
+        for(int i=0; i<numBatches; i++) {
+            int begin = (i*batchSize)+1;
+            int end = begin + batchSize - 1;
+            TupleBatch batch = exampleBatch(begin, end);
+            sm.addBatch(tsID, batch, null);                    
+        }
 
-            // Get batches
+        // Get batches
             for(int i=0; i<numBatches; i++) {
                 int begin = (i*batchSize)+1;
                 int end = begin + batchSize - 1;
@@ -295,31 +289,21 @@ public class TestFileStorageManager extends TestCase {
             }
  
             // Remove the batches
-            sm.removeBatches(tsID);
-           
-        } catch(MetaMatrixException e) {
-            fail("Unexpected exception of type " + e.getClass().getName() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        sm.removeBatches(tsID);
     }
 
-    public void testCreateNewDirectory() {
+    public void testCreateNewDirectory() throws Exception {
         Properties resourceProps = new Properties();
         
         String nonExistentDirectory = UnitTestUtil.getTestScratchPath() + File.separator + "GONZO"; //$NON-NLS-1$
         resourceProps.put(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
         StorageManager sm = new FileStorageManager();
         
-        try { 
-            sm.initialize(resourceProps);
-            
-            File file = new File(nonExistentDirectory);
-            assertTrue("Directory doesn't exist", file.exists()); //$NON-NLS-1$
-            assertTrue("Directory was created as a file", file.isDirectory()); //$NON-NLS-1$
-            
-        } catch(Exception e) {
-            e.printStackTrace();
-            fail("Unexpected exception: " + e.getMessage()); //$NON-NLS-1$
-        }
+        sm.initialize(resourceProps);
+        
+        File file = new File(nonExistentDirectory);
+        assertTrue("Directory doesn't exist", file.exists()); //$NON-NLS-1$
+        assertTrue("Directory was created as a file", file.isDirectory()); //$NON-NLS-1$
     }
     
     public void testAddTwice() throws Exception {
@@ -400,9 +384,9 @@ public class TestFileStorageManager extends TestCase {
         assertTrue(storageFile1.exists());
         assertTrue(storageFile2.exists());
         assertTrue(storageFile3.exists());
-        assertEquals(1048435, storageFile1.length());
-        assertEquals(211806, storageFile2.length());
-        assertEquals(2108106, storageFile3.length());
+        assertEquals(1048427, storageFile1.length());
+        assertEquals(211798, storageFile2.length());
+        assertEquals(2108098, storageFile3.length());
         sm.removeBatches(tsID);
         
         assertFalse(storageFile1.exists());
@@ -454,14 +438,8 @@ public class TestFileStorageManager extends TestCase {
             } catch(Throwable e) {
                 this.error = e;
             } finally {
-                // Remove all the batches
-                //System.out.println(tsID.toString() + ": removing batches");   
-                try {          
-                    sm.removeBatches(tsID);    
-                } catch(MetaMatrixComponentException e) {
-                }
+                sm.removeBatches(tsID);    
             }
-            //System.out.println(tsID.toString() + ": ending");            
         }
     }
 
@@ -521,7 +499,6 @@ public class TestFileStorageManager extends TestCase {
                     } else {
                         // Remove
                         if(added[batch]) {
-                            //System.out.println(tsID.toString() + ": removing batch " + batch);
                             added[batch] = false;
                         }                        
                     }                                        
@@ -531,14 +508,8 @@ public class TestFileStorageManager extends TestCase {
             } catch(Throwable e) {
                 this.error = e;
             } finally {
-                // Remove all the batches
-                //System.out.println(tsID.toString() + ": removing batches");   
-                try {          
-                    sm.removeBatches(tsID);    
-                } catch(MetaMatrixComponentException e) {
-                }
+                sm.removeBatches(tsID);    
             }
-            //System.out.println(tsID.toString() + ": ending");            
         }
     }
 }

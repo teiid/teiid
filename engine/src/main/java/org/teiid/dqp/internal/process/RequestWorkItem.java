@@ -36,21 +36,14 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 
 import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.dqp.internal.cache.CacheID;
-import org.teiid.dqp.internal.cache.CacheResults;
-import org.teiid.dqp.internal.cache.ResultSetCache;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
@@ -71,8 +64,9 @@ import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.processor.QueryProcessor.BatchHandler;
+import com.metamatrix.query.processor.BatchCollector.BatchHandler;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -125,8 +119,8 @@ public class RequestWorkItem extends AbstractWorkItem {
     protected Request request; //provides the processing plan, held on a temporary basis
     final private BufferManager bufferMgr;
     final private int processorTimeslice;
-    protected ResultSetCache rsCache;
-	protected CacheID cid;
+    //protected ResultSetCache rsCache;
+	//protected CacheID cid;
 	final private TransactionService transactionService;
 	final DQPWorkContext dqpWorkContext;
 	ResultsReceiver<ResultsMessage> resultsReceiver;
@@ -135,10 +129,11 @@ public class RequestWorkItem extends AbstractWorkItem {
      * obtained during new
      */
     private volatile QueryProcessor processor;
+    private BatchCollector collector;
     protected Command originalCommand;
     private AnalysisRecord analysisRecord;
     private TransactionContext transactionContext;
-    protected TupleSourceID resultsID;
+    protected TupleBuffer resultsBuffer;
     private Collection schemas;     // These are schemas associated with XML results
     private boolean returnsUpdateCount;
     
@@ -166,10 +161,10 @@ public class RequestWorkItem extends AbstractWorkItem {
         this.resultsCursor.requestResults(1, requestMsg.getFetchSize(), false);
         this.bufferMgr = dqpCore.getBufferManager();
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
-        this.rsCache = dqpCore.getRsCache();
+        /*this.rsCache = dqpCore.getRsCache();
         if (this.rsCache != null) {
         	this.cid = this.rsCache.createCacheID(workContext, requestMsg.getCommandString(), requestMsg.getParameterValues());
-        }
+        }*/
         this.transactionService = dqpCore.getTransactionServiceDirect();
         this.dqpCore = dqpCore;
         this.request = request;
@@ -208,17 +203,10 @@ public class RequestWorkItem extends AbstractWorkItem {
             		this.state = ProcessingState.CLOSE;
             	}
             }                  	            
-        } catch (BlockedOnMemoryException e) {
-            moreWork(false);
-        	LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- reenqueueing for more processing due to lack of available memory ###########"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (BlockedException e) {
             LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- processor blocked ###########"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (Throwable e) {
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
-            //if there is a cache, remove temp results if there is any
-            if(this.rsCache != null){
-            	rsCache.removeTempResults(cid, requestID);
-            }
             
             if (!isCanceled()) {
             	logCommandError();
@@ -255,11 +243,19 @@ public class RequestWorkItem extends AbstractWorkItem {
     }
 
 	protected void processMore() throws SystemException, BlockedException, MetaMatrixCoreException {
+		this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 		if (!doneProducingBatches) {
 			sendResultsIfNeeded(null);
-		    doneProducingBatches = processor.process(this.processorTimeslice);
+			collector.collectTuples();
+		    doneProducingBatches = collector.isDone();
 		}
 		if (doneProducingBatches) {
+            /*if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable()){
+            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
+                CacheResults cr = new CacheResults();
+            	cr.setCommand(originalCommand);
+                cr.setAnalysisRecord(analysisRecord);
+            }*/
 			if (this.transactionState == TransactionState.ACTIVE) {
 				boolean end = true;
 				/*
@@ -296,27 +292,19 @@ public class RequestWorkItem extends AbstractWorkItem {
 	 * Any errors that occur will not make it to the client, instead we just log them here.
 	 */
 	protected void attemptClose() {
-		if (this.resultsID != null) {
-			try {
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
-			    }
-			    this.dqpCore.getBufferManager().removeTupleSource(resultsID);
-			} catch(TupleSourceNotFoundException e) {
-			    // ignore 
-			} catch (MetaMatrixComponentException e) {
-				LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
-			}
-			
+		if (this.resultsBuffer != null) {
 			try {
 				this.processor.closeProcessing();
-			} catch (TupleSourceNotFoundException e) {
-				// ignore
 			} catch (MetaMatrixComponentException e) {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 					LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
 				}
 			}
+			
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+		    }
+		    resultsBuffer.remove();
 			
 			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
 				try {
@@ -328,7 +316,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 				}
 		    }
 
-			this.resultsID = null;
+			this.resultsBuffer = null;
 		}
 
 		if (this.transactionState == TransactionState.ACTIVE) {
@@ -364,22 +352,13 @@ public class RequestWorkItem extends AbstractWorkItem {
 		request.processRequest();
 		originalCommand = request.userCommand;
 		processor = request.processor;
-		processor.setBatchHandler(new BatchHandler() {
-			public void batchProduced(TupleBatch batch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
-	            //if there is a cache, and it is a query, save it
-	            if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable() && transactionState == TransactionState.NONE && !rsCache.hasResults(cid)){
-            		CacheResults cr = new CacheResults(batch.getAllTuples(), batch.getBeginRow(), !doneProducingBatches);
-                    cr.setCommand(originalCommand);
-                    cr.setSize(batch.getSize());
-                    cr.setAnalysisRecord(analysisRecord);
-            		if (!rsCache.setResults(cid, cr, requestID)) {
-            			rsCache = null; //disable caching if we are over size
-            		}
-	            }
+		collector = processor.createBatchCollector();
+		collector.setBatchHandler(new BatchHandler() {
+			public void batchProduced(TupleBatch batch) throws MetaMatrixComponentException {
 			    sendResultsIfNeeded(batch);
 			}
 		});
-		resultsID = processor.getResultsID();
+		resultsBuffer = collector.getTupleBuffer();
 		analysisRecord = request.analysisRecord;
 		schemas = request.schemas;
 		transactionContext = request.transactionContext;
@@ -389,7 +368,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		Option option = originalCommand.getOption();
 		if (option != null && option.getPlanOnly()) {
 		    doneProducingBatches = true;
-            this.bufferMgr.setStatus(resultsID, TupleSourceStatus.FULL);
+            resultsBuffer.close();
 		}
 		
 	    if (analysisRecord.recordQueryPlan()) {
@@ -402,8 +381,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	/**
 	 * Send results if they have been requested.  This should only be called from the processing thread.
 	 */
-	protected void sendResultsIfNeeded(TupleBatch batch) throws BlockedOnMemoryException,
-			MetaMatrixComponentException, TupleSourceNotFoundException {
+	protected void sendResultsIfNeeded(TupleBatch batch) throws MetaMatrixComponentException {
 		
 		synchronized (resultsCursor) {
 			if (!this.resultsCursor.resultsRequested
@@ -414,76 +392,61 @@ public class RequestWorkItem extends AbstractWorkItem {
 		}
 		
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID: " + requestID + " resultsID: " + this.resultsID + " done: " + doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID: " + requestID + " resultsID: " + this.resultsBuffer + " done: " + doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
-	    boolean pinned = false;
-	    
-        try {
-        	if (batch == null || batch.getBeginRow() > this.resultsCursor.begin) {
-        		batch = this.bufferMgr.pinTupleBatch(resultsID, resultsCursor.begin);
-        		pinned = true;
-        		//TODO: support fetching more than 1 batch
-        		int count = this.resultsCursor.end - this.resultsCursor.begin + 1;
-        		if (batch.getRowCount() > count) {
-        			int beginRow = Math.min(this.resultsCursor.begin, batch.getEndRow() - count + 1);
-        			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
-            		int firstOffset = beginRow - batch.getBeginRow();
-                    List[] memoryRows = batch.getAllTuples();
-                    List[] rows = new List[count];
-                    System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
-                    batch = new TupleBatch(beginRow, rows);
-        		}
+    	if (batch == null || batch.getBeginRow() > this.resultsCursor.begin) {
+    		batch = resultsBuffer.getBatch(resultsCursor.begin);
+    		//TODO: support fetching more than 1 batch
+    		int count = this.resultsCursor.end - this.resultsCursor.begin + 1;
+    		if (batch.getRowCount() > count) {
+    			int beginRow = Math.min(this.resultsCursor.begin, batch.getEndRow() - count + 1);
+    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+        		int firstOffset = beginRow - batch.getBeginRow();
+                List[] memoryRows = batch.getAllTuples();
+                List[] rows = new List[count];
+                System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
+                batch = new TupleBatch(beginRow, rows);
+    		}
+    	}
+        int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
+        
+        ResultsMessage response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
+        response.setFirstRow(batch.getBeginRow());
+        response.setLastRow(batch.getEndRow());
+        response.setUpdateResult(this.returnsUpdateCount);
+        // set final row
+        response.setFinalRow(finalRowCount);
+
+        // send any schemas associated with the results
+        response.setSchemas(this.schemas);
+        
+        // send any warnings with the response object
+        List<Throwable> responseWarnings = new ArrayList<Throwable>();
+		List<Exception> currentWarnings = processor.getAndClearWarnings();
+	    if (currentWarnings != null) {
+	    	responseWarnings.addAll(currentWarnings);
+	    }
+	    synchronized (warnings) {
+        	responseWarnings.addAll(this.warnings);
+        	this.warnings.clear();
+	    }
+        response.setWarnings(responseWarnings);
+        
+        // If it is stored procedure, set parameters
+        if (originalCommand instanceof StoredProcedure) {
+        	StoredProcedure proc = (StoredProcedure)originalCommand;
+        	if (proc.returnParameters()) {
+        		response.setParameters(getParameterInfo(proc));
         	}
-            int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
-            
-            ResultsMessage response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
-            response.setFirstRow(batch.getBeginRow());
-            response.setLastRow(batch.getEndRow());
-            response.setUpdateResult(this.returnsUpdateCount);
-            // set final row
-            response.setFinalRow(finalRowCount);
-
-            // send any schemas associated with the results
-            response.setSchemas(this.schemas);
-            
-            // send any warnings with the response object
-            List<Throwable> responseWarnings = new ArrayList<Throwable>();
-    		List<Exception> currentWarnings = processor.getAndClearWarnings();
-    	    if (currentWarnings != null) {
-    	    	responseWarnings.addAll(currentWarnings);
-    	    }
-    	    synchronized (warnings) {
-            	responseWarnings.addAll(this.warnings);
-            	this.warnings.clear();
-    	    }
-            response.setWarnings(responseWarnings);
-            
-            // If it is stored procedure, set parameters
-            if (originalCommand instanceof StoredProcedure) {
-            	StoredProcedure proc = (StoredProcedure)originalCommand;
-            	if (proc.returnParameters()) {
-            		response.setParameters(getParameterInfo(proc));
-            	}
-            }
-
-            /*
-             * mark the results sent at this point.
-             * communication exceptions will be treated as non-recoverable 
-             */
-            this.resultsCursor.resultsSent();
-            this.resultsReceiver.receiveResults(response);
-        } catch (MemoryNotAvailableException e) {
-            throw BlockedOnMemoryException.INSTANCE;
-        } finally {
-            try {
-                if (pinned) {
-                    this.bufferMgr.unpinTupleBatch(this.resultsID, batch.getBeginRow());
-                }
-            } catch (Exception e) {
-                // ignore - nothing more we can do
-            }
         }
+
+        /*
+         * mark the results sent at this point.
+         * communication exceptions will be treated as non-recoverable 
+         */
+        this.resultsCursor.resultsSent();
+        this.resultsReceiver.receiveResults(response);
 	}
     
     public static ResultsMessage createResultsMessage(RequestMessage message, List[] batch, List columnSymbols, AnalysisRecord analysisRecord) {
@@ -616,17 +579,17 @@ public class RequestWorkItem extends AbstractWorkItem {
         return false;
     }
     
-    public synchronized void requestClose() {
-    	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
-    		}
-    		return;
-    	}
+    public void requestClose() throws MetaMatrixComponentException {
+    	synchronized (this) {
+        	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
+        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
+        		}
+        		return;
+        	}
+		}
     	this.closeRequested = true;
-    	if (this.processor != null) {
-    		this.processor.requestClosed();
-    	}
+    	this.requestCancel(); //pending work should be canceled for fastest clean up
     	this.moreWork();
     }
     

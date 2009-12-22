@@ -36,8 +36,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
@@ -120,7 +119,7 @@ public class XQueryPlan extends BaseProcessorPlan {
     	XQueryExpression expr = this.xQuery.getCompiledXQuery();    
         expr.setXMLFormat(xmlFormat);
         
-        SqlEval sqlEval = new SqlEval(bufferMgr, this.dataManager, getContext(), this.xQuery.getProcedureGroup(), this.xQuery.getVariables());
+        SqlEval sqlEval = new SqlEval(this.dataManager, getContext(), this.xQuery.getProcedureGroup(), this.xQuery.getVariables());
         try {
         	SQLXML xml = expr.evaluateXQuery(sqlEval);
             TupleBatch batch = packResultsIntoBatch(xml);        
@@ -148,29 +147,25 @@ public class XQueryPlan extends BaseProcessorPlan {
      * @return
      */
     private TupleBatch packResultsIntoBatch(SQLXML srcXML) throws MetaMatrixComponentException{
-        try {
-            List rows = new ArrayList(1);
-            List row = new ArrayList(1);
+        List rows = new ArrayList(1);
+        List row = new ArrayList(1);
 
-            TupleSourceID savedId = XMLUtil.saveToBufferManager(this.bufferMgr, this.getContext().getConnectionID(), srcXML, this.chunkSize);
+        TupleBuffer savedId = XMLUtil.saveToBufferManager(this.bufferMgr, this.getContext().getConnectionID(), srcXML, this.chunkSize);
 
-            //for large documents use the buffermanager version instead
-            if (this.bufferMgr.getFinalRowCount(savedId) > 1) {
-            	srcXML = XMLUtil.getFromBufferManager(this.bufferMgr, savedId, getFormatProperties());
-            }
-            
-            XMLType xml = new XMLType(srcXML);
-            this.bufferMgr.setPersistentTupleSource(savedId, xml);
-            
-            // now build the top batch with information from the saved one.
-            row.add(xml);
-            rows.add(row);        
-            TupleBatch batch = new TupleBatch(1, rows);
-            batch.setTerminationFlag(true);
-            return batch;
-        } catch (TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e);
+        //for large documents use the buffermanager version instead
+        if (savedId.getRowCount() > 1) {
+        	srcXML = XMLUtil.getFromBufferManager(savedId, getFormatProperties());
         }
+        
+        XMLType xml = new XMLType(srcXML);
+        savedId.setContainingLobReference(xml);
+        
+        // now build the top batch with information from the saved one.
+        row.add(xml);
+        rows.add(row);        
+        TupleBatch batch = new TupleBatch(1, rows);
+        batch.setTerminationFlag(true);
+        return batch;
     }
 
     /**

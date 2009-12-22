@@ -30,13 +30,16 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.query.processor.BatchCollector.BatchHandler;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
@@ -58,22 +61,21 @@ public class TestQueryProcessor extends TestCase {
 
         CommandContext context = new CommandContext("pid", "group", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-                 
+        BatchCollector collector = processor.createBatchCollector();
+        TupleBuffer tsID = null;
         while(true) {
             try {
-                boolean done = processor.process(timeslice);
-                if(done) {
-                    break;
-                }
+                tsID = collector.collectTuples();         
+                break;
             } catch(BlockedException e) {
             }
         }
         
         // Compare # of rows in actual and expected
-        assertEquals("Did not get expected # of rows", expectedResults.length, bufferMgr.getFinalRowCount(processor.getResultsID())); //$NON-NLS-1$
+        assertEquals("Did not get expected # of rows", expectedResults.length, tsID.getRowCount()); //$NON-NLS-1$
         
         // Compare actual with expected results
-        TupleSource actual = bufferMgr.getTupleSource(processor.getResultsID());
+        TupleSource actual = tsID.createIndexedTupleSource();
         if(expectedResults.length > 0) {
             for(int i=0; i<expectedResults.length; i++) {
                 List actRecord = actual.nextTuple();
@@ -81,6 +83,7 @@ public class TestQueryProcessor extends TestCase {
                 assertEquals("Did not match row at row index " + i, expRecord, actRecord); //$NON-NLS-1$
             }
         }
+        tsID.remove();
     }
     
     public void testNoResults() throws Exception {
@@ -138,58 +141,4 @@ public class TestQueryProcessor extends TestCase {
         helpTestProcessor(plan, 1000, expectedResults);                    
     }
     
-    public void testProcessWhenClientNeedsBatch() throws Exception {
-        List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
-                
-        HashSet blocked = new HashSet(Arrays.asList(new Integer[] { new Integer(2)}));
-        int numBatches = 5;
-        int batchRow = 1;        
-        int rowsPerBatch = 10;
-        List[] expectedResults = new List[rowsPerBatch*(numBatches-blocked.size())];
-        List batches = new ArrayList();
-        for(int b=0; b<numBatches; b++) {
-            if(blocked.contains(new Integer(b))) {
-                batches.add(BlockedException.INSTANCE);
-            } else {    
-                List[] rows = new List[rowsPerBatch];
-                for(int i=0; i<rowsPerBatch; i++) {
-                    rows[i] = new ArrayList();
-                    rows[i].add(new Integer(batchRow));
-                    expectedResults[batchRow-1] = rows[i];
-                    batchRow++;
-                }
-                                                
-                TupleBatch batch = new TupleBatch(batchRow-rows.length, rows);
-                if(b == numBatches-1) {
-                    batch.setTerminationFlag(true);
-                } 
-                batches.add(batch);
-            }
-        }
-        
-        final FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
-        
-        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        FakeDataManager dataManager = new FakeDataManager();
-
-        CommandContext context = new CommandContext("pid", "group", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
-        final QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-        
-        processor.setBatchHandler(new QueryProcessor.BatchHandler() {
-        	
-        	int count = 0;
-        	
-			public void batchProduced(TupleBatch batch) throws TupleSourceNotFoundException, MetaMatrixComponentException {
-		
-				assertEquals(++count, plan.batchIndex);
-				if (count == 2) {
-					processor.closeProcessing();
-				}
-			}
-        });
-        
-        // Give the processor plenty of time to process
-        processor.process(30000);
-    }
 }

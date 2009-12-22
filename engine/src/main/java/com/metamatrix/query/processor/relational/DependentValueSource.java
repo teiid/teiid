@@ -25,15 +25,17 @@ package com.metamatrix.query.processor.relational;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.ValueIteratorSource;
 
@@ -43,31 +45,25 @@ import com.metamatrix.query.sql.util.ValueIteratorSource;
 public class DependentValueSource implements
                                  ValueIteratorSource {
 
-    private TupleSourceID tupleSourceID;
-    private BufferManager bm;
-    private Map<Expression, HashSet<Object>> cachedSets;
+    private TupleBuffer tupleSourceID;
+    private int maxSetSize;
+    private Map<Expression, Set<Object>> cachedSets;
     
-    public DependentValueSource(TupleSourceID tupleSourceID, BufferManager bm) {
+    public DependentValueSource(TupleBuffer tupleSourceID, int maxSetSize) {
         this.tupleSourceID = tupleSourceID;
-        this.bm = bm;
+        this.maxSetSize = maxSetSize;
     }
     
-    public TupleSourceID getTupleSourceID() {
+    public TupleBuffer getTupleBuffer() {
 		return tupleSourceID;
 	}
     
     /** 
      * @throws MetaMatrixComponentException 
-     * @throws TupleSourceNotFoundException 
      * @see com.metamatrix.query.sql.util.ValueIteratorSource#getValueIterator(com.metamatrix.query.sql.symbol.Expression)
      */
     public ValueIterator getValueIterator(Expression valueExpression) throws  MetaMatrixComponentException {
-    	IndexedTupleSource its;
-		try {
-			its = bm.getTupleSource(tupleSourceID);
-		} catch (TupleSourceNotFoundException e) {
-			throw new MetaMatrixComponentException(e);
-		}
+    	IndexedTupleSource its = tupleSourceID.createIndexedTupleSource();
     	int index = 0;
     	if (valueExpression != null) {
     		index = its.getSchema().indexOf(valueExpression);
@@ -76,27 +72,26 @@ public class DependentValueSource implements
         return new TupleSourceValueIterator(its, index);
     }
     
-    public HashSet<Object> getCachedSet(Expression valueExpression) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	HashSet<Object> result = null;
+    public Set<Object> getCachedSet(Expression valueExpression) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	Set<Object> result = null;
     	if (cachedSets != null) {
     		result = cachedSets.get(valueExpression);
     	}
     	if (result == null) {
-    		IndexedTupleSource its;
-    		try {
-    			if (bm.getRowCount(tupleSourceID) > bm.getProcessorBatchSize() / 2) {
-    				return null;
-    			}
-    			its = bm.getTupleSource(tupleSourceID);
-    		} catch (TupleSourceNotFoundException e) {
-    			throw new MetaMatrixComponentException(e);
-    		}
+			if (tupleSourceID.getRowCount() > maxSetSize) {
+				return null;
+			}
+			IndexedTupleSource its = tupleSourceID.createIndexedTupleSource();
         	int index = 0;
         	if (valueExpression != null) {
         		index = its.getSchema().indexOf(valueExpression);
         	}
         	Assertion.assertTrue(index != -1);
-        	result = new HashSet<Object>();
+        	if (((SingleElementSymbol)its.getSchema().get(index)).getType() == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
+        		result = new TreeSet<Object>();
+    		} else {
+    			result = new HashSet<Object>();
+    		}
         	while (its.hasNext()) {
         		Object value = its.nextTuple().get(index);
         		if (value != null) {
@@ -105,7 +100,7 @@ public class DependentValueSource implements
         	}
         	its.closeSource();
         	if (cachedSets == null) {
-        		cachedSets = new HashMap<Expression, HashSet<Object>>();
+        		cachedSets = new HashMap<Expression, Set<Object>>();
         	}
     		cachedSets.put(valueExpression, result);
     	}

@@ -21,18 +21,13 @@
  */
 package com.metamatrix.server.integration;
 
-import java.sql.SQLXML;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.metadata.index.VDBMetadataFactory;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
+import org.teiid.metadata.index.VDBMetadataFactory;
+
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
@@ -40,7 +35,7 @@ import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
 
@@ -61,9 +56,10 @@ public abstract class BaseQueryTest extends TestCase {
     public static QueryMetadataInterface createMetadata(String vdbFile, String systemVDBFile) {        
     	return VDBMetadataFactory.getVDBMetadata(new String[] {vdbFile, systemVDBFile});
     }
-        
-    public ProcessorPlan createPlan(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, boolean debug) throws Exception {
-        
+            
+    protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
+    	CommandContext context = createCommandContext();
+    	context.setProcessDebug(debug);
         Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
 
         // plan
@@ -76,80 +72,10 @@ public abstract class BaseQueryTest extends TestCase {
                 System.out.println(analysisRecord.getDebugLog());
             }
         }
-        
-        return plan;
-    }
-    
-    protected void doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
-        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = createCommandContext();
-        context.setProcessDebug(debug);
-        QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-        TupleSourceID tsID = processor.getResultsID();
-        processor.process();
 
-        // Create QueryResults from TupleSource
-        TupleSource ts = bufferMgr.getTupleSource(tsID);
-        int count = bufferMgr.getFinalRowCount(tsID);   
-
-        if(debug) {
-            System.out.println("\nResults:\n" + bufferMgr.getTupleSchema(tsID)); //$NON-NLS-1$
-            TupleSource ts2 = bufferMgr.getTupleSource(tsID);
-            for(int j=0; j<count; j++) {
-                System.out.println("" + j + ": " + ts2.nextTuple());     //$NON-NLS-1$ //$NON-NLS-2$
-            }    
-            ts2.closeSource();
-        }
-        
-        // Compare actual to expected row count
-        assertEquals("Did not get expected row count: ", expectedResults.length, count); //$NON-NLS-1$
-     
-        // Walk results and compare
-        for(int i=0; i<count; i++) { 
-            List record = ts.nextTuple();
-            
-            Object value = record.get(0);
-            if(value instanceof SQLXML) {
-                record.set(0, ((SQLXML)value).getString());
-            }            
-            assertEquals(expectedResults[i].get(0), record.get(0));                
-        }
-        ts.closeSource();        
-        
-        bufferMgr.removeTupleSource(tsID);
+    	TestProcessor.doProcess(plan, dataManager, expectedResults, context);
     }
 
-    protected void doProcessNoResultsCheck(ProcessorPlan plan, ProcessorDataManager dataManager, int expectedRowCount, boolean debug) throws Exception {
-        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = createCommandContext();
-        QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-        TupleSourceID tsID = processor.getResultsID();
-        processor.process();
-
-        // Create QueryResults from TupleSource
-        TupleSource ts = bufferMgr.getTupleSource(tsID);
-        int count = bufferMgr.getFinalRowCount(tsID);   
-
-        if(debug) {
-            System.out.println("\nResults:\n" + bufferMgr.getTupleSchema(tsID)); //$NON-NLS-1$
-            TupleSource ts2 = bufferMgr.getTupleSource(tsID);
-            for(int j=0; j<count; j++) {
-                System.out.println("" + j + ": " + ts2.nextTuple());     //$NON-NLS-1$ //$NON-NLS-2$
-            }    
-            ts2.closeSource();
-        }
-        
-        // Compare actual to expected row count
-        assertEquals("Did not get expected row count: ", expectedRowCount, count); //$NON-NLS-1$
-     
-        // Walk results 
-        for(int i=0; i<count; i++) { 
-            ts.nextTuple();
-        }
-        ts.closeSource();        
-        bufferMgr.removeTupleSource(tsID);
-    }
-    
     protected CommandContext createCommandContext() {
         Properties props = new Properties();
         //props.setProperty(ContextProperties.SOAP_HOST, "my.host.com"); //$NON-NLS-1$
@@ -157,9 +83,5 @@ public abstract class BaseQueryTest extends TestCase {
         
         return context;
     }       
-    
-    public void verifyQueryPlan(String[] expectedAtomic, ProcessorPlan plan, QueryMetadataInterface md, CapabilitiesFinder capFinder) throws Exception {
-        TestOptimizer.checkAtomicQueries(expectedAtomic, plan, md, capFinder);
-    }
     
 }

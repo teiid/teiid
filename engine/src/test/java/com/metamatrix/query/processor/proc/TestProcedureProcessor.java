@@ -40,6 +40,7 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.types.DataTypeManager;
@@ -54,6 +55,7 @@ import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.parser.QueryParser;
+import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -117,16 +119,17 @@ public class TestProcedureProcessor {
             context.getNextRand(0);
             context.setProcessDebug(DEBUG);
             QueryProcessor processor = new QueryProcessor(procPlan, context, bufferMgr, dataMgr);
-            TupleSourceID tsID = processor.getResultsID();  
-	        processor.process();
+            processor.setNonBlocking(true);
+            BatchCollector collector = processor.createBatchCollector();  
+	        TupleBuffer tsID = collector.collectTuples();
 	
 	        // Create QueryResults from TupleSource
-	        TupleSource ts = bufferMgr.getTupleSource(tsID);
-	
+	        TupleSource ts = tsID.createIndexedTupleSource();
+	        int count = tsID.getRowCount();   
+            
             if(DEBUG) {
-                int count = bufferMgr.getFinalRowCount(tsID);   
-                System.out.println("\nResults:\n" + bufferMgr.getTupleSchema(tsID)); //$NON-NLS-1$
-                TupleSource ts2 = bufferMgr.getTupleSource(tsID);
+                System.out.println("\nResults:\n" + tsID.getSchema()); //$NON-NLS-1$
+                TupleSource ts2 = tsID.createIndexedTupleSource();
                 for(int j=0; j<count; j++) {
                     System.out.println("" + j + ": " + ts2.nextTuple());     //$NON-NLS-1$ //$NON-NLS-2$
                 }    
@@ -137,8 +140,6 @@ public class TestProcedureProcessor {
                 fail("Expected processing to fail"); //$NON-NLS-1$
             }
             
-            int count = bufferMgr.getFinalRowCount(tsID);
-                   
             if (expectedResults == null) {
                 assertEquals("Incorrect number of rows: ", 1, count);   //$NON-NLS-1$
                 List tuple = ts.nextTuple();   	
@@ -150,7 +151,7 @@ public class TestProcedureProcessor {
 	        
             if (expectedResults != null) {
     	        //Walk results and compare
-                ts = bufferMgr.getTupleSource(tsID);
+                ts = tsID.createIndexedTupleSource();
                 assertEquals("Incorrect number of rows: ", expectedResults.length, count);   //$NON-NLS-1$
                 for(int j=0; j<count; j++) { 
                     List record = ts.nextTuple();  

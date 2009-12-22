@@ -42,9 +42,9 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
@@ -71,6 +71,7 @@ import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.xml.TestXMLPlanner;
 import com.metamatrix.query.parser.QueryParser;
+import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -2964,20 +2965,11 @@ public class TestXMLProcessor {
                 CommandContext context = new CommandContext("pID", "TestConn", "testUser", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 context.setProcessDebug(DEBUG);
                 QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-    	
-                while(true) {
-                    try {
-                        processor.process();
-                        break;
-                    } catch(BlockedException e) {
-                        // retry
-                    }
-                }
+                processor.setNonBlocking(true);
+                BatchCollector collector = processor.createBatchCollector();
+                TupleBuffer id = collector.collectTuples();
             
-                //int count = bufferMgr.getFinalRowCount(tsID);
-                //assertEquals("Incorrect number of records: ", 1, count); //$NON-NLS-1$
-                
-                TupleSource ts = bufferMgr.getTupleSource(processor.getResultsID());
+                TupleSource ts = id.createIndexedTupleSource();
                 List row = ts.nextTuple();
                 assertEquals("Incorrect number of columns: ", 1, row.size()); //$NON-NLS-1$
                
@@ -2985,7 +2977,7 @@ public class TestXMLProcessor {
                 XMLType result = (XMLType)row.get(0);
                 String actualDoc = result.getString();
                 
-                bufferMgr.removeTupleSource(processor.getResultsID());
+                id.remove();
                 
                 if(DEBUG) {
                     System.out.println("expectedDoc = \n" + expectedDoc); //$NON-NLS-1$
@@ -3009,7 +3001,9 @@ public class TestXMLProcessor {
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
             CommandContext context = new CommandContext("pID", null, null, null, null);                                                                 //$NON-NLS-1$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-            processor.process();
+            processor.setNonBlocking(true);
+            BatchCollector collector = processor.createBatchCollector();
+            collector.collectTuples();
         } catch (Exception e){
             if (expectedException.isInstance(e)){
                 expected = e;
@@ -3053,12 +3047,13 @@ public class TestXMLProcessor {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-        processor.process();
+        processor.setNonBlocking(true);
+        BatchCollector collector = processor.createBatchCollector();
+        TupleBuffer tupleBuffer = collector.collectTuples();
+        int count = tupleBuffer.getRowCount();
+        assertEquals("Incorrect number of records: ", expectedDocs.length, count); //$NON-NLS-1$
         
-       int count = bufferMgr.getFinalRowCount(processor.getResultsID());
-       assertEquals("Incorrect number of records: ", expectedDocs.length, count); //$NON-NLS-1$
-        
-        TupleSource ts = bufferMgr.getTupleSource(processor.getResultsID());
+        TupleSource ts = tupleBuffer.createIndexedTupleSource();
         for (int i=0; i<expectedDocs.length; i++){        
             List row = ts.nextTuple();
             if(row.isEmpty()){
@@ -3071,7 +3066,7 @@ public class TestXMLProcessor {
             //assertEquals("XML doc result # " + i +" mismatch: ", expectedDocs[i], actualDoc); //$NON-NLS-1$ //$NON-NLS-2$
             compareDocuments(expectedDocs[i], actualDoc);
         }
-        bufferMgr.removeTupleSource(processor.getResultsID());
+        tupleBuffer.remove();
     }    
 
     // =============================================================================================
@@ -6060,10 +6055,11 @@ public class TestXMLProcessor {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-
+        processor.setNonBlocking(true);
+        BatchCollector collector = processor.createBatchCollector();
         MetaMatrixComponentException failOnDefaultException = null;
         try{
-            processor.process();
+            collector.collectTuples();
         } catch (MetaMatrixComponentException e){
             failOnDefaultException = e;
         }

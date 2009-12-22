@@ -28,9 +28,7 @@ import java.io.Serializable;
  * Identifier for a tuple source.  The tuple source ID contains two
  * pieces of information: a unique ID (unique across locations) and
  * a location.  Both must be represented by a string but different
- * systems may use different location descriptions.  The
- * {@link com.metamatrix.common.buffer.BufferManagerLookup}
- * is the only party responsible for providing and decoding the location string.
+ * systems may use different location descriptions.
  */
 public class TupleSourceID implements Serializable {
 

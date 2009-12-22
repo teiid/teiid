@@ -39,6 +39,9 @@ import com.metamatrix.query.processor.program.ProgramInstruction;
 /**
  */
 public class CreateCursorResultSetInstruction extends ProgramInstruction {
+	
+	public static final String RS_NAME = "EXECSQL_INSTRUCTION"; //$NON-NLS-1$
+	
     protected String rsName;
     protected ProcessorPlan plan;
     

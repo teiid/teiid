@@ -28,8 +28,6 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -116,7 +114,7 @@ public class MergeJoinStrategy extends JoinStrategy {
      * @see com.metamatrix.query.processor.relational.JoinStrategy#initialize(com.metamatrix.query.processor.relational.JoinNode)
      */
     @Override
-    public void initialize(JoinNode joinNode) throws MetaMatrixComponentException {
+    public void initialize(JoinNode joinNode) {
         super.initialize(joinNode);
         this.outerState = this.leftSource;
         this.innerState = this.rightSource;
@@ -134,8 +132,7 @@ public class MergeJoinStrategy extends JoinStrategy {
      * @see com.metamatrix.query.processor.relational.JoinStrategy#close()
      */
     @Override
-    public void close() throws TupleSourceNotFoundException,
-                       MetaMatrixComponentException {
+    public void close() {
         super.close();
         this.outerState = null;
         this.innerState = null;
@@ -331,27 +328,15 @@ public class MergeJoinStrategy extends JoinStrategy {
         return 0;
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.relational.JoinStrategy#loadLeft()
-     */
     @Override
     protected void loadLeft() throws MetaMatrixComponentException,
-                             MetaMatrixProcessingException {
-    	if (sortLeft == SortOption.ALREADY_SORTED && !this.joinNode.isDependent() && !JoinType.JOIN_FULL_OUTER.equals(joinNode.getJoinType())) {
-    		return; // don't buffer
-    	}
-        super.loadLeft(); 
-    }
-    
-    @Override
-    protected void postLoadLeft() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
         if (this.processingSortLeft == SortOption.SORT || this.processingSortLeft == SortOption.SORT_DISTINCT) {
             if (this.leftSort == null) {
             	List expressions = this.joinNode.getLeftExpressions();
-                this.leftSort = new SortUtility(this.leftSource.getTupleSourceID(),
+                this.leftSort = new SortUtility(this.leftSource.getIterator(),
                                                     expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortLeft == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);         
+                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID());         
                 this.leftSource.markDistinct(processingSortLeft == SortOption.SORT_DISTINCT && expressions.size() == this.leftSource.getOuterVals().size());
             }
             this.leftSource.setTupleSource(leftSort.sort());
@@ -360,19 +345,14 @@ public class MergeJoinStrategy extends JoinStrategy {
     }
         
     @Override
-    protected void postLoadRight() throws MetaMatrixComponentException,
+    protected void loadRight() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
-    	sortRight();
-    }
-
-	protected void sortRight() throws MetaMatrixComponentException,
-			TupleSourceNotFoundException, BlockedOnMemoryException {
 		if (this.processingSortRight == SortOption.SORT || this.processingSortRight == SortOption.SORT_DISTINCT) {
     		if (this.rightSort == null) {
     		    List expressions = this.joinNode.getRightExpressions();
-    		    this.rightSort = new SortUtility(this.rightSource.getTupleSourceID(), 
+    		    this.rightSort = new SortUtility(this.rightSource.getIterator(), 
     		                                        expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-    		                                        this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);
+    		                                        this.joinNode.getBufferManager(), this.joinNode.getConnectionID());
     		    this.rightSource.markDistinct(processingSortRight == SortOption.SORT_DISTINCT && expressions.size() == this.rightSource.getOuterVals().size());
     		}
     		this.rightSource.setTupleSource(rightSort.sort());

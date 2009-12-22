@@ -69,7 +69,7 @@ public class TestSqlEval extends TestCase {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(factory);
         
-        SqlEval sqlEval = new SqlEval(bufferMgr, null, cc, null, Collections.EMPTY_MAP);
+        SqlEval sqlEval = new SqlEval(null, cc, null, Collections.EMPTY_MAP);
         Source results =  sqlEval.executeSQL(sql);        
         String result = toXMLString(results);
         sqlEval.close();

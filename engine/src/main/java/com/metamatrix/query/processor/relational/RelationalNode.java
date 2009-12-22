@@ -44,6 +44,7 @@ import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
@@ -52,7 +53,7 @@ import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
-public abstract class RelationalNode implements Cloneable, Describable{
+public abstract class RelationalNode implements Cloneable, Describable, BatchProducer {
 
     // External context and state
     private CommandContext context;
@@ -154,6 +155,11 @@ public abstract class RelationalNode implements Cloneable, Describable{
 
 	public void setElements(List elements) {
 		this.elements = elements;
+	}
+	
+	@Override
+	public List getOutputElements() {
+		return getElements();
 	}
 
 	public List getElements() {

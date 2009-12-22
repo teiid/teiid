@@ -39,6 +39,7 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.CompareCriteria;

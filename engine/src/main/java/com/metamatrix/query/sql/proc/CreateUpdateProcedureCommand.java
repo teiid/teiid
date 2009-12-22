@@ -294,7 +294,7 @@ public class CreateUpdateProcedureCommand extends Command {
     		return 0;
     	}
     	Command lastCommand = null;
-    	Statement statement = (Statement)block.getStatements().get(block.getStatements().size() - 1);
+    	Statement statement = block.getStatements().get(block.getStatements().size() - 1);
     	if (statement instanceof CommandStatement) {
         	CommandStatement cmdStatement = (CommandStatement)statement;
         	lastCommand = cmdStatement.getCommand();

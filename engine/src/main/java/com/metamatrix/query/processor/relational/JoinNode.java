@@ -35,8 +35,7 @@ import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -54,7 +53,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	    NESTED_LOOP
 	}
         
-    private enum State { LOAD_LEFT, LOAD_RIGHT, POST_LOAD_LEFT, POST_LOAD_RIGHT, EXECUTE }    
+    private enum State { LOAD_LEFT, LOAD_RIGHT, EXECUTE }    
     private State state = State.LOAD_LEFT;
     
     private boolean leftOpened;
@@ -191,22 +190,19 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         }
         if (state == State.LOAD_RIGHT) {
             if (isDependent() && !this.rightOpened) { 
-                TupleSourceID tsID = this.joinStrategy.leftSource.getTupleSourceID();
-                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(tsID, this.getBufferManager()));
+                TupleBuffer tsID = this.joinStrategy.leftSource.getTupleBuffer();
+                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(tsID, this.getBufferManager().getProcessorBatchSize() / 2));
                 //open the right side now that the tuples have been collected
                 this.getChildren()[1].open();
                 this.rightOpened = true;
             }
             this.joinStrategy.loadRight();
-            state = State.POST_LOAD_LEFT;
-        }
-        if (state == State.POST_LOAD_LEFT) {
-        	this.joinStrategy.postLoadLeft();
-        	state = State.POST_LOAD_RIGHT;
-        }
-        if (state == State.POST_LOAD_RIGHT) {
-        	this.joinStrategy.postLoadRight();
-        	state = State.EXECUTE;
+            //force buffering based upon join type - may have already happened in the strategy load methods
+        	this.joinStrategy.rightSource.getTupleBuffer();
+            if (joinType == JoinType.JOIN_FULL_OUTER) {
+            	this.joinStrategy.leftSource.getTupleBuffer();
+            }
+            state = State.EXECUTE;
         }
         
         while(true) {
@@ -299,12 +295,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     public void close()
             throws MetaMatrixComponentException {
         super.close();
-        
-        try {
-            joinStrategy.close();
-        } catch (TupleSourceNotFoundException err) {
-            //ignore
-        }        
+        joinStrategy.close();
         if (this.isDependent()) {
         	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
         }

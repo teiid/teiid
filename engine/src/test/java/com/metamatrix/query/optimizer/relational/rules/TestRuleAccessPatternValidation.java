@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.junit.Test;
-import org.teiid.dqp.internal.process.TestPreparedStatement;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;

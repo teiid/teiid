@@ -84,21 +84,19 @@ public class TestPreparedStatement {
     }
     
     static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, TestablePreparedPlanCache prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached) throws Exception { 
-        TestablePreparedPlanCache pPlanCache = null;
-        CapabilitiesFinder cFinder = null;
-        ProcessorDataManager dManager = null;
-        
         if ( dataManager == null ) {
             // Construct data manager with data
-            dManager = new FakeDataManager();
-            TestProcessor.sampleData1((FakeDataManager)dManager);    
-        } else dManager = dataManager;
+        	dataManager = new FakeDataManager();
+            TestProcessor.sampleData1((FakeDataManager)dataManager);    
+        }
         
-        if ( capFinder == null ) cFinder = new DefaultCapabilitiesFinder();
-        else cFinder = capFinder;
+        if ( capFinder == null ) {
+        	capFinder = new DefaultCapabilitiesFinder();
+        }
         
-        if ( prepPlanCache == null ) pPlanCache = new TestablePreparedPlanCache();
-        else pPlanCache = prepPlanCache;
+        if ( prepPlanCache == null ) {
+        	prepPlanCache = new TestablePreparedPlanCache();
+        }
         
 		// expected cache hit count
         int exHitCount = -1;
@@ -109,28 +107,28 @@ public class TestPreparedStatement {
 		 * get the plan twice.  Otherwise, we want it to be 1.
 		 */
         if ( isAlreadyCached ) {
-        	exHitCount = pPlanCache.hitCount + 2;
+        	exHitCount = prepPlanCache.hitCount + 2;
         } else {
-        	exHitCount = pPlanCache.hitCount + 1;
+        	exHitCount = prepPlanCache.hitCount + 1;
         }
         
         //Create plan or used cache plan if isPlanCached
-        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
+        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false);
 
         // Run query
         TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         
         //test cached plan
-    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
+    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false);
     	
         //make sure the plan is only created once
-        assertEquals("should reuse the plan", exHitCount, pPlanCache.hitCount); //$NON-NLS-1$
+        assertEquals("should reuse the plan", exHitCount, prepPlanCache.hitCount); //$NON-NLS-1$
                 
         // Run query again
         TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         
         //get the plan again with a new connection
-        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, 7, callableStatement, false));
+        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, 7, callableStatement, false));
 
         /*
          * If the command is not specific to a session we expect
@@ -139,7 +137,7 @@ public class TestPreparedStatement {
          * created and the hit count will be unchanged.
          */
         if ( !isSessionSpecific ) exHitCount++;
-        assertEquals(exHitCount, pPlanCache.hitCount); 
+        assertEquals(exHitCount, prepPlanCache.hitCount); 
 	}
     	    
     @Test public void testWhere() throws Exception { 

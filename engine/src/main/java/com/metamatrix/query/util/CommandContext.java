@@ -49,57 +49,61 @@ import com.metamatrix.query.sql.util.VariableContext;
  * framework.
  */
 public class CommandContext implements Cloneable {
+	
+	private static class GlobalState {
+	    /** Uniquely identify the command being processed */
+	    private Object processorID;
+	    
+	    /** Identify a group of related commands, which typically get cleaned up together */
+	    private String connectionID;
 
-    /** Uniquely identify the command being processed */
-    private Object processorID;
-    
-    /** Identify a group of related commands, which typically get cleaned up together */
-    private String connectionID;
+	    private int processorBatchSize = BufferConfig.DEFAULT_PROCESSOR_BATCH_SIZE;
+	    
+	    private int connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
 
-    private int processorBatchSize = BufferConfig.DEFAULT_PROCESSOR_BATCH_SIZE;
-    
-    private int connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+	    private String userName;
+	    
+	    private Serializable commandPayload;
+	    
+	    private String vdbName;
+	    
+	    private String vdbVersion;
+	    
+	    private Properties environmentProperties;
+	    
+	    /** Indicate whether data should be dumped for debugging purposes while processing the query */
+	    private boolean processDebug;  
+	        
+	    /** Indicate whether statistics should be collected for relational node processing*/
+	    private boolean collectNodeStatistics;
+	    
+	    private int streamingBatchSize;
+	    
+	    private Random random = null;
+	    
+	    private SecurityFunctionEvaluator securityFunctionEvaluator;
+	    
+	    private TimeZone timezone = TimeZone.getDefault();
+	    
+	    private PlanToProcessConverter planToProcessConverter;
+	    
+	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
+	        
+	    private boolean sessionFunctionEvaluated;
+	    
+	    private Set<String> groups;
+	    
+	    private long timeSliceEnd = Long.MAX_VALUE;
+	    
+	    private long timeoutEnd = Long.MAX_VALUE;
+	}
+	
+	private GlobalState globalState = new GlobalState();
 
-    private String userName;
-    
-    private Serializable commandPayload;
-    
-    private String vdbName;
-    
-    private String vdbVersion;
-    
-    private Properties environmentProperties;
-    
-    /** Indicate whether data should be dumped for debugging purposes while processing the query */
-    private boolean processDebug;  
-        
-    /** Indicate whether statistics should be collected for relational node processing*/
-    private boolean collectNodeStatistics;
-    
-    private int streamingBatchSize;
-    
-    private Random random = null;
-    
-    private Stack<String> recursionStack = null;
-    
-    private SecurityFunctionEvaluator securityFunctionEvaluator;
-    
-    private Object tempTableStore;
-    
-    private TimeZone timezone = TimeZone.getDefault();
-    
-    private PlanToProcessConverter planToProcessConverter;
-    
-    private QueryProcessor.ProcessorFactory queryProcessorFactory;
-    
     private VariableContext variableContext = new VariableContext();
-    
-    private CommandContext parent;
-    
-    private boolean sessionFunctionEvaluated;
-    
-    private Set<String> groups;
-    
+    private Object tempTableStore;
+    private Stack<String> recursionStack;
+
     /**
      * Construct a new context.
      * @param collectNodeStatistics TODO
@@ -128,66 +132,30 @@ public class CommandContext implements Cloneable {
              
     }
 
-    protected CommandContext(CommandContext context) {
-        setConnectionID(context.connectionID);
-                
-        // Reuse existing processor ID - may be overridden
-        setProcessorID(context.processorID);
-            
-        setUserName(context.userName);
-        setCommandPayload(context.commandPayload);
-        setVdbName(context.vdbName);
-        setVdbVersion(context.vdbVersion);   
-        setEnvironmentProperties(context.environmentProperties); 
-        setProcessDebug(context.processDebug);
-        setProcessorBatchSize(context.processorBatchSize);
-        setConnectorBatchSize(context.connectorBatchSize);
-        setRandom(context.random);
-        if (context.recursionStack != null) {
-            this.recursionStack = (Stack)context.recursionStack.clone();
-        }
-        this.setSecurityFunctionEvaluator(context.getSecurityFunctionEvaluator());
-        this.planToProcessConverter = context.planToProcessConverter;
-        this.queryProcessorFactory = context.queryProcessorFactory;
-        this.variableContext = context.variableContext;
-        this.parent = context;
-    }
-        
     public CommandContext() {        
     }
     
-    public CommandContext getParent() {
-		return parent;
-	}
-    
     public boolean isSessionFunctionEvaluated() {
-    	if (parent != null) {
-    		return parent.isSessionFunctionEvaluated();
-    	}
-		return sessionFunctionEvaluated;
+		return globalState.sessionFunctionEvaluated;
 	}
     
     public void setSessionFunctionEvaluated(boolean sessionFunctionEvaluated) {
-    	if (parent != null) {
-    		parent.setSessionFunctionEvaluated(sessionFunctionEvaluated);
-    	} else {
-    		this.sessionFunctionEvaluated = sessionFunctionEvaluated;
-    	}
+    	globalState.sessionFunctionEvaluated = sessionFunctionEvaluated;
 	}
     
     /**
      * @return
      */
     public Object getProcessorID() {
-        return processorID;
+        return globalState.processorID;
     }
 
     public boolean getProcessDebug() {
-        return this.processDebug;
+        return globalState.processDebug;
     }
     
     public void setProcessDebug(boolean processDebug) {
-        this.processDebug = processDebug;
+    	globalState.processDebug = processDebug;
     }
 
     /**
@@ -195,43 +163,49 @@ public class CommandContext implements Cloneable {
      */
     public void setProcessorID(Object object) {
         ArgCheck.isNotNull(object);
-        processorID = object;
+        globalState.processorID = object;
     }
 
     public Object clone() {
-    	return new CommandContext(this);
+    	CommandContext clone = new CommandContext();
+    	clone.globalState = this.globalState;
+    	clone.variableContext = this.variableContext;
+    	if (this.recursionStack != null) {
+            clone.recursionStack = (Stack<String>)this.recursionStack.clone();
+        }
+    	return clone;
     }
     
     public String toString() {
-        return "CommandContext: " + processorID; //$NON-NLS-1$
+        return "CommandContext: " + globalState.processorID; //$NON-NLS-1$
     }
 
     /**
      * @return String
      */
     public String getConnectionID() {
-        return connectionID;
+        return globalState.connectionID;
     }
 
     /**
      * @return String
      */
     public String getUserName() {
-        return userName;
+        return globalState.userName;
     }
 
     /**
      * @return String
      */
     public String getVdbName() {
-        return vdbName;
+        return globalState.vdbName;
     }
 
     /**
      * @return String
      */
     public String getVdbVersion() {
-        return vdbVersion;
+        return globalState.vdbVersion;
     }
 
     /**
@@ -239,7 +213,7 @@ public class CommandContext implements Cloneable {
      * @param connectionID The connectionID to set
      */
     public void setConnectionID(String connectionID) {
-        this.connectionID = connectionID;
+        this.globalState.connectionID = connectionID;
     }
 
     /**
@@ -247,7 +221,7 @@ public class CommandContext implements Cloneable {
      * @param userName The userName to set
      */
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.globalState.userName = userName;
     }
 
     /**
@@ -255,7 +229,7 @@ public class CommandContext implements Cloneable {
      * @param vdbName The vdbName to set
      */
     public void setVdbName(String vdbName) {
-        this.vdbName = vdbName;
+        this.globalState.vdbName = vdbName;
     }
 
     /**
@@ -263,22 +237,22 @@ public class CommandContext implements Cloneable {
      * @param vdbVersion The vdbVersion to set
      */
     public void setVdbVersion(String vdbVersion) {
-        this.vdbVersion = vdbVersion;
+        this.globalState.vdbVersion = vdbVersion;
     }
 
     public Properties getEnvironmentProperties() {
-        return environmentProperties;
+        return globalState.environmentProperties;
     }
 
     public void setEnvironmentProperties(Properties properties) {
-        environmentProperties = properties;
+    	globalState.environmentProperties = properties;
     }
     
     public Serializable getCommandPayload() {
-        return this.commandPayload;
+        return this.globalState.commandPayload;
     }
     public void setCommandPayload(Serializable commandPayload) {
-        this.commandPayload = commandPayload;
+        this.globalState.commandPayload = commandPayload;
     }    
     
     /** 
@@ -286,64 +260,58 @@ public class CommandContext implements Cloneable {
      * @since 4.2
      */
     public void setCollectNodeStatistics(boolean collectNodeStatistics) {
-        this.collectNodeStatistics = collectNodeStatistics;
+        this.globalState.collectNodeStatistics = collectNodeStatistics;
     }
     
     public boolean getCollectNodeStatistics() {
-        return this.collectNodeStatistics;
+        return this.globalState.collectNodeStatistics;
     }
     
 	public int getStreamingBatchSize() {
-		return streamingBatchSize;
+		return globalState.streamingBatchSize;
 	}
 
 	public void setStreamingBatchSize(int streamingBatchSize) {
-		this.streamingBatchSize = streamingBatchSize;
+		this.globalState.streamingBatchSize = streamingBatchSize;
 	}
 
     
     public int getConnectorBatchSize() {
-        return this.connectorBatchSize;
+        return this.globalState.connectorBatchSize;
     }
 
     
     public void setConnectorBatchSize(int connectorBatchSize) {
-        this.connectorBatchSize = connectorBatchSize;
+        this.globalState.connectorBatchSize = connectorBatchSize;
     }
 
     
     public int getProcessorBatchSize() {
-        return this.processorBatchSize;
+        return this.globalState.processorBatchSize;
     }
 
     
     public void setProcessorBatchSize(int processorBatchSize) {
-        this.processorBatchSize = processorBatchSize;
+        this.globalState.processorBatchSize = processorBatchSize;
     }
     
     public double getNextRand() {
-    	if (parent != null) {
-    		return parent.getNextRand();
-    	}
-        if (random == null) {
-            random = new Random();
+        if (globalState.random == null) {
+        	globalState.random = new Random();
         }
-        return random.nextDouble();
+        return globalState.random.nextDouble();
     }
     
     public double getNextRand(long seed) {
-    	if (parent != null) {
-    		return parent.getNextRand(seed);
-    	}
-        if (random == null) {
-            random = new Random();
+        if (globalState.random == null) {
+        	globalState.random = new Random();
         }
-        random.setSeed(seed);
-        return random.nextDouble();
+        globalState.random.setSeed(seed);
+        return globalState.random.nextDouble();
     }
     
     void setRandom(Random random) {
-        this.random = random;
+        this.globalState.random = random;
     }
 
     public void pushCall(String value) throws QueryProcessingException {
@@ -373,14 +341,14 @@ public class CommandContext implements Cloneable {
      * @return Returns the securityFunctionEvaluator.
      */
     public SecurityFunctionEvaluator getSecurityFunctionEvaluator() {
-        return this.securityFunctionEvaluator;
+        return this.globalState.securityFunctionEvaluator;
     }
     
     /** 
      * @param securityFunctionEvaluator The securityFunctionEvaluator to set.
      */
     public void setSecurityFunctionEvaluator(SecurityFunctionEvaluator securityFunctionEvaluator) {
-        this.securityFunctionEvaluator = securityFunctionEvaluator;
+        this.globalState.securityFunctionEvaluator = securityFunctionEvaluator;
     }
 
 	public Object getTempTableStore() {
@@ -392,23 +360,23 @@ public class CommandContext implements Cloneable {
 	}
 	
 	public TimeZone getServerTimeZone() {
-		return timezone;
+		return globalState.timezone;
 	}
 
 	public void setPlanToProcessConverter(PlanToProcessConverter planToProcessConverter) {
-		this.planToProcessConverter = planToProcessConverter;
+		this.globalState.planToProcessConverter = planToProcessConverter;
 	}
 
 	public PlanToProcessConverter getPlanToProcessConverter() {
-		return planToProcessConverter;
+		return globalState.planToProcessConverter;
 	}
 	
 	public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
-		return this.queryProcessorFactory;
+		return this.globalState.queryProcessorFactory;
 	}
 
 	public void setQueryProcessorFactory(QueryProcessor.ProcessorFactory queryProcessorFactory) {
-		this.queryProcessorFactory = queryProcessorFactory;
+		this.globalState.queryProcessorFactory = queryProcessorFactory;
 	}
 	
 	public VariableContext getVariableContext() {
@@ -436,11 +404,27 @@ public class CommandContext implements Cloneable {
 	}
 	
 	public Set<String> getGroups() {
-		return groups;
+		return globalState.groups;
 	}
 	
 	public void setGroups(Set<String> groups) {
-		this.groups = groups;
+		this.globalState.groups = groups;
+	}
+	
+	public long getTimeSliceEnd() {
+		return globalState.timeSliceEnd;
+	}
+	
+	public long getTimeoutEnd() {
+		return globalState.timeoutEnd;
+	}
+	
+	public void setTimeSliceEnd(long timeSliceEnd) {
+		globalState.timeSliceEnd = timeSliceEnd;
+	}
+	
+	public void setTimeoutEnd(long timeoutEnd) {
+		globalState.timeoutEnd = timeoutEnd;
 	}
 	
 }

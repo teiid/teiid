@@ -23,14 +23,19 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.sql.SQLException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.lob.ReaderInputStream;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.types.BlobType;
+import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
@@ -46,7 +51,7 @@ public class LobWorkItem implements Runnable {
     
 	/* private work item state */
 	private String streamId; 
-    private LobChunkStream stream;
+    private ByteLobChunkStream stream;
     private int streamRequestId;
     private ResultsReceiver<LobChunk> resultsReceiver;
 	
@@ -74,13 +79,6 @@ public class LobWorkItem implements Runnable {
             // now get the chunk from stream
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
-    	} catch (BlockedOnMemoryException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, new Object[] {"Reenqueueing LOB chunk request due to lack of available memory ###########", requestID}); //$NON-NLS-1$ 
-			this.dqpCore.addWork(this);
-			return;
-    	} catch (TupleSourceNotFoundException e) {
-            LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("BufferManagerLobChunkStream.no_tuple_source", streamId)); //$NON-NLS-1$
-            ex = e;
         } catch (MetaMatrixComponentException e) {            
             LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
@@ -114,13 +112,29 @@ public class LobWorkItem implements Runnable {
      * Create a object which can create a sequence of LobChunk objects on a given
      * LOB object 
      */
-    private LobChunkStream createLobStream(String referenceStreamId) 
-        throws BlockedOnMemoryException, MetaMatrixComponentException, IOException, TupleSourceNotFoundException {
+    private ByteLobChunkStream createLobStream(String referenceStreamId) 
+        throws MetaMatrixComponentException, IOException {
         
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.
-        Streamable<?> streamable = dqpCore.getBufferManager().getStreamable(parent.resultsID, referenceStreamId);
-        return new LobChunkStream(streamable, chunkSize);                        
+        Streamable<?> streamable = parent.resultsBuffer.getLobReference(referenceStreamId);
+        
+        try {
+            if (streamable instanceof XMLType) {
+                XMLType xml = (XMLType)streamable;
+                return new ByteLobChunkStream(new ReaderInputStream(xml.getCharacterStream(), Charset.forName("UTF-16")), chunkSize); //$NON-NLS-1$
+            }
+            else if (streamable instanceof ClobType) {
+                ClobType clob = (ClobType)streamable;
+                return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName("UTF-16")), chunkSize); //$NON-NLS-1$            
+            } 
+            BlobType blob = (BlobType)streamable;
+            return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
+        } catch(SQLException e) {
+            IOException ex = new IOException();
+            ex.initCause(e);
+            throw ex;
+        }
     }
     
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {

@@ -335,7 +335,7 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @see com.metamatrix.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
-		return true;
+		return Query.areResultsCachable(getProjectedSymbols());
 	}
     
     /** 

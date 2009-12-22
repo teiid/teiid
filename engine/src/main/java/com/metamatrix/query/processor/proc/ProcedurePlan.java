@@ -39,18 +39,18 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.processor.BaseProcessorPlan;
+import com.metamatrix.query.processor.BatchIterator;
+import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.DescribableUtil;
-import com.metamatrix.query.processor.NullTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -73,10 +73,10 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  */
 public class ProcedurePlan extends BaseProcessorPlan {
 
-	private class CursorState {
-		TupleSourceID tsID;
-		TupleSource ts;
-		List<?> currentRow;
+	public static class CursorState {
+		private QueryProcessor processor;
+		private IndexedTupleSource ts;
+		private List<?> currentRow;
 	}
 	
     private Program originalProgram;
@@ -88,8 +88,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
     private int batchSize;
 
     private boolean done = false;
-    private QueryProcessor internalProcessor;
-    private TupleSourceID internalResultID;
+    private CursorState currentState;
 
     // Temp state for final results
     private TupleSource finalTupleSource;
@@ -157,8 +156,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         lastTupleSource = null;
         
         done = false;
-        internalProcessor = null;
-        internalResultID = null;
+        currentState = null;
 
         finalTupleSource = null;
         beginBatch = 1;
@@ -295,7 +293,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         }
 
         if(lastTupleSource == null){
-            return new NullTupleSource(null);
+            return CollectionTupleSource.createNullTupleSource(null);
         }
         return lastTupleSource;
     }
@@ -305,14 +303,9 @@ public class ProcedurePlan extends BaseProcessorPlan {
         if (!this.cursorStates.isEmpty()) {
         	List<String> cursors = new ArrayList<String>(this.cursorStates.keySet());
         	for (String rsName : cursors) {
-        		try {
-        			removeResults(rsName);
-        		} catch (MetaMatrixComponentException e) {
-        			LogManager.logDetail(LogConstants.CTX_DQP, e, "Exception closing procedure plan cursor"); //$NON-NLS-1$
-        		}
+    			removeResults(rsName);
 			}
         }
-        internalResultID = null;
         if(getTempTableStore()!=null) {
         	getTempTableStore().removeTempTables();
         }
@@ -409,7 +402,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
     	if(rowCount == null) {
 			rowCount = new Integer(NO_ROWS_UPDATED);
     	}
-        return new UpdateCountTupleSource((Integer)rowCount);
+        return CollectionTupleSource.createUpdateCountTupleSource((Integer)rowCount);
     }
 
     /**
@@ -423,43 +416,35 @@ public class ProcedurePlan extends BaseProcessorPlan {
 		return this.currentVarContext;
     }
 
-    public void executePlan(ProcessorPlan command, String rsName)
+    public CursorState executePlan(ProcessorPlan command, String rsName)
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        boolean isExecSQLInstruction = rsName.equals(ExecSqlInstruction.RS_NAME);
-        // Defect 14544: Close all non-final ExecSqlInstruction tuple sources before creating a new source.
-        // This guarantees that the tuple source will be removed predictably from the buffer manager.
-        if (isExecSQLInstruction) {
-            removeResults(ExecSqlInstruction.RS_NAME);
+    	
+        CursorState state = this.cursorStates.get(rsName.toUpperCase());
+        if (state == null) {
+        	if (this.currentState == null) {
+		        //this may not be the first time the plan is being run
+		        command.reset();
+		
+		        CommandContext subContext = (CommandContext) getContext().clone();
+		        subContext.setVariableContext(this.currentVarContext);
+		        subContext.setTempTableStore(getTempTableStore());
+		        state = new CursorState();
+		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
+		        state.ts = new BatchIterator(state.processor);
+		        
+	            //keep a reference to the tuple source
+	            //it may be the last one
+	            this.lastTupleSource = state.ts;
+	            
+	            this.currentState = state;
+        	}
+        	//force execution to the first batch
+    		this.currentState.ts.hasNext();
+
+	        this.cursorStates.put(rsName.toUpperCase(), this.currentState);
+	        this.currentState = null;
         }
-        
-        if(this.internalProcessor == null){
-            //this may not be the first time the plan is being run
-            command.reset();
-
-            // Run query processor on command
-            CommandContext subContext = (CommandContext) getContext().clone();
-            subContext.setVariableContext(this.currentVarContext);
-            subContext.setTempTableStore(getTempTableStore());
-            internalProcessor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
-            this.internalResultID = this.internalProcessor.getResultsID();
-        }
-        this.internalProcessor.process(Integer.MAX_VALUE); //TODO: put a better value here
-
-        // didn't throw processor blocked, so must be done
-        TupleSource source = this.bufferMgr.getTupleSource(this.internalResultID);
-
-        this.internalProcessor = null;        
-
-        CursorState cursorState = new CursorState();
-        cursorState.tsID = this.internalResultID;
-        cursorState.ts = source;
-        this.cursorStates.put(rsName.toUpperCase(), cursorState);
-        
-        if(isExecSQLInstruction){
-            //keep a reference to the tuple source
-            //it may be the last one
-            this.lastTupleSource = source;
-        }
+        return state;
     }
     
     /** 
@@ -561,15 +546,8 @@ public class ProcedurePlan extends BaseProcessorPlan {
     public void removeResults(String rsName) throws MetaMatrixComponentException {
         String rsKey = rsName.toUpperCase();
         CursorState state = this.cursorStates.remove(rsKey);
-        if(state != null) {
-            try {
-    			this.bufferMgr.removeTupleSource(state.tsID);
-    		} catch (TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0021, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0021, (String)null));
-    		} catch (MetaMatrixComponentException e) {
-                throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0022, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0022, (String) null));
-    		}
-            LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"removed tuple source", state.tsID, "for result set"}); //$NON-NLS-1$ //$NON-NLS-2$
+        if (state != null) {
+        	state.processor.closeProcessing();
         }
     }
 

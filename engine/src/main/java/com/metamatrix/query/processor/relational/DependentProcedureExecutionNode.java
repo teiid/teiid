@@ -89,7 +89,6 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
     }
 
     /**
-     * @throws TupleSourceNotFoundException
      * @see com.metamatrix.query.processor.relational.PlanExecutionNode#prepareNextCommand()
      */
     protected boolean prepareNextCommand() throws BlockedException,

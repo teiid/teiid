@@ -131,7 +131,6 @@ public class PreparedPlanCache {
 	static class PreparedPlan{
 		private ProcessorPlan plan;
 		private Command command;
-		private Command rewritenCommand;
 		private List<Reference> refs;
 		private AnalysisRecord analysisRecord;
 		
@@ -191,14 +190,6 @@ public class PreparedPlanCache {
 			refs = refsValue;
 		}
 		
-		public void setRewritenCommand(Command rewritenCommand) {
-			this.rewritenCommand = rewritenCommand;
-		}
-		
-		public Command getRewritenCommand() {
-			return rewritenCommand;
-		}
-					
 	}
 
 	//for testing purpose 

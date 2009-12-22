@@ -22,11 +22,10 @@
 
 package com.metamatrix.query.sql.util;
 
-import java.util.HashSet;
+import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.sql.symbol.Expression;
 
 
@@ -45,11 +44,10 @@ public interface ValueIteratorSource {
      * @param valueExpression The expression we are retrieving an iterator for  
      * @return ValueIterator if ready, null otherwise
      * @throws MetaMatrixComponentException 
-     * @throws TupleSourceNotFoundException 
      * @since 5.0.1
      */
     ValueIterator getValueIterator(Expression valueExpression) throws MetaMatrixComponentException;
     
-    HashSet<Object> getCachedSet(Expression valueExpression) throws MetaMatrixComponentException, MetaMatrixProcessingException;
+    Set<Object> getCachedSet(Expression valueExpression) throws MetaMatrixComponentException, MetaMatrixProcessingException;
     
 }

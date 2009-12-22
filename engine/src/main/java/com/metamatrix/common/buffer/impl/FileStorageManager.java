@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.buffer.storage.file;
+package com.metamatrix.common.buffer.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -299,7 +299,7 @@ public class FileStorageManager implements StorageManager {
      * Remove all batches for a sourceID.  Before removal, the file is closed.
      * @param sourceID Tuple source ID
      */
-    public void removeBatches(TupleSourceID sourceID) throws MetaMatrixComponentException {
+    public void removeBatches(TupleSourceID sourceID) {
         TupleSourceInfo info = null;
         // Remove info from the file map
         synchronized(tupleSourceMap) {
@@ -340,11 +340,7 @@ public class FileStorageManager implements StorageManager {
 		}
 	    
 	    for (TupleSourceID key : ids) {
-            try {
-                removeBatches(key);
-            } catch (MetaMatrixComponentException e) {
-                LogManager.logWarning(LogConstants.CTX_STORAGE_MGR, e, "Shutdown failed while removing batches for tuple source: " + key); //$NON-NLS-1$
-            }
+            removeBatches(key);
 		}
 
         tupleSourceMap = null;

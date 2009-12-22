@@ -22,54 +22,49 @@
 
 package com.metamatrix.common.buffer;
 
-import com.metamatrix.api.exception.MetaMatrixException;
+import java.lang.ref.SoftReference;
 
-/**
- * Indicates memory was not available for the requested operation.
- */
-public class MemoryNotAvailableException extends MetaMatrixException {
+class ManagedBatch {
 
+    private int beginRow;
+    private int endRow;
+    private SoftReference<TupleBatch> batchReference;
+    
     /**
-     * No-arg costructor required by Externalizable semantics
+     * Constructor for ManagedBatch.
      */
-    public MemoryNotAvailableException() {
-        super();
+    public ManagedBatch(TupleBatch batch) {
+        this.beginRow = batch.getBeginRow();
+        this.endRow = batch.getEndRow();
+        this.batchReference = new SoftReference<TupleBatch>(batch);
     }
     
     /**
-     * Constructor for MemoryNotAvailableException.
-     * @param message
+     * Get the begin row, must be >= 1
+     * @return Begin row
      */
-    public MemoryNotAvailableException(String message) {
-        super(message);
+    public int getBeginRow() {
+        return this.beginRow;
     }
-
+    
     /**
-     * Constructor for MemoryNotAvailableException.
-     * @param code
-     * @param message
+     * Get the end row, inclusive
+     * @return End row
      */
-    public MemoryNotAvailableException(String code, String message) {
-        super(code, message);
+    public int getEndRow() {
+        return this.endRow;
     }
 
-    /**
-     * Constructor for MemoryNotAvailableException.
-     * @param e
-     * @param message
-     */
-    public MemoryNotAvailableException(Throwable e, String message) {
-        super(e, message);
+    public String toString() {
+        return "ManagedBatch[" + beginRow + ", " + endRow + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-
-    /**
-     * Constructor for MemoryNotAvailableException.
-     * @param e
-     * @param code
-     * @param message
-     */
-    public MemoryNotAvailableException(Throwable e, String code, String message) {
-        super(e, code, message);
-    }
-
+    
+    public TupleBatch getBatch() {
+		return this.batchReference.get();
+	}
+    
+    public void setBatchReference(TupleBatch batch) {
+		this.batchReference = new SoftReference<TupleBatch>(batch);
+	}
+    
 }

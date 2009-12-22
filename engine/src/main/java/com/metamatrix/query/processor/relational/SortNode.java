@@ -30,11 +30,9 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
-import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.OrderBy;
 
@@ -45,13 +43,11 @@ public class SortNode extends RelationalNode {
     private Mode mode = Mode.SORT;
 
     private SortUtility sortUtility;
-    private int phase = COLLECTION;
-    private TupleSourceID outputID;
+    private int phase = SORT;
+    private TupleBuffer outputID;
     private int rowCount = -1;
     private int outputBeginRow = 1;
-    private BatchCollector collector;
 
-    private static final int COLLECTION = 1;
     private static final int SORT = 2;
     private static final int OUTPUT = 3;
 
@@ -62,11 +58,10 @@ public class SortNode extends RelationalNode {
     public void reset() {
         super.reset();
         sortUtility = null;
-        phase = COLLECTION;
+        phase = SORT;
         outputID = null;
         rowCount = -1;
         outputBeginRow = 1;
-        this.collector = null;
     }
 
 	public void setSortElements(List sortElements, List<Boolean> sortTypes) {
@@ -90,56 +85,33 @@ public class SortNode extends RelationalNode {
 		throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
 		super.open();
-		this.collector = new BatchCollector(this.getChildren()[0]);
 	}
 
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        try {
-
-            if(this.phase == COLLECTION) {
-                collectionPhase();
-            }
-
-            if(this.phase == SORT) {
-                sortPhase();
-            }
-
-            return outputPhase();
-        } catch(TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e, e.getMessage());
+        if(this.phase == SORT) {
+            sortPhase();
         }
+
+        return outputPhase();
     }
 
-    private void collectionPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException, MetaMatrixProcessingException {
-		try {
-			collector.collectTuples();
-		} catch (BlockedOnMemoryException e) {
-			throw e;
-		} catch (BlockedException e) {
-			if (mode != Mode.DUP_REMOVE || !collector.collectedAny()) {
-				throw e;
-			}
-		}
-		if (this.sortUtility == null) {
-	        this.sortUtility = new SortUtility(collector.getTupleSourceID(), sortElements,
+    private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+    	if (this.sortUtility == null) {
+	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), sortElements,
 	                                            sortTypes, this.mode, getBufferManager(),
-	                                            getConnectionID(), true);
+	                                            getConnectionID());
 		}
-        this.phase = SORT;
-    }
-
-    private void sortPhase() throws BlockedException, MetaMatrixComponentException {
 		this.outputID = this.sortUtility.sort();
         this.phase = OUTPUT;
     }
 
-    private TupleBatch outputPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException {
+    private TupleBatch outputPhase() throws BlockedException, MetaMatrixComponentException {
     	if (this.rowCount == -1) {
-    		this.rowCount = getBufferManager().getFinalRowCount(outputID);
-    		if (this.rowCount == -1) {
-    			this.phase = this.collector.isDone()?SORT:COLLECTION;
+    		if (this.outputID.isFinal()) {
+    			this.rowCount = this.outputID.getRowCount();
+    		} else {
+    			this.phase = SORT;
     		}
     	}
         if(this.rowCount == 0 || (this.rowCount != -1 && this.outputBeginRow > this.rowCount)) {
@@ -148,23 +120,17 @@ public class SortNode extends RelationalNode {
             return terminationBatch;
         }
         int beginPinned = this.outputBeginRow;
-        try {
-            TupleBatch outputBatch = getBufferManager().pinTupleBatch(outputID, beginPinned);
-            
-            this.outputBeginRow += outputBatch.getRowCount();
+        TupleBatch outputBatch = this.outputID.getBatch(beginPinned);
+        
+        this.outputBeginRow += outputBatch.getRowCount();
 
-            outputBatch = removeUnrelatedColumns(outputBatch);
+        outputBatch = removeUnrelatedColumns(outputBatch);
 
-            if(rowCount != -1 && outputBeginRow > rowCount) {
-                outputBatch.setTerminationFlag(true);
-            }
-
-            return outputBatch;
-        } catch(MemoryNotAvailableException e) {
-            throw BlockedOnMemoryException.INSTANCE;
-        } finally {
-            getBufferManager().unpinTupleBatch(outputID, beginPinned);
+        if(rowCount != -1 && outputBeginRow > rowCount) {
+            outputBatch.setTerminationFlag(true);
         }
+
+        return outputBatch;
     }
 
 	private TupleBatch removeUnrelatedColumns(TupleBatch outputBatch) {
@@ -182,17 +148,9 @@ public class SortNode extends RelationalNode {
     public void close() throws MetaMatrixComponentException {
         if (!isClosed()) {
             super.close();
-            try {
-                if(this.collector != null) {
-                    this.collector.close();
-                    this.collector = null;
-                }
-                if(this.outputID != null) {
-                    getBufferManager().removeTupleSource(outputID);
-                    this.outputID = null;
-                }
-            } catch(TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(e, e.getMessage());
+            if(this.outputID != null) {
+                this.outputID.remove();
+                this.outputID = null;
             }
         }
     }

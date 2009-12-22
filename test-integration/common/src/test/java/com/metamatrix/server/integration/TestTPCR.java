@@ -59,16 +59,6 @@ public class TestTPCR extends BaseQueryTest {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(METADATA,  
-                 "select l_orderkey, sum(l_extendedprice*(1-l_discount)) as revenue, o_orderdate, o_shippriority " + //$NON-NLS-1$
-                 "from customer, orders, lineitem " +  //$NON-NLS-1$
-                 "where c_mktsegment = 'BUILDING' and c_custkey = o_custkey and l_orderkey = o_orderkey " +  //$NON-NLS-1$
-                 "and o_orderdate < {ts'1995-03-15 00:00:00'} " +  //$NON-NLS-1$
-                 "and l_shipdate > {ts'1995-03-15 00:00:00'} " +  //$NON-NLS-1$
-                 "group by l_orderkey, o_orderdate, o_shippriority " + //$NON-NLS-1$
-                 "order by revenue desc, o_orderdate", //$NON-NLS-1$
-                 finder, DEBUG);
-
         HardcodedDataManager dataMgr = new HardcodedDataManager();
     
         List[] expected =
@@ -79,7 +69,15 @@ public class TestTPCR extends BaseQueryTest {
         dataMgr.addData("SELECT g_2.l_orderkey AS c_0, SUM((g_2.l_extendedprice * (1 - g_2.l_discount))) AS c_1, g_1.o_orderdate AS c_2, g_1.o_shippriority AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_0.c_custkey = g_1.o_custkey) AND (g_2.l_orderkey = g_1.o_orderkey) AND (g_0.c_mktsegment = 'BUILDING') AND (g_1.o_orderdate < {d'1995-03-15'}) AND (g_2.l_shipdate > {ts'1995-03-15 00:00:00.0'}) GROUP BY g_2.l_orderkey, g_1.o_orderdate, g_1.o_shippriority ORDER BY c_1 DESC, c_2", //$NON-NLS-1$
                         expected);
 
-        doProcess(plan, dataMgr, expected, DEBUG);
+        doProcess(METADATA,  
+                "select l_orderkey, sum(l_extendedprice*(1-l_discount)) as revenue, o_orderdate, o_shippriority " + //$NON-NLS-1$
+                "from customer, orders, lineitem " +  //$NON-NLS-1$
+                "where c_mktsegment = 'BUILDING' and c_custkey = o_custkey and l_orderkey = o_orderkey " +  //$NON-NLS-1$
+                "and o_orderdate < {ts'1995-03-15 00:00:00'} " +  //$NON-NLS-1$
+                "and l_shipdate > {ts'1995-03-15 00:00:00'} " +  //$NON-NLS-1$
+                "group by l_orderkey, o_orderdate, o_shippriority " + //$NON-NLS-1$
+                "order by revenue desc, o_orderdate", //$NON-NLS-1$
+                finder, dataMgr, expected, DEBUG);
         
     }
     
@@ -87,13 +85,6 @@ public class TestTPCR extends BaseQueryTest {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
-                 "SELECT count (*)  " + //$NON-NLS-1$
-                 "FROM TPCR_Ora.CUSTOMER LEFT OUTER JOIN TPCR_Ora.ORDERS ON C_CUSTKEY = O_CUSTKEY " +  //$NON-NLS-1$
-                 "WHERE (O_ORDERKEY IS NULL) OR O_ORDERDATE < '1992-01-02 00:00:00' " +  //$NON-NLS-1$
-                 "AND C_ACCTBAL > 0", //$NON-NLS-1$
-                 finder, DEBUG);
-
         HardcodedDataManager dataMgr = new HardcodedDataManager();
         List[] expected =
             new List[] { Arrays.asList(new Object[] { new Integer(5) } ) };
@@ -101,7 +92,12 @@ public class TestTPCR extends BaseQueryTest {
         dataMgr.addData("SELECT COUNT(*) FROM TPCR_Ora.CUSTOMER AS g_0 LEFT OUTER JOIN TPCR_Ora.ORDERS AS g_1 ON g_0.C_CUSTKEY = g_1.O_CUSTKEY WHERE (g_1.O_ORDERKEY IS NULL) OR ((g_1.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.C_ACCTBAL > 0))", //$NON-NLS-1$
                        expected);
         
-        doProcess(plan, dataMgr, expected, DEBUG);
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+                "SELECT count (*)  " + //$NON-NLS-1$
+                "FROM TPCR_Ora.CUSTOMER LEFT OUTER JOIN TPCR_Ora.ORDERS ON C_CUSTKEY = O_CUSTKEY " +  //$NON-NLS-1$
+                "WHERE (O_ORDERKEY IS NULL) OR O_ORDERDATE < '1992-01-02 00:00:00' " +  //$NON-NLS-1$
+                "AND C_ACCTBAL > 0", //$NON-NLS-1$
+                finder, dataMgr, expected, DEBUG);
         
     }
     
@@ -122,13 +118,6 @@ public class TestTPCR extends BaseQueryTest {
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
-                 "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
-                 "LEFT OUTER JOIN TPCR_SQLS.ORDERS ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
-                 "AND O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} " + //$NON-NLS-1$
-                 "WHERE (C_ACCTBAL > 50)", //$NON-NLS-1$
-                 finder, DEBUG);
-
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
         List[] oracleExpected =
@@ -149,7 +138,12 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        doProcess(plan, dataMgr, expected, DEBUG);
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+                "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
+                "LEFT OUTER JOIN TPCR_SQLS.ORDERS ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
+                "AND O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} " + //$NON-NLS-1$
+                "WHERE (C_ACCTBAL > 50)", //$NON-NLS-1$
+                finder, dataMgr, expected, DEBUG);
         
     }     
 
@@ -164,14 +158,6 @@ public class TestTPCR extends BaseQueryTest {
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
-                 "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
-                 "LEFT OUTER JOIN " + //$NON-NLS-1$
-                 "(SELECT O_CUSTKEY, O_ORDERKEY FROM TPCR_SQLS.ORDERS WHERE O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AS X " + //$NON-NLS-1$
-                 "ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
-                 "WHERE (C_ACCTBAL > 50)", //$NON-NLS-1$
-                 finder, DEBUG);
-
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
         List[] oracleExpected =
@@ -192,7 +178,13 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        doProcess(plan, dataMgr, expected, DEBUG);
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+                "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
+                "LEFT OUTER JOIN " + //$NON-NLS-1$
+                "(SELECT O_CUSTKEY, O_ORDERKEY FROM TPCR_SQLS.ORDERS WHERE O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AS X " + //$NON-NLS-1$
+                "ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
+                "WHERE (C_ACCTBAL > 50)", //$NON-NLS-1$
+                finder, dataMgr, expected, DEBUG);
         
     }    
     

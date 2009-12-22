@@ -35,7 +35,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestXMLTypeTranslations extends BaseQueryTest {
@@ -54,11 +53,6 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         QueryMetadataInterface metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/xmltypes/test.vdb"); //$NON-NLS-1$
         
         String sql = "select * from testdocument.testDocument";  //$NON-NLS-1$
-
-        
-        ProcessorPlan plan = createPlan(metadata,  
-                 sql, 
-                 finder, DEBUG);
 
         HardcodedDataManager dataMgr = new HardcodedDataManager();
         
@@ -82,7 +76,9 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         
         
         List[] expected = new List[] { Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XSDTypesNS:test xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:XSDTypesNS=\"http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes\"><book><datetime>1903-04-04T05:06:10.0000002</datetime><double>-INF</double><float>INF</float><gday>---100</gday><gmonth>--100</gmonth><gmonthday>--04-04</gmonthday><gyear>0100</gyear><gyearmonth>1903-04</gyearmonth><string>1</string></book></XSDTypesNS:test>" })};                     //$NON-NLS-1$
-        doProcess(plan, dataMgr , expected, DEBUG);
+        doProcess(metadata,  
+                sql, 
+                finder, dataMgr , expected, DEBUG);
         
     }
     

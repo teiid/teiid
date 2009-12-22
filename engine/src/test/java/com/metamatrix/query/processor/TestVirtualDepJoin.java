@@ -39,9 +39,10 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManagerFactory.MemoryStorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
+import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.TestOptimizer;
@@ -484,9 +485,11 @@ public class TestVirtualDepJoin {
         // Run query 
         BufferManager bufferMgr = createCustomBufferMgr(2);
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-        processor.process();
+        processor.setNonBlocking(true);
+        BatchCollector collector = processor.createBatchCollector();
+        TupleBuffer id = collector.collectTuples();
 
-        TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, processor.getResultsID());
+        TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, id);
     }
 
     private BufferManager createCustomBufferMgr(int batchSize) throws MetaMatrixComponentException {
@@ -498,7 +501,7 @@ public class TestVirtualDepJoin {
         props.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
         props.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, String.valueOf(batchSize));
         props.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, String.valueOf(batchSize));
-        bufferMgr.initialize("local", props); //$NON-NLS-1$
+        bufferMgr.initialize(props);
 
         // Add unmanaged memory storage manager
         bufferMgr.setStorageManager(new MemoryStorageManager());

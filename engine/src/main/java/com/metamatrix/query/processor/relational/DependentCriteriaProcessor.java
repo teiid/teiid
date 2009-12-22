@@ -34,9 +34,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
@@ -77,7 +78,7 @@ public class DependentCriteriaProcessor {
         }
 
         public void sort() throws BlockedException,
-                   MetaMatrixComponentException {
+                   MetaMatrixComponentException, MetaMatrixProcessingException {
             if (dvs == null) {
             	if (sortUtility == null) {
             		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
@@ -87,9 +88,9 @@ public class DependentCriteriaProcessor {
 	                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
 	                }
 	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
-	                this.sortUtility = new SortUtility(originalVs.getTupleSourceID(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(), dependentNode.getConnectionID());
+	                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID());
             	}
-            	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager());
+            	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager().getProcessorBatchSize() / 2);
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
     			}
@@ -99,10 +100,7 @@ public class DependentCriteriaProcessor {
         public void close() throws MetaMatrixComponentException {
             if (dvs != null) {
             	sortUtility = null;
-                try {
-                    dependentNode.getBufferManager().removeTupleSource(dvs.getTupleSourceID());
-                } catch (TupleSourceNotFoundException e) {
-                }
+                dvs.getTupleBuffer().remove();
                 dvs = null;
             }
         }
@@ -189,7 +187,7 @@ public class DependentCriteriaProcessor {
         }
     }
 
-    public Criteria prepareCriteria() throws MetaMatrixComponentException {
+    public Criteria prepareCriteria() throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
         if (phase == SORT) {
         	for (TupleState state : dependentState.values()) {

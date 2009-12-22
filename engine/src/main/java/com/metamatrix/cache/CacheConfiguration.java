@@ -24,11 +24,10 @@ package com.metamatrix.cache;
 
 public class CacheConfiguration {
 	
-	public static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.MRU, 60*60, 100); // 1 hours with 100 nodes.
+	public static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100); // 1 hours with 100 nodes.
 		
 	public enum Policy {
 		LRU,  // Least Recently Used
-		MRU,  // Most Recently Used
 		FIFO, // First in First Out
 		LFU;  // Least frequently Used
 	}

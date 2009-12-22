@@ -26,8 +26,8 @@ import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.sql.lang.Command;
 
@@ -48,5 +48,5 @@ public interface TempTableStore {
     
     public void removeTempTableByName(String tempTableName) throws MetaMatrixComponentException;
     
-    public TupleSourceID getTupleSourceID(String tempTableName);
+    public TupleBuffer getTupleSourceID(String tempTableName);
 }

@@ -30,7 +30,6 @@ import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
-import org.jboss.cache.eviction.MRUAlgorithmConfig;
 import org.jboss.cache.jmx.JmxRegistrationManager;
 
 import com.google.inject.Inject;
@@ -90,11 +89,6 @@ public class JBossCacheFactory implements CacheFactory {
 			lru.setMaxAge(config.getMaxAgeInSeconds()*1000);
 			lru.setTimeToLive(-1); // -1 no limit
 			evictionConfig = lru;
-		}
-		else if (config.getPolicy() == Policy.MRU) {
-			MRUAlgorithmConfig mru = new MRUAlgorithmConfig();
-			mru.setMaxNodes(config.getMaxNodes());
-			evictionConfig = mru;
 		}
 		else if (config.getPolicy() == Policy.FIFO) {
 			FIFOAlgorithmConfig fifo = new FIFOAlgorithmConfig();

@@ -196,8 +196,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			ExecSqlInstruction inst = new ExecSqlInstruction(commandPlan,
-					dynamicCommand.getIntoGroup());
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan);
 
             dynamicProgram = new Program();
             dynamicProgram.addInstruction(inst);
@@ -332,7 +331,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	public Map getDescriptionProperties() {
 		Map props = new HashMap();
 		props.put(PROP_TYPE, "SQL"); //$NON-NLS-1$
-		props.put(PROP_SQL, ExecSqlInstruction.RS_NAME); 
+		props.put(PROP_SQL, CreateCursorResultSetInstruction.RS_NAME); 
 		if (dynamicCommand.getIntoGroup() != null) {
 			props.put(PROP_GROUP, dynamicCommand.getIntoGroup().toString());
 		}

@@ -28,22 +28,24 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
+import com.metamatrix.query.processor.BatchCollector;
+import com.metamatrix.query.processor.BatchIterator;
 
 class SourceState {
 
     private RelationalNode source;
     private BatchCollector collector;
-    private IndexedTupleSource tupleSource;
-    private TupleSourceID tsID;
+    private TupleBuffer buffer;
     private List<Object> outerVals;
     private IndexedTupleSource iterator;
     private int[] expressionIndexes;
     private List currentTuple;
     private int maxProbeMatch = 1;
     private boolean distinct;
+    
+    private boolean canBuffer = true;
     
     public SourceState(RelationalNode source, List expressions) {
         this.source = source;
@@ -64,8 +66,8 @@ class SourceState {
         return indecies;
     }
     
-    TupleSourceID createSourceTupleSource() throws MetaMatrixComponentException {
-    	return this.source.getBufferManager().createTupleSource(source.getElements(), source.getConnectionID(), TupleSourceType.PROCESSOR);
+    TupleBuffer createSourceTupleBuffer() throws MetaMatrixComponentException {
+    	return this.source.getBufferManager().createTupleBuffer(source.getElements(), source.getConnectionID(), TupleSourceType.PROCESSOR);
     }
     
     public List saveNext() throws MetaMatrixComponentException, MetaMatrixProcessingException {
@@ -79,52 +81,35 @@ class SourceState {
         this.currentTuple = null;
     }
     
-    public void close() throws TupleSourceNotFoundException, MetaMatrixComponentException {
+    public void close() {
         closeTupleSource(); 
     }
 
-    private void closeTupleSource() throws TupleSourceNotFoundException,
-                                   MetaMatrixComponentException {
-        if (this.tsID != null) {
-            this.source.getBufferManager().removeTupleSource(tsID);
-            this.tsID = null;
+    private void closeTupleSource() {
+        if (this.buffer != null) {
+            this.buffer.remove();
+            this.buffer = null;
+        }
+        if (this.iterator != null) {
+        	this.iterator = null;
         }
     }
     
-    public int getRowCount() {
-    	return this.collector.getRowCount();
+    public int getRowCount() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	return this.getTupleBuffer().getRowCount();
     }
 
-    /**
-     * Collect the underlying batches into a tuple source.  Subsequent calls will return that tuple source
-     */
-    public TupleSourceID collectTuples() throws MetaMatrixComponentException,
-                               MetaMatrixProcessingException {
-        if (collector == null) {
-            collector = new BatchCollector(source);
-        }
-        TupleSourceID result = collector.collectTuples();
-        if (this.tsID == null) {
-            setTupleSource(result);
-        }
-        return result;
-    }
-
-    void setTupleSource(TupleSourceID result) throws MetaMatrixComponentException, TupleSourceNotFoundException {
-        closeTupleSource();
-        this.tsID = result;
-        try {
-            this.tupleSource = source.getBufferManager().getTupleSource(result);
-        } catch (TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e, e.getMessage());
-        }
+    void setTupleSource(TupleBuffer result) {
+    	closeTupleSource();
+        this.buffer = result;
     }
     
     IndexedTupleSource getIterator() {
         if (this.iterator == null) {
-            if (this.tupleSource != null) {
-                iterator = this.tupleSource;
+            if (this.buffer != null) {
+                iterator = buffer.createIndexedTupleSource();
             } else {
+            	canBuffer = false;
                 // return a TupleBatch tuplesource iterator
                 iterator = new BatchIterator(this.source);
             }
@@ -152,8 +137,18 @@ class SourceState {
         return maxProbeMatch;
     }
 
-    public TupleSourceID getTupleSourceID() {
-        return this.tsID;
+    public TupleBuffer getTupleBuffer() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        if (this.buffer == null) {
+        	if (!canBuffer) {
+        		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
+        	}
+        	if (collector == null) {
+                collector = new BatchCollector(source, createSourceTupleBuffer());
+            }
+            TupleBuffer result = collector.collectTuples();
+            setTupleSource(result);
+        }
+        return this.buffer;
     }
 
     public boolean isDistinct() {

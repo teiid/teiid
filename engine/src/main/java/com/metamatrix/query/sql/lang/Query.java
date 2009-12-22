@@ -429,7 +429,14 @@ public class Query extends QueryCommand {
 		if(this.getInto() != null){
 			return false;
 		}
+		if (isXML) {
+			return true;
+		}
 		List projectedSymbols = getProjectedSymbols();
+		return areResultsCachable(projectedSymbols);
+	}
+
+	static boolean areResultsCachable(List projectedSymbols) {
 		for(int i=0; i<projectedSymbols.size(); i++){
 			SingleElementSymbol projectedSymbol = (SingleElementSymbol)projectedSymbols.get(i);
 			if(DataTypeManager.isLOB(projectedSymbol.getType())) {
@@ -440,7 +447,7 @@ public class Query extends QueryCommand {
 	}
     
     public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        if(isXML) {
+        if(isXML) { //TODO: this is incorrect
             return 0;
         }
         
@@ -448,13 +455,7 @@ public class Query extends QueryCommand {
             return 2;
         }
         
-        //any subcommand performing an update requires a transaction
-        //since we may not be able to roll it back other wise
-        int count = getSubCommandsUpdatingModelCount(metadata);
-        if (count > 0) {
-        	return 2;
-        }
-        return 0;
+        return getSubCommandsUpdatingModelCount(metadata);
     }
 
     /** 

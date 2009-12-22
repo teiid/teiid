@@ -22,13 +22,12 @@
 
 package com.metamatrix.query.eval;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -319,21 +318,13 @@ public class Evaluator {
         } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
     		ValueIteratorSource vis = (ValueIteratorSource)getContext(criteria).getVariableContext().getGlobalValue(ref.getContextSymbol());
-    		HashSet<Object> values;
+    		Set<Object> values;
     		try {
     			values = vis.getCachedSet(ref.getValueExpression());
     		} catch (MetaMatrixProcessingException e) {
     			throw new CriteriaEvaluationException(e, e.getMessage());
     		}
         	if (values != null) {
-        		if (leftValue instanceof BigDecimal) {
-        			for (Object object : values) {
-						if (compareValues(leftValue, object) == 0) {
-							return true;
-						}
-					}
-        			return false;
-        		}
         		return values.contains(leftValue);
         	}
         	//there are too many values to justify a linear search or holding

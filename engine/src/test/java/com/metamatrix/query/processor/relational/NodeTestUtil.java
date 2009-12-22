@@ -23,19 +23,13 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.Properties;
-import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
-import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManagerFactory.MemoryStorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 
 
 /** 
@@ -63,13 +57,13 @@ public class NodeTestUtil {
     }
     
     static BufferManager createBufferManager(Properties bmProps) {
-        BufferManagerImpl bufferManager = new TestableBufferManagerImpl();
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
         bmProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
         try {
-            bufferManager.initialize("local", bmProps); //$NON-NLS-1$
-        } catch (MetaMatrixComponentException err) {
-            throw new MetaMatrixRuntimeException(err);
-        }
+			bufferManager.initialize(bmProps);
+		} catch (MetaMatrixComponentException e) {
+			throw new RuntimeException(e);
+		}
 
         // Add storage managers
         
@@ -81,42 +75,5 @@ public class NodeTestUtil {
     private static StorageManager createFakeDatabaseStorageManager() {
         return new MemoryStorageManager();        
     } 
-    
-    public static class TestableBufferManagerImpl extends BufferManagerImpl {
-        
-        private Set blockOn;
-        private int pinCount = 0;
-        private boolean wasBlocked;
-        
-        /** 
-         * @see com.metamatrix.common.buffer.impl.BufferManagerImpl#pinTupleBatch(com.metamatrix.common.buffer.TupleSourceID, int)
-         */
-        public TupleBatch pinTupleBatch(TupleSourceID tupleSourceID,
-                                        int beginRow) throws TupleSourceNotFoundException,
-                                                      MemoryNotAvailableException,
-                                                      MetaMatrixComponentException {
-            if (blockOn != null && blockOn.contains(new Integer(++pinCount))) {
-                wasBlocked = true;
-                throw new MemoryNotAvailableException();
-            }
-            
-            wasBlocked = false;
-            
-            return super.pinTupleBatch(tupleSourceID, beginRow);
-        }
-
-        
-        /** 
-         * @param blockOn The blockOn to set.
-         */
-        public void setBlockOn(Set blockOn) {
-            this.blockOn = blockOn;
-        }
-        
-        public boolean wasBlocked() {
-            return wasBlocked;
-        }
-        
-    }
     
 }

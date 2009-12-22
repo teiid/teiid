@@ -46,7 +46,7 @@ public class TestDuplicateFilter extends TestCase {
     public void helpTestDuplicateFilter(Object[] input, Class dataType, int expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         
-        DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test", mgr.getProcessorBatchSize()); //$NON-NLS-1$
+        DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test"); //$NON-NLS-1$
         filter.initialize(dataType, dataType);
         filter.reset();
         

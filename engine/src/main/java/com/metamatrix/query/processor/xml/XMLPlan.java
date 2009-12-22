@@ -62,17 +62,16 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
@@ -108,8 +107,7 @@ public class XMLPlan extends BaseProcessorPlan {
         
     // is document in progress currently?
     boolean docInProgress = false;
-    TupleSourceID docInProgressTupleSourceId = null;
-    int chunkPosition = 0;
+    private TupleBuffer docInProgressTupleSourceId;
     
     // Post-processing
 	private String styleSheet;
@@ -177,25 +175,22 @@ public class XMLPlan extends BaseProcessorPlan {
     public TupleBatch nextBatch()
         throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
         
-        // If finished, processXML();
         while(true){
-	        List rows = processXML();
-	        
-            // we have no more to send
-	        if (rows == null){
-	        	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
+            LobChunk chunk = getNextXMLChunk(this.chunkSize);  
+            
+            if (chunk == null) {
+            	Assertion.assertTrue(!this.docInProgress);
+            	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
 	        	batch.setTerminationFlag(true);
 	        	return batch;
-	        }
+            }
+	                    
+            XMLType doc = processXML(chunk);
             
-            // we got one more to send.
-    	    List listOfRows = new ArrayList();
-        	listOfRows.add(rows);
-        
-	        TupleBatch batch = new TupleBatch(nextBatchCount++, listOfRows);
-            // when true; multiple doc return fails.
-    	    batch.setTerminationFlag(false);
-        	return batch;
+            if (doc != null) {
+    	        TupleBatch batch = new TupleBatch(nextBatchCount++, Arrays.asList(Arrays.asList(doc)));
+    	        return batch;
+            }
         }
     }
     
@@ -217,15 +212,9 @@ public class XMLPlan extends BaseProcessorPlan {
      * many XML documents, if the root of the document model has
      * a mapping class (i.e. result set) associated with it.</p>
      *
-     * @return List a single tuple that contains the ValueID
-     * of the XML document for the first document  chunk, or empty row
-     * for the rest of the document chunk; or will return null when 
-     * there are no more documents to return
      */
-    private List processXML()
-        throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
-
-
+    private XMLType processXML(LobChunk chunk)
+        throws MetaMatrixComponentException, BlockedException {
 
         boolean postProcess = (this.styleSheet != null || this.shouldValidate);
         // Note that we need to stream the document right away, as multiple documents
@@ -234,12 +223,7 @@ public class XMLPlan extends BaseProcessorPlan {
         // right away so that we give way to next batch call. (this due to bad design of xml model)
         // also note that there could be "inst" object alive but no more chunks; that is reason
         // for "if" null block
-        LobChunk chunk = getNextXMLChunk(this.chunkSize);  
         XMLType xml = null;            
-        
-        if (chunk == null) {
-            return null;
-        }
         
         // if the chunk size is less than one chunk unit then send this as string based xml.
         if (!this.docInProgress && chunk.isLast()) {
@@ -251,28 +235,25 @@ public class XMLPlan extends BaseProcessorPlan {
             if (!this.docInProgress) {
                 this.docInProgress = true;
                 this.docInProgressTupleSourceId = XMLUtil.createXMLTupleSource(this.bufferMgr, this.getContext().getConnectionID());
-                this.chunkPosition = 1;
             }
             
             // now save the chunk of data to the buffer manager and move on.
-            this.bufferMgr.addStreamablePart(this.docInProgressTupleSourceId, chunk, chunkPosition++);
+            this.docInProgressTupleSourceId.addTuple(Arrays.asList(chunk));
                                 
             // now document is finished, so create a xml object and return to the client.
             if (chunk.isLast()) {
-                this.bufferMgr.setStatus(this.docInProgressTupleSourceId, TupleSourceStatus.FULL);
+                this.docInProgressTupleSourceId.close();
                 
                 // we want this to be naturally feed by chunks whether inside
                 // or out side the processor
-                xml = new XMLType(XMLUtil.getFromBufferManager(bufferMgr, this.docInProgressTupleSourceId, getProperties()));
-                this.bufferMgr.setPersistentTupleSource(this.docInProgressTupleSourceId, xml);
+                xml = new XMLType(XMLUtil.getFromBufferManager(this.docInProgressTupleSourceId, getProperties()));
+                this.docInProgressTupleSourceId.setContainingLobReference(xml);
                 
                 //reset current document state.
                 this.docInProgress = false;
                 this.docInProgressTupleSourceId = null;
-                this.chunkPosition = 0;
-            }
-            else {
-                throw BlockedOnMemoryException.INSTANCE;
+            } else {
+            	return null; //need to continue processing
             }
         }
 
@@ -281,9 +262,7 @@ public class XMLPlan extends BaseProcessorPlan {
             xml = postProcessDocument(xml, getProperties());
         }
                                 
-        List row = new ArrayList(1);
-        row.add(xml);                    
-        return row;
+        return xml;
     }
         
     

@@ -36,16 +36,13 @@ import org.junit.Test;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.processor.relational.NodeTestUtil.TestableBufferManagerImpl;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -54,15 +51,9 @@ import com.metamatrix.query.util.CommandContext;
 public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;
-    public static final int INT_BATCH_SIZE = TestSortNode.getIntBatchSize(); //the size of 100 integers    
     
-    private void helpTestSort(long bytesInMemory, List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(bytesInMemory, BATCH_SIZE, BATCH_SIZE);
-        TestableBufferManagerImpl impl = (TestableBufferManagerImpl) mgr;
-        impl.setBlockOn(blockOn);
-        impl.getConfig().setTotalAvailableMemory(bytesInMemory);
-        impl.getConfig().setGroupUsePercentage(100);
-        impl.getConfig().setManagementInterval(0);
+    private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        BufferManager mgr = NodeTestUtil.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
         CommandContext context = new CommandContext ("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
@@ -86,36 +77,20 @@ public class TestSortNode {
         
         int currentRow = 1;
         while(true) {
-            try {
-                TupleBatch batch = sortNode.nextBatch();
-                if (mode != Mode.DUP_REMOVE) {
-	                for(int row = currentRow; row <= batch.getEndRow(); row++) {
-	                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
-	                }
+            TupleBatch batch = sortNode.nextBatch();
+            if (mode != Mode.DUP_REMOVE) {
+                for(int row = currentRow; row <= batch.getEndRow(); row++) {
+                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
                 }
-                currentRow += batch.getRowCount();    
-                if(batch.getTerminationFlag()) {
-                    break;
-                }
-            } catch (BlockedOnMemoryException e) {
-                if (!impl.wasBlocked()) {
-                    throw new BlockedOnMemoryException();
-                }
+            }
+            currentRow += batch.getRowCount();    
+            if(batch.getTerminationFlag()) {
+                break;
             }
         }
         assertEquals(expected.length, currentRow - 1);
     }
 
-    public static int getIntBatchSize() {
-        List[] expected = new List[BATCH_SIZE];
-        Arrays.fill(expected, Arrays.asList(1));
-        
-        String[] types = { "integer" };     //$NON-NLS-1$
-
-        int size = (int)SizeUtility.getBatchSize( types, expected );
-        return size;
-    }
-    
     /*
      * 1 batch all in memory
      */
@@ -158,7 +133,7 @@ public class TestSortNode {
             if (i > 0) {
                 blockedOn.add(new Integer(i));
             }
-            helpTestSort(INT_BATCH_SIZE*2, elements, data, sortElements, sortTypes, expected, blockedOn, mode);
+            helpTestSort(elements, data, sortElements, sortTypes, expected, blockedOn, mode);
         }
     }
     
@@ -209,7 +184,7 @@ public class TestSortNode {
 	                blockedOn.add(new Integer(batches*(i+1)));
 	            }
 	            //5 batches in memory out of 10 total
-	            helpTestSort(INT_BATCH_SIZE * inMemoryBatches, elements, data, sortElements, sortTypes, expected, blockedOn, mode);
+	            helpTestSort(elements, data, sortElements, sortTypes, expected, blockedOn, mode);
 	        }
         }
     }
@@ -305,7 +280,7 @@ public class TestSortNode {
         helpTestBiggerSort(10, 5);
     }
  
-    @Test(expected=BlockedOnMemoryException.class) public void testBiggerSortLowMemory() throws Exception {
+    @Test public void testBiggerSortLowMemory() throws Exception {
         helpTestBiggerSort(5, 1);
     }       
 
@@ -322,11 +297,11 @@ public class TestSortNode {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        TupleSourceID tsid = bm.createTupleSource(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
-        bm.addTupleBatch(tsid, new TupleBatch(1, new List[] {Arrays.asList(1)}));
-    	SortUtility su = new SortUtility(tsid, Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", true); //$NON-NLS-1$
-    	TupleSourceID out = su.sort();
-    	TupleSource ts = bm.getTupleSource(out);
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(1));
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test"); //$NON-NLS-1$
+    	TupleBuffer out = su.sort();
+    	TupleSource ts = out.createIndexedTupleSource();
     	assertEquals(Arrays.asList(1), ts.nextTuple());
     	try {
     		ts.nextTuple();
@@ -334,7 +309,7 @@ public class TestSortNode {
     	} catch (BlockedException e) {
     		
     	}
-    	bm.addTupleBatch(tsid, new TupleBatch(2, new List[] {Arrays.asList(2)}));
+    	tsid.addTuple(Arrays.asList(2));
     	su.sort();
     	assertEquals(Arrays.asList(2), ts.nextTuple());
     }

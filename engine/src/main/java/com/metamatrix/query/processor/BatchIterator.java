@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.query.processor.relational;
+package com.metamatrix.query.processor;
 
 import java.util.List;
 
@@ -28,14 +28,15 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
-final class BatchIterator implements
+public class BatchIterator implements
                                  IndexedTupleSource {
 
-    private final RelationalNode source;
+    private final BatchProducer source;
 
-    BatchIterator(RelationalNode source) {
+    public BatchIterator(BatchProducer source) {
         this.source = source;
     }
 
@@ -74,7 +75,7 @@ final class BatchIterator implements
     
     @Override
     public List<SingleElementSymbol> getSchema() {
-    	return source.getElements();
+    	return source.getOutputElements();
     }
     
     @Override
@@ -115,9 +116,4 @@ final class BatchIterator implements
         }
     }
     
-    @Override
-    public TupleBatch getBatch() throws MetaMatrixComponentException {
-		return currentBatch;
-    }
-
 }

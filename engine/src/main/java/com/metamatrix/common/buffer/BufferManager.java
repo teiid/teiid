@@ -25,8 +25,6 @@ package com.metamatrix.common.buffer;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.lob.LobChunk;
-import com.metamatrix.common.types.Streamable;
 
 /**
  * The buffer manager controls how memory is used and how data flows through 
@@ -37,23 +35,6 @@ import com.metamatrix.common.types.Streamable;
  * management issues.
  */
 public interface BufferManager {
-	
-	public enum TupleSourceStatus {
-		/**
-		 * Indicates the status of a {@link TupleSource} is active; the
-		 * TupleSource is itself currently still receiving data.
-		 * @see #getStatus
-		 * @see #setStatus
-		 */
-		ACTIVE,
-		/**
-		 * Indicates the status of a {@link TupleSource} is full; the
-		 * TupleSource has loaded all of its tuples.
-		 * @see #getStatus
-		 * @see #setStatus
-		 */
-		FULL
-	}
 	
 	public enum TupleSourceType {
 		/**
@@ -79,29 +60,9 @@ public interface BufferManager {
      */
     int getConnectorBatchSize();
     
-	/**
-	 * Creates a tuple source based on a schema and properties describing
-	 * hints about the source
-     * @param elements Elements of the tuple source
-	 * @param groupName Tuple source group name
-	 * @param tupleSourceType Type of tuple source
-     * @return Identifier for tuple source
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 */
-	TupleSourceID createTupleSource(List elements, String groupName, TupleSourceType tupleSourceType) 
+	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws MetaMatrixComponentException;
 	
-	/**
-	 * Removes a tuple source by ID 
-     * @param tupleSourceID Tuple source identifier
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 */
-	void removeTupleSource(TupleSourceID tupleSourceID) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
     /**
      * Removes all tuple sources by group name
      * @param groupName Tuple source group name
@@ -109,164 +70,7 @@ public interface BufferManager {
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    void removeTupleSources(String groupName) 
+    void removeTupleBuffers(String groupName) 
     throws MetaMatrixComponentException;
-
-	/**
-	 * Gets a tuple source by ID
-     * @param tupleSourceID Tuple source identifier
-     * @return Tuple source to get tuples from the specified source
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 */
-	IndexedTupleSource getTupleSource(TupleSourceID tupleSourceID) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-    /**
-     * Gets a tuple batch by ID and indexes.  Pins this tuple batch in memory until 
-     * it is unpinned or tuple source is removed.  If memory does not exist to pin the 
-     * batch, a MemoryNotAvailableException is thrown.
-     * 
-     * @param tupleSourceID Tuple source identifier
-     * @param beginRow First row index to return
-     * @return Batch of rows starting from beginRow and not past maxEndRow
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     * @throws MemoryNotAvailableException If memory was not available for the pin
-     */
-    TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow) 
-    throws TupleSourceNotFoundException, MemoryNotAvailableException, MetaMatrixComponentException;
-
-    /**
-     * Unpins a range of rows from the given tuple source
-     * @param tupleSourceID Tuple source identifier
-     * @param firstRow First row to unpin
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    void unpinTupleBatch(TupleSourceID tupleSourceID, int firstRow) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-	/**
-	 * Gets a tuple source schema by ID 
-     * @param tupleSourceID Tuple source identifier
-     * @return List of ElementSymbol describing elements of tuple source
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 */
-    List getTupleSchema(TupleSourceID tupleSourceID) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-
-	/**
-	 * Adds a batch of tuples for the specified tuple source
-     * @param tupleSourceID Tuple source identifier
-     * @param tupleBatch Batch of rows to add
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 */
-	void addTupleBatch(TupleSourceID tupleSourceID, TupleBatch tupleBatch) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-    /**
-     * Gets the current row count 
-     * @param tupleSourceID Tuple source identifier
-     * @return Current known number of rows in tuple source 
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    int getRowCount(TupleSourceID tupleSourceID)
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-	/**
-	 * Sets the status of the tuple source
-     * @param tupleSourceID Tuple source identifier
-     * @param status New status
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     * @see TupleSourceStatus#ACTIVE
-     * @see TupleSourceStatus#FULL
-	 */
-	void setStatus(TupleSourceID tupleSourceID, TupleSourceStatus status) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-	/**
-	 * Gets the status of the tuple source
-     * @param tupleSourceID Tuple source identifier
-     * @return Status of tuple source
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     * @see TupleSourceStatus#ACTIVE
-     * @see TupleSourceStatus#FULL
-	 */
-	TupleSourceStatus getStatus(TupleSourceID tupleSourceID) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-	/**
-	 * Gets the final row count if tuple source is FULL, otherwise returns -1. 
-	 * @param tupleSourceID Tuple source identifier
-	 * @return Final row count if status == FULL, -1 otherwise
-	 */
-	int getFinalRowCount(TupleSourceID tupleSourceID) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-    
-    /**
-     * Add a streamable object to the persistent store. The distinction is made between
-     * regular tuple sources and streamable object beacuse, streamable objects are fairly
-     * large in size can not be loaded totally into memory, as other tuple sources are done
-     * this mechanism allows to stream these objects chunk by chunk. 
-     * @param tupleSourceID
-     * @param streamGlob part of the stream
-     * @param stream
-     * @throws TupleSourceNotFoundException
-     * @throws MetaMatrixComponentException
-     */
-    void addStreamablePart(TupleSourceID tupleSourceID, LobChunk streamGlob, int beginRow)
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-    
-    /**
-     * Returns the streamable batch object's part stored with specified identifier
-     * @param tupleSourceID - identifier
-     * @return LobChunk a part of the Streamable object stored.
-     * @throws TupleSourceNotFoundException
-     * @throws MetaMatrixComponentException
-     */
-    LobChunk getStreamablePart(TupleSourceID tupleSourceID, int beginRow)
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-        
-    /**
-     * Release batches that have been pinned by this thread.
-     * This method should be called when processing is terminated
-     * to ensure that the memory can be freed. 
-     */
-    void releasePinnedBatches() throws MetaMatrixComponentException;
-    
-    /**
-     * Return the LOB associated with the referenceId
-     * @param id
-     * @param referenceId
-     * @return
-     * @throws TupleSourceNotFoundException
-     * @throws MetaMatrixComponentException
-     */
-    Streamable<?> getStreamable(TupleSourceID id, String referenceId) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-    
-    /**
-     * Assign the {@link TupleSource} as the persistent stream for the {@link Streamable}
-     * @param id
-     * @param s
-     * @throws TupleSourceNotFoundException 
-     */
-    void setPersistentTupleSource(TupleSourceID id, Streamable<? extends Object> s)
-    throws TupleSourceNotFoundException;
     
 }

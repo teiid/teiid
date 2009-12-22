@@ -89,8 +89,7 @@ public interface StorageManager {
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-	void removeBatches(TupleSourceID sourceID) 
-    throws MetaMatrixComponentException;
+	void removeBatches(TupleSourceID sourceID);
 
     /**
      * Shut down the Storage Manager.

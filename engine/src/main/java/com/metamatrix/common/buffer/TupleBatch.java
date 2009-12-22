@@ -41,14 +41,11 @@ import com.metamatrix.common.batch.BatchSerializer;
  */
 public class TupleBatch implements Externalizable {
     
-    public static final long UNKNOWN_SIZE = -1;
-    
     private int rowOffset;    
     private List[] tuples;
     
     // Optional state
     private boolean terminationFlag = false;
-    private long size = UNKNOWN_SIZE;
     
     /**
      * Contains ordered data types of each of the columns in the batch. Although it is not serialized,
@@ -143,22 +140,6 @@ public class TupleBatch implements Externalizable {
         this.terminationFlag = terminationFlag;    
     }
     
-    /**
-     * Get the size of this batch - may be constant indicating unknown.
-     * @return Size of batch in bytes or UNKNOWN_SIZE
-     */
-    public long getSize() {
-        return this.size;
-    }
-    
-    /**
-     * Set the size of this batch.
-     * @param size Size in bytes or UNKNOWN_SIZE 
-     */
-    public void setSize(long size) {
-        this.size = size;
-    }
-    
     public void setDataTypes(String[] types) {
         this.types = types;
     }
@@ -179,13 +160,11 @@ public class TupleBatch implements Externalizable {
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        size = in.readLong();
         rowOffset = in.readInt();
         terminationFlag = in.readBoolean();
         tuples = BatchSerializer.readBatch(in, types);
     }
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeLong(size);
         out.writeInt(rowOffset);
         out.writeBoolean(terminationFlag);
         BatchSerializer.writeBatch(out, types, tuples);

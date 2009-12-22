@@ -29,11 +29,11 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
+import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -60,7 +60,7 @@ class RelationalPlanExecutor implements PlanExecutor {
     // flag to denote the end of rows
     boolean endOfRows = false;
     // results after the execution bucket.
-    TupleSource tupleSource;
+    IndexedTupleSource tupleSource;
     // cached current row of results.
     List currentRow;
     int currentRowNumber = 0;
@@ -90,20 +90,15 @@ class RelationalPlanExecutor implements PlanExecutor {
      * @see com.metamatrix.query.processor.xml.PlanExecutor#execute(java.util.Map)
      */
     public void execute(Map referenceValues) throws MetaMatrixComponentException, BlockedException, MetaMatrixProcessingException {        
-        try {
-            // set the dynamic reference values
-            setReferenceValues(referenceValues);
-            
-            // execute
-            this.internalProcessor.process(Integer.MAX_VALUE); //TODO: but an actual value here
-        } catch (MetaMatrixComponentException e) {
-            throw e;
-        } catch (MetaMatrixProcessingException e) {
-        	throw e;
+        if (this.tupleSource == null) {
+        	setReferenceValues(referenceValues);
+            this.tupleSource = new BatchIterator(internalProcessor);
         }
+        //force execution
+        this.tupleSource.hasNext();
     }    
     
-    void setReferenceValues(Map<ElementSymbol, Object> referencesValues) throws MetaMatrixComponentException {
+    void setReferenceValues(Map<ElementSymbol, Object> referencesValues) {
         if (referencesValues == null || referencesValues.isEmpty()) {
         	return;
         }
@@ -118,14 +113,6 @@ class RelationalPlanExecutor implements PlanExecutor {
      * @throws MetaMatrixComponentException
      */
     public List nextRow() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        if (this.tupleSource == null) {
-            try {
-                this.tupleSource = this.bufferMgr.getTupleSource(this.internalProcessor.getResultsID());
-            } catch (TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("tuple_not_found", this.resultInfo.getResultSetName())); //$NON-NLS-1$                
-            }
-        }
-        
         // if we not already closed the tuple source; look for more results.
         if (!endOfRows) {
 
@@ -166,12 +153,8 @@ class RelationalPlanExecutor implements PlanExecutor {
      * Close the executor and release all the resources.
      */
     public void close() throws MetaMatrixComponentException {
-        try {
-            this.bufferMgr.removeTupleSource(this.internalProcessor.getResultsID());
-        } catch (TupleSourceNotFoundException e) {
-            
-        } 
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"removed tuple source", this.internalProcessor.getResultsID(), "for result set", this.internalProcessor.getResultsID()}); //$NON-NLS-1$ //$NON-NLS-2$
+		this.internalProcessor.closeProcessing();
+        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
     }
   
 }
