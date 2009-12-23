@@ -22,20 +22,12 @@
 
 package com.metamatrix.query.processor;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.util.CommandContext;
 
 public class TestBaseProcessorPlan extends TestCase {
 
@@ -44,7 +36,7 @@ public class TestBaseProcessorPlan extends TestCase {
     }
 
     public void testGetAndClearWarnings() {        
-        FakeProcessorPlan plan = new FakeProcessorPlan();
+        FakeProcessorPlan plan = new FakeProcessorPlan(Collections.emptyList(), Collections.emptyList());
         MetaMatrixException warning = new MetaMatrixException("test"); //$NON-NLS-1$
         plan.addWarning(warning);
         
@@ -52,65 +44,5 @@ public class TestBaseProcessorPlan extends TestCase {
         assertEquals("Did not get expected number of warnings", 1, warnings.size()); //$NON-NLS-1$
         assertEquals("Did not get expected warning", warning, warnings.get(0)); //$NON-NLS-1$
         assertNull("Did not clear warnings from plan", plan.getAndClearWarnings());         //$NON-NLS-1$
-    }
-
-    private static class FakeProcessorPlan extends ProcessorPlan {
-            
-        
-            /**
-         * @see java.lang.Object#clone()
-         */
-        public FakeProcessorPlan clone() {
-            return null;
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#close()
-         */
-        public void close() throws MetaMatrixComponentException {
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#getOutputElements()
-         */
-        public List getOutputElements() {
-            return null;
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#initialize(com.metamatrix.query.processor.ProcessorDataManager, java.lang.Object, com.metamatrix.common.buffer.BufferManager, java.lang.String, int)
-         */
-        public void initialize(
-            CommandContext context,
-            ProcessorDataManager dataMgr,
-            BufferManager bufferMgr) {
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#nextBatch()
-         */
-        public TupleBatch nextBatch() throws BlockedException, MetaMatrixComponentException {
-            return null;
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#open()
-         */
-        public void open() throws MetaMatrixComponentException {
-        }
-
-        public Map getDescriptionProperties() {
-            return new HashMap();
-        }
-        
-        /** 
-         * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-         * @since 4.2
-         */
-        public Collection getChildPlans() {
-            return Collections.EMPTY_LIST;
-        }
-        
-
     }
 }

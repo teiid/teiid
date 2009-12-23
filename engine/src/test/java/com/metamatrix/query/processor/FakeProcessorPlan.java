@@ -22,10 +22,20 @@
 
 package com.metamatrix.query.processor;
 
-import java.util.*;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.*;
+import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -36,7 +46,8 @@ public class FakeProcessorPlan extends ProcessorPlan {
     private List batches;
     int batchIndex = 0;
     private int nextBatchRow = 1;
-
+    private boolean opened = false;
+    
     /**
      * Constructor for FakeProcessorPlan.
      * @param batches List of things to return in response to nextBatch() - typically 
@@ -47,6 +58,21 @@ public class FakeProcessorPlan extends ProcessorPlan {
         this.outputElements = outputElements;
         this.batches = batches;
     }
+    
+    public FakeProcessorPlan(int counts) {
+    	List[] rows = new List[counts];
+    	for (int i = 0; i < counts; i++) {
+            rows[i] = Arrays.asList(new Object[] {new Integer(1)});
+        }
+        TupleBatch batch = new TupleBatch(1, rows);
+        batch.setTerminationFlag(true);
+        this.batches = Arrays.asList(batch);
+        this.outputElements = Command.getUpdateCommandSymbol();
+    }
+    
+    public boolean isOpened() {
+		return opened;
+	}
 
     /**
      * @see java.lang.Object#clone()
@@ -67,13 +93,6 @@ public class FakeProcessorPlan extends ProcessorPlan {
     }
 
     /**
-     * @see com.metamatrix.query.processor.ProcessorPlan#connectTupleSource(com.metamatrix.common.buffer.TupleSource, com.metamatrix.common.buffer.TupleSourceID)
-     */
-    public void connectTupleSource(TupleSource source, int dataRequestID) {
-        // nothing
-    }
-
-    /**
      * @see com.metamatrix.query.processor.ProcessorPlan#getOutputElements()
      */
     public List getOutputElements() {
@@ -84,7 +103,8 @@ public class FakeProcessorPlan extends ProcessorPlan {
      * @see com.metamatrix.query.processor.ProcessorPlan#open()
      */
     public void open() throws MetaMatrixComponentException {
-        // nothing
+    	assertFalse("ProcessorPlan.open() should not be called more than once", opened); //$NON-NLS-1$
+        opened = true;
     }
 
     /**
@@ -120,14 +140,6 @@ public class FakeProcessorPlan extends ProcessorPlan {
      */
     public List getSchema() {
         return this.outputElements;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.processor.ProcessorPlan#getUpdateCount()
-     */
-    public int getUpdateCount() {
-        // TODO Auto-generated method stub
-        return 0;
     }
 
     public Map getDescriptionProperties() {
