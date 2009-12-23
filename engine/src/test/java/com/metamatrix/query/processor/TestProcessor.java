@@ -48,9 +48,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
@@ -198,19 +197,20 @@ public class TestProcessor {
         }
     }
 
-    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager) throws TupleSourceNotFoundException, MetaMatrixComponentException {
+    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager) {
         helpProcessException(plan, dataManager, null);
     }
     
-    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager, String expectedErrorMessage) throws TupleSourceNotFoundException, MetaMatrixComponentException {
-    	TupleSourceID tsId = null;
+    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager, String expectedErrorMessage) {
+    	TupleBuffer tsId = null;
     	BufferManager bufferMgr = null;
         try {   
             bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
             CommandContext context = new CommandContext("0", "test", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-            tsId = processor.getResultsID();
-            processor.process();
+            processor.setNonBlocking(true);
+            BatchCollector collector = processor.createBatchCollector();
+            tsId = collector.collectTuples();
             fail("Expected error during processing, but got none."); //$NON-NLS-1$
         } catch(MetaMatrixCoreException e) {
             // ignore - this is expected
@@ -218,7 +218,9 @@ public class TestProcessor {
                 assertEquals(expectedErrorMessage, e.getMessage());
             }
         } finally {
-        	bufferMgr.removeTupleSource(tsId);
+        	if (tsId != null) {
+        		tsId.remove();
+        	}
         }
     }
         
@@ -227,15 +229,19 @@ public class TestProcessor {
         bufferMgr.getConfig().setProcessorBatchSize(context.getProcessorBatchSize());
         bufferMgr.getConfig().setConnectorBatchSize(context.getProcessorBatchSize());
         context.getNextRand(0);
-        TupleSourceID id = null;
+        TupleBuffer id = null;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-            id = processor.getResultsID();
-    		processor.process();
-            assertEquals(0, bufferMgr.getPinnedCount());
-            if ( expectedResults != null ) examineResults(expectedResults, bufferMgr, processor.getResultsID());
+            processor.setNonBlocking(true);
+            BatchCollector collector = processor.createBatchCollector();
+            id = collector.collectTuples();
+            if ( expectedResults != null ) {
+            	examineResults(expectedResults, bufferMgr, id);
+            }
         } finally {
-            bufferMgr.removeTupleSource(id);
+        	if (id != null) {
+        		id.remove();
+        	}
         }
     }
 
@@ -247,16 +253,16 @@ public class TestProcessor {
      * @throws MetaMatrixProcessingException 
      * @since 4.3
      */
-    static void examineResults(List[] expectedResults,BufferManager bufferMgr,TupleSourceID tsID) 
+    static void examineResults(List[] expectedResults,BufferManager bufferMgr,TupleBuffer tsID) 
         throws MetaMatrixComponentException,SQLException, MetaMatrixProcessingException {
         
         // Create QueryResults from TupleSource
-        TupleSource ts = bufferMgr.getTupleSource(tsID);
-        int count = bufferMgr.getFinalRowCount(tsID);   
+        TupleSource ts = tsID.createIndexedTupleSource();
+        int count = tsID.getRowCount();   
 
 		if(DEBUG) {
-            System.out.println("\nResults:\n" + bufferMgr.getTupleSchema(tsID)); //$NON-NLS-1$
-            TupleSource ts2 = bufferMgr.getTupleSource(tsID);
+            System.out.println("\nResults:\n" + tsID.getSchema()); //$NON-NLS-1$
+            TupleSource ts2 = tsID.createIndexedTupleSource();
             for(int j=0; j<count; j++) {
                 System.out.println("" + j + ": " + ts2.nextTuple());	 //$NON-NLS-1$ //$NON-NLS-2$
             }    
@@ -276,6 +282,7 @@ public class TestProcessor {
             	if(cellValue instanceof XMLType){
                     XMLType id =  (XMLType)cellValue; 
                     String actualDoc = id.getString(); 
+                    record = new ArrayList(record);
                     record.set(0, actualDoc);
             	}
             }
@@ -289,7 +296,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, DEBUG, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 		return context;
@@ -369,9 +376,8 @@ public class TestProcessor {
                     Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
                     } );                                     
                                      
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }                  
 
@@ -425,9 +431,8 @@ public class TestProcessor {
                     Arrays.asList(new Object[] { "cc",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
                     } );              
             
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }    
     
@@ -528,9 +533,8 @@ public class TestProcessor {
                     } );       
 
                                      
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }     
     
@@ -570,9 +574,8 @@ public class TestProcessor {
         
             dataMgr.registerTuples(groupID, elementSymbols, tuples);
 
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }
 
@@ -602,9 +605,8 @@ public class TestProcessor {
                 dataMgr.registerTuples(groupID, elementSymbols, tuples);
             }
 
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }
     
@@ -647,9 +649,8 @@ public class TestProcessor {
         
             dataMgr.registerTuples(groupID, elementSymbols, tuples);
 
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }    
 
@@ -673,9 +674,8 @@ public class TestProcessor {
         
             dataMgr.registerTuples(groupID, elementSymbols, tuples);
 
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
+        } catch(MetaMatrixException e) { 
+        	throw new RuntimeException(e);
         }
     }
 
