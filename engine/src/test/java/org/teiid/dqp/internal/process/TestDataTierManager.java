@@ -22,11 +22,8 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -39,9 +36,6 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -61,8 +55,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.dynamic.SimpleQueryProcessorFactory;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
@@ -316,23 +308,6 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
-    private static class FakeProcessorPlan extends ProcessorPlan {
-        public FakeProcessorPlan clone() {return this;}
-        public void close() throws MetaMatrixComponentException {}
-        public List getOutputElements() {return Collections.EMPTY_LIST;}
-        public void initialize(CommandContext context,ProcessorDataManager dataMgr,BufferManager bufferMgr) {}
-        public TupleBatch nextBatch() throws BlockedException,MetaMatrixComponentException {
-        	ArrayList one = new ArrayList(); one.add("1");
-        	ArrayList two = new ArrayList(); two.add("2");
-        	List[] results = {one, two};
-        	return new TupleBatch(1, results);
-        }
-        public void open() throws MetaMatrixComponentException {}
-        public void reset() {}
-        public Map getDescriptionProperties() {return null;}
-        public Collection getChildPlans() { return Collections.EMPTY_LIST; }
-    }
-
     private static class FakeDataService implements DataService {
         private int failOnCall = 10000;
         private int calls = 0;
