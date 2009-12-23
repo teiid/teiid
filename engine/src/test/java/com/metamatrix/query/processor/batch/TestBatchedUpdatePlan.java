@@ -36,8 +36,8 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.util.CommandContext;
 
 
@@ -58,7 +58,7 @@ public class TestBatchedUpdatePlan extends TestCase {
             totalCommands += commandsPerPlan[i];
             plans.add(new FakeProcessorPlan(commandsPerPlan[i]));
         }
-        BatchedUpdatePlan plan = new BatchedUpdatePlan(plans, totalCommands);
+        BatchedUpdatePlan plan = new BatchedUpdatePlan(plans, totalCommands, null);
         TupleBatch batch = plan.nextBatch();
         assertEquals(totalCommands, batch.getRowCount());
         for (int i = 1; i <= totalCommands; i++) {
@@ -71,7 +71,7 @@ public class TestBatchedUpdatePlan extends TestCase {
         for (int i = 0; i < plans.length; i++) {
             plans[i] = new FakeProcessorPlan(1);
         }
-        BatchedUpdatePlan plan = new BatchedUpdatePlan(Arrays.asList(plans), plans.length);
+        BatchedUpdatePlan plan = new BatchedUpdatePlan(Arrays.asList(plans), plans.length, null);
         plan.open();
         // First plan may or may not be opened, but all subsequent plans should not be opened.
         for (int i = 1; i < plans.length; i++) {
@@ -91,14 +91,14 @@ public class TestBatchedUpdatePlan extends TestCase {
         helpTestNextBatch(new int[] {1, 1, 1, 1});
     }
     
-    private class FakeProcessorPlan extends BaseProcessorPlan {
+    private class FakeProcessorPlan extends ProcessorPlan {
         private int counts = 0;
         private boolean opened = false;
         private int updateConnectorCount = 1;
         private FakeProcessorPlan(int commands) {
             counts = commands;
         }       
-        public Object clone() {return null;}
+        public FakeProcessorPlan clone() {return null;}
         public void close() throws MetaMatrixComponentException {}
         public void connectTupleSource(TupleSource source, int dataRequestID) {}
         public List getOutputElements() {return null;}

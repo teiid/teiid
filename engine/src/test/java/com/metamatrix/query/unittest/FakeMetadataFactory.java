@@ -887,8 +887,10 @@ public class FakeMetadataFactory {
         QueryNode vspqn41 = new QueryNode("vsp41", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 where e2=15; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp41 = createVirtualProcedure("pm1.vsp41", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn41); //$NON-NLS-1$
 
-        vm1g1.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm1.g1(e2) values(INPUT.e2); END"); //$NON-NLS-1$
-        vm1g1.putProperty(FakeMetadataObject.Props.UPDATE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = UPDATE pm1.g1 SET e2 = INPUT.e2; END"); //$NON-NLS-1$       
+        vm1g1.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm1.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
+        vm1g1.putProperty(FakeMetadataObject.Props.UPDATE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = UPDATE pm1.g1 SET e1 = INPUT.e1, e2 = INPUT.e2, e3 = INPUT.e3, e4=INPUT.e4 WHERE TRANSLATE CRITERIA; END"); //$NON-NLS-1$       
+        vm1g1.putProperty(FakeMetadataObject.Props.DELETE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm1.g1 WHERE TRANSLATE CRITERIA; END"); //$NON-NLS-1$       
+
         vm1g37.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm4.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
         vm1g37.putProperty(FakeMetadataObject.Props.DELETE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm4.g1 where translate criteria; END"); //$NON-NLS-1$
         QueryNode vspqn37 = new QueryNode("vsp37", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); END"); //$NON-NLS-1$ //$NON-NLS-2$

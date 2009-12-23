@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.metadata.runtime.MetadataStore;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.metadata.runtime.MetadataStore;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -316,11 +316,9 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
-    private static class FakeProcessorPlan implements ProcessorPlan {
-        public Object clone() {return this;}
+    private static class FakeProcessorPlan extends ProcessorPlan {
+        public FakeProcessorPlan clone() {return this;}
         public void close() throws MetaMatrixComponentException {}
-        public List getAndClearWarnings() {return null;}
-        public CommandContext getContext() {return null;}
         public List getOutputElements() {return Collections.EMPTY_LIST;}
         public void initialize(CommandContext context,ProcessorDataManager dataMgr,BufferManager bufferMgr) {}
         public TupleBatch nextBatch() throws BlockedException,MetaMatrixComponentException {

@@ -30,7 +30,7 @@ import com.metamatrix.query.util.CommandContext;
 
 /**
  */
-public class FakeProcessorPlan extends BaseProcessorPlan {
+public class FakeProcessorPlan extends ProcessorPlan {
 
     private List outputElements;
     private List batches;
@@ -51,7 +51,7 @@ public class FakeProcessorPlan extends BaseProcessorPlan {
     /**
      * @see java.lang.Object#clone()
      */
-    public Object clone() {
+    public FakeProcessorPlan clone() {
         throw new UnsupportedOperationException();
     }
 

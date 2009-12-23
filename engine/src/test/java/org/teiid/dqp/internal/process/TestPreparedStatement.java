@@ -124,8 +124,21 @@ public class TestPreparedStatement {
         //make sure the plan is only created once
         assertEquals("should reuse the plan", exHitCount, prepPlanCache.hitCount); //$NON-NLS-1$
                 
+        // If we are using FakeDataManager, stop command recording to prevent
+        // duplicate commands
+        boolean dmir = false;
+        if (dataManager instanceof FakeDataManager && ((FakeDataManager) dataManager).isRecordingCommands()) {
+        	dmir = true;
+        	((FakeDataManager) dataManager).setRecordingCommands(false);
+        }
         // Run query again
         TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
+        
+        // If we are using FakeDataManager and we stopped it from recording, 
+        // start it back up again
+        if (dmir == true) {
+        	((FakeDataManager) dataManager).setRecordingCommands(true);
+        }
         
         //get the plan again with a new connection
         assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, 7, callableStatement, false));

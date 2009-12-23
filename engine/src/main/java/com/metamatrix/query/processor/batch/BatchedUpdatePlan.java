@@ -34,20 +34,23 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
 
 
 /** 
  * Plan for execution for a batched update command. The plan executes the child plans of the
  * individual commands in order.
+ * 
+ * If variableContexts are provided, then this is a bulk update where all plans are the same object.
+ * 
  * @since 4.2
  */
-public class BatchedUpdatePlan extends BaseProcessorPlan {
+public class BatchedUpdatePlan extends ProcessorPlan {
     
     /** Array that holds the child update plans */
     private ProcessorPlan[] updatePlans;
@@ -60,6 +63,8 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
     /** The position of the command for which the update count is being retrieved */
     private int commandIndex = 0;
     
+    private List<VariableContext> contexts; //only set for bulk updates
+    
     /**
      *  
      * @param childPlans the child update plans for this batch
@@ -67,22 +72,29 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
      * commands have been batched together.
      * @since 4.2
      */
-    public BatchedUpdatePlan(List childPlans, int commandsInBatch) {
+    public BatchedUpdatePlan(List childPlans, int commandsInBatch, List<VariableContext> contexts) {
         this.updatePlans = (ProcessorPlan[])childPlans.toArray(new ProcessorPlan[childPlans.size()]);
         this.planOpened = new boolean[updatePlans.length];
         this.updateCounts = new List[commandsInBatch];
+        this.contexts = contexts;
     }
 
     /** 
      * @see java.lang.Object#clone()
      * @since 4.2
      */
-    public Object clone() {
-        List clonedPlans = new ArrayList(updatePlans.length);
-        for (int i = 0; i < updatePlans.length; i++) {
-            clonedPlans.add(updatePlans[i].clone());
+    public BatchedUpdatePlan clone() {
+        List<ProcessorPlan> clonedPlans = new ArrayList<ProcessorPlan>(updatePlans.length);
+        
+        clonedPlans.add((ProcessorPlan)updatePlans[0].clone());
+        for (int i = 1; i <updatePlans.length; i++) {
+        	if (contexts == null) {
+                clonedPlans.add((ProcessorPlan)updatePlans[1].clone());        		
+        	} else {
+        		clonedPlans.add(clonedPlans.get(0));
+        	}
         }
-        return new BatchedUpdatePlan(clonedPlans, updateCounts.length);
+        return new BatchedUpdatePlan(clonedPlans, updateCounts.length, contexts);
     }
 
     /** 
@@ -90,8 +102,11 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
      * @since 4.2
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+    	context = (CommandContext)context.clone();
+    	context.setVariableContext(new VariableContext()); //start a new root variable context
+    	this.setContext(context);
         // Initialize all the child plans
-        for (int i = 0; i < updatePlans.length; i++) {
+        for (int i = 0; i < getPlanCount(); i++) {
             updatePlans[i].initialize(context, dataMgr, bufferMgr);
         }
     }
@@ -111,8 +126,7 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
     public void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         // It's ok to open() the first plan, as it is not dependent on any prior commands.
         // See note for defect 16166 in the nextBatch() method.
-        updatePlans[0].open();
-        planOpened[0] = true;
+       openPlan();
     }
 
     /** 
@@ -130,8 +144,7 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
                  * guarantee that the commands in the previous plan are completed before the commands in any subsequent
                  * plans are executed.
                  */
-                updatePlans[planIndex].open();
-                planOpened[planIndex] = true;
+            	openPlan();
             }
             // Execute nextBatch() on each plan in sequence
             List[] currentBatch = updatePlans[planIndex].nextBatch().getAllTuples(); // Can throw BlockedException
@@ -147,6 +160,19 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
         batch.setTerminationFlag(true);
         return batch;
     }
+
+	private void openPlan() throws MetaMatrixComponentException,
+			MetaMatrixProcessingException {
+		if (this.contexts != null && !this.contexts.isEmpty()) {
+			CommandContext context = updatePlans[planIndex].getContext();
+			context.getVariableContext().clear();
+			VariableContext currentValues = this.contexts.get(planIndex);
+			context.getVariableContext().putAll(currentValues); 
+		}
+		updatePlans[planIndex].reset();
+		updatePlans[planIndex].open();
+		planOpened[planIndex] = true;
+	}
 
     /** 
      * @see com.metamatrix.query.processor.ProcessorPlan#close()
@@ -185,7 +211,7 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
         Map props = new HashMap();
         props.put(PROP_TYPE, "Batched Update Plan"); //$NON-NLS-1$
         List children = new ArrayList();
-        for (int i = 0; i < updatePlans.length; i++) {
+        for (int i = 0; i < getPlanCount(); i++) {
             children.add(updatePlans[i].getDescriptionProperties());
         }
         props.put(PROP_CHILDREN, children);
@@ -195,13 +221,17 @@ public class BatchedUpdatePlan extends BaseProcessorPlan {
     
     public String toString() {
         StringBuffer val = new StringBuffer("BatchedUpdatePlan {\n"); //$NON-NLS-1$
-        for (int i = 0; i < updatePlans.length; i++) {
+        for (int i = 0; i < getPlanCount(); i++) {
             val.append(updatePlans[i])
                .append("\n"); //$NON-NLS-1$
         }
         val.append("}\n"); //$NON-NLS-1$
         return val.toString();
     }
+
+	private int getPlanCount() {
+		return (contexts != null?1:updatePlans.length);
+	}
 
     /**
      * Returns the child plans for this batch. Used primarily for unit tests. 

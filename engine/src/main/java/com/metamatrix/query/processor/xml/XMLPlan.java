@@ -73,7 +73,6 @@ import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -89,7 +88,7 @@ import com.metamatrix.query.util.XMLFormatConstants;
 /**
  * 
  */
-public class XMLPlan extends BaseProcessorPlan {
+public class XMLPlan extends ProcessorPlan {
 	
 	// State passed during construction
 	private XMLProcessorEnvironment env;
@@ -645,7 +644,7 @@ public class XMLPlan extends BaseProcessorPlan {
  	 * in other words, it's only safe to call clone() on a plan after nextTuple() returns null,
  	 * meaning the plan has finished processing.
  	 */
-	public Object clone(){
+	public XMLPlan clone(){
         XMLPlan xmlPlan = new XMLPlan((XMLProcessorEnvironment)this.env.clone());
         return xmlPlan;
     }

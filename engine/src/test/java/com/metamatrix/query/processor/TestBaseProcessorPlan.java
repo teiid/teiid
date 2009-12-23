@@ -35,7 +35,6 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.util.CommandContext;
 
 public class TestBaseProcessorPlan extends TestCase {
@@ -55,15 +54,13 @@ public class TestBaseProcessorPlan extends TestCase {
         assertNull("Did not clear warnings from plan", plan.getAndClearWarnings());         //$NON-NLS-1$
     }
 
-
-
-    private static class FakeProcessorPlan extends BaseProcessorPlan {
+    private static class FakeProcessorPlan extends ProcessorPlan {
             
         
             /**
          * @see java.lang.Object#clone()
          */
-        public Object clone() {
+        public FakeProcessorPlan clone() {
             return null;
         }
 
@@ -71,12 +68,6 @@ public class TestBaseProcessorPlan extends TestCase {
          * @see com.metamatrix.query.processor.ProcessorPlan#close()
          */
         public void close() throws MetaMatrixComponentException {
-        }
-
-        /**
-         * @see com.metamatrix.query.processor.ProcessorPlan#connectTupleSource(com.metamatrix.common.buffer.TupleSource, int)
-         */
-        public void connectTupleSource(TupleSource source, int dataRequestID) {
         }
 
         /**
@@ -106,14 +97,6 @@ public class TestBaseProcessorPlan extends TestCase {
          * @see com.metamatrix.query.processor.ProcessorPlan#open()
          */
         public void open() throws MetaMatrixComponentException {
-        }
-
-        /* (non-Javadoc)
-         * @see com.metamatrix.query.processor.ProcessorPlan#getUpdateCount()
-         */
-        public int getUpdateCount() {
-            // TODO Auto-generated method stub
-            return 0;
         }
 
         public Map getDescriptionProperties() {

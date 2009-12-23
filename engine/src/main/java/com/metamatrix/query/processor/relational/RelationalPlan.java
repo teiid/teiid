@@ -35,7 +35,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -44,7 +43,7 @@ import com.metamatrix.query.util.LogConstants;
 
 /**
  */
-public class RelationalPlan extends BaseProcessorPlan {
+public class RelationalPlan extends ProcessorPlan {
 
 	// Initialize state - don't reset
 	private RelationalNode root;
@@ -130,7 +129,7 @@ public class RelationalPlan extends BaseProcessorPlan {
 		return this.root.toString();    
 	}
     
-	public Object clone(){
+	public RelationalPlan clone(){
 		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
 		plan.setOutputElements(new ArrayList(( outputCols != null ? outputCols : Collections.EMPTY_LIST )));
 		return plan;

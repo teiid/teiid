@@ -177,4 +177,12 @@ public class VariableContext {
     	return this.variableMap.toString();
     }
     
+    public void clear() {
+    	this.variableMap.clear();
+    }
+    
+    public void putAll(VariableContext other) {
+    	this.variableMap.putAll(other.variableMap);
+    }
+    
 }

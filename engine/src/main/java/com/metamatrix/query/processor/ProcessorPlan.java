@@ -22,10 +22,12 @@
 
 package com.metamatrix.query.processor;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.*;
 import com.metamatrix.query.processor.BatchCollector.BatchProducer;
@@ -44,7 +46,11 @@ import com.metamatrix.query.util.CommandContext;
  * the call to {@link #close}.
  * </p>
  */
-public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
+public abstract class ProcessorPlan implements Cloneable, Describable, BatchProducer {
+	
+    private List warnings = null;
+    
+    private CommandContext context;
 
 	/**
 	 * Initialize the plan with some required pieces of data for making 
@@ -56,7 +62,7 @@ public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
 	 * @param dataMgr Data manager reference
      * @param bufferMgr Buffer manager reference
 	 */
-	void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr);
+	public abstract void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr);
 	
     /**
      * Get all warnings found while processing this plan.  These warnings may
@@ -65,30 +71,52 @@ public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
      * the current warnings list.  The warnings are in order they were detected.
      * @return Current list of warnings, never null
      */
-    List<Exception> getAndClearWarnings();
+    public List getAndClearWarnings() {
+        if (warnings == null) {
+            return null;
+        }
+        List copied = warnings;
+        warnings = null;
+        return copied;
+    }
     
+    protected void addWarning(MetaMatrixException warning) {
+        if (warnings == null) {
+            warnings = new ArrayList(1);
+        }
+        warnings.add(warning);
+    }
+
     /**
      * Reset a plan so that it can be processed again.
      */
-    void reset();
+    public void reset() {
+    	this.warnings = null;
+    }
     
     /**
      * Get list of resolved elements describing output columns for this plan.
      * @return List of SingleElementSymbol
      */
-    List getOutputElements();
+    public abstract List getOutputElements();
     
     /**
      * Get the processor context, which can be modified.
      * @return context object
      */
-    CommandContext getContext();
+    public CommandContext getContext() {
+        return context;
+    }
+    
+    public void setContext(CommandContext context) {
+		this.context = context;
+	}
     
     /**
      * Open the plan for processing.
      * @throws MetaMatrixComponentException
      */
-    void open() throws MetaMatrixComponentException, MetaMatrixProcessingException;
+    public abstract void open() throws MetaMatrixComponentException, MetaMatrixProcessingException;
     
     /**
      * Get a batch of results or possibly an Exception.
@@ -98,15 +126,14 @@ public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
      * @throws MetaMatrixProcessingException for business rule exception, related
      * to user input or modeling
      */
-    TupleBatch nextBatch() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException;
+    public abstract TupleBatch nextBatch() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException;
 
     /**
      * Close the plan after processing.
      * @throws MetaMatrixComponentException
      */
-    void close() throws MetaMatrixComponentException;
+    public abstract void close() throws MetaMatrixComponentException;
     
-	
 	/**
 	 * Return a safe clone of the ProcessorPlan.  A ProcessorPlan may only be
 	 * safely cloned in between processings.  That is, it is only safe to clone
@@ -115,12 +142,12 @@ public interface ProcessorPlan extends Cloneable, Describable, BatchProducer {
 	 * @return safe clone of this ProcessorPlan, as long as it is not open for
 	 * processing
 	 */
-	Object clone();
+	public abstract ProcessorPlan clone();
     
     /**
      * Finds all nested plans and returns them.
      * @return List of ProcessorPlan 
      * @since 4.2
      */
-    Collection getChildPlans();
+    public abstract Collection getChildPlans();
 }

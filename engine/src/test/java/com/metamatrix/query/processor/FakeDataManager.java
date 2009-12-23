@@ -76,16 +76,24 @@ public class FakeDataManager implements ProcessorDataManager {
 
     // Track history to verify it later
     private List<String> queries = new ArrayList<String>();
-    
-	public FakeDataManager() {
-	}
+    private boolean recordingCommands = true;
     
     /**
      * Return string form of all queries run against this FDM 
-     * @return List<String>
+     * @return List<String> recorded commands
      */
     public List<String> getQueries() {
         return this.queries;
+    }
+	        
+    /**
+     * Clears the list of recorded commands and returns a copy
+     * @return a copy of the recorded commands prior to clearing the list
+     */
+    public List<String> clearQueries() {
+    	List<String> rc = new ArrayList<String>(this.getQueries());
+    	this.queries.clear();
+    	return rc;
     }
 	        
 	public void registerTuples(Object groupID, List elements, List[] data) {
@@ -101,9 +109,10 @@ public class FakeDataManager implements ProcessorDataManager {
         
         LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", processorID, ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        
-        if (! (command instanceof BatchedUpdateCommand) ) {
-        	this.queries.add(command.toString());
+        if (this.recordingCommands) {
+            if (! (command instanceof BatchedUpdateCommand) ) {
+            	this.queries.add(command.toString());
+            }
         }
 
         if (ReferenceCollectorVisitor.getReferences(command).size() > 0) {
@@ -122,9 +131,11 @@ public class FakeDataManager implements ProcessorDataManager {
     		if ( command.getSubCommands().get(0) instanceof Update ) {
     			group = ((Update)command.getSubCommands().get(0)).getGroup();
     		}
-        	for ( Iterator<Command> it = ((BatchedUpdateCommand) command).getUpdateCommands().iterator(); it.hasNext(); ) {
-        		this.queries.add(it.next().toString());
-        	}
+    		if (this.recordingCommands) {
+            	for ( Iterator<Command> it = ((BatchedUpdateCommand) command).getUpdateCommands().iterator(); it.hasNext(); ) {
+            		this.queries.add(it.next().toString());
+            	}
+    		}
 		}
 		
 		Object groupID = group.getMetadataID();
@@ -350,8 +361,31 @@ public class FakeDataManager implements ProcessorDataManager {
     }
     
     @Override
-    public void clearCodeTables() {
-    	
-    }
+    public void clearCodeTables() {/* does nothing */}
+
+    /**
+     * Are commands/queries that are registered with the data manager being 
+     * recorded?
+     * <p>
+     * Recorded commands can be retrieved by {@link #getQueries()}
+     * 
+	 * @return whether or not commands should be recorded
+	 */
+	public boolean isRecordingCommands() {
+		return recordingCommands;
+	}
+
+	/**
+	 * Indicate whether or not commands/queries registered with the data 
+	 * manager are to be recorded in {@link #queries}.
+	 * <p>
+	 * Recorded commands can be retrieved by {@link #getQueries()}
+     * 
+	 * @param shouldRecord should commands be recorded?
+	 */
+	public void setRecordingCommands(boolean shouldRecord) {
+		this.recordingCommands = shouldRecord;
+	}
+
 
 }

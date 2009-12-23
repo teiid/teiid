@@ -191,11 +191,13 @@ public class PreparedStatementRequest extends Request {
 			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
 		}
 		boolean supportPreparedBatchUpdate = false;
+		Command command = null;
 		if (this.processPlan instanceof RelationalPlan) {
 			RelationalPlan rPlan = (RelationalPlan)this.processPlan;
 			if (rPlan.getRootNode() instanceof AccessNode) {
 				AccessNode aNode = (AccessNode)rPlan.getRootNode();
 				String modelName = aNode.getModelName();
+				command = aNode.getCommand();
 		        SourceCapabilities caps = capabilitiesFinder.findCapabilities(modelName);
 		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
 			}
@@ -216,11 +218,13 @@ public class PreparedStatementRequest extends Request {
 					List<Object> multiValue = multiValues.get(i);
 					multiValue.add(values.get(i));
 				}
-				continue; 
+			} else { //just accumulate copies of the command/plan - clones are not necessary
+				if (command == null) {
+					command = this.prepPlan.getCommand();
+					command.setProcessorPlan(this.processPlan);
+				}
+				commands.add(command);
 			}
-			Command c = (Command)this.prepPlan.getCommand().clone();
-			commands.add(c);
-			c.setProcessorPlan((ProcessorPlan)this.processPlan.clone());
 		}
 		
 		if (paramValues.size() > 1) {

@@ -67,9 +67,9 @@ public class TestBatchedUpdatePlanner extends TestCase {
         super(name);
     }
     
-    public static List helpGetCommands(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException  { 
+    public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException  { 
         if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
-        List commands = new ArrayList(sql.length);
+        List<Command> commands = new ArrayList<Command>(sql.length);
         for (int i = 0; i < sql.length; i++) {
             Command command = QueryParser.getQueryParser().parseCommand(sql[i]);
             QueryResolver.resolveCommand(command, md);

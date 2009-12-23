@@ -47,7 +47,6 @@ import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.DescribableUtil;
@@ -71,7 +70,7 @@ import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 /**
  */
-public class ProcedurePlan extends BaseProcessorPlan {
+public class ProcedurePlan extends ProcessorPlan {
 
 	public static class CursorState {
 		private QueryProcessor processor;
@@ -320,7 +319,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         return "ProcedurePlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
     }
 
-	public Object clone(){
+	public ProcessorPlan clone(){
         ProcedurePlan plan = new ProcedurePlan((Program)originalProgram.clone());
         plan.setUpdateProcedure(this.isUpdateProcedure());
         plan.setOutputElements(this.getOutputElements());

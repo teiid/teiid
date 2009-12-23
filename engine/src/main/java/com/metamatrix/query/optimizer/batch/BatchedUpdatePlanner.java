@@ -96,6 +96,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         List updateCommands = batchedUpdateCommand.getUpdateCommands();
         int numCommands = updateCommands.size();
         List<VariableContext> allContexts = batchedUpdateCommand.getVariableContexts();
+        List<VariableContext> planContexts = null;
+        if (allContexts != null) {
+        	planContexts = new ArrayList<VariableContext>(allContexts.size());
+        }
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             // Potentially the first command of a batch
             Command updateCommand = (Command)updateCommands.get(commandIndex);
@@ -153,6 +157,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         projectNode.addChild(batchNode);
                         // Add a new RelationalPlan that represents the plan for this batch.
                         childPlans.add(new RelationalPlan(projectNode));
+                        if (planContexts != null) {
+                        	planContexts.add(new VariableContext());
+                    	}
                         // Skip those commands that were added to this batch
                         commandIndex += batch.size() - 1;
                         commandWasBatched = true;
@@ -166,9 +173,12 @@ public class BatchedUpdatePlanner implements CommandPlanner {
             		plan = QueryOptimizer.optimizePlan(cmd, metadata, idGenerator, capFinder, analysisRecord, context);
             	}
                 childPlans.add(plan);
+                if (allContexts != null) {
+                	planContexts.add(allContexts.get(commandIndex));
+                }
             }
         }
-        return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size());
+        return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size(), planContexts);
     }
     
     /**

@@ -40,9 +40,9 @@ import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.dynamic.SqlEval;
 import com.metamatrix.query.processor.xml.XMLUtil;
 import com.metamatrix.query.sql.lang.XQuery;
@@ -54,7 +54,7 @@ import com.metamatrix.query.xquery.XQueryExpression;
 /**
  * XQuery execution Plan
  */
-public class XQueryPlan extends BaseProcessorPlan {        
+public class XQueryPlan extends ProcessorPlan {        
     private XQuery xQuery;
     private BufferManager bufferMgr;
     private String xmlFormat;
@@ -76,7 +76,7 @@ public class XQueryPlan extends BaseProcessorPlan {
     /**
      * @see java.lang.Object#clone()
      */
-    public Object clone() {
+    public XQueryPlan clone() {
         XQuery clonedQuery = (XQuery)this.xQuery.clone();
         return new XQueryPlan(clonedQuery);
     }
