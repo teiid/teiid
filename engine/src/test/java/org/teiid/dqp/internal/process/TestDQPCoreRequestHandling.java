@@ -113,8 +113,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  
-        assertTrue(workItem.resultsCursor.resultsRequested);
+        addRequest(rm, r0, requestID, null, null);  
     }
     
     public void testWarnings1() {
