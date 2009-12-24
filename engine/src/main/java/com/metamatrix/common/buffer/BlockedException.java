@@ -31,7 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
  */
 public class BlockedException extends MetaMatrixComponentException {
 
-    public static final BlockedException INSTANCE = new BlockedException(""); //$NON-NLS-1$
+    public static final BlockedException INSTANCE = new BlockedException();
 
     /**
      * No-arg costructor required by Externalizable semantics
@@ -40,44 +40,4 @@ public class BlockedException extends MetaMatrixComponentException {
         super();
     }
     
-    /**
-     * Construct an instance with the message specified.
-     *
-     * @param message A message describing the exception
-     */
-    public BlockedException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Construct an instance with the message and error code specified.
-     *
-     * @param message A message describing the exception
-     * @param code The error code
-     */
-    public BlockedException( String code, String message ) {
-        super( code, message );
-    }
-
-    /**
-     * Construct an instance from a message and an exception to chain to this one.
-     *
-     * @param message A message describing the exception
-     * @param e An exception to nest within this one
-     */
-    public BlockedException( Throwable e, String message ) {
-        super( e, message );
-    }
-
-    /**
-     * Construct an instance from a message and a code and an exception to
-     * chain to this one.
-     *
-     * @param e An exception to nest within this one
-     * @param message A message describing the exception
-     * @param code A code denoting the exception
-     */
-    public BlockedException( Throwable e, String code, String message ) {
-        super( e, code, message );
-    }
 }

@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BufferManagerPropertyNames;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
@@ -90,12 +90,12 @@ public class FileStorageManager implements StorageManager {
     /**
      * Initialize with properties
      * @param props Initialization properties
-     * @see com.metamatrix.common.buffer.BufferManagerPropertyNames#BUFFER_STORAGE_DIRECTORY
-     * @see com.metamatrix.common.buffer.BufferManagerPropertyNames#MAX_OPEN_FILES
-     * @see com.metamatrix.common.buffer.BufferManagerPropertyNames#MAX_FILE_SIZE
+     * @see com.metamatrix.common.buffer.BufferManager#BUFFER_STORAGE_DIRECTORY
+     * @see com.metamatrix.common.buffer.BufferManager#MAX_OPEN_FILES
+     * @see com.metamatrix.common.buffer.BufferManager#MAX_FILE_SIZE
      */
     public void initialize(Properties props) throws MetaMatrixComponentException {
-        this.directory = props.getProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY);
+        this.directory = props.getProperty(BufferManager.BUFFER_STORAGE_DIRECTORY);
         if(this.directory == null) {
         	throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
         }
@@ -111,11 +111,15 @@ public class FileStorageManager implements StorageManager {
         }
 
         // Set up max number of open file descriptors
-        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManagerPropertyNames.MAX_OPEN_FILES, 10);
+        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManager.MAX_OPEN_FILES, 10);
         
         // Set the max file size
-        maxFileSize = PropertiesUtils.getIntProperty(props, BufferManagerPropertyNames.MAX_FILE_SIZE, 2048) * 1024L * 1024L; // Multiply by 1MB
+        maxFileSize = PropertiesUtils.getIntProperty(props, BufferManager.MAX_FILE_SIZE, 2048) * 1024L * 1024L; // Multiply by 1MB
     }
+    
+    public String getDirectory() {
+		return directory;
+	}
 
     /**
      * Look up tuple source info and possibly create.  First the file map is used to find an

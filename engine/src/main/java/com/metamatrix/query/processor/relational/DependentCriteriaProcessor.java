@@ -97,7 +97,7 @@ public class DependentCriteriaProcessor {
             }
         }
         
-        public void close() throws MetaMatrixComponentException {
+        public void close() {
             if (dvs != null) {
             	sortUtility = null;
                 dvs.getTupleBuffer().remove();

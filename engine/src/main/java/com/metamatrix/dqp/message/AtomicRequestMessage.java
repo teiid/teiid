@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.common.buffer.impl.BufferConfig;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.query.sql.lang.Command;
 
@@ -74,7 +74,7 @@ public class AtomicRequestMessage implements Serializable {
 	private Command command;
 
 	// results fetch size
-	private int fetchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+	private int fetchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 
 	// The time when the command was created by the client
 	private Date submittedTimestamp;

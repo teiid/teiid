@@ -24,9 +24,6 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-
 /**
  * Nested loop is currently implemented as a degenerate case of merge join. 
  * 

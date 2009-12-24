@@ -36,7 +36,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BufferManagerPropertyNames;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
@@ -61,23 +61,15 @@ public class TestFileStorageManager extends TestCase {
 	}
 	
 	// Set up the fixture for this testcase: the tables for this test.
-	public StorageManager getStorageManager(String MAX_FILE_SIZE) {
-        try {
-            Properties resourceProps = new Properties();
-            resourceProps.put(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, UnitTestUtil.getTestScratchPath());
-            if (MAX_FILE_SIZE != null) {
-                resourceProps.put(BufferManagerPropertyNames.MAX_FILE_SIZE, MAX_FILE_SIZE);
-            }
-            StorageManager sm = new FileStorageManager();
-            sm.initialize(resourceProps);
-            return sm;
-        } catch(Exception e) {
-            e.printStackTrace();
-            fail("Failure during storage manager initialization: " + e.getMessage()); //$NON-NLS-1$
-            
-            // won't be called
-            return null;
+	public StorageManager getStorageManager(String MAX_FILE_SIZE) throws MetaMatrixComponentException {
+        Properties resourceProps = new Properties();
+        resourceProps.put(BufferManager.BUFFER_STORAGE_DIRECTORY, UnitTestUtil.getTestScratchPath());
+        if (MAX_FILE_SIZE != null) {
+            resourceProps.put(BufferManager.MAX_FILE_SIZE, MAX_FILE_SIZE);
         }
+        StorageManager sm = new FileStorageManager();
+        sm.initialize(resourceProps);
+        return sm;
 	}
     
     public static TupleBatch exampleBatch(int begin, int end) {
@@ -146,17 +138,13 @@ public class TestFileStorageManager extends TestCase {
         }
     }
 
-    public void helpTestMultiThreaded(int OPEN_FILES, int NUM_THREADS, int NUM_BATCHES, int BATCH_SIZE) {
+    public void helpTestMultiThreaded(int OPEN_FILES, int NUM_THREADS, int NUM_BATCHES, int BATCH_SIZE) throws MetaMatrixComponentException {
         Properties resourceProps = new Properties();        
         String nonExistentDirectory = UnitTestUtil.getTestScratchPath() + File.separator + "testMultiThread"; //$NON-NLS-1$
-        resourceProps.put(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
-        resourceProps.put(BufferManagerPropertyNames.MAX_OPEN_FILES, "" + OPEN_FILES); //$NON-NLS-1$
+        resourceProps.put(BufferManager.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
+        resourceProps.put(BufferManager.MAX_OPEN_FILES, "" + OPEN_FILES); //$NON-NLS-1$
         final StorageManager sm = getStorageManager(null);
-        try {
-            sm.initialize(resourceProps);
-        } catch(MetaMatrixComponentException e) {
-            fail("Unexpected exception during initialization: " + e.getMessage()); //$NON-NLS-1$
-        }
+        sm.initialize(resourceProps);
         
         // Create threads
         AddGetWorker[] threads = new AddGetWorker[NUM_THREADS];
@@ -198,17 +186,13 @@ public class TestFileStorageManager extends TestCase {
         
     }
 
-    public void helpTestRandomThreads(int OPEN_FILES, int NUM_THREADS, int NUM_BATCHES, int BATCH_SIZE, int RANDOM_OPS) {
+    public void helpTestRandomThreads(int OPEN_FILES, int NUM_THREADS, int NUM_BATCHES, int BATCH_SIZE, int RANDOM_OPS) throws MetaMatrixComponentException {
         Properties resourceProps = new Properties();        
         String nonExistentDirectory = UnitTestUtil.getTestScratchPath() + File.separator + "testMultiThread"; //$NON-NLS-1$
-        resourceProps.put(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
-        resourceProps.put(BufferManagerPropertyNames.MAX_OPEN_FILES, "" + OPEN_FILES); //$NON-NLS-1$
+        resourceProps.put(BufferManager.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
+        resourceProps.put(BufferManager.MAX_OPEN_FILES, "" + OPEN_FILES); //$NON-NLS-1$
         final StorageManager sm = getStorageManager(null);
-        try {
-            sm.initialize(resourceProps);
-        } catch(MetaMatrixComponentException e) {
-            fail("Unexpected exception during initialization: " + e.getMessage()); //$NON-NLS-1$
-        }
+        sm.initialize(resourceProps);
         
         // Create threads
         RandomAccessWorker[] threads = new RandomAccessWorker[NUM_THREADS];
@@ -296,7 +280,7 @@ public class TestFileStorageManager extends TestCase {
         Properties resourceProps = new Properties();
         
         String nonExistentDirectory = UnitTestUtil.getTestScratchPath() + File.separator + "GONZO"; //$NON-NLS-1$
-        resourceProps.put(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
+        resourceProps.put(BufferManager.BUFFER_STORAGE_DIRECTORY, nonExistentDirectory);
         StorageManager sm = new FileStorageManager();
         
         sm.initialize(resourceProps);
@@ -327,27 +311,27 @@ public class TestFileStorageManager extends TestCase {
     }
     
     // Test with more open files than number of threads
-    public void testMultiThreaded1() {
+    public void testMultiThreaded1() throws Exception {
         helpTestMultiThreaded(6, 5, 5, 100);
     }
 
     // Test with fewer open files than number of threads
-    public void testMultiThreaded2() {
+    public void testMultiThreaded2() throws Exception {
         helpTestMultiThreaded(1, 2, 5, 100);
     }
 
     // Test 1 random thread
-    public void testRandomThreads1() {
+    public void testRandomThreads1() throws Exception {
         helpTestRandomThreads(10, 1, 5, 20, 30);
     }
 
     // Test several random threads
-    public void testRandomThreads2() {
+    public void testRandomThreads2() throws Exception {
         helpTestRandomThreads(10, 5, 5, 20, 30);
     }
 
     // Test several random threads, low open files
-    public void testRandomThreads3() {
+    public void testRandomThreads3() throws Exception {
         helpTestRandomThreads(2, 4, 5, 20, 30);
     }
     

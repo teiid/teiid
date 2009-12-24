@@ -214,7 +214,10 @@ public class TestJoinNode {
         
     public void helpTestJoin() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	for (int batchSize : new int[] {1, 10, leftTuples.length, 100}) {
-	        helpCreateJoin();                
+	        helpCreateJoin();        
+	        if (batchSize == 0) {
+	        	continue;
+	        }
 	        helpTestJoinDirect(expected, batchSize);
 	        List[] temp = leftTuples;
 	        leftTuples = rightTuples;

@@ -207,7 +207,7 @@ public class TestGroupingNode extends TestCase {
     // Same as test2, but uses processor batch size smaller than number of groups
     public void test3() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        ((BufferManagerImpl)mgr).getConfig().setProcessorBatchSize(5);
+        ((BufferManagerImpl)mgr).setProcessorBatchSize(5);
 
         GroupingNode node = getExampleGroupingNode();         
         CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
@@ -308,7 +308,7 @@ public class TestGroupingNode extends TestCase {
 
     private void helpTestLookupFunctionInAggregate(int batchSize) throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        ((BufferManagerImpl)mgr).getConfig().setProcessorBatchSize(batchSize);
+        ((BufferManagerImpl)mgr).setProcessorBatchSize(batchSize);
 
         // Set up
         GroupingNode node = new GroupingNode(1);

@@ -26,7 +26,6 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
@@ -41,9 +40,8 @@ public class NodeTestUtil {
 
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
-        bmProps.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
-        bmProps.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, "" + connectorBatchSize); //$NON-NLS-1$
+        bmProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
+        bmProps.setProperty(BufferManager.CONNECTOR_BATCH_SIZE, "" + connectorBatchSize); //$NON-NLS-1$
         return createBufferManager(bmProps);
     }
     
@@ -51,14 +49,12 @@ public class NodeTestUtil {
 
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
-        bmProps.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
+        bmProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
         return createBufferManager(bmProps);
     }
     
     static BufferManager createBufferManager(Properties bmProps) {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
-        bmProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
         try {
 			bufferManager.initialize(bmProps);
 		} catch (MetaMatrixComponentException e) {

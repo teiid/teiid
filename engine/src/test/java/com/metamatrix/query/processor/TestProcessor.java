@@ -226,8 +226,8 @@ public class TestProcessor {
         
     public static void doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
         BufferManagerImpl bufferMgr = (BufferManagerImpl)BufferManagerFactory.getStandaloneBufferManager();
-        bufferMgr.getConfig().setProcessorBatchSize(context.getProcessorBatchSize());
-        bufferMgr.getConfig().setConnectorBatchSize(context.getProcessorBatchSize());
+        bufferMgr.setProcessorBatchSize(context.getProcessorBatchSize());
+        bufferMgr.setConnectorBatchSize(context.getProcessorBatchSize());
         context.getNextRand(0);
         TupleBuffer id = null;
         try {

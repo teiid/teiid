@@ -43,6 +43,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
@@ -55,31 +56,34 @@ import com.metamatrix.query.sql.symbol.Expression;
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 
-    // Initialized stuff
     private String lookup;
-    private BufferConfig config;
-
+    
+	// Configuration 
+    private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+    private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+    private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
+    
     private Map<TupleSourceID, TupleBuffer> tupleSourceMap = new ConcurrentHashMap<TupleSourceID, TupleBuffer>();
     private Map<String, Set<TupleSourceID>> groupInfos = new HashMap<String, Set<TupleSourceID>>();
 
     private StorageManager diskMgr;
 
     private AtomicLong currentTuple = new AtomicLong(0);
-
-    /**
-     * Get the configuration of the buffer manager
-     * @return Configuration
-     */
-    public BufferConfig getConfig() {
-        return this.config;
-    }
+    
+    public int getMaxProcessingBatches() {
+		return maxProcessingBatches;
+	}
+    
+    public void setMaxProcessingBatches(int maxProcessingBatches) {
+		this.maxProcessingBatches = maxProcessingBatches;
+	}
 
     /**
      * Get processor batch size
      * @return Number of rows in a processor batch
      */
     public int getProcessorBatchSize() {        
-        return config.getProcessorBatchSize();
+        return this.processorBatchSize;
     }
 
     /**
@@ -87,8 +91,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
      * @return Number of rows in a connector batch
      */
     public int getConnectorBatchSize() {
-        return config.getConnectorBatchSize();
+        return this.connectorBatchSize;
     }
+    
+    public void setConnectorBatchSize(int connectorBatchSize) {
+        this.connectorBatchSize = connectorBatchSize;
+    } 
+
+    public void setProcessorBatchSize(int processorBatchSize) {
+        this.processorBatchSize = processorBatchSize;
+    } 
 
     /**
      * Add a storage manager to this buffer manager, order is unimportant
@@ -99,6 +111,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	Assertion.isNull(diskMgr);
         this.diskMgr = storageManager;
     }
+    
+    public StorageManager getStorageManager() {
+		return diskMgr;
+	}
     
     @Override
     public TupleBuffer createTupleBuffer(List elements, String groupName,
@@ -224,8 +240,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	@Override
 	public void initialize(Properties props)
 			throws MetaMatrixComponentException {
-		this.config = new BufferConfig(props);
 		this.lookup = "local"; //$NON-NLS-1$
+		PropertiesUtils.setBeanProperties(this, props, "metamatrix.buffer"); //$NON-NLS-1$
 	}
 
 	@Override

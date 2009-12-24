@@ -24,8 +24,8 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -73,15 +73,15 @@ public class SortUtility {
 	//constructor state
     private TupleSource sourceID;
     private Mode mode;
-    protected BufferManager bufferManager;
+    private BufferManager bufferManager;
     private String groupName;
-    protected List schema;
+    private List<SingleElementSymbol> schema;
 	private ListNestedSortComparator comparator;
 
     private TupleBuffer output;
     private boolean doneReading;
     private int phase = INITIAL_SORT;
-    protected List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
+    private List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
     private int masterSortIndex;
 
     // Phase constants for readability
@@ -100,7 +100,7 @@ public class SortUtility {
         if (mode != Mode.SORT) {
 	        if (sortElements != null && sortElements.size() < schema.size()) {
 	        	sortElements = new ArrayList(sortElements);
-	        	List toAdd = new ArrayList(schema);
+	        	List<SingleElementSymbol> toAdd = new ArrayList<SingleElementSymbol>(schema);
 	        	toAdd.removeAll(sortElements);
 	        	sortElements.addAll(toAdd);
 	        	sortTypes = new ArrayList<Boolean>(sortTypes);
@@ -113,13 +113,11 @@ public class SortUtility {
         
         int[] cols = new int[sortElements.size()];
 
-        Iterator iter = sortElements.iterator();
-        
-        for (int i = 0; i < cols.length; i++) {
-            SingleElementSymbol elem = (SingleElementSymbol)iter.next();
+        for (ListIterator<SingleElementSymbol> iter = sortElements.listIterator(); iter.hasNext();) {
+            SingleElementSymbol elem = iter.next();
             
-            cols[i] = schema.indexOf(elem);
-            Assertion.assertTrue(cols[i] != -1);
+            cols[iter.previousIndex()] = schema.indexOf(elem);
+            Assertion.assertTrue(cols[iter.previousIndex()] != -1);
         }
         this.comparator = new ListNestedSortComparator(cols, sortTypes);
         this.comparator.setDistinctIndex(distinctIndex);
@@ -150,12 +148,13 @@ public class SortUtility {
 	}
     
 	/**
-	 * creates sort sublists stored in tuplebuffers
+	 * creates sorted sublists stored in tuplebuffers
 	 */
     protected void initialSort() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	while(!doneReading) {
-            List<List<Object>> workingTuples = new ArrayList<List<Object>>();
-	        while(!doneReading) { //TODO: limit rows
+            List<List<?>> workingTuples = new ArrayList<List<?>>();
+            int maxRows = bufferManager.getMaxProcessingBatches() * bufferManager.getProcessorBatchSize();
+	        while(!doneReading && workingTuples.size() < maxRows) {
 	            try {
 	            	List<?> tuple = sourceID.nextTuple();
 	            	
@@ -183,7 +182,7 @@ public class SortUtility {
 	        	//perform a stable sort
 	    		Collections.sort(workingTuples, comparator);
 	        }
-	        for (List<Object> list : workingTuples) {
+	        for (List<?> list : workingTuples) {
 				activeID.addTuple(list);
 			}
         }
@@ -195,7 +194,7 @@ public class SortUtility {
         this.phase = MERGE;
     }
 
-	protected void addTuple(List workingTuples, List tuple) {
+	protected void addTuple(List<List<?>> workingTuples, List<?> tuple) {
 		if (this.mode == Mode.SORT) {
 			workingTuples.add(tuple);
 			return;
@@ -214,7 +213,8 @@ public class SortUtility {
             TupleBuffer merged = createTupleBuffer();
 
             int sortedIndex = 0;
-            for(; sortedIndex<activeTupleBuffers.size(); sortedIndex++) { //TODO: limit activeTupleIDs
+            int maxSortIndex = Math.min(this.bufferManager.getMaxProcessingBatches() * 2, activeTupleBuffers.size());
+            for(; sortedIndex<maxSortIndex; sortedIndex++) { 
             	TupleBuffer activeID = activeTupleBuffers.get(sortedIndex);
             	SortedSublist sortedSublist = new SortedSublist();
             	sortedSublist.its = activeID.createIndexedTupleSource();
@@ -228,7 +228,7 @@ public class SortUtility {
             	if (!sortedSublist.duplicate) {
                 	merged.addTuple(sortedSublist.tuple);
                     if (this.output != null && sortedSublist.index != masterSortIndex && sortedIndex > masterSortIndex) {
-                    	this.output.addTuple(sortedSublist.tuple);
+                    	this.output.addTuple(sortedSublist.tuple); //a new distinct row
                     }
             	}
             	addWorkingTuple(workingTuples, sortedSublist);

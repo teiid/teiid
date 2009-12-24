@@ -194,7 +194,7 @@ public class GroupingNode extends RelationalNode {
                         functions[i] = new Max();
                     }
 
-                    if(aggSymbol.isDistinct()) {
+                    if(aggSymbol.isDistinct() && !function.equals(ReservedWords.MIN) && !function.equals(ReservedWords.MAX)) {
                         functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID());
                     }
                     

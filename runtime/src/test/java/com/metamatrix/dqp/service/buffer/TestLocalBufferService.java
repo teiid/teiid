@@ -28,8 +28,8 @@ import junit.framework.TestCase;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
+import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
@@ -90,9 +90,7 @@ public class TestLocalBufferService extends TestCase {
         assertTrue(cs.useDiskBuffering());
         
         BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        BufferConfig config = mgr.getConfig();
-        assertEquals("Did not get expected memory level", 96000000L, config.getTotalAvailableMemory()); //$NON-NLS-1$
-        assertTrue(config.getBufferStorageDirectory().endsWith(cs.getDiskBufferDirectory().getName()));
+        assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(cs.getDiskBufferDirectory().getName()));
     }
 
     public void testCheckMemPropertyGotSet2() throws Exception {
@@ -110,10 +108,6 @@ public class TestLocalBufferService extends TestCase {
         
         // all the properties are set
         assertFalse(cs.useDiskBuffering());
-        
-        BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        BufferConfig config = mgr.getConfig();
-        assertEquals("Did not get expected memory level", 64000000L, config.getTotalAvailableMemory()); //$NON-NLS-1$
     }
     
 }

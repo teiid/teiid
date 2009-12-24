@@ -26,7 +26,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
@@ -62,7 +61,6 @@ public class TempTableDataManager implements ProcessorDataManager {
      * If a temp group is <i>not</i> being selected from, then this request will be
      * passed through to the underlying ProcessorDataManager.
 	 * @throws MetaMatrixProcessingException 
-	 * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(Object, Command, String, String, TupleSourceID)
 	 */
 	public TupleSource registerRequest(
 		Object processorID,

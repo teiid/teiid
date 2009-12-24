@@ -34,7 +34,6 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.FileStorageManager;
@@ -51,12 +50,6 @@ import com.metamatrix.dqp.service.ConfigurationService;
  */
 public class EmbeddedBufferService extends EmbeddedBaseDQPService implements BufferService {
 
-    // Constants
-    private static final String DEFAULT_MANAGEMENT_INTERVAL = "500"; //$NON-NLS-1$
-    private static final String DEFAULT_LOG_STATS_INTERVAL = "60000"; //$NON-NLS-1$ // every minute
-    private static final String DEFAULT_SESSION_USE_PERCENTAGE = "100"; //$NON-NLS-1$
-    private static final String DEFAULT_MAX_OPEN_FILES = "10"; //$NON-NLS-1$
-    
     // Instance
     private BufferManagerImpl bufferMgr;
 	private File bufferDir;
@@ -95,22 +88,14 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
             
             boolean useDisk = configurationSvc.useDiskBuffering();
             bufferDir = configurationSvc.getDiskBufferDirectory();                 
-            String memAvail = configurationSvc.getBufferMemorySize();
             String processorBatchSize = configurationSvc.getProcessorBatchSize();
             String connectorBatchSize = configurationSvc.getConnectorBatchSize();
                 
             // Set up buffer configuration properties
             Properties bufferProps = new Properties();                                  
-            bufferProps.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, DEFAULT_SESSION_USE_PERCENTAGE); 
-            bufferProps.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, DEFAULT_LOG_STATS_INTERVAL); 
-            bufferProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, DEFAULT_MANAGEMENT_INTERVAL); 
-            bufferProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, memAvail);
-            bufferProps.setProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
-            bufferProps.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, processorBatchSize); 
-            bufferProps.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, connectorBatchSize); 
-            // These are not set yet..
-            //CONNECTOR_BATCH_SIZE
-            //PROCESSOR_BATCH_SIZE
+            bufferProps.setProperty(BufferManager.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
+            bufferProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, processorBatchSize); 
+            bufferProps.setProperty(BufferManager.CONNECTOR_BATCH_SIZE, connectorBatchSize); 
             
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
@@ -120,8 +105,7 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
             if(useDisk) {
                 // Get the properties for FileStorageManager and create.
                 Properties fsmProps = new Properties();
-                fsmProps.setProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
-                fsmProps.setProperty(BufferManagerPropertyNames.MAX_OPEN_FILES, DEFAULT_MAX_OPEN_FILES);
+                fsmProps.setProperty(BufferManager.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
                 StorageManager fsm = new FileStorageManager();
                 fsm.initialize(fsmProps);        
                 this.bufferMgr.setStorageManager(fsm);

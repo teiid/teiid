@@ -32,7 +32,7 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 
 import com.metamatrix.cache.Cache;
-import com.metamatrix.common.buffer.impl.BufferConfig;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -68,7 +68,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     private DQPContextCache contextCache;
     
-    private int batchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+    private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,

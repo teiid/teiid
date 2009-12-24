@@ -52,10 +52,6 @@ public class BufferManagerFactory {
     	if (INSTANCE == null) {
 	        BufferManagerImpl bufferMgr = new BufferManagerImpl();
 	        Properties props = new Properties();
-	        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(Long.MAX_VALUE));
-	        props.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, "100"); //$NON-NLS-1$
-	        props.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, "0"); //$NON-NLS-1$
-	        props.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
 	        bufferMgr.initialize(props);
 	
 	        // Add unmanaged memory storage manager

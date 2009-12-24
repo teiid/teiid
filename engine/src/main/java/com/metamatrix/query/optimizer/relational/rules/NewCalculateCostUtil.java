@@ -36,7 +36,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.buffer.impl.BufferConfig;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
@@ -904,7 +904,7 @@ public class NewCalculateCostUtil {
         
         float numberComparisons = merge?(leftChildCardinality + rightChildCardinality):(leftChildCardinality * rightChildCardinality);
         
-        float connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+        float connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
         if(context != null) {
             connectorBatchSize = context.getConnectorBatchSize(); 
         }
@@ -965,8 +965,8 @@ public class NewCalculateCostUtil {
             return UNKNOWN_VALUE;
         }
 
-        float connectorBatchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
-        float processorBatchSize = BufferConfig.DEFAULT_PROCESSOR_BATCH_SIZE;
+        float connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+        float processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
         if(context != null) {
             connectorBatchSize = context.getConnectorBatchSize();
             processorBatchSize = context.getProcessorBatchSize();
