@@ -85,12 +85,7 @@ public abstract class TransactionContainer {
 	    // And therefore, the exception needs to be set as an application exception,
 	    // considered outside the bounds of the normal sqlexceptions.
 	    test.setApplicationException(e);
-//	    if (!test.exceptionExpected()) {
-//		e.printStackTrace();
-//		debug("Error: " + e.getMessage());
-		
- 
-//	    }
+
 	}
 	
 	    debug("	test.after");
