@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ctc" default="main" >
-
+	
+	<property name="root_output" value="${proj.dir}/target/bulk-query-tests" />
+	
+	<property name="ERROR_FILE" value="${root_output}/ERROR_FOUND.txt" />
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 	  <classpath>
@@ -11,14 +14,16 @@
 	<target name="main" depends="init" if="" unless="" description="create all property files">
 		<antcall target="run.all.test" inheritall="true" />
 		<antcall target="run.single.test" inheritall="true" />
+		
+		<available file="${ERROR_FILE}" property="error.flagged"/>
+
+		<fail if="error.flagged" message="One or more ctc tests failed" />
+
+
 	</target>
 
 
 	<target name="init" depends="" >
-		<path id="test.classpath">
-			<pathelement path="${maven.runtime.classpath}" />
-			<pathelement location="${basedir}/lib/*.jar" />
-		</path>
 		
 		
 		<available file="${scenario.dir}" type="dir" property="dir.exist"/>
@@ -30,14 +35,6 @@
            		<path location="${install.dir}"/>
         	 </pathconvert>
 		-->
-		<!--   
-			Load the default connection properties.   These connection properties can be used in cases
-			when automation isn't being used.
-			Its expected that when run from Hudson, that the properties will set at the system level
-			
-			<loadproperties srcFile="${install_dir}/bin/connection.properties"/>
-		-->
-		
 		
 		<condition property="all">
 			<not>
@@ -58,6 +55,7 @@
     	  <sequential>
     	  	<antcall target="exec.scenario" inheritall="true" >
    				<param name="scenario.file" value="@{file}" />
+    	  		<param name="scenario.dir" value="@{file}" />
 			</antcall>
 	  	
     	  	<!--
@@ -101,8 +99,67 @@
         	<jvmarg value="-Dvdb.artifacts.dir=${vdb.artifacts.dir}" />
 
       	  </java>
+		
+   	  		<antcall target="is.there.output" inheritall="true" >
+   			</antcall>
+
+
+	</target>
+	
+	<target name="is.there.output" >
+		   <loadproperties srcFile="${scenario.file}" />
+		
+		<basename property="scenario.name" file="${scenario.file}"
+		          suffix=".properties"/>
+
+		<echo>Are there any files ${root_output}//${queryset.dir}/output/${scenario.name}</echo>
+		
+	      <path id="output.dir.files">
+	                  <fileset dir="${root_output}/${queryset.dir}/output/${scenario.name}">
+	                  		<include name="*.txt"/>
+	                  </fileset>
+	        </path>
+		
+		<condition property="has.output">
+			<resourcecount refid="output.dir.files" when="greater" count="0" />
+
+		</condition>
+		<echo>Is there output ${has.output}</echo>
+
+	      <path id="error.files">
+	                  <fileset dir="${root_output}/${queryset.dir}/output/${scenario.name}">
+	                  		<include name="ERROR*"/>
+	                  </fileset>
+	        </path>
+		
+		<condition property="error.files.exist">
+			<resourcecount refid="error.files" when="greater" count="0" />
+
+		</condition>
+		
+		<echo>Do Error files exists ${error.files.exist}</echo>
+		
+		<condition property="error.exist">
+			<not>
+				<isset property="has.output"/>
+			</not>
+		</condition>
+		<condition property="error.exist">
+				<isset property="error.files.exist"/>
+		</condition>
+
+		<echo>Is this considered an error ${error.exist}</echo>
+		
+		<antcall target="touch.error.file" inheritall="true" />
 
 	</target>
 
+	<target name="touch.error.file"
+		if="error.exist">
+			<echo>Touch to Flag Error at ${ERROR_FILE} </echo>
+			<touch file="${ERROR_FILE}"/>
+		
+	</target>
+	
 
 </project>		
