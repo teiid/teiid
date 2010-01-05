@@ -98,16 +98,16 @@ public class SortUtility {
         this.schema = this.sourceID.getSchema();
         int distinctIndex = sortElements != null? sortElements.size() - 1:0;
         if (mode != Mode.SORT) {
-	        if (sortElements != null && sortElements.size() < schema.size()) {
+	        if (sortElements == null) {
+	    		sortElements = this.schema;
+	    		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
+	        } else if (sortElements.size() < schema.size()) {
 	        	sortElements = new ArrayList(sortElements);
 	        	List<SingleElementSymbol> toAdd = new ArrayList<SingleElementSymbol>(schema);
 	        	toAdd.removeAll(sortElements);
 	        	sortElements.addAll(toAdd);
 	        	sortTypes = new ArrayList<Boolean>(sortTypes);
 	        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
-        	} else {
-	    		sortElements = this.schema;
-	    		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
         	}
         }
         

@@ -26,10 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Test;
 
@@ -52,22 +49,16 @@ public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;
     
-    private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
         CommandContext context = new CommandContext ("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
-        FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
+        FakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
         dataNode.setElements(elements);
         dataNode.initialize(context, mgr, null);    
         
         SortNode sortNode = new SortNode(1);
-        if (mode == Mode.DUP_REMOVE) {
-        	sortTypes = Arrays.asList(new Boolean[elements.size()]);
-        	Collections.fill(sortTypes, OrderBy.ASC);
-            sortNode.setSortElements(elements, sortTypes);
-        } else {
-        	sortNode.setSortElements(sortElements, sortTypes);
-        }
+    	sortNode.setSortElements(sortElements, sortTypes);
         sortNode.setMode(mode);
         sortNode.setElements(elements);
         sortNode.addChild(dataNode);        
@@ -77,16 +68,20 @@ public class TestSortNode {
         
         int currentRow = 1;
         while(true) {
-            TupleBatch batch = sortNode.nextBatch();
-            if (mode != Mode.DUP_REMOVE) {
-                for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
-                }
-            }
-            currentRow += batch.getRowCount();    
-            if(batch.getTerminationFlag()) {
-                break;
-            }
+        	try {
+	            TupleBatch batch = sortNode.nextBatch();
+	            if (mode != Mode.DUP_REMOVE) {
+	                for(int row = currentRow; row <= batch.getEndRow(); row++) {
+	                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
+	                }
+	            }
+	            currentRow += batch.getRowCount();    
+	            if(batch.getTerminationFlag()) {
+	                break;
+	            }
+        	} catch (BlockedException e) {
+        		
+        	}
         }
         assertEquals(expected.length, currentRow - 1);
     }
@@ -121,23 +116,10 @@ public class TestSortNode {
         List sortTypes = new ArrayList();
         sortTypes.add(new Boolean(OrderBy.ASC));
         
-        /*
-         * the following code will do four tests.
-         * no blocking
-         * blocking during sort phase
-         * blocking during merge (for remove dups this tests defect 24736)
-         * blocking during sort node output 
-         */
-        for (int i = 0; i < 4; i++) {
-            Set blockedOn = new HashSet();
-            if (i > 0) {
-                blockedOn.add(new Integer(i));
-            }
-            helpTestSort(elements, data, sortElements, sortTypes, expected, blockedOn, mode);
-        }
+        helpTestSort(elements, data, sortElements, sortTypes, expected, mode);
     }
     
-    private void helpTestBiggerSort(int batches, int inMemoryBatches) throws Exception {
+    private void helpTestAllSorts(int batches) throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -146,14 +128,14 @@ public class TestSortNode {
         
         int rows = batches * BATCH_SIZE;
         
-        List unsortedNumbers = new ArrayList();
+        List[] expected = new List[rows];
         List[] data = new List[rows];
         for(int i=0; i<rows; i++) { 
             data[i] = new ArrayList();
-            
+            expected[i] = new ArrayList();
             Integer value = new Integer((i*51) % 12321);
             data[i].add(value);
-            unsortedNumbers.add(value);
+            expected[i].add(value);
         }
         
         List sortElements = new ArrayList();
@@ -162,38 +144,55 @@ public class TestSortNode {
         List sortTypes = new ArrayList();
         sortTypes.add(new Boolean(OrderBy.ASC));
 
-        Collections.sort(unsortedNumbers);                
-        List[] expected = new List[rows];
-        for(int i=0; i<unsortedNumbers.size(); i++) { 
-            expected[i] = new ArrayList();
-            expected[i].add(unsortedNumbers.get(i));
-        }
-        
+        ListNestedSortComparator comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.ASC);
+        Arrays.sort(expected, comparator);
         
         for (Mode mode : Mode.values()) {
-	        /*
-	         * the following code will do four tests, blocking in a variety of places
-	         */
-	        for (int i = 0; i < 3; i++) {
-	            Set blockedOn = new HashSet();
-	            if (i > 0) {
-	                //block on a variety of positions
-	                blockedOn.add(new Integer(i));
-	                blockedOn.add(new Integer(inMemoryBatches*i));
-	                blockedOn.add(new Integer(batches*i));
-	                blockedOn.add(new Integer(batches*(i+1)));
-	            }
-	            //5 batches in memory out of 10 total
-	            helpTestSort(elements, data, sortElements, sortTypes, expected, blockedOn, mode);
-	        }
+            helpTestSort(elements, data, sortElements, sortTypes, expected, mode);
+        }
+        
+        comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.DESC);
+        Arrays.sort(expected, comparator);
+        sortTypes.clear();
+        sortTypes.add(new Boolean(OrderBy.DESC));
+        
+        for (Mode mode : Mode.values()) {
+            helpTestSort(elements, data, sortElements, sortTypes, expected, mode);
         }
     }
         
     @Test public void testNoSort() throws Exception {
-        helpTestBiggerSort(0, 2);
+        helpTestAllSorts(0);
     }    
     
     @Test public void testBasicSort() throws Exception {
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(1), "2" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(1), "5" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(2), "1" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(2), "4" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(3), "6" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(3), "3" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(4), "3" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(5), "2" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(5), "5" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(6), "1" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(6), "4" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(7), "3" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(7), "3" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(8), "2" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(9), "1" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(9), "5" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(10), "9" }),    //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(10), "4" })                //$NON-NLS-1$
+        };
+        
+        helpTestBasicSort(expected, Mode.SORT);
+    }
+    
+    @Test public void testDupSortDesc() throws Exception {
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
@@ -277,21 +276,12 @@ public class TestSortNode {
     }   
     
     @Test public void testBiggerSort() throws Exception {
-        helpTestBiggerSort(10, 5);
+        helpTestAllSorts(10);
     }
  
-    @Test public void testBiggerSortLowMemory() throws Exception {
-        helpTestBiggerSort(5, 1);
+    @Test public void testAllSort() throws Exception {
+        helpTestAllSorts(1);
     }       
-
-    /**
-     * Progress can be made here since 2 batches fit in memory
-     * 
-     * This is also a test of the multi-pass merge
-     */
-    @Test public void testBiggerSortLowMemory2() throws Exception {
-        helpTestBiggerSort(5, 2);
-    }
     
     @Test public void testDupRemove() throws Exception {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$

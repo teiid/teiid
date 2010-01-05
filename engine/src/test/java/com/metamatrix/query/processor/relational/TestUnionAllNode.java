@@ -205,22 +205,22 @@ public class TestUnionAllNode extends TestCase {
     public void testMultipleSourceMultiBatchAllBlocking() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-
             Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),    
+            Arrays.asList(new Object[] { new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(1) }),    
 
+            Arrays.asList(new Object[] { new Integer(0) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),    
+            Arrays.asList(new Object[] { new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(1) }),    
+
+            Arrays.asList(new Object[] { new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(2) })          

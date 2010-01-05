@@ -28,12 +28,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.*;
 
-/**
- * @author amiller
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
 public class BlockingFakeRelationalNode extends FakeRelationalNode {
 
     private boolean blocked = false;
@@ -63,6 +57,7 @@ public class BlockingFakeRelationalNode extends FakeRelationalNode {
             blocked = true;
             throw BlockedException.INSTANCE;            
         }
+        blocked = false;
         return super.nextBatchDirect();
     }
 
