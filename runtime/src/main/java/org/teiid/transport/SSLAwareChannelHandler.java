@@ -86,7 +86,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		}
 		
 		@Override
-		public Object read() throws IOException,
+		public Object read(int timeout) throws IOException,
 				ClassNotFoundException {
 			throw new UnsupportedOperationException();
 		}

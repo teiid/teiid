@@ -80,7 +80,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		//## JDBC4.0-begin ##
 		@Override
 		//## JDBC4.0-end ##
-		public Object read() throws IOException,
+		public Object read(int timeout) throws IOException,
 				ClassNotFoundException {
 			Object msg = readMsgs.get(readCount++);
 			if (msg instanceof IOException) {

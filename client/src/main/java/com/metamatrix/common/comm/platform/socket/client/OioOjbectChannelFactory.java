@@ -58,7 +58,6 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private final Socket socket;
 		private ObjectOutputStream outputStream;
 		private ObjectInputStream inputStream;
-		private Object readLock = new Object();
 
 		private OioObjectChannel(Socket socket) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
@@ -117,17 +116,16 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		//## JDBC4.0-begin ##
 		@Override
 		//## JDBC4.0-end ##
-		public Object read() throws IOException, ClassNotFoundException {
+		public Object read(int timeout) throws IOException, ClassNotFoundException {
 			log.finer("reading message from socket"); //$NON-NLS-1$
-			synchronized (readLock) {
-				try {
-					return inputStream.readObject();
-				} catch (SocketTimeoutException e) {
-					throw e;
-		        } catch (IOException e) {
-		            close();
-		            throw e;
-		        }
+			socket.setSoTimeout(timeout);
+			try {
+				return inputStream.readObject();
+			} catch (SocketTimeoutException e) {
+				throw e;
+	        } catch (IOException e) {
+	            close();
+	            throw e;
 			}
 		}
 
@@ -154,7 +152,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	private int receiveBufferSize = 0;
 	private int sendBufferSize = 0;
 	private boolean conserveBandwidth;
-	private int soTimeout = 3000;
+	private int soTimeout = 30000;
 	private volatile SSLSocketFactory sslSocketFactory;
 
 	public OioOjbectChannelFactory(Properties props) {
@@ -187,7 +185,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 			socket.setSendBufferSize(sendBufferSize);
 		}
 	    socket.setTcpNoDelay(!conserveBandwidth); // enable Nagle's algorithm to conserve bandwidth
-	    socket.connect(address);
+	    socket.connect(address, soTimeout);
 	    socket.setSoTimeout(soTimeout);
 	    return new OioObjectChannel(socket);
 	}

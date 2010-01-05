@@ -95,7 +95,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         InetSocketAddress address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
         this.socketChannel = channelFactory.createObjectChannel(address, ssl);
         try {
-        	doHandshake();
+        	doHandshake(channelFactory.getSoTimeout());
         } catch (CommunicationException e) {
         	this.socketChannel.close();
         	throw e;
@@ -123,10 +123,10 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         return ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
     
-    private void doHandshake() throws IOException, CommunicationException {
+    private void doHandshake(int timeout) throws IOException, CommunicationException {
     	final Handshake handshake;
         try {
-			Object obj = this.socketChannel.read();
+			Object obj = this.socketChannel.read(timeout);
 			
 			if (!(obj instanceof Handshake)) {
 				throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
@@ -288,7 +288,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					}
 					
 					@Override
-					public synchronized Object get() throws InterruptedException, ExecutionException {
+					public Object get() throws InterruptedException, ExecutionException {
 						try {
 							return this.get(SocketServerConnectionFactory.getInstance().getSynchronousTtl(), TimeUnit.MILLISECONDS);
 						} catch (TimeoutException e) {
@@ -301,25 +301,26 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					 * the actual reads. 
 					 */
 					@Override
-					public synchronized Object get(long timeout, TimeUnit unit)
+					public Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
 						int timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
-						while (!isDone()) {
-							if (timeoutMillis <= 0) {
-								throw new TimeoutException();
-							}
-							long start = System.currentTimeMillis();
-							try {
-								receivedMessage(socketChannel.read());
-							} catch (IOException e) {
-								if (e instanceof SocketTimeoutException) {
-									timeoutMillis -= (System.currentTimeMillis() - start);
-									continue;
+						synchronized (SocketServerInstanceImpl.this) {
+							while (!isDone()) {
+								if (timeoutMillis <= 0) {
+									throw new TimeoutException();
 								}
-								exceptionOccurred(e);
-							} catch (ClassNotFoundException e) {
-								exceptionOccurred(e);
+								long start = System.currentTimeMillis();
+								try {
+									receivedMessage(socketChannel.read(timeoutMillis));
+									timeoutMillis -= (System.currentTimeMillis() - start);
+								} catch (SocketTimeoutException e) {
+									throw new TimeoutException();
+								} catch (IOException e) {
+									exceptionOccurred(e);
+								} catch (ClassNotFoundException e) {
+									exceptionOccurred(e);
+								}
 							}
 						}
 						return super.get(timeout, unit);
