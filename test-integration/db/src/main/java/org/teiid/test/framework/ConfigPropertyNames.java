@@ -124,9 +124,6 @@ public interface ConfigPropertyNames {
 	    public static final String AUTO_WRAP_ON = ExecutionProperties.TXN_WRAP_ON;  //$NON-NLS-1$
 	    public static final String AUTO_WRAP_AUTO = ExecutionProperties.TXN_WRAP_AUTO;  //$NON-NLS-1$
 	  
-	    public static final String AUTO_WRAP_PESSIMISTIC = "PESSIMISTIC";  //$NON-NLS-1$
-	    public static final String AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC";  //$NON-NLS-1$
-
     }
 
 }
