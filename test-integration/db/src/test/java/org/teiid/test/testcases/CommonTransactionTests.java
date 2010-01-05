@@ -6,6 +6,7 @@ package org.teiid.test.testcases;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
@@ -516,9 +517,28 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
                 }
                 else {
                     if (getLastException() != null) {
-                	String msg = getLastException().getMessage();
-                	boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
-                	assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
+                                                        
+                	String msg = "NA";
+                 	SQLException s = getLastException();
+                 	
+                 	Throwable t = s.getCause();
+                 	if (t instanceof TimeoutException) {
+                 	   msg = t.getMessage();
+                 	} else if (s instanceof com.metamatrix.jdbc.MMSQLException) {
+                 	     com.metamatrix.jdbc.MMSQLException mm = (com.metamatrix.jdbc.MMSQLException) t;
+                 	     if (mm.getNextException() != null) {
+                 		 SQLException next = mm.getNextException();
+                 		 msg = next.getMessage();
+                 	     } else {
+                 		 msg = mm.getMessage();
+                 	     }
+                 	} else {
+                 	
+                 	    msg = s.getMessage();
+                 	}
+                 	boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
+
+                	 assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
                     } else {
                 	fail("Program Error: it indicates exception occured, but no exception is found" );
                     }

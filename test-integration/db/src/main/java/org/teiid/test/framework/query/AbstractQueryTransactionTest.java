@@ -56,6 +56,9 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 
     protected ConnectionStrategy connStrategy;
     
+    // because only a SQLException is accounted for in AbstractQueryTest, 
+    //	the applicationException is used to when unaccounted for exceptions occur.  This could
+    // unintentional errors from the driver or ctc client test code.
     private Throwable applicationException=null;
 
     public AbstractQueryTransactionTest() {
@@ -102,9 +105,6 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 		    statement.setExecutionProperty(
 			    CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP,
 			    txnautowrap);
-		    
-		   
-//		    this.print("TransactionAutoWrap = " + txnautowrap);
 		}
 		
 		String fetchSizeStr = executionProperties
@@ -298,7 +298,13 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 	    return super.getLastException();
 	}
 	if (this.applicationException != null) {
-	    return new SQLException(this.applicationException.getClass().getName() + ":" + this.applicationException.getMessage());
+	    if (this.applicationException instanceof SQLException) {
+		return (SQLException) this.applicationException;
+	    }
+	    
+	    com.metamatrix.jdbc.MMSQLException mm = new com.metamatrix.jdbc.MMSQLException(this.applicationException.getMessage());
+	    return mm;
+
 	}
 	
 	return null;
