@@ -12,7 +12,6 @@ import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
 import org.teiid.test.framework.transaction.TxnAutoTransaction;
 
-import com.arjuna.common.internal.util.logging.commonPropertyManager;
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
@@ -34,7 +33,7 @@ public class AutoWrapTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
                 for (int i = 200; i < 210; i++) {
                     Integer val = new Integer(i);
@@ -70,7 +69,7 @@ public class AutoWrapTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceBatchCommandReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceBatchCommandReferentialIntegrityRollback") {
             public void testCase() throws Exception {
                 ArrayList list = new ArrayList();
                 for (int i = 200; i < 210; i++) {
@@ -106,7 +105,7 @@ public class AutoWrapTransactionTests extends CommonTransactionTests {
      * result = commit 
      */
     public void testMultipleSourceBulkRowInsertRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsertRollback") {
             ArrayList list = new ArrayList();
             public void testCase() throws Exception {
                 for (int i = 100; i < 120; i++) {

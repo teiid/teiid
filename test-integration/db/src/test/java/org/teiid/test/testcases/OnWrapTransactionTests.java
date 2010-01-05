@@ -36,7 +36,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
                 for (int i = 200; i < 210; i++) {
                     Integer val = new Integer(i);
@@ -73,7 +73,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
      * result = rollback
      */
     public void testSingleSourceBatchCommandReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceBatchCommandReferentialIntegrityRollback") {
             public void testCase() throws Exception {
                 ArrayList list = new ArrayList();
                 for (int i = 200; i < 210; i++) {
@@ -109,7 +109,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
      * result = commit 
      */
     public void testMultipleSourceBulkRowInsertRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsertRollback") {
             ArrayList list = new ArrayList();
             public void testCase() throws Exception {
                 for (int i = 100; i < 110; i++) {

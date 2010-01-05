@@ -113,7 +113,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * result = rollback
      */
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
 
                 for (int i = 200; i < 210; i++) {
@@ -151,7 +151,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * result = commit 
      */
     public void testMultipleSourceSelect() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelect") {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
@@ -169,7 +169,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * result = commit 
      */
     public void testMultipleSourceUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(500, '500', 500, '500')");
             }
@@ -198,7 +198,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      */
     public void testMultipleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
 
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
 
                 for (int i = 700; i < 710; i++) {
@@ -243,7 +243,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
     public void testMultipleSourceBulkRowInsert() throws Exception {
 
 	
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest() {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsert") {
             ArrayList list = new ArrayList();
             public void testCase() throws Exception {
                 for (int i = 800; i < 807; i++) {
