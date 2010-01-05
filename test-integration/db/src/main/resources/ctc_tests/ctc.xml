@@ -41,6 +41,8 @@
 				<isset property="single"/>
 			</not>
 		</condition>
+		
+		<delete file="${ERROR_FILE}"/>
 
 	</target>
 
@@ -100,19 +102,21 @@
 
       	  </java>
 		
-   	  		<antcall target="is.there.output" inheritall="true" >
-   			</antcall>
+   	  	 <antcall target="are.there.errors" inheritall="true" />
 
 
 	</target>
 	
-	<target name="is.there.output" >
-		   <loadproperties srcFile="${scenario.file}" />
+	<target name="are.there.errors" >
+		<!-- load the scenario file to get the queryset thats being run -->
+		<loadproperties srcFile="${scenario.file}" />
 		
+		
+		<!-- get the scenario name based on the scenario file, strip the suffix  -->
 		<basename property="scenario.name" file="${scenario.file}"
 		          suffix=".properties"/>
 
-		<echo>Are there any files ${root_output}//${queryset.dir}/output/${scenario.name}</echo>
+		<echo>Are there any files ${root_output}/${queryset.dir}/output/${scenario.name}</echo>
 		
 	      <path id="output.dir.files">
 	                  <fileset dir="${root_output}/${queryset.dir}/output/${scenario.name}">
@@ -122,7 +126,6 @@
 		
 		<condition property="has.output">
 			<resourcecount refid="output.dir.files" when="greater" count="0" />
-
 		</condition>
 		<echo>Is there output ${has.output}</echo>
 
@@ -156,9 +159,11 @@
 
 	<target name="touch.error.file"
 		if="error.exist">
-			<echo>Touch to Flag Error at ${ERROR_FILE} </echo>
-			<touch file="${ERROR_FILE}"/>
-		
+			<echo>Flag Error - Query Set: ${queryset.dir} Scenario: ${scenario.name} </echo>
+
+		<concat destfile="${ERROR_FILE}" append="true">Query Set: ${queryset.dir} Scenario: ${scenario.name} </concat>
+
+	
 	</target>
 	
 
