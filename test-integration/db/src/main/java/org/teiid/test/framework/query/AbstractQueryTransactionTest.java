@@ -297,8 +297,11 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 	if (super.getLastException() != null) {
 	    return super.getLastException();
 	}
+	if (this.applicationException != null) {
+	    return new SQLException(this.applicationException.getClass().getName() + ":" + this.applicationException.getMessage());
+	}
 	
-	return new SQLException(this.applicationException.getClass().getName() + ":" + this.applicationException.getMessage());
+	return null;
      }
 
     @Override
