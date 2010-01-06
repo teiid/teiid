@@ -161,7 +161,7 @@
 		if="error.exist">
 			<echo>Flag Error - Query Set: ${queryset.dir} Scenario: ${scenario.name} </echo>
 
-		<concat destfile="${ERROR_FILE}" append="true">Query Set: ${queryset.dir} Scenario: ${scenario.name} </concat>
+		<concat destfile="${ERROR_FILE}" append="true" fixlastline="yes">Query Set: ${queryset.dir} Scenario: ${scenario.name} </concat>
 
 	
 	</target>
