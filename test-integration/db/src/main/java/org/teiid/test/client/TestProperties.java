@@ -33,6 +33,15 @@ public class TestProperties {
     public static final String PROP_SCENARIO_FILE = "scenariofile";
     
     /**
+     * The {@link #QUERY_SET_NAME} property indicates the name of directory that contains
+     * the set of queries and expected results that will be used.  This is referred
+     * to as the <b>query set</b> 
+     * 
+     * This property should be found in the {@link #PROP_SCENARIO_FILE}. 
+     */
+    public static final String QUERY_SET_NAME = "queryset.dir"; //$NON-NLS-1$
+    
+    /**
      * PROP_RESULT_MODE controls what to do with the execution results.
      * 
      * @see ExpectedResults.RESULT_MODES for the options.
@@ -70,6 +79,8 @@ public class TestProperties {
      * files will be written.  
      */
     public static final String PROP_OUTPUT_DIR = "outputdir"; //$NON-NLS-1$
+    
+
 
 
 

@@ -317,6 +317,8 @@ public class TestResultsSummary  {
     public void printTotals(QueryScenario scenario ) throws Exception {
 	    String outputDir = scenario.getResultsGenerator().getOutputDir(); 
 	    String scenario_name = scenario.getQueryScenarioIdentifier();
+	    String querysetname = scenario.getQuerySetName();
+
 	
 	String summarydir = ConfigPropertyLoader.getInstance().getProperty(PROP_SUMMARY_PRT_DIR);
 	if (summarydir != null) {
@@ -325,20 +327,22 @@ public class TestResultsSummary  {
 
 	    PrintStream outputStream = null;
 	    try {
-		outputStream = getSummaryStream(outputDir, "TotalSummary_" + scenario_name, true); //$NON-NLS-1$
+		outputStream = getSummaryStream(outputDir, "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
 	    } catch (IOException e) {
 		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
 		throw e;
 	    }
 	    
-		outputStream.println("Scenario " + scenario_name + " Total Results"); //$NON-NLS-1$
+	    	
+		outputStream.println("Scenario " + scenario_name + " Summary"); //$NON-NLS-1$
+		outputStream.println("Query Set Name " + querysetname); //$NON-NLS-1$
 		outputStream.println("=================="); //$NON-NLS-1$
 		
 		outputStream
-		.println("Number of Query Sets: " + total_querysets); //$NON-NLS-1$ //$NON-NLS-2$
+		.println("Number of Test Query Sets: " + total_querysets); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		outputStream.println("=================="); //$NON-NLS-1$
-		outputStream.println("Query Sets"); //$NON-NLS-1$
+		outputStream.println("Test Query Set"); //$NON-NLS-1$
 		outputStream.println("\t" + "Name" + "\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total"); //$NON-NLS-1$
 
 		if (!this.query_sets.isEmpty()) {

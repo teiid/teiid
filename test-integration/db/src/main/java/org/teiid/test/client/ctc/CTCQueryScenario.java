@@ -68,6 +68,7 @@ public class CTCQueryScenario implements QueryScenario {
 
     private Properties props;
     private String outputDir = null;
+    private String querySetName = null;
     
     private String scenario_test_name;
     
@@ -82,12 +83,18 @@ public class CTCQueryScenario implements QueryScenario {
     public String getQueryScenarioIdentifier() {
 	return this.scenario_test_name;
     }
+    
+    public     String getQuerySetName() {
+	return this.querySetName;
+    }
 
 
     private void setup() {
 	
 	TestLogger.logDebug("Perform TestClient Setup");
 	Properties props = ConfigPropertyLoader.getInstance().getProperties();
+	
+	this.querySetName = props.getProperty(TestProperties.QUERY_SET_NAME, "querysetnamenotdefined");
 	
 	outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
 

@@ -39,6 +39,13 @@ import org.teiid.test.client.TestProperties.RESULT_MODES;
  */
 public interface QueryScenario {
     
+    
+    /**
+     * Return the name that identifies this query set.
+     * It should use the {@link TestProperties#QUERY_SET_NAME} property to obtain the name.
+     * @return String query set name;
+     */
+    String getQuerySetName();
  
     /**
      * Return the identifier for the current scenario
