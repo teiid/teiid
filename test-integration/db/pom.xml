@@ -267,7 +267,6 @@
 		                <additionalClasspathElement>${basedir}/lib/ojdbc6.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
-		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
 
 		          </additionalClasspathElements>
 		          <systemProperties>
@@ -281,10 +280,10 @@
 		            </property>
 		          </systemProperties>
 				
-<!--
+<!-- 
 <forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-	-->				
+			-->
 					<includes>
 			<!--			<include>**/*TestCase.java</include> -->
 						<include>**/*Test.java</include>
@@ -334,7 +333,6 @@
 		                <additionalClasspathElement>${basedir}/lib/ojdbc6.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
-		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
 		          </additionalClasspathElements>
 		          <systemProperties>
 		            <property>
