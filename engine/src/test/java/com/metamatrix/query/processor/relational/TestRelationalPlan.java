@@ -22,13 +22,10 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
+import java.util.List;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 
 /**
@@ -43,54 +40,12 @@ public class TestRelationalPlan extends TestCase {
         super(arg0);
     }
     
-    public void testNoRowsFirstBatch() {
-        RelationalNode node = new RelationalNode(0) {
-            public TupleBatch nextBatchDirect() throws BlockedException, MetaMatrixComponentException {
-                TupleBatch batch = new TupleBatch(1, new ArrayList());
-                batch.setTerminationFlag(true);
-                return batch;
-            }    
-            
-            public Object clone(){
-				throw new UnsupportedOperationException();
-			}
-        };
+    public void testNoRowsFirstBatch() throws Exception {
+        RelationalNode node = new FakeRelationalNode(0, new List[0]);
         
-        try {        
-            RelationalPlan plan = new RelationalPlan(node);
-            TupleBatch batch = plan.nextBatch();
-            assertTrue("Did not get terminator batch", batch.getTerminationFlag()); //$NON-NLS-1$
-            
-        } catch(MetaMatrixException e) {
-            e.printStackTrace();
-            fail("Got unexpected exception: " + e.getFullMessage());     //$NON-NLS-1$
-        }
-        
-        
+        RelationalPlan plan = new RelationalPlan(node);
+        TupleBatch batch = plan.nextBatch();
+        assertTrue("Did not get terminator batch", batch.getTerminationFlag()); //$NON-NLS-1$
     }   
-    
-    public void testNoRowsLaterBatch() {
-        RelationalNode node = new RelationalNode(0) {
-            public TupleBatch nextBatchDirect() throws BlockedException, MetaMatrixComponentException {
-                TupleBatch batch = new TupleBatch(3, new ArrayList());
-                batch.setTerminationFlag(true);
-                return batch;
-            }  
-            
-            public Object clone(){
-				throw new UnsupportedOperationException();
-			}  
-        };
-        
-        try {        
-            RelationalPlan plan = new RelationalPlan(node);
-            TupleBatch batch = plan.nextBatch();
-            assertTrue("Did not get terminator batch", batch.getTerminationFlag()); //$NON-NLS-1$
-            
-        } catch(MetaMatrixException e) {
-            e.printStackTrace();
-            fail("Got unexpected exception: " + e.getFullMessage());     //$NON-NLS-1$
-        }                
-    }          
     
 }

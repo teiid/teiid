@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.metamatrix.query.optimizer.TestAggregatePushdown;
 import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -265,6 +266,36 @@ public class TestAggregateProcessing {
                 Arrays.asList("a", Integer.valueOf(6), Boolean.TRUE), //$NON-NLS-1$
                 Arrays.asList("b", null, null), //$NON-NLS-1$
                 Arrays.asList("xyz", Integer.valueOf(1), Boolean.FALSE) //$NON-NLS-1$
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
+    
+	@Test public void testUnionAggregatePushdown() {
+    	Command command = helpParse("select count(*), max(e3) from (select e1, e2, e3 from pm1.g1 union all (select convert(e2, string) as a, e2, e3 from pm2.g2 order by a limit 10)) x group by e1, e2"); //$NON-NLS-1$
+    	
+    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    	capFinder.addCapabilities("pm1", TestAggregatePushdown.getAggregateCapabilities()); //$NON-NLS-1$
+    	BasicSourceCapabilities bac = TestAggregatePushdown.getAggregateCapabilities();
+    	bac.setFunctionSupport("convert", true); //$NON-NLS-1$
+    	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList(Integer.valueOf(2), "2", Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
+    				Arrays.asList(Integer.valueOf(1), "1", Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
+    			});
+    	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, convert(g_0.e2, string) AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_1 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList(Integer.valueOf(1), "1", Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList(Integer.valueOf(7), Boolean.TRUE),
+                Arrays.asList(Integer.valueOf(2), Boolean.FALSE),
             };    
     	
     	helpProcess(plan, dataManager, expected);

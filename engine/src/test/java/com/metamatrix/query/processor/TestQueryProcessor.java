@@ -29,17 +29,13 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.query.processor.BatchCollector.BatchHandler;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 

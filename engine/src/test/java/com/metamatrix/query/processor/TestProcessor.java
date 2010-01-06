@@ -156,8 +156,7 @@ public class TestProcessor {
 			if(DEBUG) System.out.println("\n" + process); //$NON-NLS-1$
 	        //per defect 10022, clone this plan before processing, just to make sure
 	        //a cloned plan with correlated subquery references (or any cloned plan) can be processed
-	        ProcessorPlan cloned = (ProcessorPlan)process.clone();
-	        process = cloned;
+	        process = process.clone();
 	        
 	        assertNotNull("Output elements of process plan are null", process.getOutputElements()); //$NON-NLS-1$
 
@@ -183,7 +182,7 @@ public class TestProcessor {
     
     public static void helpProcess(ProcessorPlan plan, CommandContext context, ProcessorDataManager dataManager, List[] expectedResults) {
         try {
-            ProcessorPlan clonePlan = (ProcessorPlan) plan.clone();
+            ProcessorPlan clonePlan = plan.clone();
             
             // Process twice to test reset and clone
             doProcess(plan, dataManager, expectedResults, context);

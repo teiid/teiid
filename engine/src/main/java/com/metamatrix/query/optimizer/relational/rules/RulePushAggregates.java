@@ -53,6 +53,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -64,6 +65,7 @@ import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -289,6 +291,26 @@ public class RulePushAggregates implements
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
 			throws MetaMatrixComponentException, QueryPlannerException, QueryResolverException {
 		PlanNode originalNode = unionSource;
+		//branches other than the first need to have their projected column names updated
+		PlanNode sortNode = NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+		List<SingleElementSymbol> sortOrder = null;
+		if (sortNode != null) {
+			sortOrder = (List<SingleElementSymbol>)sortNode.getProperty(Info.SORT_ORDER);
+		}
+		List<SingleElementSymbol> projectCols = FrameUtil.findTopCols(unionSource);
+		for (int i = 0; i < virtualElements.size(); i++) {
+			ElementSymbol virtualElem = virtualElements.get(i);
+			SingleElementSymbol projectedSymbol = projectCols.get(i);
+			if (!projectedSymbol.getShortCanonicalName().equals(virtualElem.getShortCanonicalName())) {
+				if (sortOrder != null) {
+					int sortIndex = sortOrder.indexOf(projectedSymbol);
+					if (sortIndex > -1) {
+						updateSymbolName(sortOrder, sortIndex, virtualElem, sortOrder.get(sortIndex));
+					}
+				}
+				updateSymbolName(projectCols, i, virtualElem, projectedSymbol);
+			}
+		}
     	PlanNode intermediateView = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
     	unionSource.addAsParent(intermediateView);
     	unionSource = intermediateView;
@@ -356,6 +378,15 @@ public class RulePushAggregates implements
         	}
         }
     }
+
+	private void updateSymbolName(List<SingleElementSymbol> projectCols, int i,
+			ElementSymbol virtualElem, SingleElementSymbol projectedSymbol) {
+		if (projectedSymbol instanceof AliasSymbol) {
+			((AliasSymbol)projectedSymbol).setName(virtualElem.getShortCanonicalName());
+		} else {
+			projectCols.set(i, new AliasSymbol(virtualElem.getShortCanonicalName(), projectedSymbol));
+		}
+	}
 
     /**
      * Walk up the plan from the GROUP node. Should encounter only (optionally) a SELECT and can stop at the PROJECT node. Need to

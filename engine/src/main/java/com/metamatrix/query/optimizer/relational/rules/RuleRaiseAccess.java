@@ -327,7 +327,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         //don't push criteria into an invalid location above an ordered limit - shouldn't happen 
         PlanNode limitNode = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SOURCE);
-        if (limitNode != null && NodeEditor.findNodePreOrder(limitNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE) != null) {
+        if (limitNode != null && FrameUtil.isOrderedLimit(limitNode)) {
         	return false;
         }
         

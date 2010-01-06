@@ -486,18 +486,19 @@ public class FrameUtil {
      * Finds the closest project columns in the current frame
      */
     static List<SingleElementSymbol> findTopCols(PlanNode node) {
-        List projects = NodeEditor.findAllNodes(node, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE|NodeConstants.Types.PROJECT);
-        PlanNode project = null;
-        if (projects.isEmpty()) {
+    	PlanNode project = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+        if (project == null) {
             project = NodeEditor.findParent(node, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
-        } else {
-            project = (PlanNode)projects.get(0);
         }
         if (project != null) {
             return (List<SingleElementSymbol>)project.getProperty(NodeConstants.Info.PROJECT_COLS);
         }
         Assertion.failed("no top cols in frame"); //$NON-NLS-1$
         return null;
+    }
+    
+    public static boolean isOrderedLimit(PlanNode node) {
+    	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null;
     }
 
 }

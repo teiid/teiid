@@ -49,6 +49,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
 		return caps;
 	}
 

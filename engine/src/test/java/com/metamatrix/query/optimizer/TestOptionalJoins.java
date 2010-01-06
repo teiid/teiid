@@ -518,7 +518,7 @@ public class TestOptionalJoins {
 		ProcessorPlan plan = TestOptimizer
 				.helpPlan(
 						"select distinct * from (SELECT pm1.g1.e3 from pm1.g1 left outer join pm1.g2 on (pm1.g1.e1 = pm1.g2.e1) order by e3 limit 10) x", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-						new String[] { "SELECT DISTINCT g_0.e3 AS c_0 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0" }); //$NON-NLS-1$
+						new String[] { "SELECT g_0.e3 AS c_0 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0" }); //$NON-NLS-1$
 
 		TestOptimizer.checkNodeTypes(plan, new int[] { 
 				1, // Access

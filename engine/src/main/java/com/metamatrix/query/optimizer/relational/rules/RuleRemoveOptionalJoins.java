@@ -262,7 +262,7 @@ public class RuleRemoveOptionalJoins implements
 					return areAggregatesCardinalityDependent(aggs);
 				}
 				case NodeConstants.Types.TUPLE_LIMIT: {
-					if (parent.getFirstChild().getType() == NodeConstants.Types.SORT) {
+					if (FrameUtil.isOrderedLimit(parent)) {
 						return true;
 					}
 				}

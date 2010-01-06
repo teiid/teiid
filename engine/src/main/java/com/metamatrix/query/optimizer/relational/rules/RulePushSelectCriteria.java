@@ -315,7 +315,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 }  
             
                 satisfyAccessPatterns(critNode, currentNode);
-            } else if (currentNode.getType() == NodeConstants.Types.TUPLE_LIMIT && currentNode.getChildCount() == 1 && currentNode.getFirstChild().getType() == NodeConstants.Types.SORT) {
+            } else if (FrameUtil.isOrderedLimit(currentNode)) {
                 return currentNode;
             } else if (currentNode.getType() == NodeConstants.Types.GROUP && critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                 return currentNode;
@@ -329,8 +329,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		throws QueryPlannerException {
         
         //ensure that the criteria can be pushed further
-        if (sourceNode.getChildCount() == 1 && sourceNode.getFirstChild().getType() == NodeConstants.Types.TUPLE_LIMIT && 
-                        sourceNode.getFirstChild().getChildCount() == 1 && sourceNode.getFirstChild().getFirstChild().getType() == NodeConstants.Types.SORT) {
+        if (sourceNode.getChildCount() == 1 && FrameUtil.isOrderedLimit(sourceNode.getFirstChild())) {
             return false;
         }
         
