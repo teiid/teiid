@@ -28,10 +28,7 @@ import java.util.concurrent.Future;
 
 public interface ObjectChannel {
 	
-	/**
-	 * Callers must obtain a lock prior to calling read
-	 */
-	Object read(int timeout) throws IOException, ClassNotFoundException;
+	Object read() throws IOException, ClassNotFoundException;
 	
 	SocketAddress getRemoteAddress();
 		

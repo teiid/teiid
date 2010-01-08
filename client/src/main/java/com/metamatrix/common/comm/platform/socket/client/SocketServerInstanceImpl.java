@@ -69,6 +69,8 @@ import com.metamatrix.dqp.client.ResultsFuture;
  */
 public class SocketServerInstanceImpl implements SocketServerInstance {
 	
+	static final int HANDSHAKE_RETRIES = 10;
+
 	private AtomicInteger MESSAGE_ID = new AtomicInteger();
 
 	private HostInfo hostInfo;
@@ -95,7 +97,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         InetSocketAddress address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
         this.socketChannel = channelFactory.createObjectChannel(address, ssl);
         try {
-        	doHandshake(channelFactory.getSoTimeout());
+        	doHandshake();
         } catch (CommunicationException e) {
         	this.socketChannel.close();
         	throw e;
@@ -123,18 +125,25 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         return ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
     
-    private void doHandshake(int timeout) throws IOException, CommunicationException {
-    	final Handshake handshake;
-        try {
-			Object obj = this.socketChannel.read(timeout);
-			
-			if (!(obj instanceof Handshake)) {
-				throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
+    private void doHandshake() throws IOException, CommunicationException {
+    	Handshake handshake = null;
+    	for (int i = 0; i < HANDSHAKE_RETRIES; i++) {
+	        try {
+				Object obj = this.socketChannel.read();
+				
+				if (!(obj instanceof Handshake)) {
+					throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
+				}
+				handshake = (Handshake)obj;
+				break;
+			} catch (ClassNotFoundException e1) {
+				throw new CommunicationException(e1);
+			} catch (SocketTimeoutException e) {
+				if (i == HANDSHAKE_RETRIES - 1) {
+					throw e;
+				}
 			}
-			handshake = (Handshake)obj;
-		} catch (ClassNotFoundException e1) {
-			throw new CommunicationException(e1);
-		}
+    	}
 
         try {
             if (!getVersionInfo().equals(handshake.getVersion())) {
@@ -288,7 +297,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					}
 					
 					@Override
-					public Object get() throws InterruptedException, ExecutionException {
+					public synchronized Object get() throws InterruptedException, ExecutionException {
 						try {
 							return this.get(SocketServerConnectionFactory.getInstance().getSynchronousTtl(), TimeUnit.MILLISECONDS);
 						} catch (TimeoutException e) {
@@ -301,26 +310,25 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					 * the actual reads. 
 					 */
 					@Override
-					public Object get(long timeout, TimeUnit unit)
+					public synchronized Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
 						int timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
-						synchronized (SocketServerInstanceImpl.this) {
-							while (!isDone()) {
-								if (timeoutMillis <= 0) {
-									throw new TimeoutException();
-								}
-								long start = System.currentTimeMillis();
-								try {
-									receivedMessage(socketChannel.read(timeoutMillis));
-									timeoutMillis -= (System.currentTimeMillis() - start);
-								} catch (SocketTimeoutException e) {
-									throw new TimeoutException();
-								} catch (IOException e) {
-									exceptionOccurred(e);
-								} catch (ClassNotFoundException e) {
-									exceptionOccurred(e);
-								}
+						while (!isDone()) {
+							if (timeoutMillis <= 0) {
+								throw new TimeoutException();
+							}
+							long start = System.currentTimeMillis();
+							try {
+								receivedMessage(socketChannel.read());
+							} catch (SocketTimeoutException e) {
+							} catch (IOException e) {
+								exceptionOccurred(e);
+							} catch (ClassNotFoundException e) {
+								exceptionOccurred(e);
+							}
+							if (!isDone()) {
+								timeoutMillis -= (System.currentTimeMillis() - start);
 							}
 						}
 						return super.get(timeout, unit);

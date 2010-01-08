@@ -80,7 +80,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		//## JDBC4.0-begin ##
 		@Override
 		//## JDBC4.0-end ##
-		public Object read(int timeout) throws IOException,
+		public Object read() throws IOException,
 				ClassNotFoundException {
 			Object msg = readMsgs.get(readCount++);
 			if (msg instanceof IOException) {
@@ -120,7 +120,9 @@ public class TestSocketServerInstanceImpl extends TestCase {
 	}
 
 	public void testHandshakeTimeout() throws Exception {
-		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(new SocketTimeoutException()));
+		SocketTimeoutException[] exs = new SocketTimeoutException[SocketServerInstanceImpl.HANDSHAKE_RETRIES];
+		Arrays.fill(exs, new SocketTimeoutException());
+		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(exs));
 		
 		try {
 			createInstance(channel);
