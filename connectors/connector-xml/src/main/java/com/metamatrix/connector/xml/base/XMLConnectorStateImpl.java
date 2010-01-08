@@ -23,6 +23,10 @@
 
 package com.metamatrix.connector.xml.base;
 
+import java.io.InputStream;
+import java.sql.SQLXML;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorCapabilities;
@@ -33,6 +37,7 @@ import org.teiid.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnectorState;
+import com.metamatrix.core.util.ReflectionHelper;
 
 public abstract class XMLConnectorStateImpl implements Cloneable,
         XMLConnectorState {
@@ -76,6 +81,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     private String capabilitiesClass;
 
 	private boolean caching = false;
+	
+	private Map<String, SQLXML> responses = new HashMap<String, SQLXML>();
 
     public XMLConnectorStateImpl() {
         setPreprocess(true);
@@ -317,5 +324,30 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     
 	public String getPluggableInputStreamFilterClass() {
 		return m_pluggableInputStreamFilterClass;
+	}
+	
+	public InputStream addStreamFilters(InputStream stream)
+	throws ConnectorException {
+
+		if (isLogRequestResponse()) {
+			stream = new LoggingInputStreamFilter(stream, logger);
+		}
+		
+		if (getPluggableInputStreamFilterClass() != null) {
+			try {
+				stream = (InputStream) ReflectionHelper.create(getPluggableInputStreamFilterClass(), new Object[] { stream,
+					logger}, new Class[] {
+					java.io.InputStream.class,
+					ConnectorLogger.class }, Thread.currentThread().getContextClassLoader());
+			} catch (Exception cnf) {
+				throw new ConnectorException(cnf);
+			}
+		}
+		return stream;
+	}
+	
+	@Override
+	public Map<String, SQLXML> getResponses() {
+		return this.responses;
 	}
 }

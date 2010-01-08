@@ -22,18 +22,11 @@
 
 package com.metamatrix.common.types;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.xml.transform.stream.StreamSource;
-
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 import junit.framework.TestCase;
 
@@ -83,83 +76,12 @@ public class TestXMLStreamSourceTranslator extends TestCase {
         "      </publishingInformation>\r\n" +  //$NON-NLS-1$
         "   </book>\r\n" + //$NON-NLS-1$
         "</Books:bookCollection>"; //$NON-NLS-1$
-    /*
-     * Test method for 'com.metamatrix.common.types.XMLStreamSourceTranslator.getReader()'
-     */
-    public void testGetReader() throws Exception {        
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(new StreamSource(new StringReader(sourceXML)),  new Properties());
-        Reader reader = translator.getReader();
-        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
-    }
-
-    public void testCharInput() throws Exception {        
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(sourceXML.toCharArray(),  new Properties());
-        Reader reader = translator.getReader();
-        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
-    }
-    
-    public void testXMLReaderFactory() throws Exception {        
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(new XMLReaderFactory() {
-            public Reader getReader() throws IOException {
-                return new StringReader(sourceXML);
-            }            
-        }, new Properties());
-        Reader reader = translator.getReader();
-        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
-    }    
-    
-    /*
-     * Test method for 'com.metamatrix.common.types.XMLStreamSourceTranslator.getInputStream()'
-     */
-    public void testGetInputStream() throws Exception {
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(new StreamSource(new ByteArrayInputStream(sourceXML.getBytes())),  new Properties());
-        InputStream stream = translator.getInputStream();
-        ByteArrayOutputStream out = getCoontents(stream);       
-        compareDocuments(sourceXML, new String(out.toByteArray()));
-    }
-
-    private ByteArrayOutputStream getCoontents(InputStream stream) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        
-        int chr = stream.read();
-        while(chr != -1) {
-            out.write((byte)chr);
-            chr = stream.read();
-        }
-        return out;
-    }
-
+   
     public void testStreamSourceWithStream() throws Exception {
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(new StreamSource(new StringReader(sourceXML)),  new Properties());
-        InputStream stream = translator.getInputStream();
-        ByteArrayOutputStream out = getCoontents(stream);       
-        compareDocuments(sourceXML, new String(out.toByteArray()));
+        StandardXMLTranslator translator = new StandardXMLTranslator(new StreamSource(new StringReader(sourceXML)),  new Properties());
+        compareDocuments(sourceXML, translator.getString());
     }    
     
-    /*
-     * Test method for 'com.metamatrix.common.types.XMLStreamSourceTranslator.getSource()'
-     */
-    public void testGetSource() throws Exception {
-        StreamSource src = new StreamSource(new StringReader(sourceXML));
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(src, new Properties());
-        assertTrue(translator.getSource() instanceof StreamSource);
-        StreamSource s = (StreamSource)translator.getSource();
-        Reader reader = s.getReader();
-        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
-    }
-
-    /*
-     * Test method for 'com.metamatrix.common.types.BaseXMLTranslator.getString()'
-     */
-    public void testGetString() throws Exception {
-        XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(sourceXML,  new Properties());
-        assertEquals(sourceXML, translator.getString());
-
-        // in the case of the stream source there is optimization that 
-        // if a string is used to xmlize then same string is returned.
-        assertEquals(sourceXML, translator.getString());
-    }
-
     private void compareDocuments(String expectedDoc, String actualDoc) {
         StringTokenizer tokens1 = new StringTokenizer(expectedDoc, "\r\n"); //$NON-NLS-1$
         StringTokenizer tokens2 = new StringTokenizer(actualDoc, "\n");//$NON-NLS-1$

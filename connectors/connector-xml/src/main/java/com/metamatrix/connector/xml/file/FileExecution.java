@@ -1,5 +1,6 @@
 package com.metamatrix.connector.xml.file;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,7 +25,6 @@ import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.OutputXPathDesc;
 import com.metamatrix.connector.xml.base.QueryAnalyzer;
 import com.metamatrix.connector.xml.base.XMLConnectionImpl;
-import com.metamatrix.connector.xml.cache.CachedXMLStream;
 import com.metamatrix.connector.xml.streaming.BaseStreamingExecution;
 import com.metamatrix.connector.xml.streaming.DocumentImpl;
 import com.metamatrix.connector.xml.streaming.InvalidPathException;
@@ -241,24 +241,9 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
 		}
 		
 		private Document getDocument() throws ConnectorException {
-			Document doc;
-			String cacheKey = queryID + Integer.valueOf(docNumber).toString();
-			if(state.isCaching()) {
-				if(null != exeContext.get(queryID)) {
-					InputStream stream = new CachedXMLStream(exeContext, queryID);
-					doc = new DocumentImpl(stream, cacheKey);
-					logger.logTrace("Got " + queryID + " from the cache");
-				} else {
-					InputStream stream = getDocumentStream(docNumber);
-					stream = state.addCachingStreamFilters(stream, exeContext, queryID);
-					doc = new DocumentImpl(stream, cacheKey); 
-				}
-			} else {
-				InputStream stream = getDocumentStream(docNumber);
-				stream = state.addStreamFilters(stream);
-				doc = new DocumentImpl(stream, cacheKey);
- 			}
-			return doc;
+			InputStream stream = getDocumentStream(docNumber);
+			stream = state.addStreamFilters(stream);
+			return new DocumentImpl(stream, queryID + docNumber);
 		}
 		
 		private InputStream getDocumentStream(int i) throws ConnectorException {
@@ -267,7 +252,7 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
 				File xmlFile = new File(xmlFileName);
 				logger.logTrace(
 								"XML Connector Framework: retrieving document from " + xmlFileName); //$NON-NLS-1$
-				InputStream retval = new FileInputStream(xmlFile);
+				InputStream retval = new BufferedInputStream(new FileInputStream(xmlFile));
 				logger.logTrace(
 						"XML Connector Framework: retrieved file " + xmlFileName); //$NON-NLS-1$
 				return retval;

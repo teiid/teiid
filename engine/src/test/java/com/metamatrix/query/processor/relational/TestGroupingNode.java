@@ -64,10 +64,11 @@ public class TestGroupingNode extends TestCase {
 	// ################################## TEST HELPERS ################################
 
 	public static TupleSource createTupleSource1() { 
-		List symbols = new ArrayList();
+		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 		symbols.add(new ElementSymbol("col1")); //$NON-NLS-1$
+		symbols.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		symbols.add(new ElementSymbol("col2")); //$NON-NLS-1$
-		
+		symbols.get(1).setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List[] tuples = new List[] {
 			Arrays.asList(new Object[] { new Integer(5), new Integer(3) }),
 			Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
@@ -158,7 +159,7 @@ public class TestGroupingNode extends TestCase {
 		node.setElements(outputElements);
 		
 		List groupingElements = new ArrayList();
-		groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+		groupingElements.add(col1); //$NON-NLS-1$
 		node.setGroupingElements(groupingElements);	  
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
@@ -281,7 +282,7 @@ public class TestGroupingNode extends TestCase {
         
         // Set grouping elements to null 
         List groupingElements = new ArrayList();
-        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+        groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
@@ -330,7 +331,7 @@ public class TestGroupingNode extends TestCase {
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();
-        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+        groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);   
         CommandContext context = new CommandContext("pid", "test", null, null, null);    //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -448,7 +449,7 @@ public class TestGroupingNode extends TestCase {
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();
-        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+        groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);
 		return node;
 	}

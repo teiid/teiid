@@ -31,15 +31,15 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicConnection;
 
-import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SecureConnectorState;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 public class XMLConnectionImpl extends BasicConnection implements XMLConnection {
 
-	private CachingConnector connector;
+	private StatefulConnector connector;
 
 	private ConnectorEnvironment connectorEnv;
 
@@ -53,7 +53,7 @@ public class XMLConnectionImpl extends BasicConnection implements XMLConnection 
 
 	private TrustedPayloadHandler payloadHandler;
 
-	public XMLConnectionImpl(CachingConnector connector, ExecutionContext context,
+	public XMLConnectionImpl(StatefulConnector connector, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) throws ConnectorException {
 		this.connector = connector;
 		this.connectorEnv = connectorEnv;
@@ -81,7 +81,7 @@ public class XMLConnectionImpl extends BasicConnection implements XMLConnection 
 		return connector.getState();
 	}
 
-	public CachingConnector getConnector() {
+	public StatefulConnector getConnector() {
 		return connector;
 	}
 

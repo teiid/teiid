@@ -73,7 +73,7 @@ public interface BufferManager {
 	 * Optional property - this values specifies how many open file descriptors should be cached
 	 * in the storage directory.  Increasing this value in heavy load may improve performance
 	 * but will use more file descriptors, which are a limited system resource.  The default
-	 * is 10.
+	 * is 32.
 	 */
 	public static final String MAX_OPEN_FILES = "metamatrix.buffer.maxOpenFiles"; //$NON-NLS-1$
 	/**
@@ -105,16 +105,8 @@ public interface BufferManager {
 	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws MetaMatrixComponentException;
 	
-    /**
-     * Removes all tuple sources by group name
-     * @param groupName Tuple source group name
-     * @throws TupleSourceNotFoundException if tuple source could not be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    void removeTupleBuffers(String groupName) 
-    throws MetaMatrixComponentException;
-    
     int getMaxProcessingBatches();
+    
+    FileStore createFileStore(String name);
     
 }

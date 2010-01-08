@@ -27,15 +27,15 @@ import java.lang.ref.SoftReference;
 class ManagedBatch {
 
     private int beginRow;
-    private int endRow;
     private SoftReference<TupleBatch> batchReference;
+    private long offset;
+    private int length;
     
     /**
      * Constructor for ManagedBatch.
      */
     public ManagedBatch(TupleBatch batch) {
         this.beginRow = batch.getBeginRow();
-        this.endRow = batch.getEndRow();
         this.batchReference = new SoftReference<TupleBatch>(batch);
     }
     
@@ -47,16 +47,8 @@ class ManagedBatch {
         return this.beginRow;
     }
     
-    /**
-     * Get the end row, inclusive
-     * @return End row
-     */
-    public int getEndRow() {
-        return this.endRow;
-    }
-
     public String toString() {
-        return "ManagedBatch[" + beginRow + ", " + endRow + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return "ManagedBatch[" + beginRow + "]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public TupleBatch getBatch() {
@@ -67,4 +59,20 @@ class ManagedBatch {
 		this.batchReference = new SoftReference<TupleBatch>(batch);
 	}
     
+    public int getLength() {
+		return length;
+	}
+    
+    public long getOffset() {
+		return offset;
+	}
+    
+    public void setLength(int length) {
+		this.length = length;
+	}
+    
+    public void setOffset(long offset) {
+		this.offset = offset;
+	}
+        
 }

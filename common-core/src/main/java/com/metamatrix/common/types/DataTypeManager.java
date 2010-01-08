@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.types;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -42,17 +43,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Source;
 
 import com.metamatrix.common.types.basic.AnyToObjectTransform;
 import com.metamatrix.common.types.basic.AnyToStringTransform;
 import com.metamatrix.common.types.basic.BooleanToNumberTransform;
-import com.metamatrix.common.types.basic.FloatingNumberToBigDecimalTransform;
-import com.metamatrix.common.types.basic.FloatingNumberToBigIntegerTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigDecimalTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigIntegerTransform;
+import com.metamatrix.common.types.basic.FloatingNumberToBigDecimalTransform;
+import com.metamatrix.common.types.basic.FloatingNumberToBigIntegerTransform;
 import com.metamatrix.common.types.basic.NullToAnyTransform;
 import com.metamatrix.common.types.basic.NumberToBooleanTransform;
 import com.metamatrix.common.types.basic.NumberToByteTransform;
@@ -64,6 +63,7 @@ import com.metamatrix.common.types.basic.NumberToShortTransform;
 import com.metamatrix.common.types.basic.ObjectToAnyTransform;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 
 /**
@@ -602,7 +602,7 @@ public class DataTypeManager {
 				return new BlobType(value);
 			}
 		});
-		sourceConverters.put(byte[].class, new SourceTransform<byte[], BlobType>() {
+		addSourceTransform(byte[].class, new SourceTransform<byte[], BlobType>() {
 			//## JDBC4.0-begin ##
 			@Override
 			//## JDBC4.0-end ##
@@ -610,7 +610,7 @@ public class DataTypeManager {
 				return new BlobType(BlobType.createBlob(value));
 			}
 		});
-		sourceConverters.put(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
+		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
 			//## JDBC4.0-begin ##
 			@Override
 			//## JDBC4.0-end ##
@@ -618,31 +618,24 @@ public class DataTypeManager {
 				return new XMLType(value);
 			}
 		});
-		sourceConverters.put(DOMSource.class, new SourceTransform<DOMSource, XMLType>() {
+		//Note: the default transform from non-InputStreamFactory source is a fully materialized string
+		addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
 			//## JDBC4.0-begin ##
 			@Override
 			//## JDBC4.0-end ##
-			public XMLType transform(DOMSource value) {
-				return new XMLType(new SQLXMLImpl(value));
+			public XMLType transform(Source value) {
+				if (value instanceof InputStreamFactory) {
+					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
+				}
+				StandardXMLTranslator sxt = new StandardXMLTranslator(value, null);
+				try {
+					return new XMLType(new SQLXMLImpl(sxt.getString()));
+				} catch (IOException e) {
+					throw new MetaMatrixRuntimeException(e);
+				}
 			}
 		});
-		sourceConverters.put(SAXSource.class, new SourceTransform<SAXSource, XMLType>() {
-			//## JDBC4.0-begin ##
-			@Override
-			//## JDBC4.0-end ##
-			public XMLType transform(SAXSource value) {
-				return new XMLType(new SQLXMLImpl(value));
-			}
-		});
-		sourceConverters.put(StreamSource.class, new SourceTransform<StreamSource, XMLType>() {
-			//## JDBC4.0-begin ##
-			@Override
-			//## JDBC4.0-end ##
-			public XMLType transform(StreamSource value) {
-				return new XMLType(new SQLXMLImpl(value));
-			}
-		});
-		sourceConverters.put(Date.class, new SourceTransform<Date, Timestamp>() {
+		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>() {
 			//## JDBC4.0-begin ##
 			@Override
 			//## JDBC4.0-end ##
@@ -701,5 +694,9 @@ public class DataTypeManager {
             || DataTypeManager.DefaultDataTypes.BLOB.equals(type)
             || DataTypeManager.DefaultDataTypes.CLOB.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
+    }
+    
+    public static <S> void addSourceTransform(Class<S> sourceClass, SourceTransform<S, ?> transform) {
+    	sourceConverters.put(sourceClass, transform);
     }
 }

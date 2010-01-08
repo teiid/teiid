@@ -31,8 +31,9 @@ import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.StandardXMLTranslator;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.CorePlugin;
@@ -53,7 +54,8 @@ public class StringToSQLXMLTransform extends Transform {
         try{        
              DocumentBuilder parser = factory.newDocumentBuilder();
              Document doc = parser.parse(new InputSource(new StringReader(xml)));
-             return new XMLType(new SQLXMLImpl(new DOMSource(doc)));
+             StandardXMLTranslator sxt = new StandardXMLTranslator(new DOMSource(doc), null);
+             return new XMLType(new SQLXMLImpl(sxt.getString()));
         }
         catch (Exception e){
             throw new TransformationException(e, CorePlugin.Util.getString("invalid_string")); //$NON-NLS-1$

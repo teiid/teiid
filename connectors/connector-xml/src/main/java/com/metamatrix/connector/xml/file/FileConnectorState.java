@@ -23,20 +23,15 @@
 
 package com.metamatrix.connector.xml.file;
 
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.util.Properties;
 
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.base.XMLConnectorStateImpl;
-import com.metamatrix.connector.xml.cache.CachingInputStreamFilter;
 
 
 public class FileConnectorState extends XMLConnectorStateImpl {
@@ -105,34 +100,8 @@ public class FileConnectorState extends XMLConnectorStateImpl {
 		return m_directoryPath;
 	}
 
-	public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
+	public Connection getConnection(StatefulConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
 		return new FileConnectionImpl(connector, context, environment);
 	}
-
-	public InputStream addStreamFilters(InputStream stream)
-			throws ConnectorException {
-
-		if (isLogRequestResponse()) {
-			stream = new LoggingInputStreamFilter(stream, logger);
-		}
-
-		try {
-			Class pluggableFilter = Class
-					.forName(getPluggableInputStreamFilterClass());
-			Constructor ctor = pluggableFilter.getConstructor(new Class[] {
-					java.io.InputStream.class,
-					ConnectorLogger.class });
-			stream = (InputStream) ctor.newInstance(new Object[] { stream,
-					logger });
-		} catch (Exception cnf) {
-			throw new ConnectorException(cnf);
-		}
-		return stream;
-	}
 	
-	public InputStream addCachingStreamFilters(InputStream stream, ExecutionContext context, String queryId) throws ConnectorException {
-		stream = addStreamFilters(stream);
-		stream = new CachingInputStreamFilter(stream, context, queryId);
-		return stream;
-	}
 }

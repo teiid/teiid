@@ -298,6 +298,8 @@ public class TempTableStoreImpl implements TempTableStore {
             for (List<Object> list : tuples) {
 				tsId.addTuple(list);
 			}
+            //TODO: this leads to fragmented batches, which may require recreating the table
+            tsId.saveBatch(false);
             
             tuplesAdded = tuples.size();
         } catch (QueryMetadataException err) {

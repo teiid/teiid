@@ -33,19 +33,13 @@ import com.metamatrix.core.CorePlugin;
  * <p>A reference stream id is tuple source id for a Streamble object where the 
  * object is in buffer manager, but the contents will never be written to disk;
  * this is the ID that client needs to reference to get the chunk of data.
- * 
- * <p>A Persistent stream id is Tuple source id under which the server *may* 
- * have saved the data to disk in buffer manager. In case of XML it is saved
- * however in case of Clobs and Blobs it is not saved yet. This id is used by
- * the process worker to in case the reference object has lost its state and we 
- * need to reinsate the object from the disk.
  */
 public abstract class Streamable<T> implements Serializable {
+	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
     public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 
     private String referenceStreamId;
-    private String persistenceStreamId;
     protected transient T reference;
     
     public Streamable() {
@@ -76,14 +70,6 @@ public abstract class Streamable<T> implements Serializable {
         this.referenceStreamId = id;
     }
     
-    public String getPersistenceStreamId() {
-        return persistenceStreamId;
-    }
-
-    public void setPersistenceStreamId(String id) {
-        this.persistenceStreamId = id;
-    } 
-    
     @Override
     public String toString() {
         return reference.toString();
@@ -103,8 +89,7 @@ public abstract class Streamable<T> implements Serializable {
     		return this.reference.equals(other.reference);
     	}
     	
-    	return this.persistenceStreamId == other.persistenceStreamId
-		&& this.referenceStreamId == other.referenceStreamId;
+    	return this.referenceStreamId == other.referenceStreamId;
     }
 
 }

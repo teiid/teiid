@@ -70,7 +70,9 @@ class FunctionTree {
     /**
      * Function selection use: Map of function name (uppercase) to List of FunctionMethod
      */
-    private Map functionsByName = new HashMap();
+    private Map<String, List<FunctionMethod>> functionsByName = new HashMap<String, List<FunctionMethod>>();
+    
+    private Set<FunctionMethod> allFunctions = new HashSet<FunctionMethod>();
 
 	/**
 	 * Function lookup and invocation use: Function name (uppercase) to Map (recursive tree)
@@ -160,11 +162,7 @@ class FunctionTree {
 	 * newer indistinguishable functions will just not be added.
 	 */
 	private boolean containsIndistinguishableFunction(FunctionMethod method){
-        List knownMethods = (List) functionsByName.get(method.getName().toUpperCase());
-        if(knownMethods == null) {
-			return false;
-        }
-        return knownMethods.contains(method);
+        return allFunctions.contains(method);
 	}
 
     /**
@@ -202,12 +200,13 @@ class FunctionTree {
         methods.add(method);
 
         // Add method to list by function name
-        List knownMethods = (List) functionsByName.get(nameKey);
+        List<FunctionMethod> knownMethods = functionsByName.get(nameKey);
         if(knownMethods == null) {
-            knownMethods = new ArrayList();
+            knownMethods = new ArrayList<FunctionMethod>();
             functionsByName.put(nameKey, knownMethods);
         }
         knownMethods.add(method);
+        allFunctions.add(method);
     }
 
     /**
@@ -265,7 +264,7 @@ class FunctionTree {
      */
     List<FunctionMethod> findFunctionMethods(String name, int args) {
         final List<FunctionMethod> allMatches = new ArrayList<FunctionMethod>();
-        List<FunctionMethod> methods = (List<FunctionMethod>) functionsByName.get(name.toUpperCase());
+        List<FunctionMethod> methods = functionsByName.get(name.toUpperCase());
         if(methods == null || methods.size() == 0) {
             return allMatches;
         }
@@ -305,8 +304,6 @@ class FunctionTree {
         	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
         }
 
-        inputTypes.add(0, CommandContext.class);
-
         // Get return type
         FunctionParameter outputParam = method.getOutputParameter();
         Class outputType = null;
@@ -323,10 +320,10 @@ class FunctionTree {
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
                 try {
                 	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
-                	requiresContext = true;
                 } catch (NoSuchMethodException e) {
-		            inputTypes = inputTypes.subList(1, inputTypes.size());
+                    inputTypes.add(0, CommandContext.class);
                 	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
+                	requiresContext = true;
                 }
             } catch (ClassNotFoundException e) {
               // Failed to load class, so can't load method - this will fail at invocation time.
@@ -339,6 +336,8 @@ class FunctionTree {
             if(invocationMethod != null && !FunctionTree.isValidMethod(invocationMethod)) {
             	throw new MetaMatrixRuntimeException(ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, inputTypes}));
             }
+        } else {
+            inputTypes.add(0, CommandContext.class);
         }
 
         FunctionDescriptor descriptor = new FunctionDescriptor(method.getName(), method.getPushdown(), types, outputType, invocationMethod, requiresContext, method.isNullDependent(), method.getDeterministic());

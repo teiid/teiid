@@ -22,23 +22,15 @@
 
 package com.metamatrix.query.processor.dynamic;
 
-import java.io.BufferedReader;
 import java.util.Collections;
 
 import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import junit.framework.TestCase;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
-
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.types.StandardXMLTranslator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -77,55 +69,15 @@ public class TestSqlEval extends TestCase {
     }
     
     String toXMLString(Source xmlSrc) throws Exception{
-        if (xmlSrc instanceof StreamSource) {
-            StreamSource input = (StreamSource)xmlSrc;
-            BufferedReader reader = new BufferedReader(input.getReader());
-            StringBuffer sb = new StringBuffer();
-            
-            int line = reader.read();
-            while(line != -1) {
-                sb.append((char)line);
-                line = reader.read();
-            }
-            reader.close();
-            return sb.toString();            
-        }
-        else if (xmlSrc instanceof SAXSource) {
-            SAXSource input = (SAXSource)xmlSrc;
-            final StringBuffer sb = new StringBuffer();
-            ContentHandler handler = new DefaultHandler() {
-
-                public void characters(char[] ch,int start,int length) throws SAXException {
-                    sb.append(ch, start, length);
-                }
-                public void endDocument() throws SAXException {
-                    super.endDocument();
-                }
-                public void endElement(String uri,String localName,String qName) throws SAXException {
-                    sb.append("</").append(qName).append(">"); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                public void error(SAXParseException e) throws SAXException {
-                    super.error(e);
-                }
-                public void startDocument() throws SAXException {
-                    super.startDocument();
-                }
-                public void startElement(String uri,String localName,String qName, Attributes attributes) throws SAXException {
-                    sb.append("<").append(qName).append(">"); //$NON-NLS-1$ //$NON-NLS-2$
-                }                
-            };
-            input.getXMLReader().setContentHandler(handler);
-            input.getXMLReader().parse(input.getInputSource());
-            return sb.toString();
-        }
-        return ""; //$NON-NLS-1$
+    	StandardXMLTranslator sxt = new StandardXMLTranslator(xmlSrc, null);
+    	return sxt.getString();
     }
       
     public void testTableResult() throws Exception { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1"; //$NON-NLS-1$
         
-        String expected ="" + //$NON-NLS-1$ 
+        String expected ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$ 
                     "<results>" + //$NON-NLS-1$
                     "<row><e1>a</e1><e2>0</e2><a>false</a><b>2.0</b></row>" + //$NON-NLS-1$
                     "<row><e1>null</e1><e2>1</e2><a>false</a><b>1.0</b></row>" +//$NON-NLS-1$
@@ -148,9 +100,8 @@ public class TestSqlEval extends TestCase {
         // Create query 
         String sql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 where e2=4"; //$NON-NLS-1$
         
-        String expected ="" + //$NON-NLS-1$ 
-                    "<results>" + //$NON-NLS-1$
-                    "</results>";//$NON-NLS-1$
+        String expected ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$ 
+                    "<results/>"; //$NON-NLS-1$
                 
         // Construct data manager with data
         FakeDataManager dataMgr = new FakeDataManager();
@@ -166,7 +117,7 @@ public class TestSqlEval extends TestCase {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManager(metadata);
         String expected = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +  //$NON-NLS-1$
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +  //$NON-NLS-1$
             "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" + //$NON-NLS-1$
             "   <Catalog>\n" +  //$NON-NLS-1$
             "      <Items>\n" +  //$NON-NLS-1$

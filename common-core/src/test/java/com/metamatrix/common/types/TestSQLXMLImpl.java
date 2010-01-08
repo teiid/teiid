@@ -22,15 +22,10 @@
 
 package com.metamatrix.common.types;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.sql.SQLException;
-import java.util.Properties;
 
-import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import junit.framework.TestCase;
@@ -44,57 +39,34 @@ import com.metamatrix.core.util.ObjectConverterUtil;
 public class TestSQLXMLImpl extends TestCase {
 
     String testStr = "<foo>test</foo>"; //$NON-NLS-1$
-    
-    XMLTranslator translator = new XMLTranslator() {        
-        public String getString() throws IOException {
-            return testStr; 
-        }
-        public Source getSource() throws IOException {
-            return new StreamSource(new StringReader(testStr));
-        }
-        public Reader getReader() throws IOException {
-            return new StringReader(testStr);
-        }
-
-        public InputStream getInputStream() throws IOException {
-            return new ByteArrayInputStream(testStr.getBytes());
-        }
-
-        public Properties getProperties() {
-            Properties p = new Properties();
-            p.setProperty("indent", "yes"); //$NON-NLS-1$ //$NON-NLS-2$
-            return p;
-        }        
-    };
-    
+        
 	//## JDBC4.0-begin ##
     public void testGetSource() throws Exception {        
-        SQLXMLImpl xml = new SQLXMLImpl(translator);
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertTrue(xml.getSource(null) instanceof StreamSource);
         
         StreamSource ss = (StreamSource)xml.getSource(null);
-        assertEquals(testStr, getContents(ss.getReader()));
+        assertEquals(testStr, new String(ObjectConverterUtil.convertToByteArray(ss.getInputStream()), Streamable.ENCODING));
     }
 	//## JDBC4.0-end ##
     
     public void testGetCharacterStream() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertEquals(testStr, getContents(xml.getCharacterStream()));
     }
 
     public void testGetBinaryStream() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);
-        assertEquals(testStr, ObjectConverterUtil.convertToString(xml.getBinaryStream()));
-
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);
+        assertEquals(testStr, new String(ObjectConverterUtil.convertToByteArray(xml.getBinaryStream()), Streamable.ENCODING));
     }
 
     public void testGetString() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertEquals(testStr, xml.getString());
     }
 
     public void testSetBinaryStream() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);        
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);        
         try {
             xml.setBinaryStream();
             fail("we do not support this yet.."); //$NON-NLS-1$
@@ -103,7 +75,7 @@ public class TestSQLXMLImpl extends TestCase {
     }
 
     public void testSetCharacterStream() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);        
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);        
         try {
             xml.setCharacterStream();
             fail("we do not support this yet.."); //$NON-NLS-1$
@@ -112,7 +84,7 @@ public class TestSQLXMLImpl extends TestCase {
     }
 
     public void testSetString() throws Exception {
-        SQLXMLImpl xml = new SQLXMLImpl(translator);        
+        SQLXMLImpl xml = new SQLXMLImpl(testStr);        
         try {
             xml.setString(testStr);
             fail("we do not support this yet.."); //$NON-NLS-1$

@@ -26,14 +26,14 @@ public abstract class BaseStreamingExecution implements XMLExecution {
 	
 	protected StreamingResultsProducer rowProducer;
 	
-	protected List<Object[]> results;
+	protected List<Object[]> results = new ArrayList<Object[]>();
 	private int resultIndex;
 	private Iterator<Document> streamIter;
 	
 	// A single query can result in multiple requests to an XML source.
 	// Each request is abstracted by a result producer.
 	// TODO: Do I really need more than one of theses?
-	protected List<ResultProducer> resultProducers;
+	protected List<ResultProducer> resultProducers = new ArrayList<ResultProducer>();
 	private Iterator<ResultProducer> producerIter;
 	
 	protected ExecutionInfo exeInfo;
@@ -53,8 +53,6 @@ public abstract class BaseStreamingExecution implements XMLExecution {
 		exeContext = context;
 		connEnv = env;
 		logger = connection.getConnectorEnv().getLogger();
-		resultProducers = new ArrayList<ResultProducer>();
-		results = new ArrayList<Object[]>();
 	}
 
 	public void cancel() throws ConnectorException {
@@ -62,7 +60,9 @@ public abstract class BaseStreamingExecution implements XMLExecution {
 	}
 
 	public void close() throws ConnectorException {
-		// nothing to do
+		for (ResultProducer resultProducer : resultProducers) {
+			resultProducer.closeStreams();
+		}
 	}
 
 	/**

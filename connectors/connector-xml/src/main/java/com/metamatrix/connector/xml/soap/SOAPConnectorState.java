@@ -30,7 +30,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.xml.CachingConnector;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 
 /**
@@ -83,7 +83,7 @@ public class SOAPConnectorState extends HTTPConnectorState implements
 		return soapState.isExceptionOnFault();
 	}
 	
-    public Connection getConnection(CachingConnector connector,
+    public Connection getConnection(StatefulConnector connector,
             ExecutionContext context, ConnectorEnvironment environment)
             throws ConnectorException {
         return new SOAPConnectionImpl(connector, context, environment);

@@ -25,13 +25,10 @@ package com.metamatrix.connector.xml.base;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.connector.xml.CachingConnector;
-
 //TODO This class used to hold the internal connector cache.  
 // I'm leaving it here so I can add cachein at a scope other than REQUEST.
 
-public abstract class AbstractCachingConnector extends LoggingConnector
-		implements CachingConnector {
+public abstract class AbstractCachingConnector extends LoggingConnector {
 
 	public AbstractCachingConnector() {
 		super();

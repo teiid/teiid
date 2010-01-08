@@ -22,13 +22,13 @@
 
 package com.metamatrix.common.lob;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 
+import com.metamatrix.common.types.Streamable;
 import com.metamatrix.core.CorePlugin;
 
 
@@ -38,15 +38,12 @@ import com.metamatrix.core.CorePlugin;
  * stream the lob data. 
  */
 public class LobChunkInputStream extends InputStream {
-    LobChunkProducer reader;
+    private LobChunkProducer reader;
 
-    byte[] byteData = null;
-    int currentCounter = 0;
-    boolean lastChunk = false;
-    int availableCounter = 0;
-    boolean closed = false;
-    
-    byte[] contents = null;
+    private byte[] byteData = null;
+    private int currentCounter = 0;
+    private boolean lastChunk = false;
+    private boolean closed = false;
     
     public LobChunkInputStream(LobChunkProducer reader) {
         this.reader = reader;
@@ -56,37 +53,19 @@ public class LobChunkInputStream extends InputStream {
         if (this.closed) {
             throw new IllegalStateException(CorePlugin.Util.getString("stream_closed")); //$NON-NLS-1$
         }        
-        if (this.availableCounter == 0) {
+        while (this.byteData == null || this.byteData.length <= currentCounter) {
         	if (this.lastChunk) {
 	            // we are done
 	            return -1;
         	}
-            fetchNextChunk();
-        }
-
-        // so we have data
-        int ret = -1;
-        if (this.availableCounter > 0) {
-            ret = (byteData[currentCounter++] & 0xFF);
-            this.availableCounter--;
-        }
-        return ret;
-    }
-
-    void fetchNextChunk() throws IOException {
-    	LobChunk value = this.reader.getNextChunk();
-        if (value != null) {
+        	LobChunk value = this.reader.getNextChunk();
             this.lastChunk = value.isLast();
             this.byteData = value.getBytes();
             this.currentCounter = 0;
-            this.availableCounter = this.byteData.length;
-        } else {
-            throw new IOException(CorePlugin.Util.getString("lob.invaliddata")); //$NON-NLS-1$
         }
-    }
 
-    public int read(byte[] b) throws IOException {
-        return read(b, 0, b.length);
+        // so we have data
+        return (byteData[currentCounter++] & 0xFF);
     }
 
     /**  
@@ -97,30 +76,10 @@ public class LobChunkInputStream extends InputStream {
         this.reader.close();
     }
 
-    /** 
-     * Get the byte contents of the input stream. use caution as this may use up VM memory as
-     * the contents are loaded into memory.
-     */
-    public byte[] getByteContents() throws IOException {
-        if (this.contents == null) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(100*1024);
-            byte[] buf = new byte[100*1024];
-            int read = read(buf);                    
-            while(read != -1) {
-                bos.write(buf, 0, read);
-                read = read(buf);
-            }
-            close();
-            this.contents = bos.toByteArray();
-            bos.close();
-        }
-        return this.contents;
-    }
-    
     /**
-     * @return a valid UTF16 based reader
+     * @return a valid reader
      */
-    public Reader getUTF16Reader() {
-    	return new InputStreamReader(this, Charset.forName("UTF-16")); //$NON-NLS-1$
+    public Reader getReader() {
+    	return new InputStreamReader(this, Charset.forName(Streamable.ENCODING));
     }
 }

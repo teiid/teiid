@@ -22,10 +22,9 @@
 
 package com.metamatrix.query.xquery;
 
-import java.sql.SQLXML;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.types.XMLTranslator;
 
 /**
  * An XQueryExpression - the object representation of
@@ -53,11 +52,10 @@ public interface XQueryExpression {
      * value is interpreted to mean that XQueries are not supported
      * by this engine.
      * @param compiledXQuery compiled XQueryExpression
-     * @return retuns a result SQLXML object.
      * @throws MetaMatrixProcessingException if xQueryString is
      * invalid and fails to compile
      */
-    public SQLXML evaluateXQuery(XQuerySQLEvaluator sqlEval)
+    public XMLTranslator evaluateXQuery(XQuerySQLEvaluator sqlEval)
     throws MetaMatrixProcessingException, MetaMatrixComponentException;
     
     

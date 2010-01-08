@@ -244,28 +244,25 @@ public class TestAggregateProcessing {
     	
     	dataManager.addData("SELECT v_0.c_0, COUNT(v_0.c_1), MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList("a", Integer.valueOf(2), Boolean.TRUE), //$NON-NLS-1$
-    				Arrays.asList("b", null, null) //$NON-NLS-1$
+    				Arrays.asList("a", Integer.valueOf(2), Integer.valueOf(1)), //$NON-NLS-1$
     			});
     	dataManager.addData("SELECT v_0.c_0, COUNT(v_0.c_1), MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList("a", Integer.valueOf(3), Boolean.FALSE), //$NON-NLS-1$
-    				Arrays.asList("b", null, null) //$NON-NLS-1$
+    				Arrays.asList("a", Integer.valueOf(3), Integer.valueOf(2)), //$NON-NLS-1$
     			});
     	dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm2.g1 AS g_0", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList("a", Boolean.FALSE), //$NON-NLS-1$
-    				Arrays.asList("xyz", Boolean.FALSE), //$NON-NLS-1$
-    				Arrays.asList(null, Boolean.TRUE),
+    				Arrays.asList("a", Integer.valueOf(3)), //$NON-NLS-1$
+    				Arrays.asList("xyz", Integer.valueOf(4)), //$NON-NLS-1$
+    				Arrays.asList(null, Integer.valueOf(5)),
     			});
     	
     	ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
     	
     	List[] expected = new List[] { 
-                Arrays.asList(null, Integer.valueOf(1), Boolean.TRUE),
-                Arrays.asList("a", Integer.valueOf(6), Boolean.TRUE), //$NON-NLS-1$
-                Arrays.asList("b", null, null), //$NON-NLS-1$
-                Arrays.asList("xyz", Integer.valueOf(1), Boolean.FALSE) //$NON-NLS-1$
+                Arrays.asList(null, Integer.valueOf(1), Integer.valueOf(5)),
+                Arrays.asList("a", Integer.valueOf(6), Integer.valueOf(3)), //$NON-NLS-1$
+                Arrays.asList("xyz", Integer.valueOf(1), Integer.valueOf(4)) //$NON-NLS-1$
             };    
     	
     	helpProcess(plan, dataManager, expected);
@@ -283,12 +280,12 @@ public class TestAggregateProcessing {
     	
     	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, g_0.e1 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList(Integer.valueOf(2), "2", Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
-    				Arrays.asList(Integer.valueOf(1), "1", Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
+    				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
+    				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
     			});
     	dataManager.addData("SELECT v_0.c_1, v_0.c_0, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e2 AS c_0, convert(g_0.e2, string) AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_1 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList(Integer.valueOf(1), "1", Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
+    				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
     			});
     	
     	ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);

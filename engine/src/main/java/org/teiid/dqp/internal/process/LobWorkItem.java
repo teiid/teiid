@@ -38,15 +38,11 @@ import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class LobWorkItem implements Runnable {
 	
 	private RequestWorkItem parent;
-    private RequestID requestID; 
-    
-	private DQPCore dqpCore;
 	private int chunkSize; 
     
 	/* private work item state */
@@ -57,8 +53,6 @@ public class LobWorkItem implements Runnable {
 	
 	public LobWorkItem(RequestWorkItem parent, DQPCore dqpCore, String streamId, int streamRequestId) {
 		this.chunkSize = dqpCore.getChunkSize();
-		this.dqpCore = dqpCore;
-		this.requestID = parent.requestID;
 		this.streamId = streamId;
 		this.parent = parent;
 		this.streamRequestId = streamRequestId;
@@ -122,18 +116,16 @@ public class LobWorkItem implements Runnable {
         try {
             if (streamable instanceof XMLType) {
                 XMLType xml = (XMLType)streamable;
-                return new ByteLobChunkStream(new ReaderInputStream(xml.getCharacterStream(), Charset.forName("UTF-16")), chunkSize); //$NON-NLS-1$
+                return new ByteLobChunkStream(new ReaderInputStream(xml.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);
             }
             else if (streamable instanceof ClobType) {
                 ClobType clob = (ClobType)streamable;
-                return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName("UTF-16")), chunkSize); //$NON-NLS-1$            
+                return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);            
             } 
             BlobType blob = (BlobType)streamable;
             return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
         } catch(SQLException e) {
-            IOException ex = new IOException();
-            ex.initCause(e);
-            throw ex;
+            throw new IOException(e);
         }
     }
     

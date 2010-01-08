@@ -733,7 +733,7 @@ public class QueryRewriter {
         Iterator iter = outerQuery.getSelect().getProjectedSymbols().iterator();
         HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
         for (SingleElementSymbol symbol : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
-            expressionMap.put((Expression)SymbolMap.getExpression(symbol).clone(), (SingleElementSymbol)iter.next());
+            expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
         }
         ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
         outerQuery.setGroupBy(groupBy);

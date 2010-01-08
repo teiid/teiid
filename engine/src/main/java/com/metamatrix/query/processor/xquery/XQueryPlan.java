@@ -36,9 +36,9 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -121,7 +121,7 @@ public class XQueryPlan extends ProcessorPlan {
         
         SqlEval sqlEval = new SqlEval(this.dataManager, getContext(), this.xQuery.getProcedureGroup(), this.xQuery.getVariables());
         try {
-        	SQLXML xml = expr.evaluateXQuery(sqlEval);
+        	XMLTranslator xml = expr.evaluateXQuery(sqlEval);
             TupleBatch batch = packResultsIntoBatch(xml);        
             return batch;
         } finally {
@@ -146,19 +146,13 @@ public class XQueryPlan extends ProcessorPlan {
      * @param rawResults
      * @return
      */
-    private TupleBatch packResultsIntoBatch(SQLXML srcXML) throws MetaMatrixComponentException{
+    private TupleBatch packResultsIntoBatch(XMLTranslator translator) throws MetaMatrixComponentException{
         List rows = new ArrayList(1);
         List row = new ArrayList(1);
 
-        TupleBuffer savedId = XMLUtil.saveToBufferManager(this.bufferMgr, this.getContext().getConnectionID(), srcXML, this.chunkSize);
+        SQLXML srcXML = XMLUtil.saveToBufferManager(this.bufferMgr, translator, this.chunkSize);
 
-        //for large documents use the buffermanager version instead
-        if (savedId.getRowCount() > 1) {
-        	srcXML = XMLUtil.getFromBufferManager(savedId, getFormatProperties());
-        }
-        
         XMLType xml = new XMLType(srcXML);
-        savedId.setContainingLobReference(xml);
         
         // now build the top batch with information from the saved one.
         row.add(xml);

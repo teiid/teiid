@@ -42,7 +42,7 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.xml.CachingConnector;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.base.SecureConnectorStateImpl;
 
 public class HTTPConnectorState extends SecureConnectorStateImpl {
@@ -407,7 +407,7 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
         return m_httpBasicAuthPwd;
     }
 
-    public Connection getConnection(CachingConnector connector,
+    public Connection getConnection(StatefulConnector connector,
             ExecutionContext context, ConnectorEnvironment environment)
             throws ConnectorException {
         return new HTTPConnectionImpl(connector, context, environment);

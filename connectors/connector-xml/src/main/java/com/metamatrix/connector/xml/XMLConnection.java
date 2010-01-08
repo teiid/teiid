@@ -32,7 +32,7 @@ public interface XMLConnection extends Connection {
 
 	public XMLConnectorState getState();
 
-	public CachingConnector getConnector();
+	public StatefulConnector getConnector();
 
 	public TrustedPayloadHandler getTrustedPayloadHandler() throws ConnectorException;
 

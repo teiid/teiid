@@ -23,6 +23,8 @@
 package com.metamatrix.query.function.metadata;
 
 import java.io.Serializable;
+import java.util.Arrays;
+
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -333,12 +335,7 @@ public class FunctionMethod implements Serializable {
     public int hashCode() { 
         int hash = HashCodeUtil.hashCode(0, name);
         if(inputParameters != null) { 
-            hash = HashCodeUtil.hashCode(hash, inputParameters.length);
-            
-            // Base hash only on first input parameter type, not all, for performance
-            if(inputParameters.length > 0 && inputParameters[0] != null) {
-                hash = HashCodeUtil.hashCode(hash, inputParameters[0].getType());
-            }    
+            hash = HashCodeUtil.hashCode(hash, Arrays.hashCode(inputParameters));
         }             
         return hash;
     }
@@ -353,9 +350,8 @@ public class FunctionMethod implements Serializable {
     public boolean equals(Object obj) {
         if(obj == this) { 
             return true;
-        } else if(obj == null) { 
-            return false;
-        } else if(obj instanceof FunctionMethod) { 
+        } 
+        if(obj instanceof FunctionMethod) { 
             FunctionMethod other = (FunctionMethod) obj;
 
             // Compare # of parameters - do this first as it is much faster than name compare
@@ -390,10 +386,8 @@ public class FunctionMethod implements Serializable {
             
             // Found no discrepancies, must be equal
             return true;            
-        } else {
-            // Can't compare object of different type
-            return false;
-        }    
+        } 
+        return false;
     }    
     
     /**

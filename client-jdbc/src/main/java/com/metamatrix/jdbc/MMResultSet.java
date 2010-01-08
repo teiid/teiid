@@ -22,6 +22,7 @@
 
 package com.metamatrix.jdbc;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -49,8 +50,11 @@ import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobType;
+import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.SqlUtil;
@@ -304,7 +308,20 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
             currentValue = MMBlob.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (BlobType) currentValue);
         }
         else if (currentValue instanceof XMLType) {
-            currentValue = MMSQLXML.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (XMLType) currentValue);
+        	XMLType type = (XMLType)currentValue;
+        	if (Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
+        		SQLXML sourceSQLXML = type.getReference();
+            	if (sourceSQLXML != null) {
+            		return sourceSQLXML;
+            	}
+            }
+        	final StreamingLobChunckProducer.Factory factory = new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue);
+        	currentValue = new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
+        		@Override
+        		public InputStream getInputStream() throws IOException {
+        			return new LobChunkInputStream(factory.getLobChunkProducer());
+        		}
+        	});
         } 
         else if (currentValue instanceof java.util.Date) {
             return TimestampWithTimezone.create((java.util.Date)currentValue, serverTimeZone, getDefaultCalendar(), currentValue.getClass());

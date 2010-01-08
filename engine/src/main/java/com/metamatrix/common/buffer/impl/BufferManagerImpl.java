@@ -22,32 +22,32 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.xml.transform.Source;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.SourceTransform;
+import com.metamatrix.common.types.StandardXMLTranslator;
+import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.processor.xml.XMLUtil;
 import com.metamatrix.query.sql.symbol.Expression;
 
 /**
@@ -56,16 +56,11 @@ import com.metamatrix.query.sql.symbol.Expression;
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 
-    private String lookup;
-    
 	// Configuration 
     private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
     
-    private Map<TupleSourceID, TupleBuffer> tupleSourceMap = new ConcurrentHashMap<TupleSourceID, TupleBuffer>();
-    private Map<String, Set<TupleSourceID>> groupInfos = new HashMap<String, Set<TupleSourceID>>();
-
     private StorageManager diskMgr;
 
     private AtomicLong currentTuple = new AtomicLong(0);
@@ -120,16 +115,42 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     public TupleBuffer createTupleBuffer(List elements, String groupName,
     		TupleSourceType tupleSourceType)
     		throws MetaMatrixComponentException {
-        TupleSourceID newID = new TupleSourceID(String.valueOf(this.currentTuple.getAndIncrement()), this.lookup);
-        Set<TupleSourceID> tupleGroupInfo = getGroupInfo(groupName, true);
-        TupleBuffer tupleBuffer = new TupleBuffer(this, groupName, newID, elements, getTypeNames(elements), getProcessorBatchSize());
-        tupleGroupInfo.add(newID);
-		tupleSourceMap.put(newID, tupleBuffer);
+    	String newID = String.valueOf(this.currentTuple.getAndIncrement());
+        TupleBuffer tupleBuffer = new TupleBuffer(this, newID, elements, getTypeNames(elements), getProcessorBatchSize());
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Creating TupleBuffer:", newID, "of type "+tupleSourceType}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return tupleBuffer;
     }
+    
+    @Override
+    public FileStore createFileStore(String name) {
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
+        }
+    	return this.diskMgr.createFileStore(name);
+    }
+    
+	@Override
+	public void initialize(Properties props) throws MetaMatrixComponentException {
+		PropertiesUtils.setBeanProperties(this, props, "metamatrix.buffer"); //$NON-NLS-1$
+		DataTypeManager.addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
+			@Override
+			public XMLType transform(Source value) {
+				if (value instanceof InputStreamFactory) {
+					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
+				}
+				StandardXMLTranslator sxt = new StandardXMLTranslator(value, null);
+				SQLXMLImpl sqlxml;
+				try {
+					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
+				} catch (MetaMatrixComponentException e) {
+					throw new MetaMatrixRuntimeException(e);
+				}
+				return new XMLType(sqlxml);
+			}
+		});
+	}
     
     /**
      * Gets the data type names for each of the input expressions, in order.
@@ -149,119 +170,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         return types;
     }
 
-    /**
-     * Remove all the tuple sources with the specified group name.  Typically the group
-     * name is really a session identifier and this is called to remove all tuple sources
-     * used by a particular session.
-     * @param groupName Name of the group
-     * @throws MetaMatrixComponentException If internal server error occurs
-     */
-    public void removeTupleBuffers(String groupName)
-    throws MetaMatrixComponentException {
-
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleBuffers for group", groupName}); //$NON-NLS-1$
-        }
-
-        Set<TupleSourceID> tupleGroupInfo = null;
-        synchronized(groupInfos) {
-        	tupleGroupInfo = groupInfos.remove(groupName);
-        }
-        if (tupleGroupInfo == null) {
-        	return;
-        }
-        List<TupleSourceID> tupleSourceIDs = null;
-        synchronized (tupleGroupInfo) {
-			tupleSourceIDs = new ArrayList<TupleSourceID>(tupleGroupInfo);
-		}
-        for (TupleSourceID tsID : tupleSourceIDs) {
-     		try {
-     			TupleBuffer tupleBuffer = getTupleBuffer(tsID);
-     			tupleBuffer.remove();
-     		} catch(TupleSourceNotFoundException e) {
-     			// ignore and go on
-     		}
-        }
-    }
-
-    /**
-     * Get the tuple source info for the specified tuple source ID
-     * @param tupleSourceID Tuple source to get
-     * @return Tuple source info
-     * @throws TupleSourceNotFoundException If not found
-     */
-    public TupleBuffer getTupleBuffer(TupleSourceID tupleSourceID) throws TupleSourceNotFoundException {
-    	TupleBuffer info = this.tupleSourceMap.get(tupleSourceID);
-
-        if(info == null) {
-        	throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", tupleSourceID)); //$NON-NLS-1$
-        }
-        return info;
-    }
-    
-    /**
-     * Gets a TupleGroupInfo representing the group 
-     * @param groupName Logical grouping name for tuple sources. Can be null.
-     * @return TupleGroupInfo for the group. Never null.
-     * @since 4.3
-     */
-    private Set<TupleSourceID> getGroupInfo(String groupName, boolean create) {
-    	Set<TupleSourceID> info = null;
-        synchronized(groupInfos) {
-            info = groupInfos.get(groupName);
-            if (info == null && create) {
-                // If it doesn't exist, create a new one
-                info = Collections.synchronizedSet(new HashSet<TupleSourceID>());
-                groupInfos.put(groupName, info);
-            }
-        }
-        return info;
-    }
-
-	@Override
-	public void addBatch(TupleSourceID sourceID, TupleBatch batch,
-			String[] types) throws MetaMatrixComponentException {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"AddTupleBatch for", sourceID, "with " + batch.getRowCount() + " rows"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        }
-		this.diskMgr.addBatch(sourceID, batch, types);
-	}
-
-	@Override
-	public TupleBatch getBatch(TupleSourceID sourceID, int beginRow,
-			String[] types) throws TupleSourceNotFoundException,
-			MetaMatrixComponentException {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"Getting tupleBatch for", sourceID, "beginRow:", beginRow}); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-		return this.diskMgr.getBatch(sourceID, beginRow, types);
-	}
-
-	@Override
-	public void initialize(Properties props)
-			throws MetaMatrixComponentException {
-		this.lookup = "local"; //$NON-NLS-1$
-		PropertiesUtils.setBeanProperties(this, props, "metamatrix.buffer"); //$NON-NLS-1$
-	}
-
-	@Override
-	public void removeBatches(TupleSourceID sourceID) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleBuffer:", sourceID}); //$NON-NLS-1$
-        }
-		TupleBuffer tupleBuffer = this.tupleSourceMap.remove(sourceID);
-		if (tupleBuffer != null) {
-			Set<TupleSourceID> ids = getGroupInfo(tupleBuffer.getGroupName(), false);
-			if (ids != null) {
-				ids.remove(sourceID);
-			}
-		}
-		this.diskMgr.removeBatches(sourceID);
-	}
-
-	@Override
 	public void shutdown() {
-		this.diskMgr.shutdown();
 	}
     
 }

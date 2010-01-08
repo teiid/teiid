@@ -3,14 +3,18 @@ package com.metamatrix.connector.xml.http;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -23,7 +27,6 @@ import org.apache.commons.httpclient.util.ParameterParser;
 import org.jdom.Document;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.connector.xml.Constants;
 import com.metamatrix.connector.xml.SAXFilterProvider;
@@ -32,12 +35,11 @@ import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
-import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
 import com.metamatrix.connector.xml.base.OutputXPathDesc;
 import com.metamatrix.connector.xml.base.ParameterDescriptor;
 import com.metamatrix.connector.xml.base.RequestGenerator;
-import com.metamatrix.connector.xml.cache.CachedXMLStream;
 import com.metamatrix.connector.xml.streaming.DocumentImpl;
+import com.metamatrix.core.util.Assertion;
 
 public class HTTPRequest extends BaseRequest {
 	
@@ -50,8 +52,9 @@ public class HTTPRequest extends BaseRequest {
     public static final String PARM_INPUT_XPATH_TABLE_PROPERTY_NAME = "XPathRootForInput"; //$NON-NLS-1$
 
     public static final String PARM_INPUT_NAMESPACE_TABLE_PROPERTY_NAME = "NamespaceForDocument"; //$NON-NLS-1$
-
-
+    
+    protected SQLXML response;
+    
 	public HTTPRequest(HTTPConnectorState state, XMLExecution execution,
 			ExecutionInfo exeInfo, List<CriteriaDesc> parameters) throws ConnectorException {
 		super(state, execution, exeInfo, parameters);
@@ -76,35 +79,32 @@ public class HTTPRequest extends BaseRequest {
 	
 	public com.metamatrix.connector.xml.Document getDocumentStream() throws ConnectorException {
 		com.metamatrix.connector.xml.Document document;
-		ExecutionContext exeContext = execution.getExeContext();
-        String cacheKey = getCacheKey();
+		//ExecutionContext exeContext = execution.getExeContext();
 
-        // Is this a request part joining across a document
-        CriteriaDesc criterion = this.exeInfo.getResponseIDCriterion();
-        if (null != criterion) {
-            String responseid = (String) (criterion.getValues().get(0));
-            
-            if(null == exeContext.get(responseid)) {
-            	throw new ConnectorException(Messages.getString("HTTPExecutor.No.doc.in.cache"));
-            } else {
-            	InputStream stream = new CachedXMLStream(exeContext, responseid);
-            	document = new DocumentImpl(stream, cacheKey);
-
-            }
-        } else {
-        	// Not a join, but might still be cached.
-            if (null == exeContext.get(cacheKey)) {
-            	// Not cached, so make the request
-                SAXFilterProvider provider = null;
-                provider = getState().getSAXFilterProvider();
-                InputStream responseBody = executeRequest();
-                InputStream filteredStream = addStreamFilters(responseBody, getLogger());
-                document = new DocumentImpl(filteredStream, cacheKey);
-            } else {
-            	InputStream stream = new CachedXMLStream(exeContext, cacheKey);
-            	document = new DocumentImpl(stream, cacheKey);
-            }
-        }
+		try {
+	        // Is this a request part joining across a document
+	        CriteriaDesc criterion = this.exeInfo.getResponseIDCriterion();
+	        if (null != criterion) {
+	            String responseid = (String) (criterion.getValues().get(0));
+	            SQLXML xml = this.execution.getConnection().getState().getResponses().get(responseid);
+	            Assertion.isNotNull(xml);
+	        	document = new DocumentImpl(xml.getBinaryStream(), responseid);
+	        } else {
+	        	// Not a join, but might still be cached.
+	            //if (null == exeContext.get(cacheKey)) {
+	            	// Not cached, so make the request
+	                SAXFilterProvider provider = getState().getSAXFilterProvider();
+	                InputStream responseBody = executeRequest();
+	                InputStream filteredStream = getState().addStreamFilters(responseBody);
+	                document = new DocumentImpl(filteredStream, this.execution.getExeContext().getExecutionCountIdentifier());
+	            //} else {
+	            //	InputStream stream = new CachedXMLStream(exeContext, cacheKey);
+	            //	document = new DocumentImpl(stream, cacheKey);
+	            //}
+	        }
+		} catch (SQLException e) {
+			throw new ConnectorException(e);
+		}
 		return document;
 	}
 	
@@ -137,49 +137,19 @@ public class HTTPRequest extends BaseRequest {
         return m_allowHttp500;
     }
     
-
-
 	public void release() {
-		request.releaseConnection();
+		if (request != null) {
+			request.releaseConnection();
+		}
+		if (response != null) {
+			this.execution.getConnection().getState().getResponses().remove(this.execution.getExeContext().getExecutionCountIdentifier());
+			try {
+				response.free();
+			} catch (SQLException e) {
+			}
+			response = null;
+		}
 	}
-
-    protected String getCacheKey() throws ConnectorException {
-
-        if (request == null) {
-            String message = com.metamatrix.connector.xml.http.Messages
-                    .getString("HttpExecutor.cannot.create.cachekey");
-            throw new ConnectorException(message);
-        }
-        // the key consists of a String in the form of
-        // |uri|parameterList|
-        String userName = execution.getConnection().getUser();
-        String session = execution.getConnection().getQueryId();
-
-        StringBuffer cacheKey = new StringBuffer();
-        cacheKey.append("|"); //$NON-NLS-1$
-        cacheKey.append(userName);
-        cacheKey.append("|");
-        cacheKey.append(session);
-        cacheKey.append("|");
-        cacheKey.append(getUriString());
-        cacheKey.append("|"); //$NON-NLS-1$
-
-        if (request instanceof PostMethod) {
-            NameValuePair[] pairs = ((PostMethod) request).getParameters();
-            if (pairs == null || pairs.length == 0) {
-                if (((PostMethod) request).getRequestEntity() != null) {
-                    String requestBodyAsString = ((StringRequestEntity) (((PostMethod) request)
-                            .getRequestEntity())).getContent();
-                    cacheKey.append(requestBodyAsString);
-                }
-            } else {
-                cacheKey.append(generatePairString(pairs));
-            }
-        } else {
-            cacheKey.append(request.getQueryString());
-        }
-        return cacheKey.toString();
-    }
 
     protected InputStream executeRequest() throws ConnectorException {
         HttpClient client = (getState()).getClient();
@@ -202,9 +172,18 @@ public class HTTPRequest extends BaseRequest {
         modifyRequest(client, request);
         InputStream responseBody = m_requestor.fetchXMLDocument(client,
                 request, getAllowHttp500());
-        return responseBody;
+        try {
+        	createSQLXML(new StreamSource(responseBody));
+        	return response.getBinaryStream();
+		} catch (SQLException e) {
+			throw new ConnectorException(e);
+		} 
     }
-
+    
+	protected void createSQLXML(Source output) {
+		response = (SQLXML)this.execution.getConnection().getConnectorEnv().getTypeFacility().convertToRuntimeType(output);
+		this.execution.getConnection().getState().getResponses().put(this.execution.getExeContext().getExecutionCountIdentifier(), response);
+	}
 
     private void createRequests() throws ConnectorException {
         if (checkIfRequestIsNeeded(exeInfo)) {
@@ -495,26 +474,6 @@ public class HTTPRequest extends BaseRequest {
 
 	protected ConnectorLogger getLogger() {
 		return getState().getLogger();
-	}
-
-
-	public InputStream addStreamFilters(InputStream response, ConnectorLogger logger)
-	throws ConnectorException {
-		
-		if(getState().isLogRequestResponse()) {
-			response = new LoggingInputStreamFilter(response, logger);
-		}
-		
-		InputStream filter = null;
-		try {
-			Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(getState().getPluggableInputStreamFilterClass());
-			Constructor ctor = pluggableFilter.getConstructor(
-					new Class[] { java.io.InputStream.class, org.teiid.connector.api.ConnectorLogger.class});
-			filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
-		} catch (Exception cnf) {
-			throw new ConnectorException(cnf);
-		}
-		return filter;
 	}
 
 	/**

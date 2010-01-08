@@ -28,7 +28,6 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.util.CommandContext;
 

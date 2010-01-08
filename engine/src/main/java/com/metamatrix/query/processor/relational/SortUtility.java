@@ -176,15 +176,16 @@ public class SortUtility {
 	        	break;
 	        }
 		
-	        TupleBuffer activeID = createTupleBuffer();
-	        activeTupleBuffers.add(activeID);
+	        TupleBuffer sublist = createTupleBuffer();
+	        activeTupleBuffers.add(sublist);
 	        if (this.mode == Mode.SORT) {
 	        	//perform a stable sort
 	    		Collections.sort(workingTuples, comparator);
 	        }
 	        for (List<?> list : workingTuples) {
-				activeID.addTuple(list);
+				sublist.addTuple(list);
 			}
+	        sublist.saveBatch(false);
         }
     	
     	if (this.activeTupleBuffers.isEmpty()) {
@@ -241,7 +242,7 @@ public class SortUtility {
             		id.remove();
             	}
             }
-
+            merged.saveBatch(false);
             this.activeTupleBuffers.add(merged);           
             masterSortIndex = masterSortIndex - sortedIndex + 1;
             if (masterSortIndex < 0) {

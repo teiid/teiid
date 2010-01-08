@@ -8,12 +8,12 @@ import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.connector.xml.CachingConnector;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 
 public class HTTPConnectionImpl extends XMLConnectionImpl {
 
-	public HTTPConnectionImpl(CachingConnector connector, ExecutionContext context,
+	public HTTPConnectionImpl(StatefulConnector connector, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) throws ConnectorException {
 		super(connector,context, connectorEnv);
 	}

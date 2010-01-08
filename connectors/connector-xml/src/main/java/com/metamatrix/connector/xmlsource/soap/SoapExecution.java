@@ -52,7 +52,6 @@ public class SoapExecution extends XMLSourceExecution {
     // Connection object.
     SoapConnection connection;
     Map outputValues = null; 
-    Source returnValue = null;   
     RuntimeMetadata metadata = null;
     ExecutionContext context;
     private IProcedure procedure;
@@ -120,10 +119,5 @@ public class SoapExecution extends XMLSourceExecution {
             throw new ConnectorException(e);
         }
     }
-    
-    @Override
-	public Source getReturnValue() {
-		return returnValue;
-	}
     
 }

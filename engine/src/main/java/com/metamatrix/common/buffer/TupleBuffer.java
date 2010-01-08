@@ -22,8 +22,11 @@
 
 package com.metamatrix.common.buffer;
 
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -38,6 +42,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.query.execution.QueryExecPlugin;
 
 public class TupleBuffer {
 	
@@ -97,8 +102,7 @@ public class TupleBuffer {
 	    }
 	    
 	    // Retrieves the necessary batch based on the currentRow
-	    TupleBatch getBatch()
-	    throws MetaMatrixComponentException{
+	    TupleBatch getBatch() throws MetaMatrixComponentException{
 	    	TupleBatch batch = null;
 	    	if (currentBatch != null) {
 	            batch = currentBatch.get();
@@ -147,38 +151,28 @@ public class TupleBuffer {
 	    }
 	}
 
-	private static class LobReference extends PhantomReference<Streamable<?>> {
-		
-		String persistentStreamId;
-		
-		public LobReference(Streamable<?> lob) {
-			super(lob, LOB_QUEUE);
-			this.persistentStreamId = lob.getPersistenceStreamId();
-		}		
-	}
-	
 	private static final AtomicLong LOB_ID = new AtomicLong();
-	private static final ReferenceQueue<Streamable<?>> LOB_QUEUE = new ReferenceQueue<Streamable<?>>();
 	
 	//construction state
 	private StorageManager manager;
-	private String groupName;
-	private TupleSourceID tupleSourceID;
+	private String tupleSourceID;
 	private List<?> schema;
 	private String[] types;
 	private int batchSize;
+	
+	private FileStore store;
 
 	private int rowCount;
 	private boolean isFinal;
     private TreeMap<Integer, ManagedBatch> batches = new TreeMap<Integer, ManagedBatch>();
 	private ArrayList<List<?>> batchBuffer;
+	private AtomicInteger referenceCount = new AtomicInteger(1);
 
     //lob management
     private Map<String, Streamable<?>> lobReferences; //references to contained lobs
     private boolean lobs = true;
-	private LobReference containingLobReference; //reference to containing lob
 	
-	public TupleBuffer(StorageManager manager, String groupName, TupleSourceID id, List<?> schema, String[] types, int batchSize) {
+	public TupleBuffer(StorageManager manager, String id, List<?> schema, String[] types, int batchSize) {
 		this.manager = manager;
 		this.tupleSourceID = id;
 		this.schema = schema;
@@ -195,18 +189,12 @@ public class TupleBuffer {
 		    	lobs = false;
 		    }
         }
-		this.groupName = groupName;
-	}
-	
-	public String getGroupName() {
-		return groupName;
-	}
-
-	public boolean isBatchBufferEmpty() {
-		return this.batchBuffer == null || this.batchBuffer.isEmpty();
 	}
 	
 	public void addTuple(List<?> tuple) throws MetaMatrixComponentException {
+		if (lobs) {
+			correctLobReferences(new List[] {tuple});
+		}
 		this.rowCount++;
 		if (batchBuffer == null) {
 			batchBuffer = new ArrayList<List<?>>(batchSize/4);
@@ -217,27 +205,62 @@ public class TupleBuffer {
 		}
 	}
 
-	void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
-		if ((batchBuffer == null || batchBuffer.isEmpty()) && !finalBatch) {
+	public void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
+		Assertion.assertTrue(!this.isRemoved());
+		if (batchBuffer == null || batchBuffer.isEmpty()) {
 			return;
 		}
-		List rows = batchBuffer==null?Collections.emptyList():batchBuffer;
+		List<?> rows = batchBuffer==null?Collections.emptyList():batchBuffer;
         TupleBatch writeBatch = new TupleBatch(rowCount - rows.size() + 1, rows);
         if (finalBatch) {
         	writeBatch.setTerminationFlag(true);
         }
-        if (writeBatch.getTerminationFlag()) {
-			this.isFinal = true;
-		}
-		correctLobReferences(writeBatch);
 		ManagedBatch mbatch = new ManagedBatch(writeBatch);
+		if (this.store == null) {
+			this.store = this.manager.createFileStore(this.tupleSourceID);
+			this.store.setCleanupReference(this);
+		}
+		byte[] bytes = convertToBytes(writeBatch);
+		mbatch.setLength(bytes.length);
+		mbatch.setOffset(this.store.write(bytes));
 		this.batches.put(mbatch.getBeginRow(), mbatch);
-		manager.addBatch(tupleSourceID, writeBatch, types);
         batchBuffer = null;
 	}
 	
+    /**
+     * Convert from an object to a byte array
+     * @param object Object to convert
+     * @return Byte array
+     */
+    private byte[] convertToBytes(TupleBatch batch) throws MetaMatrixComponentException {
+        ObjectOutputStream oos = null;
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+
+            batch.setDataTypes(types);
+            batch.writeExternal(oos);
+            oos.flush();
+            return baos.toByteArray();
+
+        } catch(IOException e) {
+        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStorageManager.batch_error")); //$NON-NLS-1$
+        } finally {
+            if(oos != null) {
+                try {
+                    oos.close();
+                } catch(IOException e) {
+                }
+            }
+        }
+    }
+	
 	public void close() throws MetaMatrixComponentException {
-		saveBatch(true);
+		//if there is only a single batch, let it stay in memory
+		if (!this.batches.isEmpty()) { 
+			saveBatch(true);
+		}
+		this.isFinal = true;
 	}
 
 	public TupleBatch getBatch(int row) throws MetaMatrixComponentException {
@@ -251,30 +274,54 @@ public class TupleBuffer {
 		if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
 			return new TupleBatch(rowCount - this.batchBuffer.size() + 1, batchBuffer);
 		}
-		Map.Entry<Integer, ManagedBatch> entry = batches.floorEntry(row);
-		ManagedBatch batch = null;
-        if (entry != null && entry.getValue().getEndRow() >= row) {
-        	batch = entry.getValue();
-        	TupleBatch result = batch.getBatch();
-        	if (result != null) {
-        		return result;
-        	}
-        	row = batch.getBeginRow();
-        }
-		try {
-			TupleBatch result = manager.getBatch(tupleSourceID, row, types);
-			correctLobReferences(result);
-			if (batch != null) {
-				batch.setBatchReference(result);
-			}
-			return result;
-		} catch (TupleSourceNotFoundException e) {
-			throw new MetaMatrixComponentException(e);
+		if (this.batchBuffer != null && !this.batchBuffer.isEmpty()) {
+			saveBatch(isFinal);
 		}
+		Map.Entry<Integer, ManagedBatch> entry = batches.floorEntry(row);
+		Assertion.isNotNull(entry);
+		ManagedBatch batch = entry.getValue();
+    	TupleBatch result = batch.getBatch();
+    	if (result != null) {
+    		return result;
+    	}
+        try {
+            byte[] bytes = new byte[batch.getLength()];
+            this.store.readFully(batch.getOffset(), bytes, 0, bytes.length);
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+
+            result = new TupleBatch();
+            result.setDataTypes(types);
+            result.readExternal(ois);
+        } catch(IOException e) {
+        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", tupleSourceID)); //$NON-NLS-1$
+        } catch (ClassNotFoundException e) {
+        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", tupleSourceID)); //$NON-NLS-1$
+        }
+		if (lobs) {
+			correctLobReferences(result.getAllTuples());
+		}
+		batch.setBatchReference(result);
+		return result;
 	}
 	
 	public void remove() {
-		manager.removeBatches(tupleSourceID);
+		int count = this.referenceCount.getAndDecrement();
+		if (count == 0) {
+			if (this.store != null) {
+				this.store.remove();
+				this.store = null;
+			}
+			if (this.batchBuffer != null) {
+				this.batchBuffer = null;
+			}
+			this.batches.clear();
+		}
+	}
+	
+	public boolean addReference() {
+		int count = this.referenceCount.addAndGet(1);
+		return count > 1;
 	}
 	
 	public int getRowCount() {
@@ -300,31 +347,7 @@ public class TupleBuffer {
 	public void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
 	}
-	
-    public void setContainingLobReference(Streamable<?> s) {
-    	cleanLobTupleSource();
-    	s.setPersistenceStreamId(tupleSourceID.getStringID());
-    	Assertion.isNull(this.containingLobReference);
-		this.containingLobReference = new LobReference(s);
-	}
-    
-    /**
-     * Attempt to clean up lingering tuplebuffers to lobs that are no longer referenced
-     */
-	private void cleanLobTupleSource() {
-		for (int i = 0; i < 10; i++) {
-			String tupleSourceId = null;
-			LobReference ref = (LobReference)LOB_QUEUE.poll();
-	    	if (ref != null) {
-	    		tupleSourceId = ref.persistentStreamId;
-	    	}
-			if (tupleSourceId == null) {
-				break;
-			}
-			this.manager.removeBatches(new TupleSourceID(tupleSourceId));
-		}
-	}
-    
+	    
     public Streamable<?> getLobReference(String id) throws MetaMatrixComponentException {
     	Streamable<?> lob = null;
     	if (this.lobReferences != null) {
@@ -343,11 +366,7 @@ public class TupleBuffer {
      * @throws MetaMatrixComponentException 
      */
     @SuppressWarnings("unchecked")
-	private void correctLobReferences(TupleBatch batch) throws MetaMatrixComponentException {
-    	if (!lobs) {
-    		return;
-    	}
-        List[] rows = batch.getAllTuples();
+	private void correctLobReferences(List[] rows) throws MetaMatrixComponentException {
         int columns = schema.size();
         // walk through the results and find all the lobs
         for (int row = 0; row < rows.length; row++) {
@@ -385,6 +404,10 @@ public class TupleBuffer {
 	@Override
 	public String toString() {
 		return this.tupleSourceID.toString();
+	}
+	
+	public boolean isRemoved() {
+		return this.referenceCount.get() <= 0;
 	}
 	
 }

@@ -30,6 +30,7 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestLobChunkInputStream extends TestCase {
@@ -53,7 +54,7 @@ public class TestLobChunkInputStream extends TestCase {
         
         LobChunkInputStream reader = new LobChunkInputStream(chunkProducer);
         
-        String fileContents = new String(reader.getByteContents());
+        String fileContents = new String(ObjectConverterUtil.convertToByteArray(reader));
         assertEquals(readFile(new FileInputStream(f)), fileContents);
     }
             

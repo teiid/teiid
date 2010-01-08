@@ -94,7 +94,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	final DQPWorkContext dqpWorkContext;
 	
 	//results request
-	ResultsReceiver<ResultsMessage> resultsReceiver;
+	private ResultsReceiver<ResultsMessage> resultsReceiver;
 	private int begin;
 	private int end;
         
@@ -366,68 +366,70 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void sendResultsIfNeeded(TupleBatch batch) throws MetaMatrixComponentException {
 		ResultsMessage response = null;
 		ResultsReceiver<ResultsMessage> receiver = null;
+		
 		synchronized (this) {
 			if (this.resultsReceiver == null
 					|| (this.begin > this.processor.getHighestRow() && !doneProducingBatches)
 					|| (this.transactionState == TransactionState.ACTIVE)) {
 				return;
 			}
-			
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID: " + requestID + " resultsID: " + this.resultsBuffer + " done: " + doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-	
-	    	if (batch == null || batch.getBeginRow() > this.begin) {
-	    		batch = resultsBuffer.getBatch(begin);
-	    		//TODO: support fetching more than 1 batch
-	    		int count = this.end - this.begin + 1;
-	    		if (batch.getRowCount() > count) {
-	    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
-	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
-	        		int firstOffset = beginRow - batch.getBeginRow();
-	                List[] memoryRows = batch.getAllTuples();
-	                List[] rows = new List[count];
-	                System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
-	                batch = new TupleBatch(beginRow, rows);
-	    		}
-	    	}
-	        int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
-	        
-	        response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
-	        response.setFirstRow(batch.getBeginRow());
-	        response.setLastRow(batch.getEndRow());
-	        response.setUpdateResult(this.returnsUpdateCount);
-	        // set final row
-	        response.setFinalRow(finalRowCount);
-	
-	        // send any schemas associated with the results
-	        response.setSchemas(this.schemas);
-	        
-	        // send any warnings with the response object
-	        List<Throwable> responseWarnings = new ArrayList<Throwable>();
-			List<Exception> currentWarnings = processor.getAndClearWarnings();
-		    if (currentWarnings != null) {
-		    	responseWarnings.addAll(currentWarnings);
-		    }
-		    synchronized (warnings) {
-	        	responseWarnings.addAll(this.warnings);
-	        	this.warnings.clear();
-		    }
-	        response.setWarnings(responseWarnings);
-	        
-	        // If it is stored procedure, set parameters
-	        if (originalCommand instanceof StoredProcedure) {
-	        	StoredProcedure proc = (StoredProcedure)originalCommand;
-	        	if (proc.returnParameters()) {
-	        		response.setParameters(getParameterInfo(proc));
-	        	}
-	        }
-	        /*
-	         * mark the results sent at this point.
-	         * communication exceptions will be treated as non-recoverable 
-	         */
-	        receiver = this.resultsReceiver;
-	        this.resultsReceiver = null;    
+		}
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID: " + requestID + " resultsID: " + this.resultsBuffer + " done: " + doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
+
+    	if (batch == null || batch.getBeginRow() > this.begin) {
+    		batch = resultsBuffer.getBatch(begin);
+    		//TODO: support fetching more than 1 batch
+    		int count = this.end - this.begin + 1;
+    		if (batch.getRowCount() > count) {
+    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
+    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+        		int firstOffset = beginRow - batch.getBeginRow();
+                List[] memoryRows = batch.getAllTuples();
+                List[] rows = new List[count];
+                System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
+                batch = new TupleBatch(beginRow, rows);
+    		}
+    	}
+        int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
+        
+        response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
+        response.setFirstRow(batch.getBeginRow());
+        response.setLastRow(batch.getEndRow());
+        response.setUpdateResult(this.returnsUpdateCount);
+        // set final row
+        response.setFinalRow(finalRowCount);
+
+        // send any schemas associated with the results
+        response.setSchemas(this.schemas);
+        
+        // send any warnings with the response object
+        List<Throwable> responseWarnings = new ArrayList<Throwable>();
+		List<Exception> currentWarnings = processor.getAndClearWarnings();
+	    if (currentWarnings != null) {
+	    	responseWarnings.addAll(currentWarnings);
+	    }
+	    synchronized (warnings) {
+        	responseWarnings.addAll(this.warnings);
+        	this.warnings.clear();
+	    }
+        response.setWarnings(responseWarnings);
+        
+        // If it is stored procedure, set parameters
+        if (originalCommand instanceof StoredProcedure) {
+        	StoredProcedure proc = (StoredProcedure)originalCommand;
+        	if (proc.returnParameters()) {
+        		response.setParameters(getParameterInfo(proc));
+        	}
+        }
+        /*
+         * mark the results sent at this point.
+         * communication exceptions will be treated as non-recoverable 
+         */
+        synchronized (this) {
+            receiver = this.resultsReceiver;
+            this.resultsReceiver = null;    
 		}
 
         receiver.receiveResults(response);

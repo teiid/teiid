@@ -52,7 +52,6 @@ public class TestXMLValue extends TestCase {
         String pkey = "peresistkeytodata"; //$NON-NLS-1$
         XMLType xv = new XMLType(xml);
         xv.setReferenceStreamId(key); 
-        xv.setPersistenceStreamId(pkey);
         
         // now force to serialize
         File saved = new File(UnitTestUtil.getTestScratchPath()+"/xmlsaved.bin"); //$NON-NLS-1$
@@ -66,7 +65,6 @@ public class TestXMLValue extends TestCase {
                 
         // make sure we have kept the reference stream id
         assertEquals(key, read.getReferenceStreamId());
-        assertEquals(pkey, read.getPersistenceStreamId());
         
         // and lost the original object
         assertNull(read.getReference());

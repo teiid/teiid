@@ -7,9 +7,6 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
@@ -28,7 +25,6 @@ import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.RequestGenerator;
-import com.metamatrix.connector.xml.cache.CachingOutputStream;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
 
@@ -86,13 +82,8 @@ public class SOAPRequest extends com.metamatrix.connector.xml.http.HTTPRequest {
             Source input = new StreamSource(reader);
             // Invoke the operation.
             Source output = dispatch.invoke(input);
-            
-            // Process the response.
-            CachingOutputStream out = new CachingOutputStream(execution.getExeContext(), getCacheKey());
-            StreamResult result = new StreamResult(out);
-            Transformer trans = TransformerFactory.newInstance().newTransformer();
-            trans.transform(output, result);
-            return out.getCachedXMLStream();
+            createSQLXML(output);
+            return response.getBinaryStream();
 		} catch (Exception e) {
 			throw new ConnectorException(e);
 		}
@@ -115,18 +106,6 @@ public class SOAPRequest extends com.metamatrix.connector.xml.http.HTTPRequest {
 		String inputParmsXPath = exeInfo.getOtherProperties().getProperty(DocumentBuilder.PARM_INPUT_XPATH_TABLE_PROPERTY_NAME); 
 		SOAPDocBuilder builder = new SOAPDocBuilder();
 		doc = builder.createXMLRequestDoc(bodyParams, (SOAPConnectorState)state, namespacePrefixes, inputParmsXPath);
-	}
-
-	protected String getCacheKey() throws ConnectorException {
-        StringBuffer cacheKey = new StringBuffer();
-        cacheKey.append("|"); //$NON-NLS-1$
-        cacheKey.append(execution.getConnection().getUser());
-        cacheKey.append("|");
-        cacheKey.append(execution.getConnection().getQueryId());
-        cacheKey.append("|");
-        cacheKey.append(getUriString());
-        cacheKey.append(requestNumber);
-        return cacheKey.toString();
 	}
 
 	public int getDocumentCount() throws ConnectorException {

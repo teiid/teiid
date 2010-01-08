@@ -22,138 +22,111 @@
 
 package com.metamatrix.common.types;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.SQLException;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
-
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
-import java.util.Properties;
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.common.util.SqlUtil;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 
 /** 
- * This metamatrix specific implementation of the SQLXML interface;
+ * Default SQLXML impl
  */
 public class SQLXMLImpl implements SQLXML {
     
-    XMLTranslator translator;
-        
-    public SQLXMLImpl(String str) {
-        this.translator = new XMLStreamSourceTranslator(str, new Properties());
+    private InputStreamFactory streamFactory;
+    
+    public SQLXMLImpl(final byte[] bytes) {
+    	setStreamFactory(bytes);
     }
 
-    public SQLXMLImpl(String str, Properties props) {
-        this.translator = new XMLStreamSourceTranslator(str, props);
+	private void setStreamFactory(final byte[] bytes) {
+		this.streamFactory = new InputStreamFactory(Streamable.ENCODING) {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(bytes);
+			}
+		};
+	}
+    
+    public SQLXMLImpl(final String str) {
+    	try {
+			setStreamFactory(str.getBytes(Streamable.ENCODING));
+		} catch (UnsupportedEncodingException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
     
-    public SQLXMLImpl(char[] str) {
-        this.translator = new XMLStreamSourceTranslator(str, new Properties());
+    public SQLXMLImpl(InputStreamFactory factory) {
+        this.streamFactory = factory;
     }
-
-    public SQLXMLImpl(char[] str, Properties props) {
-        this.translator = new XMLStreamSourceTranslator(str, props);
-    }    
-    
-    public SQLXMLImpl(XMLReaderFactory factory) {
-        this(factory, new Properties());
-    }
-
-    // the reason we have factory insted of reader is the xml may be 
-    // and can be streamed multiple times by a client. If we have reader
-    // one it closed it may not be accessable.
-    public SQLXMLImpl(XMLReaderFactory factory, Properties props) {
-        this.translator = new XMLStreamSourceTranslator(factory, props);
-    }
-   
-    public SQLXMLImpl(StreamSource streamSource) {
-        this(streamSource, new Properties());
-    }
-    
-    public SQLXMLImpl(StreamSource streamSource, Properties props) {
-        this.translator = new XMLStreamSourceTranslator(streamSource, props);
-    }
-        
-    public SQLXMLImpl(DOMSource domSource) {
-        this.translator = new XMLDomSourceTranslator(domSource, new Properties());
-    }
-    
-    public SQLXMLImpl(DOMSource domSource, Properties props) {
-        this.translator = new XMLDomSourceTranslator(domSource, props);
-    }
-
-    public SQLXMLImpl(SAXSource saxSource) {
-        this.translator = new XMLSAXSourceTranslator(saxSource, new Properties());
-    }    
-    
-    public SQLXMLImpl(SAXSource saxSource, Properties props) {
-        this.translator = new XMLSAXSourceTranslator(saxSource, props);
-    }    
-
-    public SQLXMLImpl(XMLTranslator translator) {
-        this.translator = translator;
-    }    
     
     public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
-        try {
-            Source c = this.translator.getSource();
-            if (sourceClass == null || sourceClass == c.getClass()) {
-            	return (T)c;
-            }
-        } catch (IOException e) {
-            throw new SQLException(e.getMessage());
-        }
+		if (sourceClass == null || sourceClass == StreamSource.class) {
+			return (T)new StreamSource(getBinaryStream());
+		}
         throw new SQLException("Unsupported source type " + sourceClass);
     }
 
     public Reader getCharacterStream() throws SQLException {
-        try {
-            return translator.getReader();
-        } catch (IOException e) {
-            throw new SQLException(e.getMessage());
-        }
+    	if (this.streamFactory == null) {
+    		throw new SQLException("SQLXML already freed"); 
+    	}
+    	try {
+			return new InputStreamReader(this.streamFactory.getInputStream(), this.streamFactory.getEncoding());
+		} catch (IOException e) {
+			SQLException ex = new SQLException(e.getMessage());
+			ex.initCause(e);
+			throw ex;
+		}
     }
 
     public InputStream getBinaryStream() throws SQLException {
+    	if (this.streamFactory == null) {
+    		throw new SQLException("SQLXML already freed"); 
+    	}
         try {
-            return translator.getInputStream();
-        } catch (IOException e) {
-            throw new SQLException(e.getMessage());
-        }
+			return this.streamFactory.getInputStream();
+		} catch (IOException e) {
+			SQLException ex = new SQLException(e.getMessage());
+			ex.initCause(e);
+			throw ex;
+		}
     }
 
     public String getString() throws SQLException {
         try {
-            return translator.getString();
+            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), Streamable.ENCODING);
         } catch (IOException e) {
-            throw new SQLException(e.getMessage());
+			SQLException ex = new SQLException(e.getMessage());
+			ex.initCause(e);
+			throw ex;
         }
     }
 
     public OutputStream setBinaryStream() throws SQLException {
-        throw new SQLException("not implemented");//$NON-NLS-1$
+        throw SqlUtil.createFeatureNotSupportedException();
     }
 
     public Writer setCharacterStream() throws SQLException {
-        throw new SQLException("not implemented");//$NON-NLS-1$
+        throw SqlUtil.createFeatureNotSupportedException();
     }
 
     public void setString(String value) throws SQLException {
-        throw new SQLException("not implemented");//$NON-NLS-1$
+        throw SqlUtil.createFeatureNotSupportedException();
     }
 
     public String toString() {
@@ -165,7 +138,16 @@ public class SQLXMLImpl implements SQLXML {
     }
 
 	public void free() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		if (this.streamFactory != null) {
+			try {
+				this.streamFactory.free();
+				this.streamFactory = null;
+			} catch (IOException e) {
+				SQLException ex = new SQLException(e.getMessage());
+				ex.initCause(e);
+				throw ex;
+			}
+		}
 	}
 
 	public <T extends Result> T setResult(Class<T> resultClass)

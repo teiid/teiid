@@ -22,14 +22,12 @@
 
 package com.metamatrix.connector.xmlsource.file;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.util.Properties;
-
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
@@ -38,6 +36,7 @@ import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.metadata.runtime.MetadataObject;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
+import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
 
@@ -50,7 +49,6 @@ public class FileExecution extends XMLSourceExecution {
     private static final String ISO8859 = "ISO-8859-1"; //$NON-NLS-1$
     
     RuntimeMetadata metadata = null;
-    Source returnValue = null;
     ExecutionContext context;
     File rootFolder;
     private IProcedure procedure;
@@ -88,7 +86,7 @@ public class FileExecution extends XMLSourceExecution {
         }
         
         // try to open the file and read.        
-        File xmlFile = new File(this.rootFolder, fileName);
+        final File xmlFile = new File(this.rootFolder, fileName);
         if (!xmlFile.exists()) {
             throw new ConnectorException(XMLSourcePlugin.Util.getString("XML_file_not_found", new Object[] {fileName, this.rootFolder.getAbsolutePath()})); //$NON-NLS-1$            
         }        
@@ -96,18 +94,15 @@ public class FileExecution extends XMLSourceExecution {
         Properties props = this.env.getProperties();
         String encoding = props.getProperty(ENCODING, ISO8859);
         
-        try {
-			this.returnValue = new StreamSource(new InputStreamReader(new FileInputStream(xmlFile), encoding));
-		} catch (IOException e) {
-			throw new ConnectorException(e);
-		} 
-		
+        returnValue = new InputStreamFactory(encoding) {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new BufferedInputStream(new FileInputStream(xmlFile));
+			}
+		};
+        
         XMLSourcePlugin.logDetail(this.env.getLogger(), "executing_procedure", new Object[] {procedure.getProcedureName()}); //$NON-NLS-1$
     }
     
-    @Override
-	public Source getReturnValue() {
-		return returnValue;
-	}
-
 }

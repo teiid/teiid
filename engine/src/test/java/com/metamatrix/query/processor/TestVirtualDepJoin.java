@@ -39,7 +39,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 import com.metamatrix.common.types.DataTypeManager;
@@ -154,7 +153,7 @@ public class TestVirtualDepJoin {
         FakeMetadataObject accounts = FakeMetadataFactory.createVirtualGroup("Accounts.Accounts", vAccts, accountsPlan); //$NON-NLS-1$
         List accountsElem = FakeMetadataFactory.createElements(accounts, 
                                             new String[] { "customer_id", "account_id", "transaction_id", "txn_type", "amount", "source" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-                                            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.STRING });
+                                            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.STRING });
         
         FakeMetadataObject master = FakeMetadataFactory.createVirtualModel("Master"); //$NON-NLS-1$
         QueryNode masterPlan = new QueryNode("Master.Transactions", //$NON-NLS-1$
@@ -162,7 +161,7 @@ public class TestVirtualDepJoin {
         FakeMetadataObject transactions = FakeMetadataFactory.createVirtualGroup("Master.Transactions", master, masterPlan); //$NON-NLS-1$
         List transactionsElem = FakeMetadataFactory.createElements(transactions, 
                                             new String[] { "CustomerID", "First", "Last", "AccountID", "TransactionID", "TxnCode", "Amount" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-                                            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
+                                            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL });
         
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(us);
@@ -418,7 +417,6 @@ public class TestVirtualDepJoin {
     private void helpTestMultipleBatches(boolean unique) throws Exception,
                                           MetaMatrixComponentException,
                                           MetaMatrixException,
-                                          TupleSourceNotFoundException,
                                           SQLException {
         // Create query  
         String sql = "SELECT * from Master.Transactions where last = 'Davis' order by CustomerID, TransactionID"; //$NON-NLS-1$ 

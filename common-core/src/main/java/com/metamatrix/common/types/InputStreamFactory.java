@@ -23,16 +23,40 @@
 package com.metamatrix.common.types;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 
+import javax.xml.transform.Source;
 
-/** 
- * A factory interface for generating the readers
- */
-public interface XMLReaderFactory {
+public abstract class InputStreamFactory implements Source {
+	
+	private String encoding;
+	private String systemId;
+	
+	public InputStreamFactory(String encoding) {
+		this.encoding = encoding;
+	}
+	
     /**
-     * Get a reader object 
+     * Get a new InputStream
      * @return
      */
-    Reader getReader() throws IOException;
+    public abstract InputStream getInputStream() throws IOException;
+    
+    public String getEncoding() {
+		return encoding;
+	}
+    
+    @Override
+    public String getSystemId() {
+    	return this.systemId;
+    }
+    
+    @Override
+    public void setSystemId(String systemId) {
+    	this.systemId = systemId;
+    }
+    
+    public void free() throws IOException {
+    	
+    }
 }

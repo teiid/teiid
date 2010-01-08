@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.xquery.saxon;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.HashMap;
@@ -34,16 +36,18 @@ import java.util.regex.Pattern;
 
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.query.DynamicQueryContext;
+import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.trans.XPathException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.util.XMLFormatConstants;
 import com.metamatrix.query.xquery.XQueryExpression;
@@ -117,7 +121,7 @@ public class SaxonXQueryExpression implements XQueryExpression {
     /**
      * @see com.metamatrix.query.xquery.XQueryEngine#evaluateXQuery(com.metamatrix.query.xquery.XQueryExpression)
      */
-    public SQLXML evaluateXQuery(XQuerySQLEvaluator sqlEval) 
+    public XMLTranslator evaluateXQuery(XQuerySQLEvaluator sqlEval) 
     throws MetaMatrixProcessingException, MetaMatrixComponentException {
 
         Configuration config = new Configuration();
@@ -172,11 +176,22 @@ public class SaxonXQueryExpression implements XQueryExpression {
             
             // output
             if (obj instanceof NodeInfo){
-                Properties props = new Properties();                
+            	final NodeInfo nodeInfo = (NodeInfo)obj;
+                final Properties props = new Properties();                
                 if (XMLFormatConstants.XML_TREE_FORMAT.equals(this.xmlFormat)) {
                     props.setProperty("indent", "yes");//$NON-NLS-1$//$NON-NLS-2$
                 }                
-                return new SQLXMLImpl(new SaxonXMLTranslator((NodeInfo)obj, props));
+                return new XMLTranslator() {
+					
+					@Override
+					public void translate(Writer writer) throws IOException {
+				        try {
+				            QueryResult.serialize(nodeInfo, new StreamResult(writer), props, new Configuration());
+				        } catch (TransformerException e) {
+				            throw new IOException(e);
+				        }
+					}
+				};
             } 
         }        
         throw new MetaMatrixProcessingException(QueryPlugin.Util.getString("wrong_result_type")); //$NON-NLS-1$

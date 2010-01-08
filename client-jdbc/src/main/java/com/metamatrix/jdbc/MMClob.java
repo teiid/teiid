@@ -104,7 +104,7 @@ public class MMClob implements Clob {
      * <code>CLOB</code> value
      */
     public Reader getCharacterStream() throws SQLException {
-        return new LobChunkInputStream(lobChunckFactory.getLobChunkProducer()).getUTF16Reader();
+        return new LobChunkInputStream(lobChunckFactory.getLobChunkProducer()).getReader();
     }
 
     /**

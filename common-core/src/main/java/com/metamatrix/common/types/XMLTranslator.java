@@ -23,67 +23,21 @@
 package com.metamatrix.common.types;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.Properties;
-
-import javax.xml.transform.Source;
-
+import java.io.StringWriter;
+import java.io.Writer;
 
 /** 
  * This an interface defined to convert the various kinds of the XML sources
- * defined into another source kinds. For example a DOMSource.class source can be
- * converted to String or SAXSource, or StreamSource is converted to DOMSource etc.
+ * defined into a character stream. 
  */
-public interface XMLTranslator {
-    static String lineSep = System.getProperty("line.separator"); //$NON-NLS-1$    
-    public static final String INDENT = "indent"; //$NON-NLS-1$
+public abstract class XMLTranslator {
     
-    public static final String idenityTransform = 
-            "<xsl:stylesheet version=\"2.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">" + lineSep + //$NON-NLS-1$
-            "<xsl:output method = \"xml\" omit-xml-declaration=\"yes\"/>" + lineSep + //$NON-NLS-1$
-            "<xsl:template match=\"@*|node()\">" + lineSep +//$NON-NLS-1$ 
-            "    <xsl:copy>\r\n" + lineSep+ //$NON-NLS-1$
-            "        <xsl:apply-templates select=\"@*|node()\"/>" +lineSep+//$NON-NLS-1$ 
-            "    </xsl:copy>" + lineSep + //$NON-NLS-1$
-            "</xsl:template>" + lineSep +//$NON-NLS-1$
-            "</xsl:stylesheet>" + lineSep + //$NON-NLS-1$
-            ""; //$NON-NLS-1$
+    public abstract void translate(Writer writer) throws IOException;
     
-    /**
-     * Get String form of the XML  
-     * @return string representing the XML source
-     * @throws IOException
-     */
-    String getString() throws IOException;
-    
-    /**
-     * Get the XML in the original source form; with however it got created. 
-     * @return
-     * @throws IOException
-     */
-    public Source getSource() throws IOException;
-    
-    
-    /**
-     * Get a Reader for the XML contents; 
-     * @return a Reader object for streaming the XML contents.
-     * @throws IOException
-     */
-    public Reader getReader() throws IOException;
-    
-    /**
-     * Get a InputStream  for the XMl contents; 
-     * @return a InputStream object for streaming the XML contents.
-     * @throws IOException
-     */
-    public InputStream getInputStream() throws IOException;
-    
-    /**
-     * Any specific Properties needed by the translator process, such
-     * as indenting etc. 
-     * @return properties
-     */
-    public Properties getProperties();
+	public String getString() throws IOException {
+		StringWriter writer = new StringWriter();
+		this.translate(writer);
+		return writer.toString();
+	}
     
 }

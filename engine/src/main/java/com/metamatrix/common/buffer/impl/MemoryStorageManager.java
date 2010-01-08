@@ -22,83 +22,58 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.ByteBuffer;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.query.execution.QueryExecPlugin;
 
 public class MemoryStorageManager implements StorageManager {
     
-    // TupleSourceID -> List<TupleBatch> (ordered by startRow)
-    private Map<TupleSourceID, Map<Integer, TupleBatch>> storage = Collections.synchronizedMap(new HashMap<TupleSourceID, Map<Integer, TupleBatch>>());
-
     /**
      * @see StorageManager#initialize(Properties)
      */
     public void initialize(Properties props) throws MetaMatrixComponentException {
     }
 
-    /**
-     * @see StorageManager#addBatch(TupleSourceID, TupleBatch)
-     */
-    public void addBatch(TupleSourceID storageID, TupleBatch batch, String[] types)
-        throws MetaMatrixComponentException {
-
-    	Map<Integer, TupleBatch> batches = null;
-        synchronized(this.storage) {
-            batches = storage.get(storageID);
-            if(batches == null) {
-                batches = new HashMap<Integer, TupleBatch>();
-                this.storage.put(storageID, batches);
-            }
-        }
-
-        synchronized(batches) {
-            batches.put(batch.getBeginRow(), batch);
-        }
-    }
-
-    /**
-     * @see StorageManager#getBatch(TupleSourceID, int, int)
-     */
-    public TupleBatch getBatch(TupleSourceID storageID, int beginRow, String[] types)
-        throws TupleSourceNotFoundException, MetaMatrixComponentException {
-
-    	Map<Integer, TupleBatch> batches = storage.get(storageID);
-
-        if(batches == null) {
-           	throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", storageID)); //$NON-NLS-1$
-        }
-
-        synchronized(batches) {
-            TupleBatch batch = batches.get(beginRow);
-            if(batch == null) {
-            	throw new MetaMatrixComponentException("unknown batch"); //$NON-NLS-1$
-            }
-            return batch;
-        }
-    }
-
-    /**
-     * @see StorageManager#removeStorageArea(TupleSourceID)
-     */
-    public void removeBatches(TupleSourceID storageID) {
-        storage.remove(storageID);
-    }
-
-    /**
-     * @see StorageManager#shutdown()
-     */
-    public void shutdown() {
-        this.storage.clear();
-        this.storage = null;
-    }
-
+	@Override
+	public FileStore createFileStore(String name) {
+		return new FileStore() {
+			private ByteBuffer buffer = ByteBuffer.allocate(2 << 15);
+			private int end;
+			
+			@Override
+			public synchronized long writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
+				if (end + length > buffer.capacity()) {
+					ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2 + length);
+					newBuffer.put(buffer);
+					buffer = newBuffer;
+				}
+				buffer.position(end);
+				buffer.put(bytes, offset, length);
+				long result = end;
+				end += length;
+				return result;
+			}
+			
+			@Override
+			public synchronized void removeDirect() {
+				buffer = ByteBuffer.allocate(0);
+			}
+			
+			@Override
+			public synchronized int readDirect(long fileOffset, byte[] b, int offset, int length)
+					throws MetaMatrixComponentException {
+				if (fileOffset >= end) {
+					return -1;
+				}
+				int position = (int)fileOffset;
+				buffer.position(position);
+				length = Math.min(length, end - position);
+				buffer.get(b, offset, length);
+				return length;
+			}
+		};
+	}
 }

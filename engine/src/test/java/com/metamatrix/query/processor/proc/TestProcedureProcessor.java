@@ -42,7 +42,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.MetaMatrixCoreException;

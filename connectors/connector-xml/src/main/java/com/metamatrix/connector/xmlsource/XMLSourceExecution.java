@@ -45,6 +45,7 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     // Connector environment
     protected ConnectorEnvironment env;
     private boolean returnedResult;
+    protected Source returnValue;
     
     /**
      * ctor 
@@ -65,14 +66,12 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     	}
     	return (SQLXML)result;
     }
-    
-    protected abstract Source getReturnValue();
 
     @Override
     public List<?> next() throws ConnectorException, DataNotAvailableException {
     	if (!returnedResult) {
     		returnedResult = true;
-    		return Arrays.asList(convertToXMLType(getReturnValue()));
+    		return Arrays.asList(convertToXMLType(returnValue));
     	}
     	return null;
     }  

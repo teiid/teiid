@@ -23,6 +23,9 @@
 package com.metamatrix.query.xquery;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.sql.SQLXML;
 import java.util.HashMap;
@@ -35,6 +38,7 @@ import org.jdom.output.XMLOutputter;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.xquery.saxon.SaxonXQueryExpression;
@@ -61,8 +65,9 @@ public class TestXQueryEngine extends TestCase {
     
     private void helpTestEngine(XQueryExpression expr, String xQuery, SQLXML expected, XQuerySQLEvaluator sqlEval) throws Exception{
         expr.compileXQuery(xQuery);        
-        SQLXML actualResults = expr.evaluateXQuery(sqlEval);
-        assertEquals(expected.getString(), actualResults.getString());        
+        XMLTranslator actualResults = expr.evaluateXQuery(sqlEval);
+        String result = actualResults.getString();
+        assertEquals(expected.getString(), result);        
     }
 
     private void helpTestEngineFails(String xQuery, Class<?> expectedFailure, XQuerySQLEvaluator sqlEval) throws Exception{
@@ -154,7 +159,7 @@ public class TestXQueryEngine extends TestCase {
         
         XQueryExpression expr = new SaxonXQueryExpression();
         expr.compileXQuery(xquery);
-        SQLXML actualResults = expr.evaluateXQuery(new HardcodedSqlEval(null));
+        XMLTranslator actualResults = expr.evaluateXQuery(new HardcodedSqlEval(null));
         
         assertEquals(expectedStr, actualResults.getString().replaceAll("[ \t\r\n]", "")); //$NON-NLS-1$ //$NON-NLS-2$
     }

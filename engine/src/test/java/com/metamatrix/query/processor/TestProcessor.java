@@ -7543,6 +7543,21 @@ public class TestProcessor {
         sampleData1(manager);
         helpProcess(plan, manager, expected);
     }
+    
+    @Test public void testOrderByDescAll() {
+        String sql = "SELECT distinct e1 from pm1.g2 order by e1 desc limit 1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList("c"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
 
     private static final boolean DEBUG = false;
 }

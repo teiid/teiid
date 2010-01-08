@@ -25,9 +25,10 @@ package com.metamatrix.query.processor.xml;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,13 +64,14 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -106,7 +108,7 @@ public class XMLPlan extends ProcessorPlan {
         
     // is document in progress currently?
     boolean docInProgress = false;
-    private TupleBuffer docInProgressTupleSourceId;
+    private FileStore docInProgressStore;
     
     // Post-processing
 	private String styleSheet;
@@ -226,31 +228,26 @@ public class XMLPlan extends ProcessorPlan {
         
         // if the chunk size is less than one chunk unit then send this as string based xml.
         if (!this.docInProgress && chunk.isLast()) {
-            xml = new XMLType(new SQLXMLImpl(new String(chunk.getBytes(), Charset.forName("UTF-16")), getProperties())); //$NON-NLS-1$
+            xml = new XMLType(new SQLXMLImpl(chunk.getBytes()));
         }
         else {
             
             // if this is the first chunk, then create a tuple source id for this sequence of chunks
             if (!this.docInProgress) {
                 this.docInProgress = true;
-                this.docInProgressTupleSourceId = XMLUtil.createXMLTupleSource(this.bufferMgr, this.getContext().getConnectionID());
+                this.docInProgressStore = this.bufferMgr.createFileStore("xml"); //$NON-NLS-1$
             }
             
             // now save the chunk of data to the buffer manager and move on.
-            this.docInProgressTupleSourceId.addTuple(Arrays.asList(chunk));
-                                
+            this.docInProgressStore.write(chunk.getBytes());
             // now document is finished, so create a xml object and return to the client.
             if (chunk.isLast()) {
-                this.docInProgressTupleSourceId.close();
-                
                 // we want this to be naturally feed by chunks whether inside
                 // or out side the processor
-                xml = new XMLType(XMLUtil.getFromBufferManager(this.docInProgressTupleSourceId, getProperties()));
-                this.docInProgressTupleSourceId.setContainingLobReference(xml);
-                
+                xml = new XMLType(XMLUtil.createSQLXML(this.docInProgressStore));
                 //reset current document state.
                 this.docInProgress = false;
-                this.docInProgressTupleSourceId = null;
+                this.docInProgressStore = null;
             } else {
             	return null; //need to continue processing
             }
@@ -289,7 +286,7 @@ public class XMLPlan extends ProcessorPlan {
                     if (doc.isFinished()) {
                         this.env.setDocumentInProgress(null);
                     }
-                    byte[] bytes = Arrays.copyOfRange(new String(chunk).getBytes(Charset.forName("UTF-16")), 2, chunk.length * 2 + 2); //$NON-NLS-1$
+                    byte[] bytes = new String(chunk).getBytes(Charset.forName(Streamable.ENCODING));
                     return new LobChunk(bytes, doc.isFinished()); 
                 }                
             }
@@ -501,37 +498,40 @@ public class XMLPlan extends ProcessorPlan {
 			// get a reader object for the style sheet
 			Reader styleReader = new StringReader(styleSheet);
 			// construct a Xlan source object for the syle sheet
-			Source styleSource = new StreamSource(styleReader);
+			final Source styleSource = new StreamSource(styleReader);
 
 			// get a reader object for the xml results
 			//Reader xmlReader = new StringReader(xmlResults);
 			// construct a Xlan source object for the xml results
-			Source xmlSource = new StreamSource(xmlResults.getCharacterStream());
+			final Source xmlSource = new StreamSource(xmlResults.getCharacterStream());
 
 			// Convert the output target for use in Xalan-J 2
-			StringWriter resultOut = new StringWriter();
-			StreamResult result = new StreamResult(resultOut);
+			SQLXML result = XMLUtil.saveToBufferManager(bufferMgr, new XMLTranslator() {
+				
+				@Override
+				public void translate(Writer writer) throws IOException {
+					try {
+						// get the Xalan-J 2 XSLT transformer
+		                TransformerFactory factory = new TransformerFactoryImpl();
+		                Transformer transformer = factory.newTransformer(styleSource);
 
-			try {
-				// get the Xalan-J 2 XSLT transformer
-                TransformerFactory factory = new TransformerFactoryImpl();
-                Transformer transformer = factory.newTransformer(styleSource);
+					    /*
+		                 * To use this line, the system property "javax.xml.transform.TransformerFactory"
+		                 * needs to be set to "com.icl.saxon.TransformerFactoryImpl" or desired
+		                 * TransformerFactory classname.  See com.metamatrix.jdbc.TestXMLQuery
+					     */
+		                //Transformer transformer = TransformerFactory.newInstance().newTransformer(styleSource);
 
-			    /*
-                 * To use this line, the system property "javax.xml.transform.TransformerFactory"
-                 * needs to be set to "com.icl.saxon.TransformerFactoryImpl" or desired
-                 * TransformerFactory classname.  See com.metamatrix.jdbc.TestXMLQuery
-			     */
-                //Transformer transformer = TransformerFactory.newInstance().newTransformer(styleSource);
-
-                // Feed the resultant I/O stream into the XSLT processor
-				transformer.transform(xmlSource, result);
-			} catch(Exception e) {
-				throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0046, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0046));
-			}
+		                // Feed the resultant I/O stream into the XSLT processor
+						transformer.transform(xmlSource, new StreamResult(writer));
+					} catch(Exception e) {
+						throw new IOException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0046), e);
+					}
+				}
+			}, chunkSize);
 
 			// obtain the stringified XML results for the
-			xmlResults = new XMLType(new SQLXMLImpl(resultOut.toString(), props));
+			xmlResults = new XMLType(result);
 		}
 
 		return xmlResults;

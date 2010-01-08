@@ -23,6 +23,9 @@
 
 package com.metamatrix.connector.xml;
 
+import java.sql.SQLXML;
+import java.util.Map;
+
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -43,12 +46,14 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 
 	public abstract IQueryPreprocessor getPreprocessor();
 
-	public abstract Connection getConnection(CachingConnector connector,
+	public abstract Connection getConnection(StatefulConnector connector,
 			ExecutionContext context, ConnectorEnvironment environment)
 			throws ConnectorException;
 
 	public String getPluggableInputStreamFilterClass();
 
 	public boolean isCaching();
+	
+	public Map<String, SQLXML> getResponses();
 
 }

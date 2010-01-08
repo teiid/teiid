@@ -33,7 +33,7 @@ import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.xml.CachingConnector;
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 /**
@@ -84,7 +84,7 @@ public void setUp() {
     		super();
     	}
 
-		public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
+		public Connection getConnection(StatefulConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
 			return null;
 		}
     }

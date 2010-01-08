@@ -22,141 +22,69 @@
 
 package com.metamatrix.query.processor.xml;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.Reader;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.lob.ByteLobChunkStream;
-import com.metamatrix.common.lob.LobChunk;
-import com.metamatrix.common.lob.LobChunkInputStream;
-import com.metamatrix.common.lob.LobChunkProducer;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.buffer.FileStore;
+import com.metamatrix.common.buffer.FileStore.FileStoreOutputStream;
+import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.common.types.XMLReaderFactory;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLTranslator;
 
 
 /** 
  * Utility methods to be used with the XML and XQuery processing.
  */
 public class XMLUtil {
-
+	
     /**
      * This method saves the given XML object to the buffer manager's disk process
-     * and returns the id which is saved under.  
+     * Documents less than the maxMemorySize will be held directly in memory
      */
-    public static TupleBuffer saveToBufferManager(BufferManager bufferMgr, String tupleGroupName, SQLXML srcXML, int chunkSize) 
+    public static SQLXMLImpl saveToBufferManager(BufferManager bufferMgr, XMLTranslator translator, int maxMemorySize) 
         throws MetaMatrixComponentException {        
+        boolean success = false;
+        final FileStore lobBuffer = bufferMgr.createFileStore("xml"); //$NON-NLS-1$
         try{  
-            // first persist the XML to the Buffer Manager
-            TupleBuffer sourceId = createXMLTupleSource(bufferMgr, tupleGroupName);
-
-            // since this object possibly will be streamed we need another streamable
-            // wrapper layer.            
-            ByteLobChunkStream lobStream = new ByteLobChunkStream(srcXML.getBinaryStream(), chunkSize);
-            
-            // read all the globs and Store into storage manager
-            LobChunk lobChunk = null;
-            do {
-                try {
-                    lobChunk = lobStream.getNextChunk();
-                } catch (IOException e) {
-                	throw new MetaMatrixComponentException(e);
-                }
-                sourceId.addTuple(Arrays.asList(lobChunk));
-            } while (!lobChunk.isLast());
-            
-            lobStream.close();
-            
-            sourceId.close();            
-            return sourceId;            
-        } catch(SQLException e) {
-            throw new MetaMatrixComponentException(e);
+        	FileStoreOutputStream fsos = lobBuffer.createOutputStream(maxMemorySize);
+            Writer writer = new OutputStreamWriter(fsos, Streamable.ENCODING);
+            translator.translate(writer);
+            writer.close();
+            if (!fsos.bytesWritten()) {
+            	return new SQLXMLImpl(fsos.toByteArray());
+            }
+            success = true;
+            return createSQLXML(lobBuffer);
         } catch(IOException e) {
             throw new MetaMatrixComponentException(e);
-        } 
-    }
-    
-    /**
-     * This will reconstruct the XML object from the buffer manager from given 
-     * buffer manager id. 
-     */
-    public static SQLXML getFromBufferManager(final TupleBuffer sourceId, Properties props) {
-        return new SQLXMLImpl(new BufferMangerXMLReaderFactory(sourceId), props);
-    }
-    
-    /**
-     * Creates a buffer manager's id for XML based data. 
-     */
-    public static TupleBuffer createXMLTupleSource(BufferManager bufferMgr, String tupleGroupName) throws MetaMatrixComponentException {
-    	TupleBuffer sourceID = bufferMgr.createTupleBuffer(getOutputElements(), tupleGroupName, TupleSourceType.PROCESSOR);
-    	sourceID.setBatchSize(1);
-        return sourceID;
-    }
-    
-    static List getOutputElements() {
-        ArrayList output = new ArrayList(1);
-        ElementSymbol xml = new ElementSymbol("xml"); //$NON-NLS-1$
-        xml.setType(DataTypeManager.DefaultDataClasses.XML);
-        output.add(xml);
-        return output;
-    }    
-    
-    /**
-     * This is buffer manager supported reader factory for the XML lobs
-     * so that XML can be streamed by the clients more than once. 
-     */
-    static class BufferMangerXMLReaderFactory implements XMLReaderFactory {
-        private TupleBuffer tb;
-        
-        BufferMangerXMLReaderFactory(TupleBuffer tb){
-            this.tb = tb;
+        } finally {
+        	if (!success && lobBuffer != null) {
+        		lobBuffer.remove();
+        	}
         }
-        
-        public Reader getReader() {  
-        	final IndexedTupleSource its = tb.createIndexedTupleSource();
-        	LobChunkProducer producer = new LobChunkProducer() {
-                public LobChunk getNextChunk() throws IOException {
-                    try {
-                        List<?> tuple = its.nextTuple();
-                        if (tuple == null) {
-                        	return null;
-                        }
-                        return (LobChunk)tuple.get(0);
-                    } catch (MetaMatrixProcessingException e) {
-                        String msg = DQPPlugin.Util.getString("BufferManagerLobChunkStream.no_tuple_source", new Object[] {tb}); //$NON-NLS-1$
-                        LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, msg); 
-                        throw new IOException(msg);
-                    } catch (MetaMatrixComponentException e) {
-                        String msg = DQPPlugin.Util.getString("BufferManagerLobChunkStream.error_processing", new Object[] {tb}); //$NON-NLS-1$
-                        LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, msg); 
-                        throw new IOException(msg);
-                    }                
-                }
-
-                /** 
-                 * @see com.metamatrix.common.lob.LobChunkProducer#close()
-                 */
-                public void close() throws IOException {
-                    // we could remove the buffer tuple here but, this is just a stream, so we need to delete 
-                    // that when we close th eplan.
-                }
-        	};
-            return new LobChunkInputStream(producer).getUTF16Reader();
-        }            
     }
+
+	public static SQLXMLImpl createSQLXML(final FileStore lobBuffer) {
+		SQLXMLImpl sqlXML = new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				//TODO: adjust the buffer size, and/or develop a shared buffer strategy
+				return new BufferedInputStream(lobBuffer.createInputStream());
+			}
+			
+			@Override
+			public void free() throws IOException {
+				lobBuffer.remove();
+			}
+		});     
+		lobBuffer.setCleanupReference(sqlXML);
+		return sqlXML;
+	}
+    
 }

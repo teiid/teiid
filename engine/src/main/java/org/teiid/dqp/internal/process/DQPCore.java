@@ -58,6 +58,7 @@ import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
@@ -153,7 +154,7 @@ public class DQPCore implements ClientSideDQP {
     private int processorTimeslice = DEFAULT_PROCESSOR_TIMESLICE;
     private boolean processorDebugAllowed;
     
-    private int chunkSize = 0;
+    private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
@@ -381,8 +382,6 @@ public class DQPCore implements ClientSideDQP {
         }
         return getQueueStatistics();
     }
-    
-
             
     /**
      * Cancel and close all requests associated with the clientConnection/session. Also runs a final cleanup any caches within
@@ -405,13 +404,6 @@ public class DQPCore implements ClientSideDQP {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
 				}
 	        }
-        }
-        
-        // cleanup the buffer manager
-        try {
-            bufferManager.removeTupleBuffers(sessionId);
-        } catch (Exception e) {
-            LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to remove buffered tuples for connection " + sessionId); //$NON-NLS-1$
         }
         
         if (transactionService != null) {
@@ -568,7 +560,6 @@ public class DQPCore implements ClientSideDQP {
 		return chunkSize;
 	}
 
-	
     /* 
      * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
      */
@@ -616,7 +607,7 @@ public class DQPCore implements ClientSideDQP {
         this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);
         this.maxCodeRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_RECORDS);
         
-        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 10) * 1024;
+        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 100) * 1024;
         
         //result set cache
         /*if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
