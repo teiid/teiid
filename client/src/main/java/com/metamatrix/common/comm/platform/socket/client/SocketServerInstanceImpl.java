@@ -297,7 +297,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					}
 					
 					@Override
-					public synchronized Object get() throws InterruptedException, ExecutionException {
+					public Object get() throws InterruptedException, ExecutionException {
 						try {
 							return this.get(SocketServerConnectionFactory.getInstance().getSynchronousTtl(), TimeUnit.MILLISECONDS);
 						} catch (TimeoutException e) {
@@ -310,25 +310,27 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					 * the actual reads. 
 					 */
 					@Override
-					public synchronized Object get(long timeout, TimeUnit unit)
+					public Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
 						int timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
-						while (!isDone()) {
-							if (timeoutMillis <= 0) {
-								throw new TimeoutException();
-							}
-							long start = System.currentTimeMillis();
-							try {
-								receivedMessage(socketChannel.read());
-							} catch (SocketTimeoutException e) {
-							} catch (IOException e) {
-								exceptionOccurred(e);
-							} catch (ClassNotFoundException e) {
-								exceptionOccurred(e);
-							}
-							if (!isDone()) {
-								timeoutMillis -= (System.currentTimeMillis() - start);
+						synchronized (SocketServerInstanceImpl.this) {
+							while (!isDone()) {
+								if (timeoutMillis <= 0) {
+									throw new TimeoutException();
+								}
+								long start = System.currentTimeMillis();
+								try {
+									receivedMessage(socketChannel.read());
+								} catch (SocketTimeoutException e) {
+								} catch (IOException e) {
+									exceptionOccurred(e);
+								} catch (ClassNotFoundException e) {
+									exceptionOccurred(e);
+								}
+								if (!isDone()) {
+									timeoutMillis -= (System.currentTimeMillis() - start);
+								}
 							}
 						}
 						return super.get(timeout, unit);
