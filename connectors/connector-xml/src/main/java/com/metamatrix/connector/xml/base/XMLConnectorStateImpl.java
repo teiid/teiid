@@ -28,6 +28,7 @@ import java.sql.SQLXML;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -82,7 +83,7 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
 	private boolean caching = false;
 	
-	private Map<String, SQLXML> responses = new HashMap<String, SQLXML>();
+	private Map<String, SQLXML> responses = new ConcurrentHashMap<String, SQLXML>();
 
     public XMLConnectorStateImpl() {
         setPreprocess(true);
