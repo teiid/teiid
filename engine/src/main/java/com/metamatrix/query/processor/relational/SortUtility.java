@@ -35,7 +35,10 @@ import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
@@ -63,10 +66,16 @@ public class SortUtility {
 		int index;
 		boolean duplicate;
 		IndexedTupleSource its;
+		int limit = Integer.MAX_VALUE;
 		
 		@Override
 		public int compareTo(SortedSublist o) {
 			return comparator.compare(this.tuple, o.tuple);
+		}
+		
+		@Override
+		public String toString() {
+			return index + " " + tuple + " " + duplicate; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -83,6 +92,8 @@ public class SortUtility {
     private int phase = INITIAL_SORT;
     private List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
     private int masterSortIndex;
+    
+    private int initialSortPass = 1;     //used to track the number of times through the initial sort method
 
     // Phase constants for readability
     private static final int INITIAL_SORT = 1;
@@ -165,8 +176,8 @@ public class SortUtility {
 	            	
                     addTuple(workingTuples, tuple);
 	            } catch(BlockedException e) {
-	            	if (workingTuples.isEmpty() && (mode != Mode.DUP_REMOVE || activeTupleBuffers.isEmpty())) {
-	            		throw e; //block if no work can be performed
+	            	if (workingTuples.isEmpty() && (mode != Mode.DUP_REMOVE || activeTupleBuffers.size() < initialSortPass)) {
+            			throw e; //block if no work can be performed
 	            	}
 	            	break;
 	            } 
@@ -185,13 +196,13 @@ public class SortUtility {
 	        for (List<?> list : workingTuples) {
 				sublist.addTuple(list);
 			}
-	        sublist.saveBatch(false);
+	        sublist.saveBatch();
         }
     	
     	if (this.activeTupleBuffers.isEmpty()) {
             activeTupleBuffers.add(createTupleBuffer());
         }  
-
+    	this.initialSortPass++;
         this.phase = MERGE;
     }
 
@@ -209,42 +220,49 @@ public class SortUtility {
 		
     protected void mergePhase() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	while(this.activeTupleBuffers.size() > 1) {    		
-    		ArrayList<SortedSublist> workingTuples = new ArrayList<SortedSublist>(activeTupleBuffers.size());
+    		ArrayList<SortedSublist> sublists = new ArrayList<SortedSublist>(activeTupleBuffers.size());
             
             TupleBuffer merged = createTupleBuffer();
 
-            int sortedIndex = 0;
             int maxSortIndex = Math.min(this.bufferManager.getMaxProcessingBatches() * 2, activeTupleBuffers.size());
-            for(; sortedIndex<maxSortIndex; sortedIndex++) { 
-            	TupleBuffer activeID = activeTupleBuffers.get(sortedIndex);
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
+            	LogManager.logTrace(LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        	
+        	// initialize the sublists with the min value
+            for(int i = 0; i<maxSortIndex; i++) { 
+             	TupleBuffer activeID = activeTupleBuffers.get(i);
             	SortedSublist sortedSublist = new SortedSublist();
             	sortedSublist.its = activeID.createIndexedTupleSource();
-            	sortedSublist.index = sortedIndex;
-            	addWorkingTuple(workingTuples, sortedSublist);
+            	sortedSublist.index = i;
+            	if (activeID == output) {
+            		sortedSublist.limit = output.getRowCount();
+            	}
+            	incrementWorkingTuple(sublists, sortedSublist);
             }
             
             // iteratively process the lowest tuple
-            while (workingTuples.size() > 0) {
-            	SortedSublist sortedSublist = workingTuples.remove(0);
-            	if (!sortedSublist.duplicate) {
+            while (sublists.size() > 0) {
+            	SortedSublist sortedSublist = sublists.remove(0);
+            	if (this.mode == Mode.SORT || !sortedSublist.duplicate) {
                 	merged.addTuple(sortedSublist.tuple);
-                    if (this.output != null && sortedSublist.index != masterSortIndex && sortedIndex > masterSortIndex) {
+                    if (this.output != null && sortedSublist.index > masterSortIndex) {
                     	this.output.addTuple(sortedSublist.tuple); //a new distinct row
                     }
             	}
-            	addWorkingTuple(workingTuples, sortedSublist);
+            	incrementWorkingTuple(sublists, sortedSublist);
             }                
 
             // Remove merged sublists
-            for(int i=0; i<sortedIndex; i++) {
+            for(int i=0; i<maxSortIndex; i++) {
             	TupleBuffer id = activeTupleBuffers.remove(0);
             	if (id != this.output) {
             		id.remove();
             	}
             }
-            merged.saveBatch(false);
+            merged.saveBatch();
             this.activeTupleBuffers.add(merged);           
-            masterSortIndex = masterSortIndex - sortedIndex + 1;
+            masterSortIndex = masterSortIndex - maxSortIndex + 1;
             if (masterSortIndex < 0) {
             	masterSortIndex = this.activeTupleBuffers.size() - 1;
             }
@@ -253,7 +271,7 @@ public class SortUtility {
         // Close sorted source (all others have been removed)
         if (doneReading) {
         	activeTupleBuffers.get(0).close();
-	        if (this.output != null) {
+        	if (this.output != null) {
 	        	this.output.close();
 	        }
 	        this.phase = DONE;
@@ -266,8 +284,11 @@ public class SortUtility {
     	this.phase = INITIAL_SORT;
     }
 
-	private void addWorkingTuple(ArrayList<SortedSublist> workingTuples, SortedSublist sortedSublist) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+	private void incrementWorkingTuple(ArrayList<SortedSublist> subLists, SortedSublist sortedSublist) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		sortedSublist.tuple = null;
+		if (sortedSublist.limit < sortedSublist.its.getCurrentIndex()) {
+			return; //special case for still reading the output tuplebuffer
+		}
 		try {
 			sortedSublist.tuple = sortedSublist.its.nextTuple();
         } catch (BlockedException e) {
@@ -277,12 +298,39 @@ public class SortUtility {
         	return; // done with this sublist
         }
         sortedSublist.duplicate = false;
-		int index = Collections.binarySearch(workingTuples, sortedSublist);
+		int index = Collections.binarySearch(subLists, sortedSublist);
 		if (index >= 0) {
-			sortedSublist.duplicate = mode != Mode.SORT;
-			workingTuples.add(index, sortedSublist);
+			/* In dup removal mode we need to ensure that a sublist other than the master
+			 * gets marked as duplicate
+			 */
+			if (mode == Mode.DUP_REMOVE && this.output != null && sortedSublist.index == masterSortIndex) {
+				if (!subLists.get(index).duplicate) {
+					subLists.get(index).duplicate = true;
+				} else {
+					//there's an evil twin somewhere, search before and after the index found
+					for (int i = 1; i < subLists.size(); i++) {
+						int actualIndex = i;
+						if (i <= index) {
+							actualIndex = index - i;
+						} 
+						SortedSublist sublist = subLists.get(actualIndex);
+						if (sublist.compareTo(sortedSublist) != 0) {
+							Assertion.assertTrue(actualIndex < index);
+							i = index; 
+							continue;
+						}
+						if (!sublist.duplicate) {
+							sublist.duplicate = true;
+							break;
+						}
+					}
+				}
+			} else {
+				sortedSublist.duplicate = true;
+			}
+			subLists.add(index, sortedSublist);
 		} else {
-			workingTuples.add(-index - 1, sortedSublist);
+			subLists.add(-index - 1, sortedSublist);
 		}
 	} 
 

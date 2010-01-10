@@ -54,7 +54,6 @@ public class QueryProcessor implements BatchProducer {
     private volatile boolean requestCanceled = false;
     private static final int DEFAULT_WAIT = 50;       
     private boolean processorClosed = false;
-    private volatile int highestRow;
     
     private boolean nonBlocking = false;
          
@@ -132,7 +131,6 @@ public class QueryProcessor implements BatchProducer {
 	        		throw new MetaMatrixProcessingException("Query timed out"); //$NON-NLS-1$
 	        	}
 	            result = processPlan.nextBatch();
-	            this.highestRow = result.getEndRow();
 	
 	        	if(result.getTerminationFlag()) {
 	        		done = true;
@@ -202,10 +200,6 @@ public class QueryProcessor implements BatchProducer {
         this.requestCanceled = true;
     }
     
-	public int getHighestRow() {
-		return highestRow;
-	}    
-	
 	public BatchCollector createBatchCollector() throws MetaMatrixComponentException {
 		return new BatchCollector(this, this.bufferMgr.createTupleBuffer(this.processPlan.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR));
 	}

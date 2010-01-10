@@ -117,8 +117,4 @@ public class BatchCollector {
         return buffer.getRowCount();
     }
     
-    public boolean isDone() {
-		return done;
-	}
-
 }

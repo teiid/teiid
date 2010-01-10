@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -53,7 +54,8 @@ public class TestSortNode {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
         CommandContext context = new CommandContext ("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
-        FakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
+        BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
+        dataNode.setReturnPeriod(3);
         dataNode.setElements(elements);
         dataNode.initialize(context, mgr, null);    
         
@@ -127,37 +129,32 @@ public class TestSortNode {
         elements.add(es1);
         
         int rows = batches * BATCH_SIZE;
-        
+
+        ListNestedSortComparator comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.DESC);
+
         List[] expected = new List[rows];
         List[] data = new List[rows];
+        TreeSet<List> distinct = new TreeSet<List>(comparator);
         for(int i=0; i<rows; i++) { 
-            data[i] = new ArrayList();
-            expected[i] = new ArrayList();
-            Integer value = new Integer((i*51) % 12321);
-            data[i].add(value);
-            expected[i].add(value);
+            Integer value = new Integer((i*51) % 11);
+            data[i] = Arrays.asList(value);
+            expected[i] = Arrays.asList(value);
+            distinct.add(Arrays.asList(value));
         }
+        List[] expectedDistinct = distinct.toArray(new List[distinct.size()]);
         
         List sortElements = new ArrayList();
         sortElements.add(es1);
         
         List sortTypes = new ArrayList();
-        sortTypes.add(new Boolean(OrderBy.ASC));
-
-        ListNestedSortComparator comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.ASC);
-        Arrays.sort(expected, comparator);
-        
-        for (Mode mode : Mode.values()) {
-            helpTestSort(elements, data, sortElements, sortTypes, expected, mode);
-        }
-        
-        comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.DESC);
-        Arrays.sort(expected, comparator);
-        sortTypes.clear();
         sortTypes.add(new Boolean(OrderBy.DESC));
+
+        Arrays.sort(expected, comparator);
         
         for (Mode mode : Mode.values()) {
-            helpTestSort(elements, data, sortElements, sortTypes, expected, mode);
+        	if (mode == Mode.DUP_REMOVE) {
+        		helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
+        	}
         }
     }
         
@@ -276,7 +273,7 @@ public class TestSortNode {
     }   
     
     @Test public void testBiggerSort() throws Exception {
-        helpTestAllSorts(10);
+        helpTestAllSorts(100);
     }
  
     @Test public void testAllSort() throws Exception {

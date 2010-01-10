@@ -204,8 +204,16 @@ public class TupleBuffer {
 			saveBatch(false);
 		}
 	}
+	
+	/**
+	 * Force the persistence of any rows held in memory.
+	 * @throws MetaMatrixComponentException
+	 */
+	public void saveBatch() throws MetaMatrixComponentException {
+		this.saveBatch(false);
+	}
 
-	public void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
+	void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
 		Assertion.assertTrue(!this.isRemoved());
 		if (batchBuffer == null || batchBuffer.isEmpty()) {
 			return;

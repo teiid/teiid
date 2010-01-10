@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.Describable;
@@ -338,23 +338,27 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
 	/**
 	 * Helper method for all the node that will filter the elements needed for the next node.
 	 */
-	protected List projectTuple(Map tupleElements, List tupleValues, List projectElements)
-		throws MetaMatrixComponentException {
+	protected int[] getProjectionIndexes(Map<SingleElementSymbol, Integer> tupleElements, List<SingleElementSymbol> projectElements) {
+		int[] result = new int[projectElements.size()];
 
-		List projectedTuple = new ArrayList(projectElements.size());
-
-		Iterator projectIter = projectElements.iterator();
-		while(projectIter.hasNext()) {
-			SingleElementSymbol symbol = (SingleElementSymbol) projectIter.next();
-
-			Integer index = (Integer) tupleElements.get(symbol);
-            if(index == null) {
-                throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0035, new Object[]{symbol, tupleElements}));
-			}
-
-			projectedTuple.add(tupleValues.get(index.intValue()));
+		int i = 0;
+		for (SingleElementSymbol symbol : projectElements) {
+			Integer index = tupleElements.get(symbol);
+			Assertion.isNotNull(index);
+			result[i++] = index;
 		}
 
+		return result;
+	}
+	
+	protected List<?> projectTuple(int[] indexes, List<?> tupleValues) {
+	
+		List<Object> projectedTuple = new ArrayList<Object>(indexes.length);
+	
+		for (int index : indexes) {
+			projectedTuple.add(tupleValues.get(index));
+		}
+	
 		return projectedTuple;
 	}
 

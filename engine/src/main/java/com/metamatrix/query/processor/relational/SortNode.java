@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -44,9 +44,8 @@ public class SortNode extends RelationalNode {
 
     private SortUtility sortUtility;
     private int phase = SORT;
-    private TupleBuffer outputID;
-    private int rowCount = -1;
-    private int outputBeginRow = 1;
+    private TupleBuffer output;
+    private TupleSource outputTs;
 
     private static final int SORT = 2;
     private static final int OUTPUT = 3;
@@ -59,9 +58,8 @@ public class SortNode extends RelationalNode {
         super.reset();
         sortUtility = null;
         phase = SORT;
-        outputID = null;
-        rowCount = -1;
-        outputBeginRow = 1;
+        output = null;
+        outputTs = null;
     }
 
 	public void setSortElements(List sortElements, List<Boolean> sortTypes) {
@@ -81,12 +79,6 @@ public class SortNode extends RelationalNode {
 		this.mode = mode;
 	}
 
-	public void open()
-		throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
-		super.open();
-	}
-
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         if(this.phase == SORT) {
@@ -102,55 +94,43 @@ public class SortNode extends RelationalNode {
 	                                            sortTypes, this.mode, getBufferManager(),
 	                                            getConnectionID());
 		}
-		this.outputID = this.sortUtility.sort();
+		this.output = this.sortUtility.sort();
+		if (this.outputTs == null) {
+			this.outputTs = this.output.createIndexedTupleSource();
+		}
         this.phase = OUTPUT;
     }
 
-    private TupleBatch outputPhase() throws BlockedException, MetaMatrixComponentException {
-    	if (this.rowCount == -1) {
-    		if (this.outputID.isFinal()) {
-    			this.rowCount = this.outputID.getRowCount();
-    		} else {
-    			this.phase = SORT;
-    		}
-    	}
-        if(this.rowCount == 0 || (this.rowCount != -1 && this.outputBeginRow > this.rowCount)) {
-            TupleBatch terminationBatch = new TupleBatch(1, Collections.EMPTY_LIST);
-            terminationBatch.setTerminationFlag(true);
-            return terminationBatch;
-        }
-        int beginPinned = this.outputBeginRow;
-        TupleBatch outputBatch = this.outputID.getBatch(beginPinned);
-        
-        this.outputBeginRow += outputBatch.getRowCount();
-
-        outputBatch = removeUnrelatedColumns(outputBatch);
-
-        if(rowCount != -1 && outputBeginRow > rowCount) {
-            outputBatch.setTerminationFlag(true);
-        }
-
-        return outputBatch;
-    }
-
-	private TupleBatch removeUnrelatedColumns(TupleBatch outputBatch) {
-		int extraColumns = this.getChildren()[0].getElements().size() - this.getElements().size();
-		
-		if (extraColumns > 0) {
-			for (List tuple : outputBatch.getAllTuples()) {
-				addBatchRow(tuple.subList(0, this.getElements().size()));
-			}
-			outputBatch = pullBatch();
+    private TupleBatch outputPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+		if (!this.output.isFinal()) {
+			this.phase = SORT;
 		}
-		return outputBatch;
-	}
+		List<?> tuple = null;
+		try {
+			while ((tuple = this.outputTs.nextTuple()) != null) {
+				//resize to remove unrelated columns
+				addBatchRow(tuple.subList(0, this.getElements().size()));
+				if (this.isBatchFull()) {
+					return pullBatch();
+				}
+			}
+		} catch (BlockedException e) {
+			if (this.hasPendingRows()) {
+				return this.pullBatch();
+			}
+			throw e;
+		}
+		this.terminateBatches();
+		return this.pullBatch();
+    }
 
     public void close() throws MetaMatrixComponentException {
         if (!isClosed()) {
             super.close();
-            if(this.outputID != null) {
-                this.outputID.remove();
-                this.outputID = null;
+            if(this.output != null) {
+                this.output.remove();
+                this.output = null;
+                this.outputTs = null;
             }
         }
     }

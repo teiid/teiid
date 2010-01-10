@@ -45,6 +45,7 @@ import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -1376,10 +1377,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     
     
     public String getProcessorBatchSize() {
-        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_PROCESSOR_BATCH_SIZE, String.valueOf(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE));
     }
     public String getConnectorBatchSize() {
-        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_CONNECTOR_BATCH_SIZE, String.valueOf(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE));
     }
 
 	@Override

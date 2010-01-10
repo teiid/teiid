@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -46,6 +48,7 @@ import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.FakeTupleSource;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -53,15 +56,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.util.CommandContext;
 
-public class TestGroupingNode extends TestCase {
-
-	// ################################## FRAMEWORK ################################
-	
-	public TestGroupingNode(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################
+public class TestGroupingNode {
 
 	public static TupleSource createTupleSource1() { 
 		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
@@ -93,24 +88,24 @@ public class TestGroupingNode extends TestCase {
 	private void helpProcess(BufferManager mgr,
                              GroupingNode node,
                              CommandContext context,
-                             List[] expected) throws MetaMatrixComponentException,
+                             List[] expected, ProcessorDataManager dataMgr) throws MetaMatrixComponentException,
                                              BlockedException,
                                              MetaMatrixProcessingException {
         TupleSource dataSource = createTupleSource1();
-        helpProcess(mgr, node, context, expected, dataSource);
+        helpProcess(mgr, node, context, expected, dataSource, dataMgr);
     }
     
     private void helpProcess(BufferManager mgr,
                              GroupingNode node,
                              CommandContext context,
                              List[] expected,
-                             TupleSource dataSource) throws MetaMatrixComponentException,
+                             TupleSource dataSource, ProcessorDataManager dataMgr) throws MetaMatrixComponentException,
                                                     BlockedException,
                                                     MetaMatrixProcessingException {
         RelationalNode dataNode = new FakeRelationalNode(0, dataSource, mgr.getProcessorBatchSize());
         dataNode.setElements(dataSource.getSchema());            
-        dataNode.initialize(context, mgr, null);
-        node.addChild(dataNode);            
+        node.addChild(dataNode);    
+        node.initialize(context, mgr, dataMgr);
         node.open();
         
         int currentRow = 1;
@@ -134,7 +129,7 @@ public class TestGroupingNode extends TestCase {
     
 	// ################################## ACTUAL TESTS ################################
 	
-	public void test1() throws Exception {
+	@Test public void test1() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         // Set up
@@ -159,10 +154,9 @@ public class TestGroupingNode extends TestCase {
 		node.setElements(outputElements);
 		
 		List groupingElements = new ArrayList();
-		groupingElements.add(col1); //$NON-NLS-1$
+		groupingElements.add(col1);
 		node.setGroupingElements(groupingElements);	  
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(2), new Integer(1), new Integer(1), new Long(3), new Long(3), new Double(3.0), new Double(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
@@ -175,7 +169,7 @@ public class TestGroupingNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(6), new Integer(2), new Integer(2), new Integer(2), new Long(7), new Long(7), new Double(3.5), new Double(3.5), new Integer(3), new Integer(3), new Integer(4), new Integer(4) })
         };
         
-        helpProcess(mgr, node, context, expected);
+        helpProcess(mgr, node, context, expected, null);
         
         //ensure that the distinct input type is correct
         AggregateFunction[] functions = node.getFunctions();
@@ -184,12 +178,11 @@ public class TestGroupingNode extends TestCase {
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((ElementSymbol)dup.getElements().get(0)).getType());
 	}
 
-    public void test2() throws Exception {
+    @Test public void test2() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         GroupingNode node = getExampleGroupingNode();         
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),
@@ -202,17 +195,16 @@ public class TestGroupingNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(6), new Integer(2) })
         };
                 
-        helpProcess(mgr, node, context, expected);
+        helpProcess(mgr, node, context, expected, null);
     }
 
     // Same as test2, but uses processor batch size smaller than number of groups
-    public void test3() throws Exception {
+    @Test public void test3() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         ((BufferManagerImpl)mgr).setProcessorBatchSize(5);
 
         GroupingNode node = getExampleGroupingNode();         
         CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),
@@ -225,10 +217,10 @@ public class TestGroupingNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(6), new Integer(2) })
         };
                 
-        helpProcess(mgr, node, context, expected);
+        helpProcess(mgr, node, context, expected, null);
     }
     
-    public void testDefect5769() throws Exception {
+    @Test public void testDefect5769() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         ElementSymbol bigDecimal = new ElementSymbol("value"); //$NON-NLS-1$
@@ -244,7 +236,6 @@ public class TestGroupingNode extends TestCase {
         // Set grouping elements to null 
         node.setGroupingElements(null);         
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] data = new List[] {
             Arrays.asList(new Object[] { new BigDecimal("0.0") }),     //$NON-NLS-1$
@@ -261,10 +252,10 @@ public class TestGroupingNode extends TestCase {
         List symbols = new ArrayList();
         symbols.add(bigDecimal);
         TupleSource dataSource = new FakeTupleSource(symbols, data);            
-        helpProcess(mgr, node, context, expected, dataSource);
+        helpProcess(mgr, node, context, expected, dataSource, null);
     }
 
-    public void testdefect9842() throws Exception {
+    @Test public void testdefect9842() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
@@ -285,7 +276,6 @@ public class TestGroupingNode extends TestCase {
         groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] data = new List[] {
             Arrays.asList(new Object[] { new Integer(1), new BigDecimal("0.0") }),     //$NON-NLS-1$
@@ -304,7 +294,7 @@ public class TestGroupingNode extends TestCase {
         symbols.add(col1);
         symbols.add(bigDecimal);
         TupleSource dataSource = new FakeTupleSource(symbols, data);            
-        helpProcess(mgr, node, context, expected, dataSource);
+        helpProcess(mgr, node, context, expected, dataSource, null);
     }
 
     private void helpTestLookupFunctionInAggregate(int batchSize) throws Exception {
@@ -345,8 +335,6 @@ public class TestGroupingNode extends TestCase {
         valueMap.put(new Integer(4), new Integer(5));
         dataMgr.defineCodeTable("pm1.g1", "e1", "e2", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                    
-        node.initialize(context, mgr, dataMgr);
-        
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null,           new Integer(1), new Long(4), new Long(4) }),
             Arrays.asList(new Object[] { new Integer(0), new Integer(1), new Long(5), new Long(5) }),
@@ -358,7 +346,7 @@ public class TestGroupingNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(6), new Integer(2), new Long(9), new Long(9) })
         };
         
-        helpProcess(mgr, node, context, expected);
+        helpProcess(mgr, node, context, expected, dataMgr);
     }
     
     public void helpTestEmptyGroup(boolean groupBy) throws Exception {
@@ -383,7 +371,6 @@ public class TestGroupingNode extends TestCase {
             node.setGroupingElements(groupingElements);
         }
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] data = new List[] {
         };
@@ -400,28 +387,27 @@ public class TestGroupingNode extends TestCase {
         symbols.add(col1);
         symbols.add(bigDecimal);
         TupleSource dataSource = new FakeTupleSource(symbols, data);            
-        helpProcess(mgr, node, context, expected, dataSource);
+        helpProcess(mgr, node, context, expected, dataSource, null);
     }
     
-    public void testTestEmptyGroupWithoutGroupBy() throws Exception {
+    @Test public void testTestEmptyGroupWithoutGroupBy() throws Exception {
         helpTestEmptyGroup(false);
     }
     
-    public void testTestEmptyGroupWithGroupBy() throws Exception {
+    @Test public void testTestEmptyGroupWithGroupBy() throws Exception {
         helpTestEmptyGroup(true);
     }
 
-    public void testLookupFunctionMultipleBatches() throws Exception {
+    @Test public void testLookupFunctionMultipleBatches() throws Exception {
         helpTestLookupFunctionInAggregate(3);
     }
     
-    public void testDupSort() throws Exception {
+    @Test public void testDupSort() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         GroupingNode node = getExampleGroupingNode();     
         node.setRemoveDuplicates(true);
         CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
-        node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),
@@ -434,7 +420,7 @@ public class TestGroupingNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(6), new Integer(2) })
         };
                 
-        helpProcess(mgr, node, context, expected);
+        helpProcess(mgr, node, context, expected, null);
     }
 
 	private GroupingNode getExampleGroupingNode() {

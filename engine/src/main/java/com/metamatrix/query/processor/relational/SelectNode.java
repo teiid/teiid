@@ -42,7 +42,8 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 	private Criteria criteria;
     
     // Derived element lookup map
-    private Map elementMap;    
+    private Map elementMap; 
+    private int[] projectionIndexes;
 	
     // State if blocked on evaluating a criteria
     private boolean blockedOnCriteria = false;
@@ -78,6 +79,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         // Create element lookup map for evaluating project expressions
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
+            this.projectionIndexes = getProjectionIndexes(this.elementMap, getElements());
         }
 	}
 	
@@ -109,7 +111,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
             // Evaluate criteria with tuple
             try {
                 if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
-                    addBatchRow( projectTuple(elementMap, tuple, getElements()) );
+                    addBatchRow(projectTuple(this.projectionIndexes, tuple));
                 }
             } catch(BlockedException e) {
                 // Save state and rethrow
@@ -142,6 +144,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 		super.copy(source, target);
 		target.criteria = criteria;
 		target.elementMap = source.elementMap;
+		target.projectionIndexes = source.projectionIndexes;
 	}
     
     /* 

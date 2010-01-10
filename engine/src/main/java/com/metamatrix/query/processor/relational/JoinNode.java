@@ -70,6 +70,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     private Criteria joinCriteria;
     
     private Map combinedElementMap;
+    private int[] projectionIndexes;
     
     public JoinNode(int nodeID) {
         super(nodeID);
@@ -127,10 +128,13 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     		ProcessorDataManager dataMgr) {
     	super.initialize(context, bufferManager, dataMgr);
     	
-        // Create element lookup map for evaluating project expressions
-        List combinedElements = new ArrayList(getChildren()[0].getElements());
-        combinedElements.addAll(getChildren()[1].getElements());
-        this.combinedElementMap = createLookupMap(combinedElements);
+    	if (this.combinedElementMap == null) {
+	        // Create element lookup map for evaluating project expressions
+	        List combinedElements = new ArrayList(getChildren()[0].getElements());
+	        combinedElements.addAll(getChildren()[1].getElements());
+	        this.combinedElementMap = createLookupMap(combinedElements);
+	        this.projectionIndexes = getProjectionIndexes(combinedElementMap, getElements());
+    	}
     }
     
     public void open()
@@ -211,7 +215,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             }
             List outputTuple = this.joinStrategy.nextTuple();
             if(outputTuple != null) {
-                List projectTuple = projectTuple(this.combinedElementMap, outputTuple, getElements());
+                List projectTuple = projectTuple(this.projectionIndexes, outputTuple);
                 super.addBatchRow(projectTuple);
             } else {
                 super.terminateBatches();

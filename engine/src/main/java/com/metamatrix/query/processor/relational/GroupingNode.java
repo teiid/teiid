@@ -23,8 +23,8 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
@@ -44,12 +45,14 @@ import com.metamatrix.query.function.aggregate.Max;
 import com.metamatrix.query.function.aggregate.Min;
 import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.function.aggregate.Sum;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.util.CommandContext;
 
 public class GroupingNode extends RelationalNode {
 
@@ -65,12 +68,12 @@ public class GroupingNode extends RelationalNode {
        
     // Sort phase
     private SortUtility sortUtility;
-    private TupleBuffer sortedID;
+    private TupleBuffer sortBuffer;
     private TupleSource groupTupleSource;
-
+    
     // Group phase
-    private Map expressionMap;                 // Index map for all collected expressions (Expression -> index in collectedExpressions)
     private AggregateFunction[] functions;
+    private int[] aggProjectionIndexes;
     private List lastRow;
 	private List currentGroupTuple;
 
@@ -86,16 +89,18 @@ public class GroupingNode extends RelationalNode {
         super.reset();
 
         phase = COLLECTION;
-        elementMap = null;
-        collectedExpressions = null;
                 
         sortUtility = null;
-        sortedID = null;
+        sortBuffer = null;
         
-        expressionMap = null;
-        functions = null;
         lastRow = null;
         currentGroupTuple = null;
+        
+        if (this.functions != null) {
+	    	for (AggregateFunction function : this.functions) {
+				function.reset();
+			}
+        }
     }
     
     public void setRemoveDuplicates(boolean removeDuplicates) {
@@ -112,37 +117,24 @@ public class GroupingNode extends RelationalNode {
     public void setGroupingElements(List groupingElements) {
         this.sortElements = groupingElements;
         if(groupingElements != null) {
-            sortTypes = new ArrayList(groupingElements.size());
-            for(int i=0; i<groupingElements.size(); i++) {
-                sortTypes.add(Boolean.valueOf(OrderBy.ASC));
-            }
+            sortTypes = Collections.nCopies(groupingElements.size(), Boolean.valueOf(OrderBy.ASC));
         }
     }
 
-	public void open()
-		throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
-		super.open();
-
+	@Override
+	public void initialize(CommandContext context, BufferManager bufferManager,
+			ProcessorDataManager dataMgr) {
+		super.initialize(context, bufferManager, dataMgr);
+		
+		if (this.functions != null) {
+			return;
+		}
+		
         // Incoming elements and lookup map for evaluating expressions
         List sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
-        
-        // Determine expressions to build (all grouping expressions + expressions used by aggregates)   
-        collectExpressions();
 
-        initializeFunctionAccumulators();
-	}
-
-    /** 
-     * Collect a list of all expressions that must be evaluated during collection.  This
-     * will include all the expressions being sorted on AND all expressions used within 
-     * aggregate functions.
-     * 
-     * @since 4.2
-     */
-    private void collectExpressions() {
-        // List should contain all grouping columns / expressions as we need those for sorting
+    	// List should contain all grouping columns / expressions as we need those for sorting
         if(this.sortElements != null) {
             this.collectedExpressions = new ArrayList(this.sortElements.size() + getElements().size());
             this.collectedExpressions.addAll(sortElements);
@@ -150,27 +142,10 @@ public class GroupingNode extends RelationalNode {
             this.collectedExpressions = new ArrayList(getElements().size());
         }
         
-        // Also need to include all expressions used within aggregates so that we can evaluate 
-        // them once up front during collection rather than repeatedly during aggregate evaluation
-        Iterator outputIter = getElements().iterator();
-        while(outputIter.hasNext()) {
-            Object outputSymbol = outputIter.next();
-            if(outputSymbol instanceof AggregateSymbol) {
-                AggregateSymbol agg = (AggregateSymbol) outputSymbol;
-                Expression expr = agg.getExpression();
-                if(expr != null && ! this.collectedExpressions.contains(expr)) {
-                    this.collectedExpressions.add(expr);
-                }
-            }
-        }
-        
-        // Build lookup map for evaluating aggregates later
-        this.expressionMap = createLookupMap(collectedExpressions);
-    }
-
-    private void initializeFunctionAccumulators() {
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()];
+        aggProjectionIndexes = new int[getElements().size()];
+        Arrays.fill(aggProjectionIndexes, -1);
         for(int i=0; i<getElements().size(); i++) {
             SingleElementSymbol symbol = (SingleElementSymbol)getElements().get(i);
             Class<?> outputType = symbol.getType();
@@ -181,6 +156,12 @@ public class GroupingNode extends RelationalNode {
                 if(aggSymbol.getExpression() == null) {
                     functions[i] = new Count();
                 } else {
+                	int index = this.collectedExpressions.indexOf(aggSymbol.getExpression());
+                	if(index == -1) {
+                        index = this.collectedExpressions.size();
+                        this.collectedExpressions.add(aggSymbol.getExpression());
+                    }
+                	aggProjectionIndexes[i] = index;
                     String function = aggSymbol.getAggregateFunction();
                     if(function.equals(ReservedWords.COUNT)) {
                         functions[i] = new Count();
@@ -203,6 +184,7 @@ public class GroupingNode extends RelationalNode {
                 }
             } else {
                 functions[i] = new ConstantFunction();
+                aggProjectionIndexes[i] = this.collectedExpressions.indexOf(symbol);
             }
             functions[i].initialize(outputType, inputType);
         }
@@ -304,8 +286,8 @@ public class GroupingNode extends RelationalNode {
     }
 
     private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        this.sortedID = this.sortUtility.sort();
-        this.groupTupleSource = this.sortedID.createIndexedTupleSource();
+        this.sortBuffer = this.sortUtility.sort();
+        this.groupTupleSource = this.sortBuffer.createIndexedTupleSource();
         this.phase = GROUP;
     }
 
@@ -328,10 +310,6 @@ public class GroupingNode extends RelationalNode {
                 List row = new ArrayList(functions.length);
                 for(int i=0; i<functions.length; i++) {
                     row.add( functions[i].getResult() );
-                }
-
-                // Start a new group
-                for(int i=0; i<functions.length; i++) {
                     functions[i].reset();
                 }
 
@@ -395,15 +373,9 @@ public class GroupingNode extends RelationalNode {
     throws MetaMatrixComponentException, ExpressionEvaluationException {
 
         for(int i=0; i<functions.length; i++) {
-            Expression expression = (SingleElementSymbol) getElements().get(i);
-            if(expression instanceof AggregateSymbol) {
-                expression = ((AggregateSymbol)expression).getExpression();
-            }
-
             Object value = null;
-            if(expression != null) {
-                Integer exprIndex = (Integer)expressionMap.get(expression);
-                value = tuple.get(exprIndex.intValue());
+            if(aggProjectionIndexes[i] != -1) {
+                value = tuple.get(aggProjectionIndexes[i]);
             }
             functions[i].addInput(value);
         }
@@ -411,6 +383,10 @@ public class GroupingNode extends RelationalNode {
 
     public void close() throws MetaMatrixComponentException {
         if (!isClosed()) {
+        	if (this.sortBuffer != null) {
+        		this.sortBuffer.remove();
+        		this.sortBuffer = null;
+        	}
             super.close();
         }
     }

@@ -229,7 +229,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (!doneProducingBatches) {
 			sendResultsIfNeeded(null);
 			collector.collectTuples();
-		    doneProducingBatches = collector.isDone();
+		    doneProducingBatches = this.resultsBuffer.isFinal();
 		}
 		if (doneProducingBatches) {
             /*if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable()){
@@ -274,6 +274,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	 * Any errors that occur will not make it to the client, instead we just log them here.
 	 */
 	protected void attemptClose() {
+		int rowcount = -1;
 		if (this.resultsBuffer != null) {
 			try {
 				this.processor.closeProcessing();
@@ -286,6 +287,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
 		    }
+			rowcount = resultsBuffer.getRowCount();
 		    resultsBuffer.remove();
 			
 			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
@@ -326,7 +328,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (this.processingException != null) {
 			sendError();			
 		} else {
-	        dqpCore.logMMCommand(this, false, false, this.processor.getHighestRow());
+	        dqpCore.logMMCommand(this, false, false, rowcount);
 		}
 	}
 
@@ -369,7 +371,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		
 		synchronized (this) {
 			if (this.resultsReceiver == null
-					|| (this.begin > this.processor.getHighestRow() && !doneProducingBatches)
+					|| (this.begin > this.resultsBuffer.getRowCount() && !doneProducingBatches)
 					|| (this.transactionState == TransactionState.ACTIVE)) {
 				return;
 			}
@@ -392,7 +394,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                 batch = new TupleBatch(beginRow, rows);
     		}
     	}
-        int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
+        int finalRowCount = this.resultsBuffer.isFinal()?this.resultsBuffer.getRowCount():-1;
         
         response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
         response.setFirstRow(batch.getBeginRow());
@@ -431,9 +433,7 @@ public class RequestWorkItem extends AbstractWorkItem {
             receiver = this.resultsReceiver;
             this.resultsReceiver = null;    
 		}
-
         receiver.receiveResults(response);
-        
 	}
     
     public static ResultsMessage createResultsMessage(RequestMessage message, List[] batch, List columnSymbols, AnalysisRecord analysisRecord) {
