@@ -64,7 +64,6 @@ public class SortUtility {
 	private class SortedSublist implements Comparable<SortedSublist> {
 		List<?> tuple;
 		int index;
-		boolean duplicate;
 		IndexedTupleSource its;
 		int limit = Integer.MAX_VALUE;
 		
@@ -75,7 +74,7 @@ public class SortUtility {
 		
 		@Override
 		public String toString() {
-			return index + " " + tuple + " " + duplicate; //$NON-NLS-1$ //$NON-NLS-2$
+			return index + " " + tuple; //$NON-NLS-1$
 		}
 	}
 
@@ -202,7 +201,7 @@ public class SortUtility {
     	if (this.activeTupleBuffers.isEmpty()) {
             activeTupleBuffers.add(createTupleBuffer());
         }  
-    	this.initialSortPass++;
+    	this.initialSortPass = Math.min(initialSortPass + 1, bufferManager.getMaxProcessingBatches() * 2);
         this.phase = MERGE;
     }
 
@@ -244,11 +243,9 @@ public class SortUtility {
             // iteratively process the lowest tuple
             while (sublists.size() > 0) {
             	SortedSublist sortedSublist = sublists.remove(0);
-            	if (this.mode == Mode.SORT || !sortedSublist.duplicate) {
-                	merged.addTuple(sortedSublist.tuple);
-                    if (this.output != null && sortedSublist.index > masterSortIndex) {
-                    	this.output.addTuple(sortedSublist.tuple); //a new distinct row
-                    }
+        		merged.addTuple(sortedSublist.tuple);
+                if (this.output != null && sortedSublist.index > masterSortIndex) {
+                	this.output.addTuple(sortedSublist.tuple); //a new distinct row
             	}
             	incrementWorkingTuple(sublists, sortedSublist);
             }                
@@ -285,52 +282,35 @@ public class SortUtility {
     }
 
 	private void incrementWorkingTuple(ArrayList<SortedSublist> subLists, SortedSublist sortedSublist) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-		sortedSublist.tuple = null;
-		if (sortedSublist.limit < sortedSublist.its.getCurrentIndex()) {
-			return; //special case for still reading the output tuplebuffer
-		}
-		try {
-			sortedSublist.tuple = sortedSublist.its.nextTuple();
-        } catch (BlockedException e) {
-        	//intermediate sources aren't closed
-        }  
-        if (sortedSublist.tuple == null) {
-        	return; // done with this sublist
-        }
-        sortedSublist.duplicate = false;
-		int index = Collections.binarySearch(subLists, sortedSublist);
-		if (index >= 0) {
-			/* In dup removal mode we need to ensure that a sublist other than the master
-			 * gets marked as duplicate
+		while (true) {
+			sortedSublist.tuple = null;
+			if (sortedSublist.limit < sortedSublist.its.getCurrentIndex()) {
+				return; //special case for still reading the output tuplebuffer
+			}
+			try {
+				sortedSublist.tuple = sortedSublist.its.nextTuple();
+	        } catch (BlockedException e) {
+	        	//intermediate sources aren't closed
+	        }  
+	        if (sortedSublist.tuple == null) {
+	        	return; // done with this sublist
+	        }
+			int index = Collections.binarySearch(subLists, sortedSublist);
+			if (index < 0) {
+				subLists.add(-index - 1, sortedSublist);
+				return;
+			}
+			if (mode == Mode.SORT) {
+				subLists.add(index, sortedSublist);
+				return;
+			} 
+			/* In dup removal mode we need to ensure that a sublist other than the master is incremented
 			 */
 			if (mode == Mode.DUP_REMOVE && this.output != null && sortedSublist.index == masterSortIndex) {
-				if (!subLists.get(index).duplicate) {
-					subLists.get(index).duplicate = true;
-				} else {
-					//there's an evil twin somewhere, search before and after the index found
-					for (int i = 1; i < subLists.size(); i++) {
-						int actualIndex = i;
-						if (i <= index) {
-							actualIndex = index - i;
-						} 
-						SortedSublist sublist = subLists.get(actualIndex);
-						if (sublist.compareTo(sortedSublist) != 0) {
-							Assertion.assertTrue(actualIndex < index);
-							i = index; 
-							continue;
-						}
-						if (!sublist.duplicate) {
-							sublist.duplicate = true;
-							break;
-						}
-					}
-				}
-			} else {
-				sortedSublist.duplicate = true;
+				SortedSublist dup = subLists.get(index);
+				subLists.set(index, sortedSublist);
+				sortedSublist = dup;
 			}
-			subLists.add(index, sortedSublist);
-		} else {
-			subLists.add(-index - 1, sortedSublist);
 		}
 	} 
 

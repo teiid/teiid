@@ -39,7 +39,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -51,7 +50,6 @@ import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 public abstract class RelationalNode implements Cloneable, Describable, BatchProducer {
 

@@ -152,9 +152,7 @@ public class TestSortNode {
         Arrays.sort(expected, comparator);
         
         for (Mode mode : Mode.values()) {
-        	if (mode == Mode.DUP_REMOVE) {
-        		helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
-        	}
+    		helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
         }
     }
         
