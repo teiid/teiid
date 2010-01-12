@@ -716,19 +716,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             if(Number.class.isAssignableFrom(type)) {
                 buffer.append(val);
             } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                buffer.append("{b'") //$NON-NLS-1$
+                buffer.append("{b '") //$NON-NLS-1$
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-                buffer.append("{ts'") //$NON-NLS-1$
+                buffer.append("{ts '") //$NON-NLS-1$
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-                buffer.append("{t'") //$NON-NLS-1$
+                buffer.append("{t '") //$NON-NLS-1$
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                buffer.append("{d'") //$NON-NLS-1$
+                buffer.append("{d '") //$NON-NLS-1$
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else {

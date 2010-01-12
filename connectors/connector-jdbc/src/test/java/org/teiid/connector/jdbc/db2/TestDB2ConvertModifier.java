@@ -478,38 +478,38 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = DATE
 
     public void testDateToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "string", "char({d'2003-11-01'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "string", "char({d '2003-11-01'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDateToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "timestamp({d'2003-11-01'}, '00:00:00')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "timestamp({d '2003-11-01'}, '00:00:00')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIME
 
     public void testTimeToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "char({t'23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "char({t '23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTimeToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "timestamp('1970-01-01', {t'23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "timestamp('1970-01-01', {t '23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIMESTAMP
     
     public void testTimestampToString() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "char({ts'2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "char({ts '2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTimestampToDate() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "date", "date({ts'2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "date", "date({ts '2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTimestampToTime() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "time({ts'2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "time({ts '2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

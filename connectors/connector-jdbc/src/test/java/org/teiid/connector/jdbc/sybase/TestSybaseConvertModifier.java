@@ -108,7 +108,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("date", String.class)}, //$NON-NLS-1$
             java.sql.Date.class);
         
-        helpGetString1(func,  "cast(stuff(stuff(convert(varchar, {ts'1989-03-03 07:08:12.0'}, 102), 5, 1, '-'), 8, 1, '-') AS datetime)");  //$NON-NLS-1$
+        helpGetString1(func,  "cast(stuff(stuff(convert(varchar, {ts '1989-03-03 07:08:12.0'}, 102), 5, 1, '-'), 8, 1, '-') AS datetime)");  //$NON-NLS-1$
     }
     
     /********************END of cast(date AS INPUT) ******************/
@@ -132,7 +132,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("time", String.class)}, //$NON-NLS-1$
             java.sql.Time.class);
         
-        helpGetString1(func,  "cast('1970-01-01 ' + convert(varchar, {ts'1989-03-03 07:08:12.0'}, 8) AS datetime)");  //$NON-NLS-1$
+        helpGetString1(func,  "cast('1970-01-01 ' + convert(varchar, {ts '1989-03-03 07:08:12.0'}, 8) AS datetime)");  //$NON-NLS-1$
     }
     /********************END of cast(time AS INPUT) ******************/
     
@@ -155,7 +155,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
         
-        helpGetString1(func,  "{ts'1970-01-01 12:02:03'}");  //$NON-NLS-1$
+        helpGetString1(func,  "{ts '1970-01-01 12:02:03'}");  //$NON-NLS-1$
     }
         
     @Test public void testDateToTimestamp() throws Exception {
@@ -165,7 +165,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
         
-        helpGetString1(func,  "{d'1989-03-03'}");  //$NON-NLS-1$
+        helpGetString1(func,  "{d '1989-03-03'}");  //$NON-NLS-1$
     }
     /********************END of cast(timestamp AS INPUT) ******************/
 
@@ -188,7 +188,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
 
-        helpGetString1(func,  "stuff(convert(varchar, {ts'2003-11-01 12:05:02.0'}, 123), 11, 1, ' ')");  //$NON-NLS-1$
+        helpGetString1(func,  "stuff(convert(varchar, {ts '2003-11-01 12:05:02.0'}, 123), 11, 1, ' ')");  //$NON-NLS-1$
     }
     
     @Test public void testDateToString() throws Exception {
@@ -199,7 +199,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
         
-        helpGetString1(func,  "stuff(stuff(convert(varchar, {d'2003-11-01'}, 102), 5, 1, '-'), 8, 1, '-')");  //$NON-NLS-1$
+        helpGetString1(func,  "stuff(stuff(convert(varchar, {d '2003-11-01'}, 102), 5, 1, '-'), 8, 1, '-')");  //$NON-NLS-1$
     } 
     
     @Test public void testTimeToString() throws Exception {
@@ -210,7 +210,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
         
-        helpGetString1(func,  "convert(varchar, {ts'1970-01-01 03:10:01'}, 8)");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(varchar, {ts '1970-01-01 03:10:01'}, 8)");  //$NON-NLS-1$
     }    
     
     @Test public void testBigDecimalToString() throws Exception {

@@ -68,24 +68,24 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
     public void test1() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
-            "to_number(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'DDD'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'DDD'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
-            "to_number(TO_CHAR({d'2004-01-21'}, 'DDD'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({d '2004-01-21'}, 'DDD'))"); //$NON-NLS-1$
     }
     
     public void test9() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER,
-            "to_number(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'Q'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'Q'))"); //$NON-NLS-1$
     }
 
     public void test10() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER, 
-            "to_number(TO_CHAR({d'2004-01-21'}, 'Q'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({d '2004-01-21'}, 'Q'))"); //$NON-NLS-1$
     }
 }

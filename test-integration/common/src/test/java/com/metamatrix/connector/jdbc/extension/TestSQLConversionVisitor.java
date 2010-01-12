@@ -173,14 +173,14 @@ public class TestSQLConversionVisitor extends TestCase {
 
     public void testLiteralDate() {
         helpTestVisitor(getTestVDB(),
-            "select {d'2003-12-31'} from parts", //$NON-NLS-1$
-            "SELECT {d'2003-12-31'} FROM PARTS"); //$NON-NLS-1$
+            "select {d '2003-12-31'} from parts", //$NON-NLS-1$
+            "SELECT {d '2003-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralTime() {
         helpTestVisitor(getTestVDB(),
-            "select {t'23:59:59'} from parts", //$NON-NLS-1$
-            "SELECT {t'23:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "select {t '23:59:59'} from parts", //$NON-NLS-1$
+            "SELECT {t '23:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralNull() {
@@ -191,8 +191,8 @@ public class TestSQLConversionVisitor extends TestCase {
 
     public void testLiteralTimestamp() {
         helpTestVisitor(getTestVDB(),
-            "select {ts'2003-12-31 23:59:59.123'} from parts", //$NON-NLS-1$
-            "SELECT {ts'2003-12-31 23:59:59.123'} FROM PARTS"); //$NON-NLS-1$
+            "select {ts '2003-12-31 23:59:59.123'} from parts", //$NON-NLS-1$
+            "SELECT {ts '2003-12-31 23:59:59.123'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testSQL89Join() {

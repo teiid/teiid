@@ -62,7 +62,7 @@ public class TestEscapeSyntaxModifier extends TestCase {
         ILiteral arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
         IFunction func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
                 
-        helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts'1899-12-31 00:00:00.0'})}");
+        helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts '1899-12-31 00:00:00.0'})}");
     }
 
 	private void helpTest(IFunction func, String expected) {

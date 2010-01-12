@@ -116,23 +116,23 @@ public class TestOracleSQLConversionVisitor {
     
     @Test public void testDateLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
-            "select {d'2002-12-31'} FROM parts", //$NON-NLS-1$
+            "select {d '2002-12-31'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {d'2002-12-31'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT {d '2002-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testTimeLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
-            "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
+            "select {t '13:59:59'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT {ts '1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testTimestampLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
-            "select {ts'2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
+            "select {ts '2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {ts'2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT {ts '2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testUnionOrderByWithThreeBranches() throws Exception {

@@ -42,7 +42,7 @@ public class TestH2Translator {
     }
 	
 	@Test public void testTimestampDiff() throws Exception {
-		String input = "select timestampdiff(SQL_TSI_FRAC_SECOND, timestampvalue, {d'1970-01-01'}) from BQT1.Smalla"; //$NON-NLS-1$       
+		String input = "select timestampdiff(SQL_TSI_FRAC_SECOND, timestampvalue, {d '1970-01-01'}) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT datediff('MILLISECOND', SmallA.TimestampValue, TIMESTAMP '1970-01-01 00:00:00.0') * 1000000 FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
@@ -56,7 +56,7 @@ public class TestH2Translator {
 	}
 	
 	@Test public void testTimestampAdd1() throws Exception {
-		String input = "select timestampadd(SQL_TSI_HOUR, intnum, {t'00:00:00'}) from BQT1.Smalla"; //$NON-NLS-1$       
+		String input = "select timestampadd(SQL_TSI_HOUR, intnum, {t '00:00:00'}) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT cast(dateadd('HOUR', SmallA.IntNum, TIMESTAMP '1970-01-01 00:00:00.0') AS time) FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);

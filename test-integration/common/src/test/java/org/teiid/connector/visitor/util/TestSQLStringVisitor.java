@@ -312,17 +312,17 @@ public class TestSQLStringVisitor  {
         assertEquals(expected, getString(TestLiteralImpl.example("string'Literal"))); //$NON-NLS-1$
         expected = "1000"; //$NON-NLS-1$
         assertEquals(expected, getString(TestLiteralImpl.example(new Integer(1000))));
-        expected = "{b'true'}"; //$NON-NLS-1$
+        expected = "{b 'true'}"; //$NON-NLS-1$
         assertEquals(expected, getString(TestLiteralImpl.example(Boolean.TRUE)));
         long now = System.currentTimeMillis();
         Date date = new Date(now);
-        expected = "{d'" + date.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        expected = "{d '" + date.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(expected, getString(TestLiteralImpl.example(date)));
         Timestamp ts = new Timestamp(now);
-        expected = "{ts'" + ts.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        expected = "{ts '" + ts.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(expected, getString(TestLiteralImpl.example(ts)));
         Time t = new Time(now);
-        expected = "{t'" + t.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        expected = "{t '" + t.toString() + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(expected, getString(TestLiteralImpl.example(t)));
     }
 

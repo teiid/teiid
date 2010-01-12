@@ -283,18 +283,18 @@ public class Translator {
     /**
      * Subclasses should override this method to provide a different sql translation
      * of the literal date value.  By default, a date literal is represented as:
-     * <code>{d'2002-12-31'}</code>
+     * <code>{d '2002-12-31'}</code>
      * @param dateValue Date value, never null
      * @return Translated string
      */
     public String translateLiteralDate(java.sql.Date dateValue) {
-        return "{d'" + formatDateValue(dateValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "{d '" + formatDateValue(dateValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
      * Subclasses should override this method to provide a different sql translation
      * of the literal time value.  By default, a time literal is represented as:
-     * <code>{t'23:59:59'}</code>
+     * <code>{t '23:59:59'}</code>
      * 
      * See {@link Translator#hasTimeType()} to represent literal times as timestamps.
      * 
@@ -303,15 +303,15 @@ public class Translator {
      */
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
-    		return "{ts'1970-01-01 " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+    		return "{ts '1970-01-01 " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     	}
-        return "{t'" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "{t '" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
      * Subclasses should override this method to provide a different sql translation
      * of the literal timestamp value.  By default, a timestamp literal is
-     * represented as: <code>{ts'2002-12-31 23:59:59'}</code>.
+     * represented as: <code>{ts '2002-12-31 23:59:59'}</code>.
      * 
      * See {@link Translator#getTimestampNanoPrecision()} to control the literal 
      * precision. 
@@ -320,7 +320,7 @@ public class Translator {
      * @return Translated string
      */
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "{ts'" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "{ts '" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**

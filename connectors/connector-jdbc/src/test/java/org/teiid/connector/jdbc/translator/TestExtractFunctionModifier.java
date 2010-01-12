@@ -72,32 +72,32 @@ public class TestExtractFunctionModifier extends TestCase {
     }
     public void test1() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, "EXTRACT(MONTH FROM {d'2004-01-21'})" , "month");   //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(MONTH FROM {d '2004-01-21'})" , "month");   //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test2() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
-        helpTestMod(arg1, "EXTRACT(MONTH FROM {ts'2004-01-21 17:05:00.0'})", "month"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(MONTH FROM {ts '2004-01-21 17:05:00.0'})", "month"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test3() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, "EXTRACT(YEAR FROM {d'2004-01-21'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(YEAR FROM {d '2004-01-21'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void test4() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
-        helpTestMod(arg1, "EXTRACT(YEAR FROM {ts'2004-01-21 17:05:00.0'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(YEAR FROM {ts '2004-01-21 17:05:00.0'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test5() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, "EXTRACT(DAY FROM {d'2004-01-21'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(DAY FROM {d '2004-01-21'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void test6() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
-        helpTestMod(arg1, "EXTRACT(DAY FROM {ts'2004-01-21 17:05:00.0'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(DAY FROM {ts '2004-01-21 17:05:00.0'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     public void test11() throws Exception {
