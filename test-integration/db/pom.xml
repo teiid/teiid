@@ -505,6 +505,7 @@
 								<property name="scenario.dir"  value="${scenario.dir}"></property>
 								<property name="queryset.artifacts.dir"  value="${queryset.artifacts.dir}"></property>
 								<property name="vdb.artifacts.dir"  value="${vdb.artifacts.dir}"></property>
+								<property name="third.party.jars.dir"  value="${third.party.jars.dir}"></property>
 								<property name="proj.dir" value="${project.basedir}" />
 								<ant antfile="src/main/resources/ctc_tests/ctc.xml" />
 							</tasks>

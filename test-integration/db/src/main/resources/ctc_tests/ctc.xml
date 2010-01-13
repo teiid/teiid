@@ -37,6 +37,19 @@
 		
 		<delete file="${ERROR_FILE}"/>
 
+		
+		  <copy todir="${proj_dir}/lib" failonerror="false">
+		    <fileset dir="${third.party.jars.dir}"/>
+		  </copy>
+
+
+	</target>
+	
+
+	
+	<target name="copy.third.party.jars">
+	
+	
 	</target>
 	
 	<target name="set.win"
@@ -55,6 +68,7 @@
 	<target name="set.linux"
 		if="UnixOS">
 		<property name="root_output" value="${proj.dir}/target/bulk-query-tests" />
+		<property name="proj_dir" value="${proj.dir}" />
 
 	</target>
 
@@ -125,7 +139,7 @@
 			  <java classname="org.teiid.test.client.TestClient" fork="true" >
 			  	<classpath>
 					<pathelement path="${maven.runtime.classpath}" />
-			        <fileset dir="${proj.dir}/lib">
+			        <fileset dir="${proj_dir}/lib">
 			          <include name="**/*.jar"/>
 			        </fileset>
 			    </classpath>
@@ -149,7 +163,7 @@
           <java classname="org.teiid.test.client.TestClient" fork="true" >
           	<classpath>
         		<pathelement path="${maven.runtime.classpath}" />
-                <fileset dir="${proj.dir}/lib">
+                <fileset dir="${proj_dir}/lib">
                   <include name="**/*.jar"/>
                 </fileset>
             </classpath>
