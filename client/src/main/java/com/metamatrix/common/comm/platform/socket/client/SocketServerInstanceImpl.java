@@ -325,7 +325,6 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 									receivedMessage(socketChannel.read());
 								}
 							} catch (SocketTimeoutException e) {
-								System.out.println("here");
 							} catch (Exception e) {
 								exceptionOccurred(e);
 							} finally {
