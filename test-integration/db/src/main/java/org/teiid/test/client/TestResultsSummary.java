@@ -34,14 +34,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.TestLogger;
 
 public class TestResultsSummary  {
     
@@ -58,6 +56,33 @@ public class TestResultsSummary  {
     private int total_querysets = 0;
     private List<String> failed_queries = new ArrayList<String>();
     private List<String> query_sets = new ArrayList<String>(10);
+    
+    private Map<String, Collection<TestResult>> testResults = Collections.synchronizedMap(new HashMap<String, Collection<TestResult>>());
+    
+    public void cleanup() {
+	failed_queries.clear();
+	query_sets.clear();
+	testResults.clear();
+    }
+
+    public synchronized void addTestResult(String querySetID, TestResult result) {
+	Collection<TestResult> results = null;
+	if (this.testResults.containsKey(querySetID)) {
+	    results = this.testResults.get(querySetID);
+	} else {
+	    results = new ArrayList<TestResult>();
+	    this.testResults.put(querySetID, results);
+	}
+	results.add(result);
+	
+    }
+
+
+
+    public Collection<TestResult> getTestResults(String querySetID) {
+	return this.testResults.get(querySetID);
+    }
+    
  
     private static PrintStream getSummaryStream(String outputDir,
 	    String summaryName) throws IOException {
@@ -213,6 +238,22 @@ public class TestResultsSummary  {
 	total_queries = total_queries + queries;
 
     }
+    
+    public void printResults(QueryScenario scenario, String querySetID,
+	    long beginTS,
+	    long endTS) throws Exception {
+
+    
+            TestLogger.logDebug("Print results for Query Set [" + querySetID
+        	    + "]");
+        
+            try {
+        	printResults(scenario, querySetID, beginTS, endTS, 1, 1);
+            } catch (Exception e) {
+        	// TODO Auto-generated catch block
+        	e.printStackTrace();
+            }
+    }
 
     /**
      * Print test results.
@@ -228,7 +269,7 @@ public class TestResultsSummary  {
 	    long endTS, int numberOfClients, int runNumber) throws Exception {
 	
 	String testname = scenario.getQueryScenarioIdentifier();
-	Collection<TestResult> testResults = scenario.getTestResults(querySetID);
+	Collection<TestResult> testResults = getTestResults(querySetID);
 //	Properties props = scenario.getProperties();
 	String outputDir = scenario.getResultsGenerator().getOutputDir();
 	
@@ -460,7 +501,7 @@ public class TestResultsSummary  {
 	addTableData(htmlCode, "QueryId"); //$NON-NLS-1$
 	addTableData(htmlCode, "Result"); //$NON-NLS-1$
 	addTableData(htmlCode, "First Response"); //$NON-NLS-1$
-	addTableData(htmlCode, "Total Time"); //$NON-NLS-1$
+	addTableData(htmlCode, "Total Seconds"); //$NON-NLS-1$
 	addTableData(htmlCode, "Exception"); //$NON-NLS-1$
 	addTableData(htmlCode, "Error File (if any)"); //$NON-NLS-1$
 	htmlCode.append("</tr>").append(NL); //$NON-NLS-1$
@@ -473,8 +514,11 @@ public class TestResultsSummary  {
 		    "show('" + scrub(stat.getQuery()) + "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    addTableData(htmlCode, stat.getResultStatusString(),
 		    "fail".equalsIgnoreCase(stat.getResultStatusString())); //$NON-NLS-1$
-	    addTableData(htmlCode, Long.toString(stat.getBeginTS()));
-	    addTableData(htmlCode, Long.toString(stat.getEndTS()));
+	    addTableData(htmlCode, new Date(stat.getBeginTS()).toString());
+		    
+	//	    Long.toString(stat.getBeginTS()));
+	    addTableData(htmlCode, Long.toString(  (stat.getEndTS() - stat.getBeginTS() / 1000 )));
+		    //Long.toString(stat.getEndTS()));
 	    if (stat.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		addTableData(htmlCode, stat.getExceptionMsg());
 		if (stat.getErrorfile() != null

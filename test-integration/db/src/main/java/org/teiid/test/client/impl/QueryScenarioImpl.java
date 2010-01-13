@@ -1,4 +1,5 @@
-/* JBoss, Home of Professional Open Source.
+/*
+ * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
@@ -18,75 +19,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.test.client.ctc;
+package org.teiid.test.client.impl;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Properties;
 
-import org.teiid.test.client.ClassFactory;
-import org.teiid.test.client.ExpectedResults;
-import org.teiid.test.client.QueryReader;
 import org.teiid.test.client.QueryScenario;
-import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.client.TestResult;
-import org.teiid.test.client.TestProperties.RESULT_MODES;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.FileUtils;
-
 /**
- * The CTCQueryScenario represents the tests that were created using the old xml file formats.
- *  
+ * The QueryScenarioImpl extends the QueryScenerio handle the testresults for defaults settings.
+ * 
  * @author vanhalbert
  *
  */
-public class CTCQueryScenario extends QueryScenario {
+public class QueryScenarioImpl extends QueryScenario {
     
-     
-    public CTCQueryScenario(String scenarioName, Properties querySetProperties) {
-	super(scenarioName, querySetProperties);
+
+    
+    public QueryScenarioImpl(String scenarioName, Properties queryProperties) {
+	super(scenarioName, queryProperties);
+
     }
     
-    protected void setUp() {
-
-	try {
-	    reader = new XMLQueryReader(this.getProperties());
-	} catch (QueryTestFailedException e1) {
-    		throw new TransactionRuntimeException(e1);
-	}
-
-	resultsGen = new XMLGenerateResults(this.getQueryScenarioIdentifier(), this.getProperties());
-
-	if (reader.getQuerySetIDs() == null
-		|| reader.getQuerySetIDs().isEmpty()) {
-	    throw new TransactionRuntimeException(
-		    "The queryreader did not return any queryset ID's to process");
-	}
-
-	validateResultsMode(this.getProperties());
-	
-	try {
-		setupVDBs(this.getProperties());
-	} catch (IOException e) {
-		throw new TransactionRuntimeException(e.getMessage());
-	}
-
-    }
-
- 
-    
-    public ExpectedResults getExpectedResults(String querySetID) {    
-	return new XMLExpectedResults( querySetID, this.getProperties());
-    }    
-
-
+   
 
     /* (non-Javadoc)
      * @see org.teiid.test.client.QueryScenario#handleTestResult(org.teiid.test.client.TestResult, java.lang.String)
@@ -97,35 +56,30 @@ public class CTCQueryScenario extends QueryScenario {
 	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
-	    if (tr.getStatus() != TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		try {
 		    this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
 			    sql, 
 			    resultSet, 
 			    resultException, 
 			    tr.getStatus(), isOrdered(sql), -1);
+		    
+		    tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
 
 		} catch (QueryTestFailedException qtf) {
 		    resultException = (resultException != null ? resultException
 			    : qtf);
 		    tr.setException(resultException);
 		    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+		    try {
+    		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
+    			    tr.getQueryID(), sql, resultSet, resultException,
+    			    this.getExpectedResults(tr.getQuerySetID()).getResultsFile(tr.getQueryID()) );		    
+		    } catch (QueryTestFailedException qtfe) {
+			    throw new TransactionRuntimeException(qtfe.getMessage());
+		    }
 
 		}
-	    }
 
-	    if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
-		try {
-		    
-		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
-			    tr.getQueryID(), sql, resultSet, resultException,
-			    this.getExpectedResults(tr.getQuerySetID()).getResultsFile(tr.getQueryID()) );
-		    
-
-		} catch (QueryTestFailedException qtfe) {
-		    throw new TransactionRuntimeException(qtfe.getMessage());
-		}
-	    }
 
 	} else if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
@@ -134,14 +88,14 @@ public class CTCQueryScenario extends QueryScenario {
 		
 		this.getResultsGenerator().generateQueryResultFile(tr.getQuerySetID(),
 			tr.getQueryID(), sql, resultSet, resultException, tr.getStatus());
-		
+			
 	    } catch (QueryTestFailedException qtfe) {
 		throw new TransactionRuntimeException(qtfe.getMessage());
 	    }
 
 	} else {
 	    // just create the error file for any failures
-	    if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
+	    if (tr.getException() != null) {
 		try {
 		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
 			    tr.getQueryID(), sql, resultSet, resultException,
@@ -166,7 +120,5 @@ public class CTCQueryScenario extends QueryScenario {
 	return false;
 
     }
-
-
-
+  
 }

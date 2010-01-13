@@ -26,11 +26,9 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.framework.transaction.TxnAutoTransaction;
 import org.teiid.test.framework.transaction.JNDITransaction;
 import org.teiid.test.framework.transaction.LocalTransaction;
-import org.teiid.test.framework.transaction.OffWrapTransaction;
-import org.teiid.test.framework.transaction.OnWrapTransaction;
+import org.teiid.test.framework.transaction.TxnAutoTransaction;
 import org.teiid.test.framework.transaction.XATransaction;
 
 
@@ -50,7 +48,7 @@ public class TransactionFactory {
 	 * Transaction Type indicates the type of transaction container to use
 	 * @see TransactionFactory
 	 */
-    public static final String TRANSACTION_TYPE = "transaction-type"; //$NON-NLS-1$
+    public static final String TRANSACTION_TYPE = "transaction-option"; //$NON-NLS-1$
 
     public interface TRANSACTION_TYPES {
 		public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$

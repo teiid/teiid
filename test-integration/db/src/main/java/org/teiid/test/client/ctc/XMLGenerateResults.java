@@ -54,12 +54,14 @@ public class XMLGenerateResults implements ResultsGenerator {
     private String outputDir = "";
     private String generateDir = "";
 
-    public XMLGenerateResults(Properties props, String testname, String outputDirectory) {
+    public XMLGenerateResults( String testname, Properties props) {
+	
+	outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
 
 	Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
-		+ " was not passed in", outputDirectory);
-	
-	this.outputDir = outputDirectory;
+		+ " was not specified", outputDir);
+
+	outputDir = outputDir + "/" + testname;
 
 	File d = new File(this.outputDir);
 	this.outputDir = d.getAbsolutePath();
@@ -74,7 +76,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 
 	generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
 	Assert.assertNotNull("Property " + PROP_GENERATE_DIR
-		+ " was not specified", this.outputDir);
+		+ " was not specified", this.generateDir);
 
 	d = new File(generateDir, testname);
 	generateDir = d.getAbsolutePath();
@@ -248,7 +250,7 @@ public class XMLGenerateResults implements ResultsGenerator {
     //  	
     // }
 
-    public String generateErrorFileName(String queryID, String querySetID) {
+    private String generateErrorFileName(String queryID, String querySetID) {
 	String errorFileName = "ERROR_"
 		// configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
 		//                               + querySetID + "_" //$NON-NLS-1$

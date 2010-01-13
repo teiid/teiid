@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Assert;
-import org.teiid.test.client.ctc.CTCQueryScenario;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
@@ -69,6 +68,10 @@ public class TestClient  {
     static {
 	if (System.getProperty(ConfigPropertyNames.CONFIG_FILE ) == null) {
 		System.setProperty(ConfigPropertyNames.CONFIG_FILE,"qe-test.properties");
+	}
+	
+	if (System.getProperty("project.loc" ) == null) {
+		System.setProperty("project.loc",".");
 	}
 
     }
@@ -141,7 +144,8 @@ public class TestClient  {
 	
 	ConfigPropertyLoader.getInstance().setProperty(DriverConnection.DS_URL, url);
 	
-	QueryScenario set = new CTCQueryScenario(scenario_name, ConfigPropertyLoader.getInstance().getProperties());
+	
+	QueryScenario set = ClassFactory.createQueryScenario(scenario_name);
 	
 	TransactionContainer tc = getTransactionContainter();
 
@@ -165,13 +169,16 @@ public class TestClient  {
 	while (qsetIt.hasNext()) {
 	    querySetID = qsetIt.next();
 
-	    TestLogger.logInfo("Start Query Set [" + querySetID + "]");
+	    TestLogger.logInfo("Start Test Query ID [" + querySetID + "]");
 
 	    queryTests = queryset.getQueries(querySetID);
 
 		 // the iterator to process the query tests
 	    Iterator<String> queryTestIt = null;
 	    queryTestIt = queryTests.keySet().iterator();
+	    
+	    ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
+
 	    
 	    
 	    
@@ -184,7 +191,7 @@ public class TestClient  {
         
         	    Object sqlObject = queryTests.get(queryidentifier);
                     	    
-            	    userTxn.init(querySetID, queryidentifier, sqlObject);
+            	    userTxn.init(summary, expectedResults, querySetID, queryidentifier, sqlObject);
             	    
         	    // run test
             	    tc.runTransaction(userTxn);
@@ -193,19 +200,20 @@ public class TestClient  {
         	
         	endTS = System.currentTimeMillis();
         	
-        	TestLogger.logInfo("End Query Set [" + querySetID + "]");	
+        	TestLogger.logInfo("End Test Query ID [" + querySetID + "]");
         	
-        	printResultsForSet(summary, querySetID, queryset, beginTS, endTS);
-        	
+        	summary.printResults(queryset, querySetID,beginTS, endTS);        	
   
 	}
 	
 	
 	summary.printTotals(queryset);
+	summary.cleanup();
 	
 	// cleanup all connections created for this test.
 	userTxn.getConnectionStrategy().shutdown();
 	ConfigPropertyLoader.reset();
+
 
         
 	
@@ -223,19 +231,6 @@ public class TestClient  {
 
     }
 
-        
-    private void printResultsForSet(final TestResultsSummary summary , final String querySetID, final QueryScenario querySet, final long beginTS, final long endTS) {
-	    TestLogger.logDebug("Print results for Query Set [" + querySetID
-		    + "]");
-
-	    try {
-		summary.printResults(querySet, querySetID,beginTS, endTS, 1, 1);
-	    } catch (Exception e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	    }
-
-    }
     
     private Properties getSubstitutedProperties(Properties props) {
 	Properties or = new Properties();

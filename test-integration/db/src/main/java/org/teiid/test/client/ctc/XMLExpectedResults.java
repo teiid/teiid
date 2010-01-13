@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jdom.JDOMException;
+import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
 import org.teiid.test.client.QueryScenario;
 import org.teiid.test.client.ResultsGenerator;
@@ -65,7 +66,7 @@ public class XMLExpectedResults implements ExpectedResults {
     protected Map<String, ResultsHolder> loadedResults = new HashMap<String, ResultsHolder>();
     
     
-    public XMLExpectedResults(Properties properties, String querySetIdentifier) {
+    public XMLExpectedResults(String querySetIdentifier, Properties properties) {
     	this.props = properties;
     	this.querySetIdentifier = querySetIdentifier;
      	
@@ -698,7 +699,7 @@ public class XMLExpectedResults implements ExpectedResults {
 
 		}
 		
-		QueryScenario set = new CTCQueryScenario("testscenario", ConfigPropertyLoader.getInstance().getProperties());
+		QueryScenario set = ClassFactory.createQueryScenario("testscenario");
 
 		
 		_instance.setProperty(XMLQueryReader.PROP_QUERY_FILES_ROOT_DIR, new File("target/classes/").getAbsolutePath() );

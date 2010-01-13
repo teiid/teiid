@@ -23,7 +23,8 @@
 package org.teiid.test.client;
 
 /**
- * The TestResult represents the results from a single query.
+ * The TestResult represents the results from a single test.  A single test can include 1 or more sql commands that
+ * are considered 1 inclusive test.
  * 
  * @author vanhalbert
  * 
@@ -113,6 +114,19 @@ public interface TestResult {
     * @since
     */
     int getStatus();
+    
+    
+    /**
+     * Call to set the status for this test result.
+     * @see TestResult.RESULT_STATE
+     * @param status
+     */
+    void setStatus(int status);
+    
+    /**
+     * Return the result status in string format.
+     * @return String
+     */
 
     String getResultStatusString();
 
@@ -125,6 +139,10 @@ public interface TestResult {
      * @since
      */
     String getExceptionMsg();
+    
+    Throwable getException();
+    
+    void setException(Throwable error);
 
     /**
      * Return the time (in a long value) that this query started.
@@ -134,6 +152,8 @@ public interface TestResult {
      * @since
      */
     long getBeginTS();
+    
+    void setBeginTS(long beginTS);
 
     /**
      * Return the time (in a long value) that this query ended
@@ -143,10 +163,15 @@ public interface TestResult {
      * @since
      */
     long getEndTS();
+    
+    void setEndTS(long endTS);
 
     /**
      * @return Returns the name of errorfile where the error results were
      *         written.
      */
     String getErrorfile();
+    
+    void setErrorFile(String errorFile);
+    
 }

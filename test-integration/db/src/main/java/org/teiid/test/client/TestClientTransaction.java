@@ -56,6 +56,8 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     private boolean errorExpected = false;
     
     private String sql = null;
+    
+    private TestResultsSummary testResultsSummary;
 
     public TestClientTransaction(QueryScenario querySet) {
 	super(querySet.getQueryScenarioIdentifier());
@@ -63,12 +65,13 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
     }
 
-    public void init(String querySetID, String queryIdentifier, Object query) {
+    public void init(TestResultsSummary testResultsSummary, ExpectedResults expectedResults, String querySetID, String queryIdentifier, Object query) {
 	this.querySetID = querySetID;
 	this.queryIdentifier = queryIdentifier;
 	this.queryObject = query;
-
-	this.expectedResults = null;
+	this.testResultsSummary = testResultsSummary;
+	this.expectedResults = expectedResults;
+	
 	endTS = 0;
 	beginTS = 0;
 
@@ -78,14 +81,17 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	errorExpected = false;
 
     }
+    
+    public String getTestName() {
+	return querySetID + ":" + (this.queryIdentifier!=null?this.queryIdentifier:"NA");
+	
+    }
 
     @Override
     public void before() {
 	// TODO Auto-generated method stub
 	super.before();
 
-	this.expectedResults = this.querySet
-		.getExpectedResults(this.querySetID);
 
 	try {
 	    this.errorExpected = expectedResults
@@ -113,14 +119,11 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	    String sql) throws Exception {
 
         
-	TestLogger.logDebug("execute: " + sql);
+	TestLogger.logDebug("ID: " + querySetID + "-" + queryidentifier + " execute: " + sql);
 
-	// int expectedRowCount=-1;
 	TestLogger.logDebug("expected error: " + this.errorExpected);
 
 	try {
-	    System.out.println(this.querySet.getQueryScenarioIdentifier()  + ":" + this.querySetID + ":"
-		    + this.queryIdentifier);
 	    // need to set this so the underlying query execution handles an
 	    // error properly.
 
@@ -141,91 +144,26 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     public void after() {
 	// TODO Auto-generated method stub
 	super.after();
-
-	String errorfile = null;
-
-	// TODO: uncomment
-	ResultSet erResultSet = null;
 	TestResult rs = null;
-
-	ResultsGenerator genResults = this.querySet.getResultsGenerator();
 	
 	Throwable resultException = null;
 
 	resultException = (this.getLastException() != null ? this
 		    .getLastException() : this.getApplicationException());
 
-	    
-
+	
 	if (resultException != null) {
-		    if (this.exceptionExpected()) {
-			testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
-		    } else {
-			testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
-		    }
-
-	}
-
-
-
-
-	if (this.querySet.getResultsMode().equalsIgnoreCase(
-		TestProperties.RESULT_MODES.COMPARE)) {
-	    if (testStatus != TestResult.RESULT_STATE.TEST_EXCEPTION) {
-		try {
-		    this.expectedResults.compareResults(this.queryIdentifier,
-			    sql, this.internalResultSet, resultException,
-			    testStatus, isOrdered(sql), this.fetchSize - 1);
-		} catch (QueryTestFailedException qtf) {
-		    resultException = (resultException != null ? resultException
-			    : qtf);
-		    testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
-
-		}
-	    }
-
-	    if (testStatus == TestResult.RESULT_STATE.TEST_EXCEPTION) {
-		try {
-		    genResults.generateErrorFile(querySetID,
-			    this.queryIdentifier, sql, this.internalResultSet,
-			    resultException, expectedResults
-				    .getResultsFile(this.queryIdentifier));
-
-		} catch (QueryTestFailedException qtfe) {
-		    throw new TransactionRuntimeException(qtfe.getMessage());
-		}
-	    }
-
-	} else if (this.querySet.getResultsMode().equalsIgnoreCase(
-		TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
-
-	    try {
-		genResults.generateQueryResultFile(querySetID,
-			this.queryIdentifier, sql, erResultSet,
-			resultException, testStatus);
-	    } catch (QueryTestFailedException qtfe) {
-		throw new TransactionRuntimeException(qtfe.getMessage());
-	    }
-
-	} else {
-	    // just create the error file for any failures
-	    if (testStatus == TestResult.RESULT_STATE.TEST_EXCEPTION) {
-		try {
-		    genResults.generateErrorFile(querySetID,
-			    this.queryIdentifier, sql, this.internalResultSet,
-			    resultException, expectedResults
-				    .getResultsFile(this.queryIdentifier));
-
-		} catch (QueryTestFailedException qtfe) {
-		    throw new TransactionRuntimeException(qtfe.getMessage());
-		}
-	    }
-	}
+		testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
+		
+	} 
 
 	rs = new TestResultStat(querySetID, this.queryIdentifier, sql,
-		testStatus, beginTS, endTS, resultException, errorfile);
+		testStatus, beginTS, endTS, resultException, null);
 	
-	this.querySet.addTestResult(this.querySetID, rs);
+	this.querySet.handleTestResult(rs, this.internalResultSet, sql);
+
+	
+	this.testResultsSummary.addTestResult(this.querySetID, rs);
 
     }
 
@@ -244,14 +182,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	return this.errorExpected;
     }
 
-    private boolean isOrdered(String sql) {
-
-	if (sql.toLowerCase().indexOf(" order by ") > 0) {
-	    return true;
-	}
-	return false;
-
-    }
 
     /**
      * Override the super cleanup() so that the connection to Teiid is not

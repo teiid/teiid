@@ -46,9 +46,6 @@ public class XMLQueryReader implements QueryReader {
  
     private Properties props = null;
 
-//    private Map<String, Map<String, String>> querySet = new HashMap<String, Map<String, String>>();
-//    private Map<String, String> queryToFileMap = new HashMap<String, String>();
-
     private Map<String, String> querySetIDToFileMap = new HashMap<String, String>();
 
     public XMLQueryReader(Properties properties)
