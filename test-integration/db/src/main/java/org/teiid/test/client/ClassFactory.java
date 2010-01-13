@@ -46,8 +46,9 @@ public class ClassFactory {
      * The default scenario class to use when {@link #QUERY_SCENARIO_CLASSNAME} is not defined.
      */
     
-    public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.impl.QueryScenarioImpl"; //$NON-NLS-1$
-    
+ //   public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.impl.QueryScenarioImpl"; //$NON-NLS-1$
+    public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.ctc.CTCQueryScenario"; //$NON-NLS-1$
+   
 
     /**
      * The {@link #QUERY_READER_CLASSNAME} property indicates the implementation of
