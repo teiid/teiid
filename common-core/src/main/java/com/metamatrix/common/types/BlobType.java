@@ -22,8 +22,6 @@
 
 package com.metamatrix.common.types;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -130,24 +128,6 @@ public final class BlobType extends Streamable<Blob> implements Blob {
         this.reference.truncate(len);
     }
     
-    /**
-     * Utility Method to convert blob into byte array  
-     * @param blob
-     * @return byte array
-     */
-    public static byte[] getByteArray(Blob blob) throws SQLException, IOException {
-        InputStream reader = blob.getBinaryStream();
-        ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        int c = reader.read();
-        while (c != -1) {
-            writer.write((byte)c);
-            c = reader.read();
-        }
-        reader.close();
-        byte[] data = writer.toByteArray();
-        writer.close();
-        return data;        
-    }
     //## JDBC4.0-begin ##
 	public void free() throws SQLException {
 		this.reference.free();

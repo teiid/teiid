@@ -286,6 +286,9 @@ public class SessionServiceImpl implements SessionServiceInterface {
 
 	private MetaMatrixSessionInfo getSessionInfo(MetaMatrixSessionID sessionID)
 			throws InvalidSessionException {
+		if (sessionID == null) {
+			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {null})); //$NON-NLS-1$
+		}
 		MetaMatrixSessionInfo info = this.sessionCache.get(sessionID);
 		if (info == null) {
 			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$

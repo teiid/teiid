@@ -58,7 +58,6 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private final Socket socket;
 		private ObjectOutputStream outputStream;
 		private ObjectInputStream inputStream;
-		private Object readLock = new Object();
 
 		private OioObjectChannel(Socket socket) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
@@ -119,15 +118,13 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		//## JDBC4.0-end ##
 		public Object read() throws IOException, ClassNotFoundException {
 			log.finer("reading message from socket"); //$NON-NLS-1$
-			synchronized (readLock) {
-				try {
-					return inputStream.readObject();
-				} catch (SocketTimeoutException e) {
-					throw e;
-		        } catch (IOException e) {
-		            close();
-		            throw e;
-		        }
+			try {
+				return inputStream.readObject();
+			} catch (SocketTimeoutException e) {
+				throw e;
+	        } catch (IOException e) {
+	            close();
+	            throw e;
 			}
 		}
 

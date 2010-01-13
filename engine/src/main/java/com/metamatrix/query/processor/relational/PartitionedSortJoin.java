@@ -51,7 +51,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 	 * for buffermanager reserve/release of memory 
 	 * (would also help the sort utility)
 	 */
-	public static final int MAX_PARTITIONS = 8; 
+	public static final int MAX_PARTITIONS = 16; 
 	
 	private List[] endTuples;
 	private List<Boolean> overlap = new ArrayList<Boolean>();

@@ -23,7 +23,6 @@
 package com.metamatrix.common.buffer;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.core.util.AccessibleByteArrayOutputStream;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -228,40 +228,22 @@ public class TupleBuffer {
 			this.store = this.manager.createFileStore(this.tupleSourceID);
 			this.store.setCleanupReference(this);
 		}
-		byte[] bytes = convertToBytes(writeBatch);
-		mbatch.setLength(bytes.length);
-		mbatch.setOffset(this.store.write(bytes));
+		AccessibleByteArrayOutputStream baos = null;
+        try {
+            baos = new AccessibleByteArrayOutputStream(1024);
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            writeBatch.setDataTypes(types);
+            writeBatch.writeExternal(oos);
+            oos.flush();
+            oos.close();
+        } catch(IOException e) {
+        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStorageManager.batch_error")); //$NON-NLS-1$
+        }
+        mbatch.setLength(baos.getCount());
+		mbatch.setOffset(this.store.write(baos.getBuffer(), 0, baos.getCount()));
 		this.batches.put(mbatch.getBeginRow(), mbatch);
         batchBuffer = null;
 	}
-	
-    /**
-     * Convert from an object to a byte array
-     * @param object Object to convert
-     * @return Byte array
-     */
-    private byte[] convertToBytes(TupleBatch batch) throws MetaMatrixComponentException {
-        ObjectOutputStream oos = null;
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(baos);
-
-            batch.setDataTypes(types);
-            batch.writeExternal(oos);
-            oos.flush();
-            return baos.toByteArray();
-
-        } catch(IOException e) {
-        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStorageManager.batch_error")); //$NON-NLS-1$
-        } finally {
-            if(oos != null) {
-                try {
-                    oos.close();
-                } catch(IOException e) {
-                }
-            }
-        }
-    }
 	
 	public void close() throws MetaMatrixComponentException {
 		//if there is only a single batch, let it stay in memory

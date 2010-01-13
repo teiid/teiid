@@ -23,9 +23,11 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.TreeSet;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -69,7 +71,8 @@ public class SortUtility {
 		
 		@Override
 		public int compareTo(SortedSublist o) {
-			return comparator.compare(this.tuple, o.tuple);
+			//reverse the comparison, so that removal of the lowest is a low cost operation
+			return -comparator.compare(this.tuple, o.tuple);
 		}
 		
 		@Override
@@ -92,12 +95,13 @@ public class SortUtility {
     private List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
     private int masterSortIndex;
     
-    private int initialSortPass = 1;     //used to track the number of times through the initial sort method
+    private int dupRemoveSublists = 1;     //used to control the number of sublists needed for dup remove
 
     // Phase constants for readability
     private static final int INITIAL_SORT = 1;
     private static final int MERGE = 2;
     private static final int DONE = 3;
+	private Collection<List<?>> workingTuples;
     
     public SortUtility(TupleSource sourceID, List sortElements, List<Boolean> sortTypes, Mode mode, BufferManager bufferMgr,
                         String groupName) {
@@ -162,7 +166,14 @@ public class SortUtility {
 	 */
     protected void initialSort() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	while(!doneReading) {
-            List<List<?>> workingTuples = new ArrayList<List<?>>();
+    		if (workingTuples == null) {
+	            if (mode == Mode.SORT) {
+	            	workingTuples = new ArrayList<List<?>>();
+	            } else {
+	            	workingTuples = new TreeSet<List<?>>(comparator);
+	            }
+    		}
+            
             int maxRows = bufferManager.getMaxProcessingBatches() * bufferManager.getProcessorBatchSize();
 	        while(!doneReading && workingTuples.size() < maxRows) {
 	            try {
@@ -173,9 +184,10 @@ public class SortUtility {
 	            		break;
 	            	}
 	            	
-                    addTuple(workingTuples, tuple);
+                    workingTuples.add(tuple);
 	            } catch(BlockedException e) {
-	            	if (workingTuples.isEmpty() && (mode != Mode.DUP_REMOVE || activeTupleBuffers.size() < initialSortPass)) {
+	            	if ((workingTuples.size() < maxRows/2 && mode != Mode.DUP_REMOVE) 
+	            			|| (workingTuples.size() < (dupRemoveSublists/4)*bufferManager.getProcessorBatchSize() && activeTupleBuffers.size() < dupRemoveSublists)) {
             			throw e; //block if no work can be performed
 	            	}
 	            	break;
@@ -190,33 +202,22 @@ public class SortUtility {
 	        activeTupleBuffers.add(sublist);
 	        if (this.mode == Mode.SORT) {
 	        	//perform a stable sort
-	    		Collections.sort(workingTuples, comparator);
+	    		Collections.sort((List<List<?>>)workingTuples, comparator);
 	        }
 	        for (List<?> list : workingTuples) {
 				sublist.addTuple(list);
 			}
+	        workingTuples = null;
 	        sublist.saveBatch();
         }
     	
     	if (this.activeTupleBuffers.isEmpty()) {
             activeTupleBuffers.add(createTupleBuffer());
         }  
-    	this.initialSortPass = Math.min(initialSortPass + 1, bufferManager.getMaxProcessingBatches() * 2);
+    	this.dupRemoveSublists = Math.min(dupRemoveSublists * 2, bufferManager.getMaxProcessingBatches() * 2);
         this.phase = MERGE;
     }
 
-	protected void addTuple(List<List<?>> workingTuples, List<?> tuple) {
-		if (this.mode == Mode.SORT) {
-			workingTuples.add(tuple);
-			return;
-		}
-		int index = Collections.binarySearch(workingTuples, tuple, comparator);
-		if (index >= 0) {
-			return; //it's already there
-		}
-		workingTuples.add(-index - 1, tuple);
-	}
-		
     protected void mergePhase() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	while(this.activeTupleBuffers.size() > 1) {    		
     		ArrayList<SortedSublist> sublists = new ArrayList<SortedSublist>(activeTupleBuffers.size());
@@ -227,7 +228,6 @@ public class SortUtility {
         	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
             	LogManager.logTrace(LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
             }
-        	
         	// initialize the sublists with the min value
             for(int i = 0; i<maxSortIndex; i++) { 
              	TupleBuffer activeID = activeTupleBuffers.get(i);
@@ -242,7 +242,7 @@ public class SortUtility {
             
             // iteratively process the lowest tuple
             while (sublists.size() > 0) {
-            	SortedSublist sortedSublist = sublists.remove(0);
+            	SortedSublist sortedSublist = sublists.remove(sublists.size() - 1);
         		merged.addTuple(sortedSublist.tuple);
                 if (this.output != null && sortedSublist.index > masterSortIndex) {
                 	this.output.addTuple(sortedSublist.tuple); //a new distinct row

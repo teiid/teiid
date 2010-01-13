@@ -41,6 +41,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,6 +83,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     private Cryptor cryptor;
     
     private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
+    
+    private ReentrantLock readLock = new ReentrantLock();
     
     public SocketServerInstanceImpl() {
     	
@@ -173,7 +176,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         return socketChannel.isOpen();
     }
 
-    public void send(Message message, ResultsReceiver<Object> listener, Serializable messageKey)
+    protected void send(Message message, ResultsReceiver<Object> listener, Serializable messageKey)
         throws CommunicationException, InterruptedException {
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
@@ -197,7 +200,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
      * Send an exception to all clients that are currently waiting for a
      * response.
      */
-	public void exceptionOccurred(Throwable e) {
+	private void exceptionOccurred(Throwable e) {
     	if (e instanceof CommunicationException) {
 	        if (e.getCause() instanceof InvalidClassException) {
 	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$ 
@@ -222,7 +225,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		}
     }
 
-	public void receivedMessage(Object packet) {
+	private void receivedMessage(Object packet) {
 		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$ 
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
@@ -313,23 +316,29 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					public Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
-						int timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
-						synchronized (SocketServerInstanceImpl.this) {
-							while (!isDone()) {
+						long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
+						long start = System.currentTimeMillis();
+						boolean reading = false;
+						while (!isDone()) {
+							try {
+								if ((reading = readLock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS)) == true && !isDone()) {
+									receivedMessage(socketChannel.read());
+								}
+							} catch (SocketTimeoutException e) {
+								System.out.println("here");
+							} catch (Exception e) {
+								exceptionOccurred(e);
+							} finally {
+								if (reading) {
+									readLock.unlock();
+								}
+							}
+							if (!isDone()) {
+								long now = System.currentTimeMillis();
+								timeoutMillis -= now - start;
+								start = now;
 								if (timeoutMillis <= 0) {
 									throw new TimeoutException();
-								}
-								long start = System.currentTimeMillis();
-								try {
-									receivedMessage(socketChannel.read());
-								} catch (SocketTimeoutException e) {
-								} catch (IOException e) {
-									exceptionOccurred(e);
-								} catch (ClassNotFoundException e) {
-									exceptionOccurred(e);
-								}
-								if (!isDone()) {
-									timeoutMillis -= (System.currentTimeMillis() - start);
 								}
 							}
 						}

@@ -22,11 +22,12 @@
  */
 package org.teiid.netty.handler.codec.serialization;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+
+import com.metamatrix.core.util.AccessibleByteArrayOutputStream;
 
 /**
  * An {@link ObjectOutput} which is interoperable with {@link ObjectDecoder}
@@ -42,7 +43,7 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
 
     private final DataOutputStream out;
     private final int estimatedLength;
-
+    
     public ObjectEncoderOutputStream(DataOutputStream out, int estimatedLength) throws SecurityException, IOException {
     	super();
     	this.out = out;
@@ -51,14 +52,14 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
     
     @Override
     final protected void writeObjectOverride(Object obj) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(estimatedLength);
+        AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(estimatedLength);
         ObjectOutputStream oout = new CompactObjectOutputStream(baos);
         oout.writeObject(obj);
         oout.flush();
         oout.close();
 
-        out.writeInt(baos.size());
-        out.write(baos.toByteArray());
+        out.writeInt(baos.getCount());
+        out.write(baos.getBuffer(), 0, baos.getCount());
     }
     
     @Override

@@ -22,6 +22,8 @@
 
 package com.metamatrix.common.comm.platform.socket.client;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
@@ -32,7 +34,7 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.api.HostInfo;
@@ -42,7 +44,7 @@ import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 
-public class TestSocketServerInstanceImpl extends TestCase {
+public class TestSocketServerInstanceImpl {
 	
 	private static class FakeObjectChannel implements ObjectChannel, ObjectChannelFactory {
 		List<Object> msgs = new ArrayList<Object>();
@@ -119,7 +121,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		
 	}
 
-	public void testHandshakeTimeout() throws Exception {
+	@Test public void testHandshakeTimeout() throws Exception {
 		SocketTimeoutException[] exs = new SocketTimeoutException[SocketServerInstanceImpl.HANDSHAKE_RETRIES];
 		Arrays.fill(exs, new SocketTimeoutException());
 		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(exs));
@@ -139,7 +141,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		return ssii;
 	}
 	
-	public void testSuccessfulHandshake() throws Exception {
+	@Test public void testSuccessfulHandshake() throws Exception {
 		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(new Handshake(), new SocketTimeoutException()));
 		
 		SocketServerInstanceImpl instance = createInstance(channel);
@@ -154,7 +156,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		}
 	}
 	
-	public void testVersionMismatch() throws Exception {
+	@Test public void testVersionMismatch() throws Exception {
 		Handshake h = new Handshake();
 		h.setVersion("foo"); //$NON-NLS-1$
 		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(h));
