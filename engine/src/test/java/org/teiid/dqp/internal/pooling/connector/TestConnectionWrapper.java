@@ -35,7 +35,7 @@ public class TestConnectionWrapper extends TestCase {
 	public void testIdleTime() throws Exception {
 		ConnectionWrapper wrapper = new ConnectionWrapper(Mockito.mock(BasicConnection.class), Mockito.mock(ConnectionPool.class), 1);
 		long time = wrapper.getTimeReturnedToPool();
-		Thread.sleep(5);
+		Thread.sleep(50);
 		wrapper.close();
 		assertTrue(wrapper.getTimeReturnedToPool() - time > 0);
 	}

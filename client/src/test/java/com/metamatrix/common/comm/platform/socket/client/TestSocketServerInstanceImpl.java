@@ -84,6 +84,10 @@ public class TestSocketServerInstanceImpl {
 		//## JDBC4.0-end ##
 		public Object read() throws IOException,
 				ClassNotFoundException {
+		    if (readCount >= readMsgs.size()) {
+			return "";
+		    }
+
 			Object msg = readMsgs.get(readCount++);
 			if (msg instanceof IOException) {
 				if (msg instanceof SocketTimeoutException) {
