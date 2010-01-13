@@ -294,7 +294,7 @@ public class SimpleQueryResolver implements CommandResolver {
             GroupSymbol group = obj.getGroup();
             visitNode(group);
             try {
-	            if (metadata.isXMLGroup(group.getMetadataID())) {
+	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
 	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0003, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0003));
 	            }
 	            this.discoveredGroups.add(group);
