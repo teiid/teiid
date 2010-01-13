@@ -153,9 +153,13 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	
 	if (resultException != null) {
+	    if (this.exceptionExpected()) {
+		testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
+	    } else {
 		testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
-		
-	} 
+	    }
+
+}
 
 	rs = new TestResultStat(querySetID, this.queryIdentifier, sql,
 		testStatus, beginTS, endTS, resultException, null);
