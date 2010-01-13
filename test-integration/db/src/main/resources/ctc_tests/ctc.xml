@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ctc" default="main" >
 	
-	<property name="root_output" value="${proj.dir}/target/bulk-query-tests" />
 	
-	<property name="ERROR_FILE" value="${root_output}/ERROR_FOUND.txt" />
-
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 	  <classpath>
 	  	<pathelement path="${maven.runtime.classpath}" />
@@ -23,18 +20,14 @@
 	</target>
 
 
-	<target name="init" depends="" >
+	<target name="init" depends="set.os, set.win, set.linux" >
 		
 		
+		<property name="ERROR_FILE" value="${root_output}/ERROR_FOUND.txt" />
+
 		<available file="${scenario.dir}" type="dir" property="dir.exist"/>
 		<fail unless="dir.exist" message="Scenario directory ${scenario.dir} does not exist" />
 
-		<!--		
-		<pathconvert targetos="unix" property="install_dir" >
-           		 <map from="\" to="/"/>
-           		<path location="${install.dir}"/>
-        	 </pathconvert>
-		-->
 		
 		<condition property="all">
 			<not>
@@ -43,6 +36,25 @@
 		</condition>
 		
 		<delete file="${ERROR_FILE}"/>
+
+	</target>
+	
+	<target name="set.win"
+		if="WinOS">
+		
+
+		<pathconvert targetos="unix" property="proj_dir" >
+		   		 <map from="\" to="/"/>
+		   		<path location="${proj.dir}"/>
+			 </pathconvert>
+		
+		<property name="root_output" value="${proj_dir}/target/bulk-query-tests" />
+
+	</target>
+	
+	<target name="set.linux"
+		if="UnixOS">
+		<property name="root_output" value="${proj.dir}/target/bulk-query-tests" />
 
 	</target>
 
@@ -78,13 +90,61 @@
         <iterate target="run.scenario"/>
     </target>
 	
-	<target name="exec.scenario" depends="" >
-
+	<target name="exec.scenario" depends="exec.win, exec.linux" >
 		
+	  	 <antcall target="are.there.errors" inheritall="true" />
+
+	</target>
+	
+	<target name="exec.win"
+		if="WinOS">
 		<echo>Scenario property file ${scenario.file}</echo>
-		<!--
-		jvm="${java.home}/bin/java"
-		-->
+<!--
+	Dont convert the config file, it fails
+			<pathconvert targetos="unix" property="config_file" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${config.file}"/>
+				 </pathconvert>
+-->			
+			<pathconvert targetos="unix" property="scenario_file" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${scenario.file}"/>
+				 </pathconvert>
+			
+			<pathconvert targetos="unix" property="queryset_artifacts_dir" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${queryset.artifacts.dir}"/>
+				 </pathconvert>
+			
+			<pathconvert targetos="unix" property="vdb_artifacts_dir" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${vdb.artifacts.dir}"/>
+				 </pathconvert>
+			
+			
+			  <java classname="org.teiid.test.client.TestClient" fork="true" >
+			  	<classpath>
+					<pathelement path="${maven.runtime.classpath}" />
+			        <fileset dir="${proj.dir}/lib">
+			          <include name="**/*.jar"/>
+			        </fileset>
+			    </classpath>
+			    <jvmarg value="-Xmx1024m" />
+			    <jvmarg value="-Dmetamatrix.sockets=true" />
+			  	<jvmarg value="-Dconfig=${config.file}" />
+			  	<jvmarg value="-Dscenariofile=${scenario_file}" />
+			  	<jvmarg value="-Dqueryset.artifacts.dir=${queryset_artifacts_dir}" />
+				<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
+			
+				  </java>
+
+ 
+
+	</target>
+	
+	<target name="exec.linux"
+		if="UnixOS">
+		<echo>Scenario property file ${scenario.file}</echo>
 
           <java classname="org.teiid.test.client.TestClient" fork="true" >
           	<classpath>
@@ -101,10 +161,8 @@
         	<jvmarg value="-Dvdb.artifacts.dir=${vdb.artifacts.dir}" />
 
       	  </java>
-		
-   	  	 <antcall target="are.there.errors" inheritall="true" />
 
-
+	
 	</target>
 	
 	<target name="are.there.errors" >
@@ -165,6 +223,37 @@
 
 	
 	</target>
+	
+	<target name="set.os" >
+			<condition property="isUnix">
+				<and>
+					<os family="unix"/>
+					<not>
+						<os name="Linux"/>
+					</not>
+					<not>
+						<os name="HP-UX"/>
+					</not>
+				</and>
+			</condition>
+			<condition property="isLinux">
+				<os name="Linux"/>
+			</condition>
+			<condition property="isHP-UX">
+				<os name="HP-UX"/>
+			</condition>
+			<condition property="isWindows">
+				<os family="windows"/>
+			</condition>
+
+			<condition property="UnixOS">
+				<os family="unix"/>
+			</condition>
+			<condition property="WinOS">
+				<os family="windows"/>
+			</condition>
+		</target>
+
 	
 
 </project>		
