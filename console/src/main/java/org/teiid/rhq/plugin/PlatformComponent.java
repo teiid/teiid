@@ -50,47 +50,18 @@ public class PlatformComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(PlatformComponent.class);
 
 	/**
-	 * Property is used to identify an unreachable system
-	 */
-	protected static final String UNREACHABLE_NAME = "UNREACHABLE_PLATFORM"; //$NON-NLS-1$
-
-	/**
 	 * @see org.teiid.rhq.plugin.Facet#getComponentType()
 	 * @since 4.3
 	 */
 	@Override
 	String getComponentType() {
-		return ConnectionConstants.ComponentType.PLATFORM;
+		return null;
 	}
 	
 	@Override
 	public AvailabilityType getAvailability() {
 
-		if (!connMgr.hasServersDefined()) {
-			this.isAvailable = false;
-			return AvailabilityType.DOWN;
-			
-		}
-		Connection connection = null;
-		try {
-
-			LOG.debug("Checking availability of  " + this.getComponentIdentifier()); //$NON-NLS-1$
-			connection = getConnection();
-			if (connection.isAlive()) {
-				LOG.info("Availability of  " + this.getComponentIdentifier() + " is up"); //$NON-NLS-1$  //$NON-NLS-2$
-				this.isAvailable = true;
-				return AvailabilityType.UP;
-			} 
-		} catch (InvalidPluginConfigurationException ipce) {
-			// dont log anything, already done when getconnection is called
-		} catch (Throwable err) {
-			LOG.error("Unknown exception occured when checking availability for resource " + this.getComponentIdentifier(), err); //$NON-NLS-1$ 
-		} finally {
-			connection.close();
-		}
-		LOG.error("Availability of  " + this.getComponentIdentifier() + " is down"); //$NON-NLS-1$ //$NON-NLS-2$
-		this.isAvailable = false;
-		return AvailabilityType.DOWN;
+		return AvailabilityType.UP;
 	}
 	
 	
@@ -112,7 +83,6 @@ public class PlatformComponent extends Facet {
 	public void stop() {
 		// TODO Auto-generated method stub
 		super.stop();
-		connMgr.shutdown();
 	}
 
 	@Override
