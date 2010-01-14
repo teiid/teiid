@@ -22,6 +22,7 @@
 package org.teiid.test.client;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.QueryTestFailedException;
@@ -54,9 +55,9 @@ public class TransactionFactory {
 		public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$
 		public static final String XATRANSACTION = "xa"; //$NON-NLS-1$
 		public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
-		public static final String OFFWRAP_TRANSACTION = "offwrap"; //$NON-NLS-1$
-		public static final String ONWRAP_TRANSACTION = "onwrap"; //$NON-NLS-1$
-		public static final String AUTOWRAP_TRANSACTION = "autowrap"; //$NON-NLS-1$
+		public static final String OFFWRAP_TRANSACTION = "off"; //$NON-NLS-1$
+		public static final String ONWRAP_TRANSACTION = "on"; //$NON-NLS-1$
+		public static final String AUTOWRAP_TRANSACTION = "auto"; //$NON-NLS-1$
    }
 	
 
@@ -72,7 +73,8 @@ public class TransactionFactory {
             throw new TransactionRuntimeException(TRANSACTION_TYPE + " property was not specified" );
         } 
         
-        System.out.println("Create TransactionContainer: " + type);
+       
+        TestLogger.log("====  Create Transaction-Option: " + type);
         
         if (type.equalsIgnoreCase(TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
         	transacton = new LocalTransaction();
@@ -96,6 +98,7 @@ public class TransactionFactory {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
         }
 
+        TestLogger.log("====  TransactionContainer: " + transacton.getClass().getName());
         return transacton;
     }
     
