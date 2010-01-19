@@ -21,17 +21,12 @@
  */
 
 package com.metamatrix.script.shell;
-/*
- * Copyright � 2000-2005 MetaMatrix, Inc.
- * All rights reserved.
- */
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
-
-import bsh.Interpreter;
 
 /** 
  * This class used in conjunction with BeanShell, to hijack the System.in
@@ -131,33 +126,5 @@ public class ReaderInterceptor extends Reader {
             }
         }
     }
-        
      
-    public static void main(String[] args) {
-        final String ls = System.getProperty("line.separator"); //$NON-NLS-1$
-        CustomParser p = new CustomParser() {
-            public String convert(String str) {
-                System.out.println(str);
-                if (str.matches("select .+|insert into.+|delete .+|update table .*|exec .+")){ //$NON-NLS-1$
-                    return "execute(\""+str.substring(0,str.length()-1)+"\");"+ls; //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                return "foo:"+str+ls; //$NON-NLS-1$
-            }
-
-            public void setInterpreter(Interpreter i) {
-            }            
-        };
-        
-        BufferedReader i = new BufferedReader(new ReaderInterceptor(p, null));
-        
-        try {
-            String line = i.readLine();            
-            while(line != null) {
-                System.out.println(line); 
-                line = i.readLine();
-            }
-        } catch (IOException err) {
-            err.printStackTrace();
-        }
-    }
 }

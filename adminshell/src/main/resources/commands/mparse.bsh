@@ -1,5 +1,5 @@
 /**
- * A simple parser for MetaMatrix specific commands.
+ * A simple parser for specific commands.
  */
 String mparse() {    
     // mmstr is special variable set by the Input Interceptor. Just update
@@ -9,7 +9,7 @@ String mparse() {
     boolean record = false;
     
     if (str.endsWith(";") && str.matches("(select|insert|delete|update|exec|create|drop)\\W.+")){ 
-        mmstr="execute(\""+orig_str.substring(0,orig_str.length()-1)+"\");";
+        mmstr="execute(\""+orig_str.substring(0,orig_str.length()-1).replaceAll("\"", "\\\\\"") +"\");";
         record = true;
     }
     else if (str.matches("(help|exit|quit|dir|pwd)\\(?\\)?")) {
