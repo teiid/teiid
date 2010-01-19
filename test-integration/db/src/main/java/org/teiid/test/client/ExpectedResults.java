@@ -88,22 +88,25 @@ public interface ExpectedResults {
 	
 	
 	/**
-	 * Called to compare the <code>ResultSet</code> from the executed query to the expected results.
+	 * Called to compare the <code>ResultSet</code> from the executed query to the expected results
+	 * and return the errors.
 	 * @param queryIdentifier
 	 * @param sql
 	 * @param resultSet
 	 * @param actualException
 	 * @param testStatus
 	 * @param isOrdered
-	 * @param batchSize
+	 * @param updateCnt
+	 * @return Object identifying the errors in the comparison
 	 * @throws QueryTestFailedException
 	 */
-	void compareResults(final String queryIdentifier,
+	Object compareResults(final String queryIdentifier,
 			   final String sql,
                final ResultSet resultSet,
                final Throwable actualException,
                final int testStatus,
                final boolean isOrdered,
-               final int batchSize) throws QueryTestFailedException;
+               final int updateCnt,
+               final boolean resultFromQuery) throws QueryTestFailedException;
 
 }

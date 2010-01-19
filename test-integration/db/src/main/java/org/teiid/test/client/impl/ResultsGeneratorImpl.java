@@ -29,6 +29,8 @@ import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -128,7 +130,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    if (ex != null) {
 		ResultSetUtil.printThrowable(ex, filePrintStream);
 	    } else if (result != null ){
-		
+		result.beforeFirst();
 		ResultSetUtil.printResultSet(result, MAX_COL_WIDTH, true, filePrintStream);
 	    }
 
@@ -150,7 +152,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
     public String generateErrorFile(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
-	    final Throwable queryError, final File expectedResultsFile)
+	    final Throwable queryError, final Object results)
 	    throws QueryTestFailedException {
 
 	String errorFileName = null;
@@ -194,7 +196,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    resultSet.beforeFirst();
 
 	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, expectedResultsFile, queryError);
+		    resultSet, (results != null ? (List) results : null));
 
 	} catch (Throwable e) {
 	    throw new QueryTestFailedException(e.getMessage());
@@ -241,15 +243,24 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
      */
     private void generateErrorResults(String querySetID, String queryID,
 	    String sql, File resultsFile, ResultSet actualResult,
-	    File expectedResultFile, Throwable ex)
+	    List<String> results)
 	    throws QueryTestFailedException {
 	
 	FileOutputStream actualOut = null;
 	try {
 	    actualOut = new FileOutputStream(resultsFile);
 	    PrintStream filePrintStream = new PrintStream(actualOut);
+	    
 
-	    ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
+	    if (results != null) {
+        	    for (Iterator<String> it=results.iterator(); it.hasNext();) {
+        		String line = it.next();
+        		filePrintStream.print(line);
+        	    }
+	    } else {
+	    
+		ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
+	    }
 	    	    
 
 	} catch (Exception e) {

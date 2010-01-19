@@ -6,8 +6,9 @@ import java.util.Properties;
 
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataStore;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.PropUtils;
+
+import com.metamatrix.common.util.PropertiesUtils;
 
 
 /**
@@ -112,7 +113,7 @@ public class ConfigPropertyLoader {
 	
 	private void initialize() {
 
-	    props = PropUtils.loadProperties("/" + LAST_CONFIG_FILE, null);
+	    props = PropUtils.loadProperties(LAST_CONFIG_FILE, null);
 	    dsfactory = new DataSourceFactory(this);
 	}
 	
@@ -143,9 +144,9 @@ public class ConfigPropertyLoader {
 	}
 
 	public Properties getProperties() {
+    
 	    
-	    Properties p = new Properties();
-	    p.putAll(System.getProperties());
+	    Properties p = PropertiesUtils.clone(System.getProperties(), false);
 	    if (props != null) {
 		p.putAll(props);
 	    }

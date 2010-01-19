@@ -39,6 +39,7 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
+
 /**
  * This class encapsulates results associated with a query.
  * <p>

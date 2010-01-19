@@ -196,7 +196,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 
     public String generateErrorFile(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
-	    final Throwable queryError, final File expectedResultsFile)
+	    final Throwable queryError, final Object expectedResultsFile)
 	    throws QueryTestFailedException {
 
 	String errorFileName = null;
@@ -212,7 +212,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 		resultSet.beforeFirst();
 	    }
 	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, expectedResultsFile, queryError);
+		    resultSet, (File) expectedResultsFile, queryError);
 
 	} catch (Throwable e) {
 	    throw new QueryTestFailedException(e.getMessage());

@@ -33,23 +33,27 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import org.teiid.test.client.QuerySQL;
+import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.ctc.QueryResults.ColumnInfo;
+import org.teiid.test.framework.TestLogger;
+import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.StringUtil;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.internal.core.xml.SAXBuilderHelper;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+
 
 /**
  * <P> This program helps in parsing XML Query and Results files into
@@ -76,12 +80,13 @@ public class XMLQueryVisitationStrategy {
      * queryNames/IDs as Keys.
      * <br>
      * @param queryFile the XML file object that is to be parsed
-     * @return the Map containig query strings.
+     * @return the List containing quers.
      * @exception JDOMException if there is an error consuming the message.
      */
-    public Map parseXMLQueryFile(File queryFile) throws IOException, JDOMException {
+    public List parseXMLQueryFile(File queryFile, String querySetID) throws IOException, JDOMException {
 
-        HashMap queryMap = new HashMap();
+	List<QueryTest> queries = new LinkedList();
+//        HashMap queryMap = new HashMap();
         SAXBuilder builder = SAXBuilderHelper.createSAXBuilder(false);
         Document queryDocument = builder.build(queryFile);
         List queryElements = queryDocument.getRootElement().getChildren(TagNames.Elements.QUERY);
@@ -90,15 +95,138 @@ public class XMLQueryVisitationStrategy {
             Element queryElement = (Element) iter.next();
             String queryName = queryElement.getAttributeValue(TagNames.Attributes.NAME);
             if ( queryElement.getChild(TagNames.Elements.EXCEPTION) == null ) {
-                String query = queryElement.getTextTrim();
-                queryMap.put(queryName, query);
+        	String uniqueID = querySetID + "_" + queryName;
+        	
+		List<Element> parmChildren = queryElement.getChildren(TagNames.Elements.SQL);
+        	
+		if (parmChildren == null || parmChildren.isEmpty()) {
+        	    TestLogger.logDebug("=======  Single QueryTest ");
+        	    QuerySQL sql = createQuerySQL(queryElement);
+         	    
+        	    QueryTest q = new QueryTest(uniqueID, querySetID, new QuerySQL[] {sql}, false);
+        	    queries.add(q);
+        	} else {
+        	    TestLogger.logDebug("=======  QueryTest has multiple sql statements");
+         		QuerySQL[] querysql = new QuerySQL[parmChildren.size()];
+        		int c = 0;
+        		
+        		final Iterator<Element> sqliter = parmChildren.iterator();
+        		while ( sqliter.hasNext() ) {
+        			final Element sqlElement = (Element) sqliter.next();
+        			QuerySQL sql = createQuerySQL(sqlElement);
+        			querysql[c] = sql;
+        			c++;	
+        		}
+        		QueryTest q = new QueryTest(uniqueID, querySetID, querysql, false);
+        		queries.add(q);
+               		
+        		
+       	    
+        	}
+ //               queryMap.put(queryName, query);
             } else {
                 Element exceptionElement = queryElement.getChild(TagNames.Elements.EXCEPTION);
                 String exceptionType = exceptionElement.getChild(TagNames.Elements.CLASS).getTextTrim();
-                queryMap.put(queryName, exceptionType);
+                
+                String uniqueID = querySetID + "_" + queryName;
+                QuerySQL sql = new QuerySQL(exceptionType, null);
+                
+                QueryTest q = new QueryTest(uniqueID, querySetID, new QuerySQL[] {sql}, true);
+                queries.add(q);
+
+                
+ //               queryMap.put(queryName, exceptionType);
             }
         }
-        return queryMap;
+        return queries;
+    }
+    
+    private QuerySQL createQuerySQL(Element queryElement) {
+ 	    String query = queryElement.getTextTrim();
+ 	    	    
+	    Object[] parms = getParms(queryElement);
+	    	    
+	    QuerySQL sql = new QuerySQL(query, parms);
+	    
+ 	    String updateCnt = queryElement.getAttributeValue(TagNames.Attributes.UPDATE_CNT);
+ 	    if (updateCnt != null && updateCnt.trim().length() > 0) {
+ 		int cnt = Integer.parseInt(updateCnt);
+ 		sql.setUpdateCnt(cnt);
+ 	    }
+ 	    
+ 	    String rowCnt = queryElement.getAttributeValue(TagNames.Attributes.TABLE_ROW_COUNT);
+ 	    if (rowCnt != null && rowCnt.trim().length() > 0) {
+ 		int cnt = Integer.parseInt(rowCnt);
+ 		sql.setRowCnt(cnt);
+ 	    }
+	    
+	    return sql;	
+    }
+    
+    private Object[] getParms(Element parent) {
+	List<Element> parmChildren = parent.getChildren(TagNames.Elements.PARM);
+	if (parmChildren == null) {
+	    return null;
+	}
+	
+	Object[] parms = new Object[parmChildren.size()];
+	int i = 0;
+	final Iterator<Element> iter = parmChildren.iterator();
+	while ( iter.hasNext() ) {
+		final Element parmElement = (Element) iter.next();
+		try {
+		    Object parm = createParmType(parmElement);
+		    parms[i] = parm;
+		    i++;
+		} catch (JDOMException e) {
+		    throw new TransactionRuntimeException(e);
+		}		
+	}
+	
+	
+	
+	return parms;
+    }
+    
+    private Object createParmType(Element cellElement) throws JDOMException {
+
+        Object cellObject = null;
+        
+        final String typeName = cellElement.getAttributeValue(TagNames.Attributes.TYPE);
+ 
+        if ( typeName.equalsIgnoreCase(TagNames.Elements.BOOLEAN) ) {
+            cellObject = consumeMsg((Boolean) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.STRING) ) {
+            cellObject = consumeMsg((String) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.CHAR) ) {
+            cellObject = consumeMsg((Character) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.BYTE) ) {
+            cellObject = consumeMsg((Byte) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.DOUBLE) ) {
+            cellObject = consumeMsg((Double) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.DATE) ) {
+            cellObject = consumeMsg((java.sql.Date) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.TIME) ) {
+            cellObject = consumeMsg((Time) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.TIMESTAMP) ) {
+            cellObject = consumeMsg((Timestamp) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.FLOAT) ) {
+            cellObject = consumeMsg((Float) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.BIGDECIMAL) ) {
+            cellObject = consumeMsg((BigDecimal) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.BIGINTEGER) ) {
+            cellObject = consumeMsg((BigInteger) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.INTEGER) ) {
+            cellObject = consumeMsg((Integer) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.LONG) ) {
+            cellObject = consumeMsg((Long) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.SHORT) ) {
+            cellObject = consumeMsg((Short) cellObject, cellElement);
+        } else if ( typeName.equalsIgnoreCase(TagNames.Elements.OBJECT) ) {
+            cellObject = consumeMsg((String) cellObject, cellElement);
+        }
+
+        return cellObject;
     }
 
     /**

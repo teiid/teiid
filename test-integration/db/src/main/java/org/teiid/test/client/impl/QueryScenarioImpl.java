@@ -38,30 +38,29 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  */
 public class QueryScenarioImpl extends QueryScenario {
     
-
     
     public QueryScenarioImpl(String scenarioName, Properties queryProperties) {
 	super(scenarioName, queryProperties);
 
     }
     
-   
 
     /* (non-Javadoc)
      * @see org.teiid.test.client.QueryScenario#handleTestResult(org.teiid.test.client.TestResult, java.lang.String)
      */
     @Override
-    public void handleTestResult(TestResult tr, ResultSet resultSet, String sql) {
+    public void handleTestResult(TestResult tr, ResultSet resultSet, int updateCnt, boolean resultFromQuery, String sql) {
 
 	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
+		Object results = null;
 		try {
-		    this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
+		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
 			    sql, 
 			    resultSet, 
 			    resultException, 
-			    tr.getStatus(), isOrdered(sql), -1);
+			    tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
 		    
 		    tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
 
@@ -70,14 +69,18 @@ public class QueryScenarioImpl extends QueryScenario {
 			    : qtf);
 		    tr.setException(resultException);
 		    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+
+
+		}
+		
+		if (results != null || tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		    try {
     		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
     			    tr.getQueryID(), sql, resultSet, resultException,
-    			    this.getExpectedResults(tr.getQuerySetID()).getResultsFile(tr.getQueryID()) );		    
+    			    results );		    
 		    } catch (QueryTestFailedException qtfe) {
 			    throw new TransactionRuntimeException(qtfe.getMessage());
 		    }
-
 		}
 
 
@@ -98,8 +101,7 @@ public class QueryScenarioImpl extends QueryScenario {
 	    if (tr.getException() != null) {
 		try {
 		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
-			    tr.getQueryID(), sql, resultSet, resultException,
-			    this.getExpectedResults(tr.getQuerySetID()).getResultsFile(tr.getQueryID()) );
+			    tr.getQueryID(), sql, resultSet, resultException, null);
 
 		} catch (QueryTestFailedException qtfe) {
 		    throw new TransactionRuntimeException(qtfe.getMessage());

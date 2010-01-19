@@ -42,6 +42,7 @@ import java.util.Properties;
 import org.jdom.JDOMException;
 import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
+import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryScenario;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestResult;
@@ -137,13 +138,14 @@ public class XMLExpectedResults implements ExpectedResults {
      * @throws QueryTestFailedException
      *             If comparison fails.
      */
-    public void compareResults(  final String queryIdentifier,
+    public Object compareResults(  final String queryIdentifier,
     								  final String sql,
                                       final ResultSet resultSet,
                                       final Throwable actualException,
                                       final int testStatus,
                                       final boolean isOrdered,
-                                      final int batchSize) throws QueryTestFailedException {
+                                      final int batchSize,
+                                      final boolean resultFromQuery) throws QueryTestFailedException {
 
         final String eMsg = "CompareResults Error: "; //$NON-NLS-1$
    	
@@ -201,6 +203,8 @@ public class XMLExpectedResults implements ExpectedResults {
 			break;
 		    
 	       }
+	
+	return null;
 
     	
     }
@@ -713,7 +717,7 @@ public class XMLExpectedResults implements ExpectedResults {
 		    while (it.hasNext()) {
 			String querySetID = it.next();
 
-			Map queries = set.getQueries(querySetID);
+			List<QueryTest> queries = set.getQueries(querySetID);
 			if (queries.size() == 0l) {
 				System.out.println("Failed, didn't load any queries " );
 			}
@@ -725,16 +729,17 @@ public class XMLExpectedResults implements ExpectedResults {
 				ResultsGenerator gr = set.getResultsGenerator();
 				    //new XMLGenerateResults(_instance.getProperties(), "testname", set.getOutputDirectory());
 
-				Iterator qIt = queries.keySet().iterator();
+				Iterator<QueryTest> qIt = queries.iterator();
 				while(qIt.hasNext()) {
-					String qId = (String) qIt.next();
-					String sql = (String) queries.get(qId);
+				    QueryTest q = qIt.next();
+				//	String qId = (String) qIt.next();
+				//	String sql = (String) queries.get(qId);
 					
 //					System.out.println("SetID #: " + cnt + "  Qid: " + qId + "   sql: " + sql);
 					
-					File resultsFile = er.getResultsFile(qId);
+					File resultsFile = er.getResultsFile(q.getQueryID());
 					if (resultsFile == null) {
-						System.out.println("Failed to get results file for queryID " + qId);
+						System.out.println("Failed to get results file for queryID " + q.getQueryID());
 					}
 					
 	

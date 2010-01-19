@@ -24,7 +24,7 @@ package org.teiid.test.client;
 
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -67,9 +67,12 @@ public class TestClient  {
     
     static {
 	if (System.getProperty(ConfigPropertyNames.CONFIG_FILE ) == null) {
-		System.setProperty(ConfigPropertyNames.CONFIG_FILE,"qe-test.properties");
+		System.setProperty(ConfigPropertyNames.CONFIG_FILE,"./ctc_tests/ctc-test.properties");
+	} else {
+	    System.out.println("Config File Set: " + System.getProperty(ConfigPropertyNames.CONFIG_FILE ));
 	}
 	
+	// the project.loc is used 
 	if (System.getProperty("project.loc" ) == null) {
 		System.setProperty("project.loc",".");
 	}
@@ -156,7 +159,7 @@ public class TestClient  {
     
     private void runTestCase(QueryScenario queryset,  TransactionContainer tc) throws Exception {
 	String querySetID = null;
-	Map<String, Object> queryTests = null;
+	List<QueryTest> queryTests = null;
 	
 	TestClientTransaction userTxn = new TestClientTransaction(queryset);
 	
@@ -174,8 +177,8 @@ public class TestClient  {
 	    queryTests = queryset.getQueries(querySetID);
 
 		 // the iterator to process the query tests
-	    Iterator<String> queryTestIt = null;
-	    queryTestIt = queryTests.keySet().iterator();
+	    Iterator<QueryTest> queryTestIt = null;
+	    queryTestIt = queryTests.iterator();
 	    
 	    ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
 
@@ -186,13 +189,10 @@ public class TestClient  {
 	    long endTS = 0;
 	    
         	while (queryTestIt.hasNext()) {
-        
-        	    String queryidentifier = queryTestIt.next();
-        
-        	    Object sqlObject = queryTests.get(queryidentifier);
-                    	    
-            	    userTxn.init(summary, expectedResults, querySetID, queryidentifier, sqlObject);
-            	    
+        	    QueryTest q = queryTestIt.next();
+                     	    
+            	    userTxn.init(summary, expectedResults, q);
+             	    
         	    // run test
             	    tc.runTransaction(userTxn);
 	             

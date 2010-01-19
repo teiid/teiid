@@ -98,7 +98,7 @@ public class TransactionFactory {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
         }
 
-        TestLogger.log("====  TransactionContainer: " + transacton.getClass().getName());
+        TestLogger.log("====  TransactionContainer: " + transacton.getClass().getName() + " option:" + type);
         return transacton;
     }
     

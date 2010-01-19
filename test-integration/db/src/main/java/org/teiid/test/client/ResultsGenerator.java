@@ -22,7 +22,6 @@
 
 package org.teiid.test.client;
 
-import java.io.File;
 import java.sql.ResultSet;
 
 import org.teiid.test.framework.exception.QueryTestFailedException;
@@ -63,13 +62,39 @@ public interface ResultsGenerator {
      */
     String getGenerateDir();
 
+    /**
+     * Call to generate the results file from an executed query.
+     * If an exception occurred, it is considered the result from 
+     * the query.   The file created based on the result should
+     * be able to be used as the expected result when query
+     * tests are run with in the resultmode of "compare".
+     * @param querySetID
+     * @param queryIdentfier
+     * @param query
+     * @param result
+     * @param queryError
+     * @param testStatus
+     * @throws QueryTestFailedException
+     */
     void generateQueryResultFile(String querySetID, String queryIdentfier,
 	    String query, ResultSet result, Throwable queryError, int testStatus)
 	    throws QueryTestFailedException;
 
+    /**
+     * Call to generate an error file as the result of incompatibilities in the
+     * comparison of the expected results to the actual results.
+     * @param querySetID
+     * @param queryIdentifier
+     * @param sql
+     * @param resultSet
+     * @param queryError
+     * @param results
+     * @return
+     * @throws QueryTestFailedException
+     */
     String generateErrorFile(final String querySetID,
 	    final String queryIdentifier, final String sql,
 	    final ResultSet resultSet, final Throwable queryError,
-	    final File expectedResultsFile) throws QueryTestFailedException;
+	    final Object results) throws QueryTestFailedException;
 
 }

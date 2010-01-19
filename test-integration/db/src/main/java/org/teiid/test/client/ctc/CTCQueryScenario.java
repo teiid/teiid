@@ -20,26 +20,16 @@
  */
 package org.teiid.test.client.ctc;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Properties;
 
-import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
-import org.teiid.test.client.QueryReader;
 import org.teiid.test.client.QueryScenario;
-import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.client.TestResult;
-import org.teiid.test.client.TestProperties.RESULT_MODES;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.FileUtils;
 
 /**
  * The CTCQueryScenario represents the tests that were created using the old xml file formats.
@@ -81,7 +71,7 @@ public class CTCQueryScenario extends QueryScenario {
     }
 
  
-    
+    @Override 
     public ExpectedResults getExpectedResults(String querySetID) {    
 	return new XMLExpectedResults( querySetID, this.getProperties());
     }    
@@ -92,7 +82,7 @@ public class CTCQueryScenario extends QueryScenario {
      * @see org.teiid.test.client.QueryScenario#handleTestResult(org.teiid.test.client.TestResult, java.lang.String)
      */
     @Override
-    public void handleTestResult(TestResult tr, ResultSet resultSet, String sql) {
+    public void handleTestResult(TestResult tr, ResultSet resultSet, int updatecnt, boolean resultFromQuery, String sql) {
 
 	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
@@ -103,7 +93,7 @@ public class CTCQueryScenario extends QueryScenario {
 			    sql, 
 			    resultSet, 
 			    resultException, 
-			    tr.getStatus(), isOrdered(sql), -1);
+			    tr.getStatus(), isOrdered(sql), -1,  resultFromQuery);
 
 		} catch (QueryTestFailedException qtf) {
 		    resultException = (resultException != null ? resultException

@@ -1,11 +1,14 @@
 package org.teiid.test.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+
+import com.metamatrix.common.util.PropertiesUtils;
 
 public class PropUtils {
 	
@@ -18,7 +21,15 @@ public class PropUtils {
 			props.putAll(defaults);
 		} 
 	    try {
-	        in = ConfigPropertyLoader.class.getResourceAsStream(filename);
+		
+		File f = new File(filename);
+		if (f.exists()) {
+			return PropertiesUtils.load(filename);
+
+		}
+		
+		
+	        in = ConfigPropertyLoader.class.getResourceAsStream("/" + filename);
 	        if (in != null) {
 	        	Properties lprops = new Properties();
 	        	lprops.load(in);

@@ -23,7 +23,6 @@ package org.teiid.test.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -46,8 +45,7 @@ public class ClassFactory {
      * The default scenario class to use when {@link #QUERY_SCENARIO_CLASSNAME} is not defined.
      */
     
- //   public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.impl.QueryScenarioImpl"; //$NON-NLS-1$
-    public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.ctc.CTCQueryScenario"; //$NON-NLS-1$
+    public static final String QUERY_SCENARIO_DEFAULT_CLASSNAME = "org.teiid.test.client.impl.QueryScenarioImpl"; //$NON-NLS-1$
    
 
     /**
@@ -97,7 +95,7 @@ public class ClassFactory {
     public static QueryScenario createQueryScenario(String scenarioName) {
     
 	String clzzname = ConfigPropertyLoader.getInstance().getProperty(QUERY_SCENARIO_CLASSNAME);
-	if (clzzname == null) {
+		if (clzzname == null || clzzname.startsWith("${")) {
 	    clzzname = QUERY_SCENARIO_DEFAULT_CLASSNAME;
 	}
 	
@@ -105,12 +103,12 @@ public class ClassFactory {
 	    args.add(scenarioName);
 	    args.add(ConfigPropertyLoader.getInstance().getProperties());
 
-	
 	QueryScenario scenario;
 	try {
 	    scenario = (QueryScenario) ReflectionHelper.create(clzzname, args, null);
 	} catch (Exception e) {
-	    throw new TransactionRuntimeException(e.getMessage());
+	    e.printStackTrace();
+	    throw new TransactionRuntimeException(e);
 	}
 	return scenario;
     }
@@ -125,7 +123,8 @@ public class ClassFactory {
 	try {
 	    reader = (QueryReader) ReflectionHelper.create(clzzname, args, null);
 	} catch (Exception e) {
-	    throw new TransactionRuntimeException(e.getMessage());
+	    e.printStackTrace();
+	    throw new TransactionRuntimeException(e);
 	}	
 
 	return reader;

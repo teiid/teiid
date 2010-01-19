@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryReader;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
@@ -55,7 +56,7 @@ public class XMLQueryReader implements QueryReader {
     }
 
     @Override
-    public Map<String, Object> getQueries(String querySetID)
+    public List<QueryTest> getQueries(String querySetID)
 	    throws QueryTestFailedException {
 	String queryFile = querySetIDToFileMap.get(querySetID);
 
@@ -110,10 +111,11 @@ public class XMLQueryReader implements QueryReader {
 
     }
 
-    private Map<String, Object> loadQueries(String querySetID, String queryFileName)
+    private List <QueryTest> loadQueries(String querySetID, String queryFileName)
 	    throws IOException {
 
-	Map<String, Object> queries = new HashMap<String, Object>();
+	List<QueryTest> queries = null;
+//	Map<String, Object> queries = new HashMap<String, Object>();
 	File queryFile = new File(queryFileName);
 	if (!queryFile.exists() || !queryFile.canRead()) {
 	    String msg = "Query file doesn't exist or cannot be read: " + queryFileName + ", ignoring and continuing";
@@ -125,15 +127,15 @@ public class XMLQueryReader implements QueryReader {
 
 	    XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
 	    try {
-		Map queryMap = jstrat.parseXMLQueryFile(queryFile);
-		Iterator iter = queryMap.keySet().iterator();
-		while (iter.hasNext()) {
-		    String queryID = (String) iter.next();
-		    String query = (String) queryMap.get(queryID);
-
-		    String uniqueID = querySetID + "_" + queryID;
-		    queries.put(uniqueID, query);
-		}
+		return jstrat.parseXMLQueryFile(queryFile, querySetID);
+//		Iterator iter = queryMap.keySet().iterator();
+//		while (iter.hasNext()) {
+//		    String queryID = (String) iter.next();
+//		    String query = (String) queryMap.get(queryID);
+//
+//		    String uniqueID = querySetID + "_" + queryID;
+//		    queries.put(uniqueID, query);
+//		}
 
 	    } catch (Exception e) {
 		String msg = "Error reading query file: " + queryFileName + ", " + e.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$
@@ -141,7 +143,7 @@ public class XMLQueryReader implements QueryReader {
 		throw new IOException(msg); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	}
-	return queries;
+//	return queries;
     }
 
     private static String getQuerySetName(String queryFileName) {
@@ -174,7 +176,7 @@ public class XMLQueryReader implements QueryReader {
 	    while (it.hasNext()) {
 		String querySetID = it.next();
 
-		Map queries = reader.getQueries(querySetID);
+		List<QueryTest> queries = reader.getQueries(querySetID);
 		
 		if (queries.size() == 0l) {
 		    System.out.println("Failed, didn't load any queries ");

@@ -109,6 +109,8 @@ public final class TagNames {
         public static final String QUERY = "query"; //$NON-NLS-1$
         public static final String SELECT = "select"; //$NON-NLS-1$
         public static final String ROOT_ELEMENT = "root"; //$NON-NLS-1$
+        public static final String SQL = "sql"; //$NON-NLS-1$
+        public static final String PARM = "parm"; //$NON-NLS-1$
     }
 
     /**
@@ -123,6 +125,7 @@ public final class TagNames {
         public static final String VALUE = "value"; //$NON-NLS-1$
         public static final String DISTINCT = "distinct"; //$NON-NLS-1$
         public static final String STAR = "star"; //$NON-NLS-1$
+        public static final String UPDATE_CNT = "updatecnt"; //$NON-NLS-1$
     }
 
     /**

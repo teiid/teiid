@@ -23,7 +23,7 @@
 package org.teiid.test.client;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
@@ -70,18 +70,15 @@ public interface QueryReader {
     Collection<String> getQuerySetIDs();
 
     /**
-     * Return a <code>Map</code> containing the query identifier as the key, and
-     * the value is the query.  In most simple cases, the query will be a <code>String</code>
-     * However, complex types (i.e., to execute prepared statements or other arguments), it maybe
-     * some other type.
+     * Return a <code>List</code> containing {@link QueryTest}
      * 
-     * @return Map
+     * @return List
      * @throws QueryTestFailedException
      * 
      * @since
      */
-    Map<String, Object> getQueries(String querySetID)
-	    throws QueryTestFailedException; // key=queryIdentifier
+    List<QueryTest> getQueries(String querySetID)
+	    throws QueryTestFailedException; 
 																					// Map<String, String> - key = queryIdentifier
 
 }

@@ -42,11 +42,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
     private QueryScenario querySet = null;
     private ExpectedResults expectedResults = null;
-
-    // the current querySet info
-    private String querySetID = null;
-    private String queryIdentifier = null;
-    private Object queryObject = null;
+    private QueryTest query = null;
 
     private long endTS = 0;
     private long beginTS = 0;
@@ -56,6 +52,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     private boolean errorExpected = false;
     
     private String sql = null;
+    private boolean resultFromQuery = false;
     
     private TestResultsSummary testResultsSummary;
 
@@ -64,11 +61,12 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	this.querySet = querySet;
 
     }
+    
+    
+    
 
-    public void init(TestResultsSummary testResultsSummary, ExpectedResults expectedResults, String querySetID, String queryIdentifier, Object query) {
-	this.querySetID = querySetID;
-	this.queryIdentifier = queryIdentifier;
-	this.queryObject = query;
+    public void init(TestResultsSummary testResultsSummary, ExpectedResults expectedResults, QueryTest query) {
+	this.query = query;
 	this.testResultsSummary = testResultsSummary;
 	this.expectedResults = expectedResults;
 	
@@ -77,13 +75,13 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
 
-
 	errorExpected = false;
+	resultFromQuery = false;
 
     }
     
     public String getTestName() {
-	return querySetID + ":" + (this.queryIdentifier!=null?this.queryIdentifier:"NA");
+	return query.geQuerySetID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
 	
     }
 
@@ -95,7 +93,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	try {
 	    this.errorExpected = expectedResults
-		    .isExceptionExpected(this.queryIdentifier);
+		    .isExceptionExpected(query.getQueryID());
 	} catch (QueryTestFailedException e) {
 	    // TODO Auto-generated catch block
 	    throw new TransactionRuntimeException("ProgramError: "
@@ -104,31 +102,34 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
     }
 
+
     @Override
     public void testCase() throws Exception {
-	if (this.queryObject instanceof String) {
-	    this.sql = (String) this.queryObject;
-	    executeTest(this.querySetID, this.queryIdentifier, sql);
-	}
-	
-	// TODO:  support object types for queries (i.e., arguments for prepared statements, etc)
-
-    }
-
-    protected void executeTest(String querySetID, String queryidentifier,
-	    String sql) throws Exception {
-
-        
-	TestLogger.logDebug("ID: " + querySetID + "-" + queryidentifier + " execute: " + sql);
-
 	TestLogger.logDebug("expected error: " + this.errorExpected);
+	TestLogger.logDebug("ID: " + query.geQuerySetID() + "-" + query.getQueryID());
+        
+	QuerySQL[] queries = query.getQueries();
+	int l = queries.length;
 
 	try {
 	    // need to set this so the underlying query execution handles an
 	    // error properly.
 
 	    beginTS = System.currentTimeMillis();
-	    execute(sql);
+	    
+	    for (int i= 0; i < l; i++) {
+		QuerySQL qsql = queries[i];
+		this.sql = qsql.getSql();
+		resultFromQuery = execute(sql, qsql.getParms());
+		if (!resultFromQuery) {	    
+		    this.assertUpdateCount(qsql.getUpdateCnt());
+
+		} else if (qsql.getRowCnt() >= 0) {
+		    this.assertRowCount(qsql.getRowCnt());
+
+		}
+		
+	    }
 
 	} catch (Throwable t) {
 	    this.setApplicationException(t);
@@ -159,15 +160,16 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 		testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
 	    }
 
-}
+	}
 
-	rs = new TestResultStat(querySetID, this.queryIdentifier, sql,
+	rs = new TestResultStat(query.geQuerySetID(), query.getQueryID(), sql,
 		testStatus, beginTS, endTS, resultException, null);
 	
-	this.querySet.handleTestResult(rs, this.internalResultSet, sql);
+	
+	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
 
 	
-	this.testResultsSummary.addTestResult(this.querySetID, rs);
+	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
 
     }
 
@@ -182,7 +184,6 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     // exceptions depends on this
     @Override
     public boolean exceptionExpected() {
-	// TODO Auto-generated method stub
 	return this.errorExpected;
     }
 

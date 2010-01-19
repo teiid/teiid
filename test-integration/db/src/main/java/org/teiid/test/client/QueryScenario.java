@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 
 import org.teiid.test.client.TestProperties.RESULT_MODES;
@@ -120,7 +120,8 @@ public abstract class QueryScenario {
 	for (int i = 0; i < vdbfiles.length; i++) {
 	    vdbdef.append(vdbfiles[i].getAbsolutePath() + ";");
 	}
-
+	TestLogger.log("=====  Connect to VDBs: " + vdbdef.toString());
+	
 	deployProperties.setProperty("vdb.definition", vdbdef.toString());
 	PropertiesUtils.print(deployPropLoc, deployProperties,"Updated for vdb.definition");
 
@@ -186,7 +187,7 @@ public abstract class QueryScenario {
      * @return Map<String, Object>
      */
 
-    public Map<String, Object> getQueries(String querySetID) {
+    public List<QueryTest> getQueries(String querySetID) {
 	try {
 	    return reader.getQueries(querySetID);
 	} catch (QueryTestFailedException e) {
@@ -254,7 +255,7 @@ public abstract class QueryScenario {
     }
 
 
-    public abstract void handleTestResult(TestResult tr, ResultSet resultSet, String sql);
+    public abstract void handleTestResult(TestResult tr, ResultSet resultSet, int updateCnt, boolean resultFromQuery, String sql);
 
 
 }
