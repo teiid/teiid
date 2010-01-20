@@ -35,6 +35,7 @@ import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
@@ -46,6 +47,19 @@ import org.teiid.connector.language.IFunction;
  */
 public class MySQLTranslator extends Translator {
 	
+	/**
+	 * Adds support for the 2 argument form of padding
+	 */
+	private final class PadFunctionModifier extends FunctionModifier {
+		@Override
+		public List<?> translate(IFunction function) {
+			if (function.getParameters().size() == 2) {
+				function.getParameters().add(getLanguageFactory().createLiteral(" ", TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
+			}
+			return null;
+		}
+	}
+
 	@Override
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
@@ -54,7 +68,8 @@ public class MySQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.BITOR, new BitFunctionModifier("|", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITXOR, new BitFunctionModifier("^", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
-        
+        registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("signed", FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$

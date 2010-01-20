@@ -314,4 +314,13 @@ public class TestMySQLTranslator {
             input, 
             output, TRANSLATOR);        
     }
+    
+    @Test public void testPad() throws Exception {
+        String input = "select lpad(smalla.stringkey, 18), rpad(smalla.stringkey, 12) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT lpad(SmallA.StringKey, 18, ' '), rpad(SmallA.StringKey, 12, ' ') FROM SmallA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);        
+    }
 }
