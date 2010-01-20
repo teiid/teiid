@@ -32,6 +32,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
@@ -40,6 +41,12 @@ import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.util.CommandContext;
 
 public class QueryProcessor implements BatchProducer {
+	
+	public static class ExpiredTimeSliceException extends MetaMatrixRuntimeException {
+		
+	}
+	
+	private static ExpiredTimeSliceException EXPIRED_TIME_SLICE = new ExpiredTimeSliceException();
 	
 	public interface ProcessorFactory {
 		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException;
@@ -92,16 +99,19 @@ public class QueryProcessor implements BatchProducer {
 	    while (true) {
 	    	try {
 	    		return nextBatchDirect();
-	    	} catch (BlockedException e) {
-	    		if (nonBlocking) {
-	    			try {
-	                    Thread.sleep(DEFAULT_WAIT);
-	                } catch (InterruptedException err) {
-	                    throw new MetaMatrixComponentException(err);
-	                }
-	    			continue;
+	    	} catch (ExpiredTimeSliceException e) {
+	    		if (!nonBlocking) {
+	    			throw e;
 	    		}
-	    		throw e;
+	    	} catch (BlockedException e) {
+	    		if (!nonBlocking) {
+	    			throw e;
+	    		}
+	    		try {
+	                Thread.sleep(DEFAULT_WAIT);
+	            } catch (InterruptedException err) {
+	                throw new MetaMatrixComponentException(err);
+	            }
 	    	}
 	    }
 	}
@@ -162,7 +172,7 @@ public class QueryProcessor implements BatchProducer {
 			closeProcessing();
 		} 
 	    if (result == null) {
-	    	throw BlockedException.INSTANCE; //expired timeslice
+	    	throw EXPIRED_TIME_SLICE;
 	    }
 		return result;
 	}

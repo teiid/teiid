@@ -187,6 +187,9 @@ public class RequestWorkItem extends AbstractWorkItem {
             }                  	            
         } catch (BlockedException e) {
             LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- processor blocked ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+        } catch (QueryProcessor.ExpiredTimeSliceException e) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "############# PW reenqueueing ", requestID, "- time slice expired ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+            this.moreWork();
         } catch (Throwable e) {
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
             
@@ -490,13 +493,10 @@ public class RequestWorkItem extends AbstractWorkItem {
         resultsReceiver.receiveResults(response);
     }
 
-    private static List getParameterInfo(StoredProcedure procedure) {
-        List params = procedure.getParameters();
-        List paramInfos = new ArrayList(params.size());
+    private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
+        List<ParameterInfo> paramInfos = new ArrayList<ParameterInfo>();
         
-        Iterator iter = params.iterator();
-        while(iter.hasNext()) {
-            SPParameter param = (SPParameter) iter.next();
+        for (SPParameter param : procedure.getParameters()) {
             ParameterInfo info = new ParameterInfo(param.getParameterType(), param.getResultSetColumns().size());
             paramInfos.add(info);
         }
