@@ -4,7 +4,7 @@
 	<property name="embedded.temp.dir" value="${temp.dir}/embedded"/>
 	
 	<!--  this contains jars to be included in the embedded war -->
-	<property name="embedded.jar" value="${basedir}/target/distribution/jbedsp-embedded-plugin-${product.version}.jar"/>
+	<property name="embedded.jar" value="${basedir}/target/distribution/teiid-embedded-plugin-${product.version}.jar"/>
 
 	<property name="enterprise.temp.dir" value="${temp.dir}/enterprise"/>
 	<!--  this is the plugin to be deployed to JON that get sent to the agent -->

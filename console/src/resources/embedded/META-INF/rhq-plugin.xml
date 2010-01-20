@@ -1,38 +1,117 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<!--
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
- */-->
+	<!--
+		* JBoss, Home of Professional Open Source. * See the COPYRIGHT.txt
+		file distributed with this work for information * regarding copyright
+		ownership. Some portions may be licensed * to Red Hat, Inc. under one
+		or more contributor license agreements. * * This library is free
+		software; you can redistribute it and/or * modify it under the terms
+		of the GNU Lesser General Public * License as published by the Free
+		Software Foundation; either * version 2.1 of the License, or (at your
+		option) any later version. * * This library is distributed in the hope
+		that it will be useful, * but WITHOUT ANY WARRANTY; without even the
+		implied warranty of * MERCHANTABILITY or FITNESS FOR A PARTICULAR
+		PURPOSE. See the GNU * Lesser General Public License for more details.
+		* * You should have received a copy of the GNU Lesser General Public *
+		License along with this library; if not, write to the Free Software *
+		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA *
+		02110-1301 USA. */
+	-->
 
 <plugin name="TeiidPlugin" displayName="Teiid Plugin" package="org.teiid.rhq.plugin"
 	version="2.0.0" description="Supports management and monitoring of JBoss Teiid"
-
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:xmlns:rhq-plugin"
 	xmlns:c="urn:xmlns:rhq-configuration">
 
-	<depends plugin="JMX" useClasses="true"/>
+	<depends plugin="JMX" />
+	<depends plugin="JBossAS5" useClasses="true" />
 
 
-	<server name="Teiid Data Services" description="Teiid Datasources" class="PlatformComponent"
-		discovery="PlatformDiscoveryComponent" createDeletePolicy="both">
+	<server name="Data Services" description="JBoss Enterprise Data Services"
+		class="PlatformComponent" discovery="PlatformDiscoveryComponent"
+		createDeletePolicy="both">
+
+
+		<runs-inside>
+			<parent-resource-type name="JBossAS Server"
+				plugin="JBossAS5" />
+		</runs-inside>
+
+		<service name="Virtual Database VDB(s)"
+			description="JBoss Enterprise Data Services Virtual Databases" class="VDBComponent"
+			discovery="VDBDiscoveryComponent" createDeletePolicy="both">
+
+			<resource-configuration>
+				<c:group name="general" displayName="General"
+					hiddenByDefault="false">
+					<c:simple-property name="name" type="string"
+						description="The Virtual Database Name" />
+					<c:simple-property name="version" type="string"
+						description="The Virtual Database Version" />
+					<c:simple-property name="description" type="string"
+						description="The Virtual Database Description" />
+					<c:simple-property name="status" type="string"
+						description="The Virtual Database Status" />
+					<c:simple-property name="url" type="string"
+						description="The Virtual Database URL" />
+				</c:group>
+				<c:group name="models" displayName="Models" hiddenByDefault="false">
+					<c:list-property name="models" description="The models for this VDB.">
+						<c:map-property name="model">
+							<c:simple-property name="name" displayName="Name"
+								description="Name of the model" required="true" />
+							<c:simple-property name="type" displayName="Type"
+								description="Type of model" required="true" />
+							<c:simple-property name="path" displayName="Path"
+								description="Path to the model" required="false" />
+							<c:simple-property name="visibility"
+								displayName="Visible" description="Visbility of the model"
+								required="false" />
+						</c:map-property>
+					</c:list-property>
+				</c:group>
+			</resource-configuration>
+
+			<service name="Models" description="Models that map to a datasource"
+				class="ModelComponent" discovery="ModelDiscoveryComponent"
+				createDeletePolicy="both">
+				<resource-configuration>
+					<c:group name="general" displayName="General"
+						hiddenByDefault="false">
+						<c:simple-property name="name" type="string"
+							description="The model name" readOnly="true" />
+						<c:simple-property name="type" type="string"
+							description="The model type. e.g. Source or Virtual" readOnly="true" />
+						<c:simple-property name="path" type="string"
+							description="The model path" readOnly="true" />
+						<c:simple-property name="modelURI" type="string"
+							description="The model URI" readOnly="true" />
+						<c:simple-property name="source" type="string"
+							description="True if this is a physical source model" readOnly="true" />
+						<c:simple-property name="visible" type="string"
+							description="True if the model is visible" readOnly="true" />
+						<c:simple-property name="modelType" type="string"
+							description="Type for this model" readOnly="true" />
+						<c:simple-property name="supportsMultiSourceBindings"
+							type="string" description="True if this models supports multiple source bindings"
+							readOnly="true" />
+					</c:group>
+					<c:group name="connectors" displayName="Connectors"
+						hiddenByDefault="false">
+						<c:list-property name="connectors"
+							description="The connector(s) for this Model">
+							<c:map-property name="connector">
+								<c:simple-property name="name" displayName="Name"
+									description="Connector for this model" required="true" />
+							</c:map-property>
+						</c:list-property>
+					</c:group>
+				</resource-configuration>
+
+			</service>
+
+		</service>
+
 	</server>
 
 </plugin>

@@ -91,14 +91,7 @@ public interface ConnectionConstants {
 					}
         		}
         		       		
-        		public interface Host {
-					public final static String TYPE = "Runtime.Host"; //$NON-NLS-1$
-
-					public static interface Operations {
-					   	public final static String GET_HOSTS = "getHosts"; //$NON-NLS-1$            
-											
-					}        			
-        		}
+        	
         		
         		public interface Process {
 
@@ -160,6 +153,27 @@ public interface ConnectionConstants {
         	
         	}
         	public interface Resource {
+        		
+        		public interface VDB {
+					public final static String TYPE = "teiid"; //$NON-NLS-1$
+					public final static String SUBTYPE = "vdb"; //$NON-NLS-1$
+
+
+					public static interface Operations {
+											
+					}        			
+        		}
+        		
+        		public interface Model {
+					public final static String TYPE = "teiid"; //$NON-NLS-1$
+					public final static String SUBTYPE = "model"; //$NON-NLS-1$
+
+
+					public static interface Operations {
+											
+					}        			
+        		}
+        		
         		public interface Service {
 
 					public final static String TYPE = "Resource.Service"; //$NON-NLS-1$

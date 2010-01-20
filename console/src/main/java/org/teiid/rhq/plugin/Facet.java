@@ -55,11 +55,9 @@ import org.rhq.core.pluginapi.operation.OperationResult;
 import org.teiid.rhq.admin.utils.SingletonConnectionManager;
 import org.teiid.rhq.comm.Component;
 import org.teiid.rhq.comm.Connection;
-import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.comm.ConnectionException;
 import org.teiid.rhq.comm.ExecutedResult;
 import org.teiid.rhq.comm.VMComponent;
-import org.teiid.rhq.comm.ConnectionConstants.ComponentType;
 import org.teiid.rhq.plugin.objects.ExecutedOperationResultImpl;
 
 
@@ -112,31 +110,6 @@ public abstract class Facet implements ResourceComponent,
 	 */
 	public void start(ResourceContext context) {
 		resourceContext = context;
-		
-		
-		systemKey = resourceContext.getPluginConfiguration()
-				.getSimpleProperties().get(Component.SYSTEM_KEY)
-				.getStringValue();
-		name = resourceContext.getPluginConfiguration().getSimpleProperties()
-				.get(Component.NAME).getStringValue();
-
-		// because the system may not be up, name and
-		// identifier may be null at initial creation
-		// and will be updated when the system becomes available.
-		if (name == null)
-			name = "NotSet"; //$NON-NLS-1$
-
-		identifier = resourceContext.getPluginConfiguration()
-				.getSimpleProperties().get(Component.IDENTIFIER)
-				.getStringValue();
-		if (identifier == null)
-			identifier = "";//$NON-NLS-1$
-		if (resourceContext.getPluginConfiguration().getSimpleProperties().get(
-				VMComponent.PORT) != null) {
-			port = resourceContext.getPluginConfiguration()
-					.getSimpleProperties().get(VMComponent.PORT)
-					.getStringValue();
-		}
 	}
 
 	/**
@@ -244,31 +217,9 @@ public abstract class Facet implements ResourceComponent,
 	 */
 	public AvailabilityType getAvailability() {
 
-		if (!connMgr.hasServersDefined()) {
-			this.isAvailable = false;
-			return AvailabilityType.DOWN;
-			
-		}
-		Connection connection = null;
-		try {
-
-			LOG.debug("Checking availability of  " + identifier); //$NON-NLS-1$
-			connection = getConnection();
-			if (connection.isAvailable(getComponentType(), identifier)) {
-				LOG.info("Availability of  " + identifier + " is up"); //$NON-NLS-1$  //$NON-NLS-2$
-				this.isAvailable = true;
-				return AvailabilityType.UP;
-			} 
-		} catch (InvalidPluginConfigurationException ipce) {
-			// dont log anything, already done when getconnection is called
-		} catch (Throwable err) {
-			LOG.error("Unknown exception occured when checking availability for resource " + identifier, err); //$NON-NLS-1$ 
-		} finally {
-			connection.close();
-		}
-		LOG.error("Availability of  " + identifier + " is down"); //$NON-NLS-1$ //$NON-NLS-2$
-		this.isAvailable = false;
-		return AvailabilityType.DOWN;
+		LOG.debug("Checking availability of  " + identifier); //$NON-NLS-1$
+		
+		return AvailabilityType.UP;
 	}
 
 	/**
@@ -339,9 +290,9 @@ public abstract class Facet implements ResourceComponent,
 			// start with.
 			// note that it is empty, so we're assuming there are no required
 			// configs in the plugin descriptor.
-			resourceConfiguration = new Configuration();
+			resourceConfiguration = this.resourceContext.getPluginConfiguration();
 		}
-
+		
 		Configuration config = resourceConfiguration;
 
 		return config;
@@ -438,4 +389,6 @@ public abstract class Facet implements ResourceComponent,
 	 */
 	public void deleteResource() {
 	}
+	
+	
 }

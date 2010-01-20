@@ -104,7 +104,8 @@ public interface PluginConstants {
 		public interface Connector {
 
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
-			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
+			public final static String SUBTYPE_NOTX = "NoTx"; //$NON-NLS-1$
+			public final static String SUBTYPE_TX = "Tx"; //$NON-NLS-1$
 			public final static String NAME = "Enterprise Connector"; //$NON-NLS-1$
 			public final static String DESCRIPTION = "JBoss Enterprise Connector Binding"; //$NON-NLS-1$
 			
