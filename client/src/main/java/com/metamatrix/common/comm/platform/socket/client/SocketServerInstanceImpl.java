@@ -41,7 +41,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,7 +83,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     
     private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
     
-    private ReentrantLock readLock = new ReentrantLock();
+    private boolean hasReader;
     
     public SocketServerInstanceImpl() {
     	
@@ -318,18 +317,29 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 							TimeoutException {
 						long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
 						long start = System.currentTimeMillis();
-						boolean reading = false;
 						while (!isDone()) {
-							try {
-								if ((reading = readLock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS)) == true && !isDone()) {
-									receivedMessage(socketChannel.read());
+							boolean reading = false;
+							synchronized (SocketServerInstanceImpl.this) {
+								if (!hasReader) {
+									hasReader = true;
+									reading = true;
+								} else if (!isDone()) {
+									SocketServerInstanceImpl.this.wait(Math.max(1, timeoutMillis));
 								}
-							} catch (SocketTimeoutException e) {
-							} catch (Exception e) {
-								exceptionOccurred(e);
-							} finally {
-								if (reading) {
-									readLock.unlock();
+							} 
+							if (reading) {
+								try {
+									if (!isDone()) {
+										receivedMessage(socketChannel.read());
+									}
+								} catch (SocketTimeoutException e) {
+								} catch (Exception e) {
+									exceptionOccurred(e);
+								} finally {
+									synchronized (SocketServerInstanceImpl.this) {
+										hasReader = false;
+										SocketServerInstanceImpl.this.notifyAll();
+									}
 								}
 							}
 							if (!isDone()) {

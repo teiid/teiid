@@ -65,7 +65,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
         		buffer = new byte[4];
         	}
             fillBuffer();
-    		int dataLen = ((buffer[0] & 0xff << 24) + (buffer[1] & 0xff << 16) + (buffer[2] & 0xff << 8) + (buffer[3] & 0xff << 0));
+    		int dataLen = getIntFromBytes(buffer);
 	        if (dataLen <= 0) {
 	            throw new StreamCorruptedException("invalid data length: " + dataLen); //$NON-NLS-1$
 	        }
@@ -86,6 +86,10 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
         buffer = null;
         return new CompactObjectInputStream(bais, classLoader).readObject();
     }
+
+	static int getIntFromBytes(byte[] buffer) {
+		return ((buffer[0] & 0xff) << 24) + ((buffer[1] & 0xff) << 16) + ((buffer[2] & 0xff) << 8) + (buffer[3] & 0xff);
+	}
 
 	private void fillBuffer() throws IOException, EOFException {
 		while (count < buffer.length) {

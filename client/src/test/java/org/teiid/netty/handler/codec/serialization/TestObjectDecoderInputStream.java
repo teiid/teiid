@@ -67,4 +67,13 @@ public class TestObjectDecoderInputStream {
 		assertEquals(obj, result);
 	}
 	
+	@Test public void testLargeIntConversion() throws Exception {
+		int testValue = 204503404;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		dos.writeInt(testValue);
+		dos.close();
+		assertEquals(testValue, ObjectDecoderInputStream.getIntFromBytes(baos.toByteArray()));
+	}
+	
 }
