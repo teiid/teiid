@@ -295,6 +295,7 @@ public class TestSortNode {
     		
     	}
     	tsid.addTuple(Arrays.asList(2));
+    	tsid.addTuple(Arrays.asList(3));
     	su.sort();
     	assertEquals(Arrays.asList(2), ts.nextTuple());
     }
