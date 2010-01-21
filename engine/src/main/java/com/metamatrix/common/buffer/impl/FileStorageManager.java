@@ -48,7 +48,8 @@ import com.metamatrix.query.execution.QueryExecPlugin;
  */
 public class FileStorageManager implements StorageManager {
 	
-    private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
+    private static final int DEFAULT_MAX_OPEN_FILES = 256;
+	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
 	private class FileInfo {
     	private File file;
@@ -155,7 +156,7 @@ public class FileStorageManager implements StorageManager {
 	}
 
     // Initialization
-    private int maxOpenFiles = 32;
+    private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = 2L * 1024L * 1024L * 1024L; // 2GB
     private String directory;
     private File dirFile;
@@ -200,7 +201,7 @@ public class FileStorageManager implements StorageManager {
         }
 
         // Set up max number of open file descriptors
-        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManager.MAX_OPEN_FILES, 32);
+        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManager.MAX_OPEN_FILES, DEFAULT_MAX_OPEN_FILES);
         
         // Set the max file size
         maxFileSize = PropertiesUtils.getIntProperty(props, BufferManager.MAX_FILE_SIZE, 2048) * 1024L * 1024L; // Multiply by 1MB

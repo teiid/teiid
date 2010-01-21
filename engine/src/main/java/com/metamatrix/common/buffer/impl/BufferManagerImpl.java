@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.transform.Source;
 
@@ -60,6 +62,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
+    private int reserveBatches = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private int maxReserveBatches = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private ReentrantLock lock = new ReentrantLock(true);
+    private Condition batchesFreed = lock.newCondition();
     
     private StorageManager diskMgr;
 
@@ -168,6 +174,40 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
             types[i.previousIndex()] = DataTypeManager.getDataTypeName(expr.getType());
         }
         return types;
+    }
+    
+    @Override
+    public void releaseBuffers(int count) {
+    	lock.lock();
+    	try {
+	    	this.reserveBatches += count;
+	    	batchesFreed.signalAll();
+    	} finally {
+    		lock.unlock();
+    	}
+    }	
+    
+    @Override
+    public int reserveBuffers(int count, boolean wait) throws MetaMatrixComponentException {
+    	lock.lock();
+	    try {
+	    	while (wait && count > this.reserveBatches && this.reserveBatches < this.maxReserveBatches / 2) {
+	    		try {
+					batchesFreed.await();
+				} catch (InterruptedException e) {
+					throw new MetaMatrixComponentException(e);
+				}
+	    	}	
+	    	this.reserveBatches -= count;
+	    	if (this.reserveBatches >= 0) {
+	    		return count;
+	    	}
+	    	int result = count + this.reserveBatches;
+	    	this.reserveBatches = 0;
+	    	return result;
+	    } finally {
+    		lock.unlock();
+    	}
     }
 
 	public void shutdown() {

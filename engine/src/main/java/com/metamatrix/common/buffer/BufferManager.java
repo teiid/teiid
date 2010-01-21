@@ -72,8 +72,7 @@ public interface BufferManager {
 	/**
 	 * Optional property - this values specifies how many open file descriptors should be cached
 	 * in the storage directory.  Increasing this value in heavy load may improve performance
-	 * but will use more file descriptors, which are a limited system resource.  The default
-	 * is 32.
+	 * but will use more file descriptors, which are a limited system resource.
 	 */
 	public static final String MAX_OPEN_FILES = "metamatrix.buffer.maxOpenFiles"; //$NON-NLS-1$
 	/**
@@ -88,7 +87,8 @@ public interface BufferManager {
 	
 	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 2048;
 	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 1024;
-	public static int DEFAULT_MAX_PROCESSING_BATCHES = 16;
+	public static int DEFAULT_MAX_PROCESSING_BATCHES = 8;
+	public static int DEFAULT_RESERVE_BUFFERS = 64;
 
     /**
      * Get the batch size to use during query processing.  
@@ -105,8 +105,35 @@ public interface BufferManager {
 	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws MetaMatrixComponentException;
 	
+	/**
+	 * Return the maximum number of batches that can be temporarily held potentially 
+	 * across even a blocked exception.
+	 * @return
+	 */
     int getMaxProcessingBatches();
     
+    /**
+     * Creates a new {@link FileStore}.  See {@link FileStore#setCleanupReference(Object)} to
+     * automatically cleanup the underlying resources.
+     * @param name
+     * @return
+     */
     FileStore createFileStore(String name);
+    
+    /**
+     * Reserve up to count buffers for use.  Wait will cause the process to block until
+     * all of the requested or half of the total buffers are available.
+     * @param count
+     * @param wait
+     * @return
+     * @throws MetaMatrixComponentException
+     */
+    int reserveBuffers(int count, boolean wait) throws MetaMatrixComponentException;
+    
+    /**
+     * Releases the buffers reserved by a call to {@link BufferManager#reserveBuffers(int, boolean)}
+     * @param count
+     */
+    void releaseBuffers(int count);
     
 }
