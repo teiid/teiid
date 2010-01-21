@@ -755,7 +755,7 @@
               <para>ASCII(x)</para>
             </entry>
             <entry>
-              <para>Provide ASCII value of the left most character in x.  The empty string will as input will return null.</para>
+              <para>Provide ASCII value of the left most character in x.  The empty string will as input will return null. <footnoteref linkend="nonAscii"/></para>
             </entry>
             <entry>
               <para>return type is integer</para>
@@ -766,7 +766,11 @@
               <para>CHR(x) CHAR(x)</para>
             </entry>
             <entry>
-              <para>Provide the character for ASCII value x</para>
+              <para>Provide the character for ASCII value x 
+              	<footnote label="1" id="nonAscii"><para>Non-ASCII range characters or integers used in these functions 
+              	may produce different results or exceptions depending on where the function is evalutated (Teiid vs. source).  
+              	Teiid's uses Java default int to char and char to int conversions, which operates over UTF16 values.</para></footnote>
+              </para>
             </entry>
             <entry>
               <para>x in {integer}</para>
