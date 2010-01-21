@@ -323,4 +323,14 @@ public class TestMySQLTranslator {
             input, 
             output, TRANSLATOR);        
     }
+    
+    @Test public void testChar() throws Exception {
+    	String input = "SELECT intkey, CHR(CONVERT(bigintegervalue, integer)) FROM BQT1.MediumA"; //$NON-NLS-1$
+        String output = "SELECT MediumA.IntKey, char(cast(MediumA.BigIntegerValue AS signed)) FROM MediumA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
 }

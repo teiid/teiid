@@ -22,33 +22,33 @@
 
 package org.teiid.connector.jdbc.mysql;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IFunction;
+import org.teiid.connector.jdbc.TranslationHelper;
 
-public class MySQL5Translator extends MySQLTranslator {
-	
-	@Override
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
-        super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
-			
-			@Override
-			public List<?> translate(IFunction function) {
-				return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-	}
-	
-	@Override
-	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-		return MySQL5Capabilities.class;
-	}
-	
+import com.metamatrix.cdk.api.EnvironmentUtility;
+
+/**
+ */
+public class TestMySQL5Translator {
+
+    private static MySQL5Translator TRANSLATOR; 
+    
+    @BeforeClass public static void oneTimeSetup() throws ConnectorException {
+        TRANSLATOR = new MySQL5Translator();        
+        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+    }
+
+    @Test public void testChar() throws Exception {
+    	String input = "SELECT intkey, CHR(CONVERT(bigintegervalue, integer)) FROM BQT1.MediumA"; //$NON-NLS-1$
+        String output = "SELECT MediumA.IntKey, char(cast(MediumA.BigIntegerValue AS signed) USING ASCII) FROM MediumA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
 }
