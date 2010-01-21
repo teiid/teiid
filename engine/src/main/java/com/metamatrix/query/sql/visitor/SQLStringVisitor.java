@@ -1157,7 +1157,7 @@ public class SQLStringVisitor extends LanguageVisitor {
  	 * @param str String literal value (unquoted), never null
  	 * @return Escaped string literal value
  	 */
-    protected String escapeStringValue(String str, String tick) {
+    static String escapeStringValue(String str, String tick) {
         return StringUtil.replaceAll(str, tick, tick + tick);
     }
 
@@ -1551,7 +1551,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(registerNode(obj.getRowLimit()));
     }
 
-    private String escapeSinglePart(String part) {
+    public static String escapeSinglePart(String part) {
     	if(isReservedWord(part)) {
     	    return ID_ESCAPE_CHAR + part + ID_ESCAPE_CHAR;
     	}
@@ -1576,7 +1576,7 @@ public class SQLStringVisitor extends LanguageVisitor {
      * @param string String to check
      * @return True if reserved word
      */
-    protected boolean isReservedWord(String string) {
+    static boolean isReservedWord(String string) {
     	if(string == null) {
     	    return false;
     	}
