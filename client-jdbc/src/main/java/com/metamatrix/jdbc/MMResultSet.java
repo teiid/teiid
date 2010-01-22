@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -365,7 +367,11 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
     	checkClosed();
         try {
         	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
-        	ResultsMessage currentResultMsg = results.get();
+        	int timeoutSeconds = statement.getQueryTimeout();
+        	if (timeoutSeconds == 0) {
+        		timeoutSeconds = Integer.MAX_VALUE;
+        	}
+        	ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
     		this.setResultsData(currentResultMsg);
     		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
     		return getCurrentBatch(currentResultMsg);
@@ -374,6 +380,8 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		} catch (InterruptedException e) {
 			throw MMSQLException.create(e);
 		} catch (ExecutionException e) {
+			throw MMSQLException.create(e);
+		} catch (TimeoutException e) {
 			throw MMSQLException.create(e);
 		}
     }
