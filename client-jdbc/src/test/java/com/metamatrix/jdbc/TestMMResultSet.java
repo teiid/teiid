@@ -33,6 +33,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import junit.framework.TestCase;
 
@@ -692,6 +693,8 @@ public class TestMMResultSet extends TestCase {
 		} catch (InterruptedException e) {
 			throw new SQLException(e.getMessage());
 		} catch (ExecutionException e) {
+			throw new SQLException(e.getMessage());
+		} catch (TimeoutException e) {
 			throw new SQLException(e.getMessage());
 		}
     }

@@ -35,6 +35,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.mockito.Matchers;
 
 import junit.framework.TestCase;
 
@@ -772,20 +776,20 @@ public class TestAllResultsImpl extends TestCase {
 	
 	static MMResultSet helpTestBatching(MMStatement statement, int fetchSize, int batchLength,
 			int totalLength) throws InterruptedException, ExecutionException,
-			MetaMatrixProcessingException, SQLException {
+			MetaMatrixProcessingException, SQLException, TimeoutException {
 		ClientSideDQP dqp = mock(ClientSideDQP.class);
 		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getFetchSize()).toReturn(fetchSize);
 		for (int i = batchLength; i < totalLength; i += batchLength) {
 			//forward requests
 			ResultsFuture<ResultsMessage> nextBatch = mock(ResultsFuture.class);
-			stub(nextBatch.get()).toReturn(exampleResultsMsg4(i + 1, Math.min(batchLength, totalLength - i), fetchSize, i + batchLength >= totalLength));
+			stub(nextBatch.get(Matchers.anyLong(), (TimeUnit)Matchers.anyObject())).toReturn(exampleResultsMsg4(i + 1, Math.min(batchLength, totalLength - i), fetchSize, i + batchLength >= totalLength));
 			stub(dqp.processCursorRequest(REQUEST_ID, i + 1, fetchSize)).toReturn(nextBatch);
 			
 			if (i + batchLength < totalLength) {
 				//backward requests
 				ResultsFuture<ResultsMessage> previousBatch = mock(ResultsFuture.class);
-				stub(previousBatch.get()).toReturn(exampleResultsMsg4(i - batchLength + 1, i, fetchSize, false));
+				stub(previousBatch.get(Matchers.anyLong(), (TimeUnit)Matchers.anyObject())).toReturn(exampleResultsMsg4(i - batchLength + 1, i, fetchSize, false));
 				stub(dqp.processCursorRequest(REQUEST_ID, i, fetchSize)).toReturn(previousBatch);
 			}
 		}
