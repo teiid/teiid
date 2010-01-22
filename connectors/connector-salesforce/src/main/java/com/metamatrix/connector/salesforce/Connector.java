@@ -33,13 +33,17 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.CredentialMap;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
 @ConnectionPooling
-public class Connector extends org.teiid.connector.basic.BasicConnector {
+public class Connector extends org.teiid.connector.basic.BasicConnector implements MetadataProvider {
 
+	private static Connector connector;
+	
 	private ConnectorLogger logger;
 
 	private ConnectorEnvironment connectorEnv;
@@ -50,6 +54,10 @@ public class Connector extends org.teiid.connector.basic.BasicConnector {
 	private URL url;
 	private SalesforceCapabilities salesforceCapabilites;
 
+	public Connector() {
+		connector = this;
+	}
+	
 	// ///////////////////////////////////////////////////////////
 	// Connector implementation
 	// ///////////////////////////////////////////////////////////
@@ -156,5 +164,16 @@ public class Connector extends org.teiid.connector.basic.BasicConnector {
 	@Override
 	public ConnectorCapabilities getCapabilities() {
 		return salesforceCapabilites;
+	}
+
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory)
+			throws ConnectorException {
+		MetadataProcessor processor = new MetadataProcessor((SalesforceConnection)getConnection(null),metadataFactory, logger);
+		processor.processMetadata();
+	}
+	
+	public static Connector getConnector() {
+		return connector;
 	}
 }

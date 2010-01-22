@@ -47,6 +47,8 @@ import com.metamatrix.connector.salesforce.execution.ProcedureExecutionParentImp
 import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdateExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdatedResult;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
@@ -175,5 +177,13 @@ public class SalesforceConnection extends BasicConnection {
 		QueryResult result = new QueryResult(true, "teiid_created_result",
 		           objects, objects.length);
 		return result;
+	}
+	
+	public DescribeGlobalResult getObjects() throws ConnectorException {
+		return connection.getObjects();
+	}
+	
+	public DescribeSObjectResult getObjectMetaData(String objectName) throws ConnectorException {
+		return connection.getObjectMetaData(objectName);
 	}
 }

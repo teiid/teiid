@@ -48,6 +48,8 @@ import com.metamatrix.connector.salesforce.execution.UpdatedResult;
 import com.sforce.soap.partner.CallOptions;
 import com.sforce.soap.partner.DeleteResult;
 import com.sforce.soap.partner.DeletedRecord;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.GetDeletedResult;
 import com.sforce.soap.partner.GetUpdatedResult;
 import com.sforce.soap.partner.LoginResult;
@@ -335,6 +337,28 @@ public class ConnectionImpl {
 		try {
 			return binding.retrieve(fieldList, sObjectType, ids);
 		} catch (ApiFault e) {
+			throw new ConnectorException(e.getMessage());
+		} catch (RemoteException e) {
+			throw new ConnectorException(e, e.getMessage());
+		}
+	}
+
+	public DescribeGlobalResult getObjects() throws ConnectorException {
+		try {
+			return binding.describeGlobal();
+		} catch (RemoteException e) {
+			ConnectorException ce = new ConnectorException(e.getCause().getMessage());
+			ce.initCause(e.getCause());
+			throw ce;
+		}
+	}
+
+	public DescribeSObjectResult getObjectMetaData(String objectName) throws ConnectorException {
+		try {
+			return binding.describeSObject(objectName);
+		} catch (InvalidSObjectFault e) {
+			throw new ConnectorException(e.getExceptionMessage());
+		} catch (UnexpectedErrorFault e) {
 			throw new ConnectorException(e.getMessage());
 		} catch (RemoteException e) {
 			throw new ConnectorException(e, e.getMessage());

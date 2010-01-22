@@ -34,11 +34,12 @@ public class ConnectorState {
 	public static final String USERNAME = "username";
 	public static final String PASSWORD = "password";
 	public static final String URL = "URL";
+	public static final String MODEL_AUDIT_FIELDS = "ModelAuditFields";
 	
 	String username;
 	String password;
 	URL url;
-	
+	boolean modelAuditFields;
 	
 	public ConnectorState(Properties props, ConnectorLogger logger) throws ConnectorException {
 		if (logger == null) {
@@ -65,6 +66,11 @@ public class ConnectorState {
 			}
 			setUrl(salesforceURL);
 		}
+		
+		Boolean modelAudits = Boolean.valueOf(props.getProperty(MODEL_AUDIT_FIELDS));
+        if (modelAudits) {
+            setModelAuditFields(modelAudits);
+        }
 	}
 
 	private void setUrl(URL salesforceURL) {
@@ -90,5 +96,12 @@ public class ConnectorState {
 	public String getPassword() {
 		return password;
 	}
+	
+	public void setModelAuditFields(boolean modelAuditFields) {
+		this.modelAuditFields = modelAuditFields;
+	}
 
+	public boolean isModelAuditFields() {
+		return modelAuditFields;
+	}
 }

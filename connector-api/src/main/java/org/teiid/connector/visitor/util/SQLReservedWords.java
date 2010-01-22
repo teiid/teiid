@@ -22,7 +22,10 @@
 
 package org.teiid.connector.visitor.util;
 
-public interface SQLReservedWords {
+import java.util.HashSet;
+import java.util.Set;
+
+public class SQLReservedWords {
 
     public static final String ANY = "ANY"; //$NON-NLS-1$
     public static final String ALL = "ALL"; //$NON-NLS-1$
@@ -145,4 +148,44 @@ public interface SQLReservedWords {
 
     public static final String LPAREN = "("; //$NON-NLS-1$
     public static final String RPAREN = ")"; //$NON-NLS-1$
+    
+    public static final String[] ALL_WORDS = new String[] {ALL, ALL_COLS, AND, ANY, AS, ASC, AVG, BEGIN, BETWEEN, BIGINTEGER,
+        BIGDECIMAL, BREAK, BY, BYTE, CASE, CAST, CHAR, CONVERT, CONTINUE, COUNT, CREATE, CRITERIA, CROSS, DATE, DEBUG, DECLARE,
+        DELETE, DESC, DISTINCT, DOUBLE, ELSE, END, ERROR, ESCAPE, EXCEPT, EXEC, EXECUTE, EXISTS, FALSE, FLOAT, FOR, FROM, FULL,
+        GROUP, HAS, HAVING, IF, IN, INNER, INSERT, INTEGER, INTERSECT, INTO, IS, JOIN, LEFT, LIKE, LONG, LOOP, MAKEDEP, MIN, MAX,
+        NOT, NULL, OBJECT, ON, OR, ORDER, OPTION, OUTER, PROCEDURE, RIGHT, SELECT, SET, SHORT, SHOWPLAN, SOME,
+        SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH,
+        SQL_TSI_QUARTER, SQL_TSI_YEAR, STRING, SUM, THEN, TIME, TIMESTAMP, TIMESTAMPADD, TIMESTAMPDIFF, TRANSLATE, TRUE, UNION,
+        UNKNOWN, UPDATE, USING, VALUES, VIRTUAL, WHEN, WITH, WHERE, WHILE,};
+
+    /**
+     * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
+     */
+    private static final Set RESERVED_WORDS = new HashSet();
+
+    // Initialize RESERVED_WORDS set
+    static {
+        // Iterate through the reserved words and capitalize all of them
+        for (int i = 0; i != SQLReservedWords.ALL_WORDS.length; ++i) {
+            String reservedWord = SQLReservedWords.ALL_WORDS[i];
+            SQLReservedWords.RESERVED_WORDS.add(reservedWord.toUpperCase());
+        }
+    }
+
+    /** Can't construct */
+    private SQLReservedWords() {
+    }
+
+    /**
+     * Check whether a string is a reserved word.
+     * 
+     * @param str String to check
+     * @return True if reserved word, false if not or null
+     */
+    public static final boolean isReservedWord( String str ) {
+        if (str == null) {
+            return false;
+        }
+        return RESERVED_WORDS.contains(str.toUpperCase());
+    }
 }

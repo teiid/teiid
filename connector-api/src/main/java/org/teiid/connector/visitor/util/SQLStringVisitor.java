@@ -82,7 +82,7 @@ import com.metamatrix.core.util.StringUtil;
  * Creates a SQL string for a LanguageObject subtree. Instances of this class
  * are not reusable, and are not thread-safe.
  */
-public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLReservedWords {
+public class SQLStringVisitor extends AbstractLanguageVisitor {
    
     private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
     		"&", "|", "^", "#"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
@@ -130,8 +130,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         if (items != null && items.size() != 0) {
             append(items.get(0));
             for (int i = 1; i < items.size(); i++) {
-                buffer.append(COMMA)
-                      .append(SPACE);
+                buffer.append(SQLReservedWords.COMMA)
+                      .append(SQLReservedWords.SPACE);
                 append(items.get(i));
             }
         }
@@ -146,8 +146,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         if (items != null && items.length != 0) {
             append(items[0]);
             for (int i = 1; i < items.length; i++) {
-                buffer.append(COMMA)
-                      .append(SPACE);
+                buffer.append(SQLReservedWords.COMMA)
+                      .append(SQLReservedWords.SPACE);
                 append(items[i]);
             }
         }
@@ -171,19 +171,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(IAggregate obj) {
         buffer.append(obj.getName())
-              .append(LPAREN);
+              .append(SQLReservedWords.LPAREN);
         
         if ( obj.isDistinct()) {
-            buffer.append(DISTINCT)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.DISTINCT)
+                  .append(SQLReservedWords.SPACE);
         }
         
         if (obj.getExpression() == null) {
-             buffer.append(ALL_COLS);
+             buffer.append(SQLReservedWords.ALL_COLS);
         } else {
             append(obj.getExpression());
         }
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
 
     /**
@@ -191,18 +191,18 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(ICompareCriteria obj) {
         append(obj.getLeftExpression());
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         
         switch(obj.getOperator()) {
-            case EQ: buffer.append(EQ); break;
-            case GE: buffer.append(GE); break;
-            case GT: buffer.append(GT); break;
-            case LE: buffer.append(LE); break;
-            case LT: buffer.append(LT); break;
-            case NE: buffer.append(NE); break;
+            case EQ: buffer.append(SQLReservedWords.EQ); break;
+            case GE: buffer.append(SQLReservedWords.GE); break;
+            case GT: buffer.append(SQLReservedWords.GT); break;
+            case LE: buffer.append(SQLReservedWords.LE); break;
+            case LT: buffer.append(SQLReservedWords.LT); break;
+            case NE: buffer.append(SQLReservedWords.NE); break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         append(obj.getRightExpression());
     }
 
@@ -212,8 +212,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(ICompoundCriteria obj) {
         String opString = null;
         switch(obj.getOperator()) {
-            case AND: opString = AND; break;
-            case OR:  opString = OR;  break;
+            case AND: opString = SQLReservedWords.AND; break;
+            case OR:  opString = SQLReservedWords.OR;  break;
             default: opString = UNDEFINED;
         }
         
@@ -224,16 +224,16 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             // Special case - should really never happen, but we are tolerant
             append((ILanguageObject)criteria.get(0));
         } else {
-            buffer.append(LPAREN);
+            buffer.append(SQLReservedWords.LPAREN);
             append((ILanguageObject)criteria.get(0));
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
             for (int i = 1; i < criteria.size(); i++) {
-                buffer.append(SPACE)
+                buffer.append(SQLReservedWords.SPACE)
                       .append(opString)
-                      .append(SPACE)
-                      .append(LPAREN);
+                      .append(SQLReservedWords.SPACE)
+                      .append(SQLReservedWords.LPAREN);
                 append((ILanguageObject)criteria.get(i));
-                buffer.append(RPAREN);
+                buffer.append(SQLReservedWords.RPAREN);
             }
             
         }
@@ -243,16 +243,16 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IDelete)
      */
     public void visit(IDelete obj) {
-        buffer.append(DELETE)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.DELETE)
+              .append(SQLReservedWords.SPACE);
         buffer.append(getSourceComment(obj));
-        buffer.append(FROM)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.FROM)
+              .append(SQLReservedWords.SPACE);
         append(obj.getGroup());
         if (obj.getCriteria() != null) {
-            buffer.append(SPACE)
-                  .append(WHERE)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.WHERE)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getCriteria());
         }
     }
@@ -319,7 +319,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         // If not, do normal logic:  [group + "."] + element
         if(groupName != null) {
         	elementName.append(groupName);
-        	elementName.append(DOT);
+        	elementName.append(SQLReservedWords.DOT);
         }
         elementName.append(elemShortName);
         return elementName.toString();
@@ -342,8 +342,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExecute)
      */
     public void visit(IProcedure obj) {              
-        buffer.append(EXEC)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.EXEC)
+              .append(SQLReservedWords.SPACE);
         
         if(obj.getMetadataObject() != null) {
             buffer.append(getName(obj.getMetadataObject()));                         
@@ -351,7 +351,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             buffer.append(obj.getProcedureName());
         }
               
-        buffer.append(LPAREN);
+        buffer.append(SQLReservedWords.LPAREN);
         final List params = obj.getParameters();
         if (params != null && params.size() != 0) {
             IParameter param = null;
@@ -359,8 +359,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                 param = (IParameter)params.get(i);
                 if (param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT) {
                     if (i != 0) {
-                        buffer.append(COMMA)
-                              .append(SPACE);
+                        buffer.append(SQLReservedWords.COMMA)
+                              .append(SQLReservedWords.SPACE);
                     }
                     if (param.getValue() != null) {
                         buffer.append(param.getValue().toString());
@@ -370,26 +370,26 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                 }
             }
         }
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
 
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
      */
     public void visit(IExistsCriteria obj) {
-        buffer.append(EXISTS)
-              .append(SPACE)
-              .append(LPAREN);
+        buffer.append(SQLReservedWords.EXISTS)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.LPAREN);
         append(obj.getQuery());
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
     
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IFrom)
      */
     public void visit(IFrom obj) {
-        buffer.append(FROM)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.FROM)
+              .append(SQLReservedWords.SPACE);
         append(obj.getItems());
     }
         
@@ -404,61 +404,61 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
 
         String name = obj.getName();
         List<IExpression> args = obj.getParameters();
-        if(name.equalsIgnoreCase(CONVERT) || name.equalsIgnoreCase(CAST)) { 
+        if(name.equalsIgnoreCase(SQLReservedWords.CONVERT) || name.equalsIgnoreCase(SQLReservedWords.CAST)) { 
             
             Object typeValue = ((ILiteral)args.get(1)).getValue();
                
             buffer.append(name);
-            buffer.append(LPAREN); 
+            buffer.append(SQLReservedWords.LPAREN); 
             
             append(args.get(0));
 
-            if(name.equalsIgnoreCase(CONVERT)) { 
-                buffer.append(COMMA); 
-                buffer.append(SPACE); 
+            if(name.equalsIgnoreCase(SQLReservedWords.CONVERT)) { 
+                buffer.append(SQLReservedWords.COMMA); 
+                buffer.append(SQLReservedWords.SPACE); 
             } else {
-                buffer.append(SPACE); 
-                buffer.append(AS); 
-                buffer.append(SPACE); 
+                buffer.append(SQLReservedWords.SPACE); 
+                buffer.append(SQLReservedWords.AS); 
+                buffer.append(SQLReservedWords.SPACE); 
             }
             buffer.append(typeValue);
-            buffer.append(RPAREN); 
+            buffer.append(SQLReservedWords.RPAREN); 
         } else if(isInfixFunction(name)) { 
-            buffer.append(LPAREN); 
+            buffer.append(SQLReservedWords.LPAREN); 
 
             if(args != null) {
                 for(int i=0; i<args.size(); i++) {
                     append(args.get(i));
                     if(i < (args.size()-1)) {
-                        buffer.append(SPACE);
+                        buffer.append(SQLReservedWords.SPACE);
                         buffer.append(name);
-                        buffer.append(SPACE);
+                        buffer.append(SQLReservedWords.SPACE);
                     }
                 }
             }
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
 
-        } else if(name.equalsIgnoreCase(TIMESTAMPADD) || name.equalsIgnoreCase(TIMESTAMPDIFF)) {
+        } else if(name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPDIFF)) {
             buffer.append(name);
-            buffer.append(LPAREN); 
+            buffer.append(SQLReservedWords.LPAREN); 
 
             if(args != null && args.size() > 0) {
                 buffer.append(((ILiteral)args.get(0)).getValue());
 
                 for(int i=1; i<args.size(); i++) {
-                	buffer.append(COMMA); 
-                    buffer.append(SPACE);
+                	buffer.append(SQLReservedWords.COMMA); 
+                    buffer.append(SQLReservedWords.SPACE);
                 	append(args.get(i));
                 }
             }
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
 
         } else {
 
             buffer.append(obj.getName())
-                  .append(LPAREN);
+                  .append(SQLReservedWords.LPAREN);
             append(obj.getParameters());
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
         }
     }
 
@@ -478,10 +478,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         }        
         
         if (obj.getDefinition() != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             if (useAsInGroupAlias()){
-                buffer.append(AS)
-                      .append(SPACE);
+                buffer.append(SQLReservedWords.AS)
+                      .append(SQLReservedWords.SPACE);
             }
         	buffer.append(obj.getContext());
         }
@@ -502,10 +502,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IGroupBy)
      */
     public void visit(IGroupBy obj) {
-        buffer.append(GROUP)
-              .append(SPACE)
-              .append(BY)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.GROUP)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.BY)
+              .append(SQLReservedWords.SPACE);
         append(obj.getElements());
     }
 
@@ -515,29 +515,29 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IInCriteria obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SPACE)
-                  .append(NOT);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.NOT);
         }
-        buffer.append(SPACE)
-              .append(IN)
-              .append(SPACE)
-              .append(LPAREN);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.IN)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.LPAREN);
         append(obj.getRightExpressions());
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
 
     public void visit(IInlineView obj) {
-        buffer.append(LPAREN);
+        buffer.append(SQLReservedWords.LPAREN);
         if (obj.getOutput() != null) {
         	buffer.append(obj.getOutput());
         } else {
         	append(obj.getQuery());
         }
-        buffer.append(RPAREN);
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.RPAREN);
+        buffer.append(SQLReservedWords.SPACE);
         if(useAsInGroupAlias()) {
-            buffer.append(AS);
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.AS);
+            buffer.append(SQLReservedWords.SPACE);
         }
         buffer.append(obj.getContext());
     }
@@ -546,33 +546,33 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
-    	buffer.append(INSERT).append(SPACE);
+    	buffer.append(SQLReservedWords.INSERT).append(SQLReservedWords.SPACE);
 		buffer.append(getSourceComment(obj));
-		buffer.append(INTO).append(SPACE);
+		buffer.append(SQLReservedWords.INTO).append(SQLReservedWords.SPACE);
 		append(obj.getGroup());
 		if (obj.getElements() != null && obj.getElements().size() != 0) {
-			buffer.append(SPACE).append(LPAREN);
+			buffer.append(SQLReservedWords.SPACE).append(SQLReservedWords.LPAREN);
 
 			int elementCount = obj.getElements().size();
 			for (int i = 0; i < elementCount; i++) {
 				buffer.append(getElementName(obj.getElements().get(i), false));
 				if (i < elementCount - 1) {
-					buffer.append(COMMA);
-					buffer.append(SPACE);
+					buffer.append(SQLReservedWords.COMMA);
+					buffer.append(SQLReservedWords.SPACE);
 				}
 			}
 
-			buffer.append(RPAREN);
+			buffer.append(SQLReservedWords.RPAREN);
 		}
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         append(obj.getValueSource());
     }
     
     @Override
 	public void visit(IInsertExpressionValueSource obj) {
-		buffer.append(VALUES).append(SPACE).append(LPAREN);
+		buffer.append(SQLReservedWords.VALUES).append(SQLReservedWords.SPACE).append(SQLReservedWords.LPAREN);
 		append(obj.getValues());
-		buffer.append(RPAREN);
+		buffer.append(SQLReservedWords.RPAREN);
 	}
         
     /**
@@ -580,14 +580,14 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(IIsNullCriteria obj) {
         append(obj.getExpression());
-        buffer.append(SPACE)
-              .append(IS)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.IS)
+              .append(SQLReservedWords.SPACE);
         if (obj.isNegated()) {
-            buffer.append(NOT)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.NOT)
+                  .append(SQLReservedWords.SPACE);
         }
-        buffer.append(NULL);
+        buffer.append(SQLReservedWords.NULL);
     }
 
     /**
@@ -596,56 +596,56 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IJoin obj) {
         IFromItem leftItem = obj.getLeftItem();
         if(useParensForJoins() && leftItem instanceof IJoin) {
-            buffer.append(LPAREN);
+            buffer.append(SQLReservedWords.LPAREN);
             append(leftItem);
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
         } else {
             append(leftItem);
         }
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         
         switch(obj.getJoinType()) {
             case CROSS_JOIN:
-                buffer.append(CROSS);
+                buffer.append(SQLReservedWords.CROSS);
                 break;
             case FULL_OUTER_JOIN:
-                buffer.append(FULL)
-                      .append(SPACE)
-                      .append(OUTER);
+                buffer.append(SQLReservedWords.FULL)
+                      .append(SQLReservedWords.SPACE)
+                      .append(SQLReservedWords.OUTER);
                 break;
             case INNER_JOIN:
-                buffer.append(INNER);
+                buffer.append(SQLReservedWords.INNER);
                 break;
             case LEFT_OUTER_JOIN:
-                buffer.append(LEFT)
-                      .append(SPACE)
-                      .append(OUTER);
+                buffer.append(SQLReservedWords.LEFT)
+                      .append(SQLReservedWords.SPACE)
+                      .append(SQLReservedWords.OUTER);
                 break;
             case RIGHT_OUTER_JOIN:
-                buffer.append(RIGHT)
-                      .append(SPACE)
-                      .append(OUTER);
+                buffer.append(SQLReservedWords.RIGHT)
+                      .append(SQLReservedWords.SPACE)
+                      .append(SQLReservedWords.OUTER);
                 break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SPACE)
-              .append(JOIN)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.JOIN)
+              .append(SQLReservedWords.SPACE);
         
         IFromItem rightItem = obj.getRightItem();
         if(rightItem instanceof IJoin && (useParensForJoins() || obj.getJoinType() == IJoin.JoinType.CROSS_JOIN)) {
-            buffer.append(LPAREN);
+            buffer.append(SQLReservedWords.LPAREN);
             append(rightItem);
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
         } else {
             append(rightItem);
         }
         
         final List criteria = obj.getCriteria();
         if (criteria != null && criteria.size() != 0) {
-            buffer.append(SPACE)
-                  .append(ON)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.ON)
+                  .append(SQLReservedWords.SPACE);
 
             Iterator critIter = criteria.iterator();
             while(critIter.hasNext()) {
@@ -653,15 +653,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                 if(crit instanceof IPredicateCriteria) {
                     append(crit);                    
                 } else {
-                    buffer.append(LPAREN);
+                    buffer.append(SQLReservedWords.LPAREN);
                     append(crit);                    
-                    buffer.append(RPAREN);
+                    buffer.append(SQLReservedWords.RPAREN);
                 }
                 
                 if(critIter.hasNext()) {
-                    buffer.append(SPACE)
-                          .append(AND)
-                          .append(SPACE);
+                    buffer.append(SQLReservedWords.SPACE)
+                          .append(SQLReservedWords.AND)
+                          .append(SQLReservedWords.SPACE);
                 }
             }
         }        
@@ -673,31 +673,31 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(ILikeCriteria obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SPACE)
-                  .append(NOT);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.NOT);
         }
-        buffer.append(SPACE)
-              .append(LIKE)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.LIKE)
+              .append(SQLReservedWords.SPACE);
         append(obj.getRightExpression());
         if (obj.getEscapeCharacter() != null) {
-            buffer.append(SPACE)
-                  .append(ESCAPE)
-                  .append(SPACE)
-                  .append(QUOTE)
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.ESCAPE)
+                  .append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.QUOTE)
                   .append(obj.getEscapeCharacter().toString())
-                  .append(QUOTE);
+                  .append(SQLReservedWords.QUOTE);
         }
         
     }
     
     public void visit(ILimit obj) {
-        buffer.append(LIMIT)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.LIMIT)
+              .append(SQLReservedWords.SPACE);
         if (obj.getRowOffset() > 0) {
             buffer.append(obj.getRowOffset())
-                  .append(COMMA)
-                  .append(SPACE);
+                  .append(SQLReservedWords.COMMA)
+                  .append(SQLReservedWords.SPACE);
         }
         buffer.append(obj.getRowLimit());
     }
@@ -709,7 +709,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     	if (obj.isBindValue()) {
     		buffer.append("?"); //$NON-NLS-1$
     	} else if (obj.getValue() == null) {
-            buffer.append(NULL);
+            buffer.append(SQLReservedWords.NULL);
         } else {
             Class type = obj.getType();
             String val = obj.getValue().toString();
@@ -732,9 +732,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else {
-                buffer.append(QUOTE)
-                      .append(escapeString(val, QUOTE))
-                      .append(QUOTE);
+                buffer.append(SQLReservedWords.QUOTE)
+                      .append(escapeString(val, SQLReservedWords.QUOTE))
+                      .append(SQLReservedWords.QUOTE);
             }
         }
     }
@@ -743,21 +743,21 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.INotCriteria)
      */
     public void visit(INotCriteria obj) {
-        buffer.append(NOT)
-              .append(SPACE)
-              .append(LPAREN);
+        buffer.append(SQLReservedWords.NOT)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.LPAREN);
         append(obj.getCriteria());
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
 
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IOrderBy)
      */
     public void visit(IOrderBy obj) {
-        buffer.append(ORDER)
-              .append(SPACE)
-              .append(BY)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.ORDER)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.BY)
+              .append(SQLReservedWords.SPACE);
         append(obj.getItems());
     }
 
@@ -774,8 +774,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             buffer.append(UNDEFINED);
         }
         if (obj.getDirection() == IOrderByItem.DESC) {
-            buffer.append(SPACE)
-                  .append(DESC);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.DESC);
         } // Don't print default "ASC"
     }
 
@@ -786,7 +786,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         if (obj.getValue() == null) {
             buffer.append(UNDEFINED_PARAM);
         } else if (obj.getValue() == null) {
-            buffer.append(NULL);
+            buffer.append(SQLReservedWords.NULL);
         } else {
             buffer.append(obj.getValue().toString());
         }
@@ -798,31 +798,31 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IQuery obj) {
         visitSelect(obj.getSelect(), obj);
         if (obj.getFrom() != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(obj.getFrom());
         }
         if (obj.getWhere() != null) {
-            buffer.append(SPACE)
-                  .append(WHERE)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.WHERE)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getWhere());
         }
         if (obj.getGroupBy() != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(obj.getGroupBy());
         }
         if (obj.getHaving() != null) {
-            buffer.append(SPACE)
-                  .append(HAVING)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.HAVING)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getHaving());
         }
         if (obj.getOrderBy() != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(obj.getOrderBy());
         }
         if (obj.getLimit() != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(obj.getLimit());
         }
     }
@@ -831,26 +831,26 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ISearchedCaseExpression)
      */
     public void visit(ISearchedCaseExpression obj) {
-        buffer.append(CASE);
+        buffer.append(SQLReservedWords.CASE);
         final int whenCount = obj.getWhenCount();
         for (int i = 0; i < whenCount; i++) {
-            buffer.append(SPACE)
-                  .append(WHEN)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.WHEN)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getWhenCriteria(i));
-            buffer.append(SPACE)
-                  .append(THEN)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.THEN)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getThenExpression(i));
         }
         if (obj.getElseExpression() != null) {
-            buffer.append(SPACE)
-                  .append(ELSE)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.ELSE)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getElseExpression());
         }
-        buffer.append(SPACE)
-              .append(END);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.END);
     }
 
     /**
@@ -861,10 +861,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     }
 
 	private void visitSelect(ISelect obj, ICommand command) {
-		buffer.append(SELECT).append(SPACE);
+		buffer.append(SQLReservedWords.SELECT).append(SQLReservedWords.SPACE);
         buffer.append(getSourceComment(command));
         if (obj.isDistinct()) {
-            buffer.append(DISTINCT).append(SPACE);
+            buffer.append(SQLReservedWords.DISTINCT).append(SQLReservedWords.SPACE);
         }
         append(obj.getSelectSymbols());
 	}
@@ -877,9 +877,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IScalarSubquery)
      */
     public void visit(IScalarSubquery obj) {
-        buffer.append(LPAREN);   
+        buffer.append(SQLReservedWords.LPAREN);   
         append(obj.getQuery());     
-        buffer.append(RPAREN);        
+        buffer.append(SQLReservedWords.RPAREN);        
     }
 
     /**
@@ -888,9 +888,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(ISelectSymbol obj) {
         append(obj.getExpression());
         if (obj.hasAlias()) {
-            buffer.append(SPACE)
-                  .append(AS)
-                  .append(SPACE)
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.AS)
+                  .append(SQLReservedWords.SPACE)
                   .append(obj.getOutputName());
         }
     }
@@ -900,27 +900,27 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(ISubqueryCompareCriteria obj) {
         append(obj.getLeftExpression());
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         
         switch(obj.getOperator()) {
-            case EQ: buffer.append(EQ); break;
-            case GE: buffer.append(GE); break;
-            case GT: buffer.append(GT); break;
-            case LE: buffer.append(LE); break;
-            case LT: buffer.append(LT); break;
-            case NE: buffer.append(NE); break;
+            case EQ: buffer.append(SQLReservedWords.EQ); break;
+            case GE: buffer.append(SQLReservedWords.GE); break;
+            case GT: buffer.append(SQLReservedWords.GT); break;
+            case LE: buffer.append(SQLReservedWords.LE); break;
+            case LT: buffer.append(SQLReservedWords.LT); break;
+            case NE: buffer.append(SQLReservedWords.NE); break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         switch(obj.getQuantifier()) {
-            case ALL: buffer.append(ALL); break;
-            case SOME: buffer.append(SOME); break;
+            case ALL: buffer.append(SQLReservedWords.ALL); break;
+            case SOME: buffer.append(SQLReservedWords.SOME); break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SPACE);
-        buffer.append(LPAREN);        
+        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(SQLReservedWords.LPAREN);        
         append(obj.getQuery());
-        buffer.append(RPAREN);        
+        buffer.append(SQLReservedWords.RPAREN);        
     }
 
     /* 
@@ -929,33 +929,33 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(ISubqueryInCriteria obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SPACE)
-                  .append(NOT);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.NOT);
         }
-        buffer.append(SPACE)
-              .append(IN)
-              .append(SPACE)
-              .append(LPAREN);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.IN)
+              .append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.LPAREN);
         append(obj.getQuery());
-        buffer.append(RPAREN);
+        buffer.append(SQLReservedWords.RPAREN);
     }
 
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IUpdate)
      */
     public void visit(IUpdate obj) {
-        buffer.append(UPDATE)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.UPDATE)
+              .append(SQLReservedWords.SPACE);
         buffer.append(getSourceComment(obj));
         append(obj.getGroup());
-        buffer.append(SPACE)
-              .append(SET)
-              .append(SPACE);
+        buffer.append(SQLReservedWords.SPACE)
+              .append(SQLReservedWords.SET)
+              .append(SQLReservedWords.SPACE);
         append(obj.getChanges()); 
         if (obj.getCriteria() != null) {
-            buffer.append(SPACE)
-                  .append(WHERE)
-                  .append(SPACE);
+            buffer.append(SQLReservedWords.SPACE)
+                  .append(SQLReservedWords.WHERE)
+                  .append(SQLReservedWords.SPACE);
             append(obj.getCriteria());
         }
     }
@@ -966,34 +966,34 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     
     public void visit(ISetClause clause) {
         buffer.append(getElementName(clause.getSymbol(), false));
-        buffer.append(SPACE).append(EQ).append(SPACE);
+        buffer.append(SQLReservedWords.SPACE).append(SQLReservedWords.EQ).append(SQLReservedWords.SPACE);
         append(clause.getValue());
     }
     
     public void visit(ISetQuery obj) {
         appendSetQuery(obj.getLeftQuery());
         
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
         
         appendSetOperation(obj.getOperation());
 
         if(obj.isAll()) {
-            buffer.append(SPACE);
-            buffer.append(ALL);                
+            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(SQLReservedWords.ALL);                
         }
-        buffer.append(SPACE);
+        buffer.append(SQLReservedWords.SPACE);
 
         appendSetQuery(obj.getRightQuery());
         
         IOrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(orderBy);
         }
 
         ILimit limit = obj.getLimit();
         if(limit != null) {
-            buffer.append(SPACE);
+            buffer.append(SQLReservedWords.SPACE);
             append(limit);
         }
     }
@@ -1008,9 +1008,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
 
     protected void appendSetQuery(IQueryCommand obj) {
         if(obj instanceof ISetQuery || useParensForSetQueries()) {
-            buffer.append(LPAREN);
+            buffer.append(SQLReservedWords.LPAREN);
             append(obj);
-            buffer.append(RPAREN);
+            buffer.append(SQLReservedWords.RPAREN);
         } else {
             append(obj);
         }

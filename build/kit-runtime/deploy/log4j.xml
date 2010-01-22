@@ -81,6 +81,10 @@
    <logger name="org.teiid">
      <level value="WARN" />
    </logger>   
+      
+   <logger name="org.apache.axis">
+     <level value="WARN" />
+   </logger>
    
    <!-- un-comment to enable COMMAND log
    <logger name="org.teiid.COMMAND_LOG" additivity="false">

@@ -51,7 +51,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	private int idIndex = -1; // index of the ID select symbol.
 	protected List<ISelectSymbol> selectSymbols;
 	protected StringBuffer limitClause = new StringBuffer();
-	private Boolean supportsRetrieve;
+	private Boolean objectSupportsRetrieve;
 	
 	public SelectVisitor(RuntimeMetadata metadata) {
 		super(metadata);
@@ -113,7 +113,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			if(fromItem instanceof IGroup) {
 				table = ((IGroup)fromItem).getMetadataObject();
 		        String supportsQuery = (String)table.getProperties().get(Constants.SUPPORTS_QUERY);
-		        supportsRetrieve = Boolean.valueOf((String)table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
+		        objectSupportsRetrieve = Boolean.valueOf((String)table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
 		        if (!Boolean.valueOf(supportsQuery)) {
 		            throw new ConnectorException(table.getNameInSource() + " "
 		                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
@@ -230,7 +230,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 	
 	public boolean canRetrieve() {
-		return supportsRetrieve && hasOnlyIDCriteria();
+		return objectSupportsRetrieve && hasOnlyIDCriteria();
 	}
 
 }

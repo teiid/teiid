@@ -47,7 +47,7 @@ import com.metamatrix.core.util.StringUtil;
 
 /**
  */
-public class ObjectExecutionHelper implements SQLReservedWords {
+public class ObjectExecutionHelper {
     private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$
 
     private static final TimeZone LOCAL_TIME_ZONE = TimeZone.getDefault();
@@ -58,7 +58,7 @@ public class ObjectExecutionHelper implements SQLReservedWords {
     * @return a SQL-safe string
     */
    protected String escapeString(String str) {
-       return StringUtil.replaceAll(str, QUOTE, ESCAPED_QUOTE);
+       return StringUtil.replaceAll(str, SQLReservedWords.QUOTE, ESCAPED_QUOTE);
    }    
     
     /**

@@ -53,6 +53,7 @@ import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.ISetClause;
 import org.teiid.connector.language.IParameter.Direction;
 import org.teiid.connector.language.ISetQuery.Operation;
+import org.teiid.connector.visitor.util.SQLReservedWords;
 import org.teiid.connector.visitor.util.SQLStringVisitor;
 
 
@@ -138,7 +139,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      */
     private void translateSQLType(Class type, Object obj, StringBuilder valuesbuffer) {
         if (obj == null) {
-            valuesbuffer.append(NULL);
+            valuesbuffer.append(SQLReservedWords.NULL);
         } else {
             if(Number.class.isAssignableFrom(type)) {
                 boolean useFormatting = false;
@@ -173,9 +174,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 
-                valuesbuffer.append(QUOTE)
-                      .append(escapeString(obj.toString(), QUOTE))
-                      .append(QUOTE);
+                valuesbuffer.append(SQLReservedWords.QUOTE)
+                      .append(escapeString(obj.toString(), SQLReservedWords.QUOTE))
+                      .append(SQLReservedWords.QUOTE);
             }
         }        
     }
