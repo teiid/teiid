@@ -333,4 +333,13 @@ public class TestMySQLTranslator {
             output, TRANSLATOR);
     }
     
+    @Test public void testBooleanToString() throws Exception {
+    	String input = "SELECT convert(INTKEY, boolean) FROM BQT1.SmallA ORDER BY INTKEY"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END FROM SmallA ORDER BY INTKEY"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
 }

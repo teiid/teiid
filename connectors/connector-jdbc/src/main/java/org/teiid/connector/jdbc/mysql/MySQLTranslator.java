@@ -72,7 +72,7 @@ public class MySQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
-        convertModifier.addTypeMapping("signed", FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
+        convertModifier.addTypeMapping("signed", FunctionModifier.BOOLEAN, FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
     	//char(n) assume 4.1 or later
     	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("char", FunctionModifier.STRING); //$NON-NLS-1$
