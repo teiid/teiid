@@ -613,7 +613,7 @@ public class TestMMDataSource extends TestCase {
     	ds.setServerName("hostName"); //$NON-NLS-1$
     	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setPortNumber(1);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2000;ApplicationName=JDBC;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
+    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {

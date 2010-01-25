@@ -17,6 +17,7 @@
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" IsRequired="true"   />
             <PropertyDefinition Name="TrimStrings" DisplayName="Trim string flag" ShortDescription="Right Trim fixed character types returned as Strings - note that the native type must be char or nchar and the source must support the rtrim function." DefaultValue="false" PropertyType="Boolean" IsExpert="true" />
             <PropertyDefinition Name="UseCommentsInSourceQuery" DisplayName="Use informational comments in Source Queries" ShortDescription="This will embed /*comment*/ style comment with session/request id in source SQL query for informational purposes" DefaultValue="false" PropertyType="Boolean"  IsExpert="true"/>
+            <PropertyDefinition Name="FetchSize" DisplayName="Statement Fetch Size" ShortDescription="Statement Fetch Size" DefaultValue="0" PropertyType="Integer"  IsExpert="true"/>
         </ComponentType>
         <ComponentType Name="Oracle Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="oracle.jdbc.driver.OracleDriver" IsRequired="true"   />

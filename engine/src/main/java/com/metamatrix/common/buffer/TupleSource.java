@@ -60,5 +60,11 @@ public interface TupleSource {
      */    
 	void closeSource()
 		throws MetaMatrixComponentException;
+	
+	/**
+	 * Returns an estimate of the number of rows that can be read without blocking.
+	 * @return
+	 */
+	int available();
 
 }

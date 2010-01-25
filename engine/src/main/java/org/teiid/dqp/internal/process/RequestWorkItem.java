@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,6 +108,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     private AnalysisRecord analysisRecord;
     private TransactionContext transactionContext;
     protected TupleBuffer resultsBuffer;
+    private TupleBatch savedBatch;
     private Collection schemas;     // These are schemas associated with XML results
     private boolean returnsUpdateCount;
     
@@ -346,6 +348,9 @@ public class RequestWorkItem extends AbstractWorkItem {
 			}
 		});
 		resultsBuffer = collector.getTupleBuffer();
+		if (requestMsg.getCursorType() == ResultSet.TYPE_FORWARD_ONLY) {
+			resultsBuffer.setForwardOnly(true);
+		}
 		analysisRecord = request.analysisRecord;
 		schemas = request.schemas;
 		transactionContext = request.transactionContext;
@@ -383,11 +388,18 @@ public class RequestWorkItem extends AbstractWorkItem {
 			LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID: " + requestID + " resultsID: " + this.resultsBuffer + " done: " + doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
-    	if (batch == null || batch.getBeginRow() > this.begin) {
-    		batch = resultsBuffer.getBatch(begin);
+    	if (batch == null || !(batch.getBeginRow() <= this.begin && batch.getEndRow() >= this.begin)) {
+    		if (savedBatch != null && savedBatch.getBeginRow() <= this.begin && savedBatch.getEndRow() >= this.begin) {
+    			batch = savedBatch;
+    		} else {
+    			batch = resultsBuffer.getBatch(begin);
+    		}
     		//TODO: support fetching more than 1 batch
     		int count = this.end - this.begin + 1;
     		if (batch.getRowCount() > count) {
+    			if (requestMsg.getCursorType() == ResultSet.TYPE_FORWARD_ONLY) {
+    				savedBatch = batch;
+    			}
     			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
     			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
         		int firstOffset = beginRow - batch.getBeginRow();

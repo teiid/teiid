@@ -120,4 +120,9 @@ public class FakeTupleSource implements TupleSource {
         this.exceptionOnClose = exceptionOnClose;
     }
     
+    @Override
+    public int available() {
+    	return 0;
+    }
+    
 }

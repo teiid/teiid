@@ -225,4 +225,17 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 		return this.isTransactional;
 	}
 	
+	@Override
+	public int available() {
+		if (index < currentBatchCount) {
+			return currentBatchCount - index;
+		}
+		synchronized (this) {
+			if (nextBatch != null) {
+				return nextBatch.length;
+			}
+		}
+		return 0;
+	}
+	
 }

@@ -242,6 +242,11 @@ public class TestBatchedUpdateNode {
             }
             return null;
         }
+        
+        @Override
+        public int available() {
+        	return 0;
+        }
     }
     
 }

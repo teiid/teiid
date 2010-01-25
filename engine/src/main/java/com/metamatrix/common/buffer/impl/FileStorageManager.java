@@ -33,7 +33,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.log.LogManager;
@@ -113,7 +112,7 @@ public class FileStorageManager implements StorageManager {
 			}
 	    }
 
-		public synchronized long writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
+		public void writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
 			Map.Entry<Long, FileInfo> entry = this.storageFiles.lastEntry();
 			boolean createNew = false;
 			FileInfo fileInfo = null;
@@ -139,7 +138,6 @@ public class FileStorageManager implements StorageManager {
 	            fileAccess.setLength(pointer + length);
 	            fileAccess.seek(pointer);
 	            fileAccess.write(bytes, offset, length);
-	            return fileOffset + pointer;
 	        } catch(IOException e) {
 	            throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
 	        } finally {
@@ -185,7 +183,7 @@ public class FileStorageManager implements StorageManager {
      * @see com.metamatrix.common.buffer.BufferManager#MAX_FILE_SIZE
      */
     public void initialize(Properties props) throws MetaMatrixComponentException {
-        this.directory = props.getProperty(BufferManager.BUFFER_STORAGE_DIRECTORY);
+    	PropertiesUtils.setBeanProperties(this, props, "org.teiid.buffer"); //$NON-NLS-1$
         if(this.directory == null) {
         	throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
         }
@@ -199,13 +197,19 @@ public class FileStorageManager implements StorageManager {
         } else if(! dirFile.mkdirs()) {
         	throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.error_creating", dirFile.getAbsoluteFile())); //$NON-NLS-1$
         }
-
-        // Set up max number of open file descriptors
-        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManager.MAX_OPEN_FILES, DEFAULT_MAX_OPEN_FILES);
-        
-        // Set the max file size
-        maxFileSize = PropertiesUtils.getIntProperty(props, BufferManager.MAX_FILE_SIZE, 2048) * 1024L * 1024L; // Multiply by 1MB
     }
+    
+    public void setMaxFileSize(long maxFileSize) {
+    	this.maxFileSize = maxFileSize * 1024L * 1024L;
+	}
+    
+    public void setMaxOpenFiles(int maxOpenFiles) {
+		this.maxOpenFiles = maxOpenFiles;
+	}
+    
+    public void setStorageDirectory(String directory) {
+		this.directory = directory;
+	}
     
     File createFile(String name, int fileNumber) throws MetaMatrixComponentException {
         try {

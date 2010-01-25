@@ -42,21 +42,10 @@ import com.metamatrix.common.buffer.TupleBuffer;
  */
 public class PartitionedSortJoin extends MergeJoinStrategy {
 	
-	/**
-	 * This is a compromise between the max size of the smaller side
-	 * and effective partitioning assuming that we only want to hold
-	 * two batches in memory during partitioning.
-	 * 
-	 * TODO: apply partitioning recursively and/or have a better mechanism
-	 * for buffermanager reserve/release of memory 
-	 * (would also help the sort utility)
-	 */
-	public static final int MAX_PARTITIONS = 16; 
-	
 	private List[] endTuples;
 	private List<Boolean> overlap = new ArrayList<Boolean>();
 	private List<Integer> endRows = new ArrayList<Integer>();
-	private List<TupleBuffer> partitionIds = new ArrayList<TupleBuffer>();
+	private List<TupleBuffer> partitions = new ArrayList<TupleBuffer>();
 	private int currentPartition;
 	private IndexedTupleSource currentSource;
 	private SourceState sortedSource;
@@ -73,13 +62,13 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     @Override
     public void close() {
     	super.close();
-    	for (TupleBuffer tupleSourceID : this.partitionIds) {
+    	for (TupleBuffer tupleSourceID : this.partitions) {
 			tupleSourceID.remove();
 		}
     	this.endTuples = null;
     	this.overlap.clear();
     	this.endRows.clear();
-    	this.partitionIds.clear();
+    	this.partitions.clear();
     	this.currentSource = null;
     	this.sortedSource = null;
     	this.partitionedSource = null;
@@ -128,7 +117,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     protected void loadRight() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
     	this.rightSource.getTupleBuffer();
-    	int maxRows = this.joinNode.getBatchSize() * MAX_PARTITIONS;
+    	int maxRows = this.joinNode.getBatchSize() * getMaxProcessingBatches();
     	if (processingSortRight == SortOption.SORT
     			&& this.leftSource.getRowCount() < maxRows
     			&& this.leftSource.getRowCount() * 4 < this.rightSource.getRowCount()) {
@@ -161,13 +150,25 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
         	}
     	}
     }
+
+    /**
+     * Since the source to be partitioned is already loaded, then there's no
+     * chance of a blocked exception during partitioning, so double the max.
+     * 
+     * TODO: partition at the same time as the load to determine size
+     * 
+     * @return
+     */
+	private int getMaxProcessingBatches() {
+		return 2 * this.joinNode.getBufferManager().getMaxProcessingBatches();
+	}
     
 	private void partitionSource(boolean left) throws MetaMatrixComponentException,
 			MetaMatrixProcessingException {
 		if (partitioned) {
 			return;
 		}
-		if (endTuples.length > MAX_PARTITIONS + 1) {
+		if (endTuples.length > getMaxProcessingBatches() + 1) {
 			if (left) {
 				this.processingSortLeft = SortOption.SORT;
 			} else {
@@ -176,13 +177,13 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 			return;
 		}
 		if (endTuples.length < 2) {
-			partitionIds.add(this.partitionedSource.getTupleBuffer());
+			partitions.add(this.partitionedSource.getTupleBuffer());
 		} else {
-			if (partitionIds.isEmpty()) {
+			if (partitions.isEmpty()) {
 				for (int i = 0; i < endTuples.length; i++) {
 					TupleBuffer tc = this.partitionedSource.createSourceTupleBuffer();
-					tc.setBatchSize(Math.max(1, this.joinNode.getBatchSize()/4));
-					this.partitionIds.add(tc);
+					tc.setBatchSize(Math.max(1, this.joinNode.getBatchSize()));
+					this.partitions.add(tc);
 				}
 			}
 			while (this.partitionedSource.getIterator().hasNext()) {
@@ -191,14 +192,17 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 				if (index < 0) {
 					index = -index - 1;
 				}
-				if (index > this.partitionIds.size() -1) {
+				if (index > this.partitions.size() -1) {
 					continue;
 				}
 				while (index > 0 && this.overlap.get(index - 1) 
 						&& compare(tuple, this.endTuples[index - 1], this.partitionedSource.getExpressionIndexes(), this.sortedSource.getExpressionIndexes()) == 0) {
 					index--;
 				}
-				this.partitionIds.get(index).addTuple(tuple);
+				this.partitions.get(index).addTuple(tuple);
+			}
+			for (TupleBuffer partition : this.partitions) {
+				partition.saveBatch();
 			}
 			this.partitionedSource.getIterator().setPosition(1);
 		}
@@ -214,12 +218,12 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	if (endRows.isEmpty()) {
     		return null; //no rows on the sorted side
     	}
-    	while (currentPartition < partitionIds.size()) {
+    	while (currentPartition < partitions.size()) {
     		if (currentSource == null) {
-    			if (!this.partitionIds.isEmpty()) {
-    				this.partitionIds.get(currentPartition).close();
+    			if (!this.partitions.isEmpty()) {
+    				this.partitions.get(currentPartition).close();
     			}
-    			currentSource = partitionIds.get(currentPartition).createIndexedTupleSource();
+    			currentSource = partitions.get(currentPartition).createIndexedTupleSource();
     		}
     		
     		int beginIndex = currentPartition>0?endRows.get(currentPartition - 1)+1:1;
@@ -251,7 +255,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 		    			}
 	    			}
 	    			if (matchEnd == batch.length - 1 && currentPartition < overlap.size() && overlap.get(currentPartition)) {
-	    				this.partitionIds.get(currentPartition + 1).addTuple(partitionedTuple);
+	    				this.partitions.get(currentPartition + 1).addTuple(partitionedTuple);
 	    			}
     			}
     			while (matchBegin <= matchEnd) {

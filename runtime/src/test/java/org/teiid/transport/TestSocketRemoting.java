@@ -200,7 +200,6 @@ public class TestSocketRemoting extends TestCase {
 			dqp.begin();
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (XATransactionException e) {
-			e.printStackTrace();
 			assertEquals("Component not found: com.metamatrix.dqp.client.ClientSideDQP", e.getMessage()); //$NON-NLS-1$
 		}
 	}

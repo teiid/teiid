@@ -116,4 +116,12 @@ public class BatchIterator implements
         }
     }
     
+    @Override
+    public int available() {
+    	if (currentBatch != null) {
+    		return currentBatch.getEndRow() - currentRow + 1;
+    	}
+    	return 0;
+    }
+    
 }

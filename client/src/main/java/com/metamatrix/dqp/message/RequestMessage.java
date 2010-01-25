@@ -39,7 +39,7 @@ public class RequestMessage implements Serializable {
 
     static final long serialVersionUID = 2258063872049251854L;
     
-    public static final int DEFAULT_FETCH_SIZE = 2000;
+    public static final int DEFAULT_FETCH_SIZE = 2048;
 
     private String[] commands;
     private boolean isBatchedUpdate;

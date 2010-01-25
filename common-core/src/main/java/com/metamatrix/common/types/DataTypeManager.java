@@ -23,6 +23,7 @@
 package com.metamatrix.common.types;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -42,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import javax.xml.transform.Source;
 
@@ -61,6 +63,7 @@ import com.metamatrix.common.types.basic.NumberToIntegerTransform;
 import com.metamatrix.common.types.basic.NumberToLongTransform;
 import com.metamatrix.common.types.basic.NumberToShortTransform;
 import com.metamatrix.common.types.basic.ObjectToAnyTransform;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -81,6 +84,11 @@ import com.metamatrix.core.util.ArgCheck;
  * </p>
  */
 public class DataTypeManager {
+	
+	private static final int MAX_VALUE_MAP_SIZE = 10000;
+	private static boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", true); //$NON-NLS-1$
+	
+	private static Map<Class<?>, Map<Object, WeakReference<Object>>> valueMaps = new HashMap<Class<?>, Map<Object, WeakReference<Object>>>(); 
 
 	public static final int MAX_STRING_LENGTH = 4000;
 
@@ -418,19 +426,33 @@ public class DataTypeManager {
 	 */
 	static void loadDataTypes() {
 		DataTypeManager.addDataType(DefaultDataTypes.BOOLEAN, DefaultDataClasses.BOOLEAN);
+		valueMaps.put(DefaultDataClasses.BOOLEAN, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BYTE, DefaultDataClasses.BYTE);
+		valueMaps.put(DefaultDataClasses.BYTE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.SHORT,	DefaultDataClasses.SHORT);
+		valueMaps.put(DefaultDataClasses.SHORT, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.CHAR, DefaultDataClasses.CHAR);
+		valueMaps.put(DefaultDataClasses.CHAR, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.INTEGER, DefaultDataClasses.INTEGER);
+		valueMaps.put(DefaultDataClasses.INTEGER, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.LONG, DefaultDataClasses.LONG);
+		valueMaps.put(DefaultDataClasses.LONG, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BIG_INTEGER, DefaultDataClasses.BIG_INTEGER);
+		valueMaps.put(DefaultDataClasses.BIG_INTEGER, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.FLOAT, DefaultDataClasses.FLOAT);
+		valueMaps.put(DefaultDataClasses.FLOAT, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.DOUBLE, DefaultDataClasses.DOUBLE);
+		valueMaps.put(DefaultDataClasses.DOUBLE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BIG_DECIMAL, DefaultDataClasses.BIG_DECIMAL);
+		valueMaps.put(DefaultDataClasses.BIG_DECIMAL, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.DATE, DefaultDataClasses.DATE);
+		valueMaps.put(DefaultDataClasses.DATE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.TIME, DefaultDataClasses.TIME);
+		valueMaps.put(DefaultDataClasses.TIME, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.TIMESTAMP, DefaultDataClasses.TIMESTAMP);
+		valueMaps.put(DefaultDataClasses.TIMESTAMP, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.STRING, DefaultDataClasses.STRING);
+		valueMaps.put(DefaultDataClasses.STRING, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.CLOB, DefaultDataClasses.CLOB);
 		DataTypeManager.addDataType(DefaultDataTypes.XML, DefaultDataClasses.XML);
 		DataTypeManager.addDataType(DefaultDataTypes.OBJECT, DefaultDataClasses.OBJECT);
@@ -686,7 +708,8 @@ public class DataTypeManager {
             Object[] params = new Object[] { sourceType, targetClass, value};
             throw new TransformationException(CorePlugin.Util.getString("ObjectToAnyTransform.Invalid_value", params)); //$NON-NLS-1$
 		}
-		return (T) transform.transform(value);
+		T result = (T) transform.transform(value);
+		return getCanonicalValue(result);
 	}
 	
     public static boolean isNonComparable(String type) {
@@ -698,5 +721,30 @@ public class DataTypeManager {
     
     public static <S> void addSourceTransform(Class<S> sourceClass, SourceTransform<S, ?> transform) {
     	sourceConverters.put(sourceClass, transform);
+    }
+    
+    @SuppressWarnings("unchecked")
+	public static <T> T getCanonicalValue(T value) {
+    	if (USE_VALUE_CACHE) {
+    		if (value == null) {
+    			return null;
+    		}
+	    	Map<Object, WeakReference<Object>> valueMap = valueMaps.get(value.getClass());
+	    	if (valueMap == null) {
+	    		return value;
+	    	}
+			WeakReference<Object> valueReference = valueMap.get(value);
+			Object canonicalValue = null;
+			if (valueReference != null) {
+				canonicalValue = valueReference.get();
+			}
+			if (canonicalValue != null) {
+				return (T)canonicalValue;
+			}
+			if (valueMap.size() <= MAX_VALUE_MAP_SIZE) {
+				valueMap.put(value, new WeakReference<Object>(value));
+			}
+    	}
+		return value;
     }
 }

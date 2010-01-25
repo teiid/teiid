@@ -67,4 +67,12 @@ public class CollectionTupleSource implements TupleSource {
 	public void closeSource() {
 		
 	}
+	
+	@Override
+	public int available() {
+		if (tuples.hasNext()) {
+			return 1;
+		}
+		return 0;
+	}
 }

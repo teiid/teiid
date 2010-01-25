@@ -104,6 +104,8 @@ public class SortNode extends RelationalNode {
     private TupleBatch outputPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 		if (!this.output.isFinal()) {
 			this.phase = SORT;
+		} else {
+			this.output.setForwardOnly(true);
 		}
 		List<?> tuple = null;
 		try {

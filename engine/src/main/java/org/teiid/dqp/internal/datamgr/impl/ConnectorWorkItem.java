@@ -84,7 +84,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     private ICommand translatedCommand;
     private Class<?>[] schema;
     private List<Integer> convertToRuntimeType;
-    private List<Integer> convertToDesiredRuntimeType;
+    private boolean[] convertToDesiredRuntimeType;
         
     /* End state information */    
     protected boolean lastBatch;
@@ -309,12 +309,12 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         Command command = this.requestMsg.getCommand();
 		List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
-		this.convertToDesiredRuntimeType = new ArrayList<Integer>(symbols.size());
+		this.convertToDesiredRuntimeType = new boolean[symbols.size()];
 		this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
 		for (int i = 0; i < schema.length; i++) {
 			SingleElementSymbol symbol = symbols.get(i);
 			this.schema[i] = symbol.getType();
-			this.convertToDesiredRuntimeType.add(i);
+			this.convertToDesiredRuntimeType[i] = true;
 			this.convertToRuntimeType.add(i);
 		}
 
@@ -469,20 +469,23 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 			}
 		}
 		//TODO: add a proper intermediate schema
-		for (int i = convertToDesiredRuntimeType.size() - 1; i >= 0; i--) {
-			int index = convertToDesiredRuntimeType.get(i);
-			Object value = row.get(index);
-			if (value != null) {
-				Object result;
-				try {
-					result = DataTypeManager.transformValue(value, value.getClass(), this.schema[index]);
-				} catch (TransformationException e) {
-					throw new ConnectorException(e);
+		for (int i = 0; i < row.size(); i++) {
+			if (convertToDesiredRuntimeType[i]) {
+				Object value = row.get(i);
+				if (value != null) {
+					Object result;
+					try {
+						result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
+					} catch (TransformationException e) {
+						throw new ConnectorException(e);
+					}
+					if (value == result) {
+						convertToDesiredRuntimeType[i] = false;
+					}
+					row.set(i, result);
 				}
-				if (value == result) {
-					convertToDesiredRuntimeType.remove(i);
-				}
-				row.set(index, result);
+			} else {
+				row.set(i, DataTypeManager.getCanonicalValue(row.get(i)));
 			}
 		}
 	}

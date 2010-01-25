@@ -59,13 +59,22 @@ public abstract class FileStore {
 
 		@Override
 		public void write(byte[] b, int off, int len) throws IOException {
-			if (count + len <= buffer.length) {
-				System.arraycopy(b, off, buffer, count, len);
-				count += len;
+			if (len > buffer.length) {
+				flushBuffer();
+				writeDirect(b, off, len);
 				return;
 			}
+			int bufferedLength = Math.min(len, buffer.length - count);
+			if (count < buffer.length) {
+				System.arraycopy(b, off, buffer, count, bufferedLength);
+				count += bufferedLength;
+				if (bufferedLength == len) {
+					return;
+				}
+			}
 			flushBuffer();
-			writeDirect(b, off, len);
+			System.arraycopy(b, off + bufferedLength, buffer, count, len - bufferedLength);
+			count += len - bufferedLength;
 		}
 
 		private void writeDirect(byte[] b, int off, int len) throws IOException {
@@ -77,7 +86,7 @@ public abstract class FileStore {
 			}
 		}
 
-		private void flushBuffer() throws IOException {
+		public void flushBuffer() throws IOException {
 			if (count > 0) {
 				writeDirect(buffer, 0, count);
 				count = 0;
@@ -119,6 +128,9 @@ public abstract class FileStore {
 		}
 	}
 	
+	private boolean removed;
+	private long len;
+	
 	public void setCleanupReference(Object o) {
 		REFERENCES.add(new CleanupReference(o, this));
 		for (int i = 0; i < 10; i++) {
@@ -131,8 +143,10 @@ public abstract class FileStore {
 		}
 	}
 	
-	private boolean removed;
-	
+	public synchronized long getLength() {
+		return len;
+	}
+		
 	public int read(long fileOffset, byte[] b, int offSet, int length)
 			throws MetaMatrixComponentException {
 		if (removed) {
@@ -155,18 +169,21 @@ public abstract class FileStore {
     	} while (n < length);
 	}
 	
-	public long write(byte[] bytes) throws MetaMatrixComponentException {
-		return write(bytes, 0, bytes.length);
+	public void write(byte[] bytes) throws MetaMatrixComponentException {
+		write(bytes, 0, bytes.length);
 	}
 
-	public long write(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
+	public synchronized long write(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
 		if (removed) {
 			throw new MetaMatrixComponentException("already removed"); //$NON-NLS-1$
 		}
-		return writeDirect(bytes, offset, length);
+		writeDirect(bytes, offset, length);
+		long result = len;
+		len += length;		
+		return result;
 	}
 
-	protected abstract long writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException;
+	protected abstract void writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException;
 
 	public void remove() {
 		if (!this.removed) {
@@ -177,9 +194,9 @@ public abstract class FileStore {
 	
 	protected abstract void removeDirect();
 	
-	public InputStream createInputStream() {
+	public InputStream createInputStream(final long start) {
 		return new InputStream() {
-			private long offset;
+			private long offset = start;
 			
 			@Override
 			public int read() throws IOException {

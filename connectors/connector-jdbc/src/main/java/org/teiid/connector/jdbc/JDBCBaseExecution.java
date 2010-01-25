@@ -80,7 +80,10 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         this.logger = logger;
         this.context = context;
 
-        fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, context.getBatchSize());
+        fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, 0);
+        if (fetchSize == 0) {
+        	fetchSize = context.getBatchSize();
+        }
         maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, -1);
         //if the connector work needs to throw an excpetion, set the size plus 1
         if (maxResultRows > 0 && PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false)) {

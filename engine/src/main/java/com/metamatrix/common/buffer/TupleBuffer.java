@@ -22,35 +22,29 @@
 
 package com.metamatrix.common.buffer;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.core.util.AccessibleByteArrayOutputStream;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.sql.symbol.Expression;
 
 public class TupleBuffer {
 	
 	class TupleSourceImpl implements IndexedTupleSource {
-	    private SoftReference<TupleBatch> currentBatch;
 	    private int currentRow = 1;
 	    private int mark = 1;
 		private List<?> currentTuple;
+		private TupleBatch batch;
 
 	    @Override
 	    public int getCurrentIndex() {
@@ -80,45 +74,28 @@ public class TupleBuffer {
 
 		private List<?> getCurrentTuple() throws MetaMatrixComponentException,
 				BlockedException {
-			TupleBatch batch = getBatch();
-	        if(batch.getRowCount() == 0) {
-	            // Check if last
-                if(isFinal) {
-                	currentBatch = null;
-                    return null;
-                } 
-                throw BlockedException.INSTANCE;
-	        }
-
-	        return batch.getTuple(currentRow);
+			if (currentRow <= rowCount) {
+				if (forwardOnly) {
+					if (batch == null || currentRow > batch.getEndRow()) {
+						batch = getBatch(currentRow);
+					}
+					return batch.getTuple(currentRow);
+				} 
+				//TODO: determine if we should directly hold a soft reference here
+				return getRow(currentRow);
+			}
+			if(isFinal) {
+	            return null;
+	        } 
+	        throw BlockedException.INSTANCE;
 		}
 
 	    @Override
 	    public void closeSource()
 	    throws MetaMatrixComponentException{
-	    	currentBatch = null;
+	    	batch = null;
 	        mark = 1;
 	        reset();
-	    }
-	    
-	    // Retrieves the necessary batch based on the currentRow
-	    TupleBatch getBatch() throws MetaMatrixComponentException{
-	    	TupleBatch batch = null;
-	    	if (currentBatch != null) {
-	            batch = currentBatch.get();
-	        }
-	        if (batch != null) {
-	            if (currentRow <= batch.getEndRow() && currentRow >= batch.getBeginRow()) {
-	                return batch;
-	            }
-	            currentBatch = null;
-	        } 
-	        
-            batch = TupleBuffer.this.getBatch(currentRow);
-            if (batch != null) {
-            	currentBatch = new SoftReference<TupleBatch>(batch);
-            }
-	        return batch;
 	    }
 	    
 	    @Override
@@ -149,34 +126,56 @@ public class TupleBuffer {
 		        this.currentTuple = null;
 	        }
 	    }
+	    
+	    @Override
+	    public int available() {
+	    	return 0;
+	    }
 	}
+	
+    /**
+     * Gets the data type names for each of the input expressions, in order.
+     * @param expressions List of Expressions
+     * @return
+     * @since 4.2
+     */
+    public static String[] getTypeNames(List expressions) {
+    	if (expressions == null) {
+    		return null;
+    	}
+        String[] types = new String[expressions.size()];
+        for (ListIterator i = expressions.listIterator(); i.hasNext();) {
+            Expression expr = (Expression)i.next();
+            types[i.previousIndex()] = DataTypeManager.getDataTypeName(expr.getType());
+        }
+        return types;
+    }
 
 	private static final AtomicLong LOB_ID = new AtomicLong();
 	
 	//construction state
-	private StorageManager manager;
+	private BatchManager manager;
 	private String tupleSourceID;
 	private List<?> schema;
 	private String[] types;
 	private int batchSize;
 	
-	private FileStore store;
-
 	private int rowCount;
 	private boolean isFinal;
-    private TreeMap<Integer, ManagedBatch> batches = new TreeMap<Integer, ManagedBatch>();
+    private TreeMap<Integer, BatchManager.ManagedBatch> batches = new TreeMap<Integer, BatchManager.ManagedBatch>();
 	private ArrayList<List<?>> batchBuffer;
-	private AtomicInteger referenceCount = new AtomicInteger(1);
+	private boolean removed;
+	private boolean forwardOnly;
 
     //lob management
     private Map<String, Streamable<?>> lobReferences; //references to contained lobs
     private boolean lobs = true;
 	
-	public TupleBuffer(StorageManager manager, String id, List<?> schema, String[] types, int batchSize) {
+	public TupleBuffer(BatchManager manager, String id, List<?> schema, int batchSize) {
 		this.manager = manager;
 		this.tupleSourceID = id;
 		this.schema = schema;
-		this.types = types;
+		this.types = getTypeNames(schema);
 		this.batchSize = batchSize;
 		if (types != null) {
 			int i = 0;
@@ -215,33 +214,16 @@ public class TupleBuffer {
 
 	void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
 		Assertion.assertTrue(!this.isRemoved());
-		if (batchBuffer == null || batchBuffer.isEmpty()) {
+		if (batchBuffer == null || batchBuffer.isEmpty() || batchBuffer.size() < Math.max(1, batchSize / 32)) {
 			return;
 		}
-		List<?> rows = batchBuffer==null?Collections.emptyList():batchBuffer;
-        TupleBatch writeBatch = new TupleBatch(rowCount - rows.size() + 1, rows);
+        TupleBatch writeBatch = new TupleBatch(rowCount - batchBuffer.size() + 1, batchBuffer);
         if (finalBatch) {
         	writeBatch.setTerminationFlag(true);
         }
-		ManagedBatch mbatch = new ManagedBatch(writeBatch);
-		if (this.store == null) {
-			this.store = this.manager.createFileStore(this.tupleSourceID);
-			this.store.setCleanupReference(this);
-		}
-		AccessibleByteArrayOutputStream baos = null;
-        try {
-            baos = new AccessibleByteArrayOutputStream(1024);
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            writeBatch.setDataTypes(types);
-            writeBatch.writeExternal(oos);
-            oos.flush();
-            oos.close();
-        } catch(IOException e) {
-        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStorageManager.batch_error")); //$NON-NLS-1$
-        }
-        mbatch.setLength(baos.getCount());
-		mbatch.setOffset(this.store.write(baos.getBuffer(), 0, baos.getCount()));
-		this.batches.put(mbatch.getBeginRow(), mbatch);
+        writeBatch.setDataTypes(types);
+		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch);
+		this.batches.put(writeBatch.getBeginRow(), mbatch);
         batchBuffer = null;
 	}
 	
@@ -252,7 +234,23 @@ public class TupleBuffer {
 		}
 		this.isFinal = true;
 	}
+	
+	List<?> getRow(int row) throws MetaMatrixComponentException {
+		if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
+			return this.batchBuffer.get(row - rowCount + this.batchBuffer.size() - 1);
+		}
+		TupleBatch batch = getBatch(row);
+		return batch.getTuple(row);
+	}
 
+	/**
+	 * Get the batch containing the given row.
+	 * NOTE: the returned batch may be empty or may begin with a row other
+	 * than the one specified.
+	 * @param row
+	 * @return
+	 * @throws MetaMatrixComponentException
+	 */
 	public TupleBatch getBatch(int row) throws MetaMatrixComponentException {
 		if (row > rowCount) {
 			TupleBatch batch = new TupleBatch(rowCount + 1, new List[] {});
@@ -262,56 +260,42 @@ public class TupleBuffer {
 			return batch;
 		}
 		if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
-			return new TupleBatch(rowCount - this.batchBuffer.size() + 1, batchBuffer);
+			TupleBatch result = new TupleBatch(rowCount - this.batchBuffer.size() + 1, batchBuffer);
+			if (forwardOnly) {
+				this.batchBuffer = null;
+			}
+			return result;
 		}
 		if (this.batchBuffer != null && !this.batchBuffer.isEmpty()) {
+			//this is just a sanity check to ensure we're not holding too many
+			//hard references to batches.
 			saveBatch(isFinal);
 		}
-		Map.Entry<Integer, ManagedBatch> entry = batches.floorEntry(row);
+		Map.Entry<Integer, BatchManager.ManagedBatch> entry = batches.floorEntry(row);
 		Assertion.isNotNull(entry);
-		ManagedBatch batch = entry.getValue();
-    	TupleBatch result = batch.getBatch();
-    	if (result != null) {
-    		return result;
+		BatchManager.ManagedBatch batch = entry.getValue();
+    	TupleBatch result = batch.getBatch(!forwardOnly, types);
+    	if (lobs && result.getDataTypes() == null) {
+	        correctLobReferences(result.getAllTuples());
     	}
-        try {
-            byte[] bytes = new byte[batch.getLength()];
-            this.store.readFully(batch.getOffset(), bytes, 0, bytes.length);
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(bais);
-
-            result = new TupleBatch();
-            result.setDataTypes(types);
-            result.readExternal(ois);
-        } catch(IOException e) {
-        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", tupleSourceID)); //$NON-NLS-1$
-        } catch (ClassNotFoundException e) {
-        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", tupleSourceID)); //$NON-NLS-1$
-        }
-		if (lobs) {
-			correctLobReferences(result.getAllTuples());
+    	result.setDataTypes(types);
+    	if (forwardOnly) {
+			batches.remove(entry.getKey());
 		}
-		batch.setBatchReference(result);
 		return result;
 	}
 	
 	public void remove() {
-		int count = this.referenceCount.getAndDecrement();
-		if (count == 0) {
-			if (this.store != null) {
-				this.store.remove();
-				this.store = null;
-			}
+		if (!removed) {
+			this.manager.remove();
 			if (this.batchBuffer != null) {
 				this.batchBuffer = null;
 			}
+			for (BatchManager.ManagedBatch batch : this.batches.values()) {
+				batch.remove();
+			}
 			this.batches.clear();
 		}
-	}
-	
-	public boolean addReference() {
-		int count = this.referenceCount.addAndGet(1);
-		return count > 1;
 	}
 	
 	public int getRowCount() {
@@ -383,6 +367,10 @@ public class TupleBuffer {
         }
     }
     
+    public void setForwardOnly(boolean forwardOnly) {
+		this.forwardOnly = forwardOnly;
+	}
+    
 	/**
 	 * Create a new iterator for this buffer
 	 * @return
@@ -393,11 +381,11 @@ public class TupleBuffer {
 	
 	@Override
 	public String toString() {
-		return this.tupleSourceID.toString();
+		return this.tupleSourceID;
 	}
 	
 	public boolean isRemoved() {
-		return this.referenceCount.get() <= 0;
+		return removed;
 	}
 	
 }

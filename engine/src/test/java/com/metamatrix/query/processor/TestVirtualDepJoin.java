@@ -492,8 +492,8 @@ public class TestVirtualDepJoin {
     private BufferManager createCustomBufferMgr(int batchSize) throws MetaMatrixComponentException {
         BufferManagerImpl bufferMgr = new BufferManagerImpl();
         Properties props = new Properties();
-        props.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, String.valueOf(batchSize));
-        props.setProperty(BufferManager.CONNECTOR_BATCH_SIZE, String.valueOf(batchSize));
+        bufferMgr.setConnectorBatchSize(batchSize);
+        bufferMgr.setProcessorBatchSize(batchSize);
         bufferMgr.initialize(props);
 
         // Add unmanaged memory storage manager

@@ -729,12 +729,6 @@ public class MMStatement extends WrapperImpl implements Statement {
         String partial = getExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         res.setPartialResults(Boolean.valueOf(partial).booleanValue());
 
-        // Get fetch size
-        res.setFetchSize(fetchSize);
-
-        // Get cursor type
-        res.setCursorType(this.resultSetType);
-
         // Get xml validation mode
         String validate = getExecutionProperty(ExecutionProperties.PROP_XML_VALIDATION);
         if(validate == null) {
@@ -846,8 +840,8 @@ public class MMStatement extends WrapperImpl implements Statement {
             sqlOptions.toUpperCase().indexOf(ExecutionProperties.SQL_OPTION_SHOWPLAN.toUpperCase()) >= 0) {
             reqMsg.setShowPlan(true);
         }
-
-        reqMsg.setFetchSize(getFetchSize());
+        reqMsg.setCursorType(this.resultSetType);
+        reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setStyleSheet(this.styleSheet);
         reqMsg.setRowLimit(this.maxRows);
 

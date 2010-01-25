@@ -106,6 +106,7 @@ public class DuplicateFilter implements AggregateFunction {
 
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
+            collectionBuffer.setForwardOnly(true);
         }
 
         List row = new ArrayList(1);
@@ -126,6 +127,7 @@ public class DuplicateFilter implements AggregateFunction {
             // Sort
             sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), elements, sortTypes, Mode.DUP_REMOVE, mgr, groupName);
             TupleBuffer sorted = sortUtility.sort();
+            sorted.setForwardOnly(true);
             try {
 	            // Add all input to proxy
 	            TupleSource sortedSource = sorted.createIndexedTupleSource();

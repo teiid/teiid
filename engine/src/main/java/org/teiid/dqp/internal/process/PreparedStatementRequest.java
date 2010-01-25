@@ -100,15 +100,15 @@ public class PreparedStatementRequest extends Request {
 			return;
 		}
 		List values = requestMsg.getParameterValues();
-		List spParams = proc.getParameters();
+		List<SPParameter> spParams = proc.getParameters();
 		proc.clearParameters();
 		int inParameterCount = values.size();
 		if (this.requestMsg.isPreparedBatchUpdate() && values.size() > 0) {
 			inParameterCount = ((List)values.get(0)).size();
 		}
 		int index = 1;
-		for (Iterator params = spParams.iterator(); params.hasNext();) {
-			SPParameter param = (SPParameter) params.next();
+		for (Iterator<SPParameter> params = spParams.iterator(); params.hasNext();) {
+			SPParameter param = params.next();
 			if (param.getParameterType() == SPParameter.RETURN_VALUE) {
 				continue;
 			}
@@ -147,13 +147,13 @@ public class PreparedStatementRequest extends Request {
         	if (!this.addedLimit) { //TODO: this is a little problematic
             	prepPlan.setCommand(this.userCommand);
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
-		        prepPlan.setPlan((ProcessorPlan)processPlan.clone());
+		        prepPlan.setPlan(processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
 		        this.prepPlanCache.putPreparedPlan(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
         } else {
         	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
-            processPlan = (ProcessorPlan)cachedPlan.clone();
+            processPlan = cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
             

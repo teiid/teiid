@@ -75,7 +75,7 @@ public class XMLUtil {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				//TODO: adjust the buffer size, and/or develop a shared buffer strategy
-				return new BufferedInputStream(lobBuffer.createInputStream());
+				return new BufferedInputStream(lobBuffer.createInputStream(0));
 			}
 			
 			@Override

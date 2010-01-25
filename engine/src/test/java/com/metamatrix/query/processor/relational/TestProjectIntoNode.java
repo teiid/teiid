@@ -217,5 +217,9 @@ public class TestProjectIntoNode extends TestCase {
                     ? null
                     : Arrays.asList(new Object[] {new Integer(currentRow), Integer.toString(currentRow)});
         }
+        @Override
+        public int available() {
+        	return 0;
+        }
     }
 }

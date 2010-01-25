@@ -82,7 +82,7 @@ public class SortUtility {
 	}
 
 	//constructor state
-    private TupleSource sourceID;
+    private TupleSource source;
     private Mode mode;
     private BufferManager bufferManager;
     private String groupName;
@@ -105,11 +105,11 @@ public class SortUtility {
     
     public SortUtility(TupleSource sourceID, List sortElements, List<Boolean> sortTypes, Mode mode, BufferManager bufferMgr,
                         String groupName) {
-        this.sourceID = sourceID;
+        this.source = sourceID;
         this.mode = mode;
         this.bufferManager = bufferMgr;
         this.groupName = groupName;
-        this.schema = this.sourceID.getSchema();
+        this.schema = this.source.getSchema();
         int distinctIndex = sortElements != null? sortElements.size() - 1:0;
         if (mode != Mode.SORT) {
 	        if (sortElements == null) {
@@ -159,6 +159,7 @@ public class SortUtility {
 
 	private TupleBuffer createTupleBuffer() throws MetaMatrixComponentException {
 		TupleBuffer tb = bufferManager.createTupleBuffer(this.schema, this.groupName, TupleSourceType.PROCESSOR);
+		tb.setForwardOnly(true);
 		return tb;
 	}
     
@@ -178,16 +179,23 @@ public class SortUtility {
             try {
 	            int maxRows = bufferManager.getMaxProcessingBatches() * bufferManager.getProcessorBatchSize();
 		        while(!doneReading) {
+		        	//attempt to reserve more working memory if there are additional rows available before blocking
 		        	if (workingTuples.size() == maxRows) {
-		        		int reserved = bufferManager.reserveBuffers(1, false);
+		        		if (source.available() < 1) {
+		        			break;
+		        		}
+	        			int reserved = bufferManager.reserveBuffers(1, false);
 		        		if (reserved == 0) {
 		        			break;
 		        		} 
 		        		totalReservedBuffers += 1;
-		        		maxRows += bufferManager.getProcessorBatchSize();
+		        		maxRows += bufferManager.getProcessorBatchSize();	
 		        	}
 		            try {
-		            	List<?> tuple = sourceID.nextTuple();
+		            	if (totalReservedBuffers > 0 && source.available() == 0) {
+		            		break;
+		            	}
+		            	List<?> tuple = source.nextTuple();
 		            	
 		            	if (tuple == null) {
 		            		doneReading = true;
@@ -293,6 +301,7 @@ public class SortUtility {
         // Close sorted source (all others have been removed)
         if (doneReading) {
         	activeTupleBuffers.get(0).close();
+        	activeTupleBuffers.get(0).setForwardOnly(false);
         	if (this.output != null) {
 	        	this.output.close();
 	        }
@@ -302,6 +311,7 @@ public class SortUtility {
     	Assertion.assertTrue(mode == Mode.DUP_REMOVE);
     	if (this.output == null) {
     		this.output = activeTupleBuffers.get(0);
+    		this.output.setForwardOnly(false);
     	}
     	this.phase = INITIAL_SORT;
     }

@@ -34,7 +34,6 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
@@ -92,22 +91,21 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
             String connectorBatchSize = configurationSvc.getConnectorBatchSize();
                 
             // Set up buffer configuration properties
-            Properties bufferProps = new Properties();                                  
-            bufferProps.setProperty(BufferManager.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
-            bufferProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, processorBatchSize); 
-            bufferProps.setProperty(BufferManager.CONNECTOR_BATCH_SIZE, connectorBatchSize); 
+            Properties bufferProps = configurationSvc.getSystemProperties();                                 
             
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
+            this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
+            this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
+            
             this.bufferMgr.initialize(bufferProps);
             
             // If necessary, add disk storage manager
             if(useDisk) {
                 // Get the properties for FileStorageManager and create.
-                Properties fsmProps = new Properties();
-                fsmProps.setProperty(BufferManager.BUFFER_STORAGE_DIRECTORY, bufferDir.getCanonicalPath());
-                StorageManager fsm = new FileStorageManager();
-                fsm.initialize(fsmProps);        
+                FileStorageManager fsm = new FileStorageManager();
+                fsm.setStorageDirectory(bufferDir.getCanonicalPath());
+                fsm.initialize(bufferProps);        
                 this.bufferMgr.setStorageManager(fsm);
                 
                 // start the file storage manager in clean state

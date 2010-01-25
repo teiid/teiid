@@ -26,6 +26,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.util.List;
 
 import com.metamatrix.common.batch.BatchSerializer;
@@ -40,8 +41,10 @@ import com.metamatrix.common.batch.BatchSerializer;
  * This object is immutable and Serializable;
  */
 public class TupleBatch implements Externalizable {
-    
-    private int rowOffset;    
+	
+	private static final long serialVersionUID = 6304443387337336957L;
+	
+	private int rowOffset;    
     private List[] tuples;
     
     // Optional state
@@ -139,6 +142,10 @@ public class TupleBatch implements Externalizable {
     public void setTerminationFlag(boolean terminationFlag) {
         this.terminationFlag = terminationFlag;    
     }
+    
+    public String[] getDataTypes() {
+		return types;
+	}
     
     public void setDataTypes(String[] types) {
         this.types = types;

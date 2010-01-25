@@ -129,6 +129,11 @@ public class TempTableStoreImpl implements TempTableStore {
 		public void closeSource() throws MetaMatrixComponentException {
 			
 		}
+		
+		@Override
+		public int available() {
+			return 0;
+		}
 	}
 
 	private BufferManager buffer;

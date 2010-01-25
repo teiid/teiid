@@ -41,20 +41,16 @@ public class MemoryStorageManager implements StorageManager {
 	public FileStore createFileStore(String name) {
 		return new FileStore() {
 			private ByteBuffer buffer = ByteBuffer.allocate(2 << 15);
-			private int end;
 			
 			@Override
-			public synchronized long writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
-				if (end + length > buffer.capacity()) {
+			public void writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
+				if (getLength() + length > buffer.capacity()) {
 					ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2 + length);
 					newBuffer.put(buffer);
 					buffer = newBuffer;
 				}
-				buffer.position(end);
+				buffer.position((int)getLength());
 				buffer.put(bytes, offset, length);
-				long result = end;
-				end += length;
-				return result;
 			}
 			
 			@Override
@@ -65,12 +61,12 @@ public class MemoryStorageManager implements StorageManager {
 			@Override
 			public synchronized int readDirect(long fileOffset, byte[] b, int offset, int length)
 					throws MetaMatrixComponentException {
-				if (fileOffset >= end) {
+				if (fileOffset >= getLength()) {
 					return -1;
 				}
 				int position = (int)fileOffset;
 				buffer.position(position);
-				length = Math.min(length, end - position);
+				length = Math.min(length, (int)getLength() - position);
 				buffer.get(b, offset, length);
 				return length;
 			}

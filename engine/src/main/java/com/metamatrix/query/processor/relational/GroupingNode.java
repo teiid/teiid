@@ -268,6 +268,14 @@ public class GroupingNode extends RelationalNode {
 			public void closeSource() throws MetaMatrixComponentException {
 				
 			}
+			
+			@Override
+			public int available() {
+				if (sourceBatch != null) {
+		    		return sourceBatch.getEndRow() - sourceRow + 1;
+		    	}
+				return 0;
+			}
 		};
 		
 	}
@@ -287,6 +295,7 @@ public class GroupingNode extends RelationalNode {
 
     private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         this.sortBuffer = this.sortUtility.sort();
+        this.sortBuffer.setForwardOnly(true);
         this.groupTupleSource = this.sortBuffer.createIndexedTupleSource();
         this.phase = GROUP;
     }

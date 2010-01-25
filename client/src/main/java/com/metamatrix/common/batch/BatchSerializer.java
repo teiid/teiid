@@ -151,7 +151,7 @@ public class BatchSerializer {
             readIsNullData(in, isNull);
             for (int i = 0; i < batch.length; i++) {
                 if (!isNullObject(isNull, i)) {
-                    batch[i].set(col, readObject(in));
+                    batch[i].set(col, DataTypeManager.getCanonicalValue(readObject(in)));
                 }
             }
         }

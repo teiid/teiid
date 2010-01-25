@@ -37,24 +37,23 @@ import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 public class NodeTestUtil {
     
     static BufferManager getTestBufferManager(long bytesAvailable, int procBatchSize, int connectorBatchSize) {
-
+    	BufferManagerImpl bufferManager = new BufferManagerImpl();
+    	bufferManager.setProcessorBatchSize(procBatchSize);
+    	bufferManager.setConnectorBatchSize(connectorBatchSize);
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
-        bmProps.setProperty(BufferManager.CONNECTOR_BATCH_SIZE, "" + connectorBatchSize); //$NON-NLS-1$
-        return createBufferManager(bmProps);
+        return createBufferManager(bufferManager, bmProps);
     }
     
     static BufferManager getTestBufferManager(long bytesAvailable, int procBatchSize) {
-
+    	BufferManagerImpl bufferManager = new BufferManagerImpl();
+    	bufferManager.setProcessorBatchSize(procBatchSize);
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManager.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
-        return createBufferManager(bmProps);
+        return createBufferManager(bufferManager, bmProps);
     }
     
-    static BufferManager createBufferManager(Properties bmProps) {
-        BufferManagerImpl bufferManager = new BufferManagerImpl();
+    static BufferManager createBufferManager(BufferManagerImpl bufferManager, Properties bmProps) {
         try {
 			bufferManager.initialize(bmProps);
 		} catch (MetaMatrixComponentException e) {
