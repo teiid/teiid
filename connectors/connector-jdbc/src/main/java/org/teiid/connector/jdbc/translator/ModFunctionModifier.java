@@ -24,6 +24,7 @@ package org.teiid.connector.jdbc.translator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,20 +40,27 @@ import org.teiid.connector.language.ILanguageFactory;
  */
 public class ModFunctionModifier extends AliasModifier {
 
-	private static Set<Class> SUPPORTED_TYPES = new HashSet<Class>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
+	private Set<Class> supportedTypes = new HashSet<Class>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
 
 	private ILanguageFactory langFactory;
-    
+
     public ModFunctionModifier(String modFunction, ILanguageFactory langFactory) {
+    	this(modFunction, langFactory, null);
+    }
+
+    public ModFunctionModifier(String modFunction, ILanguageFactory langFactory, Collection<Class> supportedTypes) {
     	super(modFunction);
-        this.langFactory = langFactory;
+    	this.langFactory = langFactory;
+    	if (supportedTypes != null) {
+    		this.supportedTypes.addAll(supportedTypes);
+    	}
     }
     
     @Override
     public List<?> translate(IFunction function) {
     	List<IExpression> expressions = function.getParameters();
 		Class<?> type = function.getType();
-		if (SUPPORTED_TYPES.contains(type)) {
+		if (supportedTypes.contains(type)) {
 			modify(function);
 			return null;
 		}

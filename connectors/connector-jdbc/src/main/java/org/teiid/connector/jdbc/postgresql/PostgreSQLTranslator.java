@@ -41,6 +41,7 @@ import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.IExpression;
@@ -93,6 +94,8 @@ public class PostgreSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
+        
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$ 
 
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());

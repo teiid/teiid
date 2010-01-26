@@ -145,22 +145,6 @@ public class TestModFunctionModifier extends TestCase {
 
     /**
      * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * MOD(x,y) using {@link Integer} constants for both parameters returns 
-     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
-     * function name of "MOD" and a supported type list which contains {@link Integer}. 
-     * 
-     * @throws Exception
-     */
-    public void testTwoIntConst3() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
-                LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
-        };
-        helpTestMod("MOD", args, "MOD(10, 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Integer} constants for both parameters returns (x % y).  
      * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
@@ -170,22 +154,6 @@ public class TestModFunctionModifier extends TestCase {
     public void testTwoIntConst5() throws Exception {
         IExpression[] args = new IExpression[] {
         		LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
-                LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
-        };
-        helpTestMod("%", args, "(10 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * x % y using {@link Integer} constants for both parameters returns (x % y).  
-     * {@link ModFunctionModifier} will be constructed with a function name of 
-     * "%" and a supported type list which contains {@link Integer}. 
-     * 
-     * @throws Exception
-     */
-    public void testTwoIntConst6() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
         };
         helpTestMod("%", args, "(10 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -225,22 +193,6 @@ public class TestModFunctionModifier extends TestCase {
 
     /**
      * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * MOD(x,y) using {@link Long} constants for both parameters returns 
-     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
-     * function name of "MOD" and a supported type list which contains {@link Long}. 
-     * 
-     * @throws Exception
-     */
-    public void testTwoLongConst3() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral(new Long(10), Long.class),
-                LANG_FACTORY.createLiteral(new Long(6), Long.class)           
-        };
-        helpTestMod("MOD", args, "MOD(10, 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Long} constants for both parameters returns (x % y).  
      * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
@@ -248,22 +200,6 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoLongConst5() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral(new Long(10), Long.class),
-                LANG_FACTORY.createLiteral(new Long(6), Long.class)           
-        };
-        helpTestMod("%", args, "(10 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * x % y using {@link Long} constants for both parameters returns (x % y).  
-     * {@link ModFunctionModifier} will be constructed with a function name of 
-     * "%" and a supported type list which contains {@link Long}. 
-     * 
-     * @throws Exception
-     */
-    public void testTwoLongConst6() throws Exception {
         IExpression[] args = new IExpression[] {
                 LANG_FACTORY.createLiteral(new Long(10), Long.class),
                 LANG_FACTORY.createLiteral(new Long(6), Long.class)           
@@ -355,23 +291,6 @@ public class TestModFunctionModifier extends TestCase {
 
     /**
      * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
-     * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
-     * constructed with a function name of "MOD" and a supported type list which 
-     * contains {@link Integer}. 
-     * 
-     * @throws Exception
-     */
-    public void testOneIntElemOneIntConst3() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
-                LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
-        };
-        helpTestMod("MOD", args, "MOD(e1, 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
      * parameters returns (e1 % y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
@@ -384,23 +303,6 @@ public class TestModFunctionModifier extends TestCase {
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
         };
         // % / default 
-        helpTestMod("%", args, "(e1 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
-     * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
-     * parameters returns (e1 % y).  {@link ModFunctionModifier} will be 
-     * constructed with a function name of "%" and a supported type list which 
-     * contains {@link Integer}. 
-     * 
-     * @throws Exception
-     */
-    public void testOneIntElemOneIntConst6() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
-                LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
-        };
         helpTestMod("%", args, "(e1 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
