@@ -25,6 +25,7 @@ package org.teiid.connector.jdbc.mysql;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.TranslationHelper;
@@ -338,6 +339,25 @@ public class TestMySQLTranslator {
         String output = "SELECT CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END FROM SmallA ORDER BY INTKEY"; //$NON-NLS-1$
           
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
+    @Test public void testThreeUnionBranches() throws Exception {
+    	String input = "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id"; //$NON-NLS-1$
+        String output = "(SELECT PARTS.PART_ID AS id FROM PARTS) UNION ALL (SELECT PARTS.PART_NAME FROM PARTS) UNION ALL (SELECT PARTS.PART_ID FROM PARTS) ORDER BY id"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
+    @Ignore("There's no good workaround for this case on mysql 4 and for 5 can be done with a suquery, but only if the first union branch has no parens...")
+    @Test public void testNestedSetQuery() throws Exception {
+    	String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
+        String output = ""; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
             input, 
             output, TRANSLATOR);
     }

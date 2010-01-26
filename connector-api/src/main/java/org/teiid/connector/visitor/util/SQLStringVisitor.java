@@ -72,6 +72,7 @@ import org.teiid.connector.language.ISubqueryCompareCriteria;
 import org.teiid.connector.language.ISubqueryInCriteria;
 import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.ISetQuery.Operation;
 import org.teiid.connector.metadata.runtime.MetadataObject;
 import org.teiid.connector.visitor.framework.AbstractLanguageVisitor;
 
@@ -971,7 +972,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(ISetQuery obj) {
-        appendSetQuery(obj.getLeftQuery());
+        appendSetQuery(obj, obj.getLeftQuery(), false);
         
         buffer.append(SQLReservedWords.SPACE);
         
@@ -983,7 +984,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         buffer.append(SQLReservedWords.SPACE);
 
-        appendSetQuery(obj.getRightQuery());
+        appendSetQuery(obj, obj.getRightQuery(), true);
         
         IOrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
@@ -1006,8 +1007,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	return false;
     }
 
-    protected void appendSetQuery(IQueryCommand obj) {
-        if(obj instanceof ISetQuery || useParensForSetQueries()) {
+    protected void appendSetQuery(ISetQuery parent, IQueryCommand obj, boolean right) {
+        if((!(obj instanceof ISetQuery) && useParensForSetQueries()) 
+        		|| (right && obj instanceof ISetQuery 
+        				&& ((parent.isAll() && !((ISetQuery)obj).isAll()) 
+        						|| parent.getOperation() != ((ISetQuery)obj).getOperation()))) {
             buffer.append(SQLReservedWords.LPAREN);
             append(obj);
             buffer.append(SQLReservedWords.RPAREN);

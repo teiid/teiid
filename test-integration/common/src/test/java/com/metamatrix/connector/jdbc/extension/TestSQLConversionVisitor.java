@@ -22,10 +22,12 @@
 
 package com.metamatrix.connector.jdbc.extension;
 
+import static org.junit.Assert.*;
+
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
@@ -43,10 +45,9 @@ import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-
 /**
  */
-public class TestSQLConversionVisitor extends TestCase {
+public class TestSQLConversionVisitor {
 
     public static final ExecutionContext context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
                                                                             "Version",  //$NON-NLS-1$
@@ -56,14 +57,16 @@ public class TestSQLConversionVisitor extends TestCase {
                                                                             "ConnectionID",   //$NON-NLS-1$
                                                                             "Connector", //$NON-NLS-1$
                                                                             "RequestID", "PartID", "ExecCount");     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    /**
-     * Constructor for TestSQLConversionVisitor.
-     * @param name
-     */
-    public TestSQLConversionVisitor(String name) {
-        super(name);
+    
+    private static Translator TRANSLATOR; 
+    
+    @BeforeClass public static void oneTimeSetup() throws ConnectorException {
+    	TRANSLATOR = new Translator();
+        Properties p = new Properties();
+    	p.setProperty(JDBCPropertyNames.TRIM_STRINGS, Boolean.TRUE.toString());
+    	TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(p, false));
     }
-
+    
     public String getTestVDB() {
         return TranslationHelper.PARTS_VDB;
     }
@@ -99,244 +102,244 @@ public class TestSQLConversionVisitor extends TestCase {
         return visitor.toString();
     }    
     
-    public void testSimple() {
+    @Test public void testSimple() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testAliasInSelect() {
+    @Test public void testAliasInSelect() {
         helpTestVisitor(getTestVDB(),
             "select part_name as x from parts", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME AS x FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testAliasedGroup() {
+    @Test public void testAliasedGroup() {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts y", //$NON-NLS-1$
             "SELECT y.PART_NAME FROM PARTS AS y"); //$NON-NLS-1$
     }
 
-    public void testAliasedGroupAndElement() {
+    @Test public void testAliasedGroupAndElement() {
         helpTestVisitor(getTestVDB(),
             "select y.part_name AS z from parts y", //$NON-NLS-1$
             "SELECT y.PART_NAME AS z FROM PARTS AS y"); //$NON-NLS-1$
     }
 
-    public void testLiteralString() {
+    @Test public void testLiteralString() {
         helpTestVisitor(getTestVDB(),
             "select 'x' from parts", //$NON-NLS-1$
             "SELECT 'x' FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralInteger() {
+    @Test public void testLiteralInteger() {
         helpTestVisitor(getTestVDB(),
             "select 5 from parts", //$NON-NLS-1$
             "SELECT 5 FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralFloat() {
+    @Test public void testLiteralFloat() {
         helpTestVisitor(getTestVDB(),
             "select 5.2 from parts", //$NON-NLS-1$
             "SELECT 5.2 FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralLowFloat() {
+    @Test public void testLiteralLowFloat() {
         helpTestVisitor(getTestVDB(),
             "select 0.012 from parts", //$NON-NLS-1$
             "SELECT 0.012 FROM PARTS"); //$NON-NLS-1$
     }
     
-    public void testLiteralLowFloat2() {
+    @Test public void testLiteralLowFloat2() {
         helpTestVisitor(getTestVDB(),
             "select 0.00012 from parts", //$NON-NLS-1$
             "SELECT 0.00012 FROM PARTS"); //$NON-NLS-1$
     }    
     
-    public void testLiteralHighFloat() {
+    @Test public void testLiteralHighFloat() {
         helpTestVisitor(getTestVDB(),
             "select 12345.123 from parts", //$NON-NLS-1$
             "SELECT 12345.123 FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralHighFloat2() {
+    @Test public void testLiteralHighFloat2() {
         helpTestVisitor(getTestVDB(),
             "select 1234567890.1234567 from parts", //$NON-NLS-1$
             "SELECT 1234567890.1234567 FROM PARTS"); //$NON-NLS-1$
     }
     
-    public void testLiteralBoolean() {
+    @Test public void testLiteralBoolean() {
         helpTestVisitor(getTestVDB(),
             "select {b'true'}, {b'false'} from parts", //$NON-NLS-1$
             "SELECT 1, 0 FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralDate() {
+    @Test public void testLiteralDate() {
         helpTestVisitor(getTestVDB(),
             "select {d '2003-12-31'} from parts", //$NON-NLS-1$
             "SELECT {d '2003-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralTime() {
+    @Test public void testLiteralTime() {
         helpTestVisitor(getTestVDB(),
             "select {t '23:59:59'} from parts", //$NON-NLS-1$
             "SELECT {t '23:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralNull() {
+    @Test public void testLiteralNull() {
         helpTestVisitor(getTestVDB(),
             "select null from parts", //$NON-NLS-1$
             "SELECT NULL FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testLiteralTimestamp() {
+    @Test public void testLiteralTimestamp() {
         helpTestVisitor(getTestVDB(),
             "select {ts '2003-12-31 23:59:59.123'} from parts", //$NON-NLS-1$
             "SELECT {ts '2003-12-31 23:59:59.123'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testSQL89Join() {
+    @Test public void testSQL89Join() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p, supplier_parts s where p.part_id = s.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM PARTS AS p, SUPPLIER_PARTS AS s WHERE p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testSQL92Join() {
+    @Test public void testSQL92Join() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM PARTS AS p INNER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testSelfJoin() {
+    @Test public void testSelfJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p join parts p2 on p.part_id = p2.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM PARTS AS p INNER JOIN PARTS AS p2 ON p.PART_ID = p2.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testRightOuterJoin() {
+    @Test public void testRightOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p right join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM SUPPLIER_PARTS AS s LEFT OUTER JOIN PARTS AS p ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testLeftOuterJoin() {
+    @Test public void testLeftOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p left join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM PARTS AS p LEFT OUTER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testFullOuterJoin() {
+    @Test public void testFullOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p full join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
             "SELECT p.PART_NAME FROM PARTS AS p FULL OUTER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
-    public void testCompare1() {
+    @Test public void testCompare1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id = 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID = 'x'"); //$NON-NLS-1$
     }
 
-    public void testCompare2() {
+    @Test public void testCompare2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id <> 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID <> 'x'"); //$NON-NLS-1$
     }
 
-    public void testCompare3() {
+    @Test public void testCompare3() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id < 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID < 'x'"); //$NON-NLS-1$
     }
 
-    public void testCompare4() {
+    @Test public void testCompare4() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id <= 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID <= 'x'"); //$NON-NLS-1$
     }
 
-    public void testCompare5() {
+    @Test public void testCompare5() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id > 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID > 'x'"); //$NON-NLS-1$
     }
 
-    public void testCompare6() {
+    @Test public void testCompare6() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id >= 'x'", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID >= 'x'"); //$NON-NLS-1$
     }
 
-    public void testIn1() {
+    @Test public void testIn1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id in ('x')", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID = 'x'"); //$NON-NLS-1$
     }
 
-    public void testIn2() {
+    @Test public void testIn2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id in ('x', 'y')", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IN ('x', 'y')"); //$NON-NLS-1$
     }
 
-    public void testIn3() {
+    @Test public void testIn3() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id not in ('x', 'y')", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID NOT IN ('x', 'y')"); //$NON-NLS-1$
     }
 
-    public void testIsNull1() {
+    @Test public void testIsNull1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id is null", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IS NULL"); //$NON-NLS-1$
     }
 
-    public void testIsNull2() {
+    @Test public void testIsNull2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id is not null", //$NON-NLS-1$
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IS NOT NULL"); //$NON-NLS-1$
     }
 
-    public void testInsertNull() {
+    @Test public void testInsertNull() {
         helpTestVisitor(getTestVDB(),
             "insert into parts (part_id, part_name, part_color, part_weight) values ('a', null, 'c', 'd')", //$NON-NLS-1$
             "INSERT INTO PARTS (PART_ID, PART_NAME, PART_COLOR, PART_WEIGHT) VALUES ('a', NULL, 'c', 'd')"); //$NON-NLS-1$
     }
 
-    public void testUpdateNull() {
+    @Test public void testUpdateNull() {
         helpTestVisitor(getTestVDB(),
             "update parts set part_weight = null where part_color = 'b'", //$NON-NLS-1$
             "UPDATE PARTS SET PART_WEIGHT = NULL WHERE PARTS.PART_COLOR = 'b'"); //$NON-NLS-1$
     }
 
-    public void testUpdateWhereNull() {
+    @Test public void testUpdateWhereNull() {
         helpTestVisitor(getTestVDB(),
             "update parts set part_weight = 'a' where part_weight = null", //$NON-NLS-1$
             "UPDATE PARTS SET PART_WEIGHT = 'a' WHERE NULL <> NULL"); //$NON-NLS-1$
     }
 
-    public void testPreparedStatementCreationWithUpdate() {
+    @Test public void testPreparedStatementCreationWithUpdate() {
         helpTestVisitor(getTestVDB(),
                         "update parts set part_weight = 'a' where part_weight < 5", //$NON-NLS-1$
                         "UPDATE PARTS SET PART_WEIGHT = ? WHERE PARTS.PART_WEIGHT < ?", //$NON-NLS-1$
                         true); 
     }
     
-    public void testPreparedStatementCreationWithInsert() {
+    @Test public void testPreparedStatementCreationWithInsert() {
         helpTestVisitor(getTestVDB(),
                         "insert into parts (part_weight) values (5)", //$NON-NLS-1$
                         "INSERT INTO PARTS (PART_WEIGHT) VALUES (?)", //$NON-NLS-1$
                         true); 
     }
     
-    public void testPreparedStatementCreationWithSelect() {
+    @Test public void testPreparedStatementCreationWithSelect() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_id not in ('x', 'y') and part_weight < 6", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE (PARTS.PART_ID NOT IN (?, ?)) AND (PARTS.PART_WEIGHT < ?)", //$NON-NLS-1$
                         true); 
     }
     
-    public void testPreparedStatementCreationWithLike() {
+    @Test public void testPreparedStatementCreationWithLike() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_name like '%foo'", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_NAME LIKE ?", //$NON-NLS-1$
@@ -358,53 +361,76 @@ public class TestSQLConversionVisitor extends TestCase {
      * In the future, functions can be made smarter about which of their literal arguments
      * either are (or are not) eligible to be bind variables 
      */
-    public void testPreparedStatementCreationWithFunction() {
+    @Test public void testPreparedStatementCreationWithFunction() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where concat(part_name, 'x') = concat('y', part_weight)", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(PARTS.PART_NAME, 'x') = concat('y', PARTS.PART_WEIGHT)", //$NON-NLS-1$
                         true); 
     }
     
-    public void testPreparedStatementCreationWithCase() {
+    @Test public void testPreparedStatementCreationWithCase() {
         helpTestVisitor(getTestVDB(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME='a' THEN 'b' ELSE 'c' END", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME = ? THEN 'b' ELSE 'c' END", //$NON-NLS-1$
                         true); 
     }
 
-    public void testVisitIDeleteWithComment() throws Exception {
+    @Test public void testVisitIDeleteWithComment() throws Exception {
         String expected = "DELETE /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ FROM g1 WHERE (100 >= 200) AND (500 < 600)"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestDeleteImpl.example()));
     }
 
-    public void testVisitIInsertWithComment() throws Exception {
+    @Test public void testVisitIInsertWithComment() throws Exception {
         String expected = "INSERT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ INTO g1 (e1, e2, e3, e4) VALUES (1, 2, 3, 4)"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestInsertImpl.example("g1"))); //$NON-NLS-1$
     }  
     
-    public void testVisitISelectWithComment() throws Exception {
+    @Test public void testVisitISelectWithComment() throws Exception {
         String expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestSelectImpl.example(false)));
         expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ DISTINCT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestSelectImpl.example(true)));
     }
     
-    public void testVisitIUpdateWithComment() throws Exception {
+    @Test public void testVisitIUpdateWithComment() throws Exception {
         String expected = "UPDATE /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ g1 SET e1 = 1, e2 = 1, e3 = 1, e4 = 1 WHERE 1 = 1"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestUpdateImpl.example()));
     }    
     
-    public void testVisitIProcedureWithComment() throws Exception {
+    @Test public void testVisitIProcedureWithComment() throws Exception {
         String expected = "{ /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestProcedureImpl.example()));
     }  
     
-    public void testTrimStrings() throws Exception {
-    	Translator trans = new Translator();
-        Properties p = new Properties();
-    	p.setProperty(JDBCPropertyNames.TRIM_STRINGS, Boolean.TRUE.toString());
-        trans.initialize(EnvironmentUtility.createEnvironment(p, false));
-
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, "select stringkey from bqt1.smalla", "SELECT rtrim(SmallA.StringKey) FROM SmallA", trans); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testTrimStrings() throws Exception {
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, "select stringkey from bqt1.smalla", "SELECT rtrim(SmallA.StringKey) FROM SmallA", TRANSLATOR); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testNestedSetQuery() throws Exception {
+    	String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
+        String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION ALL (SELECT PARTS.PART_NAME FROM PARTS UNION SELECT rtrim(PARTS.PART_ID) FROM PARTS)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
+    @Test public void testNestedSetQuery1() throws Exception {
+    	String input = "select part_id id FROM parts UNION (select part_name FROM parts EXCEPT select part_id FROM parts)"; //$NON-NLS-1$
+        String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION (SELECT PARTS.PART_NAME FROM PARTS EXCEPT SELECT rtrim(PARTS.PART_ID) FROM PARTS)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
+    @Test public void testNestedSetQuery2() throws Exception {
+    	String input = "select part_id id FROM parts UNION select part_name FROM parts EXCEPT select part_id FROM parts"; //$NON-NLS-1$
+        String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION SELECT PARTS.PART_NAME FROM PARTS EXCEPT SELECT rtrim(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+
 }
