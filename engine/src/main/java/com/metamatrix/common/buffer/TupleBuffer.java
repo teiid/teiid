@@ -200,7 +200,25 @@ public class TupleBuffer {
 		}
 		batchBuffer.add(tuple);
 		if (batchBuffer.size() == batchSize) {
-			saveBatch(false);
+			saveBatch(false, false);
+		}
+	}
+	
+	/**
+	 * Adds the given batch preserving row offsets.
+	 * @param batch
+	 * @throws MetaMatrixComponentException
+	 */
+	public void addTupleBatch(TupleBatch batch, boolean save) throws MetaMatrixComponentException {
+		Assertion.assertTrue(this.rowCount < batch.getBeginRow());
+		if (this.rowCount != batch.getBeginRow() - 1) {
+			saveBatch(false, true);
+			this.rowCount = batch.getBeginRow() - 1;
+		} 
+		if (save) {
+			for (List<?> tuple : batch.getAllTuples()) {
+				addTuple(tuple);
+			}
 		}
 	}
 	
@@ -209,12 +227,12 @@ public class TupleBuffer {
 	 * @throws MetaMatrixComponentException
 	 */
 	public void saveBatch() throws MetaMatrixComponentException {
-		this.saveBatch(false);
+		this.saveBatch(false, false);
 	}
 
-	void saveBatch(boolean finalBatch) throws MetaMatrixComponentException {
+	void saveBatch(boolean finalBatch, boolean force) throws MetaMatrixComponentException {
 		Assertion.assertTrue(!this.isRemoved());
-		if (batchBuffer == null || batchBuffer.isEmpty() || batchBuffer.size() < Math.max(1, batchSize / 32)) {
+		if (batchBuffer == null || batchBuffer.isEmpty() || (!force && batchBuffer.size() < Math.max(1, batchSize / 32))) {
 			return;
 		}
         TupleBatch writeBatch = new TupleBatch(rowCount - batchBuffer.size() + 1, batchBuffer);
@@ -230,7 +248,7 @@ public class TupleBuffer {
 	public void close() throws MetaMatrixComponentException {
 		//if there is only a single batch, let it stay in memory
 		if (!this.batches.isEmpty()) { 
-			saveBatch(true);
+			saveBatch(true, false);
 		}
 		this.isFinal = true;
 	}
@@ -252,35 +270,34 @@ public class TupleBuffer {
 	 * @throws MetaMatrixComponentException
 	 */
 	public TupleBatch getBatch(int row) throws MetaMatrixComponentException {
+		TupleBatch result = null;
 		if (row > rowCount) {
-			TupleBatch batch = new TupleBatch(rowCount + 1, new List[] {});
-			if (isFinal) {
-				batch.setTerminationFlag(true);
-			}
-			return batch;
-		}
-		if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
-			TupleBatch result = new TupleBatch(rowCount - this.batchBuffer.size() + 1, batchBuffer);
+			result = new TupleBatch(rowCount + 1, new List[] {});
+		} else if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
+			result = new TupleBatch(rowCount - this.batchBuffer.size() + 1, batchBuffer);
 			if (forwardOnly) {
 				this.batchBuffer = null;
 			}
-			return result;
+		} else {
+			if (this.batchBuffer != null && !this.batchBuffer.isEmpty()) {
+				//this is just a sanity check to ensure we're not holding too many
+				//hard references to batches.
+				saveBatch(isFinal, false);
+			}
+			Map.Entry<Integer, BatchManager.ManagedBatch> entry = batches.floorEntry(row);
+			Assertion.isNotNull(entry);
+			BatchManager.ManagedBatch batch = entry.getValue();
+	    	result = batch.getBatch(!forwardOnly, types);
+	    	if (lobs && result.getDataTypes() == null) {
+		        correctLobReferences(result.getAllTuples());
+	    	}
+	    	result.setDataTypes(types);
+	    	if (forwardOnly) {
+				batches.remove(entry.getKey());
+			}
 		}
-		if (this.batchBuffer != null && !this.batchBuffer.isEmpty()) {
-			//this is just a sanity check to ensure we're not holding too many
-			//hard references to batches.
-			saveBatch(isFinal);
-		}
-		Map.Entry<Integer, BatchManager.ManagedBatch> entry = batches.floorEntry(row);
-		Assertion.isNotNull(entry);
-		BatchManager.ManagedBatch batch = entry.getValue();
-    	TupleBatch result = batch.getBatch(!forwardOnly, types);
-    	if (lobs && result.getDataTypes() == null) {
-	        correctLobReferences(result.getAllTuples());
-    	}
-    	result.setDataTypes(types);
-    	if (forwardOnly) {
-			batches.remove(entry.getKey());
+		if (isFinal && result.getEndRow() == rowCount) {
+			result.setTerminationFlag(true);
 		}
 		return result;
 	}

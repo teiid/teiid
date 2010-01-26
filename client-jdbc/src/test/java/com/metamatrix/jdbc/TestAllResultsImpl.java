@@ -22,6 +22,7 @@
 
 package com.metamatrix.jdbc;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.sql.ResultSet;
@@ -38,9 +39,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Matchers;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
@@ -51,7 +52,7 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.query.unittest.TimestampUtil;
 
-public class TestAllResultsImpl extends TestCase {
+public class TestAllResultsImpl {
 
 	private static final long REQUEST_ID = 0;
 	private static final int TYPE_FORWARD_ONLY = ResultSet.TYPE_FORWARD_ONLY;
@@ -59,17 +60,12 @@ public class TestAllResultsImpl extends TestCase {
 
 	private MMStatement statement;
 
-	public TestAllResultsImpl(String name) {
-		super(name);
-	}
-
-	@Override
-	protected void setUp() throws Exception {
-		statement = TestMMResultSet.createMockStatement();
+	@Before public void setUp() throws Exception {
+		statement = TestMMResultSet.createMockStatement(TYPE_SCROLL_SENSITIVE);
 	}
 	
 	/** test hasNext(), actual result set should return FALSE. */
-	public void testHasNext1() throws Exception {
+	@Test public void testHasNext1() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
 		while (rs.next()) {
@@ -84,7 +80,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test hasNext(), actual result set should return TRUE. */
-	public void testHasNext2() throws Exception {
+	@Test public void testHasNext2() throws Exception {
 		List[] results = exampleResults1(5);
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
@@ -104,7 +100,7 @@ public class TestAllResultsImpl extends TestCase {
 	 * test next(), whether the result set's cursor is positioned on next row or
 	 * not
 	 */
-	public void testNext1() throws Exception {
+	@Test public void testNext1() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
 
@@ -117,7 +113,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test next(), walk through all rows of a result set and compare each row. */
-	public void testNext2() throws Exception {
+	@Test public void testNext2() throws Exception {
 		List[] results = exampleResults1(5);
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
@@ -135,7 +131,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test next(), get result set and close without walking through */
-	public void testNext3() throws Exception {
+	@Test public void testNext3() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
 		assertEquals(new Integer(0), new Integer(rs.getRow())); 
@@ -144,7 +140,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test next(), walk through partial rows of a result set */
-	public void testNext4() throws Exception {
+	@Test public void testNext4() throws Exception {
 		List[] results = exampleResults1(5);
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
@@ -160,7 +156,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test next(), when hasNext() == false */
-	public void testNext5() throws Exception {
+	@Test public void testNext5() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
 		while (rs.next()) {
@@ -175,7 +171,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test getObject() at columnIndex = 2 of 5th row */
-	public void testGetObject1() throws Exception {
+	@Test public void testGetObject1() throws Exception {
 		List[] results = exampleResults2();
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2a(),
 				statement);
@@ -199,7 +195,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** Should fail, test getObject() at wrong columnIndex */
-	public void testGetObject2() throws Exception {
+	@Test public void testGetObject2() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2a(),
 				statement);
 
@@ -218,7 +214,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testGetRow() throws Exception {
+	@Test public void testGetRow() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
 				statement);
 
@@ -233,7 +229,7 @@ public class TestAllResultsImpl extends TestCase {
 
 	}
 
-	public void testPrevious() throws Exception {
+	@Test public void testPrevious() throws Exception {
 		List[] results = exampleResults1(5);
 		MMResultSet rs = new MMResultSet(exampleResultsMsg1(),
 				statement);
@@ -254,7 +250,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testGetCurrentRecord() throws Exception {
+	@Test public void testGetCurrentRecord() throws Exception {
 		List[] results = exampleResults2();
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
 				statement);
@@ -265,7 +261,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testGetMetaData() throws Exception {
+	@Test public void testGetMetaData() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2a(),
 				statement);
 		ResultSetMetaData rmetadata = rs.getMetaData();
@@ -280,20 +276,20 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testResultsWarnings() throws Exception {
+	@Test public void testResultsWarnings() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
 				statement);
 		rs.close();
 	}
 
-	public void testClose() throws Exception {
+	@Test public void testClose() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
 				statement);
 		rs.close();
 		verify(statement, times(0)).close();
 	}
 
-	public void testGetFetchSize() throws Exception {
+	@Test public void testGetFetchSize() throws Exception {
 		MMStatement s = mock(MMStatement.class);
 		stub(s.getFetchSize()).toReturn(500);
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(), s);
@@ -304,27 +300,17 @@ public class TestAllResultsImpl extends TestCase {
 
 	// //////////////////////Functions refer to ResultSet's TYPE_FORWARD_ONLY///
 	// /////////////////
-	public void testIsAfterLast1() throws Exception {
+	@Test(expected=SQLException.class) public void testIsAfterLast1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
-
-		// the last row
 		rs.last();
-		boolean actual = rs.isAfterLast();
-		assertEquals(false, actual); 
-		rs.close();
 	}
 
-	public void testAfterLast1() throws Exception {
+	@Test(expected=SQLException.class) public void testAfterLast1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
-
-		// move cursor right past the last row
 		rs.afterLast();
-		assertEquals(0, rs.getRow()); 
-		rs.close();
-
 	}
 
-	public void testIsBeforeFirst1() throws Exception {
+	@Test public void testIsBeforeFirst1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
 		// right before the first row
@@ -333,7 +319,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsBeforeFirst2() throws Exception {
+	@Test public void testIsBeforeFirst2() throws Exception {
 		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
 
 		// right before the first row
@@ -342,7 +328,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testBeforeFirst1() throws Exception {
+	@Test(expected=SQLException.class) public void testBeforeFirst1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
 		// move cursor to the first row
@@ -350,12 +336,9 @@ public class TestAllResultsImpl extends TestCase {
 
 		// move back to before first row
 		rs.beforeFirst();
-
-		assertEquals(0, rs.getRow()); 
-		rs.close();
 	}
 
-	public void testIsFirst1() throws Exception {
+	@Test public void testIsFirst1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
 		// move cursor to the first row
@@ -365,7 +348,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsFirst2() throws Exception {
+	@Test public void testIsFirst2() throws Exception {
 		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
 
 		// move cursor to the first row
@@ -375,27 +358,23 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testFirst1() throws Exception {
+	@Test(expected=SQLException.class) public void testFirst1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
 		// move cursor to the first row
 		rs.next();
-		boolean actual = rs.first();
-		assertEquals(true, actual); 
-		rs.close();
+		rs.first();
 	}
 
-	public void testFirst2() throws Exception {
+	@Test(expected=SQLException.class) public void testFirst2() throws Exception {
 		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
 
 		// move cursor to the first row
 		rs.next();
-		boolean actual = rs.first();
-		assertEquals(false, actual); 
-		rs.close();
+		rs.first();
 	}
 
-	public void testFindColumn() throws Exception {
+	@Test public void testFindColumn() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2a(),
 				statement);
 
@@ -403,45 +382,29 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsLast1() throws Exception {
+	@Test public void testIsLast1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
 		// move cursor to the last row
-		rs.last();
 		boolean actual = rs.isLast();
-		assertEquals(true, actual); 
-		rs.close();
+		assertEquals(false, actual); 
 	}
 
-	public void testIsLast2() throws Exception {
+	@Test public void testIsLast2() throws Exception {
 		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
 
 		// move cursor to the last row
-		rs.last();
 		boolean actual = rs.isLast();
 		assertEquals(false, actual); 
-		rs.close();
 	}
 
-	public void testLast1() throws Exception {
+	@Test(expected=SQLException.class) public void testLast1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
-		// check whether the movement of cursor is successful
-		boolean actual = rs.last();
-		assertEquals(true, actual); 
-		rs.close();
+		rs.last();
 	}
 
-	public void testLast2() throws Exception {
-		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
-
-		// check whether the movement of cursor is successful
-		boolean actual = rs.last();
-		assertEquals(false, actual); 
-		rs.close();
-	}
-
-	public void testRelative1() throws Exception {
+	@Test public void testRelative1() throws Exception {
 		MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
 				statement);
 
@@ -458,28 +421,16 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testAbsolute1() throws Exception {
+	@Test(expected=SQLException.class) public void testAbsolute1() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_FORWARD_ONLY);
 
-		// check whether the movement of cursor is successful
-		boolean actual = rs.absolute(1);
-		assertEquals(true, actual); 
-		rs.close();
-	}
-
-	public void testAbsolute2() throws Exception {
-		MMResultSet rs = helpGetNoResults(TYPE_FORWARD_ONLY);
-
-		// check whether the movement of cursor is successful
-		boolean actual = rs.absolute(1);
-		assertEquals(false, actual); 
-		rs.close();
+		rs.absolute(1);
 	}
 
 	// //////////Functions refer to other types other than ResultSet's
 	// TYPE_FORWARD_ONLY//////
 
-	public void testAfterLast1a() throws Exception {
+	@Test public void testAfterLast1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move cursor right past the last row
@@ -490,7 +441,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsAfterLast1a() throws Exception {
+	@Test public void testIsAfterLast1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// the last row
@@ -505,7 +456,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsBeforeFirst1a() throws Exception {
+	@Test public void testIsBeforeFirst1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// right before the first row
@@ -514,7 +465,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testBeforeFirst1a() throws Exception {
+	@Test public void testBeforeFirst1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move cursor to the first row
@@ -528,7 +479,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsFirst1a() throws Exception {
+	@Test public void testIsFirst1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move cursor to the first row
@@ -541,7 +492,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testFirst1a() throws Exception {
+	@Test public void testFirst1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move cursor to the first row
@@ -563,7 +514,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testIsLast1a() throws Exception {
+	@Test public void testIsLast1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// check whether the movement of cursor is successful
@@ -576,7 +527,7 @@ public class TestAllResultsImpl extends TestCase {
 		rs.close();
 	}
 
-	public void testLast1a() throws Exception {
+	@Test public void testLast1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// check whether the movement of cursor is successful
@@ -589,7 +540,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** normal relative move, only including moving from valid row to valid one */
-	public void testRelative1a() throws Exception {
+	@Test public void testRelative1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move to 1st row
@@ -607,7 +558,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** normal relative move, including moving from valid row to invalid one */
-	public void testRelative1b() throws Exception {
+	@Test public void testRelative1b() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// move to 1st row
@@ -635,7 +586,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** check only moving from an invalid row */
-	public void testRelative1c() throws Exception {
+	@Test public void testRelative1c() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// test if move before first will work or not
@@ -685,7 +636,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test only valid row in result set */
-	public void testAbsolute1a() throws Exception {
+	@Test public void testAbsolute1a() throws Exception {
 		MMResultSet rs = helpGetResultSetImpl(TYPE_SCROLL_SENSITIVE);
 
 		// start from beginning
@@ -710,7 +661,7 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	/** test only valid row in result set */
-	public void testAbsolute2a() throws Exception {
+	@Test public void testAbsolute2a() throws Exception {
 		MMResultSet rs = helpGetNoResults(TYPE_SCROLL_SENSITIVE);
 
 		// start from beginning
@@ -729,7 +680,7 @@ public class TestAllResultsImpl extends TestCase {
 	 * Case 4293 - timestamps for begin and end processing should both be set
 	 * server-side (from the same system clock)
 	 */
-	public void testProcessingTime() throws Exception {
+	@Test public void testProcessingTime() throws Exception {
 		RequestMessage request = new RequestMessage();
 		request.setProcessingTimestamp(new Date(12345678L));
 		ResultsMessage resultsMsg = new ResultsMessage(request);
@@ -757,7 +708,7 @@ public class TestAllResultsImpl extends TestCase {
 	/**
 	 * 3 batches
 	 */
-	public void testMoreResults() throws Exception {
+	@Test public void testMoreResults() throws Exception {
 		int fetchSize = 5;
 		int batchLength = 4;
 		int totalLength = 10;
@@ -795,8 +746,7 @@ public class TestAllResultsImpl extends TestCase {
 		}
 		
 		ResultsMessage msg = exampleResultsMsg4(1, batchLength, fetchSize, batchLength == totalLength);
-		MMResultSet rs = new MMResultSet(msg, statement);
-		return rs;
+		return new MMResultSet(msg, statement);
 	}
 
 	// /////////////////////Helper Method///////////////////
@@ -844,12 +794,14 @@ public class TestAllResultsImpl extends TestCase {
 	private MMResultSet helpGetResultSetImpl(int type)
 			throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg2();
+		statement = TestMMResultSet.createMockStatement(type);
 		MMResultSet rs = new MMResultSet(rsMsg, statement);
 		return rs;
 	}
 
 	private MMResultSet helpGetNoResults(int type) throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg3();
+		statement = TestMMResultSet.createMockStatement(type);
 		MMResultSet rs = new MMResultSet(rsMsg, statement);
 		return rs;
 	}
@@ -913,7 +865,7 @@ public class TestAllResultsImpl extends TestCase {
 		return resultsMsg;
 	}
 
-	public void testNotCallingNext() throws SQLException {
+	@Test public void testNotCallingNext() throws SQLException {
 		MMResultSet cs = new MMResultSet(exampleResultsMsg2a(),
 				statement);
 
@@ -925,7 +877,7 @@ public class TestAllResultsImpl extends TestCase {
 		}
 	}
 	
-	public void testDateType() throws SQLException {
+	@Test public void testDateType() throws SQLException {
 		RequestMessage request = new RequestMessage();
 		request.setProcessingTimestamp(new Date(1L));
 		request.setExecutionId(REQUEST_ID);
@@ -947,8 +899,8 @@ public class TestAllResultsImpl extends TestCase {
 		assertEquals(new Timestamp(0), rs.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("GMT-05:00")))); //$NON-NLS-1$
 	}
 	
-	public void testWasNull() throws SQLException{
-		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$ //$NON-NLS-1$
+	@Test public void testWasNull() throws SQLException{
+		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$
 				new String[] { MMJDBCSQLTypeInfo.STRING });
 		MMResultSet rs = new MMResultSet(message, statement);
 		assertTrue(rs.next());
@@ -960,9 +912,9 @@ public class TestAllResultsImpl extends TestCase {
 		assertTrue(rs.wasNull());
 		assertEquals(0l, rs.getLong(1));
 		assertTrue(rs.wasNull());
-		assertEquals(0f, rs.getFloat(1));
+		assertEquals(0f, rs.getFloat(1), 0);
 		assertTrue(rs.wasNull());		
-		assertEquals(0d, rs.getDouble(1));
+		assertEquals(0d, rs.getDouble(1), 0);
 		assertTrue(rs.wasNull());
 		assertNull(rs.getString(1));
 		assertTrue(rs.wasNull());
@@ -972,7 +924,7 @@ public class TestAllResultsImpl extends TestCase {
 		assertFalse(rs.next());
 	}
 	
-	public void testGetters() throws SQLException{
+	@Test public void testGetters() throws SQLException{
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00")); //$NON-NLS-1$
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$ 
 				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ 
@@ -984,8 +936,8 @@ public class TestAllResultsImpl extends TestCase {
 		assertEquals(1, rs.getShort(1));
 		assertEquals(1, rs.getInt(1));
 		assertEquals(1l, rs.getLong(1));
-		assertEquals(1f, rs.getFloat(1));
-		assertEquals(1d, rs.getDouble(1));
+		assertEquals(1f, rs.getFloat(1), 0);
+		assertEquals(1d, rs.getDouble(1), 0);
 		assertEquals("1", rs.getString(1)); //$NON-NLS-1$
 		assertEquals(Integer.valueOf(1), rs.getObject(1)); 
 		//the mock statement is in GMT-6 the server results are from GMT-5, so we expect them to display the same

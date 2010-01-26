@@ -400,7 +400,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 	
 	protected int getOffset() {
-		return parameters;
+		return parameters > 0 ? 1 : 0;
 	}
 
 	protected int getAbsoluteRowNumber() {

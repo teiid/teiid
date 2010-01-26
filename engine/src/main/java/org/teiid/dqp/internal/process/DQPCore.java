@@ -129,7 +129,7 @@ public class DQPCore implements ClientSideDQP {
     private static final int DEFAULT_MAX_CODE_TABLE_RECORDS = 10000;
     private static final int DEFAULT_MAX_CODE_TABLES = 200;
     private static final int DEFAULT_MAX_CODE_RECORDS = 200000;
-    private static final int DEFAULT_FETCH_SIZE = 2000;
+    private static final int DEFAULT_MAX_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE * 10;
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
@@ -139,7 +139,7 @@ public class DQPCore implements ClientSideDQP {
     private int maxCodeTables = DEFAULT_MAX_CODE_TABLES;
     private int maxCodeRecords = DEFAULT_MAX_CODE_RECORDS;
     
-    private int maxFetchSize = DEFAULT_FETCH_SIZE;
+    private int maxFetchSize = DEFAULT_MAX_FETCH_SIZE;
     
     // Resources
     private BufferManager bufferManager;
@@ -601,7 +601,7 @@ public class DQPCore implements ClientSideDQP {
 		PropertiesUtils.setBeanProperties(this, props, null);
 		
         this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
-        this.maxFetchSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        this.maxFetchSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_FETCH_SIZE, DEFAULT_MAX_FETCH_SIZE);
         this.processorDebugAllowed = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.PROCESSOR_DEBUG_ALLOWED, true);
         this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS_PER_TABLE, DEFAULT_MAX_CODE_TABLE_RECORDS);
         this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);

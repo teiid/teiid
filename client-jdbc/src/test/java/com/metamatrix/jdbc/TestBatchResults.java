@@ -22,20 +22,20 @@
 
 package com.metamatrix.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
+
 import com.metamatrix.jdbc.BatchResults.Batch;
-
-import junit.framework.TestCase;
-
-
 
 /** 
  * @since 4.3
  */
-public class TestBatchResults extends TestCase {
+public class TestBatchResults {
 	
 	static class MockBatchFetcher implements BatchFetcher {
 
@@ -81,10 +81,6 @@ public class TestBatchResults extends TestCase {
 		
 	}
     
-    public TestBatchResults (String name) {
-        super(name);        
-    }
-    
     private static List[] createBatch(int begin, int end) {
         List[] results = new List[end - begin + 1];
         for(int i=0; i<(end - begin + 1); i++) {
@@ -98,9 +94,8 @@ public class TestBatchResults extends TestCase {
         List[] results = new List[0];
         return results;
     }
-
     
-    public void testGetCurrentRow1() throws Exception{
+    @Test public void testGetCurrentRow1() throws Exception{
         //empty batch
         BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertNull(batchResults.getCurrentRow());
@@ -108,7 +103,7 @@ public class TestBatchResults extends TestCase {
         assertNull(batchResults.getCurrentRow());
     }
     
-    public void testGetCurrentRow2() throws Exception{
+    @Test public void testGetCurrentRow2() throws Exception{
     	BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, true);
         assertNull(batchResults.getCurrentRow());
         batchResults.next();
@@ -117,30 +112,30 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testHasNext1() throws Exception{
+    @Test public void testHasNext1() throws Exception{
         //empty batch
     	BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertFalse(batchResults.hasNext());
     }
     
-    public void testHasNext2() throws Exception{
+    @Test public void testHasNext2() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
         assertTrue(batchResults.hasNext());
     }
     
-    public void testHasNext3() throws Exception{
+    @Test public void testHasNext3() throws Exception{
     	BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, true);
         assertTrue(batchResults.hasNext());
     }
     
-    public void testNext1() throws Exception{
+    @Test public void testNext1() throws Exception{
         //empty batch
     	BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertFalse(batchResults.next());
     }
     
-    public void testNext2() throws Exception{
+    @Test public void testNext2() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
         assertTrue(batchResults.next());
@@ -150,7 +145,7 @@ public class TestBatchResults extends TestCase {
         assertFalse(batchResults.next());
     }
     
-    public void testNext3() throws Exception{
+    @Test public void testNext3() throws Exception{
         //one row batch, multiple batches
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, false);
         batchResults.setBatchFetcher(new MockBatchFetcher());
@@ -161,7 +156,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testNext4() throws Exception{
+    @Test public void testNext4() throws Exception{
     	BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, false);
         batchResults.setBatchFetcher(new MockBatchFetcher());
         int i;
@@ -179,13 +174,13 @@ public class TestBatchResults extends TestCase {
         assertFalse(batchResults.next());
     }
     
-    public void testHasPrevious1() throws Exception{
+    @Test public void testHasPrevious1() throws Exception{
         //empty batch
     	BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertFalse(batchResults.hasPrevious());
     }
     
-    public void testHasPrevious2() throws Exception{
+    @Test public void testHasPrevious2() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
         assertFalse(batchResults.hasPrevious());
@@ -195,13 +190,13 @@ public class TestBatchResults extends TestCase {
         assertTrue(batchResults.hasPrevious());
     }
     
-    public void testPrevious1() throws Exception{
+    @Test public void testPrevious1() throws Exception{
         //empty batch
     	BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertFalse(batchResults.previous());
     }
     
-    public void testPrevious2() throws Exception{
+    @Test public void testPrevious2() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
         assertTrue(batchResults.next());
@@ -214,7 +209,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testPrevious3() throws Exception{
+    @Test public void testPrevious3() throws Exception{
         //one row batch, multiple batches
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, false);
         batchResults.setBatchFetcher(new MockBatchFetcher());
@@ -235,7 +230,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testPrevious4() throws Exception{
+    @Test public void testPrevious4() throws Exception{
     	BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, false);
         batchResults.setBatchFetcher(new MockBatchFetcher());
         int i;
@@ -250,14 +245,14 @@ public class TestBatchResults extends TestCase {
         }
     }
     
-    public void testAbsolute1() throws Exception{
+    @Test public void testAbsolute1() throws Exception{
         //empty batch
     	BatchResults batchResults = new BatchResults(createEmptyBatch(), 0, 0, true);
         assertFalse(batchResults.absolute(0));
         assertFalse(batchResults.absolute(1));
     }
     
-    public void testAbsolute2() throws Exception{
+    @Test public void testAbsolute2() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
     	batchResults.setBatchFetcher(new MockBatchFetcher());
@@ -269,7 +264,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testAbsolute3() throws Exception{
+    @Test public void testAbsolute3() throws Exception{
         BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, false);
         batchResults.setBatchFetcher(new MockBatchFetcher(200));
         assertFalse(batchResults.absolute(0));
@@ -288,7 +283,7 @@ public class TestBatchResults extends TestCase {
     }
 
     //move backwards with absolute
-    public void testAbsolute4() throws Exception{
+    @Test public void testAbsolute4() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, false);
     	batchResults.setBatchFetcher(new MockBatchFetcher());
@@ -299,7 +294,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
     }
     
-    public void testAbsolute5() throws Exception{
+    @Test public void testAbsolute5() throws Exception{
         //one row batch
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, false);
     	batchResults.setBatchFetcher(new MockBatchFetcher());
@@ -311,7 +306,7 @@ public class TestBatchResults extends TestCase {
         assertFalse(batchResults.absolute(-100));
     }
         
-    public void testCurrentRowNumber() throws Exception {
+    @Test public void testCurrentRowNumber() throws Exception {
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, true);
         assertEquals(0, batchResults.getCurrentRowNumber());
         batchResults.next();
@@ -322,7 +317,7 @@ public class TestBatchResults extends TestCase {
         assertEquals(2, batchResults.getCurrentRowNumber());
     }
     
-    public void testSetException() throws Exception {
+    @Test public void testSetException() throws Exception {
     	BatchResults batchResults = new BatchResults(createBatch(1, 1), 1, 1, false);
     	MockBatchFetcher batchFetcher = new MockBatchFetcher();
     	batchResults.setBatchFetcher(batchFetcher);
@@ -335,7 +330,7 @@ public class TestBatchResults extends TestCase {
         }
     }
     
-    public void testBatching() throws Exception {               
+    @Test public void testBatching() throws Exception {               
         BatchResults batchResults = new BatchResults(createBatch(1, 10), 1, 10, false);
         MockBatchFetcher batchFetcher = new MockBatchFetcher(60);
         batchResults.setBatchFetcher(batchFetcher);

@@ -51,7 +51,7 @@ public class BatchCollector {
 	}
 	
 	public interface BatchHandler {
-		void batchProduced(TupleBatch batch) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+		boolean batchProduced(TupleBatch batch) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	}
 
     private BatchProducer sourceNode;
@@ -59,7 +59,6 @@ public class BatchCollector {
 
     private boolean done = false;
     private TupleBuffer buffer;
-    private boolean collectedAny;
     
     public BatchCollector(BatchProducer sourceNode, TupleBuffer buffer) {
         this.sourceNode = sourceNode;
@@ -91,26 +90,18 @@ public class BatchCollector {
      * Flush the batch by giving it to the buffer manager.
      */
     private void flushBatch(TupleBatch batch) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	boolean add = true;
+		if (this.batchHandler != null && (batch.getRowCount() > 0 || batch.getTerminationFlag())) {
+        	add = this.batchHandler.batchProduced(batch);
+        }
     	// Add batch
         if(batch.getRowCount() > 0) {
-        	for (List tuple : batch.getAllTuples()) {
-				buffer.addTuple(tuple);
-			}
-            collectedAny = true;
-        }
-		if (this.batchHandler != null && (batch.getRowCount() > 0 || batch.getTerminationFlag())) {
-        	this.batchHandler.batchProduced(batch);
+        	buffer.addTupleBatch(batch, add);
         }
     }
     
 	public void setBatchHandler(BatchHandler batchHandler) {
 		this.batchHandler = batchHandler;
-	}
-    
-    public boolean collectedAny() {
-		boolean result = collectedAny;
-		collectedAny = false;
-		return result;
 	}
     
     public int getRowCount() {

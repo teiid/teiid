@@ -26,7 +26,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.Serializable;
 import java.util.List;
 
 import com.metamatrix.common.batch.BatchSerializer;
@@ -149,6 +148,10 @@ public class TupleBatch implements Externalizable {
     
     public void setDataTypes(String[] types) {
         this.types = types;
+    }
+    
+    public boolean containsRow(int row) {
+    	return rowOffset <= row && getEndRow() >= row;
     }
     
     /**

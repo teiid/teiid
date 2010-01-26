@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 
 /**
  * This class replaces a verbose legacy implementation of LRUCaching.
- * However technically this is an eldest first purging policy.
  */
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
