@@ -180,11 +180,7 @@ public class SetQuery extends QueryCommand {
         if(this.getLimit() != null) { 
             copy.setLimit( (Limit) this.getLimit().clone() );
         }
- 
-        if(this.getOption() != null) { 
-            copy.setOption( (Option) this.getOption().clone() );
-        }
-        
+         
         return copy;
 	}
 	

@@ -153,10 +153,6 @@ public class CreateUpdateProcedureCommand extends Command {
 	public Object clone() {		
 		CreateUpdateProcedureCommand copy = new CreateUpdateProcedureCommand();
 
-        if (this.getOption() != null) {
-            copy.setOption((Option)this.getOption().clone());
-        }
-        
         //Clone this class state
         if (this.block != null) {
             copy.setBlock((Block)this.block.clone());

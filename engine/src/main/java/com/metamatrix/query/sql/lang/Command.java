@@ -50,6 +50,8 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  * SQL update statement, etc.
  */
 public abstract class Command implements LanguageObject {
+	
+	public static final String CACHE = "cache"; //$NON-NLS-1$
 
 	/** 
 	 * Represents an unknown type of command 
@@ -126,6 +128,8 @@ public abstract class Command implements LanguageObject {
 	private ProcessorPlan plan;
 	
 	private SymbolMap correlatedReferences;
+	
+	private boolean cache;
     
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
@@ -232,6 +236,10 @@ public abstract class Command implements LanguageObject {
         if (this.correlatedReferences != null) {
         	copy.correlatedReferences = this.correlatedReferences.clone();
         }
+        if(this.getOption() != null) { 
+            copy.setOption( (Option) this.getOption().clone() );
+        }
+        copy.cache = this.cache;
     }
     
     /**
@@ -336,6 +344,14 @@ public abstract class Command implements LanguageObject {
     public void setProcessorPlan(ProcessorPlan plan) {
     	this.plan = plan;
     }
+    
+    public boolean isCache() {
+		return cache;
+	}
+    
+    public void setCache(boolean cache) {
+		this.cache = cache;
+	}
     
     /**
      * Returns a string representation of an instance of this class.

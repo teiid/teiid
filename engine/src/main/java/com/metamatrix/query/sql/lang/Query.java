@@ -351,10 +351,6 @@ public class Query extends QueryCommand {
             copy.setLimit( (Limit) getLimit().clone());
         }
 
-		if(getOption() != null) {
-			copy.setOption( (Option) getOption().clone());
-		}
-        
         // Defect 13751: should clone isXML state.
         copy.setIsXML(getIsXML());
         

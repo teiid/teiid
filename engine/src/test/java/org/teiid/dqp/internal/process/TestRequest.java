@@ -176,7 +176,7 @@ public class TestRequest extends TestCase {
     }
 
     private Request helpProcessMessage(FakeApplicationEnvironment environment,
-                                    RequestMessage message, PreparedPlanCache cache, DQPWorkContext workContext) throws QueryValidatorException,
+                                    RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws QueryValidatorException,
                                                            QueryParserException,
                                                            QueryResolverException,
                                                            MetaMatrixComponentException,
@@ -206,7 +206,7 @@ public class TestRequest extends TestCase {
      */
     public void testProcessRequestPreparedStatement() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
-        PreparedPlanCache cache = new PreparedPlanCache();
+        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
         FakeApplicationEnvironment environment = 
             new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         

@@ -42,6 +42,7 @@ public interface DQPEmbeddedProperties {
 
     // cache properties
     public static final String USE_RESULTSET_CACHE = "ResultSetCache.enabled"; //$NON-NLS-1$
+    public static final String MAX_RESULTSET_CACHE_ENTRIES = "ResultSetCache.maxEntries"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLE_RECORDS_PER_TABLE = "CodeTables.maxRowsPerTable"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLE_RECORDS = "CodeTables.maxRows"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLES = "CodeTables.maxCount"; //$NON-NLS-1$

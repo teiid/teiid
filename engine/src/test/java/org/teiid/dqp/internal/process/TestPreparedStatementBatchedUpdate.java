@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.dqp.internal.process.TestPreparedStatement.TestablePreparedPlanCache;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -53,7 +52,7 @@ public class TestPreparedStatementBatchedUpdate {
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
 		// Create a testable prepared plan cache
-		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
 		
 		// Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -115,7 +114,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -211,7 +210,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE vm1.g1 SET vm1.g1.e2=? WHERE vm1.g1.e1=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -304,7 +303,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -427,7 +426,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE vm1.g1 SET vm1.g1.e1=?, vm1.g1.e3=? WHERE vm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();

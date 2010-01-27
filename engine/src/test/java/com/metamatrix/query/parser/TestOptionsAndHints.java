@@ -22,9 +22,13 @@
 
 package com.metamatrix.query.parser;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.Test;
 
 import com.metamatrix.query.sql.lang.AbstractCompareCriteria;
 import com.metamatrix.query.sql.lang.Command;
@@ -58,13 +62,10 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
-
-import junit.framework.TestCase;
-
-public class TestOptionsAndHints extends TestCase {
+public class TestOptionsAndHints {
     
     /** Select a From db.g1 MAKENOTDEP, db.g2 MAKENOTDEP WHERE a = b */
-    public void testOptionMakeNotDepInline4(){
+    @Test public void testOptionMakeNotDepInline4(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("c", "db.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -93,7 +94,7 @@ public class TestOptionsAndHints extends TestCase {
     }
 
     /** Select a From db.g1 JOIN db.g2 MAKEDEP ON a = b */
-    public void testOptionMakeDepInline1(){
+    @Test public void testOptionMakeDepInline1(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -118,7 +119,7 @@ public class TestOptionsAndHints extends TestCase {
     } 
     
     /** Select a From db.g1 MAKEDEP JOIN db.g2 ON a = b */
-    public void testOptionMakeDepInline2(){
+    @Test public void testOptionMakeDepInline2(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -143,7 +144,7 @@ public class TestOptionsAndHints extends TestCase {
     }
 
     /** Select a From (db.g1 MAKEDEP JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKEDEP ON a = c */
-    public void testOptionMakeDepInline3(){
+    @Test public void testOptionMakeDepInline3(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         GroupSymbol g3 = new GroupSymbol("db.g3"); //$NON-NLS-1$
@@ -174,7 +175,7 @@ public class TestOptionsAndHints extends TestCase {
     }
 
     /** Select a From db.g1 MAKEDEP, db.g2 MAKEDEP WHERE a = b */
-    public void testOptionMakeDepInline4(){
+    @Test public void testOptionMakeDepInline4(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("c", "db.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -202,7 +203,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     }
 
-    public void testOptionMakedepBankOfAmerica() throws Exception {
+    @Test public void testOptionMakedepBankOfAmerica() throws Exception {
         String sql = "SELECT A.alert_id " + //$NON-NLS-1$
             "FROM (FSK_ALERT AS A MAKEDEP INNER JOIN Core.FSC_PARTY_DIM AS C ON A.primary_entity_key = C.PARTY_KEY) " +//$NON-NLS-1$
             "LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id " +//$NON-NLS-1$ 
@@ -213,7 +214,7 @@ public class TestOptionsAndHints extends TestCase {
     }
     
     /** Select a From db.g1 JOIN db.g2 MAKENOTDEP ON a = b */
-    public void testOptionMakeNotDepInline1(){
+    @Test public void testOptionMakeNotDepInline1(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -238,7 +239,7 @@ public class TestOptionsAndHints extends TestCase {
     } 
     
     /** Select a From db.g1 MAKENOTDEP JOIN db.g2 ON a = b */
-    public void testOptionMakeNotDepInline2(){
+    @Test public void testOptionMakeNotDepInline2(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
@@ -263,7 +264,7 @@ public class TestOptionsAndHints extends TestCase {
     }
 
     /** Select a From (db.g1 MAKENOTDEP JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 MAKENOTDEP ON a = c */
-    public void testOptionMakeNotDepInline3(){
+    @Test public void testOptionMakeNotDepInline3(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         GroupSymbol g3 = new GroupSymbol("db.g3"); //$NON-NLS-1$
@@ -293,7 +294,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     }
 
-    public void testDepOptions2() {
+    @Test public void testDepOptions2() {
         GroupSymbol a = new GroupSymbol("a"); //$NON-NLS-1$
         GroupSymbol b = new GroupSymbol("b"); //$NON-NLS-1$
         ElementSymbol x = new ElementSymbol("a.x", true); //$NON-NLS-1$
@@ -312,7 +313,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     }
 
-    public void testOptionNoCache1(){
+    @Test public void testOptionNoCache1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -334,7 +335,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     } 
     
-    public void testOptionNoCache2(){
+    @Test public void testOptionNoCache2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -359,7 +360,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
     
 //  related to defect 14423
-    public void testOptionNoCache3(){
+    @Test public void testOptionNoCache3(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -381,11 +382,11 @@ public class TestOptionsAndHints extends TestCase {
     } 
     
     /** SELECT a from g OPTION xyx */
-    public void testFailsIllegalOption(){
+    @Test public void testFailsIllegalOption(){
         TestParser.helpException("SELECT a from g OPTION xyx");         //$NON-NLS-1$
     }
     
-    public void testInsertWithOption() {
+    @Test public void testInsertWithOption() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         List vars = new ArrayList();
@@ -402,7 +403,7 @@ public class TestOptionsAndHints extends TestCase {
                  insert);                     
     }
     
-    public void testDeleteWithOption() {
+    @Test public void testDeleteWithOption() {
         Delete delete = new Delete();
         delete.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Option option = new Option();
@@ -413,7 +414,7 @@ public class TestOptionsAndHints extends TestCase {
                  delete);                     
     }
     
-    public void testUpdateWithOption() {
+    @Test public void testUpdateWithOption() {
         Update update = new Update();     
         update.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         update.addChange(new ElementSymbol("a"), new Reference(0));
@@ -426,7 +427,7 @@ public class TestOptionsAndHints extends TestCase {
                  update);                     
     }
 
-    public void testOptionalFromClause1() {
+    @Test public void testOptionalFromClause1() {
         String sql = "SELECT * FROM /* optional */ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -444,7 +445,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause1_1() {
+    @Test public void testOptionalFromClause1_1() {
         String sql = "SELECT * FROM /* optional*/ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -462,7 +463,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause1_2() {
+    @Test public void testOptionalFromClause1_2() {
         String sql = "SELECT * FROM /*optional */ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -480,7 +481,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause1_3() {
+    @Test public void testOptionalFromClause1_3() {
         String sql = "SELECT * FROM /* optional  */ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -498,7 +499,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause1_4() {
+    @Test public void testOptionalFromClause1_4() {
         String sql = "SELECT * /* optional */ FROM /* OptiOnal  */ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -516,7 +517,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause1_5() {
+    @Test public void testOptionalFromClause1_5() {
         String sql = "SELECT * FROM /* OptiOnal  */ t1, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -534,7 +535,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause2() {
+    @Test public void testOptionalFromClause2() {
         String sql = "SELECT * FROM t1, /* optional */ t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -552,7 +553,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM t1, /* optional */ t2", query);         //$NON-NLS-1$
     }
 
-    public void testOptionalFromClause3() {
+    @Test public void testOptionalFromClause3() {
         String sql = "SELECT * FROM /* optional */ t1 AS a, t2"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -570,7 +571,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM /* optional */ t1 AS a, t2", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause4() {
+    @Test public void testOptionalFromClause4() {
         String sql = "SELECT * FROM t1, /* optional */ t2 as a"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -588,7 +589,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM t1, /* optional */ t2 AS a", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause5() {
+    @Test public void testOptionalFromClause5() {
         String sql = "SELECT * FROM t1, /* optional */ (select * from t1, t2) as x"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -615,7 +616,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM t1, /* optional */ (SELECT * FROM t1, t2) AS x", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause6() {
+    @Test public void testOptionalFromClause6() {
         String sql = "SELECT * FROM t1 INNER JOIN /* optional */ (select a from t1, t2) AS x ON t1.a=x.a"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -648,7 +649,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT * FROM t1 INNER JOIN /* optional */ (SELECT a FROM t1, t2) AS x ON t1.a = x.a", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause7() {
+    @Test public void testOptionalFromClause7() {
         String sql = "SELECT b FROM t1, /* optional */ (t2 INNER JOIN t3 ON t2.a = t3.a)"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -677,7 +678,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT b FROM t1, /* optional */ (t2 INNER JOIN t3 ON t2.a = t3.a)", query);         //$NON-NLS-1$
     }
 
-    public void testOptionalFromClause8() {
+    @Test public void testOptionalFromClause8() {
         String sql = "SELECT b FROM t1, /* optional */ (/* optional */ (SELECT * FROM t1, t2) AS x INNER JOIN t3 ON x.a = t3.a)"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -715,7 +716,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT b FROM t1, /* optional */ (/* optional */ (SELECT * FROM t1, t2) AS x INNER JOIN t3 ON x.a = t3.a)", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause9() {
+    @Test public void testOptionalFromClause9() {
         String sql = "SELECT b FROM (t1 LEFT OUTER JOIN /* optional */t2 on t1.a = t2.a) LEFT OUTER JOIN /* optional */t3 on t1.a = t3.a"; //$NON-NLS-1$
         
         Query query = new Query();
@@ -749,7 +750,7 @@ public class TestOptionsAndHints extends TestCase {
         TestParser.helpTest(sql, "SELECT b FROM (t1 LEFT OUTER JOIN /* optional */ t2 ON t1.a = t2.a) LEFT OUTER JOIN /* optional */ t3 ON t1.a = t3.a", query);         //$NON-NLS-1$
     }
     
-    public void testOptionalFromClause10(){
+    @Test public void testOptionalFromClause10(){
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
         String shortType = new String("short"); //$NON-NLS-1$
@@ -835,7 +836,7 @@ public class TestOptionsAndHints extends TestCase {
            "var2 = SELECT b1 FROM g, /* optional */ h WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
 
-    public void testStoredQueryWithOption(){
+    @Test public void testStoredQueryWithOption(){
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         Option option = new Option();
@@ -845,7 +846,7 @@ public class TestOptionsAndHints extends TestCase {
     }
 
     /** Select a From db.g Option SHOWPLAN */
-    public void testOptionShowPlan(){
+    @Test public void testOptionShowPlan(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -867,7 +868,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option PLANONLY */
-    public void testOptionPlanOnly(){
+    @Test public void testOptionPlanOnly(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -889,7 +890,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makedep a.b.c */
-    public void testOptionMakeDependent1(){
+    @Test public void testOptionMakeDependent1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -911,7 +912,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makedep a.b.c, d.e.f showplan */
-    public void testOptionMakeDependent2(){
+    @Test public void testOptionMakeDependent2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -935,7 +936,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makedep a.b.c, d.e.f, x.y.z */
-    public void testOptionMakeDependent3(){
+    @Test public void testOptionMakeDependent3(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -959,7 +960,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makenotdep a.b.c */
-    public void testOptionMakeNotDependent1(){
+    @Test public void testOptionMakeNotDependent1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -981,7 +982,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makenotdep a.b.c, d.e.f showplan */
-    public void testOptionMakeNotDependent2(){
+    @Test public void testOptionMakeNotDependent2(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1005,7 +1006,7 @@ public class TestOptionsAndHints extends TestCase {
     }   
 
     /** Select a From db.g Option makenotdep a.b.c, d.e.f, x.y.z */
-    public void testOptionMakeNotDependent3(){
+    @Test public void testOptionMakeNotDependent3(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -1028,7 +1029,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     }
     
-    public void testDepOptions1() {
+    @Test public void testDepOptions1() {
         GroupSymbol a = new GroupSymbol("a"); //$NON-NLS-1$
         GroupSymbol b = new GroupSymbol("b"); //$NON-NLS-1$
         ElementSymbol x = new ElementSymbol("a.x", true); //$NON-NLS-1$
@@ -1049,7 +1050,7 @@ public class TestOptionsAndHints extends TestCase {
                  query);
     }
     
-    public void testOptionMakeDepInline5(){
+    @Test public void testOptionMakeDepInline5(){
         GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
         GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
         GroupSymbol g3 = new GroupSymbol("db.g3"); //$NON-NLS-1$
@@ -1079,6 +1080,32 @@ public class TestOptionsAndHints extends TestCase {
         
         //ensure that the new string form is parsable
         TestParser.helpTest(query.toString(), query.toString(), query);
+    }
+    
+    @Test public void testCache() {
+        String sql = "/* cache */ SELECT * FROM t1"; //$NON-NLS-1$
+        
+        Query query = new Query();
+        Select select = new Select();
+        select.addSymbol(new AllSymbol());
+        query.setSelect(select);
+        From from = new From();
+        UnaryFromClause ufc = new UnaryFromClause();
+        from.addClause(ufc);
+        ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
+        query.setFrom(from);           
+        query.setCache(true);
+        TestParser.helpTest(sql, "/* cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
+    }
+    
+    @Test public void testCache1() {
+        String sql = "/* cache */ execute foo()"; //$NON-NLS-1$
+        
+        StoredProcedure sp = new StoredProcedure();
+        sp.setCache(true);
+        sp.setProcedureName("foo"); //$NON-NLS-1$
+
+        TestParser.helpTest(sql, "/* cache */ EXEC foo()", sp);         //$NON-NLS-1$
     }
     
 }

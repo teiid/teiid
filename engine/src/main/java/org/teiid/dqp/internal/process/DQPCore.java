@@ -133,6 +133,7 @@ public class DQPCore implements ClientSideDQP {
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
+    private static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
 
     // System properties for Code Table
     private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
@@ -144,10 +145,10 @@ public class DQPCore implements ClientSideDQP {
     // Resources
     private BufferManager bufferManager;
     private ProcessorDataManager dataTierMgr;
-    private PreparedPlanCache prepPlanCache;
+    private SessionAwareCache<PreparedPlan> prepPlanCache;
+    private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private MetadataService metadataService;
-    //private ResultSetCache rsCache;
     
     // Query worker pool for processing plans
     private WorkerPool processWorkerPool;
@@ -219,7 +220,7 @@ public class DQPCore implements ClientSideDQP {
             
             if(holder != null && !holder.isCanceled()) {
             	RequestInfo req = new RequestInfo(holder.requestID, holder.requestMsg.getCommandString(), holder.requestMsg.getSubmittedTimestamp(), holder.requestMsg.getProcessingTimestamp());
-            	req.setSessionToken(holder.dqpWorkContext.getSessionToken());
+            	req.setSessionToken(holder.getDqpWorkContext().getSessionToken());
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().isInTransaction()) {
             		req.setTransactionId(holder.getTransactionContext().getTxnID());
             	}
@@ -234,7 +235,7 @@ public class DQPCore implements ClientSideDQP {
                     // add all the subrequest messages
                 	AtomicRequestMessage arm = conInfo.getAtomicRequestMessage();
                 	RequestInfo info = new RequestInfo(arm.getRequestID(), arm.getCommand().toString(), arm.getSubmittedTimestamp(), arm.getProcessingTimestamp());
-                	info.setSessionToken(holder.dqpWorkContext.getSessionToken());
+                	info.setSessionToken(holder.getDqpWorkContext().getSessionToken());
                 	info.setConnectorBindingUUID(arm.getConnectorBindingID());
         			info.setNodeID(arm.getAtomicRequestID().getNodeID());
         			info.setExecutionID(arm.getAtomicRequestID().getExecutionId());
@@ -475,9 +476,9 @@ public class DQPCore implements ClientSideDQP {
 
 	public void clearResultSetCache() {
 		//clear cache in server
-		/*if(rsCache != null){
-			rsCache.clear();
-		}*/
+		if(rsCache != null){
+			rsCache.clearAll();
+		}
 	}
     
     void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
@@ -548,9 +549,9 @@ public class DQPCore implements ClientSideDQP {
 		return transactionService;
 	}
 
-	/*ResultSetCache getRsCache() {
+	SessionAwareCache<CachedResults> getRsCache() {
 		return rsCache;
-	}*/
+	}
 	
 	int getProcessorTimeSlice() {
 		return this.processorTimeslice;
@@ -610,15 +611,13 @@ public class DQPCore implements ClientSideDQP {
         this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 100) * 1024;
         
         //result set cache
-        /*if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
-			this.rsCache = new ResultSetCache();
-			PropertiesUtils.setBeanProperties(this.rsCache, props, "ResultSetCache"); //$NON-NLS-1$
-			this.rsCache.start(cacheFactory);
-        }*/
+        if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, true)){ 
+			this.rsCache = new SessionAwareCache<CachedResults>(PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_RESULTSET_CACHE_ENTRIES, DEFAULT_MAX_RESULTSET_CACHE_ENTRIES));
+        }
 
         //prepared plan cache
-        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_PLAN_CACHE_SIZE, PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL);
-        prepPlanCache = new PreparedPlanCache(maxSizeTotal);
+        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_PLAN_CACHE_SIZE, SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL);
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(maxSizeTotal);
 		
         // Processor debug flag
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$

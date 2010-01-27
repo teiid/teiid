@@ -37,6 +37,7 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 
 import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -84,32 +85,24 @@ public class RequestWorkItem extends AbstractWorkItem {
 	/*
 	 * Obtained at construction time 
 	 */
-    protected final DQPCore dqpCore;
+    private final DQPCore dqpCore;
     final RequestMessage requestMsg;    
     final RequestID requestID;
-    protected Request request; //provides the processing plan, held on a temporary basis
-    final private int processorTimeslice;
-    //protected ResultSetCache rsCache;
-	//protected CacheID cid;
-	final private TransactionService transactionService;
-	final DQPWorkContext dqpWorkContext;
+    private Request request; //provides the processing plan, held on a temporary basis
+    private final int processorTimeslice;
+	private CacheID cid;
+	private final TransactionService transactionService;
+	private final DQPWorkContext dqpWorkContext;
 	
-	//results request
-	private ResultsReceiver<ResultsMessage> resultsReceiver;
-	private int begin;
-	private int end;
-        
     /*
      * obtained during new
      */
     private volatile QueryProcessor processor;
     private BatchCollector collector;
-    protected Command originalCommand;
+    private Command originalCommand;
     private AnalysisRecord analysisRecord;
     private TransactionContext transactionContext;
-    protected TupleBuffer resultsBuffer;
-    private TupleBatch savedBatch;
-    private Collection schemas;     // These are schemas associated with XML results
+    TupleBuffer resultsBuffer;
     private boolean returnsUpdateCount;
     
     /*
@@ -119,27 +112,30 @@ public class RequestWorkItem extends AbstractWorkItem {
     private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = new ConcurrentHashMap<AtomicRequestID, DataTierTupleSource>(4);
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
     private List<MetaMatrixException> warnings = new LinkedList<MetaMatrixException>();
-
     private boolean doneProducingBatches;
-    protected boolean isClosed;
+    private boolean isClosed;
     private volatile boolean isCanceled;
     private volatile boolean closeRequested;
-    
+	//results request
+	private ResultsReceiver<ResultsMessage> resultsReceiver;
+	private int begin;
+	private int end;
+    private TupleBatch savedBatch;
     private Map<Integer, LobWorkItem> lobStreams = Collections.synchronizedMap(new HashMap<Integer, LobWorkItem>(4));
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
-        /*this.rsCache = dqpCore.getRsCache();
-        if (this.rsCache != null) {
-        	this.cid = this.rsCache.createCacheID(workContext, requestMsg.getCommandString(), requestMsg.getParameterValues());
-        }*/
         this.transactionService = dqpCore.getTransactionServiceDirect();
         this.dqpCore = dqpCore;
         this.request = request;
         this.dqpWorkContext = workContext;
         this.requestResults(1, requestMsg.getFetchSize(), receiver);
+    }
+    
+    private boolean isForwardOnly() {
+    	return this.cid == null && requestMsg.getCursorType() == ResultSet.TYPE_FORWARD_ONLY;    	
     }
     
 	/**
@@ -230,19 +226,15 @@ public class RequestWorkItem extends AbstractWorkItem {
     }
 
 	protected void processMore() throws SystemException, BlockedException, MetaMatrixCoreException {
-		this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
+		if (this.processor != null) {
+			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
+		}
 		if (!doneProducingBatches) {
 			sendResultsIfNeeded(null);
 			collector.collectTuples();
 		    doneProducingBatches = this.resultsBuffer.isFinal();
 		}
 		if (doneProducingBatches) {
-            /*if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable()){
-            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
-                CacheResults cr = new CacheResults();
-            	cr.setCommand(originalCommand);
-                cr.setAnalysisRecord(analysisRecord);
-            }*/
 			if (this.transactionState == TransactionState.ACTIVE) {
 				boolean endState = true;
 				/*
@@ -282,7 +274,9 @@ public class RequestWorkItem extends AbstractWorkItem {
 		int rowcount = -1;
 		if (this.resultsBuffer != null) {
 			try {
-				this.processor.closeProcessing();
+				if (this.processor != null) {
+					this.processor.closeProcessing();
+				}
 			} catch (MetaMatrixComponentException e) {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 					LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
@@ -293,7 +287,18 @@ public class RequestWorkItem extends AbstractWorkItem {
 		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
 		    }
 			rowcount = resultsBuffer.getRowCount();
-		    resultsBuffer.remove();
+			if (this.processor != null) {
+				if (this.cid == null || !this.doneProducingBatches) {
+					resultsBuffer.remove();
+				} else {
+	            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
+	            	CachedResults cr = new CachedResults();
+	            	cr.setCommand(originalCommand);
+	                cr.setAnalysisRecord(analysisRecord);
+	                cr.setResults(this.resultsBuffer);
+	                dqpCore.getRsCache().put(cid, sessionScope, cr);
+				}
+			}
 			
 			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
 				try {
@@ -306,6 +311,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		    }
 
 			this.resultsBuffer = null;
+			this.processor = null;
 		}
 
 		if (this.transactionState == TransactionState.ACTIVE) {
@@ -338,8 +344,24 @@ public class RequestWorkItem extends AbstractWorkItem {
 	}
 
 	protected void processNew() throws MetaMatrixProcessingException, MetaMatrixComponentException {
+		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
+		CacheID cacheId = new CacheID(this.dqpWorkContext, Request.createParseInfo(requestMsg), requestMsg.getCommandString());
+    	cacheId.setParameters(requestMsg.getParameterValues());
+		if (rsCache != null) {
+			CachedResults cr = rsCache.get(cacheId);
+			if (cr != null && (requestMsg.useResultSetCache() || cr.getCommand().isCache())) {
+				this.resultsBuffer = cr.getResults();
+				this.analysisRecord = cr.getAnalysisRecord();
+				this.originalCommand = cr.getCommand();
+				this.doneProducingBatches = true;
+				return;
+			}
+		}
 		request.processRequest();
 		originalCommand = request.userCommand;
+        if ((requestMsg.useResultSetCache() || originalCommand.isCache()) && rsCache != null && originalCommand.areResultsCachable()) {
+        	this.cid = cacheId;
+        }
 		processor = request.processor;
 		collector = processor.createBatchCollector();
 		collector.setBatchHandler(new BatchHandler() {
@@ -348,11 +370,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 			}
 		});
 		resultsBuffer = collector.getTupleBuffer();
-		if (requestMsg.getCursorType() == ResultSet.TYPE_FORWARD_ONLY) {
-			resultsBuffer.setForwardOnly(true);
-		}
+		resultsBuffer.setForwardOnly(isForwardOnly());
 		analysisRecord = request.analysisRecord;
-		schemas = request.schemas;
 		transactionContext = request.transactionContext;
 		if (this.transactionContext != null && this.transactionContext.isInTransaction()) {
 			this.transactionState = TransactionState.ACTIVE;
@@ -361,6 +380,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (option != null && option.getPlanOnly()) {
 		    doneProducingBatches = true;
             resultsBuffer.close();
+            this.cid = null;
 		}
 		
 	    if (analysisRecord.recordQueryPlan()) {
@@ -406,7 +426,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     			boolean last = false;
     			if (endRow == batch.getEndRow()) {
     				last = batch.getTerminationFlag();
-    			} else if (fromBuffer && requestMsg.getCursorType() == ResultSet.TYPE_FORWARD_ONLY) {
+    			} else if (fromBuffer && isForwardOnly()) {
         			savedBatch = batch;
     			}
         		int firstOffset = beginRow - batch.getBeginRow();
@@ -416,26 +436,25 @@ public class RequestWorkItem extends AbstractWorkItem {
                 batch = new TupleBatch(beginRow, rows);
                 batch.setTerminationFlag(last);
     		} else if (!fromBuffer){
-    			result = requestMsg.getCursorType() != ResultSet.TYPE_FORWARD_ONLY;
+    			result = !isForwardOnly();
     		}
 	        int finalRowCount = this.resultsBuffer.isFinal()?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
-	        response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
+	        response = createResultsMessage(requestMsg, batch.getAllTuples(), this.originalCommand.getProjectedSymbols(), analysisRecord);
 	        response.setFirstRow(batch.getBeginRow());
 	        response.setLastRow(batch.getEndRow());
 	        response.setUpdateResult(this.returnsUpdateCount);
 	        // set final row
 	        response.setFinalRow(finalRowCount);
 	
-	        // send any schemas associated with the results
-	        response.setSchemas(this.schemas);
-	        
 	        // send any warnings with the response object
 	        List<Throwable> responseWarnings = new ArrayList<Throwable>();
-			List<Exception> currentWarnings = processor.getAndClearWarnings();
-		    if (currentWarnings != null) {
-		    	responseWarnings.addAll(currentWarnings);
-		    }
+	        if (this.processor != null) {
+				List<Exception> currentWarnings = processor.getAndClearWarnings();
+			    if (currentWarnings != null) {
+			    	responseWarnings.addAll(currentWarnings);
+			    }
+	        }
 		    synchronized (warnings) {
 	        	responseWarnings.addAll(this.warnings);
 	        	this.warnings.clear();

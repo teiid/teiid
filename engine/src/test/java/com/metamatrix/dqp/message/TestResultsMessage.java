@@ -70,11 +70,6 @@ public class TestResultsMessage extends TestCase {
         results.add(new BigInteger("300")); //$NON-NLS-1$
         results.add(new BigInteger("400")); //$NON-NLS-1$
         message.setResults(new List[] {results});
-        List schemas = new ArrayList();
-        schemas.add("schema1"); //$NON-NLS-1$
-        schemas.add("schema2"); //$NON-NLS-1$
-        schemas.add("schema3"); //$NON-NLS-1$
-        message.setSchemas(schemas);
         List warnings = new ArrayList();
         warnings.add(new Exception("warning1")); //$NON-NLS-1$
         warnings.add(new Exception("warning2")); //$NON-NLS-1$
@@ -133,13 +128,6 @@ public class TestResultsMessage extends TestCase {
         assertEquals(new BigInteger("200"), copy.getResults()[0].get(1)); //$NON-NLS-1$
         assertEquals(new BigInteger("300"), copy.getResults()[0].get(2)); //$NON-NLS-1$
         assertEquals(new BigInteger("400"), copy.getResults()[0].get(3)); //$NON-NLS-1$
-        
-        assertNotNull(copy.getSchemas());
-        assertEquals(3, copy.getSchemas().size());
-        // We know that the implementation creates a List
-        assertTrue(copy.getSchemas().contains("schema1")); //$NON-NLS-1$
-        assertTrue(copy.getSchemas().contains("schema2")); //$NON-NLS-1$
-        assertTrue(copy.getSchemas().contains("schema3")); //$NON-NLS-1$
         
         assertNotNull(copy.getWarnings());
         assertEquals(2, copy.getWarnings().size());

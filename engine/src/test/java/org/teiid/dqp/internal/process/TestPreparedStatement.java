@@ -60,30 +60,15 @@ public class TestPreparedStatement {
 	
 	private static boolean DEBUG = false;
 	
-	static class TestablePreparedPlanCache extends PreparedPlanCache {
-		
-		int hitCount;
-		
-		@Override
-		public PreparedPlan getPreparedPlan(CacheID id) {
-			PreparedPlan result = super.getPreparedPlan(id);
-			if (result != null) {
-				hitCount++;
-			}
-			return result;
-		}
-		
-	}
-		
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
     }
 
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific) throws Exception { 
-        helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, (TestablePreparedPlanCache)null, callableStatement, isSessionSpecific, /* isAlreadyCached */false); 
+        helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, null, callableStatement, isSessionSpecific, /* isAlreadyCached */false); 
     }
     
-    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, TestablePreparedPlanCache prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached) throws Exception { 
+    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached) throws Exception { 
         if ( dataManager == null ) {
             // Construct data manager with data
         	dataManager = new FakeDataManager();
@@ -95,7 +80,7 @@ public class TestPreparedStatement {
         }
         
         if ( prepPlanCache == null ) {
-        	prepPlanCache = new TestablePreparedPlanCache();
+        	prepPlanCache = new SessionAwareCache<PreparedPlan>();
         }
         
 		// expected cache hit count
@@ -107,9 +92,9 @@ public class TestPreparedStatement {
 		 * get the plan twice.  Otherwise, we want it to be 1.
 		 */
         if ( isAlreadyCached ) {
-        	exHitCount = prepPlanCache.hitCount + 2;
+        	exHitCount = prepPlanCache.getCacheHitCount() + 2;
         } else {
-        	exHitCount = prepPlanCache.hitCount + 1;
+        	exHitCount = prepPlanCache.getCacheHitCount() + 1;
         }
         
         //Create plan or used cache plan if isPlanCached
@@ -122,7 +107,7 @@ public class TestPreparedStatement {
     	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false);
     	
         //make sure the plan is only created once
-        assertEquals("should reuse the plan", exHitCount, prepPlanCache.hitCount); //$NON-NLS-1$
+        assertEquals("should reuse the plan", exHitCount, prepPlanCache.getCacheHitCount()); //$NON-NLS-1$
                 
         // If we are using FakeDataManager, stop command recording to prevent
         // duplicate commands
@@ -150,7 +135,7 @@ public class TestPreparedStatement {
          * created and the hit count will be unchanged.
          */
         if ( !isSessionSpecific ) exHitCount++;
-        assertEquals(exHitCount, prepPlanCache.hitCount); 
+        assertEquals(exHitCount, prepPlanCache.getCacheHitCount()); 
 	}
     	    
     @Test public void testWhere() throws Exception { 
@@ -212,12 +197,12 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList(0);
 
-        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new PreparedPlanCache(), SESSION_ID, false, false);
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false);
         
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
     
-	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, PreparedPlanCache prepPlanCache)
+	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, SessionAwareCache<PreparedPlan> prepPlanCache)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {    	
@@ -225,7 +210,7 @@ public class TestPreparedStatement {
     }
 	
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
-			PreparedPlanCache prepPlanCache, int conn)
+			SessionAwareCache<PreparedPlan> prepPlanCache, int conn)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
@@ -235,7 +220,7 @@ public class TestPreparedStatement {
 	}
 
 	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
-			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, int conn, boolean callableStatement, boolean limitResults)
+			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
@@ -280,7 +265,7 @@ public class TestPreparedStatement {
 		values.add("a"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)*/
@@ -291,7 +276,7 @@ public class TestPreparedStatement {
 		List values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = ? AND pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?) */
@@ -302,7 +287,7 @@ public class TestPreparedStatement {
 		List values = Arrays.asList("d", "c"); //$NON-NLS-1$ //$NON-NLS-2$
 				
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
 	}	
 
 	/** SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X */
@@ -315,13 +300,13 @@ public class TestPreparedStatement {
 		values.add("d"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
 	}	
 	
 	@Test public void testValidateWrongValues() throws Exception {
 		// Create query 
 	    String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
-	    TestablePreparedPlanCache prepCache = new TestablePreparedPlanCache();
+	    SessionAwareCache<PreparedPlan> prepCache = new SessionAwareCache<PreparedPlan>();
 
 	    //wrong type
 		try{         	        
@@ -334,7 +319,7 @@ public class TestPreparedStatement {
 		}catch(QueryResolverException qe){
             assertEquals("Error converting parameter number 1 with value \"x\" to expected type integer.", qe.getMessage()); //$NON-NLS-1$
     	}    	
-    	assertEquals(0, prepCache.hitCount);
+    	assertEquals(0, prepCache.getCacheHitCount());
     	
     	//test cached plan
     	try{	        
@@ -347,7 +332,7 @@ public class TestPreparedStatement {
 	   	    assertEquals("The number of bound values '2' does not match the number of parameters '1' in the prepared statement.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	
-    	assertEquals(1, prepCache.hitCount);  
+    	assertEquals(1, prepCache.getCacheHitCount());  
     	
     	//wrong number of values
 		try{         
@@ -368,7 +353,7 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList("0"); //$NON-NLS-1$
         
-		helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
+		helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
     }
     
     /**
@@ -380,13 +365,13 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList("0"); //$NON-NLS-1$
         
-        TestablePreparedPlanCache planCache = new TestablePreparedPlanCache();
+        SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
         
 		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true);
 
 		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true);
 		//make sure the plan wasn't reused
-		assertEquals(0, planCache.hitCount);
+		assertEquals(0, planCache.getCacheHitCount());
     }
     
     @Test public void testUpdateProcedureCriteria() throws Exception {

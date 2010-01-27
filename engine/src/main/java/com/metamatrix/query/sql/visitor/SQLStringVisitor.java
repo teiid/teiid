@@ -35,6 +35,7 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Create;
@@ -481,9 +482,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(JoinPredicate obj) {
-        if (obj.isOptional()) {
-            addOptionComment(obj);
-        }
+        addOptionComment(obj);
         
         if(obj.hasHint()) {
             parts.add("(");//$NON-NLS-1$
@@ -557,14 +556,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     private void addOptionComment(FromClause obj) {
-        parts.add(BEGIN_COMMENT);
-        parts.add(SPACE);
-        if (obj.isOptional()) {
-            parts.add(Option.OPTIONAL);
-            parts.add(SPACE);
-        }
-        parts.add(END_COMMENT);
-        parts.add(SPACE);
+    	if (obj.isOptional()) {
+	    	parts.add(BEGIN_COMMENT);
+	        parts.add(SPACE);
+	        parts.add(Option.OPTIONAL);
+	        parts.add(SPACE);
+	        parts.add(END_COMMENT);
+	        parts.add(SPACE);
+    	}
     }
 
     public void visit(JoinType obj) {
@@ -791,6 +790,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(Query obj) {
+    	addCacheHint(obj);
         parts.add(registerNode(obj.getSelect()));
 
         if(obj.getInto() != null){
@@ -920,6 +920,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(SetQuery obj) {
+    	addCacheHint(obj);
         QueryCommand query = obj.getLeftQuery();
         if(query instanceof Query) {
             parts.add(registerNode(query));
@@ -975,6 +976,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(StoredProcedure obj) {
+    	addCacheHint(obj);
         //exec clause
         parts.add(ReservedWords.EXEC);
 		parts.add(SPACE);
@@ -1016,10 +1018,19 @@ public class SQLStringVisitor extends LanguageVisitor {
 		}
     }
 
+	private void addCacheHint(Command obj) {
+		if (obj.isCache()) {
+    		parts.add(BEGIN_COMMENT);
+	        parts.add(SPACE);
+	        parts.add(Command.CACHE);
+	        parts.add(SPACE);
+	        parts.add(END_COMMENT);
+	        parts.add(SPACE);
+    	}
+	}
+
     public void visit(SubqueryFromClause obj) {
-        if(obj.isOptional()) {
-            addOptionComment(obj);
-        }
+        addOptionComment(obj);
         parts.add("(");//$NON-NLS-1$
         parts.add(registerNode(obj.getCommand()));
         parts.add(")");//$NON-NLS-1$
@@ -1046,9 +1057,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
 
     public void visit(UnaryFromClause obj) {
-        if(obj.isOptional()) {
-            addOptionComment(obj);
-        }
+        addOptionComment(obj);
         parts.add(registerNode(obj.getGroup()));
         addFromClasueDepOptions(obj);
     }

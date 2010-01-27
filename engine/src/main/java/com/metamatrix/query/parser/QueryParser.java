@@ -116,6 +116,7 @@ public class QueryParser {
         QueryParserException qpe = null;
         try {
 	        Command result = parseCommandWithParser(sql, parseInfo);
+	        result.setCache(parseInfo.cache);
 			return result;
         } catch (QueryParserException e) {
         	qpe = e;

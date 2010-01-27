@@ -31,6 +31,7 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.ReservedWords;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Option;
@@ -157,22 +158,33 @@ public class SQLParserUtil {
     }
     
     void setFromClauseOptions(Token groupID, FromClause fromClause){
-        Token optToken = groupID.specialToken;
+        String[] parts = getComment(groupID);
+
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].equalsIgnoreCase(Option.OPTIONAL)) {
+                fromClause.setOptional(true);
+            }        
+        }
+    }
+
+	private String[] getComment(Token t) {
+		Token optToken = t.specialToken;
         if (optToken == null) { 
-            return;
+            return new String[0];
         }
         String hint = optToken.image.substring(2, optToken.image.length() - 2);
         String[] parts = hint.split("\\s"); //$NON-NLS-1$
+		return parts;
+	}
+    
+    void setQueryCacheOption(Token t, ParseInfo p) {
+    	String[] parts = getComment(t);
 
-        HashSet<String> set = new HashSet<String>();
-        
         for (int i = 0; i < parts.length; i++) {
-            set.add(parts[i].toLowerCase());
+            if (parts[i].equalsIgnoreCase(Command.CACHE)) {
+                p.cache = true;
+            }        
         }
-        
-        if (set.contains(Option.OPTIONAL)) {
-            fromClause.setOptional(true);
-        }        
     }
 
     /**

@@ -27,8 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
-import org.teiid.dqp.internal.process.PreparedPlanCache.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
@@ -62,10 +61,10 @@ import com.metamatrix.query.util.CommandContext;
  * Specific request for handling prepared statement calls.
  */
 public class PreparedStatementRequest extends Request {
-    private PreparedPlanCache prepPlanCache;
+    private SessionAwareCache<PreparedPlan> prepPlanCache;
     private PreparedPlan prepPlan;
     
-    public PreparedStatementRequest(PreparedPlanCache prepPlanCache) {
+    public PreparedStatementRequest(SessionAwareCache<PreparedPlan> prepPlanCache) {
     	this.prepPlanCache = prepPlanCache;
     }
     
@@ -132,8 +131,8 @@ public class PreparedStatementRequest extends Request {
      */
     protected void generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
     	String sqlQuery = requestMsg.getCommands()[0];
-    	CacheID id = new PreparedPlanCache.CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
-        prepPlan = prepPlanCache.getPreparedPlan(id);
+    	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
+        prepPlan = prepPlanCache.get(id);
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
@@ -149,7 +148,7 @@ public class PreparedStatementRequest extends Request {
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan(processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
-		        this.prepPlanCache.putPreparedPlan(id, this.context.isSessionFunctionEvaluated(), prepPlan);
+		        this.prepPlanCache.put(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
         } else {
         	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$

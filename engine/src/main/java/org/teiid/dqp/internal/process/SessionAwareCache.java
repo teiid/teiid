@@ -25,62 +25,64 @@ package org.teiid.dqp.internal.process;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.parser.ParseInfo;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
- * This class is used to cache plan and related objects for prepared statement
+ * This class is used to cache session aware objects
  */
-public class PreparedPlanCache {
+public class SessionAwareCache<T> {
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 250;
 
-	private Map<CacheID, PreparedPlan> cache;
+	private Map<CacheID, T> cache;
 	private int maxSize;
 	
-	PreparedPlanCache(){
+	private AtomicInteger cacheHit = new AtomicInteger();
+	
+	SessionAwareCache(){
 		this(DEFAULT_MAX_SIZE_TOTAL);
 	}
 	
-	PreparedPlanCache (int maxSize ){
+	SessionAwareCache (int maxSize ){
 		if(maxSize < 0){
 			maxSize = DEFAULT_MAX_SIZE_TOTAL;
 		}
 		this.maxSize = maxSize;
-		cache = Collections.synchronizedMap(new LRUCache<CacheID, PreparedPlan>(maxSize));
+		cache = Collections.synchronizedMap(new LRUCache<CacheID, T>(maxSize));
 	}	
 	
-	/**
-	 * Return the PreparedPlan for the given session and SQl query
-	 * @param sql SQL query string
-	 * @param session ClientConnection
-	 * @return PreparedPlan for the given clientConn and SQl query. Null if not exist.
-	 */
-	public PreparedPlan getPreparedPlan(CacheID id){
+	public T get(CacheID id){
 		id.setSessionId(id.originalSessionId);
-		PreparedPlan result = cache.get(id);
+		T result = cache.get(id);
 		if (result == null) {
 			id.setSessionId(null);
+			result = cache.get(id);
 		}
-		return cache.get(id);
+		if (result != null) {
+			cacheHit.getAndIncrement();
+		}
+		return result;
+	}
+	
+	public int getCacheHitCount() {
+		return cacheHit.get();
 	}
 	
 	/**
 	 * Create PreparedPlan for the given clientConn and SQl query
 	 */
-	public void putPreparedPlan(CacheID id, boolean sessionSpecific, PreparedPlan plan){
+	public void put(CacheID id, boolean sessionSpecific, T t){
 		if (sessionSpecific) {
 			id.setSessionId(id.originalSessionId);
 		} else {
 			id.setSessionId(null);
 		}
-		this.cache.put(id, plan);
+		this.cache.put(id, t);
 	}
 	
 	/**
@@ -97,7 +99,7 @@ public class PreparedPlanCache {
 		private ParseInfo pi;
 		private String sessionId;
 		private String originalSessionId;
-		private int hashCode;
+		private List<?> parameters;
 				
 		CacheID(DQPWorkContext context, ParseInfo pi, String sql){
 			this.sql = sql;
@@ -108,7 +110,10 @@ public class PreparedPlanCache {
 		
 		private void setSessionId(String sessionId) {
 			this.sessionId = sessionId;
-			hashCode = HashCodeUtil.hashCode(HashCodeUtil.hashCode(HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, vdbInfo), sql), pi), sessionId);
+		}
+		
+		public void setParameters(List<?> parameters) {
+			this.parameters = parameters;
 		}
 						
 		public boolean equals(Object obj){
@@ -120,78 +125,21 @@ public class PreparedPlanCache {
 	        } 
         	CacheID that = (CacheID)obj;
             return this.pi.equals(that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
-            	&& ((this.sessionId == null && that.sessionId == null) || this.sessionId.equals(that.sessionId));
+            	&& EquivalenceUtil.areEqual(this.sessionId, that.sessionId)
+            	&& EquivalenceUtil.areEqual(this.parameters, that.parameters);
 		}
 		
 	    public int hashCode() {
-	        return hashCode;
+	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi, sessionId, parameters);
+	    }
+	    
+	    @Override
+	    public String toString() {
+	    	return "Cache Entry<" + originalSessionId + "> params:" + parameters + " sql:" + sql; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	    			
 	    }
 	}
 	
-	static class PreparedPlan{
-		private ProcessorPlan plan;
-		private Command command;
-		private List<Reference> refs;
-		private AnalysisRecord analysisRecord;
-		
-		/**
-		 * Return the ProcessorPlan.
-		 */
-		public ProcessorPlan getPlan(){
-			return plan;
-		}
-		
-		/**
-		 * Return the plan description.
-		 */
-		public AnalysisRecord getAnalysisRecord(){
-			return this.analysisRecord;
-		}
-		
-		/**
-		 * Return the Command .
-		 */
-		public Command getCommand(){
-			return command;
-		}
-		
-		/**
-		 * Return the list of Reference.
-		 */
-		public List<Reference> getReferences(){
-			return refs;
-		}
-		
-		/**
-		 * Set the ProcessorPlan.
-		 */
-		public void setPlan(ProcessorPlan planValue){
-			plan = planValue;
-		}
-		
-		/**
-		 * Set the plan description.
-		 */
-		public void setAnalysisRecord(AnalysisRecord analysisRecord){
-            this.analysisRecord = analysisRecord;
-		}
-		
-		/**
-		 * Set the Command.
-		 */
-		public void setCommand(Command commandValue){
-			command = commandValue;
-		}
-		
-		/**
-		 * Set the list of Reference.
-		 */
-		public void setReferences(List<Reference> refsValue){
-			refs = refsValue;
-		}
-		
-	}
-
 	//for testing purpose 
 	int getSpaceUsed() {
 		return cache.size();

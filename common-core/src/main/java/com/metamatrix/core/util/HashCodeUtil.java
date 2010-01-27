@@ -22,7 +22,6 @@
 
 package com.metamatrix.core.util;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -71,17 +70,13 @@ public final class HashCodeUtil {
 		return hashCode(previous, (x == 0.0) ? 0L : Double.doubleToLongBits(x));
 	}
 
-	public static final int hashCode(int previous, Object x) {
-		return (x == null) ? (PRIME*previous) : (PRIME*previous) + x.hashCode();
-	}
-
-	public static final int hashCode(int previous, Object[] x) {
+	public static final int hashCode(int previous, Object... x) {
 		if(x == null) {
 			return PRIME*previous;
 		}
-		int hc = 0;
+		int hc = previous;
 		for(int i=0; i<x.length; i++) {
-			hc = hashCode(hc, x[i]);
+			hc = (x[i] == null) ? (PRIME*hc) : (PRIME*hc) + x[i].hashCode();
 		}
 		return hc;
 	}
@@ -107,26 +102,6 @@ public final class HashCodeUtil {
 	}
 
 	/**
-	 * Compute a hash code on a large list by walking the list
-	 * and combining the hash code at every exponential index:
-	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
-	 * for good time complexity.  
-	 */	 
-	public static final int expHashCode(int previous, List x) {
-		if(x == null) {
-			return PRIME*previous;
-		}
-		int hc = (PRIME*previous) + x.size();
-		int index = 1;
-		int xlen = x.size()+1;	// switch to 1-based
-		while(index < xlen) {
-			hc = hashCode(hc, x.get(index-1));
-			index = index << 1;		// left shift by 1 to double
-		}
-		return hc;
-	}
-
-	/**
 	 * Compute a hash code on a large collection by walking the list
 	 * and combining the hash code at every exponential index:
 	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
@@ -134,7 +109,7 @@ public final class HashCodeUtil {
 	 * the collection and pull the necessary hash code values.
 	 * Slower than a List or array but faster than getting EVERY value.	 
 	 */
-	public static final int expHashCode(int previous, Collection x) {
+	public static final int expHashCode(int previous, List x) {
 		if(x == null || x.size() == 0) {
 			return PRIME*previous;
 		}

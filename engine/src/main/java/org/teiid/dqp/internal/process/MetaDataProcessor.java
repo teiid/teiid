@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
-import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -78,7 +78,7 @@ public class MetaDataProcessor {
     private MetadataService metadataService;
     private DQPCore requestManager;
     private QueryMetadataInterface metadata;
-    private PreparedPlanCache planCache;
+    private SessionAwareCache<PreparedPlan> planCache;
     private ApplicationEnvironment env;
         
     private String vdbName;
@@ -86,7 +86,7 @@ public class MetaDataProcessor {
     private RequestID requestID;
     
     
-    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, PreparedPlanCache planCache, ApplicationEnvironment env, String vdbName, String vdbVersion) {
+    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, ApplicationEnvironment env, String vdbName, String vdbVersion) {
         this.metadataService = metadataService;    
         this.requestManager = requestManager;
         this.planCache = planCache;
@@ -215,8 +215,8 @@ public class MetaDataProcessor {
         ParseInfo info = new ParseInfo();
         // Defect 19747 - the parser needs the following connection property to decide whether to treat double-quoted strings as variable names
         info.ansiQuotedIdentifiers = isDoubleQuotedVariablesAllowed;
-        CacheID id = new PreparedPlanCache.CacheID(workContext, info, sql);
-        PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(id);
+        CacheID id = new CacheID(workContext, info, sql);
+        PreparedPlan plan = planCache.get(id);
         if(plan != null) {
             command = plan.getCommand();
         } else {

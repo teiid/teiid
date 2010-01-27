@@ -30,8 +30,7 @@ import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
-import org.teiid.dqp.internal.process.PreparedPlanCache.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -57,25 +56,25 @@ public class TestPreparedPlanCache {
     
     //====Tests====//
     @Test public void testPutPreparedPlan(){
-    	PreparedPlanCache cache = new PreparedPlanCache();
+    	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
     	
     	CacheID id = new CacheID(token, pi, EXAMPLE_QUERY + 1);
     	
     	//No PreparedPlan at the begining
-    	assertNull(cache.getPreparedPlan(id));
+    	assertNull(cache.get(id));
     	//create one
-    	cache.putPreparedPlan(id, true, new PreparedPlan());
+    	cache.put(id, true, new PreparedPlan());
     	//should have one now
-    	assertNotNull("Unable to get prepared plan from cache", cache.getPreparedPlan(id)); //$NON-NLS-1$
+    	assertNotNull("Unable to get prepared plan from cache", cache.get(id)); //$NON-NLS-1$
     }
     
-    @Test public void testGetPreparedPlan(){
-    	PreparedPlanCache cache = new PreparedPlanCache();
+    @Test public void testget(){
+    	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
     	helpPutPreparedPlans(cache, token, 0, 10);
     	helpPutPreparedPlans(cache, token2, 0, 15);
     	
     	//read an entry for session2 (token2)
-    	PreparedPlan pPlan = cache.getPreparedPlan(new CacheID(token2, pi, EXAMPLE_QUERY + 12));
+    	PreparedPlan pPlan = cache.get(new CacheID(token2, pi, EXAMPLE_QUERY + 12));
     	assertNotNull("Unable to get prepared plan from cache", pPlan); //$NON-NLS-1$
     	assertEquals("Error getting plan from cache", new RelationalPlan(new ProjectNode(12)).toString(), pPlan.getPlan().toString()); //$NON-NLS-1$
     	assertEquals("Error getting command from cache", EXAMPLE_QUERY + 12, pPlan.getCommand().toString()); //$NON-NLS-1$
@@ -84,30 +83,30 @@ public class TestPreparedPlanCache {
     }
     
     @Test public void testClearAll(){
-    	PreparedPlanCache cache = new PreparedPlanCache();
+    	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
     	
     	//create one for each session token
     	helpPutPreparedPlans(cache, token, 1, 1);
     	helpPutPreparedPlans(cache, token2, 1, 1);
     	//should have one
-    	assertNotNull("Unable to get prepared plan from cache for token", cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$
+    	assertNotNull("Unable to get prepared plan from cache for token", cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$
     	cache.clearAll();
     	//should not exist for token
-    	assertNull("Failed remove from cache", cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
+    	assertNull("Failed remove from cache", cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
     	//should not exist for token2
-    	assertNull("Unable to get prepared plan from cache for token2", cache.getPreparedPlan(new CacheID(token2, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
+    	assertNull("Unable to get prepared plan from cache for token2", cache.get(new CacheID(token2, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
     }
     
     @Test public void testMaxSize(){
-        PreparedPlanCache cache = new PreparedPlanCache(100);
+        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>(100);
         helpPutPreparedPlans(cache, token, 0, 101);
         //the first one should be gone because the max size is 100
-        assertNull(cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
+        assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
         
-        assertNotNull(cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 12))); 
+        assertNotNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 12))); 
         helpPutPreparedPlans(cache, token, 102, 50);
         //"sql12" should still be there based on lru  policy
-        assertNotNull(cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 12))); 
+        assertNotNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 12))); 
         
         helpPutPreparedPlans(cache, token2, 0, 121);
         helpPutPreparedPlans(cache, token, 0, 50);
@@ -116,31 +115,31 @@ public class TestPreparedPlanCache {
     
     @Test public void testZeroSizeCache() {
         // Create with 0 size cache
-        PreparedPlanCache cache = new PreparedPlanCache(0);
+        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>(0);
         assertEquals(0, cache.getSpaceAllowed());
         
         // Add 1 plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 0, 1);
-        assertNull(cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
+        assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
         assertEquals(0, cache.getSpaceUsed());
         
         // Add another plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 1, 1);
-        assertNull(cache.getPreparedPlan(new CacheID(token, pi, EXAMPLE_QUERY + 1))); 
+        assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 1))); 
         assertEquals(0, cache.getSpaceUsed());        
     }
     
     // set init size to negative number, which should default to 100 (default)
     @Test public void testNegativeSizeCacheUsesDefault() {
-        PreparedPlanCache negativeSizedCache = new PreparedPlanCache(-1000);
-        PreparedPlanCache defaultSizedCache = new PreparedPlanCache();
+        SessionAwareCache<PreparedPlan> negativeSizedCache = new SessionAwareCache<PreparedPlan>(-1000);
+        SessionAwareCache<PreparedPlan> defaultSizedCache = new SessionAwareCache<PreparedPlan>();
         
         assertEquals(defaultSizedCache.getSpaceAllowed(), negativeSizedCache.getSpaceAllowed());
-        assertEquals(PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL, negativeSizedCache.getSpaceAllowed());                       
+        assertEquals(SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL, negativeSizedCache.getSpaceAllowed());                       
     }
     
     //====Help methods====//
-    private void helpPutPreparedPlans(PreparedPlanCache cache, DQPWorkContext session, int start, int count){
+    private void helpPutPreparedPlans(SessionAwareCache<PreparedPlan> cache, DQPWorkContext session, int start, int count){
     	for(int i=0; i<count; i++){
     		Command dummy;
 			try {
@@ -151,7 +150,7 @@ public class TestPreparedPlanCache {
 	    	CacheID id = new CacheID(session, pi, dummy.toString());
 
 	    	PreparedPlan pPlan = new PreparedPlan();
-    		cache.putPreparedPlan(id, true, pPlan);
+    		cache.put(id, true, pPlan);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             Map props = new HashMap();

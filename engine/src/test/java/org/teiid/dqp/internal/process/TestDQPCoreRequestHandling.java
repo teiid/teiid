@@ -152,7 +152,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
-        AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
+        AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
         DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);
@@ -166,7 +166,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
-        AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
+        AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
         DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);

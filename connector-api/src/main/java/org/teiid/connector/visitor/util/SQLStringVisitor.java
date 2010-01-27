@@ -72,7 +72,6 @@ import org.teiid.connector.language.ISubqueryCompareCriteria;
 import org.teiid.connector.language.ISubqueryInCriteria;
 import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.language.ISetQuery.Operation;
 import org.teiid.connector.metadata.runtime.MetadataObject;
 import org.teiid.connector.visitor.framework.AbstractLanguageVisitor;
 

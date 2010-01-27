@@ -999,10 +999,15 @@ StoredProcedure storedProcedure(ParseInfo info) :
 	StoredProcedure storedProcedure = new StoredProcedure();
 	String procName = null;
 	Option option = null;
+	Token execToken = null;
 }
 {
 	(
-		(<EXEC> | <EXECUTE>)
+		(
+		 (execToken = <EXEC> { setQueryCacheOption(execToken, info); }) 
+		 |
+		 (execToken = <EXECUTE> { setQueryCacheOption(execToken, info); })
+		)
 		procName = id()
 		{
 			storedProcedure.setProcedureName(procName);
@@ -1415,9 +1420,13 @@ Select select(ParseInfo info) :
 	SelectSymbol symbol = null;
 	Select select = new Select();
 	info.aggregatesAllowed = true;
+	Token selectToken = null;
 }
 {
-	<SELECT>
+	selectToken = <SELECT>
+	{
+	  setQueryCacheOption(selectToken, info);
+	}
 	[<ALL> | (<DISTINCT> {isDistinct=true;})]
 	(<STAR>
 		{

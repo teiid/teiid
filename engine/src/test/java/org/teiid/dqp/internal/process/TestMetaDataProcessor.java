@@ -66,7 +66,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Create components
         MetadataService mdSvc = Mockito.mock(MetadataService.class);
         Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
-        PreparedPlanCache prepPlanCache = new PreparedPlanCache();
+        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
         DQPCore requestMgr = new DQPCore();
 
         DQPWorkContext workContext = new DQPWorkContext();
@@ -133,7 +133,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Create components
         MetadataService mdSvc = Mockito.mock(MetadataService.class);
         Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
-        PreparedPlanCache prepPlanCache = new PreparedPlanCache();
+        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
         
         // Initialize components
         ApplicationEnvironment env = new ApplicationEnvironment();

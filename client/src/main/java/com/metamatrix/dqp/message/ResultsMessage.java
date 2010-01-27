@@ -57,9 +57,6 @@ public class ResultsMessage implements Externalizable {
     /** Warning could be schema validation errors or partial results warnings */
     private List<Throwable> warnings;
 
-    /** Schemas associated with xml results. */
-    private Collection schemas;
-
     /** First row index */
     private int firstRow = 0;
 
@@ -172,14 +169,6 @@ public class ResultsMessage implements Externalizable {
         return planDescription;
     }
 
-
-    /**
-     * @return
-     */
-    public Collection getSchemas() {
-        return schemas;
-    }
-
     /**
      * @return
      */
@@ -224,13 +213,6 @@ public class ResultsMessage implements Externalizable {
      */
     public void setPlanDescription(Map object) {
         planDescription = object;
-    }
-
-    /**
-     * @param collection
-     */
-    public void setSchemas(Collection collection) {
-        schemas = collection;
     }
 
     /**
@@ -295,9 +277,6 @@ public class ResultsMessage implements Externalizable {
         	this.warnings = ExceptionHolder.toThrowables(holderList);
         }
 
-        //Schemas
-        schemas = ExternalizeUtil.readList(in);
-
         firstRow = in.readInt();
         lastRow = in.readInt();
         finalRow = in.readInt();
@@ -334,8 +313,6 @@ public class ResultsMessage implements Externalizable {
         	out.writeObject(this.warnings);
         }
 
-        //Schemas
-        ExternalizeUtil.writeCollection(out, schemas);
         out.writeInt(firstRow);
         out.writeInt(lastRow);
         out.writeInt(finalRow);
