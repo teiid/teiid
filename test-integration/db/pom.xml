@@ -29,19 +29,20 @@
 			<artifactId>junit</artifactId>
 			<version>4.4</version>
 		</dependency>
-
+	
+			
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client-jdbc</artifactId>
 			<type>test-jar</type>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
-        
+     
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-engine</artifactId>
 			<type>test-jar</type>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency> 
 
 		<dependency>
@@ -388,6 +389,7 @@
 						<phase>integration-test</phase>
 						<configuration>
 							<tasks>
+								
 								<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
 								<property name="scenario.dir"  value="${scenario.dir}"></property>
 								<property name="queryset.artifacts.dir"  value="${queryset.artifacts.dir}"></property>
@@ -399,6 +401,7 @@
 								<property name="proj.dir" value="${project.basedir}" />
 
 								<ant antfile="src/main/resources/ctc_tests/ctc.xml" />
+
 							</tasks>
 						</configuration>
 						<goals>
