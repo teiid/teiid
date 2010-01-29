@@ -246,10 +246,7 @@ public class TupleBuffer {
 	}
 	
 	public void close() throws MetaMatrixComponentException {
-		//if there is only a single batch, let it stay in memory
-		if (!this.batches.isEmpty()) { 
-			saveBatch(true, false);
-		}
+		saveBatch(true, false);
 		this.isFinal = true;
 	}
 	
