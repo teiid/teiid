@@ -51,8 +51,7 @@
         <para>Session – the Session service manages active
           session information.  Active sessions are stored in a
           distributed cache and shared between Session services in each
-          VM.  Sessions are also persisted in the server repository
-          database.  </para>
+          VM.</para>
       </listitem>
       <listitem>
         <para>Membership – the Membership service manages
