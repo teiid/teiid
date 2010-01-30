@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory">Chapter 3. Result Set Caching</title><link rel="stylesheet" href="css/jbossorg.css" type="text/css"/><meta xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" name="generator" content="DocBook XSL Stylesheets V1.72.0"/><link rel="start" href="index.html" title="Teiid - Scalable Information Integration"/><link rel="up" href="index.html" title="Teiid - Scalable Information Integration"/><link rel="prev" href="matviews.html" title="Chapter 2. Materialized Views"/><link rel="next" href="codetable.html" title="Chapter 4. Code Table Caching"/><link rel="copyright" href="ln-Legal_Notice.html" title="Legal Notice"/></head><body><p id="title"><a href="http://www.jboss.org" class="site_href"><strong>JBoss.org</strong></a><a href="http://docs.jboss.org/" class="doc_href"><strong>Community Documentation</strong></a></p><ul class="docnav"><li class="previous"><a accesskey="p" href="matviews.html"><strong>Prev</strong></a></li><li class="next"><a accesskey="n" href="codetable.html"><strong>Next</strong></a></li></ul><div class="chapter" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="resultset"/>Chapter 3. Result Set Caching</h2></div></div></div><div class="toc"><dl><dt><span class="sect1"><a href="resultset.html#d0e829">3.1. Support Summary</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e851">3.2. User Interaction</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e860">3.3. Cache Configuration</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e997">3.4. Cache Characteristics</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e1008">3.5. Cache Administration</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e1027">3.6. Limitations</a></span></dt><dt><span class="sect1"><a href="resultset.html#d0e1043">3.7. Outstanding Issues</a></span></dt></dl></div><p>MetaMatrix provides the capability to store the results of
+		specific queries.  MetaMatrix can be configured to store the results
+		for end-user queries, or to cache the results of atomic queries issued
+		to data sources in response to end-user queries, or both.  When the
+		exact same user query is submitted to the MetaMatrix Server, the
+		cached results will be returned.  Similarly, if the exact same atomic
+		query is encountered while processing an end-user query, the cached
+		results will be used in processing that query, even if the end-user
+		query is different than the original one.  These caching techniques
+		can yield significant performance gains if users of the system submit
+		the same queries often, or if user queries result in the same queries
+		being issued to the underlying data sources.</p><p>Result set caching will cache result sets based on an exact match
+		of the incoming SQL string. It only applies to SELECT and EXEC
+		statements; it does not apply to SELECT INTO statements, or INSERT,
+		UPDATE, and DELETE statements.</p><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e829"/>3.1. Support Summary</h2></div></div></div><div xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="orderedlist"><ol><li><p>Caching of end-user queries (on a per-query service basis)
+				</p></li><li><p>Caching of data source queries (on a per-connector binding
+					basis)</p></li><li><p>Scoping of caching to either VDB or session level</p></li><li><p>Caching of XML result sets</p></li><li><p>Users explicitly state whether to use a result set cache or
+					not (if available)</p></li><li><p>Administrative clearing of caches</p></li></ol></div></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e851"/>3.2. User Interaction</h2></div></div></div><p>End users or client applications explicitly state whether to use
+			result set caching for each query.  This can be done by setting the
+			JDBC ResultSetCacheMode execution property to true to enable the use
+			of caching for that statement, or false to disable it.  The default
+			is true.  Note that if this property is set to true, it only has an
+			effect if caching has been enabled in the Server.  </p><p>Specification of result set caching for ODBC and SOAP is through
+			extra URL properties, on a per-connection basis. </p><p>Each query is re-checked for authorization for the user’s
+			permissions, regardless of whether or not the query results have been
+			cached.</p></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e860"/>3.3. Cache Configuration</h2></div></div></div><p>Result set caching in the MetaMatrix Server is configured in the
+			MetaMatrix Console.  By default, result set caching is disabled.
+			 When enabled, the default caching scope is restricted to a
+			particular VDB.</p><p>Result set caching can be enabled and configured in two places:
+		</p><div xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="orderedlist"><ol><li><p>End-user queries – In Configuration Deployment panel,
+					QueryEngine PSC, QueryService properties (per MetaMatrix process)
+				</p></li><li><p>Data source queries – In Configuration Connector Binding
+					panel, properties</p></li></ol></div><p>The following are the properties that can be set at the query
+			service and connector binding levels.</p><div class="informaltable"><table border="1"><colgroup><col/><col/><col/><col/></colgroup><tbody><tr><td>
+							<p>Property</p>
+						</td><td>
+							<p>Description</p>
+						</td><td>
+							<p>Type</p>
+						</td><td>
+							<p>Default</p>
+						</td></tr><tr><td>
+							<p>ResultSet Cache Enabled</p>
+						</td><td>
+							<p>Enable result set caching for the source</p>
+						</td><td>
+							<p>Boolean</p>
+						</td><td>
+							<p>false</p>
+						</td></tr><tr><td>
+							<p>ResultSet Cache Maximum Age</p>
+						</td><td>
+							<p>Maximum time before the cache is automatically cleared
+							</p>
+						</td><td>
+							<p>Integer – millsec</p>
+						</td><td>
+							<p>0 (no limit)</p>
+						</td></tr><tr><td>
+							<p>ResultSet Cache Maximum Size</p>
+						</td><td>
+							<p>Maximum size the cache will be allowed to grow to before
+								objects are removed</p>
+						</td><td>
+							<p>Integer – MB </p>
+						</td><td>
+							<p>0 (no limit)</p>
+						</td></tr><tr><td>
+							<p>ResultSet Cache Scope</p>
+						</td><td>
+							<p>Whether caching is restricted to a specific session
+								(‘session’) or a specific VDB version (‘vdb’)</p>
+						</td><td>
+							<p>String</p>
+						</td><td>
+							<p>vdb</p>
+						</td></tr></tbody></table></div><p/><p>End-User Cache Configuration</p><p>End-user query result caching is controlled in properties for
+			the individual Query Services in each PSC.  These properties can be
+			accessed in the Configuration Deployment panel, by selecting the
+			QueryEngine PSC, then selecting an individual QueryService.  The
+			properties are shown at the bottom.    </p><p>
+			<img src="embedded:graphics3"/>
+		</p><p>Data Source Cache Configuration</p><p>Data source caching is controlled in properties for the
+			individual connector bindings for each source.  These properties can
+			be accessed on the Configuration Connector Bindings panel, by
+			selecting an individual connector binding and selecting the
+			Properties tab.  Note that these are all optional properties.  Check
+			the Include Optional Properties setting to see these properties.  
+		</p></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e997"/>3.4. Cache Characteristics</h2></div></div></div><p>Cache Persistence Mechanism</p><p>Result sets are persisted in object caches local to individual
+			Java processes (virtual machines or VMs).   User query result sets
+			are cached in the VM of the individual query services running on host
+			machines.  Data source query results are cached in the VM of the
+			individual connector bindings running on host machines. </p><p>Cache Operational Policy</p><p>Objects are removed from the cache on a least frequently used
+			basis.  When the cache reaches approximately 90% of its maximum size
+			(as defined by the ResultSet Cache Maximum Size property), query
+			result sets are removed to bring the cache back down to the 80%
+			threshold.</p></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e1008"/>3.5. Cache Administration</h2></div></div></div><p>Result set caching is administered using the servershell script
+			under the &lt;server install&gt;/util directory.  This script is
+			called servershell.cmd on Windows systems, and servershell.sh on Unix
+			systems.  </p><p>The following administrative operations can be performed for all
+			caches of a given type, by specifying the appropriate parameters on
+			the script’s command-line:</p><div xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="orderedlist"><ol><li><p>Clear cache options</p></li><li><p>clearQueryServiceResultSetCaches – clears all the result set
+					caches in all the query services</p></li><li><p>clearConnectorServiceResultSetCaches – clears all the result
+					set caches in all the connector services</p></li></ol></div><p>These can be listed in help by executing the script with the
+			command-line argument expertmode on.  </p></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e1027"/>3.6. Limitations</h2></div></div></div><div xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" class="orderedlist"><ol><li><p>BLOBs and CLOBs cannot be cached.  Therefore, any query
+					retrieving BLOB or CLOB information will not be cached.  </p></li><li><p>Caches are not distributed; they are bound to a particular
+					MetaMatrix process.  So, if the same query is routed to two
+					different host machines, the query will be executed twice, and
+					cached independently on each machine. </p></li><li><p>Result set caching is not transactional and should not be used
+					in the scope of XA transactions.  Transactions depend on (and
+					enforce) consistency of data, and cached data cannot be guaranteed
+					to be consistent with the data store’s data.</p></li><li><p>ResultSet Cache Scope property values are not constrained, so
+					users may type in the incorrect values (only vdb and session are
+					allowed).   [defect 14444]</p></li></ol></div></div><div class="sect1" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="d0e1043"/>3.7. Outstanding Issues</h2></div></div></div><p>Specification of result set caching for ODBC and SOAP is through
+			extra URL properties, on a per-connection basis.</p></div></div><ul class="docnav"><li class="previous"><a accesskey="p" href="matviews.html"><strong>Prev</strong>Chapter 2. Materialized Views</a></li><li class="up"><a accesskey="u" href="#"><strong>Top of page</strong></a></li><li class="home"><a accesskey="h" href="index.html"><strong>Front page</strong></a></li><li class="next"><a accesskey="n" href="codetable.html"><strong>Next</strong>Chapter 4. Code Table Caching</a></li></ul></body></html>

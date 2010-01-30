@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory">Chapter 1. Overview</title><link rel="stylesheet" href="css/jbossorg.css" type="text/css"/><meta xmlns:rf="java:org.jboss.highlight.XhtmlRendererFactory" name="generator" content="DocBook XSL Stylesheets V1.72.0"/><link rel="start" href="index.html" title="Teiid - Scalable Information Integration"/><link rel="up" href="index.html" title="Teiid - Scalable Information Integration"/><link rel="prev" href="index.html" title="Teiid - Scalable Information Integration"/><link rel="next" href="matviews.html" title="Chapter 2. Materialized Views"/><link rel="copyright" href="ln-Legal_Notice.html" title="Legal Notice"/></head><body><p id="title"><a href="http://www.jboss.org" class="site_href"><strong>JBoss.org</strong></a><a href="http://docs.jboss.org/" class="doc_href"><strong>Community Documentation</strong></a></p><ul class="docnav"><li class="previous"><a accesskey="p" href="index.html"><strong>Prev</strong></a></li><li class="next"><a accesskey="n" href="matviews.html"><strong>Next</strong></a></li></ul><div class="chapter" lang="en-US"><div class="titlepage"><div><div><h2 class="title"><a id="overview"/>Chapter 1. Overview</h2></div></div></div><p>Teiid provides three capabilities for caching
+		data: materialized views, result set caching, and code table caching.
+		 These can be used to significantly improve performance in many
+		situations. </p><p>Following is a summary comparison of these three data caching
+		options.</p><div class="informaltable"><table border="1"><colgroup><col/><col/><col/><col/></colgroup><tbody><tr><td>
+						<p/>
+					</td><td>
+						<p>Materialized Views</p>
+					</td><td>
+						<p>Result Set Caching</p>
+					</td><td>
+						<p>Code Table Caching</p>
+					</td></tr><tr><td>
+						<p>Best For</p>
+					</td><td>
+						<p>Complex transformations</p>
+					</td><td>
+						<p>Complex frequently issued user queries</p>
+					</td><td>
+						<p>Key based lookups on small, frequently accessed tables</p>
+					</td></tr><tr><td>
+						<p>Data Change Rate</p>
+					</td><td>
+						<p>Static</p>
+					</td><td>
+						<p>Static</p>
+					</td><td>
+						<p>Static</p>
+					</td></tr><tr><td>
+						<p>Data Size</p>
+					</td><td>
+						<p>Any size</p>
+					</td><td>
+						<p>Small-Medium</p>
+					</td><td>
+						<p>Small</p>
+					</td></tr><tr><td>
+						<p>Cache Defined By</p>
+					</td><td>
+						<p>External scripts</p>
+					</td><td>
+						<p>Query execution</p>
+					</td><td>
+						<p>Scalar function (lookup) execution</p>
+					</td></tr><tr><td>
+						<p>Cache Scope</p>
+					</td><td>
+						<p>VDB</p>
+					</td><td>
+						<p>VDB or session</p>
+					</td><td>
+						<p>VDB within Query service</p>
+					</td></tr><tr><td>
+						<p>Cache Key</p>
+					</td><td>
+						<p/>
+					</td><td>
+						<p>Based upon the user query</p>
+					</td><td>
+						<p>VDB + table + key column + value column</p>
+					</td></tr><tr><td>
+						<p>Cache Removal Policy</p>
+					</td><td>
+						<p>None (discretion of administrator)</p>
+					</td><td>
+						<p>Least-recently used removed first</p>
+					</td><td>
+						<p>None (discretion of administrator)</p>
+					</td></tr><tr><td>
+						<p>Cache Configuration</p>
+					</td><td>
+						<p>Model properties</p>
+					</td><td>
+						<p>DQP Configuration</p>
+					</td><td>
+						<p>DQP Configuration</p>
+					</td></tr><tr><td>
+						<p>Cache Administration</p>
+					</td><td>
+						<p>External to Teiid</p>
+					</td><td>
+						<p/>
+					</td><td>
+						<p/>
+					</td></tr><tr><td>
+						<p>Access Method</p>
+					</td><td>
+						<p>Query against materialized view</p>
+					</td><td>
+						<p>Query with caching enabled</p>
+					</td><td>
+						<p>Query containing scalar “lookup” function</p>
+					</td></tr><tr><td>
+						<p>User Override?</p>
+					</td><td>
+						<p>Yes</p>
+					</td><td>
+						<p>Yes</p>
+					</td><td>
+						<p>No – must explicitly specify whether to use</p>
+					</td></tr></tbody></table></div></div><ul class="docnav"><li class="previous"><a accesskey="p" href="index.html"><strong>Prev</strong>Teiid - Scalable Information Integration</a></li><li class="up"><a accesskey="u" href="#"><strong>Top of page</strong></a></li><li class="home"><a accesskey="h" href="index.html"><strong>Front page</strong></a></li><li class="next"><a accesskey="n" href="matviews.html"><strong>Next</strong>Chapter 2. Materialized Views</a></li></ul></body></html>

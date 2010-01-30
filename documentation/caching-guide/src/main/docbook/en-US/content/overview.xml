@@ -1,0 +1,187 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="overview">
+	<title>Overview</title>
+	<para>Teiid provides three capabilities for caching
+		data: materialized views, result set caching, and code table caching.
+		 These can be used to significantly improve performance in many
+		situations. </para>
+	<para>Following is a summary comparison of these three data caching
+		options.</para>
+	<informaltable frame="all">
+		<tgroup cols="4">
+			<tbody>
+				<row>
+					<entry>
+						<para />
+					</entry>
+					<entry>
+						<para>Materialized Views</para>
+					</entry>
+					<entry>
+						<para>Result Set Caching</para>
+					</entry>
+					<entry>
+						<para>Code Table Caching</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Best For</para>
+					</entry>
+					<entry>
+						<para>Complex transformations</para>
+					</entry>
+					<entry>
+						<para>Complex frequently issued user queries</para>
+					</entry>
+					<entry>
+						<para>Key based lookups on small, frequently accessed tables</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Data Change Rate</para>
+					</entry>
+					<entry>
+						<para>Static</para>
+					</entry>
+					<entry>
+						<para>Static</para>
+					</entry>
+					<entry>
+						<para>Static</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Data Size</para>
+					</entry>
+					<entry>
+						<para>Any size</para>
+					</entry>
+					<entry>
+						<para>Small-Medium</para>
+					</entry>
+					<entry>
+						<para>Small</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Defined By</para>
+					</entry>
+					<entry>
+						<para>External scripts</para>
+					</entry>
+					<entry>
+						<para>Query execution</para>
+					</entry>
+					<entry>
+						<para>Scalar function (lookup) execution</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Scope</para>
+					</entry>
+					<entry>
+						<para>VDB</para>
+					</entry>
+					<entry>
+						<para>VDB or session</para>
+					</entry>
+					<entry>
+						<para>VDB within Query service</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Key</para>
+					</entry>
+					<entry>
+						<para />
+					</entry>
+					<entry>
+						<para>Based upon the user query</para>
+					</entry>
+					<entry>
+						<para>VDB + table + key column + value column</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Removal Policy</para>
+					</entry>
+					<entry>
+						<para>None (discretion of administrator)</para>
+					</entry>
+					<entry>
+						<para>Least-recently used removed first</para>
+					</entry>
+					<entry>
+						<para>None (discretion of administrator)</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Configuration</para>
+					</entry>
+					<entry>
+						<para>Model properties</para>
+					</entry>
+					<entry>
+						<para>DQP Configuration</para>
+					</entry>
+					<entry>
+						<para>DQP Configuration</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Cache Administration</para>
+					</entry>
+					<entry>
+						<para>External to Teiid</para>
+					</entry>
+					<entry>
+						<para></para>
+					</entry>
+					<entry>
+						<para></para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>Access Method</para>
+					</entry>
+					<entry>
+						<para>Query against materialized view</para>
+					</entry>
+					<entry>
+						<para>Query with caching enabled</para>
+					</entry>
+					<entry>
+						<para>Query containing scalar “lookup” function</para>
+					</entry>
+				</row>
+				<row>
+					<entry>
+						<para>User Override?</para>
+					</entry>
+					<entry>
+						<para>Yes</para>
+					</entry>
+					<entry>
+						<para>Yes</para>
+					</entry>
+					<entry>
+						<para>No – must explicitly specify whether to use</para>
+					</entry>
+				</row>
+			</tbody>
+		</tgroup>
+	</informaltable>
+</chapter>

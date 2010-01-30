@@ -1,0 +1,156 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="codetable">
+	<title>Code Table Caching</title>
+	<para>MetaMatrix provides a means of caching small, frequently used
+		tables of data.  This is referred to as “code table caching” or
+		“reference data caching”.</para>
+	<para>Code table caching is done by using the lookup scalar function,
+		provided as a standard function with MetaMatrix. The lookup function
+		provides a way to get a value out of a table when a key value is
+		provided.  The function automatically caches all the values in the
+		referenced table for the specified key/value pairs.  The cache is
+		created the first time it is used in a particular MetaMatrix process.
+		 Subsequent lookups against the same table using the same key and
+		value columns will use the cached information.</para>
+	<para>This caching solution is appropriate for integration of
+		“reference data” with transactional or operational data.  Reference
+		data are static data sets – typically small – which are used very
+		frequently in most enterprise applications.  Examples are ISO country
+		codes, state codes, and different types of financial instrument
+		identifiers.  </para>
+	<sect1>
+		<title>Support Summary</title>
+		<orderedlist>
+			<listitem>
+				<para>Caching of small, frequently accessed tables</para>
+			</listitem>
+			<listitem>
+				<para>Administrative clearing of cached tables through command line
+					utility</para>
+			</listitem>
+		</orderedlist>
+	</sect1>
+	<sect1>
+		<title>User Interaction</title>
+		<para>This caching mechanism is automatically invoked when the lookup
+			scalar function is used.  Each time this function is called with a
+			unique combination of referenced table, key element, and returned
+			element (the first 3 arguments to the function), the MetaMatrix
+			System caches the entire contents of the table being accessed.
+			 Subsequent lookup function uses with the same combination of
+			parameters uses the cached table data.</para>
+		<para>Note that the use of the lookup function automatically performs
+			caching; there is no option to use the lookup function and not
+			perform caching.  Once the values for a particular lookup are cached,
+			they will be used until the cache is cleared through the Console.
+		</para>
+		<para>Specification:</para>
+		<para>The following provides information on the use of the lookup
+			function.</para>
+		<informaltable frame="all">
+			<tgroup cols="3">
+				<thead>
+					<row>
+						<entry>
+							<para>Function</para>
+						</entry>
+						<entry>
+							<para>Definition</para>
+						</entry>
+						<entry>
+							<para>Datatype Constraint</para>
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<para>LOOKUP(codeGroup, returnElement, keyElement, keyValue)
+							</para>
+						</entry>
+						<entry>
+							<para>In the lookup group codeGroup, find the row where
+								keyElement has the value keyValue and return the associated
+								returnElement.</para>
+						</entry>
+						<entry>
+							<para>codeGroup, returnElement, and keyElement must be string
+								literals containing metadata identifiers, keyValue datatype must
+								match datatype of the keyElement, return datatype matches that
+								of returnElement</para>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</informaltable>
+		<para />
+		<para>See the MetaMatrix Query Support Booklet for more information on
+			use of the lookup function.</para>
+		<para>Examples (can be used wherever scalar literal can be in query):
+		</para>
+		<para>lookup(‘ISOCountryCodes, ‘CountryName’, ‘CountryCode’, ‘US’)
+		</para>
+		<para>lookup(‘StatePostalCodes, ‘StateDisplayName’, ‘PostalCode’,
+			‘63131’) </para>
+		<para>lookup(‘EmpIDs’, ‘Name’, ‘ID’, ‘m204815’) </para>
+	</sect1>
+	<sect1>
+		<title>Cache Configuration</title>
+		<para>Cached lookup groups might consume significant memory.  You can
+			limit the number and maximum size of these code groups by setting
+			properties of the Query Service through the MetaMatrix Console.  
+		</para>
+		<para>The following are the properties that can be set at the query
+			service level to control reference data caching.</para>
+		<para />
+	</sect1>
+	<sect1>
+		<title>Cache Characteristics</title>
+		<para>Cache Persistence Mechanism</para>
+		<para>Reference tables are persisted in object caches local to
+			individual Java processes (virtual machines or VMs).   They are
+			cached in the VM of the individual query services running on host
+			machines.  </para>
+		<para>Cache Loading Policy</para>
+		<para>When a user calls the lookup function for a unique combination
+			of table, key element, and returned element, the MetaMatrix System
+			caches all key-value pairs of that table for the specified elements.
+			   </para>
+		<para>The MetaMatrix System uses this cached map for all queries, in
+			all sessions, that later access this lookup group.</para>
+		<para>Cache Operational Policy</para>
+		<para>Cached tables are never proactively cleared.  They can only be
+			cleared through using the svcmgr utility script.</para>
+	</sect1>
+	<sect1>
+		<title>Cache Administration</title>
+		<para>The lookup cache can be cleared using the svcmgr utility script.
+			 To clear cached code tables, set expertmode on, and then pass in the
+			clearCodeTableCaches argument.</para>
+	</sect1>
+	<sect1>
+		<title>Limitations</title>
+		<orderedlist>
+			<listitem>
+				<para>Cached code tables are not tied to specific virtual databases.
+					 This may result in an error when the same model is used in
+					multiple virtual databases while it has bindings to different
+					sources of data.  This may pose a security issue if a cached code
+					table is loaded in the context of one user but then accessed by
+					another user who should not have access to that data. [defect
+					11629]</para>
+			</listitem>
+			<listitem>
+				<para>The use of the lookup function automatically performs caching;
+					there is no option to use the lookup function and not perform
+					caching.  [defect 14445]</para>
+			</listitem>
+		</orderedlist>
+		<para>Cached code tables are never proactively cleared by the Server.
+			 If a lot of code tables are loaded, or large code tables are loaded,
+			the Server’s available memory could be exceeded.</para>
+	</sect1>
+</chapter>
