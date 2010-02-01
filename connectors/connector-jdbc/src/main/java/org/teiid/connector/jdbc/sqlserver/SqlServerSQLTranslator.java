@@ -65,7 +65,7 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
     	if (obj instanceof IElement) {
     		IElement elem = (IElement)obj;
     		try {
-				if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+				if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
 					return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			} catch (ConnectorException e) {

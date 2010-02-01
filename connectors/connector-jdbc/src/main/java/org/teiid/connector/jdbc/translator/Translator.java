@@ -216,7 +216,7 @@ public class Translator {
     	} else if (obj instanceof IElement) {
     		IElement elem = (IElement)obj;
     		try {
-    			if (trimChar && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+    			if (trimChar && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING && elem.getMetadataObject() != null 
     					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
     				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new IExpression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
     			}
