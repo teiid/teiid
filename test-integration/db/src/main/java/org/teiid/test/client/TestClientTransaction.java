@@ -121,7 +121,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 		QuerySQL qsql = queries[i];
 		this.sql = qsql.getSql();
 		resultFromQuery = execute(sql, qsql.getParms());
-		if (!resultFromQuery) {	    
+		if (qsql.getUpdateCnt() >= 0) {	    
 		    this.assertUpdateCount(qsql.getUpdateCnt());
 
 		} else if (qsql.getRowCnt() >= 0) {
