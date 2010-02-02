@@ -202,9 +202,8 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 				this.partitions.get(index).addTuple(tuple);
 			}
 			for (TupleBuffer partition : this.partitions) {
-				partition.saveBatch();
+				partition.close();
 			}
-			this.partitionedSource.getIterator().setPosition(1);
 		}
 		partitioned = true;
 	}
@@ -220,9 +219,6 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	}
     	while (currentPartition < partitions.size()) {
     		if (currentSource == null) {
-    			if (!this.partitions.isEmpty()) {
-    				this.partitions.get(currentPartition).close();
-    			}
     			currentSource = partitions.get(currentPartition).createIndexedTupleSource();
     		}
     		

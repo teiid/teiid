@@ -61,7 +61,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 				return;
 			}
 			processor.closeProcessing();
-			collector.getTupleBuffer().close();
+			collector.getTupleBuffer().remove();
 			processor = null;
 			this.done = false;
 		}
@@ -100,7 +100,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		SubqueryState state = this.subqueries.get(key);
 		if (state == null) {
 			state = new SubqueryState();
-			state.plan = (ProcessorPlan)container.getCommand().getProcessorPlan().clone();
+			state.plan = container.getCommand().getProcessorPlan().clone();
 			this.subqueries.put(key, state);
 		}
 		if ((tuple == null && state.tuple != null) || (tuple != null && !tuple.equals(state.tuple))) {

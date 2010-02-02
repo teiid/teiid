@@ -79,6 +79,8 @@ import com.metamatrix.query.processor.xml.XMLUtil;
  * for our tendency to read buffers in a forward manner.  If our processing algorithms are changed 
  * to use alternating ascending/descending access, then the buffering approach could be replaced 
  * with a simple LRU.
+ * 
+ * TODO: allow for cached stores to use lru - (result set/mat view)
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 	
@@ -387,8 +389,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     @Override
     public TupleBuffer createTupleBuffer(final List elements, String groupName,
-    		TupleSourceType tupleSourceType)
-    		throws MetaMatrixComponentException {
+    		TupleSourceType tupleSourceType) {
     	final String newID = String.valueOf(this.currentTuple.getAndIncrement());
     	
     	BatchManager batchManager = new BatchManager() {

@@ -24,6 +24,10 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.List;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.query.processor.relational.SourceState.ImplicitBuffer;
+
 /**
  * Nested loop is currently implemented as a degenerate case of merge join. 
  * 
@@ -53,6 +57,12 @@ public class NestedLoopJoinStrategy extends MergeJoinStrategy {
                           int[] leftExpressionIndecies,
                           int[] rightExpressionIndecies) {
         return 0; // there are no expressions in nested loop joins, comparison is meaningless
+    }
+    
+    @Override
+    protected void loadRight() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+    	this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
     }
     
     /** 

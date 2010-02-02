@@ -25,16 +25,13 @@ package com.metamatrix.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.query.processor.FakeDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.TestProcessor;
+import org.junit.Test;
+
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-import junit.framework.TestCase;
-
-public class TestOptionalJoins extends TestCase {
+public class TestOptionalJoins {
     
-    public void testOptionalJoinNode1() { 
+    @Test public void testOptionalJoinNode1() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, /* optional */ pm1.g2 where pm1.g1.e1 = 'a'"; //$NON-NLS-1$
         
@@ -56,7 +53,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode2() { 
+    @Test public void testOptionalJoinNode2() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, /* optional */ pm1.g2, pm1.g3 where pm1.g1.e1 = 'a' and pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -84,7 +81,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode3() { 
+    @Test public void testOptionalJoinNode3() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1"; //$NON-NLS-1$
         
@@ -109,7 +106,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode4() { 
+    @Test public void testOptionalJoinNode4() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN /* optional */ pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -134,7 +131,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode5() { 
+    @Test public void testOptionalJoinNode5() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN /* optional */ pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -165,7 +162,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode6() { 
+    @Test public void testOptionalJoinNode6() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -196,7 +193,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode7() { 
+    @Test public void testOptionalJoinNode7() { 
         // Create query 
         String sql = "SELECT pm1.g3.e1 FROM /* optional */ (pm1.g1 LEFT OUTER JOIN pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -221,7 +218,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode8() { 
+    @Test public void testOptionalJoinNode8() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ (select * from pm1.g2) as X on pm1.g1.e1 = x.e1"; //$NON-NLS-1$
         
@@ -246,7 +243,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode9() { 
+    @Test public void testOptionalJoinNode9() { 
         // Create query 
         String sql = "SELECT pm1.g2.e1 FROM pm1.g2, /* optional */ vm1.g1"; //$NON-NLS-1$
         
@@ -271,7 +268,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode10() { 
+    @Test public void testOptionalJoinNode10() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM /* optional */ vm1.g1, pm1.g1"; //$NON-NLS-1$
         
@@ -296,7 +293,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode11() { 
+    @Test public void testOptionalJoinNode11() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ vm1.g2 on pm1.g1.e1 = vm1.g2.e1"; //$NON-NLS-1$
         
@@ -321,7 +318,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode12() { 
+    @Test public void testOptionalJoinNode12() { 
         // Create query 
         String sql = "SELECT pm1.g3.e1 FROM /* optional */ (pm1.g1 LEFT OUTER JOIN vm1.g1 on pm1.g1.e1 = vm1.g1.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
         
@@ -346,7 +343,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode13() { 
+    @Test public void testOptionalJoinNode13() { 
         // Create query 
         String sql = "SELECT count(pm1.g1.e1) FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1"; //$NON-NLS-1$
         
@@ -366,7 +363,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode15() { 
+    @Test public void testOptionalJoinNode15() { 
         // Create query 
         String sql = "SELECT x.e1 FROM (select vm1.g1.e1, vm1.g2.e2 from vm1.g1 LEFT OUTER JOIN /* optional */vm1.g2 on vm1.g1.e2 = vm1.g2.e2) AS x"; //$NON-NLS-1$
         
@@ -391,7 +388,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode16() { 
+    @Test public void testOptionalJoinNode16() { 
         // Create query 
         String sql = "SELECT x.e1 FROM (select vm1.g1.e1, vm1.g2.e2 from vm1.g1 LEFT OUTER JOIN /* optional */vm1.g2 on vm1.g1.e2 = vm1.g2.e2) AS x order by x.e1"; //$NON-NLS-1$
         
@@ -416,7 +413,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode17() { 
+    @Test public void testOptionalJoinNode17() { 
         // Create query 
         String sql = "SELECT length(z) FROM /* optional */ pm1.g1, (select distinct e2 as y, e3 || 'x' as z from pm1.g1 ORDER BY y, z) AS x"; //$NON-NLS-1$
         
@@ -440,7 +437,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode18() { 
+    @Test public void testOptionalJoinNode18() { 
         // Create query 
         String sql = "SELECT x.e1 FROM (select vm1.g1.e1, vm1.g2.e2 from vm1.g1 LEFT OUTER JOIN /* optional */vm1.g2 on vm1.g1.e2 = vm1.g2.e2) AS x"; //$NON-NLS-1$
         
@@ -465,7 +462,7 @@ public class TestOptionalJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testOptionalJoinNode19() { 
+    @Test public void testOptionalJoinNode19() { 
         // Create query 
         String sql = "SELECT length(z) FROM /* optional */ pm1.g1 inner join (select e2 as y, e3 || 'x' as z from pm1.g1 ORDER BY z) AS x on pm1.g1.e2=x.y"; //$NON-NLS-1$
         

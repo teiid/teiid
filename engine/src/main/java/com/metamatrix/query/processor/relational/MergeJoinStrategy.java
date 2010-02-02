@@ -22,15 +22,13 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.query.processor.relational.SortUtility.Mode;
+import com.metamatrix.query.processor.relational.SourceState.ImplicitBuffer;
 import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.lang.OrderBy;
 
 /**
  * MergeJoinStrategy supports generalized Full, Left Outer, and Inner Joins (containing non-equi join criteria) as long as there
@@ -85,8 +83,6 @@ public class MergeJoinStrategy extends JoinStrategy {
     private boolean grouping;
     
     //load time state
-    private SortUtility leftSort;
-    private SortUtility rightSort;
     protected SortOption processingSortLeft;
     protected SortOption processingSortRight;   
     
@@ -136,8 +132,6 @@ public class MergeJoinStrategy extends JoinStrategy {
         super.close();
         this.outerState = null;
         this.innerState = null;
-        this.leftSort = null;
-        this.rightSort = null;
     }
     
     @Override
@@ -331,33 +325,16 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     protected void loadLeft() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
-        if (this.processingSortLeft == SortOption.SORT || this.processingSortLeft == SortOption.SORT_DISTINCT) {
-            if (this.leftSort == null) {
-            	List expressions = this.joinNode.getLeftExpressions();
-                this.leftSort = new SortUtility(this.leftSource.getIterator(),
-                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortLeft == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID());         
-                this.leftSource.markDistinct(processingSortLeft == SortOption.SORT_DISTINCT && expressions.size() == this.leftSource.getOuterVals().size());
-            }
-            this.leftSource.setTupleSource(leftSort.sort());
-            this.leftSource.markDistinct(leftSort.isDistinct());
-        }        
+        this.leftSource.sort(this.processingSortLeft);        
     }
         
     @Override
     protected void loadRight() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
-		if (this.processingSortRight == SortOption.SORT || this.processingSortRight == SortOption.SORT_DISTINCT) {
-    		if (this.rightSort == null) {
-    		    List expressions = this.joinNode.getRightExpressions();
-    		    this.rightSort = new SortUtility(this.rightSource.getIterator(), 
-    		                                        expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-    		                                        this.joinNode.getBufferManager(), this.joinNode.getConnectionID());
-    		    this.rightSource.markDistinct(processingSortRight == SortOption.SORT_DISTINCT && expressions.size() == this.rightSource.getOuterVals().size());
-    		}
-    		this.rightSource.setTupleSource(rightSort.sort());
-            this.rightSource.markDistinct(rightSort.isDistinct());
-        }
+		this.rightSource.sort(this.processingSortRight);
+		if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
+			this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
+		}
 	}
         
     public void setProcessingSortRight(boolean processingSortRight) {

@@ -37,6 +37,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.relational.SourceState.ImplicitBuffer;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
@@ -188,7 +189,10 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                                           MetaMatrixComponentException,
                                           MetaMatrixProcessingException {
         if (state == State.LOAD_LEFT) {
-            //left child was already opened by the join node
+        	if (this.joinType != JoinType.JOIN_FULL_OUTER) {
+            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
+            }
+        	//left child was already opened by the join node
             this.joinStrategy.loadLeft();
             state = State.LOAD_RIGHT;
         }
@@ -201,11 +205,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                 this.rightOpened = true;
             }
             this.joinStrategy.loadRight();
-            //force buffering based upon join type - may have already happened in the strategy load methods
-        	this.joinStrategy.rightSource.getTupleBuffer();
-            if (joinType == JoinType.JOIN_FULL_OUTER) {
-            	this.joinStrategy.leftSource.getTupleBuffer();
-            }
             state = State.EXECUTE;
         }
         

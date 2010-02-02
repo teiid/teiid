@@ -32,10 +32,18 @@ import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.BatchIterator;
+import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
+import com.metamatrix.query.sql.lang.OrderBy;
 
 class SourceState {
 
+	enum ImplicitBuffer {
+		NONE, FULL, ON_MARK
+	}
+	
     private RelationalNode source;
+    private List expressions;
     private BatchCollector collector;
     private TupleBuffer buffer;
     private List<Object> outerVals;
@@ -44,15 +52,21 @@ class SourceState {
     private List currentTuple;
     private int maxProbeMatch = 1;
     private boolean distinct;
+    private ImplicitBuffer implicitBuffer = ImplicitBuffer.FULL;
     
-    private boolean canBuffer = true;
+    private SortUtility sortUtility;
     
     public SourceState(RelationalNode source, List expressions) {
         this.source = source;
+        this.expressions = expressions;
         List elements = source.getElements();
         this.outerVals = Collections.nCopies(elements.size(), null);
         this.expressionIndexes = getExpressionIndecies(expressions, elements);
     }
+    
+    public void setImplicitBuffer(ImplicitBuffer implicitBuffer) {
+		this.implicitBuffer = implicitBuffer;
+	}
     
     private int[] getExpressionIndecies(List expressions,
                                         List elements) {
@@ -75,43 +89,41 @@ class SourceState {
         return currentTuple;
     }
     
-    public void reset() {
+    public void reset() throws MetaMatrixComponentException {
         this.getIterator().reset();
         this.getIterator().mark();
         this.currentTuple = null;
     }
     
     public void close() {
-        closeTupleSource(); 
-    }
-
-    private void closeTupleSource() {
-        if (this.buffer != null) {
+    	if (this.buffer != null) {
             this.buffer.remove();
             this.buffer = null;
         }
         if (this.iterator != null) {
+        	try {
+				this.iterator.closeSource();
+			} catch (MetaMatrixComponentException e) {
+			}
         	this.iterator = null;
         }
     }
-    
+
     public int getRowCount() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	return this.getTupleBuffer().getRowCount();
     }
 
-    void setTupleSource(TupleBuffer result) {
-    	closeTupleSource();
-        this.buffer = result;
-    }
-    
-    IndexedTupleSource getIterator() {
+    IndexedTupleSource getIterator() throws MetaMatrixComponentException {
         if (this.iterator == null) {
             if (this.buffer != null) {
                 iterator = buffer.createIndexedTupleSource();
             } else {
-            	canBuffer = false;
                 // return a TupleBatch tuplesource iterator
-                iterator = new BatchIterator(this.source);
+                BatchIterator bi = new BatchIterator(this.source);
+                if (implicitBuffer != ImplicitBuffer.NONE) {
+                	bi.setBuffer(createSourceTupleBuffer(), implicitBuffer == ImplicitBuffer.ON_MARK);
+                }
+                this.iterator = bi;
             }
         }
         return this.iterator;
@@ -139,14 +151,13 @@ class SourceState {
 
     public TupleBuffer getTupleBuffer() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         if (this.buffer == null) {
-        	if (!canBuffer) {
+        	if (this.iterator instanceof BatchIterator) {
         		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
         	}
         	if (collector == null) {
                 collector = new BatchCollector(source, createSourceTupleBuffer());
             }
-            TupleBuffer result = collector.collectTuples();
-            setTupleSource(result);
+            this.buffer = collector.collectTuples();
         }
         return this.buffer;
     }
@@ -157,6 +168,19 @@ class SourceState {
 
     public void markDistinct(boolean distinct) {
         this.distinct |= distinct;
+    }
+    
+    public void sort(SortOption sortOption) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	if (sortOption == SortOption.SORT || sortOption == SortOption.SORT_DISTINCT) {
+	    	if (this.sortUtility == null) {
+			    this.sortUtility = new SortUtility(this.buffer != null ? this.buffer.createIndexedTupleSource() : new BatchIterator(this.source), 
+			                                        expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
+			                                        this.source.getBufferManager(), this.source.getConnectionID());
+			    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
+			}
+			this.buffer = sortUtility.sort();
+	        this.markDistinct(sortUtility.isDistinct());
+    	}
     }
 
 }

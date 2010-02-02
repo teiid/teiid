@@ -129,7 +129,7 @@ public class TupleBuffer {
 	    
 	    @Override
 	    public int available() {
-	    	return 0;
+	    	return rowCount - currentRow + 1;
 	    }
 	}
 	
@@ -222,6 +222,16 @@ public class TupleBuffer {
 		}
 	}
 	
+	public void purge() {
+		if (this.batchBuffer != null) {
+			this.batchBuffer = null;
+		}
+		for (BatchManager.ManagedBatch batch : this.batches.values()) {
+			batch.remove();
+		}
+		this.batches.clear();
+	}
+	
 	/**
 	 * Force the persistence of any rows held in memory.
 	 * @throws MetaMatrixComponentException
@@ -302,13 +312,7 @@ public class TupleBuffer {
 	public void remove() {
 		if (!removed) {
 			this.manager.remove();
-			if (this.batchBuffer != null) {
-				this.batchBuffer = null;
-			}
-			for (BatchManager.ManagedBatch batch : this.batches.values()) {
-				batch.remove();
-			}
-			this.batches.clear();
+			purge();
 		}
 	}
 	
