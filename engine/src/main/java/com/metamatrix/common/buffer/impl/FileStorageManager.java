@@ -203,6 +203,10 @@ public class FileStorageManager implements StorageManager {
     	this.maxFileSize = maxFileSize * 1024L * 1024L;
 	}
     
+    void setMaxFileSizeDirect(long maxFileSize) {
+    	this.maxFileSize = maxFileSize;
+    }
+    
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
