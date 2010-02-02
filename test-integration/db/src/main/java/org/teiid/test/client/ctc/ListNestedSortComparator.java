@@ -147,14 +147,15 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
 					// param1 = null, so is less than a non-null
 					compare = -1;
 				}
-			} else if( param2 == null ) {
+	    } else if( param2 == null ) {
 				// param1 != null, param2 == null
 				compare = 1;
-			} else if ( param1 instanceof Comparable ) {
+	   } else if ( param1 instanceof Comparable ) {
                 compare = ((Comparable)param1).compareTo(param2);
             } else {
-            	ArgCheck.isTrue(false, "Expected comparable types");
+        	compare = 0;
             }
+
             if (compare != 0) {
             	boolean asc = orderTypes != null?((Boolean)orderTypes.get(k)).booleanValue():this.ascendingOrder;
                 return asc ? compare : -compare;
