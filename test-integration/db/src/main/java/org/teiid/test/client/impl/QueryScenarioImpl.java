@@ -54,30 +54,36 @@ public class QueryScenarioImpl extends QueryScenario {
 	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
-		Object results = null;
+	    
+		Object error_results = null;
 		try {
-		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
+		    error_results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
 			    sql, 
 			    resultSet, 
 			    resultException, 
 			    tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
 		    
-		    tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
-
+		    if (error_results == null) {
+			tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
+		    } else {
+			tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+		    }
+		    
+		    
 		} catch (QueryTestFailedException qtf) {
 		    resultException = (resultException != null ? resultException
 			    : qtf);
 		    tr.setException(resultException);
 		    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
 
-
 		}
 		
-		if (results != null || tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
+		if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		    try {
     		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
     			    tr.getQueryID(), sql, resultSet, resultException,
-    			    results );		    
+    			    error_results );	
+    		    	
 		    } catch (QueryTestFailedException qtfe) {
 			    throw new TransactionRuntimeException(qtfe.getMessage());
 		    }
@@ -99,6 +105,7 @@ public class QueryScenarioImpl extends QueryScenario {
 	} else {
 	    // just create the error file for any failures
 	    if (tr.getException() != null) {
+		tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
 		try {
 		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
 			    tr.getQueryID(), sql, resultSet, resultException, null);

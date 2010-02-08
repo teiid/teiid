@@ -154,7 +154,7 @@ public class TestResultsSummary  {
 		.println("Number Passed    : " + passFailGenMap.get("pass")); //$NON-NLS-1$ //$NON-NLS-2$
 	outputStream
 		.println("Number Failed    : " + passFailGenMap.get("fail")); //$NON-NLS-1$ //$NON-NLS-2$
-	outputStream.println("Number Generated : " + passFailGenMap.get("gen")); //$NON-NLS-1$ //$NON-NLS-2$
+//	outputStream.println("Number Generated : " + passFailGenMap.get("gen")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	ResponseTimes responseTimes = calcQueryResponseTimes(results);
 	outputStream.println("QPS              : " + responseTimes.qps); //$NON-NLS-1$
