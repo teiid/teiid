@@ -5,7 +5,7 @@
 <!--  *    Testing simple transactions                     *   -->
 <!--  * =====================================================================* -->
 
-<query name="TestQuery1">select * from pm1.g1 where e1 >= 0 order by e1
+<query name="TestQuery1">select * from pm1.g1 order by e1
 </query>
 
 <query name="TestQuery2">select * from pm1.g2 where e1 >= 0 order by e1</query>
