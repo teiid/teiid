@@ -37,7 +37,7 @@ import org.junit.Assert;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
+import org.teiid.test.util.TestResultSetUtil;
 
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.jdbc.util.ResultSetUtil;
@@ -128,7 +128,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    PrintStream filePrintStream = new PrintStream(actualOut);
 	    
 	    if (ex != null) {
-		ResultSetUtil.printThrowable(ex, filePrintStream);
+		TestResultSetUtil.printThrowable(ex, filePrintStream);
 	    } else if (result != null ){
 		result.beforeFirst();
 		ResultSetUtil.printResultSet(result, MAX_COL_WIDTH, true, filePrintStream);
@@ -136,7 +136,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
 	} catch (Exception e) {
 	    e.printStackTrace();
-	    throw new TransactionRuntimeException(e);
+	    throw new QueryTestFailedException(e);
 	} finally {
 	    if (actualOut != null) {
 		try {
@@ -172,11 +172,13 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 		    PrintStream filePrintStream = new PrintStream(actualOut);
 		    
 
-		    ResultSetUtil.printThrowable(queryError, filePrintStream);
+		    TestResultSetUtil.printThrowable(queryError, filePrintStream);
+		    
+		    filePrintStream.flush();
 
 		} catch (Exception e) {
 			    e.printStackTrace();
-			    throw new TransactionRuntimeException(e);
+			    throw new QueryTestFailedException(e);
 		} finally {
 		    	if (actualOut != null) {
 				try {
@@ -265,7 +267,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
 	} catch (Exception e) {
 	    e.printStackTrace();
-	    throw new TransactionRuntimeException(e);
+	    throw new QueryTestFailedException(e);
 	} finally {
 	    if (actualOut != null) {
 		try {

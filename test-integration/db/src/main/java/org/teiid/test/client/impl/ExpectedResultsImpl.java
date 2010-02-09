@@ -33,7 +33,7 @@ import org.teiid.test.client.ExpectedResults;
 import org.teiid.test.client.ctc.ResultsHolder;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
+import org.teiid.test.util.TestResultSetUtil;
 
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.jdbc.util.ResultSetUtil;
@@ -116,13 +116,12 @@ public class ExpectedResultsImpl implements ExpectedResults {
 
 	List<?> results = null;
 	if (actualException != null) {
-
 	    try {
-		results = ResultSetUtil.writeAndCompareThrowable(
-			actualException, null, expectedResultsFile, false);
+		results = TestResultSetUtil.compareThrowable(
+			actualException, expectedResultsFile, false);
 
 	    } catch (Throwable e) {
-		TransactionRuntimeException t = new TransactionRuntimeException(
+		QueryTestFailedException t = new QueryTestFailedException(
 			e.getMessage());
 		t.initCause(e);
 		throw t;
@@ -177,7 +176,7 @@ public class ExpectedResultsImpl implements ExpectedResults {
 	    } catch (QueryTestFailedException qe) {
 		throw qe;
 	    } catch (Throwable e) {
-		TransactionRuntimeException t = new TransactionRuntimeException(
+		QueryTestFailedException t = new QueryTestFailedException(
 			e.getMessage());
 		t.initCause(e);
 		throw t;

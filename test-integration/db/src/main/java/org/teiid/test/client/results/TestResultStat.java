@@ -114,11 +114,16 @@ public class TestResultStat implements TestResult, Serializable {
     }
 
     public String getExceptionMsg() {
-        return (error != null ? error.getMessage() : "");
+        return (this.errorMsg != null ? this.errorMsg : ( error != null ? error.getMessage() : ""));
     }
     
     public void setException(Throwable error){
 	this.error = error;
+    }
+    
+    public  void setExceptionMessage(String errorMsg) {
+	this.errorMsg = errorMsg;
+	
     }
     
     public Throwable getException() {

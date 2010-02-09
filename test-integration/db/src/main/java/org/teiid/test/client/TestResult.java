@@ -142,7 +142,20 @@ public interface TestResult {
     
     Throwable getException();
     
+    /**
+     * Set the exception that indicates the reason why there is a problem
+     * with the results.   Call {@link #setExceptionMessage(String)} to display
+     * a different message in the summary file.
+     * @param error
+     */
     void setException(Throwable error);
+    
+    /**
+     * Set the error message relating to the reason why there is a problem
+     * with the results.
+     * @param errorMsg
+     */
+    void setExceptionMessage(String errorMsg);
 
     /**
      * Return the time (in a long value) that this query started.

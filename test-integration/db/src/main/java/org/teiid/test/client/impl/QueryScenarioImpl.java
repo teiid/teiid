@@ -55,18 +55,19 @@ public class QueryScenarioImpl extends QueryScenario {
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
 	    
-		Object error_results = null;
+		Object results = null;
 		try {
-		    error_results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
+		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
 			    sql, 
 			    resultSet, 
 			    resultException, 
 			    tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
 		    
-		    if (error_results == null) {
+		    if (results == null) {
 			tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
 		    } else {
 			tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+			tr.setExceptionMessage("Results did not compare to expected results");
 		    }
 		    
 		    
@@ -82,7 +83,7 @@ public class QueryScenarioImpl extends QueryScenario {
 		    try {
     		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
     			    tr.getQueryID(), sql, resultSet, resultException,
-    			    error_results );	
+    			    results );	
     		    	
 		    } catch (QueryTestFailedException qtfe) {
 			    throw new TransactionRuntimeException(qtfe.getMessage());
