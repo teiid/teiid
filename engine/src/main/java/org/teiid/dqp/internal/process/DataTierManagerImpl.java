@@ -446,12 +446,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
             }
         	success = true;
         } finally {
-        	Collection requests = null;
-        	if (success) {
-                requests = codeTableCache.markCacheLoaded(codeRequestId);
-        	} else {
-        		requests = codeTableCache.errorLoadingCache(codeRequestId);        		
-        	}
+        	Collection requests = codeTableCache.markCacheDone(codeRequestId, success);
         	notifyWaitingCodeTableRequests(requests);
         }
     }

@@ -73,11 +73,7 @@ public class TestCodeTableCache extends TestCase {
 		} catch (MetaMatrixProcessingException e) {
 			throw new RuntimeException(e);
 		}
-		if(setDone) {
-			ctc.markCacheLoaded(nodeId);
-		} else {
-			ctc.errorLoadingCache(nodeId);
-		}
+		ctc.markCacheDone(nodeId, setDone);
 		return ctc;	
 	}
 
@@ -98,7 +94,7 @@ public class TestCodeTableCache extends TestCase {
 		} catch (MetaMatrixProcessingException e) {
 			throw new RuntimeException(e);
 		}
-		ctc.markCacheLoaded(nodeId);
+		ctc.markCacheDone(nodeId, true);
 		return ctc;	
 	}
 
@@ -114,6 +110,10 @@ public class TestCodeTableCache extends TestCase {
 		CodeTableCache ctc = setUpSampleCodeTable(true);
 
 		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_EXISTS, actualState);	 //$NON-NLS-1$
+		
+		//test case insensitive
+		actualState = ctc.cacheExists("countryCODE", "code", "Country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_EXISTS, actualState);	 //$NON-NLS-1$
 	}
 

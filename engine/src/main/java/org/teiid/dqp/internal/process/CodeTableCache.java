@@ -37,6 +37,7 @@ import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * Code table cache.  Heavily synchronized in-memory cache of code tables.  There is no purging policy for this cache.  Once the limits have been reached exceptions will occur.
@@ -189,32 +190,13 @@ class CodeTableCache {
         }
 		return table.codeMap.get(keyValue);
     }
-
-   /**
-    * Places the lookup results in the cache and marks the cache loaded
-    * @param requestID
-    * @param nodeID
-    * @return the set of waiting requests
-    * @since 4.2
-    */
-    public Set<Object> markCacheLoaded(CacheKey requestKey) {
-        return markCacheDone(requestKey, false);
-    }
-       
-   /**
-    * Notifies the CodeTableCache that this code table had an error. Removes any existing cached results and clears any state
-    * for this CacheKey.
-    * @param requestID
-    * @param nodeID
-    * @return the set of waiting requests
-    * @since 4.2
-    */
-    public Set<Object> errorLoadingCache(CacheKey requestKey) {
-        return markCacheDone(requestKey, true);
-    }
    
-    private synchronized Set<Object> markCacheDone(CacheKey cacheKey, boolean errorOccurred) {
-        if (errorOccurred) {
+    /**
+     * Notifies the CodeTableCache that this code is done.  If the table had an error, it removes any temporary results.
+     * @return the set of waiting requests
+     */
+    public synchronized Set<Object> markCacheDone(CacheKey cacheKey, boolean success) {
+        if (!success) {
             // Remove any results already cached
             CodeTable table = codeTableCache.remove(cacheKey);
             if (table != null) {
@@ -224,7 +206,7 @@ class CodeTableCache {
         }
     	CodeTable table = codeTableCache.get(cacheKey);
     	if (table == null || table.codeMap == null) {
-    		return null;
+    		return null; //can only happen if cache was cleared between load and now
     	}
         rowCount += table.codeMap.size();
         Set<Object> waiting = table.waitingRequests;
@@ -264,8 +246,7 @@ class CodeTableCache {
         private String codeTable;
         private String returnElement;
         private String keyElement;
-        private String vdbName;
-        private String vdbVersion;
+        private VDBKey vdbKey;
         
         private int hashCode;
         
@@ -273,15 +254,11 @@ class CodeTableCache {
             this.codeTable = codeTable;
             this.returnElement = returnElement;
             this.keyElement = keyElement;
-            this.vdbName = vdbName;
-            this.vdbVersion = vdbVersion;
+            this.vdbKey = new VDBKey(vdbName, vdbVersion);
             
             // Compute hash code and cache it
-            hashCode = HashCodeUtil.hashCode(0, codeTable);
-            hashCode = HashCodeUtil.hashCode(hashCode, returnElement);
-            hashCode = HashCodeUtil.hashCode(hashCode, keyElement);   
-            hashCode = HashCodeUtil.hashCode(hashCode, vdbName);
-            hashCode = HashCodeUtil.hashCode(hashCode, vdbVersion);
+            hashCode = HashCodeUtil.hashCode(codeTable.toUpperCase().hashCode(), returnElement.toUpperCase(), 
+            		keyElement.toUpperCase(), vdbKey);
         }
         
         public String getCodeTable() {
@@ -304,11 +281,10 @@ class CodeTableCache {
                 CacheKey other = (CacheKey) obj;
                 
                 return (other.hashCode() == hashCode() &&
-                    this.codeTable.equals(other.codeTable) &&
-                    this.returnElement.equals(other.returnElement) && 
-                    this.keyElement.equals(other.keyElement) &&
-                    this.vdbName.equals(other.vdbName) &&
-                    this.vdbVersion.equals(other.vdbVersion));
+                    this.codeTable.equalsIgnoreCase(other.codeTable) &&
+                    this.returnElement.equalsIgnoreCase(other.returnElement) && 
+                    this.keyElement.equalsIgnoreCase(other.keyElement) &&
+                    this.vdbKey.equals(other.vdbKey));
             }
             return false;
         }
