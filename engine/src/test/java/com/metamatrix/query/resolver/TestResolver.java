@@ -2079,6 +2079,16 @@ public class TestResolver {
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(0)).getType());
     }
     
+    @Test public void testUnionQueryClone() throws Exception{
+        SetQuery command = (SetQuery)helpResolve("SELECT e2, e3 FROM pm1.g1 UNION SELECT e3, e2 from pm1.g1"); //$NON-NLS-1$
+        
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(1)).getType());
+        
+        command = (SetQuery)command.clone();
+        
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((SingleElementSymbol)command.getProjectedSymbols().get(1)).getType());
+    }
+    
     @Test public void testSelectIntoNoFrom() {
         helpResolve("SELECT 'a', 19, {b'true'}, 13.999 INTO pm1.g1"); //$NON-NLS-1$
     }

@@ -180,6 +180,10 @@ public class SetQuery extends QueryCommand {
         if(this.getLimit() != null) { 
             copy.setLimit( (Limit) this.getLimit().clone() );
         }
+        
+        if (this.projectedTypes != null) {
+        	copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes));
+        }
          
         return copy;
 	}
