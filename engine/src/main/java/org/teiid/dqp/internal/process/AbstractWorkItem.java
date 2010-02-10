@@ -47,7 +47,7 @@ public abstract class AbstractWorkItem implements Runnable {
     	}
     }
     
-    ThreadState getThreadState() {
+    synchronized ThreadState getThreadState() {
     	return this.threadState;
     }
     
@@ -80,8 +80,12 @@ public abstract class AbstractWorkItem implements Runnable {
 	        	}
 	    		break;
     		default:
-    			throw new IllegalStateException("Should not END on IDLE or DONE"); //$NON-NLS-1$
+    			throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
     	}
+    }
+    
+    protected boolean isIdle() {
+    	return this.threadState == ThreadState.IDLE;
     }
     
     protected void moreWork() {

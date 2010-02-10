@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
@@ -96,7 +97,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         
     protected RequestState requestState = RequestState.NEW;
     
-    private volatile boolean isCancelled;
+    private AtomicBoolean isCancelled = new AtomicBoolean();
     private volatile boolean moreRequested;
     private volatile boolean closeRequested;
     private boolean isClosed;
@@ -190,7 +191,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }
 
 	private void checkForCloseEvent() throws NeedsClosedException {
-		if (this.isCancelled || this.closeRequested) {
+		if (this.isCancelled.get() || this.closeRequested) {
 			throw new NeedsClosedException();
 		}
 	}
@@ -231,7 +232,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_ERROR, -1);
         
         String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
-        if (isCancelled) {            
+        if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else if (t instanceof ConnectorException || t instanceof MetaMatrixProcessingException) {
         	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
@@ -512,8 +513,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }    
             
     void asynchCancel() throws ConnectorException {
-    	if (!this.isCancelled) {
-	    	this.isCancelled = true;
+    	if (this.isCancelled.compareAndSet(false, true)) {
 	        if(execution != null) {
 	            execution.cancel();
 	        }            
@@ -522,7 +522,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }
     
     boolean isCancelled() {
-    	return this.isCancelled;
+    	return this.isCancelled.get();
     }
 
 	@Override

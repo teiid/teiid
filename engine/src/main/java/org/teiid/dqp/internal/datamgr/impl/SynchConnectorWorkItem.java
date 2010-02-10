@@ -68,7 +68,9 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 	protected void pauseProcessing() {
 		releaseTxnLock();
 		try {
-			this.wait();
+			while (isIdle()) {
+				this.wait();
+			}
 			acquireTransactionLock();
 		} catch (InterruptedException e) {
 			interrupted(e);
