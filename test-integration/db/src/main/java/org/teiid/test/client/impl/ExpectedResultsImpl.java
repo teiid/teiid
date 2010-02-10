@@ -36,7 +36,6 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.jdbc.util.ResultSetUtil;
 
 public class ExpectedResultsImpl implements ExpectedResults {
 
@@ -118,7 +117,7 @@ public class ExpectedResultsImpl implements ExpectedResults {
 	if (actualException != null) {
 	    try {
 		results = TestResultSetUtil.compareThrowable(
-			actualException, expectedResultsFile, false);
+			actualException, sql, expectedResultsFile, false);
 
 	    } catch (Throwable e) {
 		QueryTestFailedException t = new QueryTestFailedException(
@@ -170,7 +169,7 @@ public class ExpectedResultsImpl implements ExpectedResults {
 		
 		resultSet.beforeFirst();
 
-		results = ResultSetUtil.writeAndCompareResultSet(resultSet,
+		results = TestResultSetUtil.writeAndCompareResultSet(resultSet, sql,
 			MAX_COL_WIDTH, false, null, expectedResultsFile, false);
 
 	    } catch (QueryTestFailedException qe) {
