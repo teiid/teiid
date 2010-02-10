@@ -27,8 +27,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.naming.NamingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.managed.api.ComponentType;
+import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.RunState;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.measurement.AvailabilityType;
@@ -36,11 +41,17 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
-import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.teiid.rhq.admin.utils.SingletonConnectionManager;
 import org.teiid.rhq.comm.Connection;
 import org.teiid.rhq.comm.ConnectionConstants;
-import org.teiid.rhq.comm.ConnectionConstants.ComponentType;
+//import org.teiid.rhq.comm.ConnectionConstants;
+//import org.teiid.rhq.comm.Connection;
+//import org.teiid.rhq.comm.ConnectionConstants;
+//import org.teiid.rhq.comm.ConnectionConstants.ComponentType.Runtime.System.Metrics;
+import org.teiid.rhq.plugin.util.PluginConstants;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
+import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Runtime.Metrics;
 
 
 /**
@@ -60,11 +71,26 @@ public class PlatformComponent extends Facet {
 	
 	@Override
 	public AvailabilityType getAvailability() {
-
-		return AvailabilityType.UP;
+		RunState runState = null;
+		ManagedComponent mc;
+		try {
+			mc = ProfileServiceUtil.getManagedComponent(
+					new ComponentType(PluginConstants.ComponentType.Runtime.TYPE,
+							PluginConstants.ComponentType.Runtime.SUBTYPE),
+					PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+			runState = mc.getRunState();
+		} catch (NamingException e) {
+			LOG.error("Naming exception getting: " + PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+	        return AvailabilityType.DOWN;
+		} catch (Exception e) {
+			LOG.error("Exception getting: " + PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+			return AvailabilityType.DOWN;
+		}
+		
+		return (runState == RunState.RUNNING) ? AvailabilityType.UP : AvailabilityType.DOWN;
+		
 	}
-	
-	
+
 	
 	protected void setOperationArguments(String name, Configuration configuration,
 			Map valueMap) {

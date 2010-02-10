@@ -26,8 +26,10 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.deployers.spi.management.ManagementView;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.ManagedDeployment;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.values.CollectionValueSupport;
@@ -67,13 +69,27 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 			String vdbName = ((SimpleValueSupport) mcVdb.getProperty("name")
 					.getValue()).getValue().toString();
-			String vdbVersion = ((SimpleValueSupport) mcVdb.getProperty("version")
-					.getValue()).getValue().toString();
-			//TODO: Correct this after deploying proper VDB/Metadata
+//			ManagementView managementView = ProfileServiceUtil
+//			.getManagementView(ProfileServiceUtil.getProfileService(),
+//					false);
+			//ManagedDeployment managedDeployment = managementView.getDeploymentNamesForType(arg0)(vdbName);
+			//Set deploymentNames = null;
+			
+//			try
+//	        {
+//	            deploymentNames = managementView.getDeploymentNames();
+//	        }
+//	        catch (Exception e)
+//	        {
+//	            log.error("Unable to get deployment for type " , e);
+//	        }
+			String vdbVersion = ((SimpleValueSupport) mcVdb.getProperty(
+					"version").getValue()).getValue().toString();
+			// TODO: Correct this after deploying proper VDB/Metadata
 			String vdbDescription = "description"; // mcVdb.getProperty("description");
 			String vdbStatus = "active"; // mcVdb.getProperty("status");
 			String vdbURL = "url"; // mcVdb.getProperty("url");
-			
+
 			/**
 			 * 
 			 * A discovered resource must have a unique key, that must stay the
@@ -85,23 +101,25 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					vdbName, // Resource Name
 					vdbVersion, // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
-					discoveryContext.getDefaultPluginConfiguration(), // Plugin Config
+					discoveryContext.getDefaultPluginConfiguration(), // Plugin
+																		// Config
 					null // Process info from a process scan
 			);
-			
-			//Get plugin config map for models
+
+			// Get plugin config map for models
 			Configuration configuration = detail.getPluginConfiguration();
 
 			configuration.put(new PropertySimple("name", vdbName));
 			configuration.put(new PropertySimple("version", vdbVersion));
-			configuration.put(new PropertySimple("description", vdbDescription));
+			configuration
+					.put(new PropertySimple("description", vdbDescription));
 			configuration.put(new PropertySimple("status", vdbStatus));
-			configuration.put(new PropertySimple("url", vdbURL));			
-			
+			configuration.put(new PropertySimple("url", vdbURL));
+
 			getModels(mcVdb, configuration);
 
 			detail.setPluginConfiguration(configuration);
-			
+
 			// Add to return values
 			discoveredResources.add(detail);
 			log.info("Discovered Teiid VDB: " + vdbName);
@@ -115,28 +133,33 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 	 * @param configuration
 	 */
 	private void getModels(ManagedComponent mcVdb, Configuration configuration) {
-		//Get models from VDB
+		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("models");
-		CollectionValueSupport valueSupport = (CollectionValueSupport) property.getValue();
+		CollectionValueSupport valueSupport = (CollectionValueSupport) property
+				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
- 
+
 		PropertyList modelsList = new PropertyList("models");
 		configuration.put(modelsList);
-				
+
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
-			ManagedObjectImpl managedObject = (ManagedObjectImpl)genValueSupport.getValue();
+			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
+					.getValue();
 			String modelName = managedObject.getName();
-			String type = ((SimpleValueSupport) managedObject.getProperty("modelType").getValue()).getValue().toString();
-			String visibility = ((SimpleValueSupport) managedObject.getProperty("visible").getValue()).getValue().toString();
-			String path = ((SimpleValueSupport) managedObject.getProperty("path").getValue()).getValue().toString();
-			
-			PropertyMap model = new PropertyMap("model", new PropertySimple("name", modelName),
-					new PropertySimple("type", type), new PropertySimple("path", path), 
-					new PropertySimple("visibility", visibility));
+			String type = ((SimpleValueSupport) managedObject.getProperty(
+					"modelType").getValue()).getValue().toString();
+			String visibility = ((SimpleValueSupport) managedObject
+					.getProperty("visible").getValue()).getValue().toString();
+			String path = ((SimpleValueSupport) managedObject.getProperty(
+					"path").getValue()).getValue().toString();
+
+			PropertyMap model = new PropertyMap("model", new PropertySimple(
+					"name", modelName), new PropertySimple("type", type),
+					new PropertySimple("path", path), new PropertySimple(
+							"visibility", visibility));
 			modelsList.add(model);
 		}
-	}	
-	
+	}
 
 }

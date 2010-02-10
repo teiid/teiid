@@ -26,20 +26,51 @@
 	<depends plugin="JMX" />
 	<depends plugin="JBossAS5" useClasses="true" />
 
-
 	<server name="Data Services" description="JBoss Enterprise Data Services"
-		class="PlatformComponent" discovery="PlatformDiscoveryComponent"
-		createDeletePolicy="both">
-
+		class="PlatformComponent" discovery="PlatformDiscoveryComponent">
 
 		<runs-inside>
 			<parent-resource-type name="JBossAS Server"
 				plugin="JBossAS5" />
 		</runs-inside>
 
-		<service name="Virtual Database VDB(s)"
+	<!--	<metric displayName="Query Count" defaultOn="true" displayType="summary"
+			category="throughput" property="queryCount"
+			description="The number of queries for a given point in time" />
+
+		<metric displayName="Long Running Queries" defaultOn="true"
+			displayType="summary" category="performance" property="longRunningQueries"
+			description="The number of queries that have been running longer than the limit set for queries." />
+
+		<metric displayName="Session Count" defaultOn="true"
+			displayType="summary" category="throughput" property="sessionCount"
+			description="The number of user connections for a given point in time" />
+
+		<resource-configuration>
+			<c:group name="general" displayName="General"
+				hiddenByDefault="false">
+				<c:description>Query Configuration</c:description>
+				<c:simple-property name="longRunningQueryLimit"
+					type="integer" activationPolicy="immediate" units="seconds"
+					default="600" displayName="Long Running Query limit"
+					description="The value (in seconds) to use to determine if a query is to be considered 'long running'.">
+					<c:constraint>
+						<c:integer-constraint minimum="0" maximum="999999" />
+					</c:constraint>
+				</c:simple-property>
+			</c:group>
+		</resource-configuration>
+       -->
+		<service name="Virtual Database (VDB)s"
 			description="JBoss Enterprise Data Services Virtual Databases" class="VDBComponent"
-			discovery="VDBDiscoveryComponent" createDeletePolicy="both">
+			discovery="VDBDiscoveryComponent" createDeletePolicy="both"
+			creationDataType="content">
+
+			<content name="vdb" displayName="VDB Archive" category="deployable"
+				isCreationType="true">
+
+			</content>
+
 
 			<resource-configuration>
 				<c:group name="general" displayName="General"
@@ -71,6 +102,7 @@
 					</c:list-property>
 				</c:group>
 			</resource-configuration>
+
 
 			<service name="Models" description="Models that map to a datasource"
 				class="ModelComponent" discovery="ModelDiscoveryComponent"

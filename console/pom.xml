@@ -19,6 +19,7 @@
 			<org.jboss.jopr.as4.version>1.2.0.GA</org.jboss.jopr.as4.version>
 		-->
 		<org.jboss.jopr.as5.version>1.2.0.GA</org.jboss.jopr.as5.version>
+		<org.rhq.version>1.3.0.GA</org.rhq.version>
 
 		<org.jboss.jopr.version>1.2.0.GA</org.jboss.jopr.version>
 
@@ -211,7 +212,7 @@
 		<dependency>
 			<groupId>org.rhq</groupId>
 			<artifactId>rhq-core-domain</artifactId>
-			<version>${org.jboss.jopr.version}</version>
+			<version>${org.rhq.version}</version>
 			<scope>provided</scope>
 			<!--
 				provided by the agent/plugin-container
@@ -222,21 +223,21 @@
 		<dependency>
 			<groupId>org.rhq</groupId>
 			<artifactId>rhq-core-plugin-api</artifactId>
-			<version>${org.jboss.jopr.version}</version>
+			<version>${org.rhq.version}</version>
 			<scope>provided</scope> <!-- provided by the agent/plugin-container -->
 		</dependency>
 
 		<dependency>
 			<groupId>org.rhq</groupId>
 			<artifactId>rhq-core-native-system</artifactId>
-			<version>${org.jboss.jopr.version}</version>
+			<version>${org.rhq.version}</version>
 			<scope>provided</scope> <!-- provided by the agent/plugin-container -->
 		</dependency>
 
 		<dependency>
 			<groupId>org.rhq</groupId>
 			<artifactId>rhq-jmx-plugin</artifactId>
-			<version>${org.jboss.jopr.version}</version>
+			<version>${org.rhq.version}</version>
 		</dependency>
 
 		<dependency>
@@ -304,12 +305,13 @@
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 		</dependency>
+		<dependency>
+			<groupId>org.jboss.jopr</groupId>
+			<artifactId>jopr-embedded-jbas5</artifactId>
+			<type>war</type>
+			<version>${org.jboss.jopr.as5.version}</version>
+		</dependency>
 
-		<!--
-			<dependency> <groupId>org.jboss.jopr</groupId>
-			<artifactId>jopr-embedded-jbas4</artifactId> <type>war</type>
-			<version>${org.jboss.jopr.as4.version}</version> </dependency>
-		-->
 		<dependency>
 			<groupId>org.jboss.jopr</groupId>
 			<artifactId>jopr-embedded-jbas5</artifactId>
@@ -328,7 +330,17 @@
 			<artifactId>ant</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.3.2</version>
+		</dependency>
 
+		<dependency>
+			<groupId>org.jboss.on</groupId>
+			<artifactId>jopr-jboss-as-5-plugin</artifactId>
+			<version>2.3.0.EmbJopr.1.2.0-1</version>
+		</dependency>
 
 	</dependencies>
 
