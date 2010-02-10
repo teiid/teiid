@@ -7558,6 +7558,20 @@ public class TestProcessor {
         
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testImplicitAggregateWithInlineView() {
+        String sql = "SELECT * FROM (SELECT b.count, enterprise_id FROM (SELECT COUNT(*), 2 AS enterprise_id FROM (SELECT 'A Name' AS Name, 1 AS enterprise_id) c ) b ) a WHERE enterprise_id = 1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {};    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
 
     private static final boolean DEBUG = false;
 }

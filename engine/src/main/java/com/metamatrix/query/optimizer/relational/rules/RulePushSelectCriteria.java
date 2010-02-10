@@ -140,6 +140,12 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			CapabilitiesFinder capFinder, PlanNode critNode)
 			throws MetaMatrixComponentException, QueryMetadataException {
 		if (critNode.getGroups().isEmpty()) {
+	        //check to see if pushing may impact cardinality
+	        PlanNode groupNode = NodeEditor.findNodePreOrder(critNode, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
+	        if (groupNode != null && !groupNode.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
+	        	return groupNode;
+	        }
+
 			Object modelId = getSubqueryModelId(metadata, capFinder, critNode);
 			if (modelId != null) {
 				for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE)) {
