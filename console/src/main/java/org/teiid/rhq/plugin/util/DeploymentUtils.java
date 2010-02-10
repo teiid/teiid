@@ -31,10 +31,8 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.deployers.spi.management.deploy.DeploymentProgress;
 import org.jboss.deployers.spi.management.deploy.DeploymentStatus;
-import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.resource.ResourceType;
 import org.rhq.core.util.exception.ThrowableUtil;
-import org.rhq.plugins.jbossas5.util.ResourceTypeUtils;
 
 /**
  * A set of utility methods for deploying applications.
@@ -44,7 +42,6 @@ public class DeploymentUtils {
     private static final Log LOG = LogFactory.getLog(DeploymentUtils.class);
 
     public static boolean hasCorrectExtension(String archiveFileName, ResourceType resourceType) {
-        Configuration defaultPluginConfig = ResourceTypeUtils.getDefaultPluginConfiguration(resourceType);
         String expectedExtension = "vdb";
         int lastPeriod = archiveFileName.lastIndexOf(".");
         String extension = (lastPeriod != -1) ? archiveFileName.substring(lastPeriod + 1) : null;
@@ -144,5 +141,6 @@ public class DeploymentUtils {
     }
 
     private DeploymentUtils() {
-    }
+    }    
+    
 }
