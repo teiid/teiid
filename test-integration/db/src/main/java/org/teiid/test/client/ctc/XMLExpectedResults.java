@@ -45,6 +45,7 @@ import org.teiid.test.client.ExpectedResults;
 import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryScenario;
 import org.teiid.test.client.ResultsGenerator;
+import org.teiid.test.client.TestProperties;
 import org.teiid.test.client.TestResult;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
@@ -59,7 +60,7 @@ import com.metamatrix.core.util.StringUtil;
 public class XMLExpectedResults implements ExpectedResults {
      
     protected Properties props;
-    protected int resultMode = -1;
+    protected String resultMode = TestProperties.RESULT_MODES.NONE;
     protected String generateDir = null;
     protected String querySetIdentifier = null;
     protected String results_dir_loc = null;
@@ -81,17 +82,44 @@ public class XMLExpectedResults implements ExpectedResults {
 	    File dir = new File(expected_root_loc, results_dir_loc);
 	    this.results_dir_loc = dir.getAbsolutePath();
 	}
+	
+	validateResultsMode(this.props);
 
     	
     	TestLogger.logInfo("Expected results loc: " + this.results_dir_loc);
+    }
+    
+    protected void validateResultsMode(Properties props) {
+	// Determine from property what to do with query results
+	String resultModeStr = props.getProperty(
+		TestProperties.PROP_RESULT_MODE, "");
+	// No need to check for null prop here since we've just checked for this
+	// required property
+
+	if (resultModeStr.equalsIgnoreCase(TestProperties.RESULT_MODES.NONE)
+		|| resultModeStr
+			.equalsIgnoreCase(TestProperties.RESULT_MODES.COMPARE)
+		|| resultModeStr
+			.equalsIgnoreCase(TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
+	    resultMode = resultModeStr;
+	}
+	// otherwise use default of NONE
+
+	TestLogger.log("\nResults mode: " + resultMode); //$NON-NLS-1$
+
     }
 
 
 	@Override
 	public boolean isExceptionExpected(String queryidentifier) throws QueryTestFailedException {
-       		ResultsHolder expectedResults = (ResultsHolder) getResults(queryidentifier);
+		if (resultMode.equalsIgnoreCase(
+			TestProperties.RESULT_MODES.COMPARE)) {
 
-		return (expectedResults.getExceptionMsg() == null ? false : true);
+       			ResultsHolder expectedResults = (ResultsHolder) getResults(queryidentifier);
+
+       			return (expectedResults.getExceptionMsg() == null ? false : true);
+		} 
+		return false;
 	}
 
 
