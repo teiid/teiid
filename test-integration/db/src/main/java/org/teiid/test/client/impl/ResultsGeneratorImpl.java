@@ -218,14 +218,17 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
 
     private String generateErrorFileName(String queryID, String querySetID) {
-	String errorFileName = "ERROR_"
-		// configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
-		//                               + querySetID + "_" //$NON-NLS-1$
-		+ queryID
-		+ "_" //$NON-NLS-1$
-		+ FILE_NAME_DATE_FORMATER.format(new Date(System
-			.currentTimeMillis())) + ".txt"; //$NON-NLS-1$
-	return errorFileName;
+//	String errorFileName = "ERROR_"
+//		// configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
+//		//                               + querySetID + "_" //$NON-NLS-1$
+//		+ queryID
+//		+ "_" //$NON-NLS-1$
+//		+ FILE_NAME_DATE_FORMATER.format(new Date(System
+//			.currentTimeMillis())) + ".txt"; //$NON-NLS-1$
+//	return errorFileName;
+	
+	return  queryID + ".txt";
+
     }
 
     /**

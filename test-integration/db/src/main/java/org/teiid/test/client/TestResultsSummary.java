@@ -41,6 +41,8 @@ import java.util.Map;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 
+import com.metamatrix.core.util.StringUtilities;
+
 public class TestResultsSummary  {
     
     private static final String PROP_SUMMARY_PRT_DIR="summarydir";
@@ -220,7 +222,7 @@ public class TestResultsSummary  {
 	    case TestResult.RESULT_STATE.TEST_EXCEPTION:
 		++fail;
 		
-		this.failed_queries.add(stat.getQueryID());
+		this.failed_queries.add(stat.getQueryID() + "," + StringUtilities.replaceWhitespace(stat.getExceptionMsg(), "", true));
 		break;
 	    case TestResult.RESULT_STATE.TEST_SUCCESS:
 		++pass;
@@ -250,7 +252,6 @@ public class TestResultsSummary  {
             try {
         	printResults(scenario, querySetID, beginTS, endTS, 1, 1);
             } catch (Exception e) {
-        	// TODO Auto-generated catch block
         	e.printStackTrace();
             }
     }
