@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,8 +43,8 @@ import java.util.Properties;
 import org.jdom.JDOMException;
 import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
-import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryScenario;
+import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.client.TestResult;
@@ -51,7 +52,6 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
-
 
 import com.metamatrix.core.util.StringUtil;
 
@@ -606,17 +606,22 @@ public class XMLExpectedResults implements ExpectedResults {
 		// TODO: Replace stripCR() with XMLUnit comparison for XML results.
 		// stripCR() is a workaround for comparing XML Queries
 		// that have '\r'.
-		String expected = stripCR(expectedStr);
-		String actual = stripCR(actualStr);
+		String expected = stripCR(expectedStr).trim();
+		String actual = stripCR(actualStr).trim();
 
 		String locationText = ""; //$NON-NLS-1$
 		int mismatchIndex = -1;
-		if (!expected.equals(actual)) {
+		
+		
+		boolean isequal = Arrays.equals(expected.toCharArray(), actual.toCharArray());
+		
+		//if (!expected.equals(actual)) {
+		if (!isequal) {
 			if (expected != null && actual != null) {
 				int shortestStringLength = expected.length();
 				if (actual.length() < expected.length()) {
 					shortestStringLength = actual.length();
-				}
+				} 
 				for (int i = 0; i < shortestStringLength; i++) {
 					if (expected.charAt(i) != actual.charAt(i)) {
 						locationText = "  Strings do not match at character: " + (i + 1) + //$NON-NLS-1$
