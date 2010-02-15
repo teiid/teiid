@@ -46,12 +46,14 @@ import com.metamatrix.core.util.StringUtil;
 public class XMLQueryReader implements QueryReader {
  
     private Properties props = null;
+    private String queryScenarioIdentifier;
 
     private Map<String, String> querySetIDToFileMap = new HashMap<String, String>();
 
-    public XMLQueryReader(Properties properties)
+    public XMLQueryReader(String queryScenarioID, Properties properties)
 	    throws QueryTestFailedException {
 	this.props = properties;
+	this.queryScenarioIdentifier = queryScenarioID;
 	loadQuerySets();
     }
 
@@ -127,7 +129,7 @@ public class XMLQueryReader implements QueryReader {
 
 	    XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
 	    try {
-		return jstrat.parseXMLQueryFile(queryFile, querySetID);
+		return jstrat.parseXMLQueryFile(this.queryScenarioIdentifier, queryFile, querySetID);
 //		Iterator iter = queryMap.keySet().iterator();
 //		while (iter.hasNext()) {
 //		    String queryID = (String) iter.next();
@@ -171,7 +173,7 @@ public class XMLQueryReader implements QueryReader {
 		"target/classes/").getAbsolutePath());
 
 	try {
-	    XMLQueryReader reader = new XMLQueryReader(_instance.getProperties());
+	    XMLQueryReader reader = new XMLQueryReader("scenario_id",  _instance.getProperties());
 	    Iterator<String> it = reader.getQuerySetIDs().iterator();
 	    while (it.hasNext()) {
 		String querySetID = it.next();

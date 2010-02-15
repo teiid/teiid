@@ -83,7 +83,7 @@ public class XMLQueryVisitationStrategy {
      * @return the List containing quers.
      * @exception JDOMException if there is an error consuming the message.
      */
-    public List parseXMLQueryFile(File queryFile, String querySetID) throws IOException, JDOMException {
+    public List parseXMLQueryFile(String queryScenarioID, File queryFile, String querySetID) throws IOException, JDOMException {
 
 	List<QueryTest> queries = new LinkedList();
 //        HashMap queryMap = new HashMap();
@@ -103,7 +103,7 @@ public class XMLQueryVisitationStrategy {
         	    TestLogger.logDebug("=======  Single QueryTest ");
         	    QuerySQL sql = createQuerySQL(queryElement);
          	    
-        	    QueryTest q = new QueryTest(uniqueID, querySetID, new QuerySQL[] {sql}, false);
+        	    QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, false);
         	    queries.add(q);
         	} else {
         	    TestLogger.logDebug("=======  QueryTest has multiple sql statements");
@@ -117,7 +117,7 @@ public class XMLQueryVisitationStrategy {
         			querysql[c] = sql;
         			c++;	
         		}
-        		QueryTest q = new QueryTest(uniqueID, querySetID, querysql, false);
+        		QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, querysql, false);
         		queries.add(q);
                		
         		
@@ -131,7 +131,7 @@ public class XMLQueryVisitationStrategy {
                 String uniqueID = querySetID + "_" + queryName;
                 QuerySQL sql = new QuerySQL(exceptionType, null);
                 
-                QueryTest q = new QueryTest(uniqueID, querySetID, new QuerySQL[] {sql}, true);
+                QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, true);
                 queries.add(q);
 
                 

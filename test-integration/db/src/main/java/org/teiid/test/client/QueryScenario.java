@@ -72,6 +72,7 @@ public abstract class QueryScenario {
 
     protected void setUp() {
 	Collection args = new ArrayList(1);
+	args.add(scenarioName);
 	args.add(props);
 
 	reader = ClassFactory.createQueryReader(args);

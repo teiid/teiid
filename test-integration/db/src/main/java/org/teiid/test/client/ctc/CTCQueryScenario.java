@@ -47,7 +47,7 @@ public class CTCQueryScenario extends QueryScenario {
     protected void setUp() {
 
 	try {
-	    reader = new XMLQueryReader(this.getProperties());
+	    reader = new XMLQueryReader(this.getQueryScenarioIdentifier(), this.getProperties());
 	} catch (QueryTestFailedException e1) {
     		throw new TransactionRuntimeException(e1);
 	}

@@ -81,7 +81,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     }
     
     public String getTestName() {
-	return query.geQuerySetID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
+	return query.getQueryScenarioID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
 	
     }
 
