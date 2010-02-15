@@ -1,3 +1,4 @@
+select a.* from pm1.g1 as a, pm1.g2 as b where a.e1 = 1100 and a.e1=b.e1
 integer      string                                            
 e1           e2                                                
 1100         '1100'                                            

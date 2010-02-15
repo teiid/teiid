@@ -1,3 +1,4 @@
+select * from pm2.g2 where e1 >= 0 order by e1
 integer  string                                            
 E1       E2                                                
 0        0                                                 

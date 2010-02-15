@@ -1,3 +1,4 @@
+select *  pm1.g1 order by e1
 com.metamatrix.jdbc.MMSQLException : Parsing error: Encountered "pm1.g1" at line 1, column 11.
 Was expecting one of:
     <EOF> 

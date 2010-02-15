@@ -1,3 +1,4 @@
+select * from pm1.g1 where e1 > 999
 integer      string                                            
 e1           e2                                                
 Row Count : 0

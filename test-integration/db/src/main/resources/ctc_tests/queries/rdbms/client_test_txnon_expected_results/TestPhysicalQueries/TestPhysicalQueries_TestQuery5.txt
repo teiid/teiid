@@ -1,3 +1,4 @@
+select * from pm1.g1 where e1 = 1000
 integer      string                                            
 e1           e2                                                
 1000         '1000'                                            
