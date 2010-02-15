@@ -166,10 +166,10 @@
 			  	<jvmarg value="-Dqueryset.artifacts.dir=${queryset_artifacts_dir}" />
 				<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
 		       	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
+				<jvmarg value="-Dusedatasources=${usedatasources}" />
+				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
 
-				  </java>
-
- 
+			</java>
 
 	</target>
 	
@@ -193,7 +193,8 @@
           	<jvmarg value="-Dqueryset.artifacts.dir=${queryset.artifacts.dir}" />
         	<jvmarg value="-Dvdb.artifacts.dir=${vdb.artifacts.dir}" />
         	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
-            	
+			<jvmarg value="-Dusedatasources=${usedatasources}" />
+			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />            	
 
       	  </java>
 		

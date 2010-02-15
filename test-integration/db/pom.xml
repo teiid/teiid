@@ -399,6 +399,8 @@
 								<property name="query.scenario.classname"  value="${query.scenario.classname}"></property>
 								<property name="third.party.jars.dir"  value="${third.party.jars.dir}"></property>
 								<property name="proj.dir" value="${project.basedir}" />
+								<property name="usedatasources"  value="${usedatasources}"></property>
+								<property name="datasourceloc"  value="${datasourceloc}"></property>
 
 								<ant antfile="src/main/resources/ctc_tests/ctc.xml" />
 
