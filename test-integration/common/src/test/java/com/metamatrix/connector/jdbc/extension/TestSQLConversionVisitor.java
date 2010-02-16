@@ -432,5 +432,14 @@ public class TestSQLConversionVisitor {
             input, 
             output, TRANSLATOR);
     }
+    
+    @Test public void testNestedSetQuery3() throws Exception {
+    	String input = "select part_id id FROM parts UNION (select part_name FROM parts Union ALL select part_id FROM parts)"; //$NON-NLS-1$
+        String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION SELECT PARTS.PART_NAME FROM PARTS UNION SELECT rtrim(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
 
 }

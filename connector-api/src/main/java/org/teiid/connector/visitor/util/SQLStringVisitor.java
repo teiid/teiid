@@ -1015,6 +1015,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             append(obj);
             buffer.append(SQLReservedWords.RPAREN);
         } else {
+        	if (!parent.isAll() && obj instanceof ISetQuery) {
+        		((ISetQuery)obj).setAll(false);
+        	}
             append(obj);
         }
     }
