@@ -222,7 +222,7 @@ public class TestResultsSummary  {
 	    case TestResult.RESULT_STATE.TEST_EXCEPTION:
 		++fail;
 		
-		this.failed_queries.add(stat.getQueryID() + "," + StringUtilities.replaceWhitespace(stat.getExceptionMsg(), "", true));
+		this.failed_queries.add(stat.getQueryID() + "~" + stat.getExceptionMsg());
 		break;
 	    case TestResult.RESULT_STATE.TEST_SUCCESS:
 		++pass;
