@@ -1289,10 +1289,19 @@ public class XMLQueryVisitationStrategy {
         // Create the Character element ...
         // ----------------------
         Element charElement = new Element(TagNames.Elements.CHAR);
-        charElement.setText(object.toString());
+               
+        String v = object.toString();
+        if (v != null && v.length() != 0) {
+            
+	    String toReplace = new String( new Character( (char)0x0).toString() );
+	    v.replaceAll(toReplace," ");
+	    charElement.setText(v.trim());
+
+        }
         if ( parent != null ) {
             charElement = parent.addContent(charElement);
         }
+
 
         return charElement;
     }
