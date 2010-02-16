@@ -41,7 +41,6 @@ import java.util.Map;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 
-import com.metamatrix.core.util.StringUtilities;
 
 public class TestResultsSummary  {
     
@@ -52,6 +51,7 @@ public class TestResultsSummary  {
     private static final String NL = System.getProperty("line.separator"); //$NON-NLS-1$
     
     // totals for scenario
+    private String resultMode = "NotSet";
     private int total_queries = 0;
     private int total_pass = 0;
     private int total_fail = 0;
@@ -61,6 +61,10 @@ public class TestResultsSummary  {
     
     private Map<String, Collection<TestResult>> testResults = Collections.synchronizedMap(new HashMap<String, Collection<TestResult>>());
     
+    public TestResultsSummary(String resultMode) {
+	this.resultMode = resultMode;
+    }
+   
     public void cleanup() {
 	failed_queries.clear();
 	query_sets.clear();
@@ -138,10 +142,10 @@ public class TestResultsSummary  {
 	return summaryFile;
     }
 
-    private static void printQueryTestResults(PrintStream outputStream,
+    private void printQueryTestResults(PrintStream outputStream,
 	    long testStartTS, long endTS, int numberOfClients,
 	    SimpleDateFormat formatter, Collection results) {
-	outputStream.println("Query Test Results"); //$NON-NLS-1$
+	outputStream.println("Query Test Results [" + this.resultMode  + "]"); //$NON-NLS-1$
 	outputStream.println("=================="); //$NON-NLS-1$
 	outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
 	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
@@ -376,7 +380,7 @@ public class TestResultsSummary  {
 	    }
 	    
 	    	
-		outputStream.println("Scenario " + scenario_name + " Summary"); //$NON-NLS-1$
+		outputStream.println("Scenario " + scenario_name + " Summary [" + this.resultMode  + "]"); //$NON-NLS-1$
 		outputStream.println("Query Set Name " + querysetname); //$NON-NLS-1$
 		outputStream.println("=================="); //$NON-NLS-1$
 		

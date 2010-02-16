@@ -165,7 +165,7 @@ public class TestClient  {
 	
 	Iterator<String> qsetIt = queryset.getQuerySetIDs().iterator();
 	
-	TestResultsSummary summary = new TestResultsSummary();
+	TestResultsSummary summary = new TestResultsSummary(queryset.getResultsMode());
 
 	// iterate over the query set ID's, which there
 	// should be 1 for each file to be processed
