@@ -181,8 +181,14 @@ public class ConvertModifier extends FunctionModifier {
 		this.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(IFunction function) {
-				IExpression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 'false' WHEN ", stringValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				IExpression booleanValue = function.getParameters().get(0);
+				if (booleanValue instanceof IFunction) {
+					IFunction nested = (IFunction)booleanValue;
+					if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) { //$NON-NLS-1$
+						booleanValue = nested.getParameters().get(0);
+					}
+				}
+				return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
     	this.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new FunctionModifier() {

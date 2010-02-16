@@ -236,5 +236,14 @@ public class TestDB2SqlTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testBooleanToString() throws Exception {
+    	String input = "SELECT convert(convert(INTKEY, boolean), string) FROM BQT1.SmallA"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.IntKey = 0 THEN 'false' WHEN SmallA.IntKey IS NOT NULL THEN 'true' END FROM SmallA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
 
 }

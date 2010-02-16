@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.connector.api.ExecutionContext;
@@ -76,6 +77,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     private List preparedValues = new ArrayList();
     
     private Set<ILanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<ILanguageObject, Boolean>());
+    private Map<ILanguageObject, Object> translations = new IdentityHashMap<ILanguageObject, Object>(); 
     
     private boolean replaceWithBinding = false;
     
@@ -98,7 +100,19 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         }
     	List<?> parts = null;
     	if (!recursionObjects.contains(obj)) {
-    		parts = translator.translate(obj, context);
+    		Object trans = this.translations.get(obj);
+    		if (trans instanceof List<?>) {
+    			parts = (List<?>)trans;
+    		} else if (trans instanceof ILanguageObject) {
+    			obj = (ILanguageObject)trans;
+    		} else {
+    			parts = translator.translate(obj, context);
+    			if (parts != null) {
+    				this.translations.put(obj, parts);
+    			} else {
+    				this.translations.put(obj, obj);
+    			}
+    		}
     	}
 		if (parts != null) {
 			recursionObjects.add(obj);

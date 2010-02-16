@@ -45,8 +45,8 @@ public class TranslatedCommand {
     private boolean prepared;
     private List preparedValues;
     
-    private SQLConversionVisitor sqlConversionVisitor;
     private Translator sqlTranslator;
+    private ExecutionContext context;
     
     /**
      * Constructor, takes a SQLConversionVisitor subclass 
@@ -54,8 +54,7 @@ public class TranslatedCommand {
      */
     public TranslatedCommand(ExecutionContext context, Translator sqlTranslator){
     	this.sqlTranslator = sqlTranslator;
-        this.sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
-        this.sqlConversionVisitor.setExecutionContext(context);
+    	this.context = context;
     }
     
     /**
@@ -66,20 +65,18 @@ public class TranslatedCommand {
      * @throws ConnectorException 
      */
     public void translateCommand(ICommand command) throws ConnectorException {
-        this.sql = getSQL(command);
-        this.preparedValues = this.sqlConversionVisitor.getPreparedValues();
-        this.prepared = this.sqlConversionVisitor.isPrepared();
-    }
-	
-	private String getSQL(ICommand command) {
+    	SQLConversionVisitor sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
+        sqlConversionVisitor.setExecutionContext(context);
         if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
-            this.sqlConversionVisitor.setPrepared(true);
+        	sqlConversionVisitor.setPrepared(true);
         }
         
-		this.sqlConversionVisitor.append(command);
-		return this.sqlConversionVisitor.toString();
-	}
-
+		sqlConversionVisitor.append(command);
+		this.sql = sqlConversionVisitor.toString();
+        this.preparedValues = sqlConversionVisitor.getPreparedValues();
+        this.prepared = sqlConversionVisitor.isPrepared();
+    }
+	
     /**
      * Simple check to see if any values in the command should be replaced with bind values
      *  
