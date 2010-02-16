@@ -56,7 +56,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		List<?> tuple;
 		ProcessorPlan plan;
 		
-		void close() throws MetaMatrixComponentException {
+		void close() {
 			if (processor == null) {
 				return;
 			}
@@ -85,7 +85,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		}
 	}
 	
-	public void close() throws MetaMatrixComponentException {
+	public void close() {
 		for (SubqueryState state : subqueries.values()) {
 			state.close();
 		}
@@ -123,9 +123,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		        state.collector = state.processor.createBatchCollector();
 			}
 			state.done = true;
-			state.processor.getProcessorPlan().reset();
+			state.plan.reset();
 		}
-		return new DependentValueSource(state.collector.collectTuples(), this.manager.getProcessorBatchSize() / 2).getValueIterator(ref.getValueExpression());
+		return new DependentValueSource(state.collector.collectTuples()).getValueIterator(ref.getValueExpression());
 	}
 	
 }

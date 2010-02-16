@@ -126,14 +126,11 @@ public class SortNode extends RelationalNode {
 		return this.pullBatch();
     }
 
-    public void close() throws MetaMatrixComponentException {
-        if (!isClosed()) {
-            super.close();
-            if(this.output != null) {
-                this.output.remove();
-                this.output = null;
-                this.outputTs = null;
-            }
+    public void closeDirect() {
+        if(this.output != null) {
+            this.output.remove();
+            this.output = null;
+            this.outputTs = null;
         }
     }
 

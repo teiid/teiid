@@ -28,13 +28,19 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
+import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.util.CommandContext;
 
 public class UnionAllNode extends RelationalNode {
 
     private boolean[] sourceDone;
     
     private int outputRow = 1;
+    private int reserved;
+    private int schemaSize;
 	
 	public UnionAllNode(int nodeID) {
 		super(nodeID);
@@ -47,12 +53,21 @@ public class UnionAllNode extends RelationalNode {
         outputRow = 1;   
     }    
     
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+    		ProcessorDataManager dataMgr) {
+    	super.initialize(context, bufferManager, dataMgr);
+    	this.schemaSize = getBufferManager().getSchemaSize(getOutputElements());
+    }
+    
 	public void open() 
 		throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
         // Initialize done flags
         sourceDone = new boolean[getChildren().length];
-        
+        if (reserved == 0) {
+        	reserved = getBufferManager().reserveBuffers((getChildren().length - 1) * schemaSize, BufferReserveMode.FORCE);
+        }
         // Open the children
         super.open();
 	}
@@ -79,6 +94,10 @@ public class UnionAllNode extends RelationalNode {
                             // Mark source as being done and decrement the activeSources counter
                             sourceDone[i] = true;
                             activeSources--;
+                            if (reserved > 0) {
+                            	getBufferManager().releaseBuffers(schemaSize);
+                            	reserved-=schemaSize;
+                            }
                         }
                     } catch(BlockedException e) {
                     	if(i<children.length-1 && hasDependentProcedureExecutionNode(children[0])){
@@ -122,6 +141,12 @@ public class UnionAllNode extends RelationalNode {
         
         return outputBatch;
     }    
+    
+    @Override
+    public void closeDirect() {
+    	getBufferManager().releaseBuffers(reserved);
+    	reserved = 0;
+    }
 
 	public Object clone(){
 		UnionAllNode clonedNode = new UnionAllNode(super.getID());

@@ -70,18 +70,17 @@ import com.metamatrix.dqp.client.ResultsFuture;
 public class SocketServerInstanceImpl implements SocketServerInstance {
 	
 	static final int HANDSHAKE_RETRIES = 10;
+    private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
 	private AtomicInteger MESSAGE_ID = new AtomicInteger();
+    private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
 
 	private HostInfo hostInfo;
 	private boolean ssl;
-    private ObjectChannel socketChannel;
-    private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
     private long synchTimeout;
 
+    private ObjectChannel socketChannel;
     private Cryptor cryptor;
-    
-    private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
     
     private boolean hasReader;
     
@@ -95,7 +94,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         this.synchTimeout = synchTimeout;
     }
     
-    public void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
+    public synchronized void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
         InetSocketAddress address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
         this.socketChannel = channelFactory.createObjectChannel(address, ssl);
         try {
@@ -249,6 +248,45 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     public Cryptor getCryptor() {
         return this.cryptor;
     }
+    
+    void read(long timeout, TimeUnit unit, ResultsFuture<?> future) throws TimeoutException, InterruptedException {
+    	long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
+		long start = System.currentTimeMillis();
+		while (!future.isDone()) {
+			boolean reading = false;
+			synchronized (this) {
+				if (!hasReader) {
+					hasReader = true;
+					reading = true;
+				} else if (!future.isDone()) {
+					this.wait(Math.max(1, timeoutMillis));
+				}
+			} 
+			if (reading) {
+				try {
+					if (!future.isDone()) {
+						receivedMessage(socketChannel.read());
+					}
+				} catch (SocketTimeoutException e) {
+				} catch (Exception e) {
+					exceptionOccurred(e);
+				} finally {
+					synchronized (this) {
+						hasReader = false;
+						this.notifyAll();
+					}
+				}
+			}
+			if (!future.isDone()) {
+				long now = System.currentTimeMillis();
+				timeoutMillis -= now - start;
+				start = now;
+				if (timeoutMillis <= 0) {
+					throw new TimeoutException();
+				}
+			}
+		}
+    }
 
 	@SuppressWarnings("unchecked")
 	//## JDBC4.0-begin ##
@@ -315,42 +353,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					public Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
-						long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
-						long start = System.currentTimeMillis();
-						while (!isDone()) {
-							boolean reading = false;
-							synchronized (SocketServerInstanceImpl.this) {
-								if (!hasReader) {
-									hasReader = true;
-									reading = true;
-								} else if (!isDone()) {
-									SocketServerInstanceImpl.this.wait(Math.max(1, timeoutMillis));
-								}
-							} 
-							if (reading) {
-								try {
-									if (!isDone()) {
-										receivedMessage(socketChannel.read());
-									}
-								} catch (SocketTimeoutException e) {
-								} catch (Exception e) {
-									exceptionOccurred(e);
-								} finally {
-									synchronized (SocketServerInstanceImpl.this) {
-										hasReader = false;
-										SocketServerInstanceImpl.this.notifyAll();
-									}
-								}
-							}
-							if (!isDone()) {
-								long now = System.currentTimeMillis();
-								timeoutMillis -= now - start;
-								start = now;
-								if (timeoutMillis <= 0) {
-									throw new TimeoutException();
-								}
-							}
-						}
+						read(timeout, unit, this);
 						return super.get(timeout, unit);
 					}
 				};

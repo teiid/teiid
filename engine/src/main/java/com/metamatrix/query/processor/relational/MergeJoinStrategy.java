@@ -135,7 +135,7 @@ public class MergeJoinStrategy extends JoinStrategy {
     }
     
     @Override
-    protected List nextTuple() throws MetaMatrixComponentException,
+    protected void process() throws MetaMatrixComponentException,
     		CriteriaEvaluationException, MetaMatrixProcessingException {
         while (this.mergeState != MergeState.DONE) {
             
@@ -149,7 +149,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                         this.leftScanState = ScanState.DONE;
                         if (joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
                             mergeState = MergeState.DONE;
-                            return null;
+                            return;
                         }
                     }
                 }
@@ -163,7 +163,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                         this.rightScanState = ScanState.DONE;
                         if (!this.joinNode.getJoinType().isOuter()) {
                             mergeState = MergeState.DONE;
-                            return null;
+                            return;
                         }
                     }
                 }
@@ -173,7 +173,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                 if (this.leftScanState == ScanState.DONE) {
                     if (this.rightScanState == ScanState.DONE) {
                         this.mergeState = MergeState.DONE;
-                        return null;
+                        return;
                     }
                     result = -1;
                 } else if (this.rightScanState == ScanState.DONE) {
@@ -191,12 +191,12 @@ public class MergeJoinStrategy extends JoinStrategy {
                 } else if (result > 0) {
                     this.leftScanState = ScanState.READ;
                     if (this.joinNode.getJoinType().isOuter()) {
-                        return outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals());
+                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
                     }
                 } else {
                     this.rightScanState = ScanState.READ;
                     if (joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER) {
-                        return outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple());
+                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
                     }
                 }
             }
@@ -229,11 +229,11 @@ public class MergeJoinStrategy extends JoinStrategy {
 
                 while (loopState == LoopState.LOAD_INNER || loopState == LoopState.EVALUATE_CRITERIA) {
                     if (loopState == LoopState.LOAD_INNER) {
-                        if (compareToPrevious(innerState)) {
-                            loopState = LoopState.EVALUATE_CRITERIA;
-                        } else {
-                            loopState = LoopState.LOAD_OUTER;
+                        if (!compareToPrevious(innerState)) {
+                        	loopState = LoopState.LOAD_OUTER;
+                        	break;
                         }
+                        loopState = LoopState.EVALUATE_CRITERIA;
                     }
 
                     if (loopState == LoopState.EVALUATE_CRITERIA) {
@@ -248,25 +248,25 @@ public class MergeJoinStrategy extends JoinStrategy {
                                 if (this.joinNode.getJoinType() == JoinType.JOIN_SEMI) {
                                     this.loopState = LoopState.LOAD_OUTER; //only one match is needed for semi join
                                 } 
-                                return outputTuple;
+                                this.joinNode.addBatchRow(outputTuple);
+                                continue;
                             }
                             //right outer join || anti semi join can skip to the next outer value
                             this.loopState = LoopState.LOAD_OUTER;
+                            break;
                         } 
                     }
                 }
 
                 if (!outerMatched) {
                     if (matchState == MatchState.MATCH_RIGHT) {
-                    	return outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple());
-                    }
-                    if (this.joinNode.getJoinType().isOuter()) {
-                        return outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals());
+                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
+                    } else if (this.joinNode.getJoinType().isOuter()) {
+                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
                     }
                 }
             }
         }
-        return null;
     }
 
     protected boolean compareToPrevious(SourceState target) throws MetaMatrixComponentException,

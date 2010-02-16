@@ -36,38 +36,40 @@ public class JoinType implements LanguageObject {
 	// Constants defining join type - users will construct these
 	
 	/** Represents an inner join:  a INNER JOIN b */
-	public static final JoinType JOIN_INNER 		= new JoinType(0);
+	public static final JoinType JOIN_INNER 		= new JoinType(0, false);
 
 	/** Represents a right outer join:  a RIGHT OUTER JOIN b */
-	public static final JoinType JOIN_RIGHT_OUTER 	= new JoinType(1);
+	public static final JoinType JOIN_RIGHT_OUTER 	= new JoinType(1, true);
 
 	/** Represents a left outer join:  a LEFT OUTER JOIN b */
-	public static final JoinType JOIN_LEFT_OUTER 	= new JoinType(2);
+	public static final JoinType JOIN_LEFT_OUTER 	= new JoinType(2, true);
 
 	/** Represents a full outer join:  a FULL OUTER JOIN b */
-	public static final JoinType JOIN_FULL_OUTER 	= new JoinType(3);
+	public static final JoinType JOIN_FULL_OUTER 	= new JoinType(3, true);
 
 	/** Represents a cross join:  a CROSS JOIN b */
-	public static final JoinType JOIN_CROSS 		= new JoinType(4);
+	public static final JoinType JOIN_CROSS 		= new JoinType(4, false);
     
     /** Represents a union join:  a UNION JOIN b - not used after rewrite */
-    public static final JoinType JOIN_UNION         = new JoinType(5);
+    public static final JoinType JOIN_UNION         = new JoinType(5, true);
     
     /** internal SEMI Join type */
-    public static final JoinType JOIN_SEMI          = new JoinType(6);
+    public static final JoinType JOIN_SEMI          = new JoinType(6, false);
     
     /** internal ANTI SEMI Join type */
-    public static final JoinType JOIN_ANTI_SEMI          = new JoinType(7);
+    public static final JoinType JOIN_ANTI_SEMI          = new JoinType(7, true);
 
 	private int type;
+	private boolean outer;
 
 	/**
 	 * Construct a join type object.  This is private and is only called by
 	 * the static constant objects in this class.
 	 * @param type Type code for object
 	 */
-	private JoinType(int type) { 
+	private JoinType(int type, boolean outer) { 
 		this.type = type;
+		this.outer = outer;
 	}
 
 	/**
@@ -97,7 +99,7 @@ public class JoinType implements LanguageObject {
 	 * @return True if left/right/full outer, false if inner/cross
 	 */
 	public boolean isOuter() { 
-		return this.equals(JOIN_LEFT_OUTER) || this.equals(JOIN_FULL_OUTER) || this.equals(JOIN_RIGHT_OUTER) || this.equals(JOIN_ANTI_SEMI); 	
+		return outer; 	
 	}
 	
 	public boolean isSemi() {

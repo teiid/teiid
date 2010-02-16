@@ -36,6 +36,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
@@ -87,6 +88,7 @@ public class SortUtility {
     private BufferManager bufferManager;
     private String groupName;
     private List<SingleElementSymbol> schema;
+    private int schemaSize;
 	private ListNestedSortComparator comparator;
 
     private TupleBuffer output;
@@ -110,6 +112,7 @@ public class SortUtility {
         this.bufferManager = bufferMgr;
         this.groupName = groupName;
         this.schema = this.source.getSchema();
+        this.schemaSize = bufferManager.getSchemaSize(this.schema);
         int distinctIndex = sortElements != null? sortElements.size() - 1:0;
         if (mode != Mode.SORT) {
 	        if (sortElements == null) {
@@ -175,26 +178,22 @@ public class SortUtility {
 	            	workingTuples = new TreeSet<List<?>>(comparator);
 	            }
     		}
+    		
             int totalReservedBuffers = 0;
             try {
-	            int maxRows = bufferManager.getMaxProcessingBatches() * bufferManager.getProcessorBatchSize();
+	            int maxRows = this.bufferManager.getProcessorBatchSize();
 		        while(!doneReading) {
 		        	//attempt to reserve more working memory if there are additional rows available before blocking
-		        	if (workingTuples.size() == maxRows) {
-		        		if (source.available() < 1) {
-		        			break;
-		        		}
-	        			int reserved = bufferManager.reserveBuffers(1, false);
-		        		if (reserved == 0) {
+		        	if (workingTuples.size() >= maxRows) {
+	        			int reserved = bufferManager.reserveBuffers(schemaSize, 
+	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingBatchColumns())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
+	        			if (reserved != schemaSize) {
 		        			break;
 		        		} 
-		        		totalReservedBuffers += 1;
+		        		totalReservedBuffers += reserved;
 		        		maxRows += bufferManager.getProcessorBatchSize();	
 		        	}
 		            try {
-		            	if (totalReservedBuffers > 0 && source.available() == 0) {
-		            		break;
-		            	}
 		            	List<?> tuple = source.nextTuple();
 		            	
 		            	if (tuple == null) {
@@ -205,6 +204,9 @@ public class SortUtility {
 	                    	this.collected++;
 	                    }
 		            } catch(BlockedException e) {
+		            	if (workingTuples.size() >= bufferManager.getProcessorBatchSize()) {
+		            		break;
+		            	}
 		            	if (mode != Mode.DUP_REMOVE  
 		            			|| (this.output != null && collected < this.output.getRowCount() * 2) 
 		            			|| (this.output == null && this.workingTuples.isEmpty() && this.activeTupleBuffers.isEmpty())) {
@@ -231,7 +233,7 @@ public class SortUtility {
 	            
 		        sublist.saveBatch();
             } finally {
-            	bufferManager.releaseBuffers(totalReservedBuffers);
+        		bufferManager.releaseBuffers(totalReservedBuffers);
             }
         }
     	
@@ -248,12 +250,17 @@ public class SortUtility {
             
             TupleBuffer merged = createTupleBuffer();
 
-            int maxSortIndex = Math.min(activeTupleBuffers.size(), this.bufferManager.getMaxProcessingBatches());
-            int reservedBuffers = 0;
-            if (activeTupleBuffers.size() > maxSortIndex) {
-            	reservedBuffers = bufferManager.reserveBuffers(activeTupleBuffers.size() - maxSortIndex, true);
+            int desiredSpace = activeTupleBuffers.size() * schemaSize;
+            int reserved = Math.min(desiredSpace, this.bufferManager.getMaxProcessingBatchColumns());
+            bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
+            if (desiredSpace > reserved) {
+            	reserved += bufferManager.reserveBuffers(desiredSpace - reserved, BufferReserveMode.WAIT);
             }
-            maxSortIndex += reservedBuffers;
+            int maxSortIndex = Math.max(2, reserved / schemaSize); //always allow progress
+            //release any partial excess
+            int release = reserved % schemaSize > 0 ? 1 : 0;
+            bufferManager.releaseBuffers(release);
+            reserved -= release;
             try {
 	        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
 	            	LogManager.logTrace(LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -294,16 +301,21 @@ public class SortUtility {
 	            	masterSortIndex = this.activeTupleBuffers.size() - 1;
 	            }
             } finally {
-            	this.bufferManager.releaseBuffers(reservedBuffers);
+            	this.bufferManager.releaseBuffers(reserved);
             }
         }
     	
         // Close sorted source (all others have been removed)
         if (doneReading) {
-        	activeTupleBuffers.get(0).close();
-        	activeTupleBuffers.get(0).setForwardOnly(false);
         	if (this.output != null) {
 	        	this.output.close();
+	        	TupleBuffer last = activeTupleBuffers.remove(0);
+	        	if (output != last) {
+	        		last.remove();
+	        	}
+	        } else {
+	        	activeTupleBuffers.get(0).close();
+	        	activeTupleBuffers.get(0).setForwardOnly(false);
 	        }
 	        this.phase = DONE;
 	        return;

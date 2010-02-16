@@ -212,9 +212,8 @@ public class GroupingNode extends RelationalNode {
             return groupPhase();
         }
         
-        TupleBatch terminationBatch = new TupleBatch(1, Collections.EMPTY_LIST);
-        terminationBatch.setTerminationFlag(true);
-        return terminationBatch;
+        this.terminateBatches();
+        return pullBatch();
     }
 	
 	public TupleSource getCollectionTupleSource() {
@@ -265,7 +264,7 @@ public class GroupingNode extends RelationalNode {
 			}
 			
 			@Override
-			public void closeSource() throws MetaMatrixComponentException {
+			public void closeSource() {
 				
 			}
 			
@@ -390,14 +389,11 @@ public class GroupingNode extends RelationalNode {
         }
     }
 
-    public void close() throws MetaMatrixComponentException {
-        if (!isClosed()) {
-        	if (this.sortBuffer != null) {
-        		this.sortBuffer.remove();
-        		this.sortBuffer = null;
-        	}
-            super.close();
-        }
+    public void closeDirect() {
+    	if (this.sortBuffer != null) {
+    		this.sortBuffer.remove();
+    		this.sortBuffer = null;
+    	}
     }
 
 	protected void getNodeString(StringBuffer str) {

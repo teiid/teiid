@@ -79,7 +79,7 @@ public abstract class JoinStrategy {
         return combinedRow; 
     }
     
-    protected abstract List nextTuple() throws MetaMatrixComponentException, CriteriaEvaluationException, MetaMatrixProcessingException;
+    protected abstract void process() throws MetaMatrixComponentException, CriteriaEvaluationException, MetaMatrixProcessingException;
     
     public abstract Object clone();
         

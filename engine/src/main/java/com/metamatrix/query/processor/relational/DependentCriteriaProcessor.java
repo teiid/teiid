@@ -90,7 +90,7 @@ public class DependentCriteriaProcessor {
 	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
 	                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID());
             	}
-            	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager().getProcessorBatchSize() / 2);
+            	dvs = new DependentValueSource(sortUtility.sort());
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
     			}
@@ -176,7 +176,7 @@ public class DependentCriteriaProcessor {
         }        
     }
 
-    public void close() throws MetaMatrixComponentException {
+    public void close() {
         if (dependentState != null) {
             for (TupleState state : dependentState.values()) {
 				state.close();

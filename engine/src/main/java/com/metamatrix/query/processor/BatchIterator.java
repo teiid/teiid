@@ -103,7 +103,7 @@ public class BatchIterator implements IndexedTupleSource {
 	}
     
     @Override
-    public void closeSource() throws MetaMatrixComponentException {
+    public void closeSource() {
     	if (this.buffer != null) {
     		this.buffer.remove();
     		this.buffer = null;
@@ -124,7 +124,8 @@ public class BatchIterator implements IndexedTupleSource {
         List result = currentTuple;
         currentTuple = null;
         if (mark && saveOnMark && this.currentRow - 1 > this.buffer.getRowCount()) {
-        	this.buffer.addTupleBatch(new TupleBatch(this.currentRow - 1, new List[] {result}), true);
+        	this.buffer.setRowCount(this.currentRow - 2);
+        	this.buffer.addTuple(result);
         	this.bufferedIndex = this.currentRow - 1;
         }
         return result;

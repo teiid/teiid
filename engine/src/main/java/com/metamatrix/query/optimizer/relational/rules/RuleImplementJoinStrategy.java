@@ -79,13 +79,11 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && context != null) {
             	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
             	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
-            	boolean leftSmall = leftCost < context.getProcessorBatchSize() / 4;
-            	boolean rightSmall = rightCost < context.getProcessorBatchSize() / 4;
-            	boolean leftLarge = leftCost > context.getProcessorBatchSize();
-            	boolean rightLarge = rightCost > context.getProcessorBatchSize();
-            	if (leftLarge || rightLarge) {
-	                pushLeft = leftCost == NewCalculateCostUtil.UNKNOWN_VALUE || leftSmall || rightLarge;
-	                pushRight = rightCost == NewCalculateCostUtil.UNKNOWN_VALUE || rightSmall || leftLarge || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
+            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
+            			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
+            		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
+            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 16;
+            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 16 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
             	}
             }            
 

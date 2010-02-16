@@ -54,12 +54,8 @@ public interface TupleSource {
 	
     /**
      * Closes the Tuple Source.  
-     * @throws MetaMatrixComponentException indicating a non-business
-     * exception such as a communication exception, or other such
-     * nondeterministic exception
      */    
-	void closeSource()
-		throws MetaMatrixComponentException;
+	void closeSource();
 	
 	/**
 	 * Returns an estimate of the number of rows that can be read without blocking.

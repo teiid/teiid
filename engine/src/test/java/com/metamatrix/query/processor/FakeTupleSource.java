@@ -105,11 +105,7 @@ public class FakeTupleSource implements TupleSource {
 		return null;
 	}
 
-	public void closeSource()
-		throws MetaMatrixComponentException {
-        if (exceptionOnClose) {
-            throw new FakeComponentException();
-        }
+	public void closeSource() {
 	}
     
     public void setBlockOnce(){

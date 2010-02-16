@@ -40,6 +40,7 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -3357,11 +3358,11 @@ public class TestOptimizer {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE / 4));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE));
         FakeMetadataObject g3 = metadata.getStore().findObject("pm1.g3", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
+        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,

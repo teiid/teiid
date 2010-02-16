@@ -29,6 +29,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.BatchIterator;
@@ -63,6 +64,10 @@ class SourceState {
         this.outerVals = Collections.nCopies(elements.size(), null);
         this.expressionIndexes = getExpressionIndecies(expressions, elements);
     }
+    
+    public RelationalNode getSource() {
+		return source;
+	}
     
     public void setImplicitBuffer(ImplicitBuffer implicitBuffer) {
 		this.implicitBuffer = implicitBuffer;
@@ -101,10 +106,7 @@ class SourceState {
             this.buffer = null;
         }
         if (this.iterator != null) {
-        	try {
-				this.iterator.closeSource();
-			} catch (MetaMatrixComponentException e) {
-			}
+			this.iterator.closeSource();
         	this.iterator = null;
         }
     }
@@ -173,9 +175,15 @@ class SourceState {
     public void sort(SortOption sortOption) throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	if (sortOption == SortOption.SORT || sortOption == SortOption.SORT_DISTINCT) {
 	    	if (this.sortUtility == null) {
-			    this.sortUtility = new SortUtility(this.buffer != null ? this.buffer.createIndexedTupleSource() : new BatchIterator(this.source), 
-			                                        expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-			                                        this.source.getBufferManager(), this.source.getConnectionID());
+	    		TupleSource ts = null;
+	    		if (this.buffer != null) {
+	    			this.buffer.setForwardOnly(true);
+	    			ts = this.buffer.createIndexedTupleSource();
+	    		} else {
+	    			ts = new BatchIterator(this.source);
+	    		}
+			    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
+			    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID());
 			    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
 			}
 			this.buffer = sortUtility.sort();

@@ -36,7 +36,6 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.processor.FakeTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.FakeTupleSource.FakeComponentException;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Insert;
@@ -120,24 +119,6 @@ public class TestProjectIntoNode extends TestCase {
         helpTestNextBatch(20, true, false, false);
     }
     
-    public void testNextBatch_ExceptionOnClose() throws Exception {
-        try {
-            helpTestNextBatch(100, true, false, true);
-            fail("expected exception"); //$NON-NLS-1$
-        } catch (FakeComponentException e) {
-            //expected
-        }
-    }
-    
-    public void testNextBatch_ExceptionOnClose1() throws Exception {
-        try {
-            helpTestNextBatch(100, false, false, true);
-            fail("expected exception"); //$NON-NLS-1$
-        } catch (FakeComponentException e) {
-            //expected
-        }
-    }
-
     private static final class FakePDM implements ProcessorDataManager {
         private int expectedBatchSize;
         private int callCount = 0;
@@ -205,7 +186,7 @@ public class TestProjectIntoNode extends TestCase {
         private FakeDataTupleSource(int rows) {
             this.rows = rows;
         }
-        public void closeSource() throws MetaMatrixComponentException {}
+        public void closeSource() {}
         public List getSchema() {return null;}
         public List nextTuple() throws MetaMatrixComponentException {
             if (currentRow % 100 == 0 && block) {

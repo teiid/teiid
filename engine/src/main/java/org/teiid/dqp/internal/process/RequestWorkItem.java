@@ -273,14 +273,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void attemptClose() {
 		int rowcount = -1;
 		if (this.resultsBuffer != null) {
-			try {
-				if (this.processor != null) {
-					this.processor.closeProcessing();
-				}
-			} catch (MetaMatrixComponentException e) {
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-					LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
-				}
+			if (this.processor != null) {
+				this.processor.closeProcessing();
 			}
 			
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -301,13 +295,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			}
 			
 			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
-				try {
-					connectorRequest.fullyCloseSource();
-				} catch (MetaMatrixComponentException e) {
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-						LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
-					}
-				}
+				connectorRequest.fullyCloseSource();
 		    }
 
 			this.resultsBuffer = null;
@@ -376,16 +364,16 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (this.transactionContext != null && this.transactionContext.isInTransaction()) {
 			this.transactionState = TransactionState.ACTIVE;
 		}
+	    if (analysisRecord.recordQueryPlan()) {
+	        analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
+	    }
 		Option option = originalCommand.getOption();
 		if (option != null && option.getPlanOnly()) {
 		    doneProducingBatches = true;
             resultsBuffer.close();
             this.cid = null;
+            this.processor = null;
 		}
-		
-	    if (analysisRecord.recordQueryPlan()) {
-	        analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
-	    }
 	    this.returnsUpdateCount = request.returnsUpdateCount;
 		request = null;
 	}

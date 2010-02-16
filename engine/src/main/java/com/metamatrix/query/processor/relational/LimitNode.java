@@ -98,9 +98,6 @@ public class LimitNode extends RelationalNode {
         rowCounter += resultBatch.getRowCount();
         if (rowCounter == limit || batch.getTerminationFlag()) {
             resultBatch.setTerminationFlag(true);
-            if (!batch.getTerminationFlag()){
-                getChildren()[0].close();
-            }
         }        
         return resultBatch;
     }

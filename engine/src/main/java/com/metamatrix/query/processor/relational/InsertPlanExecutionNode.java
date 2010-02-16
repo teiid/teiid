@@ -99,8 +99,7 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 	}
 	
 	@Override
-	public void close() throws MetaMatrixComponentException {
-		super.close();
+	public void closeDirect() {
 		this.currentBatch = null;
 	}
 	

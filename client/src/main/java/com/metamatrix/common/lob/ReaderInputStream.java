@@ -32,13 +32,15 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
+import com.metamatrix.common.types.Streamable;
+
 public class ReaderInputStream extends InputStream {
 	
-	private static final int DEFAULT_BUFFER_SIZE = 100 * 1024;
+	private static final int DEFAULT_BUFFER_SIZE = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
 	
 	private final Reader reader;
 	private final Charset charSet;
-	private final int bufferSize;
+	private char[] charBuffer;
 	
 	private boolean hasMore = true;
 	private ByteBuffer currentBuffer;
@@ -52,7 +54,7 @@ public class ReaderInputStream extends InputStream {
 	public ReaderInputStream(Reader reader, Charset charSet, int bufferSize) {
 		this.reader = reader;
 		this.charSet = charSet;
-		this.bufferSize = bufferSize;
+		this.charBuffer = new char[bufferSize];
 		if (charSet.displayName().equalsIgnoreCase("UTF-16")) { //$NON-NLS-1$
 			prefixBytes = 2;
 		}
@@ -64,18 +66,12 @@ public class ReaderInputStream extends InputStream {
 			if (!hasMore) {
 				return -1;
 			}
-			char[] charBuffer = new char[bufferSize];
 			int charsRead = reader.read(charBuffer);
 			if (charsRead == -1) {
 	            hasMore = false;
 				return -1;
 			}
-			if (charsRead != charBuffer.length) {
-				char[] buf = new char[charsRead];
-	            System.arraycopy(charBuffer, 0, buf, 0, charsRead);
-	            charBuffer = buf;
-			}
-			currentBuffer = charSet.encode(CharBuffer.wrap(charBuffer));
+			currentBuffer = charSet.encode(CharBuffer.wrap(charBuffer, 0, charsRead));
 			if (!needsPrefix) {
 				currentBuffer.position(prefixBytes);
 			}

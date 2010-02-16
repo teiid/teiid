@@ -39,7 +39,6 @@ import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
-import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.QueryPlugin;
@@ -225,8 +224,11 @@ public class Evaluator {
 	}
 
     private final int compareValues(Object leftValue, Object rightValue) {
-    	ArgCheck.isInstanceOf(Comparable.class, leftValue);
-    	ArgCheck.isInstanceOf(Comparable.class, rightValue);
+    	assert leftValue instanceof Comparable<?>;
+    	assert rightValue instanceof Comparable<?>;
+    	if (leftValue == rightValue) {
+    		return 0;
+    	}
         return ((Comparable)leftValue).compareTo(rightValue);
     }
 

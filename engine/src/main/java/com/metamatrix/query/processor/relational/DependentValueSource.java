@@ -45,17 +45,15 @@ import com.metamatrix.query.sql.util.ValueIteratorSource;
 public class DependentValueSource implements
                                  ValueIteratorSource {
 
-    private TupleBuffer tupleSourceID;
-    private int maxSetSize;
+    private TupleBuffer buffer;
     private Map<Expression, Set<Object>> cachedSets;
     
-    public DependentValueSource(TupleBuffer tupleSourceID, int maxSetSize) {
-        this.tupleSourceID = tupleSourceID;
-        this.maxSetSize = maxSetSize;
+    public DependentValueSource(TupleBuffer tupleSourceID) {
+        this.buffer = tupleSourceID;
     }
     
     public TupleBuffer getTupleBuffer() {
-		return tupleSourceID;
+		return buffer;
 	}
     
     /** 
@@ -63,7 +61,7 @@ public class DependentValueSource implements
      * @see com.metamatrix.query.sql.util.ValueIteratorSource#getValueIterator(com.metamatrix.query.sql.symbol.Expression)
      */
     public ValueIterator getValueIterator(Expression valueExpression) throws  MetaMatrixComponentException {
-    	IndexedTupleSource its = tupleSourceID.createIndexedTupleSource();
+    	IndexedTupleSource its = buffer.createIndexedTupleSource();
     	int index = 0;
     	if (valueExpression != null) {
     		index = its.getSchema().indexOf(valueExpression);
@@ -78,10 +76,10 @@ public class DependentValueSource implements
     		result = cachedSets.get(valueExpression);
     	}
     	if (result == null) {
-			if (tupleSourceID.getRowCount() > maxSetSize) {
+			if (buffer.getRowCount() > buffer.getBatchSize()) {
 				return null;
 			}
-			IndexedTupleSource its = tupleSourceID.createIndexedTupleSource();
+			IndexedTupleSource its = buffer.createIndexedTupleSource();
         	int index = 0;
         	if (valueExpression != null) {
         		index = its.getSchema().indexOf(valueExpression);

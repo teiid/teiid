@@ -30,6 +30,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -57,6 +58,7 @@ public class QueryProcessor implements BatchProducer {
 	private BufferManager bufferMgr;
 	private ProcessorPlan processPlan;
     private boolean initialized = false;
+    private int reserved;
     /** Flag that marks whether the request has been canceled. */
     private volatile boolean requestCanceled = false;
     private static final int DEFAULT_WAIT = 50;       
@@ -125,10 +127,12 @@ public class QueryProcessor implements BatchProducer {
 	    try {
 	    	// initialize if necessary
 			if(! initialized) {
+				if (reserved == 0) {
+					reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
+				}
 				// Open the top node for reading
 				processPlan.open();
-	
-	            initialized = true;
+				initialized = true;
 			}
 	
 			long currentTime = System.currentTimeMillis();
@@ -155,11 +159,7 @@ public class QueryProcessor implements BatchProducer {
 	    } catch (BlockedException e) {
 	    	throw e;
 	    } catch (MetaMatrixException e) {
-	    	try {
-	    		closeProcessing();
-	    	} catch (MetaMatrixException e1){
-	    		LogManager.logDetail(LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
-	    	}
+    		closeProcessing();
 	    	if (e instanceof MetaMatrixProcessingException) {
 	    		throw (MetaMatrixProcessingException)e;
 	    	}
@@ -180,18 +180,22 @@ public class QueryProcessor implements BatchProducer {
 	                   
     /**
      * Close processing and clean everything up.  Should only be called by the same thread that called process.
-     * @throws MetaMatrixComponentException 
      */
-    public void closeProcessing() throws MetaMatrixComponentException  {
+    public void closeProcessing() {
     	if (processorClosed) {
     		return;
     	}
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
     		LogManager.logDetail(LogConstants.CTX_DQP, "QueryProcessor: closing processor"); //$NON-NLS-1$
     	}
+		this.bufferMgr.releaseBuffers(reserved);
+		reserved = 0;
         processorClosed = true;
-    	    
-    	processPlan.close();
+        try {
+        	processPlan.close();
+		} catch (MetaMatrixComponentException e1){
+			LogManager.logDetail(LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
+		}
     }
 
     @Override

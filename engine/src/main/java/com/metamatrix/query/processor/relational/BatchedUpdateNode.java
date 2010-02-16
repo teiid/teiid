@@ -144,14 +144,10 @@ public class BatchedUpdateNode extends RelationalNode {
      * @see com.metamatrix.query.processor.relational.RelationalNode#close()
      * @since 4.2
      */
-    public void close() throws MetaMatrixComponentException {
-        if (!isClosed()) {
-            super.close();
-
-            if (tupleSource != null) {
-            	tupleSource.closeSource();
-            	tupleSource = null;
-            }
+    public void closeDirect() {
+        if (tupleSource != null) {
+        	tupleSource.closeSource();
+        	tupleSource = null;
         }
     }
     

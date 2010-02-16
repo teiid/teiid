@@ -28,6 +28,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
@@ -36,6 +37,7 @@ import com.metamatrix.query.mapping.xml.MappingDocument;
 import com.metamatrix.query.mapping.xml.MappingElement;
 import com.metamatrix.query.mapping.xml.MappingNode;
 import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.optimizer.relational.rules.RuleChooseDependent;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -483,8 +485,8 @@ public class TestXMLPlanningEnhancements extends TestCase {
         FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
 
         // supply the costing information for OrdersC
-        orders.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1000));
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));        
+        orders.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE - 1);
+        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY);        
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         

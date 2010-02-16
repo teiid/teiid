@@ -2,7 +2,6 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.Map;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.query.eval.Evaluator;
 
 public abstract class SubqueryAwareRelationalNode extends RelationalNode {
@@ -31,8 +30,7 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 	}
 	
 	@Override
-	public void close() throws MetaMatrixComponentException {
-		super.close();
+	public void closeDirect() {
 		if (evaluator != null) {
 			evaluator.close();
 		}

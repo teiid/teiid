@@ -27,17 +27,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -81,6 +78,10 @@ import com.metamatrix.query.processor.xml.XMLUtil;
  * with a simple LRU.
  * 
  * TODO: allow for cached stores to use lru - (result set/mat view)
+ * TODO: account for row/content based sizing (difficult given value sharing)
+ * TODO: account for memory based lobs (it would be nice if the approximate buffer size matched at 100kB)
+ * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
+ *       - this is not necessary for already persistent batches, since we hold a weak reference
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 	
@@ -96,10 +97,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		ManagedBatchImpl removeBatch(int row) {
 			ManagedBatchImpl result = batches.remove(row);
 			if (result != null) {
-				activeBatchCount--;
-				if (toPersistCount > 0) {
-					toPersistCount--;
-				}
+				activeBatchColumnCount -= result.columnCount;
 			}
 			return result;
 		}
@@ -111,23 +109,30 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		
 		private long offset = -1;
 		private boolean persistent;
-		private volatile TupleBatch pBatch;
-		private Reference<TupleBatch> batchReference;
+		private volatile TupleBatch activeBatch;
+		private volatile Reference<TupleBatch> batchReference;
 		private int beginRow;
+		private int columnCount;
 		
-		public ManagedBatchImpl(String id, FileStore store, TupleBatch batch) throws MetaMatrixComponentException {
+		public ManagedBatchImpl(String id, FileStore store, TupleBatch batch) {
             LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", batchAdded.incrementAndGet()); //$NON-NLS-1$
 			this.id = id;
 			this.store = store;
-			this.pBatch = batch;
+			this.activeBatch = batch;
 			this.beginRow = batch.getBeginRow();
-			addToCache(false);
-			persistBatchReferences();
+			List[] allTuples = batch.getAllTuples();
+			if (allTuples.length > 0) {
+				columnCount = allTuples[0].size();
+			}
 		}
 
 		private void addToCache(boolean update) {
 			synchronized (activeBatches) {
-				activeBatchCount++;
+				TupleBatch batch = this.activeBatch;
+				if (batch == null) {
+					return; //already removed
+				}
+				activeBatchColumnCount += columnCount;
 				TupleBufferInfo tbi = null;
 				if (update) {
 					tbi = activeBatches.remove(this.id);
@@ -164,35 +169,34 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					}
 				}
 			}
+			persistBatchReferences();
 			synchronized (this) {
-				if (this.batchReference != null && this.pBatch == null) {
-					TupleBatch result = this.batchReference.get();
-					if (result != null) {
-						if (!cache) {
-							softCache.remove(this);
-							this.batchReference.clear();
-						} 
-						referenceHit.getAndIncrement();
-						return result;
-					}
-				}
-
-				TupleBatch batch = this.pBatch;
+				TupleBatch batch = this.activeBatch;
 				if (batch != null){
 					return batch;
 				}
-			}
-			persistBatchReferences();
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readCount.incrementAndGet()); //$NON-NLS-1$
-			synchronized (this) {
+				Reference<TupleBatch> ref = this.batchReference;
+				this.batchReference = null;
+				if (ref != null) {
+					batch = ref.get();
+					if (batch != null) {
+						if (cache) {
+							this.activeBatch = batch;
+				        	addToCache(true);
+						} 
+						referenceHit.getAndIncrement();
+						return batch;
+					}
+				}
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readCount.incrementAndGet()); //$NON-NLS-1$
 				try {
 		            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(store.createInputStream(this.offset), IO_BUFFER_SIZE));
-		            TupleBatch batch = new TupleBatch();
+		            batch = new TupleBatch();
 		            batch.setDataTypes(types);
 		            batch.readExternal(ois);
 			        batch.setDataTypes(null);
 			        if (cache) {
-			        	this.pBatch = batch;
+			        	this.activeBatch = batch;
 			        	addToCache(true);
 			        }
 					return batch;
@@ -204,71 +208,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 		}
 
-		public void persistBatchReferences() throws MetaMatrixComponentException {
-			ManagedBatchImpl mb = null;
-			boolean createSoft = false;
-			/*
-			 * If we are over our limit, collect half of the batches. 
-			 */
-			synchronized (activeBatches) {
-				if (activeBatchCount > reserveBatches && toPersistCount == 0) {
-					toPersistCount = activeBatchCount / 2;
-				}
-			}
-			while (true) {
-				synchronized (activeBatches) {
-					if (activeBatchCount == 0 || toPersistCount == 0) {
-						toPersistCount = 0;
-						break;
-					}
-					Iterator<TupleBufferInfo> iter = activeBatches.values().iterator();
-					TupleBufferInfo tbi = iter.next();
-					Map.Entry<Integer, ManagedBatchImpl> entry = null;
-					if (tbi.lastUsed != null) {
-						entry = tbi.batches.floorEntry(tbi.lastUsed - 1);
-					}
-					if (entry == null) {
-						entry = tbi.batches.pollLastEntry();
-					} else {
-						createSoft = true;
-						tbi.batches.remove(entry.getKey());
-					}
-					if (tbi.batches.isEmpty()) {
-						iter.remove();
-					}
-					activeBatchCount--;
-					toPersistCount--;
-					mb = entry.getValue();
-				}
-				persist(createSoft, mb);
-			}
-			synchronized (softCache) {
-				if (softCache.size() > reserveBatches) {
-					Iterator<ManagedBatchImpl> iter = softCache.iterator();
-					mb = iter.next();
-					iter.remove();
-				}
-			}
-			persist(false, mb);
-		}
-
-		private void persist(boolean createSoft, ManagedBatchImpl mb)
-				throws MetaMatrixComponentException {
+		public synchronized void persist() throws MetaMatrixComponentException {
 			try {
-				if (mb != null) {
-					mb.persist(createSoft);
-				}
-			} catch (MetaMatrixComponentException e) {
-				if (mb == this) {
-					throw e;
-				}
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
-			}
-		}
-
-		public synchronized void persist(boolean createSoft) throws MetaMatrixComponentException {
-			try {
-				TupleBatch batch = pBatch;
+				TupleBatch batch = activeBatch;
 				if (batch != null) {
 					if (!persistent) {
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Writing batch to disk", writeCount.incrementAndGet()); //$NON-NLS-1$
@@ -282,18 +224,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				            fsos.flushBuffer();
 						}
 					}
-					if (createSoft) {
-						this.batchReference = new SoftReference<TupleBatch>(batch);
-						softCache.add(this);
-					} else {
-						this.batchReference = new WeakReference<TupleBatch>(batch);
-					}
+					this.batchReference = new WeakReference<TupleBatch>(batch);
 				}
 			} catch (IOException e) {
 				throw new MetaMatrixComponentException(e);
 			} finally {
 				persistent = true;
-				pBatch = null;
+				activeBatch = null;
 			}
 		}
 
@@ -304,16 +241,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					activeBatches.remove(this.id);
 				}
 			}
-			softCache.remove(this);
-			pBatch = null;
-			if (batchReference != null) {
-				batchReference.clear();
-			}
+			activeBatch = null;
+			batchReference = null;
 		}
 		
 		@Override
 		public String toString() {
-			return "ManagedBatch " + id + " " + pBatch; //$NON-NLS-1$ //$NON-NLS-2$
+			return "ManagedBatch " + id + " " + activeBatch; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -321,16 +255,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
-    private int reserveBatches = BufferManager.DEFAULT_RESERVE_BUFFERS;
-    private int maxReserveBatches = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private volatile int reserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
     
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
     
-    private int toPersistCount = 0;
-    private int activeBatchCount = 0;
+    private volatile int activeBatchColumnCount = 0;
     private Map<String, TupleBufferInfo> activeBatches = new LinkedHashMap<String, TupleBufferInfo>();
-	private Set<ManagedBatchImpl> softCache = Collections.synchronizedSet(new LinkedHashSet<ManagedBatchImpl>());
     
     private StorageManager diskMgr;
 
@@ -341,18 +273,20 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private AtomicInteger readAttempts = new AtomicInteger();
 	private AtomicInteger referenceHit = new AtomicInteger();
 	
-    public int getMaxProcessingBatches() {
+	@Override
+    public int getMaxProcessingBatchColumns() {
 		return maxProcessingBatches;
 	}
     
-    public void setMaxProcessingBatches(int maxProcessingBatches) {
-		this.maxProcessingBatches = Math.max(2, maxProcessingBatches);
+    public void setMaxProcessingBatchColumns(int maxProcessingBatches) {
+		this.maxProcessingBatches = Math.max(0, maxProcessingBatches);
 	}
 
     /**
      * Get processor batch size
      * @return Number of rows in a processor batch
      */
+    @Override
     public int getProcessorBatchSize() {        
         return this.processorBatchSize;
     }
@@ -361,6 +295,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
      * Get connector batch size
      * @return Number of rows in a connector batch
      */
+    @Override
     public int getConnectorBatchSize() {
         return this.connectorBatchSize;
     }
@@ -402,7 +337,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     				this.store = createFileStore(newID);
     				this.store.setCleanupReference(this);
     			}
-    			return new ManagedBatchImpl(newID, store, batch);
+    			ManagedBatchImpl mbi = new ManagedBatchImpl(newID, store, batch);
+    			mbi.addToCache(false);
+    			persistBatchReferences();
+    			return mbi;
     		}
 
     		@Override
@@ -451,9 +389,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     @Override
     public void releaseBuffers(int count) {
+    	if (count < 1) {
+    		return;
+    	}
     	lock.lock();
     	try {
-	    	this.reserveBatches += count;
+	    	this.reserveBatchColumns += count;
 	    	batchesFreed.signalAll();
     	} finally {
     		lock.unlock();
@@ -461,30 +402,82 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     }	
     
     @Override
-    public int reserveBuffers(int count, boolean wait) throws MetaMatrixComponentException {
+    public int reserveBuffers(int count, BufferReserveMode mode) {
     	lock.lock();
 	    try {
-	    	while (wait && count > this.reserveBatches && this.reserveBatches < this.maxReserveBatches / 2) {
-	    		try {
-					batchesFreed.await();
-				} catch (InterruptedException e) {
-					throw new MetaMatrixComponentException(e);
-				}
-	    	}	
-	    	this.reserveBatches -= count;
-	    	if (this.reserveBatches >= 0) {
+	    	if (mode == BufferReserveMode.WAIT) {
+		    	int waitCount = 0;
+		    	while (count - waitCount > this.reserveBatchColumns) {
+		    		try {
+						batchesFreed.await(100, TimeUnit.MILLISECONDS);
+					} catch (InterruptedException e) {
+						throw new MetaMatrixRuntimeException(e);
+					}
+					waitCount++;
+		    	}	
+	    	}
+	    	if (this.reserveBatchColumns >= count || mode == BufferReserveMode.FORCE) {
+		    	this.reserveBatchColumns -= count;
 	    		return count;
 	    	}
-	    	int result = count + this.reserveBatches;
-	    	this.reserveBatches = 0;
+	    	int result = Math.max(0, this.reserveBatchColumns);
+	    	this.reserveBatchColumns -= result;
 	    	return result;
 	    } finally {
     		lock.unlock();
+    		persistBatchReferences();
     	}
     }
     
-    public void setMaxReserveBatches(int maxReserveBatches) {
-		this.maxReserveBatches = maxReserveBatches;
+	void persistBatchReferences() {
+		if (activeBatchColumnCount == 0 || activeBatchColumnCount <= reserveBatchColumns) {
+			int memoryCount = activeBatchColumnCount + maxReserveBatchColumns - reserveBatchColumns;
+			if (DataTypeManager.isValueCacheEnabled()) {
+				if (memoryCount < maxReserveBatchColumns / 8) {
+					DataTypeManager.setValueCacheEnabled(false);
+				}
+			} else if (memoryCount > maxReserveBatchColumns / 4) {
+				DataTypeManager.setValueCacheEnabled(true);
+			}
+			return;
+		}
+		while (true) {
+			ManagedBatchImpl mb = null;
+			synchronized (activeBatches) {
+				if (activeBatchColumnCount == 0 || activeBatchColumnCount * 5 < reserveBatchColumns * 4) {
+					break;
+				}
+				Iterator<TupleBufferInfo> iter = activeBatches.values().iterator();
+				TupleBufferInfo tbi = iter.next();
+				Map.Entry<Integer, ManagedBatchImpl> entry = null;
+				if (tbi.lastUsed != null) {
+					entry = tbi.batches.floorEntry(tbi.lastUsed - 1);
+				}
+				if (entry == null) {
+					entry = tbi.batches.lastEntry();
+				} 
+				tbi.removeBatch(entry.getKey());
+				if (tbi.batches.isEmpty()) {
+					iter.remove();
+				}
+				mb = entry.getValue();
+			}
+			try {
+				mb.persist();
+			} catch (MetaMatrixComponentException e) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
+			}
+		}
+	}
+	
+	@Override
+	public int getSchemaSize(List elements) {
+		return elements.size();
+	}
+	
+    public void setMaxReserveBatchColumns(int maxReserve) {
+    	this.maxReserveBatchColumns = maxReserve;
+		this.reserveBatchColumns = maxReserve;
 	}
 
 	public void shutdown() {

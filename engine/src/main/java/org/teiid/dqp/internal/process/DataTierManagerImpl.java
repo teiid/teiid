@@ -54,8 +54,10 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -69,6 +71,7 @@ import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
 import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -371,9 +374,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		this.dataService.executeRequest(aqr, connectorId, receiver);
 	}
 
-	public void closeRequest(AtomicRequestID request, ConnectorID connectorId)
-			throws MetaMatrixComponentException {
-		this.dataService.closeRequest(request, connectorId);
+	public void closeRequest(AtomicRequestID request, ConnectorID connectorId) {
+		try {
+			this.dataService.closeRequest(request, connectorId);
+		} catch (MetaMatrixComponentException e) {
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
+			}
+		}
 	}
 	
 	public void cancelRequest(AtomicRequestID request, ConnectorID connectorId)

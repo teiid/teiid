@@ -191,7 +191,7 @@ public class ProjectIntoNode extends RelationalNode {
     	tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, this.modelName, null, getID());        
     }
     
-    private void closeRequest() throws MetaMatrixComponentException {
+    private void closeRequest() {
 
         if (this.tupleSource != null) {
             tupleSource.closeSource();
@@ -253,8 +253,7 @@ public class ProjectIntoNode extends RelationalNode {
 		return intoGroup.isTempGroupSymbol();
 	}
 
-    public void close() throws MetaMatrixComponentException {
+    public void closeDirect() {
         closeRequest();
-        super.close();
 	}
 }

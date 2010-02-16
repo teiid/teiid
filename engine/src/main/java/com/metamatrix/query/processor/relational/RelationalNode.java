@@ -252,17 +252,16 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
      * @throws MetaMatrixComponentException
      * @since 4.2
      */
-    public TupleBatch nextBatch() throws BlockedException,  MetaMatrixComponentException, MetaMatrixProcessingException {
+    public final TupleBatch nextBatch() throws BlockedException,  MetaMatrixComponentException, MetaMatrixProcessingException {
         boolean recordStats = this.context != null && (this.context.getCollectNodeStatistics() || this.context.getProcessDebug());
         
-        TupleBatch batch = null;
         try {
             while (true) {
             	//start timer for this batch
                 if(recordStats && this.context.getCollectNodeStatistics()) {
                     this.nodeStatistics.startBatchTimer();
                 }
-                batch = nextBatchDirect();
+                TupleBatch batch = nextBatchDirect();
                 if (recordStats) {
                     if(this.context.getCollectNodeStatistics()) {
                         // stop timer for this batch (normal)
@@ -279,15 +278,17 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
                 //this processing style however against the spirit of batch processing (but was already utilized by Sort and Grouping nodes)
                 if (batch.getRowCount() != 0 || batch.getTerminationFlag()) {
-                    break;
+                    if (batch.getTerminationFlag()) {
+                        close();
+                    }
+                    return batch;
                 }
             }
-            return batch;
         } catch (BlockedException e) {
             if(recordStats && this.context.getCollectNodeStatistics()) {
                 // stop timer for this batch (BlockedException)
                 this.nodeStatistics.stopBatchTimer();
-                this.nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                this.nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
             }
             throw e;
         } catch (MetaMatrixComponentException e) {
@@ -310,10 +311,11 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
 	protected abstract TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException;
 
-	public void close()
+	public final void close()
 		throws MetaMatrixComponentException {
 
         if (!this.closed) {
+        	closeDirect();
             for(int i=0; i<children.length; i++) {
                 if(children[i] != null) {
                     children[i].close();
@@ -324,6 +326,10 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
             this.closed = true;
         }
     }
+	
+	public void closeDirect() {
+		
+	}
 
     /**
      * Check if the node has been already closed

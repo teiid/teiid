@@ -95,7 +95,7 @@ public class BatchCollector {
         	add = this.batchHandler.batchProduced(batch);
         }
     	// Add batch
-        if(batch.getRowCount() > 0) {
+        if(batch.getRowCount() > 0 || batch.getTerminationFlag()) {
         	buffer.addTupleBatch(batch, add);
         }
     }

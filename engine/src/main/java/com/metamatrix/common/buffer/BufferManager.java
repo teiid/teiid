@@ -47,17 +47,22 @@ public interface BufferManager {
 		 */
 		FINAL
 	}
+	
+	public enum BufferReserveMode {
+		WAIT,
+		FORCE,
+		NO_WAIT
+	}
 
-	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 2048;
-	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 1024;
-	public static int DEFAULT_MAX_PROCESSING_BATCHES = 8;
+	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 1024;
+	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 512;
+	public static int DEFAULT_MAX_PROCESSING_BATCHES = 128;
 	
 	/**
-	 * The BufferManager may maintain at least this many batch references in memory.
-	 * 
-	 * Up to 2x this value may be held by soft references.
+	 * This is the maximum number of batch columns used for processing.
+	 * See {@link #reserveBuffers(int, boolean)}
 	 */
-	public static int DEFAULT_RESERVE_BUFFERS = 64;
+	public static int DEFAULT_RESERVE_BUFFERS = 16384;
 	
     /**
      * Get the batch size to use during query processing.  
@@ -79,7 +84,7 @@ public interface BufferManager {
 	 * across even a blocked exception.
 	 * @return
 	 */
-    int getMaxProcessingBatches();
+    int getMaxProcessingBatchColumns();
     
     /**
      * Creates a new {@link FileStore}.  See {@link FileStore#setCleanupReference(Object)} to
@@ -90,19 +95,22 @@ public interface BufferManager {
     FileStore createFileStore(String name);
     
     /**
-     * Reserve up to count buffers for use.  Wait will cause the process to block until
-     * all of the requested or half of the total buffers are available.
+     * Reserve up to count buffers for use.
      * @param count
-     * @param wait
+     * @param mode
      * @return
-     * @throws MetaMatrixComponentException
      */
-    int reserveBuffers(int count, boolean wait) throws MetaMatrixComponentException;
+    int reserveBuffers(int count, BufferReserveMode mode);
     
     /**
      * Releases the buffers reserved by a call to {@link BufferManager#reserveBuffers(int, boolean)}
      * @param count
      */
     void releaseBuffers(int count);
+    
+    /**
+     * Get the size estimate for the given schema.
+     */
+    int getSchemaSize(List elements);
     
 }

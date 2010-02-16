@@ -125,7 +125,9 @@ public class DuplicateFilter implements AggregateFunction {
             this.collectionBuffer.close();
 
             // Sort
-            sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), elements, sortTypes, Mode.DUP_REMOVE, mgr, groupName);
+            if (sortUtility == null) {
+            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), elements, sortTypes, Mode.DUP_REMOVE_SORT, mgr, groupName);
+            }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);
             try {

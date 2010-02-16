@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Collections;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -37,9 +36,8 @@ public class NullNode extends RelationalNode {
     public TupleBatch nextBatchDirect()
         throws MetaMatrixComponentException {
 
-        TupleBatch batch = new TupleBatch(1, Collections.EMPTY_LIST);
-        batch.setTerminationFlag(true);
-        return batch;
+        this.terminateBatches();
+        return pullBatch();
     }
         
     protected void getNodeString(StringBuffer str) {

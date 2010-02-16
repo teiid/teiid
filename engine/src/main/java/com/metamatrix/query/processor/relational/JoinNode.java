@@ -36,6 +36,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.SourceState.ImplicitBuffer;
 import com.metamatrix.query.sql.LanguageObject;
@@ -48,6 +49,10 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class JoinNode extends SubqueryAwareRelationalNode {
 	
+	static class BatchAvailableException extends RuntimeException {}
+	
+	static BatchAvailableException BATCH_AVILABLE = new BatchAvailableException(); 
+	
 	public enum JoinStrategyType {    
 	    MERGE,
 	    PARTITIONED_SORT,
@@ -59,6 +64,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     
     private boolean leftOpened;
     private boolean rightOpened;
+    private int reserved;
     
     private JoinStrategy joinStrategy;
     private JoinType joinType;
@@ -147,16 +153,25 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             this.leftOpened = true;
         }
         
-        if(!isDependent() && !this.rightOpened) {
-            // Open right child if non-dependent
-            getChildren()[1].open();
-            this.rightOpened = true;
+        if(!isDependent()) {
+        	openRight();
         }
             
         this.state = State.LOAD_LEFT;
         // Set Up Join Strategy
         this.joinStrategy.initialize(this);
     }
+
+	private void openRight() throws MetaMatrixComponentException,
+			MetaMatrixProcessingException {
+		if (!this.rightOpened) {
+			if (reserved == 0) {
+				reserved = getBufferManager().reserveBuffers(getBufferManager().getSchemaSize(getOutputElements()), BufferReserveMode.FORCE);
+			}
+			getChildren()[1].open();
+			this.rightOpened = true;
+		}
+	}
             
     /** 
      * @see com.metamatrix.query.processor.relational.RelationalNode#clone()
@@ -194,33 +209,25 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             }
         	//left child was already opened by the join node
             this.joinStrategy.loadLeft();
+            if (isDependent()) { 
+                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
+                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(buffer));
+            }
             state = State.LOAD_RIGHT;
         }
         if (state == State.LOAD_RIGHT) {
-            if (isDependent() && !this.rightOpened) { 
-                TupleBuffer tsID = this.joinStrategy.leftSource.getTupleBuffer();
-                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(tsID, this.getBufferManager().getProcessorBatchSize() / 2));
-                //open the right side now that the tuples have been collected
-                this.getChildren()[1].open();
-                this.rightOpened = true;
-            }
+        	this.openRight();
             this.joinStrategy.loadRight();
+        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
             state = State.EXECUTE;
         }
-        
-        while(true) {
-            if(super.isBatchFull()) {
-                return super.pullBatch();
-            }
-            List outputTuple = this.joinStrategy.nextTuple();
-            if(outputTuple != null) {
-                List projectTuple = projectTuple(this.projectionIndexes, outputTuple);
-                super.addBatchRow(projectTuple);
-            } else {
-                super.terminateBatches();
-                return super.pullBatch();
-            }
+        try {
+        	this.joinStrategy.process();
+        	this.terminateBatches();
+        } catch (BatchAvailableException e) {
+        	//pull the batch
         }
+        return pullBatch();
     }
 
     /** 
@@ -295,13 +302,12 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         this.dependentValueSource = dependentValueSource;
     }
     
-    public void close()
-            throws MetaMatrixComponentException {
-        super.close();
+    public void closeDirect() {
+		getBufferManager().releaseBuffers(reserved);
+		reserved = 0;
+        super.closeDirect();
         joinStrategy.close();
-        if (this.isDependent()) {
-        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
-        }
+    	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
     }
 
     public JoinType getJoinType() {
@@ -334,6 +340,15 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     		return Collections.emptyList();
     	}
     	return Arrays.asList(this.joinCriteria);
+    }
+    
+    @Override
+    protected void addBatchRow(List row) {
+        List projectTuple = projectTuple(this.projectionIndexes, row);
+        super.addBatchRow(projectTuple);
+        if (isBatchFull()) {
+        	throw BATCH_AVILABLE;
+        }
     }
 
 }

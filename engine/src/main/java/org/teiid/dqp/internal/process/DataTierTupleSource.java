@@ -149,7 +149,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
         }
     }
     
-    public void fullyCloseSource() throws MetaMatrixComponentException {
+    public void fullyCloseSource() {
     	this.dataMgr.closeRequest(aqr.getAtomicRequestID(), connectorId);
     }
     
@@ -160,7 +160,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     /**
      * @see TupleSource#closeSource()
      */
-    public void closeSource() throws MetaMatrixComponentException {
+    public void closeSource() {
     	if (this.supportsImplicitClose) {
     		this.dataMgr.closeRequest(aqr.getAtomicRequestID(), connectorId);
     	}

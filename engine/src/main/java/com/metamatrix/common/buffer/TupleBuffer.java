@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.buffer;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,10 +33,13 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.sql.symbol.Expression;
 
 public class TupleBuffer {
@@ -75,15 +79,16 @@ public class TupleBuffer {
 		private List<?> getCurrentTuple() throws MetaMatrixComponentException,
 				BlockedException {
 			if (currentRow <= rowCount) {
-				if (forwardOnly) {
-					if (batch == null || currentRow > batch.getEndRow()) {
+				//if (forwardOnly) {
+					if (batch == null || !batch.containsRow(currentRow)) {
 						batch = getBatch(currentRow);
 					}
 					return batch.getTuple(currentRow);
-				} 
+				//} 
 				//TODO: determine if we should directly hold a soft reference here
-				return getRow(currentRow);
+				//return getRow(currentRow);
 			}
+			batch = null;
 			if(isFinal) {
 	            return null;
 	        } 
@@ -91,8 +96,7 @@ public class TupleBuffer {
 		}
 
 	    @Override
-	    public void closeSource()
-	    throws MetaMatrixComponentException{
+	    public void closeSource() {
 	    	batch = null;
 	        mark = 1;
 	        reset();
@@ -210,21 +214,26 @@ public class TupleBuffer {
 	 * @throws MetaMatrixComponentException
 	 */
 	public void addTupleBatch(TupleBatch batch, boolean save) throws MetaMatrixComponentException {
-		Assertion.assertTrue(this.rowCount < batch.getBeginRow());
-		if (this.rowCount != batch.getBeginRow() - 1) {
-			saveBatch(false, true);
-			this.rowCount = batch.getBeginRow() - 1;
-		} 
+		setRowCount(batch.getBeginRow() - 1); 
 		if (save) {
 			for (List<?> tuple : batch.getAllTuples()) {
 				addTuple(tuple);
 			}
 		}
 	}
+
+	public void setRowCount(int rowCount)
+			throws MetaMatrixComponentException {
+		assert this.rowCount <= rowCount;
+		if (this.rowCount != rowCount) {
+			saveBatch(false, true);
+			this.rowCount = rowCount;
+		}
+	}
 	
 	public void purge() {
 		if (this.batchBuffer != null) {
-			this.batchBuffer = null;
+			this.batchBuffer.clear();
 		}
 		for (BatchManager.ManagedBatch batch : this.batches.values()) {
 			batch.remove();
@@ -260,14 +269,6 @@ public class TupleBuffer {
 		this.isFinal = true;
 	}
 	
-	List<?> getRow(int row) throws MetaMatrixComponentException {
-		if (this.batchBuffer != null && row > rowCount - this.batchBuffer.size()) {
-			return this.batchBuffer.get(row - rowCount + this.batchBuffer.size() - 1);
-		}
-		TupleBatch batch = getBatch(row);
-		return batch.getTuple(row);
-	}
-
 	/**
 	 * Get the batch containing the given row.
 	 * NOTE: the returned batch may be empty or may begin with a row other
@@ -311,8 +312,13 @@ public class TupleBuffer {
 	
 	public void remove() {
 		if (!removed) {
-			this.manager.remove();
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+	            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Removing TupleBuffer:", this.tupleSourceID); //$NON-NLS-1$
+	        }
+			this.batchBuffer = null;
 			purge();
+			this.manager.remove();
+			removed = true;
 		}
 	}
 	

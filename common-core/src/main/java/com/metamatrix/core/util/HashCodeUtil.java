@@ -24,6 +24,7 @@ package com.metamatrix.core.util;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.RandomAccess;
 
 /**
  * <P>This class provides utility functions for generating good
@@ -105,9 +106,7 @@ public final class HashCodeUtil {
 	 * Compute a hash code on a large collection by walking the list
 	 * and combining the hash code at every exponential index:
 	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
-	 * for good time complexity.  This uses an iterator to walk
-	 * the collection and pull the necessary hash code values.
-	 * Slower than a List or array but faster than getting EVERY value.	 
+	 * for good time complexity. 	 
 	 */
 	public static final int expHashCode(int previous, List x) {
 		if(x == null || x.size() == 0) {
@@ -115,17 +114,40 @@ public final class HashCodeUtil {
 		}
 		int size = x.size();				// size of collection
 		int hc = (PRIME*previous) + size;	// hash code so far
-		int skip = 0;						// skip between samples
-		int total = 0;						// collection examined already
-		Iterator iter = x.iterator();		// collection iterator
-		Object obj = iter.next();			// last iterated object, primed at first
-		while(total < size) {
-			for(int i=0; i<skip; i++) {		// skip to next sample
-				obj = iter.next();
+		if (x instanceof RandomAccess) {
+			int index = 1;
+			int xlen = x.size()+1;	// switch to 1-based
+			while(index < xlen) {
+				hc = hashCode(hc, x.get(index-1));
+				index = index << 1;		// left shift by 1 to double
 			}
-			hc = hashCode(hc, obj);			// add sample to hashcode
-			skip = (skip == 0) ? 1 : skip << 1;		// left shift by 1 to double
-			total += skip;					// update total
+		} else {
+			int skip = 0;						// skip between samples
+			int total = 0;						// collection examined already
+			Iterator iter = x.iterator();		// collection iterator
+			Object obj = iter.next();			// last iterated object, primed at first
+			while(total < size) {
+				for(int i=0; i<skip; i++) {		// skip to next sample
+					obj = iter.next();
+				}
+				hc = hashCode(hc, obj);			// add sample to hashcode
+				skip = (skip == 0) ? 1 : skip << 1;		// left shift by 1 to double
+				total += skip;					// update total
+			}
+		}
+		return hc;
+	}
+	
+	public static final int expHashCode(String x) {
+		if(x == null) {
+			return 0;
+		}
+		int hc = x.length();
+		int index = 1;
+		int xlen = x.length()+1;	// switch to 1-based
+		while(index < xlen) {
+			hc = PRIME * hc + x.charAt(index-1);
+			index = index << 1;		// left shift by 1 to double
 		}
 		return hc;
 	}

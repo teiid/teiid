@@ -230,7 +230,7 @@ public class TestBatchedUpdateNode {
         private FakeTupleSource(int numCommands) {
             this.numCommands = numCommands;
         }
-        public void closeSource() throws MetaMatrixComponentException {}
+        public void closeSource() {}
         public List getSchema() {return null;}
         public List nextTuple() throws MetaMatrixComponentException {
             if (first) {

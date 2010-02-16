@@ -102,7 +102,7 @@ public class AccessNode extends RelationalNode {
         isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
         
 		if(needProcessing) {
-            this.tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, connectorBindingId, getID());
+			registerRequest(atomicCommand);
 		}
 	}
 
@@ -152,7 +152,7 @@ public class AccessNode extends RelationalNode {
             	}
                 Command atomicCommand = (Command)command.clone();
                 if (prepareNextCommand(atomicCommand)) {
-                    tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
+                    registerRequest(atomicCommand);
                     break;
                 }
             }            
@@ -167,6 +167,11 @@ public class AccessNode extends RelationalNode {
         terminateBatches();
         return pullBatch();
 	}
+
+	private void registerRequest(Command atomicCommand)
+			throws MetaMatrixComponentException, MetaMatrixProcessingException {
+		tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, connectorBindingId, getID());
+	}
 	
 	protected boolean processCommandsIndividually() {
 		return false;
@@ -176,15 +181,11 @@ public class AccessNode extends RelationalNode {
         return false;
     }
     
-	public void close() throws MetaMatrixComponentException {
-	    if (!isClosed()) {
-            super.close();
-            
-            closeSources();            
-        }
+	public void closeDirect() {
+        closeSources();            
 	}
 
-    private void closeSources() throws MetaMatrixComponentException {
+    private void closeSources() {
         if(this.tupleSource != null) {
     		this.tupleSource.closeSource();
             tupleSource = null;

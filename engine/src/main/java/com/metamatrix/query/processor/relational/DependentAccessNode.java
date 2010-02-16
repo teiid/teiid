@@ -54,11 +54,8 @@ public class DependentAccessNode extends AccessNode {
     /**
      * @see com.metamatrix.query.processor.relational.AccessNode#close()
      */
-    public void close() throws MetaMatrixComponentException {
-        if (isClosed()) {
-            return;
-        }
-        super.close();
+    public void closeDirect() {
+        super.closeDirect();
 
         if (criteriaProcessor != null) {
             criteriaProcessor.close();

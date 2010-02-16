@@ -76,11 +76,8 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
         criteriaProcessor = null;
     }
     
-    public void close() throws MetaMatrixComponentException {
-        if (isClosed()) {
-            return;
-        }
-        super.close();
+    public void closeDirect() {
+        super.closeDirect();
 
         if (criteriaProcessor != null) {
             criteriaProcessor.close();

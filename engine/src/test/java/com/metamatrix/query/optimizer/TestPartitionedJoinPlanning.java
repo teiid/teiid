@@ -27,6 +27,7 @@ import static com.metamatrix.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
 
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -47,13 +48,14 @@ public class TestPartitionedJoinPlanning {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, 600);
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, 3000);
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 16);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,

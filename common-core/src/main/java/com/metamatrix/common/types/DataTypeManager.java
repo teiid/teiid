@@ -34,6 +34,7 @@ import java.sql.SQLXML;
 /*## JDBC3.0-JDK1.5-begin ##
 import com.metamatrix.core.jdbc.SQLXML; 
 ## JDBC3.0-JDK1.5-end ##*/
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import javax.xml.transform.Source;
 
@@ -68,6 +68,7 @@ import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.HashCodeUtil;
 
 /**
  * <p>
@@ -85,10 +86,56 @@ import com.metamatrix.core.util.ArgCheck;
  */
 public class DataTypeManager {
 	
-	private static final int MAX_VALUE_MAP_SIZE = 10000;
-	private static boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", true); //$NON-NLS-1$
+	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", true); //$NON-NLS-1$
 	
-	private static Map<Class<?>, Map<Object, WeakReference<Object>>> valueMaps = new HashMap<Class<?>, Map<Object, WeakReference<Object>>>(); 
+	private static boolean valueCacheEnabled;
+	
+	private interface ValueCache<T> {
+		T getValue(T value);
+	}
+	
+	private static class HashedValueCache<T> implements ValueCache<T> {
+		
+		final Object[] cache;
+		final boolean weak = false;
+		
+		HashedValueCache(int size) {
+			cache = new Object[1 << size];
+		}
+				
+		@SuppressWarnings("unchecked")
+		public T getValue(T value) {
+			int index = hash(primaryHash(value)) & (cache.length - 1);
+	    	Object canonicalValue = get(index);
+	    	if (value.equals(canonicalValue)) {
+	    		return (T)canonicalValue;
+	    	} 
+	    	set(index, value);
+	    	return value;
+		}
+		
+		protected Object get(int index) {
+			return cache[index];
+		}
+		
+		protected void set(int index, T value) {
+			cache[index] = value;
+		}
+		
+		protected int primaryHash(T value) {
+			return value.hashCode();
+		}
+
+		/*
+		 * The same power of 2 hash bucketing from the Java HashMap  
+		 */
+		final static int hash(int h) {
+			h ^= (h >>> 20) ^ (h >>> 12);
+	        return h ^= (h >>> 7) ^ (h >>> 4);
+		}
+	}
+	
+	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128); 
 
 	public static final int MAX_STRING_LENGTH = 4000;
 
@@ -152,7 +199,7 @@ public class DataTypeManager {
 	 * Doubly-nested map of String srcType --> Map of String targetType -->
 	 * Transform
 	 */
-	private static Map<String, Map<String, Transform>> transforms = new HashMap<String, Map<String, Transform>>();
+	private static Map<String, Map<String, Transform>> transforms = new HashMap<String, Map<String, Transform>>(128);
 
 	/** Utility to easily get Transform given srcType and targetType */
 	private static Transform getTransformFromMaps(String srcType,
@@ -165,10 +212,10 @@ public class DataTypeManager {
 	}
 
 	/** Base data type names and classes, Type name --> Type class */
-	private static Map<String, Class> dataTypeNames = new LinkedHashMap<String, Class>();
+	private static Map<String, Class> dataTypeNames = new LinkedHashMap<String, Class>(128);
 
 	/** Base data type names and classes, Type class --> Type name */
-	private static Map<Class, String> dataTypeClasses = new LinkedHashMap<Class, String>();
+	private static Map<Class, String> dataTypeClasses = new LinkedHashMap<Class, String>(128);
 
 	private static Set<String> DATA_TYPE_NAMES = Collections.unmodifiableSet(dataTypeNames.keySet());
 
@@ -426,38 +473,94 @@ public class DataTypeManager {
 	 */
 	static void loadDataTypes() {
 		DataTypeManager.addDataType(DefaultDataTypes.BOOLEAN, DefaultDataClasses.BOOLEAN);
-		valueMaps.put(DefaultDataClasses.BOOLEAN, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BYTE, DefaultDataClasses.BYTE);
-		valueMaps.put(DefaultDataClasses.BYTE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.SHORT,	DefaultDataClasses.SHORT);
-		valueMaps.put(DefaultDataClasses.SHORT, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.CHAR, DefaultDataClasses.CHAR);
-		valueMaps.put(DefaultDataClasses.CHAR, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.INTEGER, DefaultDataClasses.INTEGER);
-		valueMaps.put(DefaultDataClasses.INTEGER, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.LONG, DefaultDataClasses.LONG);
-		valueMaps.put(DefaultDataClasses.LONG, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BIG_INTEGER, DefaultDataClasses.BIG_INTEGER);
-		valueMaps.put(DefaultDataClasses.BIG_INTEGER, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.FLOAT, DefaultDataClasses.FLOAT);
-		valueMaps.put(DefaultDataClasses.FLOAT, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.DOUBLE, DefaultDataClasses.DOUBLE);
-		valueMaps.put(DefaultDataClasses.DOUBLE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.BIG_DECIMAL, DefaultDataClasses.BIG_DECIMAL);
-		valueMaps.put(DefaultDataClasses.BIG_DECIMAL, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.DATE, DefaultDataClasses.DATE);
-		valueMaps.put(DefaultDataClasses.DATE, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.TIME, DefaultDataClasses.TIME);
-		valueMaps.put(DefaultDataClasses.TIME, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.TIMESTAMP, DefaultDataClasses.TIMESTAMP);
-		valueMaps.put(DefaultDataClasses.TIMESTAMP, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.STRING, DefaultDataClasses.STRING);
-		valueMaps.put(DefaultDataClasses.STRING, Collections.synchronizedMap(new WeakHashMap<Object, WeakReference<Object>>()));
 		DataTypeManager.addDataType(DefaultDataTypes.CLOB, DefaultDataClasses.CLOB);
 		DataTypeManager.addDataType(DefaultDataTypes.XML, DefaultDataClasses.XML);
 		DataTypeManager.addDataType(DefaultDataTypes.OBJECT, DefaultDataClasses.OBJECT);
 		DataTypeManager.addDataType(DefaultDataTypes.NULL, DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
+		
+		if (USE_VALUE_CACHE) {
+			valueMaps.put(DefaultDataClasses.BOOLEAN, new ValueCache<Boolean>() {
+				@Override
+				public Boolean getValue(Boolean value) {
+					return Boolean.valueOf(value);
+				}
+			});
+			valueMaps.put(DefaultDataClasses.BYTE, new ValueCache<Byte>() {
+				@Override
+				public Byte getValue(Byte value) {
+					return Byte.valueOf(value);
+				}
+			});
+			valueMaps.put(DefaultDataClasses.SHORT, new HashedValueCache<Short>(13));
+			valueMaps.put(DefaultDataClasses.CHAR, new HashedValueCache<Character>(13));
+			valueMaps.put(DefaultDataClasses.INTEGER, new HashedValueCache<Integer>(14));
+			valueMaps.put(DefaultDataClasses.LONG, new HashedValueCache<Long>(14));
+			valueMaps.put(DefaultDataClasses.BIG_INTEGER, new HashedValueCache<BigInteger>(14));
+			valueMaps.put(DefaultDataClasses.FLOAT, new HashedValueCache<Float>(14));
+			valueMaps.put(DefaultDataClasses.DOUBLE, new HashedValueCache<Double>(14));
+			valueMaps.put(DefaultDataClasses.DATE, new HashedValueCache<Date>(14));
+			valueMaps.put(DefaultDataClasses.TIME, new HashedValueCache<Time>(14));
+			valueMaps.put(DefaultDataClasses.TIMESTAMP, new HashedValueCache<Timestamp>(14));
+			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new HashedValueCache<BigDecimal>(15) {
+				@Override
+				protected Object get(int index) {
+					WeakReference<?> ref = (WeakReference<?>) cache[index];
+					if (ref != null) {
+						return ref.get();
+					}
+					return null;
+				}
+				
+				@Override
+				protected void set(int index, BigDecimal value) {
+					cache[index] = new WeakReference<BigDecimal>(value);
+				}
+			});
+			valueMaps.put(DefaultDataClasses.STRING, new HashedValueCache<String>(15) {
+				HashedValueCache<String> smallCache = new HashedValueCache<String>(13);
+				
+				@Override
+				public String getValue(String value) {
+					if (value.length() < 14) {
+						return smallCache.getValue(value);
+					}
+					return super.getValue(value);
+				}
+				
+				@Override
+				protected Object get(int index) {
+					WeakReference<?> ref = (WeakReference<?>) cache[index];
+					if (ref != null) {
+						return ref.get();
+					}
+					return null;
+				}
+				
+				@Override
+				protected void set(int index, String value) {
+					cache[index] = new WeakReference<Object>(value);
+				}
+				
+				@Override
+				protected int primaryHash(String value) {
+					return HashCodeUtil.expHashCode(value);
+				}
+			});
+		}
 	}
 
 	/**
@@ -723,27 +826,26 @@ public class DataTypeManager {
     	sourceConverters.put(sourceClass, transform);
     }
     
+    public static void setValueCacheEnabled(boolean enabled) {
+    	valueCacheEnabled = enabled;
+    }
+    
+    public static boolean isValueCacheEnabled() {
+    	return valueCacheEnabled;
+    }
+    
     @SuppressWarnings("unchecked")
 	public static <T> T getCanonicalValue(T value) {
-    	if (USE_VALUE_CACHE) {
+    	if (USE_VALUE_CACHE && valueCacheEnabled) {
     		if (value == null) {
     			return null;
     		}
-	    	Map<Object, WeakReference<Object>> valueMap = valueMaps.get(value.getClass());
-	    	if (valueMap == null) {
+    		//TODO: this initial lookup is inefficient, since there are likely collisions
+	    	ValueCache valueCache = valueMaps.get(value.getClass());
+	    	if (valueCache == null) {
 	    		return value;
 	    	}
-			WeakReference<Object> valueReference = valueMap.get(value);
-			Object canonicalValue = null;
-			if (valueReference != null) {
-				canonicalValue = valueReference.get();
-			}
-			if (canonicalValue != null) {
-				return (T)canonicalValue;
-			}
-			if (valueMap.size() <= MAX_VALUE_MAP_SIZE) {
-				valueMap.put(value, new WeakReference<Object>(value));
-			}
+	    	return (T)valueCache.getValue(value);
     	}
 		return value;
     }

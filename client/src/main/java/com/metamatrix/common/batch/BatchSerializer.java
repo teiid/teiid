@@ -322,10 +322,6 @@ public class BatchSerializer {
             int b;
             boolean readingShort;
             int length = in.readInt();
-            /* Although using a StringBuffer and doing a toString() to get the String value reuses
-             * the StringBuffer's internal char[], the StringBuffer.append() calls are all synchronized,
-             * and likely too costly compared to simply copying the array during derialization.
-             */
             char[] chars = new char[length];
             readingShort = true;
             for (int i = 0; i < length; i++) {
