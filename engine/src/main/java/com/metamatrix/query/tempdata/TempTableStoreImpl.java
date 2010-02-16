@@ -77,6 +77,7 @@ public class TempTableStoreImpl implements TempTableStore {
 		private final Criteria crit;
 		protected int updateCount = 0;
 		private boolean done;
+		private List<?> currentTuple;
 
 		private UpdateTupleSource(String groupKey, TupleBuffer tsId, Criteria crit) throws MetaMatrixComponentException {
 			this.groupKey = groupKey;
@@ -96,14 +97,14 @@ public class TempTableStoreImpl implements TempTableStore {
 				return null;
 			}
 			
-			List<?> tuple = null;
 			//still have to worry about blocked exceptions...
-			while ((tuple = ts.nextTuple()) != null) {
-				if (eval.evaluate(crit, tuple)) {
-					tuplePassed(tuple);
+			while (currentTuple != null || (currentTuple = ts.nextTuple()) != null) {
+				if (eval.evaluate(crit, currentTuple)) {
+					tuplePassed(currentTuple);
 				} else {
-					tupleFailed(tuple);
+					tupleFailed(currentTuple);
 				}
+				currentTuple = null;
 			}
 			newBuffer.close();
 			groupToTupleSourceID.put(groupKey, newBuffer);
@@ -126,7 +127,7 @@ public class TempTableStoreImpl implements TempTableStore {
 		}
 
 		@Override
-		public void closeSource() throws MetaMatrixComponentException {
+		public void closeSource() {
 			
 		}
 		
@@ -270,20 +271,12 @@ public class TempTableStoreImpl implements TempTableStore {
         }
         //allow implicit temp group definition
         List columns = null;
-        switch (command.getType()) {
-        case Command.TYPE_QUERY:
-            Query query = (Query)command;
-            if(query.getInto() != null && query.getInto().getGroup().isImplicitTempGroupSymbol()) {
-                columns = query.getSelect().getSymbols();
-            }
-            break;
-        case Command.TYPE_INSERT:
+        if (command instanceof Insert) {
             Insert insert = (Insert)command;
             GroupSymbol group = insert.getGroup();
             if(group.isImplicitTempGroupSymbol()) {
                 columns = insert.getVariables();
             }
-            break;
         }
         if (columns == null) {
         	throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
