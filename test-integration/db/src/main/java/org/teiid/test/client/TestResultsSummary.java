@@ -40,6 +40,7 @@ import java.util.Map;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
+import org.teiid.test.util.StringUtil;
 
 
 public class TestResultsSummary  {
@@ -226,7 +227,9 @@ public class TestResultsSummary  {
 	    case TestResult.RESULT_STATE.TEST_EXCEPTION:
 		++fail;
 		
-		this.failed_queries.add(stat.getQueryID() + "~" + stat.getExceptionMsg());
+		String msg = StringUtil.removeChars(stat.getExceptionMsg(), new char[] {'\r', '\n'});  
+		
+		this.failed_queries.add(stat.getQueryID() + "~" + msg);
 		break;
 	    case TestResult.RESULT_STATE.TEST_SUCCESS:
 		++pass;
