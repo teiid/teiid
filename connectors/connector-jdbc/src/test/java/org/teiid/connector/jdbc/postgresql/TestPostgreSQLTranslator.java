@@ -412,7 +412,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate() throws Exception {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in substr('chimp', 1)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in 'chimp') FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -446,7 +446,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate3() throws Exception {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
-        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in substr('234567890', 1)) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
+        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in '234567890') FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -480,7 +480,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate5() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(SmallA.StringNum in substr('chimp', 1)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT position(SmallA.StringNum in 'chimp') FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -497,7 +497,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate6() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(SmallA.StringNum in substr('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) + CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END - 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -514,7 +514,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate7() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(SmallA.StringNum in substr('chimp', CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) + CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END - 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 

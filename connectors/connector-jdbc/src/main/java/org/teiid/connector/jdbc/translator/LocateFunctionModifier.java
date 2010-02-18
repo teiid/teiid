@@ -160,7 +160,7 @@ public class LocateFunctionModifier extends AliasModifier {
 	private IExpression ensurePositiveStartIndex(IExpression startIndex) {
 		if (startIndex instanceof ILiteral) {
 			ILiteral literal = (ILiteral)startIndex;  
-			if (literal.getValue() != null && ((Integer)literal.getValue() < 1)) {
+			if (literal.getValue() instanceof Integer && ((Integer)literal.getValue() < 1)) {
 				literal.setValue(1);
 			}
 		} else {

@@ -29,6 +29,7 @@ import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
 
 public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.LocateFunctionModifier {
 	
@@ -44,8 +45,29 @@ public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.
 		parts.add("position("); //$NON-NLS-1$
 		parts.add(params.get(0));		
 		parts.add(" in "); //$NON-NLS-1$
+		boolean useSubStr = false;
 		if (params.size() == 3) {
+			useSubStr = true;
+			if (params.get(2) instanceof ILiteral && ((ILiteral)params.get(2)).getValue() instanceof Integer) {
+				Integer value = (Integer)((ILiteral)params.get(2)).getValue();
+				if (value > 1) {
+					((ILiteral)params.get(2)).setValue(value - 1);
+				} else {
+					useSubStr = false;
+				}
+			}
+		}
+		if (useSubStr) {
+			parts.add(0, "("); //$NON-NLS-1$
 			parts.add(this.getLanguageFactory().createFunction("substr", params.subList(1, 3), TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
+			parts.add(")"); //$NON-NLS-1$
+			parts.add(" + "); //$NON-NLS-1$
+			if (params.get(2) instanceof ILiteral && ((ILiteral)params.get(2)).getValue() instanceof Integer) {
+				parts.add(params.get(2));
+			} else {
+				parts.add(params.get(2));
+				parts.add(" - 1"); //$NON-NLS-1$
+			}
 		} else {
 			parts.add(params.get(1));
 		}
