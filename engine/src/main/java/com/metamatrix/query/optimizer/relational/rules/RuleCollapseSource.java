@@ -87,24 +87,21 @@ public final class RuleCollapseSource implements OptimizerRule {
 
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
-            } else { 
-                // Create command from access on down and save in access node
-                if(command == null) {
-                	PlanNode commandRoot = accessNode;
-                	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
-                	if (intoGroup != null) {
-                		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
-                	}
-                    plan = removeUnnecessaryInlineView(plan, commandRoot);
-                    QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
-                	addDistinct(metadata, capFinder, accessNode, queryCommand);
-                    command = queryCommand;
-                    if (intoGroup != null) {
-                    	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
-                    	insertCommand.setQueryExpression(queryCommand);
-                    	command = insertCommand;
-                    }
-                } 
+            } else if(command == null) {
+            	PlanNode commandRoot = accessNode;
+            	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
+            	if (intoGroup != null) {
+            		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
+            	}
+                plan = removeUnnecessaryInlineView(plan, commandRoot);
+                QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
+            	addDistinct(metadata, capFinder, accessNode, queryCommand);
+                command = queryCommand;
+                if (intoGroup != null) {
+                	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
+                	insertCommand.setQueryExpression(queryCommand);
+                	command = insertCommand;
+                }
             }
     		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
     		accessNode.removeAllChildren();
@@ -417,10 +414,7 @@ public final class RuleCollapseSource implements OptimizerRule {
     }
     
 	private void processOrderBy(PlanNode node, QueryCommand query) {
-		List params = (List)node.getProperty(NodeConstants.Info.SORT_ORDER);
-		List types = (List)node.getProperty(NodeConstants.Info.ORDER_TYPES);
-		OrderBy orderBy = new OrderBy(params, types);
-		query.setOrderBy(orderBy);
+		query.setOrderBy((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER));
 	}
 
    /**

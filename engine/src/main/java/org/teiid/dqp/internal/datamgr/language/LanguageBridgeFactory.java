@@ -97,6 +97,7 @@ import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -438,19 +439,15 @@ public class LanguageBridgeFactory {
         if(orderBy == null){
             return null;
         }
-        List items = orderBy.getVariables();
-        List types = orderBy.getTypes();
-        List translatedItems = new ArrayList();
-        for (int i = 0; i < items.size(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol)items.get(i);
-            boolean direction = (((Boolean)types.get(i)).booleanValue() == OrderBy.DESC)
-                                ? IOrderByItem.DESC
-                                : IOrderByItem.ASC;
+        List<OrderByItemImpl> translatedItems = new ArrayList<OrderByItemImpl>();
+        for (OrderByItem item : orderBy.getOrderByItems()) {
+            SingleElementSymbol symbol = item.getSymbol();
+            boolean direction = item.isAscending()?IOrderByItem.ASC:IOrderByItem.DESC;
                                 
             OrderByItemImpl orderByItem = null;                                
             if(symbol instanceof ElementSymbol){
                 IElement innerElement = translate((ElementSymbol)symbol);
-                if (symbol.getOutputName() != null && symbol.getOutputName().indexOf(ElementSymbol.SEPARATOR) != -1) {
+                if (item.isUnrelated() || (symbol.getOutputName() != null && symbol.getOutputName().indexOf(ElementSymbol.SEPARATOR) != -1)) {
                 	orderByItem = new OrderByItemImpl(null, direction, innerElement);
                 } else {
                 	orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, innerElement);
@@ -535,8 +532,7 @@ public class LanguageBridgeFactory {
     }
 
     IElement translate(ElementSymbol symbol) throws MetaMatrixComponentException {
-        ElementImpl element = null;
-        element = new ElementImpl(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
+        ElementImpl element = new ElementImpl(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
         
         if (element.getGroup().getMetadataObject() == null) {
             return element;

@@ -45,6 +45,7 @@ import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -163,7 +164,7 @@ public class RuleRemoveOptionalJoins implements
             case NodeConstants.Types.SORT:
             {
                 if (elements != null) {
-                    List sortOrder = (List)node.getProperty(NodeConstants.Info.SORT_ORDER);
+                    OrderBy sortOrder = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
                     ElementCollectorVisitor.getElements(sortOrder, elements);
                 }
                 break;

@@ -41,7 +41,7 @@ import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.MatchCriteria;
-import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetClause;
@@ -90,29 +90,35 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
             
             if (symbol instanceof SingleElementSymbol) {
                 SingleElementSymbol ses = (SingleElementSymbol)symbol;
-                SingleElementSymbol replacmentSymbol = null; 
-
-                Expression expr = ses;
-                if (ses instanceof ExpressionSymbol && !(ses instanceof AggregateSymbol)) {
-                    expr = ((ExpressionSymbol)ses).getExpression();
-                }
-                
-                Expression replacement = replaceExpression(expr);
-                
-                if (replacement instanceof SingleElementSymbol) {
-                    replacmentSymbol = (SingleElementSymbol)replacement;
-                } else {
-                    replacmentSymbol = new ExpressionSymbol(ses.getName(), replacement);
-                }
-                
-                if (alias && createAliases() && !replacmentSymbol.getShortCanonicalName().equals(ses.getShortCanonicalName())) {
-                    replacmentSymbol = new AliasSymbol(ses.getShortName(), replacmentSymbol);
-                }
+                SingleElementSymbol replacmentSymbol = replaceSymbol(ses, alias);
                 
                 symbols.set(i, replacmentSymbol);
             }
         }
     }
+
+	private SingleElementSymbol replaceSymbol(SingleElementSymbol ses,
+			boolean alias) {
+		SingleElementSymbol replacmentSymbol = null; 
+
+		Expression expr = ses;
+		if (ses instanceof ExpressionSymbol && !(ses instanceof AggregateSymbol)) {
+		    expr = ((ExpressionSymbol)ses).getExpression();
+		}
+		
+		Expression replacement = replaceExpression(expr);
+		
+		if (replacement instanceof SingleElementSymbol) {
+		    replacmentSymbol = (SingleElementSymbol)replacement;
+		} else {
+		    replacmentSymbol = new ExpressionSymbol(ses.getName(), replacement);
+		}
+		
+		if (alias && createAliases() && !replacmentSymbol.getShortCanonicalName().equals(ses.getShortCanonicalName())) {
+		    replacmentSymbol = new AliasSymbol(ses.getShortName(), replacmentSymbol);
+		}
+		return replacmentSymbol;
+	}
     
     /** 
      * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.symbol.AliasSymbol)
@@ -265,12 +271,9 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         replaceSymbols(obj.getSymbols(), false);
     }
     
-    /**
-     * Swap each SingleElementSymbol in OrderBy (other symbols are ignored).
-     * @param obj Object to remap
-     */
-    public void visit(OrderBy obj) {
-        replaceSymbols(obj.getVariables(), true);        
+    @Override
+    public void visit(OrderByItem obj) {
+    	obj.setSymbol(replaceSymbol(obj.getSymbol(), true));
     }
     
     public void visit(Limit obj) {

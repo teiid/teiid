@@ -74,6 +74,7 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
@@ -321,11 +322,10 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.SORT:
 			case NodeConstants.Types.DUP_REMOVE:
                 SortNode sortNode = new SortNode(getID());
-                
-				List elements = (List) node.getProperty(NodeConstants.Info.SORT_ORDER);
-				List sortTypes = (List) node.getProperty(NodeConstants.Info.ORDER_TYPES);
-				
-				sortNode.setSortElements(elements, sortTypes);
+                OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
+				if (orderBy != null) {
+					sortNode.setSortElements(orderBy.getSortKeys(), orderBy.getTypes());
+				}
 				if (node.getType() == NodeConstants.Types.DUP_REMOVE) {
 					sortNode.setMode(Mode.DUP_REMOVE);
 				} else if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {

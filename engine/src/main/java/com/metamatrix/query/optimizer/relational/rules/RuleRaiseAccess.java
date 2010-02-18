@@ -47,6 +47,7 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -255,9 +256,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         } 
         
-        List sortCols = (List)parentNode.getProperty(NodeConstants.Info.SORT_ORDER);
-        for (int i = 0; i < sortCols.size(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol)sortCols.get(i);
+        //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
+        List<SingleElementSymbol> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
+        for (SingleElementSymbol symbol : sortCols) {
             if(! canPushSymbol(symbol, true, modelID, metadata, capFinder)) {
                 return false;
             }

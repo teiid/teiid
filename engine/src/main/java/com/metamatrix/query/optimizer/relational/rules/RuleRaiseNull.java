@@ -40,6 +40,8 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
@@ -159,11 +161,11 @@ public final class RuleRaiseNull implements OptimizerRule {
                     PlanNode sort = NodeEditor.findParent(firstProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
                     
                     if (sort != null) { //correct the sort to the new columns as well
-                        List<SingleElementSymbol> sortOrder = (List<SingleElementSymbol>)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-                        for (int i = 0; i < sortOrder.size(); i++) {
-                            SingleElementSymbol sortElement = sortOrder.get(i);
+                        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+                        for (OrderByItem item : sortOrder.getOrderByItems()) {
+                            SingleElementSymbol sortElement = item.getSymbol();
                             sortElement = newProjectSymbols.get(oldProjectSymbols.indexOf(sortElement));
-                            sortOrder.set(i, sortElement);
+                            item.setSymbol(sortElement);
                         }
                     }
                     

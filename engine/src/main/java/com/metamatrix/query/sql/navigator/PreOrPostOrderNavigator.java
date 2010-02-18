@@ -49,6 +49,7 @@ import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.Select;
@@ -350,7 +351,13 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(OrderBy obj) {
         preVisitVisitor(obj);
-        visitNodes(obj.getVariables());
+        visitNodes(obj.getOrderByItems());
+        postVisitVisitor(obj);
+    }
+    @Override
+    public void visit(OrderByItem obj) {
+    	preVisitVisitor(obj);
+        visitNode(obj.getSymbol());
         postVisitVisitor(obj);
     }
     public void visit(Query obj) {

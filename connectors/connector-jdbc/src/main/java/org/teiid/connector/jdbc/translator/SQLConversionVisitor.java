@@ -374,4 +374,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     	return translator.useParensForJoins();
     }
 	
+	protected boolean useSelectLimit() {
+		return translator.useSelectLimit();
+	}
+	
 }

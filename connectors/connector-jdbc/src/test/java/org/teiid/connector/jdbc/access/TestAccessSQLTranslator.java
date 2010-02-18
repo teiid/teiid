@@ -66,7 +66,7 @@ public class TestAccessSQLTranslator extends TestCase {
 
     public void testRowLimit() throws Exception {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
-        String output = "SELECT TOP 100 * FROM (SELECT SmallA.IntKey FROM SmallA) AS X";  //$NON-NLS-1$
+        String output = "SELECT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(
             input, 
@@ -76,7 +76,7 @@ public class TestAccessSQLTranslator extends TestCase {
     
     public void testRowLimit1() throws Exception {
         String input = "select distinct intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
-        String output = "SELECT TOP 100 * FROM (SELECT DISTINCT SmallA.IntKey FROM SmallA) AS X";  //$NON-NLS-1$
+        String output = "SELECT DISTINCT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(
             input, 

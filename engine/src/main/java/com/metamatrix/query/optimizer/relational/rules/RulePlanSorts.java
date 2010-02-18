@@ -38,7 +38,9 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.SetQuery;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -74,7 +76,7 @@ public class RulePlanSorts implements OptimizerRule {
 			if (mergeSortWithDupRemoval(node)) {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 			}
-			List orderColumns = (List)node.getProperty(NodeConstants.Info.SORT_ORDER);
+			List<SingleElementSymbol> orderColumns = ((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
 				List exprs = (List)possibleSort.getProperty(Info.GROUP_COLS);

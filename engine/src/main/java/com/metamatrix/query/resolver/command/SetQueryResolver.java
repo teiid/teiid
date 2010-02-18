@@ -137,7 +137,7 @@ public class SetQueryResolver implements CommandResolver {
      * @return True if the ORDER BY contains the element
      */
     public static boolean orderByContainsVariable(OrderBy orderBy, SingleElementSymbol ses, int position) {
-        for (final Iterator iterator = orderBy.getVariables().iterator(); iterator.hasNext();) {
+        for (final Iterator iterator = orderBy.getSortKeys().iterator(); iterator.hasNext();) {
             final ElementSymbol element = (ElementSymbol)iterator.next();
             if (position == ((TempMetadataID)element.getMetadataID()).getPosition()) {
                 return true;

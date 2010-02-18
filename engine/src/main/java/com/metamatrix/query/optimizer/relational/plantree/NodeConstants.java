@@ -108,8 +108,7 @@ public final class NodeConstants {
         IS_DEPENDENT_SET, // Boolean - only used with dependent joins
 
         // Sort node properties
-        ORDER_TYPES,        // List <Boolean>
-        SORT_ORDER,         // List <SingleElementSymbol>
+        SORT_ORDER,         // OrderBy
         UNRELATED_SORT,     // Boolean
         IS_DUP_REMOVAL,		// Boolean
 

@@ -65,7 +65,7 @@ public class TestOrderByRewrite  {
                                    String[] elementNames,
                                    String[] elementIDs) {
         List elements = new ArrayList();
-        for (Iterator i = langObj.getVariables().iterator(); i.hasNext();) {
+        for (Iterator i = langObj.getSortKeys().iterator(); i.hasNext();) {
             ElementCollectorVisitor.getElements((LanguageObject)i.next(), elements);
         }
 
@@ -84,7 +84,7 @@ public class TestOrderByRewrite  {
     private void helpCheckExpressionsSymbols(OrderBy langObj,
                                              String[] functionsNames) {
     	int expCount = 0;
-        for (Iterator i = langObj.getVariables().iterator(); i.hasNext();) {
+        for (Iterator i = langObj.getSortKeys().iterator(); i.hasNext();) {
         	SingleElementSymbol ses = (SingleElementSymbol)i.next();
             if (ses instanceof ExpressionSymbol) {
                 assertEquals("Expression Symbols does not match: ", functionsNames[expCount++], ses.toString()); //$NON-NLS-1$                        		

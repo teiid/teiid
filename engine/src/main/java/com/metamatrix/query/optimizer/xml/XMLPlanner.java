@@ -305,7 +305,7 @@ public final class XMLPlanner implements CommandPlanner{
             return;
         }
         
-        List elements = orderBy.getVariables();
+        List elements = orderBy.getSortKeys();
 		List types = orderBy.getTypes();
 
 		for (int i = 0; i< elements.size(); i++) {

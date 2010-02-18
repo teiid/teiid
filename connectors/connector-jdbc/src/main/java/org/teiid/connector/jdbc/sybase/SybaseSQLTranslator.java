@@ -43,7 +43,7 @@ import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.ISetQuery;
 
 
 /**
@@ -166,12 +166,15 @@ public class SybaseSQLTranslator extends Translator {
     	return 3;
     }
     
+    /**
+     * SetQueries don't have a concept of TOP, an inline view is needed.
+     */
     @Override
     public List<?> translateCommand(ICommand command, ExecutionContext context) {
-    	if (!(command instanceof IQueryCommand)) {
+    	if (!(command instanceof ISetQuery)) {
     		return null;
     	}
-		IQueryCommand queryCommand = (IQueryCommand)command;
+    	ISetQuery queryCommand = (ISetQuery)command;
 		if (queryCommand.getLimit() == null) {
 			return null;
     	}
@@ -180,8 +183,8 @@ public class SybaseSQLTranslator extends Translator {
 		queryCommand.setLimit(null);
 		queryCommand.setOrderBy(null);
 		List<Object> parts = new ArrayList<Object>(6);
-		parts.add("SELECT TOP "); //$NON-NLS-1$
-		parts.add(limit.getRowLimit());
+		parts.add("SELECT "); //$NON-NLS-1$
+		parts.addAll(translateLimit(limit, context));
 		parts.add(" * FROM ("); //$NON-NLS-1$
 		parts.add(queryCommand);
 		parts.add(") AS X"); //$NON-NLS-1$
@@ -190,6 +193,17 @@ public class SybaseSQLTranslator extends Translator {
 			parts.add(orderBy);
 		}
 		return parts;
+    }
+    
+    @SuppressWarnings("unchecked")
+	@Override
+    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    	return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean useSelectLimit() {
+    	return true;
     }
     
     @Override

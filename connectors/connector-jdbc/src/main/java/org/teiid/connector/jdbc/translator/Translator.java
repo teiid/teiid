@@ -839,4 +839,12 @@ public class Translator {
     	return false;
     }
     
+    /**
+     * 
+     * @return true if the limit clause is part of the select
+     */
+    public boolean useSelectLimit() {
+    	return false;
+    }
+    
 }

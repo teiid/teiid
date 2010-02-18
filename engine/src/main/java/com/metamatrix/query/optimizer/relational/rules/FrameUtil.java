@@ -235,10 +235,8 @@ public class FrameUtil {
             convertAccessPatterns(symbolMap, node);
         
         } else if(type == NodeConstants.Types.SORT) { 
-        	List<SingleElementSymbol> sortCols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.SORT_ORDER);
-            OrderBy orderBy = new OrderBy(sortCols);
+        	OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
             ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap);
-            node.setProperty(NodeConstants.Info.SORT_ORDER, orderBy.getVariables());
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }

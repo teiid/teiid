@@ -23,6 +23,8 @@
 package com.metamatrix.query.sql;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is the primary interface for all language objects.  It extends a few 
@@ -43,5 +45,18 @@ public interface LanguageObject extends Serializable, Cloneable {
 	 * @return Deep clone of this object
 	 */
     Object clone();
+    
+    public static class Util {
+
+		@SuppressWarnings("unchecked")
+		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(List<T> collection) {
+			ArrayList<S> result = new ArrayList<S>(collection.size());
+			for (LanguageObject obj : collection) {
+				result.add((S)obj.clone());
+			}
+			return result;
+		}
+    	
+    }
     	 
 }

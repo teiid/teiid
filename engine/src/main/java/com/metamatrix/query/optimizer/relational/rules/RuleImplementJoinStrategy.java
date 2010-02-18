@@ -24,7 +24,6 @@ package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -122,9 +121,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         boolean needsCorrection = outputSymbols.size() > oldSize;
                 
-        List<Boolean> directions = Collections.nCopies(orderSymbols.size(), OrderBy.ASC);
-        
-        PlanNode sortNode = createSortNode(orderSymbols, outputSymbols, directions);
+        PlanNode sortNode = createSortNode(new ArrayList<SingleElementSymbol>(orderSymbols), outputSymbols);
         
         if (sourceNode.getType() == NodeConstants.Types.ACCESS) {
         	if (NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
@@ -151,13 +148,11 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         return false;
     }
 
-    private static PlanNode createSortNode(Collection orderSymbols,
-                                           Collection outputElements,
-                                           List directions) {
+    private static PlanNode createSortNode(List<SingleElementSymbol> orderSymbols,
+                                           Collection outputElements) {
         PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
-        sortNode.setProperty(NodeConstants.Info.SORT_ORDER, new ArrayList(orderSymbols));
+        sortNode.setProperty(NodeConstants.Info.SORT_ORDER, new OrderBy(orderSymbols));
         sortNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList(outputElements));
-        sortNode.setProperty(NodeConstants.Info.ORDER_TYPES, directions);
         return sortNode;
     }
 

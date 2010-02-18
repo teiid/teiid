@@ -46,6 +46,8 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
@@ -147,11 +149,11 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    case NodeConstants.Types.SORT:
 		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
 		    		//add missing sort columns
-			    	List<SingleElementSymbol> elements = (List<SingleElementSymbol>) root.getProperty(NodeConstants.Info.SORT_ORDER);
+			    	OrderBy elements = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
 			    	outputElements = new ArrayList<SingleElementSymbol>(outputElements);
-			    	for (SingleElementSymbol singleElementSymbol : elements) {
-						if (!outputElements.contains(singleElementSymbol)) {
-							outputElements.add(singleElementSymbol);
+			    	for (OrderByItem item : elements.getOrderByItems()) {
+						if (!outputElements.contains(item.getSymbol())) {
+							outputElements.add(item.getSymbol());
 						}
 					}
 		    	}
@@ -235,15 +237,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         if (sort == null) {
         	return outputElements;
         }
-        List sortOrder = (List)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
         List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
         
         SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
         
         List<ElementSymbol> symbolOrder = symbolMap.getKeys();
         
-        for (final Iterator iterator = sortOrder.iterator(); iterator.hasNext();) {
-            final Expression expr = (Expression)iterator.next();
+        for (OrderByItem item : sortOrder.getOrderByItems()) {
+            final Expression expr = item.getSymbol();
             int index = topCols.indexOf(expr);
             ElementSymbol symbol = symbolOrder.get(index);
             if (!outputElements.contains(symbol)) {

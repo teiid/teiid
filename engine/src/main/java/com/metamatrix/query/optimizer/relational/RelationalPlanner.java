@@ -65,6 +65,7 @@ import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
+import com.metamatrix.query.sql.LanguageObject.Util;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
@@ -156,7 +157,7 @@ public class RelationalPlanner implements CommandPlanner {
 		connectSubqueryContainers(plan); //TODO: merge with node creation
         
         // Set top column information on top node
-        List<SingleElementSymbol> topCols = QueryRewriter.deepClone(command.getProjectedSymbols(), SingleElementSymbol.class);
+        List<SingleElementSymbol> topCols = Util.deepClone(command.getProjectedSymbols());
 
         // Build rule set based on hints
         RuleStack rules = RelationalPlanner.buildRules(hints);
@@ -530,7 +531,6 @@ public class RelationalPlanner implements CommandPlanner {
         
 		if(command.getOrderBy() != null) {
 			node = attachSorting(node, command.getOrderBy());
-            hints.hasSort = true;
 		}
 
         if (command.getLimit() != null) {
@@ -786,8 +786,7 @@ public class RelationalPlanner implements CommandPlanner {
 	private static PlanNode attachSorting(PlanNode plan, OrderBy orderBy) {
 		PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
 		
-		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, orderBy.getVariables());
-		sortNode.setProperty(NodeConstants.Info.ORDER_TYPES, orderBy.getTypes());
+		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, orderBy);
 		if (orderBy.hasUnrelated()) {
 			sortNode.setProperty(Info.UNRELATED_SORT, true);
 		}

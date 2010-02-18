@@ -58,6 +58,7 @@ import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.PredicateCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
@@ -697,29 +698,28 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(SPACE);
         parts.add(ReservedWords.BY);
 		parts.add(SPACE);
-
-        List variables = obj.getVariables();
-        List types = obj.getTypes();
-        Iterator iter = variables.iterator();
-        Iterator typeIter = types.iterator();
-        while ( iter.hasNext() ) {
-		    SingleElementSymbol ses = (SingleElementSymbol)iter.next();
-		    if (ses instanceof AliasSymbol) {
-		    	AliasSymbol as = (AliasSymbol)ses;
-		    	outputDisplayName(as.getOutputName());
-		    } else {
-		    	parts.add(registerNode(ses));
-		    }
-            Boolean type = (Boolean) typeIter.next();
-            if( type.booleanValue() == OrderBy.DESC ) {
-                parts.add(SPACE);
-                parts.add(ReservedWords.DESC);
-            } // Don't print default "ASC"
-
-            if (iter.hasNext()) {
-                parts.add( ", " ); //$NON-NLS-1$
-            }
+		for (Iterator<OrderByItem> iterator = obj.getOrderByItems().iterator(); iterator.hasNext();) {
+			OrderByItem item = iterator.next();
+			parts.add(registerNode(item));
+			if (iterator.hasNext()) {
+				parts.add( ", " ); //$NON-NLS-1$				
+			}
+		}
+    }
+    
+    @Override
+    public void visit(OrderByItem obj) {
+    	SingleElementSymbol ses = obj.getSymbol();
+	    if (ses instanceof AliasSymbol) {
+	    	AliasSymbol as = (AliasSymbol)ses;
+	    	outputDisplayName(as.getOutputName());
+	    } else {
+	    	parts.add(registerNode(ses));
 	    }
+        if(!obj.isAscending()) {
+            parts.add(SPACE);
+            parts.add(ReservedWords.DESC);
+        } // Don't print default "ASC"
     }
     
     public void visit(DynamicCommand obj) {

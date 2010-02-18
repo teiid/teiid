@@ -104,7 +104,7 @@ public abstract class AbstractAssignmentInstruction extends ProgramInstruction {
         clone.setVariable(this.variable);
         clone.setExpression(this.expression);
         if (processPlan != null) {
-            clone.setProcessPlan((ProcessorPlan)getProcessPlan().clone());
+            clone.setProcessPlan(getProcessPlan().clone());
         }
     }
 

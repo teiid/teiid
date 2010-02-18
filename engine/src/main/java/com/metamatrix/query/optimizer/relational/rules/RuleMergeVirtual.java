@@ -42,6 +42,8 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
@@ -244,14 +246,12 @@ public final class RuleMergeVirtual implements
         PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
         if (sort != null) { //special handling is needed since we are retaining the child aliases
         	List<SingleElementSymbol> childProject = (List<SingleElementSymbol>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
-        	List<SingleElementSymbol> elements = (List<SingleElementSymbol>)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-        	List<SingleElementSymbol> newElements = new ArrayList<SingleElementSymbol>(elements.size());
-        	for (SingleElementSymbol singleElementSymbol : elements) {
-				newElements.add(childProject.get(selectSymbols.indexOf(singleElementSymbol)));
+        	OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+        	for (OrderByItem item : elements.getOrderByItems()) {
+				item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
 			}
-            sort.setProperty(NodeConstants.Info.SORT_ORDER, newElements);
             sort.getGroups().clear();
-            sort.addGroups(GroupsUsedByElementsVisitor.getGroups(newElements));
+            sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
         }
         
         prepareFrame(frame);

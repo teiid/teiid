@@ -343,7 +343,7 @@ public class AliasGenerator extends PreOrderNavigator {
 	                        
 	            if (needsAlias) {
 	                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
-	                obj.getVariables().set(i, element);
+	                obj.getOrderByItems().get(i).setSymbol(element);
 	            }
 	            element.setOutputName(name);
             }

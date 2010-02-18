@@ -354,9 +354,6 @@ public class ResolverUtil {
                 	index = expressions.indexOf(SymbolMap.getExpression(sortKey));
                 }
                 orderBy.setExpressionPosition(i, index);
-                if (index == -1) {
-                	orderBy.addUnrelated((ElementSymbol)sortKey);
-                }
                 continue;
         	} else if (sortKey instanceof ExpressionSymbol) {
         		// check for legacy positional
@@ -369,6 +366,7 @@ public class ResolverUtil {
             		    throw new QueryResolverException(QueryPlugin.Util.getString("SQLParser.non_position_constant", c)); //$NON-NLS-1$
         		    }
         		    orderBy.setExpressionPosition(i, elementOrder - 1);
+        		    continue;
         		}
         	}
         	//handle order by expressions        	
@@ -380,13 +378,9 @@ public class ResolverUtil {
     					isSimpleQuery, knownShortNames, symbol); 
 			}
             ResolverVisitor.resolveLanguageObject(sortKey, metadata);
-            int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
             
-            if (index != -1) {
-    			//the query is using an derived column, but not through an alias
-    			orderBy.setExpressionPosition(i, index);
-    		} 
-            //must be an unrelated sort expression
+            int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
+        	orderBy.setExpressionPosition(i, index);
         }
     }
     

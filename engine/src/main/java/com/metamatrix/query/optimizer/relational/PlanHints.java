@@ -34,9 +34,6 @@ public final class PlanHints {
     // This flag indicates that the plan has a virtual group somewhere
     public boolean hasVirtualGroups = false;
     
-    // This flag indicates that the plan has a sort somewhere
-    public boolean hasSort = false;
-    
     // flag indicates that the plan has a union somewhere
     public boolean hasSetQuery = false;
     

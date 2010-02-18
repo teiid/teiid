@@ -64,6 +64,7 @@ import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.Select;
@@ -203,8 +204,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateInsert(obj);
     }
 
-    public void visit(OrderBy obj) {
-        validateSortable(obj.getVariables());
+    @Override
+    public void visit(OrderByItem obj) {
+    	validateSortable(obj.getSymbol());
     }
     
     public void visit(Query obj) {
@@ -605,11 +607,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Iterator iter = symbols.iterator();
         while(iter.hasNext()) {
             SingleElementSymbol symbol = (SingleElementSymbol) iter.next();
-            if (isNonComparable(symbol)) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0026, symbol), symbol);
-            }
+            validateSortable(symbol);
         }
     }
+
+	private void validateSortable(SingleElementSymbol symbol) {
+		if (isNonComparable(symbol)) {
+		    handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0026, symbol), symbol);
+		}
+	}
 
     public static boolean isNonComparable(Expression symbol) {
         return DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(symbol.getType()));
@@ -647,11 +653,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         }
         if (obj.getOrderBy() != null) {
         	OrderBy orderBy = obj.getOrderBy();
-        	if (orderBy.hasUnrelated()) {
-        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.unrelated_orderby_xml"), obj); //$NON-NLS-1$
-        	}
-        	for (SingleElementSymbol ses : (List<SingleElementSymbol>)orderBy.getVariables()) {
-				if (!(ses instanceof ElementSymbol)) {
+        	for (OrderByItem item : orderBy.getOrderByItems()) {
+				if (!(item.getSymbol() instanceof ElementSymbol)) {
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.orderby_expression_xml"), obj); //$NON-NLS-1$
 				}
 			}

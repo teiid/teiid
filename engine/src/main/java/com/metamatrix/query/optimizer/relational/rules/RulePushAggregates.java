@@ -58,10 +58,12 @@ import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.ReservedWords;
+import com.metamatrix.query.sql.LanguageObject.Util;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -294,8 +296,10 @@ public class RulePushAggregates implements
 		//branches other than the first need to have their projected column names updated
 		PlanNode sortNode = NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
 		List<SingleElementSymbol> sortOrder = null;
+		OrderBy orderBy = null;
 		if (sortNode != null) {
-			sortOrder = (List<SingleElementSymbol>)sortNode.getProperty(Info.SORT_ORDER);
+			orderBy = (OrderBy)sortNode.getProperty(Info.SORT_ORDER);
+			sortOrder = orderBy.getSortKeys();
 		}
 		List<SingleElementSymbol> projectCols = FrameUtil.findTopCols(unionSource);
 		for (int i = 0; i < virtualElements.size(); i++) {
@@ -306,6 +310,7 @@ public class RulePushAggregates implements
 					int sortIndex = sortOrder.indexOf(projectedSymbol);
 					if (sortIndex > -1) {
 						updateSymbolName(sortOrder, sortIndex, virtualElem, sortOrder.get(sortIndex));
+						orderBy.getOrderByItems().get(sortIndex).setSymbol(sortOrder.get(sortIndex));
 					}
 				}
 				updateSymbolName(projectCols, i, virtualElem, projectedSymbol);
@@ -336,7 +341,7 @@ public class RulePushAggregates implements
 			}
         }
 
-        List<SingleElementSymbol> projectedViewSymbols = QueryRewriter.deepClone(projectedSymbols, SingleElementSymbol.class);
+        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(projectedSymbols);
 
         SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols, metadata);
         for (AggregateSymbol agg : aggregates) {

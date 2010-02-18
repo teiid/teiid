@@ -23,22 +23,15 @@
 package com.metamatrix.query.sql.lang;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
  * Represents the ORDER BY clause of a query.  The ORDER BY clause states
@@ -55,42 +48,34 @@ public class OrderBy implements LanguageObject {
 	/** Constant for the descending value */
     public static final boolean DESC = false;
 
-	private List sortOrder;
-    private List orderTypes;
-    /**
-     * set by the resolver to contain element symbol references 
-     * outside of the select clause
-     */
-    private Set<ElementSymbol> unrelated; 
-    private List<Integer> expressionPositions;
+    private List<OrderByItem> orderByItems = new ArrayList<OrderByItem>();
+    
     /**
      * Constructs a default instance of this class.
      */
     public OrderBy() {
-    	sortOrder = new ArrayList();
-        orderTypes = new ArrayList();
     }
 
     /**
-     * Constructs an instance of this class from an ordered set of elements.
+     * Constructs an instance of this class from an ordered list of elements.
      * @param parameters The ordered list of SingleElementSymbol
      */
-    public OrderBy( List parameters ) {
-        sortOrder = new ArrayList( parameters );
-        orderTypes = new ArrayList(parameters.size());
-        for( int i=0; i< parameters.size(); i++) {
-        	orderTypes.add(Boolean.TRUE);
-        }
+    public OrderBy( List<? extends SingleElementSymbol> parameters ) {
+    	for (SingleElementSymbol singleElementSymbol : parameters) {
+			orderByItems.add(new OrderByItem(singleElementSymbol, ASC));
+		}
     }
-
+    
     /**
      * Constructs an instance of this class from an ordered set of elements.
      * @param parameters The ordered list of SingleElementSymbol
      * @param types The list of directions by which the results are ordered (Boolean, true=ascending)
      */
-    public OrderBy( List parameters, List types ) {
-        sortOrder = new ArrayList( parameters );
-        orderTypes = new ArrayList( types );
+    public OrderBy( List<? extends SingleElementSymbol> parameters, List<Boolean> types ) {
+    	Iterator<Boolean> typeIter = types.iterator();
+    	for (SingleElementSymbol singleElementSymbol : parameters) {
+			orderByItems.add(new OrderByItem(singleElementSymbol, typeIter.next()));
+		}
     }
 
     // =========================================================================
@@ -101,23 +86,11 @@ public class OrderBy implements LanguageObject {
      * @return Number of variables in ORDER BY
      */
     public int getVariableCount() {
-        return sortOrder.size();
+        return orderByItems.size();
     }
-
-    /**
-     * Returns an ordered list of the symbols in ORDER BY
-     * @param List of SingleElementSymbol in ORDER BY
-     */
-    public List getVariables() {
-        return sortOrder;
-    }
-
-    /**
-     * Returns an ordered list of sort direction for each order.
-     * @param List of Boolean, Boolean.TRUE represents ascending
-     */
-    public List getTypes() {
-        return orderTypes;
+    
+    public List<OrderByItem> getOrderByItems() {
+    	return this.orderByItems;
     }
 
     /**
@@ -126,7 +99,7 @@ public class OrderBy implements LanguageObject {
      * @return The element at the index
      */
     public SingleElementSymbol getVariable( int index ) {
-        return (SingleElementSymbol)sortOrder.get(index);
+        return orderByItems.get(index).getSymbol();
     }
 
     /**
@@ -135,7 +108,7 @@ public class OrderBy implements LanguageObject {
      * @return The sort order at the index
      */
     public Boolean getOrderType( int index ) {
-        return (Boolean)orderTypes.get(index);
+        return orderByItems.get(index).isAscending();
     }
 
     /**
@@ -143,10 +116,7 @@ public class OrderBy implements LanguageObject {
      * @param element Element to add
      */
     public void addVariable( SingleElementSymbol element ) {
-    	if(element != null) {
-	        sortOrder.add(element);
-            orderTypes.add(Boolean.valueOf(ASC));
-        }
+    	addVariable(element, ASC);
     }
 
     /**
@@ -157,28 +127,10 @@ public class OrderBy implements LanguageObject {
      */
     public void addVariable( SingleElementSymbol element, boolean type ) {
     	if(element != null) {
-	        sortOrder.add(element);
-            orderTypes.add(Boolean.valueOf(type));
+            orderByItems.add(new OrderByItem(element, type));
         }
     }
     
-    /**
-     * Sets a new collection of variables to be used.  The replacement
-     * set must be of the same size as the previous set.
-     * @param elements Collection of SingleElementSymbol
-     * @throws IllegalArgumentException if element is null or size of elements != size of existing elements
-     */
-    public void replaceVariables( Collection elements ) {
-		if(elements == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0004));
-		}
-		if(elements.size() != sortOrder.size()) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0005));
-		}
-
-        sortOrder = new ArrayList(elements);
-    }
-
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -190,26 +142,10 @@ public class OrderBy implements LanguageObject {
     /**
      * Return deep copy of this ORDER BY clause.
      */
-    public Object clone() {
-	    List thisSymbols = getVariables();
-	    List copySymbols = new ArrayList(thisSymbols.size());
-	    Iterator iter = thisSymbols.iterator();
-	    while(iter.hasNext()) {
-	    	SingleElementSymbol ses = (SingleElementSymbol) iter.next();
-	    	copySymbols.add(ses.clone());
-	    }
-		OrderBy result = new OrderBy(copySymbols, getTypes());
-		if (this.unrelated != null) {
-			HashSet<ElementSymbol> copyUnrelated = new HashSet<ElementSymbol>();
-			for (ElementSymbol elementSymbol : this.unrelated) {
-				copyUnrelated.add((ElementSymbol)elementSymbol.clone());
-			}
-			result.unrelated = copyUnrelated;
-		}
-		if (this.expressionPositions != null) {
-			result.expressionPositions = new ArrayList<Integer>(expressionPositions);
-		}
-        return result;
+    public OrderBy clone() {
+    	OrderBy clone = new OrderBy();
+    	clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems);
+        return clone;
 	}
 
 	/**
@@ -228,8 +164,7 @@ public class OrderBy implements LanguageObject {
 		}
 
 		OrderBy other = (OrderBy) obj;
-        return EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
-               EquivalenceUtil.areEqual(getTypes(), other.getTypes());
+        return EquivalenceUtil.areEqual(orderByItems, other.orderByItems);
 	}
 
 	/**
@@ -240,10 +175,7 @@ public class OrderBy implements LanguageObject {
 	 * @return Hash code
 	 */
 	public int hashCode() {
-        int hc = 0;
-		hc = HashCodeUtil.hashCode(0, getVariables());
-        hc = HashCodeUtil.hashCode(hc, getTypes());
-        return hc;
+        return HashCodeUtil.hashCode(0, orderByItems);
 	}
 
     /**
@@ -254,42 +186,45 @@ public class OrderBy implements LanguageObject {
     	return SQLStringVisitor.getSQLString(this);
     }
 
-    public boolean hasUnrelated() {
-		return this.unrelated != null;
-	}
-    
-    public void addUnrelated(ElementSymbol symbol) {
-    	if (this.unrelated == null) {
-    		this.unrelated = new HashSet<ElementSymbol>();
-    	}
-    	this.unrelated.add(symbol);
-	}
-    
-    public Set<ElementSymbol> getUnrelated() {
-    	if (this.unrelated == null) {
-    		return Collections.emptySet();
-    	}
-		return unrelated;
-	}
-    
     public void setExpressionPosition(int orderIndex, int selectIndex) {
-    	if (this.expressionPositions == null) {
-    		this.expressionPositions = new ArrayList<Integer>(Collections.nCopies(sortOrder.size(), -1));
-    	}
-    	this.expressionPositions.set(orderIndex, selectIndex);
+    	this.orderByItems.get(orderIndex).setExpressionPosition(selectIndex);
     }
     
     public int getExpressionPosition(int orderIndex) {
-    	if (expressionPositions == null) {
-    		return -1;
-    	}
-		return expressionPositions.get(orderIndex);
+    	return this.orderByItems.get(orderIndex).getExpressionPosition();
 	}
     
     public void removeOrderByItem(int index) {
-        sortOrder.remove(index);
-        orderTypes.remove(index);
-        expressionPositions.remove(index);
+        this.orderByItems.remove(index);
+    }
+    
+    public boolean hasUnrelated() {
+    	for (OrderByItem item : orderByItems) {
+			if (item.isUnrelated()) {
+				return true;
+			}
+		}
+    	return false;
+    }
+    
+    /**
+     * Get the list or sort key symbols.  Modifications to this list will not add or remove {@link OrderByItem}s.
+     * @return
+     */
+    public List<SingleElementSymbol> getSortKeys() {
+    	ArrayList<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>(orderByItems.size());
+    	for (OrderByItem item : orderByItems) {
+			result.add(item.getSymbol());
+		}
+    	return result;
+    }
+    
+    public List<Boolean> getTypes() {
+    	ArrayList<Boolean> result = new ArrayList<Boolean>(orderByItems.size());
+    	for (OrderByItem item : orderByItems) {
+			result.add(item.isAscending());
+		}
+    	return result;
     }
     
 }

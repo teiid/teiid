@@ -72,7 +72,7 @@ public class TestAliasGenerator {
         String sql = "select e1 from pm1.g1 order by e1"; //$NON-NLS-1$
         String expected = "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"; //$NON-NLS-1$
         Query command = (Query)helpTest(sql, expected, true, FakeMetadataFactory.example1Cached());
-        assertEquals(((SingleElementSymbol)command.getOrderBy().getVariables().get(0)).getName(), "e1"); //$NON-NLS-1$
+        assertEquals(command.getOrderBy().getSortKeys().get(0).getName(), "e1"); //$NON-NLS-1$
         assertEquals(((SingleElementSymbol)command.getProjectedSymbols().get(0)).getShortName(), "e1"); //$NON-NLS-1$
     }
     

@@ -52,7 +52,7 @@ import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 
 /**
- *  A join region is a set of cross and inner joins whose ordering is completely interchangable.
+ *  A join region is a set of cross and inner joins whose ordering is completely interchangeable.
  *  
  *  It can be conceptually thought of as:
  *     Criteria node some combination of groups A, B, C
@@ -73,30 +73,30 @@ class JoinRegion {
     
     public static final int UNKNOWN_TUPLE_EST = 100000;
     
-    private LinkedHashMap dependentJoinSourceNodes = new LinkedHashMap();
-    private LinkedHashMap joinSourceNodes = new LinkedHashMap();
+    private LinkedHashMap<PlanNode, PlanNode> dependentJoinSourceNodes = new LinkedHashMap<PlanNode, PlanNode>();
+    private LinkedHashMap<PlanNode, PlanNode> joinSourceNodes = new LinkedHashMap<PlanNode, PlanNode>();
         
-    private List dependentCritieraNodes = new ArrayList();
-    private List criteriaNodes = new ArrayList();
+    private List<PlanNode> dependentCritieraNodes = new ArrayList<PlanNode>();
+    private List<PlanNode> criteriaNodes = new ArrayList<PlanNode>();
     
-    private List unsatisfiedAccessPatterns = new LinkedList();
+    private List<Collection<AccessPattern>> unsatisfiedAccessPatterns = new LinkedList<Collection<AccessPattern>>();
     
     private Map<ElementSymbol, Set<Collection<GroupSymbol>>> dependentCriteriaElements;
-    private Map critieriaToSourceMap;
+    private Map<PlanNode, Set<PlanNode>> critieriaToSourceMap;
     
     public PlanNode getJoinRoot() {
         return joinRoot;
     }
     
-    public List getUnsatisfiedAccessPatterns() {
+    public List<Collection<AccessPattern>> getUnsatisfiedAccessPatterns() {
         return unsatisfiedAccessPatterns;
     }
     
-    public Map getJoinSourceNodes() {
+    public Map<PlanNode, PlanNode> getJoinSourceNodes() {
         return joinSourceNodes;
     }
 
-    public Map getDependentJoinSourceNodes() {
+    public Map<PlanNode, PlanNode> getDependentJoinSourceNodes() {
         return dependentJoinSourceNodes;
     }
     
@@ -104,7 +104,7 @@ class JoinRegion {
         return criteriaNodes;
     }
     
-    public List getDependentCriteriaNodes() {
+    public List<PlanNode> getDependentCriteriaNodes() {
         return dependentCritieraNodes;
     }
     
@@ -112,7 +112,7 @@ class JoinRegion {
         return this.dependentCriteriaElements;
     }
 
-    public Map getCritieriaToSourceMap() {
+    public Map<PlanNode, Set<PlanNode>> getCritieriaToSourceMap() {
         return this.critieriaToSourceMap;
     }
 
@@ -122,7 +122,7 @@ class JoinRegion {
             root = root.getParent();
         }
         if (sourceNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
-            Collection aps = (Collection)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
+            Collection<AccessPattern> aps = (Collection<AccessPattern>)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
             unsatisfiedAccessPatterns.add(aps);
             dependentJoinSourceNodes.put(sourceNode, root);
         } else {
@@ -146,12 +146,11 @@ class JoinRegion {
         }
     }
                     
-    public void addJoinCriteriaList(List joinCriteria) {
+    public void addJoinCriteriaList(List<? extends Criteria> joinCriteria) {
         if (joinCriteria == null || joinCriteria.isEmpty()) {
             return;
         }
-        for (Iterator i = joinCriteria.iterator(); i.hasNext();) {
-            Criteria crit = (Criteria)i.next();
+        for (Criteria crit : joinCriteria) {
             criteriaNodes.add(RelationalPlanner.createSelectNode(crit, false));
         }
     }
@@ -167,20 +166,19 @@ class JoinRegion {
      * 
      */
     public void reconstructJoinRegoin() {
-        LinkedHashMap combined = new LinkedHashMap(joinSourceNodes);
+        LinkedHashMap<PlanNode, PlanNode> combined = new LinkedHashMap<PlanNode, PlanNode>(joinSourceNodes);
         combined.putAll(dependentJoinSourceNodes);
         
         PlanNode root = null;
         
         if (combined.size() < 2) {
-            root = (PlanNode)combined.values().iterator().next();
+            root = combined.values().iterator().next();
             root.removeProperty(NodeConstants.Info.EST_CARDINALITY);
         } else {
             root = RulePlanJoins.createJoinNode();
         
-            for (Iterator i = combined.entrySet().iterator(); i.hasNext();) {
-                Map.Entry entry = (Map.Entry)i.next();
-                PlanNode joinSourceRoot = (PlanNode)entry.getValue();
+            for (Map.Entry<PlanNode, PlanNode> entry : combined.entrySet()) {
+                PlanNode joinSourceRoot = entry.getValue();
                 joinSourceRoot.removeProperty(NodeConstants.Info.EST_CARDINALITY);
                 if (root.getChildCount() == 2) {
                     PlanNode parentJoin = RulePlanJoins.createJoinNode();
@@ -189,10 +187,10 @@ class JoinRegion {
                     root = parentJoin;
                 }
                 root.addLastChild(joinSourceRoot);
-                root.addGroups(((PlanNode)entry.getKey()).getGroups());
+                root.addGroups(entry.getKey().getGroups());
             }
         }
-        LinkedList criteria = new LinkedList(dependentCritieraNodes);
+        LinkedList<PlanNode> criteria = new LinkedList<PlanNode>(dependentCritieraNodes);
         criteria.addAll(criteriaNodes);
 
         PlanNode parent = this.joinRoot.getParent();
@@ -201,9 +199,7 @@ class JoinRegion {
 
         parent.removeChild(joinRoot);
         
-        for (Iterator i = criteria.iterator(); i.hasNext();) {
-            PlanNode critNode = (PlanNode)i.next();
-            
+        for (PlanNode critNode : criteria) {
             critNode.removeFromParent();
             critNode.removeAllChildren();
             critNode.addFirstChild(root);
@@ -229,24 +225,24 @@ class JoinRegion {
      * @return
      */
     public double scoreRegion(Object[] joinOrder, QueryMetadataInterface metadata) {
-        List joinSourceEntries = new ArrayList(joinSourceNodes.entrySet());
+        List<Map.Entry<PlanNode, PlanNode>> joinSourceEntries = new ArrayList<Map.Entry<PlanNode, PlanNode>>(joinSourceNodes.entrySet());
         double totalIntermediatCost = 0;
         double cost = 1;
         
-        HashSet criteria = new HashSet(this.criteriaNodes);
-        HashSet groups = new HashSet(this.joinSourceNodes.size());
+        HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
+        HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
         
         for (int i = 0; i < joinOrder.length; i++) {
             Integer source = (Integer)joinOrder[i];
             
-            Map.Entry entry = (Map.Entry)joinSourceEntries.get(source.intValue());
-            PlanNode joinSourceRoot = (PlanNode)entry.getValue();
+            Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
+            PlanNode joinSourceRoot = entry.getValue();
             
             //check to make sure that this group ordering satisfies the access patterns
             if (!this.unsatisfiedAccessPatterns.isEmpty()) {
-                PlanNode joinSource = (PlanNode)entry.getKey();
+                PlanNode joinSource = entry.getKey();
                 
-                Collection requiredGroups = (Collection)joinSource.getProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS);
+                Collection<GroupSymbol> requiredGroups = (Collection<GroupSymbol>)joinSource.getProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS);
                 
                 if (requiredGroups != null && !groups.containsAll(requiredGroups)) {
                     return Double.MAX_VALUE;
@@ -266,11 +262,9 @@ class JoinRegion {
             cost *= sourceCost;
             
             if (!criteria.isEmpty() && i > 0) {
-                List applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
+                List<PlanNode> applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
                 
-                for (Iterator j = applicableCriteria.iterator(); j.hasNext();) {
-                    PlanNode criteriaNode = (PlanNode)j.next();
-                    
+                for (PlanNode criteriaNode : applicableCriteria) {
                     float filter = ((Float)criteriaNode.getProperty(NodeConstants.Info.EST_SELECTIVITY)).floatValue();
                     
                     cost *= filter;
@@ -290,15 +284,9 @@ class JoinRegion {
      *  This does not necessarily mean that a join tree will be successfully created
      */
     public boolean isSatisfiable() {
-        if (getUnsatisfiedAccessPatterns().isEmpty()) {
-            return true;
-        }
-        
-        for (Iterator i = getUnsatisfiedAccessPatterns().iterator(); i.hasNext();) {
-            Collection accessPatterns = (Collection)i.next();
+    	for (Collection<AccessPattern> accessPatterns : getUnsatisfiedAccessPatterns()) {
             boolean matchedAll = false;
-            for (Iterator j = accessPatterns.iterator(); j.hasNext();) {
-                AccessPattern ap = (AccessPattern)j.next();
+            for (AccessPattern ap : accessPatterns) {
                 if (dependentCriteriaElements.keySet().containsAll(ap.getUnsatisfied())) {
                     matchedAll = true;
                     break;
@@ -313,8 +301,7 @@ class JoinRegion {
     }
 
     public void initializeCostingInformation(QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
-        for (Iterator i = joinSourceNodes.values().iterator(); i.hasNext();) {
-            PlanNode node = (PlanNode)i.next();
+    	for (PlanNode node : joinSourceNodes.values()) {
             NewCalculateCostUtil.computeCostForTree(node, metadata);
         }
         
@@ -328,9 +315,7 @@ class JoinRegion {
      */
     private void estimateCriteriaSelectivity(QueryMetadataInterface metadata) throws QueryMetadataException,
                                                                              MetaMatrixComponentException {
-        for (Iterator i = criteriaNodes.iterator(); i.hasNext();) {
-            PlanNode node = (PlanNode)i.next();
-            
+        for (PlanNode node : criteriaNodes) {
             Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             
             float[] baseCosts = new float[] {100, 10000, 1000000};
@@ -355,28 +340,21 @@ class JoinRegion {
      *  TODO: assumptions are made here about how dependent criteria must look that are a little restrictive
      */
     public void initializeJoinInformation() {
-        critieriaToSourceMap = new HashMap();
+        critieriaToSourceMap = new HashMap<PlanNode, Set<PlanNode>>();
                 
-        LinkedList crits = new LinkedList(criteriaNodes);
+        LinkedList<PlanNode> crits = new LinkedList<PlanNode>(criteriaNodes);
         crits.addAll(dependentCritieraNodes);
         
-        LinkedHashMap source = new LinkedHashMap(joinSourceNodes);
+        LinkedHashMap<PlanNode, PlanNode> source = new LinkedHashMap<PlanNode, PlanNode>(joinSourceNodes);
         source.putAll(dependentJoinSourceNodes);
         
-        for (Iterator j = crits.iterator(); j.hasNext();) {
-            PlanNode critNode = (PlanNode)j.next();
-            
-            for (Iterator k = critNode.getGroups().iterator(); k.hasNext();) {
-
-                GroupSymbol group = (GroupSymbol)k.next();
-                
-                for (Iterator i = source.keySet().iterator(); i.hasNext();) {
-                    PlanNode node = (PlanNode)i.next();
-                    
+        for (PlanNode critNode : crits) {
+        	for (GroupSymbol group : critNode.getGroups()) {
+        		for (PlanNode node : source.keySet()) {
                     if (node.getGroups().contains(group)) {
-                        Set sources = (Set)critieriaToSourceMap.get(critNode);
+                        Set<PlanNode> sources = critieriaToSourceMap.get(critNode);
                         if (sources == null) {
-                            sources = new HashSet();
+                            sources = new HashSet<PlanNode>();
                             critieriaToSourceMap.put(critNode, sources);
                         }
                         sources.add(node);
@@ -390,22 +368,18 @@ class JoinRegion {
             return;
         }
         
-        Map dependentGroupToSourceMap = new HashMap();
+        Map<GroupSymbol, PlanNode> dependentGroupToSourceMap = new HashMap<GroupSymbol, PlanNode>();
         
-        for (Iterator i = dependentJoinSourceNodes.keySet().iterator(); i.hasNext();) {
-            PlanNode node = (PlanNode)i.next();
-            
-            for (Iterator j = node.getGroups().iterator(); j.hasNext();) {
-                GroupSymbol symbol = (GroupSymbol)j.next();
+        for (PlanNode node : dependentJoinSourceNodes.keySet()) {
+        	for (GroupSymbol symbol : node.getGroups()) {
                 dependentGroupToSourceMap.put(symbol, node);
             }
         }
         
-        for (Iterator i = getCriteriaNodes().iterator(); i.hasNext();) {
-            PlanNode node = (PlanNode)i.next();
+        for (Iterator<PlanNode> i = getCriteriaNodes().iterator(); i.hasNext();) {
+            PlanNode node = i.next();
             
-            for (Iterator j = node.getGroups().iterator(); j.hasNext();) {
-                GroupSymbol symbol = (GroupSymbol)j.next();
+            for (GroupSymbol symbol : node.getGroups()) {
                 if (dependentGroupToSourceMap.containsKey(symbol)) {
                     i.remove();
                     dependentCritieraNodes.add(node);
@@ -416,8 +390,7 @@ class JoinRegion {
         
         dependentCriteriaElements = new HashMap<ElementSymbol, Set<Collection<GroupSymbol>>>();
         
-        for (Iterator i = dependentCritieraNodes.iterator(); i.hasNext();) {
-            PlanNode critNode = (PlanNode)i.next();
+        for (PlanNode critNode : dependentCritieraNodes) {
             Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             if(!(crit instanceof CompareCriteria)) {
                 continue;
@@ -479,17 +452,15 @@ class JoinRegion {
         return false;
     }
     
-    public List getJoinCriteriaForGroups(Set groups) {
+    public List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups) {
         return getJoinCriteriaForGroups(groups, getCriteriaNodes());
     }
     
     //TODO: this should be better than a linear search
-    protected List getJoinCriteriaForGroups(Set groups, Collection nodes) {
-        List result = new LinkedList();
+    protected List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups, Collection<PlanNode> nodes) {
+        List<PlanNode> result = new LinkedList<PlanNode>();
         
-        for (Iterator i = nodes.iterator(); i.hasNext();) {
-            PlanNode critNode = (PlanNode)i.next();
-            
+        for (PlanNode critNode : nodes) {
             if (groups.containsAll(critNode.getGroups())) {
                 result.add(critNode);
             }
@@ -499,12 +470,12 @@ class JoinRegion {
     }
     
     public void changeJoinOrder(Object[] joinOrder) {
-        List joinSourceEntries = new ArrayList(joinSourceNodes.entrySet());
+        List<Map.Entry<PlanNode, PlanNode>> joinSourceEntries = new ArrayList<Map.Entry<PlanNode, PlanNode>>(joinSourceNodes.entrySet());
         
         for (int i = 0; i < joinOrder.length; i++) {
             Integer source = (Integer)joinOrder[i];
             
-            Map.Entry entry = (Map.Entry)joinSourceEntries.get(source.intValue());
+            Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
             
             this.joinSourceNodes.remove(entry.getKey());
             this.joinSourceNodes.put(entry.getKey(), entry.getValue());

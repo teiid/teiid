@@ -821,7 +821,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(SQLReservedWords.SPACE);
             append(obj.getOrderBy());
         }
-        if (obj.getLimit() != null) {
+        if (!useSelectLimit() && obj.getLimit() != null) {
             buffer.append(SQLReservedWords.SPACE);
             append(obj.getLimit());
         }
@@ -860,11 +860,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	visitSelect(obj, null);
     }
 
-	private void visitSelect(ISelect obj, ICommand command) {
+	private void visitSelect(ISelect obj, IQuery command) {
 		buffer.append(SQLReservedWords.SELECT).append(SQLReservedWords.SPACE);
         buffer.append(getSourceComment(command));
         if (obj.isDistinct()) {
             buffer.append(SQLReservedWords.DISTINCT).append(SQLReservedWords.SPACE);
+        }
+        if (useSelectLimit() && command.getLimit() != null) {
+            append(command.getLimit());
+            buffer.append(SQLReservedWords.SPACE);
         }
         append(obj.getSelectSymbols());
 	}
@@ -1036,6 +1040,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     protected boolean useParensForJoins() {
+    	return false;
+    }
+    
+    protected boolean useSelectLimit() {
     	return false;
     }
 }

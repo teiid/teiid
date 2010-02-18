@@ -125,4 +125,5 @@ public abstract class LanguageVisitor {
     public void visit(ProcedureContainer obj) {}
     public void visit(SetClauseList obj) {}
     public void visit(SetClause obj) {}
+    public void visit(OrderByItem obj) {}
 }

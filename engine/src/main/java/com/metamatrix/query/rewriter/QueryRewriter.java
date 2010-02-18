@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +65,7 @@ import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
+import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.DependentValueSource;
@@ -73,6 +75,7 @@ import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.ReservedWords;
+import com.metamatrix.query.sql.LanguageObject.Util;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
@@ -95,6 +98,7 @@ import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -796,10 +800,12 @@ public class QueryRewriter {
         
         boolean hasUnrelatedExpression = false;
         
+        LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol querySymbol = orderBy.getVariable(i);
         	int index = orderBy.getExpressionPosition(i);
         	if (index == -1) {
+    			unrelatedItems.add(orderBy.getOrderByItems().get(i));
         		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
         	  	continue; // must be unrelated - but potentially contains references to the select clause
         	}
@@ -808,7 +814,7 @@ public class QueryRewriter {
         	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
                 orderBy.removeOrderByItem(i--);
         	} else {
-        		orderBy.getVariables().set(i, querySymbol.clone());
+        		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
         	}
         }
         
@@ -824,7 +830,14 @@ public class QueryRewriter {
         int originalSymbolCount = select.getProjectedSymbols().size();
 
         //add unrelated to select
-        select.addSymbols(orderBy.getUnrelated());
+        for (OrderByItem orderByItem : unrelatedItems) {
+        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(orderByItem.getSymbol(), true);
+        	for (ElementSymbol elementSymbol : elements) {
+        		if (!(elementSymbol.getMetadataID() instanceof TempMetadataID) || ((TempMetadataID)elementSymbol.getMetadataID()).getPosition() == -1) {
+                    select.addSymbol(elementSymbol);				
+        		}
+			}
+		}
         makeSelectUnique(select, false);
         
         Query query = queryCommand.getProjectedQuery();
@@ -871,12 +884,7 @@ public class QueryRewriter {
 		} catch (MetaMatrixComponentException e) {
 			throw new QueryValidatorException(e, e.getMessage());
 		}
-		//filter back out the unrelated
-		orderBy.getUnrelated().clear();
 		List symbols = top.getSelect().getSymbols();
-		for (ElementSymbol symbol : (List<ElementSymbol>)symbols.subList(originalSymbolCount, symbols.size())) {
-			orderBy.addUnrelated(symbol);
-		}
 		top.getSelect().setSymbols(symbols.subList(0, originalSymbolCount));
 		top.setInto(into);
 		top.setLimit(limit);
@@ -894,7 +902,7 @@ public class QueryRewriter {
     private Insert rewriteSelectInto(Query query) throws QueryValidatorException {
         Into into = query.getInto();
         try {
-            List<ElementSymbol> allIntoElements = deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata), ElementSymbol.class);
+            List<ElementSymbol> allIntoElements = Util.deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata));
             Insert insert = new Insert(into.getGroup(), allIntoElements, Collections.emptyList());
             query.setInto(null);
             insert.setQueryExpression(query);
@@ -2407,14 +2415,6 @@ public class QueryRewriter {
         query.getTemporaryMetadata().putAll(store.getData()); 
         return query;
     }    
-    
-    public static <S extends Expression, T extends S> List<S> deepClone(List<T> collection, Class<S> clazz) {
-    	ArrayList<S> result = new ArrayList<S>(collection.size());
-    	for (Expression expression : collection) {
-			result.add((S)expression.clone());
-		}
-    	return result;
-    }
     
     public static void makeSelectUnique(Select select, boolean expressionSymbolsOnly) {
         
