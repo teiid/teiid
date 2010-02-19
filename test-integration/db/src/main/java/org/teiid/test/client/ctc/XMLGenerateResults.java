@@ -27,10 +27,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.jdom.Attribute;
@@ -43,6 +45,7 @@ import org.junit.Assert;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
+import org.teiid.test.util.TestResultSetUtil;
 
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
@@ -51,8 +54,11 @@ import com.metamatrix.internal.core.xml.JdomHelper;
 public class XMLGenerateResults implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
+    private static final int MAX_COL_WIDTH = 65;
+    
     private String outputDir = "";
     private String generateDir = "";
+    
 
     public XMLGenerateResults( String testname, Properties props) {
 	
@@ -193,8 +199,121 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    }
 	}
     }
-
+    
+//  Begin New from Impl
+    
+    
     public String generateErrorFile(final String querySetID,
+	    final String queryID, final String sql, final ResultSet resultSet,
+	    final Throwable queryError, final Object results)
+	    throws QueryTestFailedException {
+
+	String errorFileName = null;
+	try {
+	    // write actual results to error file
+	    errorFileName = generateErrorFileName(queryID, querySetID);
+	    // configID, queryID, Integer.toString(clientID));
+	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
+	    File errorFile = new File(getOutputDir(), errorFileName);
+	    
+	    // the resultset will be passed in as null when
+	    // the error was due to a thrown exception, and not based comparison issues 
+	    if (resultSet == null) {
+		FileOutputStream actualOut = null;
+		try {
+		    actualOut = new FileOutputStream(errorFile);
+		    PrintStream filePrintStream = new PrintStream(actualOut);
+		    
+
+		    TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
+		    
+		    filePrintStream.flush();
+
+		} catch (Exception e) {
+			    e.printStackTrace();
+			    throw new QueryTestFailedException(e);
+		} finally {
+		    	if (actualOut != null) {
+				try {
+				    actualOut.close();
+				} catch (IOException e) {
+				    // TODO Auto-generated catch block
+				    e.printStackTrace();
+				}
+			}
+		}
+		return errorFileName;
+
+	    }
+
+	    // rewind resultset
+
+	    resultSet.beforeFirst();
+
+	    generateErrorResults(querySetID, queryID, sql, errorFile,
+		    resultSet, (results != null ? (List) results : null));
+
+	} catch (Throwable e) {
+	    throw new QueryTestFailedException(e.getMessage());
+	    //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
+	return errorFileName;
+    }
+
+    
+    /**
+     * Generate an error file for a query that failed comparison. File should
+     * have the SQL, the actual results returned from the server and the results
+     * that were expected.
+     * 
+     * @param queryID
+     * @param sql
+     * @param resultsFile
+     * @param actualResult
+     * @param expectedResultFile
+     * @param ex
+     * @throws QueryTestFailedException
+     */
+    private void generateErrorResults(String querySetID, String queryID,
+	    String sql, File resultsFile, ResultSet actualResult,
+	    List<String> results)
+	    throws QueryTestFailedException {
+	
+	FileOutputStream actualOut = null;
+	try {
+	    actualOut = new FileOutputStream(resultsFile);
+	    PrintStream filePrintStream = new PrintStream(actualOut);
+	    
+	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
+
+//	    if (results != null) {
+//        	    for (Iterator<String> it=results.iterator(); it.hasNext();) {
+//        		String line = it.next();
+//        		filePrintStream.print(line);
+//        	    }
+//	    } else {
+//	    
+//		ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
+//	    }
+	    	    
+
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    throw new QueryTestFailedException(e);
+	} finally {
+	    if (actualOut != null) {
+		try {
+		    actualOut.close();
+		} catch (IOException e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+		}
+	    }
+	}
+    }
+//  End of copy from impl 
+   
+    public String generateErrorFilex(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
 	    final Throwable queryError, final Object expectedResultsFile)
 	    throws QueryTestFailedException {
@@ -260,7 +379,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 //			.currentTimeMillis())) + ".xml"; //$NON-NLS-1$
 //	return errorFileName;
 	
-	return  queryID + ".xml";
+	return  queryID + ".txt";
     }
 
     /**
