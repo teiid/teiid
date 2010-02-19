@@ -21,6 +21,7 @@
  */
 package org.teiid.rhq.plugin.objects;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -108,7 +109,7 @@ public class ExecutedResourceConfigurationResultImpl implements ExecutedResult {
 	}
 	
 
-	public void setContent(List content) {
+	public void setContent(Collection content) {
 		this.content = content;
 		setComplexResult();
 	}

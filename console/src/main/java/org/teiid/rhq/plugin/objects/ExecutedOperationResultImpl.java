@@ -21,6 +21,7 @@
  */
 package org.teiid.rhq.plugin.objects;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -98,7 +99,7 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 		while (resultIter.hasNext()) {
 			Map reportRowMap = (Map) resultIter.next();
 			Iterator reportRowKeySetIter = reportRowMap.keySet().iterator();
-			pm = new PropertyMap("userMap"); //$NON-NLS-1$			
+			pm = new PropertyMap(MAPNAME); //$NON-NLS-1$			
 
 			while (reportRowKeySetIter.hasNext()) {
 				String key = (String) reportRowKeySetIter.next();
@@ -110,7 +111,7 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 		operationResult.getComplexResults().put(list);
 	}
 
-	public void setContent(List content) {
+	public void setContent(Collection content) {
 		this.content = content;
 		setComplexResult();
 	}
