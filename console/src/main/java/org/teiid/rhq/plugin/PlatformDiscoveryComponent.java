@@ -58,9 +58,9 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
 
 		ManagedComponent mc = ProfileServiceUtil.getManagedComponent(
-				new ComponentType(PluginConstants.ComponentType.Runtime.TYPE,
-						PluginConstants.ComponentType.Runtime.SUBTYPE),
-				PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+				new ComponentType(PluginConstants.ComponentType.Platform.TYPE,
+						PluginConstants.ComponentType.Platform.SUBTYPE),
+				PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
 
 		Configuration c = new Configuration(); 
 		String managerName = mc.getName();
@@ -74,9 +74,9 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 				discoveryContext.getResourceType(), // ResourceType
 				managerName, // Resource Key
-				PluginConstants.ComponentType.Runtime.TEIID_ENGINE_RESOURCE_NAME, // Resource Name
+				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_NAME, // Resource Name
 				null, // Version TODO can we get that from discovery ?
-				PluginConstants.ComponentType.Runtime.TEIID_ENGINE_RESOURCE_DESCRIPTION, // Description
+				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_DESCRIPTION, // Description
 				c, // Plugin Config
 				null // Process info from a process scan
 		);

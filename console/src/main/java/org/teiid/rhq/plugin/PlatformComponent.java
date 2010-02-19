@@ -31,7 +31,6 @@ import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.RunState;
 import org.rhq.core.domain.configuration.Configuration;
@@ -41,70 +40,124 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
-import org.teiid.rhq.admin.utils.SingletonConnectionManager;
-import org.teiid.rhq.comm.Connection;
-import org.teiid.rhq.comm.ConnectionConstants;
-//import org.teiid.rhq.comm.ConnectionConstants;
-//import org.teiid.rhq.comm.Connection;
-//import org.teiid.rhq.comm.ConnectionConstants;
-//import org.teiid.rhq.comm.ConnectionConstants.ComponentType.Runtime.System.Metrics;
+import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
-import org.teiid.rhq.plugin.util.PluginConstants.Operation;
-import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Runtime.Metrics;
-
+import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 
 /**
  * 
  */
-public class PlatformComponent extends Facet {
+public class PlatformComponent extends Facet implements PluginConstants {
 	private final Log LOG = LogFactory.getLog(PlatformComponent.class);
 
+	
 	/**
 	 * @see org.teiid.rhq.plugin.Facet#getComponentType()
 	 * @since 4.3
 	 */
 	@Override
 	String getComponentType() {
-		return null;
+		return PluginConstants.ComponentType.Platform.NAME;
 	}
-	
+
 	@Override
 	public AvailabilityType getAvailability() {
 		RunState runState = null;
 		ManagedComponent mc;
 		try {
-			mc = ProfileServiceUtil.getManagedComponent(
-					new ComponentType(PluginConstants.ComponentType.Runtime.TYPE,
-							PluginConstants.ComponentType.Runtime.SUBTYPE),
-					PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+			mc =  ProfileServiceUtil.getManagedComponent(new org.jboss.managed.api.ComponentType(
+					ComponentType.Platform.TYPE,
+					ComponentType.Platform.SUBTYPE),
+					ComponentType.Platform.TEIID_RUNTIME_ENGINE);
 			runState = mc.getRunState();
 		} catch (NamingException e) {
-			LOG.error("Naming exception getting: " + PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
-	        return AvailabilityType.DOWN;
+			LOG
+					.error("Naming exception getting: "
+							+ PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
+			return AvailabilityType.DOWN;
 		} catch (Exception e) {
-			LOG.error("Exception getting: " + PluginConstants.ComponentType.Runtime.TEIID_RUNTIME_ENGINE);
+			LOG
+					.error("Exception getting: "
+							+ PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
 			return AvailabilityType.DOWN;
 		}
-		
-		return (runState == RunState.RUNNING) ? AvailabilityType.UP : AvailabilityType.DOWN;
-		
+
+		return (runState == RunState.RUNNING) ? AvailabilityType.UP
+				: AvailabilityType.DOWN;
+
 	}
 
-	
-	protected void setOperationArguments(String name, Configuration configuration,
-			Map valueMap) {
- 		
-	}	
+	@Override
+	protected void setOperationArguments(String name,
+			Configuration configuration, Map<String, Object> valueMap) {
+		// Parameter logic for System Operations
+		if (name.equals(Platform.Operations.GET_QUERIES) ||
+			name.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
+			Integer long_running_value = getResourceConfiguration().getSimple(Operation.Value.LONG_RUNNING_QUERY_LIMIT).getIntegerValue();
+			valueMap.put(Operation.Value.LONG_RUNNING_QUERY_LIMIT, long_running_value);				
+		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
+			String key = Operation.Value.REQUEST_ID;
+			valueMap.put(key, configuration.getSimple(key).getStringValue());
+		} 
+//		else if (name.equals(ConnectionConstants.ComponentType.Operation.GET_PROPERTIES) ) {
+//			String key = ConnectionConstants.IDENTIFIER;
+//			valueMap.put(key, getComponentIdentifier());
+//		}
 
+	}
 
 	@Override
 	public void getValues(MeasurementReport report,
 			Set<MeasurementScheduleRequest> requests) throws Exception {
+		
+		DQPManagementView view = new DQPManagementView();
+
+		Map<String, Object> valueMap = new HashMap<String, Object>();
+
+		for (MeasurementScheduleRequest request : requests) {
+			String name = request.getName();
+			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
+
+			// Initialize any parameters to be used in the retrieval of metric
+			// values
+			if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+				Integer value = getResourceConfiguration()
+						.getSimple(
+								PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT)
+						.getIntegerValue();
+				valueMap.put(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT, value);
+			}
+
+			Object metricReturnObject = view.getMetric(getComponentType(), this
+					.getComponentIdentifier(), name, valueMap);
+
+			try {
+				if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
+					report.addData(new MeasurementDataNumeric(request,
+							(Double) metricReturnObject));
+				} else {
+					if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
+						report.addData(new MeasurementDataNumeric(request,
+								(Double) metricReturnObject));
+					} else {
+						if (request.getName().equals(
+								PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+							report.addData(new MeasurementDataNumeric(request,
+									(Double) metricReturnObject));
+						}
+					}
+				}
+
+			} catch (Exception e) {
+				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
+						+ "]. Cause: " + e); //$NON-NLS-1$
+				// throw(e);
+			}
+		}
+
 	}
-	
-	
-	
+
 	@Override
 	public void stop() {
 		// TODO Auto-generated method stub
@@ -113,19 +166,20 @@ public class PlatformComponent extends Facet {
 
 	@Override
 	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
-		
+
 		Properties props = System.getProperties();
-		
-		Iterator<PropertySimple> pluginPropIter = report.getConfiguration().getSimpleProperties().values().iterator();
-		
-		while (pluginPropIter.hasNext()){
+
+		Iterator<PropertySimple> pluginPropIter = report.getConfiguration()
+				.getSimpleProperties().values().iterator();
+
+		while (pluginPropIter.hasNext()) {
 			PropertySimple pluginProp = pluginPropIter.next();
 			props.put(pluginProp.getName(), pluginProp.getStringValue());
 		}
-		
-		SingletonConnectionManager.getInstance().initialize(props);
+
+		//SingletonConnectionManager.getInstance().initialize(props);
 		super.updateResourceConfiguration(report);
-		
-	}	
+
+	}
 
 }

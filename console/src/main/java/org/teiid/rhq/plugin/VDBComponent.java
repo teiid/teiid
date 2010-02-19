@@ -32,6 +32,7 @@ import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
 import org.teiid.rhq.comm.ConnectionConstants;
+import org.teiid.rhq.plugin.util.PluginConstants;
 
 
 /**
@@ -41,6 +42,15 @@ import org.teiid.rhq.comm.ConnectionConstants;
 public class VDBComponent extends Facet {
 	private final Log LOG = LogFactory
 			.getLog(VDBComponent.class);
+
+	
+	/* (non-Javadoc)
+	 * @see org.teiid.rhq.plugin.Facet#getComponentName()
+	 */
+	@Override
+	public String getComponentName() {
+		return PluginConstants.ComponentType.VDB.NAME;
+	}
 
 	/**
 	 * The plugin container will call this method when your resource component

@@ -67,22 +67,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		for (ManagedComponent mcVdb : vdbs) {
 
+			String vdbKey = mcVdb.getDeployment().getName();
 			String vdbName = ((SimpleValueSupport) mcVdb.getProperty("name")
 					.getValue()).getValue().toString();
-//			ManagementView managementView = ProfileServiceUtil
-//			.getManagementView(ProfileServiceUtil.getProfileService(),
-//					false);
-			//ManagedDeployment managedDeployment = managementView.getDeploymentNamesForType(arg0)(vdbName);
-			//Set deploymentNames = null;
-			
-//			try
-//	        {
-//	            deploymentNames = managementView.getDeploymentNames();
-//	        }
-//	        catch (Exception e)
-//	        {
-//	            log.error("Unable to get deployment for type " , e);
-//	        }
 			String vdbVersion = ((SimpleValueSupport) mcVdb.getProperty(
 					"version").getValue()).getValue().toString();
 			// TODO: Correct this after deploying proper VDB/Metadata
@@ -97,7 +84,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			 */
 			DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 					discoveryContext.getResourceType(), // ResourceType
-					vdbName, // Resource Key
+					vdbKey, // Resource Key
 					vdbName, // Resource Name
 					vdbVersion, // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
