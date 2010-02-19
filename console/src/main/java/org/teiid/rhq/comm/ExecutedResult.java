@@ -21,6 +21,7 @@
  */
 package org.teiid.rhq.comm;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ExecutedResult {
@@ -33,7 +34,7 @@ public interface ExecutedResult {
 	
 	List<String> getFieldNameList();
 	
-	void setContent(List content);
+	void setContent(Collection content);
 	
 	void setContent(String content);
 	
