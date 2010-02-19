@@ -234,6 +234,9 @@
 	                  <fileset dir="${root_output}/${queryset.dir}/output/${scenario.name}">
 	                  		<include name="ERROR*"/>
 	                  </fileset>
+            		<fileset dir="${root_output}/${queryset.dir}/output/${scenario.name}">
+            			<include name="*.err"/>
+            		</fileset>
 	        </path>
 		
 		<condition property="error.files.exist">
