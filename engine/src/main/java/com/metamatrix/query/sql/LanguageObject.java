@@ -48,11 +48,10 @@ public interface LanguageObject extends Serializable, Cloneable {
     
     public static class Util {
 
-		@SuppressWarnings("unchecked")
-		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(List<T> collection) {
+		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(List<T> collection, Class<S> type) {
 			ArrayList<S> result = new ArrayList<S>(collection.size());
 			for (LanguageObject obj : collection) {
-				result.add((S)obj.clone());
+				result.add(type.cast(obj.clone()));
 			}
 			return result;
 		}

@@ -902,7 +902,7 @@ public class QueryRewriter {
     private Insert rewriteSelectInto(Query query) throws QueryValidatorException {
         Into into = query.getInto();
         try {
-            List<ElementSymbol> allIntoElements = Util.deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata));
+            List<ElementSymbol> allIntoElements = Util.deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata), ElementSymbol.class);
             Insert insert = new Insert(into.getGroup(), allIntoElements, Collections.emptyList());
             query.setInto(null);
             insert.setQueryExpression(query);

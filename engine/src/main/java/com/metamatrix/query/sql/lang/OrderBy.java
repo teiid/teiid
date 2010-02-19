@@ -144,7 +144,7 @@ public class OrderBy implements LanguageObject {
      */
     public OrderBy clone() {
     	OrderBy clone = new OrderBy();
-    	clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems);
+    	clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems, OrderByItem.class);
         return clone;
 	}
 

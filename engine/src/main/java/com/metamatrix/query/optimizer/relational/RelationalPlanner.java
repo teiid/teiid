@@ -157,7 +157,7 @@ public class RelationalPlanner implements CommandPlanner {
 		connectSubqueryContainers(plan); //TODO: merge with node creation
         
         // Set top column information on top node
-        List<SingleElementSymbol> topCols = Util.deepClone(command.getProjectedSymbols());
+        List<SingleElementSymbol> topCols = Util.deepClone(command.getProjectedSymbols(), SingleElementSymbol.class);
 
         // Build rule set based on hints
         RuleStack rules = RelationalPlanner.buildRules(hints);

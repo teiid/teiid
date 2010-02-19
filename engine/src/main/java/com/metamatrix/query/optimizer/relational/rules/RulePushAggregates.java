@@ -341,7 +341,7 @@ public class RulePushAggregates implements
 			}
         }
 
-        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(projectedSymbols);
+        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(projectedSymbols, SingleElementSymbol.class);
 
         SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols, metadata);
         for (AggregateSymbol agg : aggregates) {
