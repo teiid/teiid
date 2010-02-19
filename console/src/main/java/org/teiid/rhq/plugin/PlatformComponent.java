@@ -21,7 +21,6 @@
  */
 package org.teiid.rhq.plugin;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -36,11 +35,9 @@ import org.jboss.managed.api.RunState;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.measurement.AvailabilityType;
-import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
-import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
@@ -111,50 +108,50 @@ public class PlatformComponent extends Facet implements PluginConstants {
 	public void getValues(MeasurementReport report,
 			Set<MeasurementScheduleRequest> requests) throws Exception {
 		
-		DQPManagementView view = new DQPManagementView();
-
-		Map<String, Object> valueMap = new HashMap<String, Object>();
-
-		for (MeasurementScheduleRequest request : requests) {
-			String name = request.getName();
-			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
-
-			// Initialize any parameters to be used in the retrieval of metric
-			// values
-			if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-				Integer value = getResourceConfiguration()
-						.getSimple(
-								PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT)
-						.getIntegerValue();
-				valueMap.put(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT, value);
-			}
-
-			Object metricReturnObject = view.getMetric(getComponentType(), this
-					.getComponentIdentifier(), name, valueMap);
-
-			try {
-				if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
-					report.addData(new MeasurementDataNumeric(request,
-							(Double) metricReturnObject));
-				} else {
-					if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
-						report.addData(new MeasurementDataNumeric(request,
-								(Double) metricReturnObject));
-					} else {
-						if (request.getName().equals(
-								PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-							report.addData(new MeasurementDataNumeric(request,
-									(Double) metricReturnObject));
-						}
-					}
-				}
-
-			} catch (Exception e) {
-				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
-						+ "]. Cause: " + e); //$NON-NLS-1$
-				// throw(e);
-			}
-		}
+//		DQPManagementView view = new DQPManagementView();
+//
+//		Map<String, Object> valueMap = new HashMap<String, Object>();
+//
+//		for (MeasurementScheduleRequest request : requests) {
+//			String name = request.getName();
+//			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
+//
+//			// Initialize any parameters to be used in the retrieval of metric
+//			// values
+//			if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+//				Integer value = getResourceConfiguration()
+//						.getSimple(
+//								PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT)
+//						.getIntegerValue();
+//				valueMap.put(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT, value);
+//			}
+//
+//			Object metricReturnObject = view.getMetric(getComponentType(), this
+//					.getComponentIdentifier(), name, valueMap);
+//
+//			try {
+//				if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
+//					report.addData(new MeasurementDataNumeric(request,
+//							(Double) metricReturnObject));
+//				} else {
+//					if (request.getName().equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
+//						report.addData(new MeasurementDataNumeric(request,
+//								(Double) metricReturnObject));
+//					} else {
+//						if (request.getName().equals(
+//								PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+//							report.addData(new MeasurementDataNumeric(request,
+//									(Double) metricReturnObject));
+//						}
+//					}
+//				}
+//
+//			} catch (Exception e) {
+//				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
+//						+ "]. Cause: " + e); //$NON-NLS-1$
+//				// throw(e);
+//			}
+//		}
 
 	}
 
