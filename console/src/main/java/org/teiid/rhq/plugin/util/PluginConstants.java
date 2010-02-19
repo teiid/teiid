@@ -57,8 +57,9 @@ public interface PluginConstants {
 	 */
 	public interface ComponentType {
 		
-		public interface Runtime {
+		public interface Platform {
 
+			public final static String NAME = "Platform"; //$NON-NLS-1$
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
 			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
 			public final static String TEIID_RUNTIME_ENGINE = "teiid/runtime-engine"; //$NON-NLS-1$
@@ -68,9 +69,13 @@ public interface PluginConstants {
 
 			public static interface Operations {
 
-				public final static String BOUNCE_SYSTEM = "bounceSystem"; //$NON-NLS-1$					
+				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$					
 				public final static String GET_LONGRUNNINGQUERIES = "listLongRunningQueries"; //$NON-NLS-1$
-
+				public final static String KILL_REQUEST = "killRequest"; //$NON-NLS-1$
+				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
+				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
+				public final static String GET_SESSIONS = "getActiveSessions"; //$NON-NLS-1$
+				
 			}
 
 			public static interface Metrics {
@@ -154,10 +159,6 @@ public interface PluginConstants {
 
 	}
 
-	public interface Security {
-
-	}
-
 	/**
 	 * Use these metric names when calling getValues() on the connection
 	 * interface.
@@ -178,9 +179,10 @@ public interface PluginConstants {
 	public static interface Operation {
 		public final static String KILL_REQUEST = "killRequest"; //$NON-NLS-1$
 		public final static String GET_VDBS = "listVDBs"; //$NON-NLS-1$
-
 		public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
-
+		public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
+		public final static String GET_SESSIONS = "getActiveSessions"; //$NON-NLS-1$
+		
 		/**
 		 * Use these value names when calling executeOperation() on the
 		 * connection interface. These will correlate with parameters used in

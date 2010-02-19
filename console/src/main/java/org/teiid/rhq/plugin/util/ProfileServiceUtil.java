@@ -21,6 +21,9 @@ import org.jboss.profileservice.spi.ProfileService;
 public class ProfileServiceUtil {
 
 	protected final Log LOG = LogFactory.getLog(ProfileServiceUtil.class);
+	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");
+	private static String DQPNAME = "org.teiid.dqp.internal.process.DQPManagementView";
+
 
 	/**
 	 * Get the passed in {@link ManagedComponent}
@@ -130,6 +133,11 @@ public class ProfileServiceUtil {
 		File warFile = new File(warUrl.getPath());
 		File deployDir = warFile.getParentFile();
 		return deployDir;
+	}
+	
+	public static ManagedComponent getDQPManagementView() throws NamingException, Exception {
+		
+		return getManagedComponent(DQPTYPE, DQPNAME);
 	}
 
 }

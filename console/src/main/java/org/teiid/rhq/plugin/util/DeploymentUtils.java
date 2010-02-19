@@ -76,7 +76,7 @@ public class DeploymentUtils {
         DeploymentStatus distributeStatus;
         Exception distributeFailure = null;
         try {
-            progress = deploymentManager.distribute(archiveFileName, contentURL, false);
+            progress = deploymentManager.distribute(archiveFileName, contentURL, true);
             distributeStatus = run(progress);
             if (distributeStatus.isFailed()) {
                 distributeFailure = (distributeStatus.getFailure() != null) ? distributeStatus.getFailure() :
