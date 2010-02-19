@@ -214,11 +214,16 @@ public class XMLExpectedResults implements ExpectedResults {
 			    // printResultSet(results));
 
 			    // Convert results to ResultsHolder
+ 			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
+		    		actualResults.setQueryID(expectedResults.getQueryID());
+
 		      		if (expectedResults.getRows().size() > 0) {
-        			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
-        			    actualResults.setQueryID(expectedResults.getQueryID());
-        			    convertResults(resultSet, batchSize,   actualResults);
+         			    convertResults(resultSet, batchSize,   actualResults);
         			    compareResults(actualResults, expectedResults, eMsg, isOrdered);
+		      		} else if (actualResults.getRows() != null &&  actualResults.getRows().size() > 0) {
+			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$
+	      		    
+		      		    
 		      		}
 
 			    // DEBUG:
@@ -344,7 +349,7 @@ public class XMLExpectedResults implements ExpectedResults {
                 sortRecords(expectedRows, true);
                 expectedResults.setRows(expectedRows);
             }
-
+            
             compareResultSets(actualResults.getRows(),
                               actualResults.getTypes(),
                               actualResults.getIdentifiers(),
@@ -469,8 +474,8 @@ public class XMLExpectedResults implements ExpectedResults {
         }
 
         //      DEBUG:
-        //        debugOut.println("================== Compariing Rows ===================");
-
+        //       debugOut.println("================== Compariing Rows ===================");
+ 
         // Loop through rows
         for (int row = 0; row < actualRowCount; row++) {
 
@@ -491,7 +496,7 @@ public class XMLExpectedResults implements ExpectedResults {
                 final Object actualValue = actualRecord.get(col);
                 // Get expected value
                 final Object expectedValue = expectedRecord.get(col);
-
+ 
                 //              DEBUG:
                 //                debugOut.println(" Col: " +(col +1) + ": expectedValue:[" + expectedValue + "] actualValue:[" + actualValue +
                 // "]");
@@ -513,7 +518,8 @@ public class XMLExpectedResults implements ExpectedResults {
                         // DEBUG:
                         //                        debugOut.println(" ExpectedType: " + expectedValue.getClass() + " ActualType: " +
                         // actualValue.getClass());
-                        if (expectedValue instanceof String) {
+                	
+                         if (expectedValue instanceof String) {
                             final String expectedString = (String)expectedValue;
                             if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
                                 // LOB types are special case - metadata says they're Object types so
@@ -536,6 +542,14 @@ public class XMLExpectedResults implements ExpectedResults {
                                 // Check for String difference
                                 assertStringsMatch(expectedString, (String)actualValue, (row + 1), (col + 1), eMsg);
                             }
+                        } else {
+                            
+                            throw new QueryTestFailedException(eMsg + "Value mismatch at row " + (row + 1) //$NON-NLS-1$
+                                    + " and column " + (col + 1) //$NON-NLS-1$
+                                    + ": expected = [" //$NON-NLS-1$
+                                    + expectedValue + "], actual = [" //$NON-NLS-1$
+                                    + actualValue + "]"); //$NON-NLS-1$
+              
                         }
                     }
                 }

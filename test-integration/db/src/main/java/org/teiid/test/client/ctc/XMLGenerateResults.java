@@ -251,7 +251,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    resultSet.beforeFirst();
 
 	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, (results != null ? (List) results : null));
+		    resultSet, (File) results);
 
 	} catch (Throwable e) {
 	    throw new QueryTestFailedException(e.getMessage());
@@ -276,7 +276,7 @@ public class XMLGenerateResults implements ResultsGenerator {
      */
     private void generateErrorResults(String querySetID, String queryID,
 	    String sql, File resultsFile, ResultSet actualResult,
-	    List<String> results)
+	    File results)
 	    throws QueryTestFailedException {
 	
 	FileOutputStream actualOut = null;
@@ -379,7 +379,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 //			.currentTimeMillis())) + ".xml"; //$NON-NLS-1$
 //	return errorFileName;
 	
-	return  queryID + ".txt";
+	return  queryID + ".err";
     }
 
     /**
