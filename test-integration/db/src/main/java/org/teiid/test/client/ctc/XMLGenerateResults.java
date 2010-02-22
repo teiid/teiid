@@ -203,7 +203,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 //  Begin New from Impl
     
     
-    public String generateErrorFile(final String querySetID,
+    public String generateErrorFile_keep(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
 	    final Throwable queryError, final Object results)
 	    throws QueryTestFailedException {
@@ -285,17 +285,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    PrintStream filePrintStream = new PrintStream(actualOut);
 	    
 	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
-
-//	    if (results != null) {
-//        	    for (Iterator<String> it=results.iterator(); it.hasNext();) {
-//        		String line = it.next();
-//        		filePrintStream.print(line);
-//        	    }
-//	    } else {
-//	    
-//		ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
-//	    }
-	    	    
+    	    
 
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -313,7 +303,7 @@ public class XMLGenerateResults implements ResultsGenerator {
     }
 //  End of copy from impl 
    
-    public String generateErrorFilex(final String querySetID,
+    public String generateErrorFile(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
 	    final Throwable queryError, final Object expectedResultsFile)
 	    throws QueryTestFailedException {
