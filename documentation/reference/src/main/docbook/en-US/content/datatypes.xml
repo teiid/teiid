@@ -245,6 +245,15 @@
           Allowed explicit conversions may still fail during processing
           if the runtime values are not actually convertable.</para>
       </listitem>
+      <listitem>
+         <warning>
+	         <para>The Teiid conversions of float/double/bigdecimal/timestamp to string rely on the JDBC/Java defined
+	         output formats.  Pushdown behavior attempts to mimic these results, but may vary depending upon the actual
+	         source type and conversion logic.  Care should be taken to not assume the string form in criteria or other
+	         places where a variation may cause different results.
+	         </para>
+         </warning>
+      </listitem>
     </itemizedlist>
     <para>
     </para>
