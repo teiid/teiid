@@ -65,7 +65,6 @@ import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.DependentValueSource;
@@ -141,7 +140,6 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
-import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.util.ValueIterator;
@@ -807,7 +805,7 @@ public class QueryRewriter {
         	if (index == -1) {
     			unrelatedItems.add(orderBy.getOrderByItems().get(i));
         		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
-        	  	continue; // must be unrelated - but potentially contains references to the select clause
+        	  	continue; // must be unrelated
         	}
         	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
         	Expression expr = SymbolMap.getExpression(querySymbol);
@@ -831,12 +829,7 @@ public class QueryRewriter {
 
         //add unrelated to select
         for (OrderByItem orderByItem : unrelatedItems) {
-        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(orderByItem.getSymbol(), true);
-        	for (ElementSymbol elementSymbol : elements) {
-        		if (!(elementSymbol.getMetadataID() instanceof TempMetadataID) || ((TempMetadataID)elementSymbol.getMetadataID()).getPosition() == -1) {
-                    select.addSymbol(elementSymbol);				
-        		}
-			}
+            select.addSymbol(orderByItem.getSymbol());				
 		}
         makeSelectUnique(select, false);
         
@@ -851,29 +844,13 @@ public class QueryRewriter {
         Query top = null;
         
         try {
-        	Query intermediate = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
-			Iterator iter = intermediate.getSelect().getProjectedSymbols().iterator();
+        	top = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
+			Iterator iter = top.getSelect().getProjectedSymbols().iterator();
 		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
 		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)select.getProjectedSymbols()) {
 		    	SingleElementSymbol ses = (SingleElementSymbol)iter.next();
 		        expressionMap.put(SymbolMap.getExpression(symbol), ses);
 		        expressionMap.put(new ElementSymbol(symbol.getName()), ses);
-		    }
-		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
-		    for (int i = 0; i < orderBy.getVariableCount(); i++) {
-		    	int index = orderBy.getExpressionPosition(i);
-		    	SingleElementSymbol ss = orderBy.getVariable(i);
-		    	if (index == -1 && !(ss instanceof ElementSymbol)) {
-		    		intermediate.getSelect().addSymbol((SelectSymbol)ss.clone());
-		    	}
-			}
-		    makeSelectUnique(intermediate.getSelect(), true);
-		    
-        	top = createInlineViewQuery(new GroupSymbol("Y"), intermediate, metadata, intermediate.getSelect().getProjectedSymbols()); //$NON-NLS-1$
-			iter = top.getSelect().getProjectedSymbols().iterator();
-		    expressionMap = new HashMap<Expression, SingleElementSymbol>();
-		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)intermediate.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
 		    }
 		    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
 		    //now the order by should only contain element symbols

@@ -309,8 +309,8 @@ public class TestOrderByRewrite  {
     } 
     
     @Test public void testOrderByExpression() throws Exception {
-    	Query resolvedQuery = (Query) getCommand("SELECT 0 AS SOMEINT, pm1.g1.e2 as y FROM pm1.g1 ORDER BY y + SOMEINT, e3"); //$NON-NLS-1$
-        assertEquals("SELECT Y_1.SOMEINT, Y_1.Y FROM (SELECT X_1.SOMEINT, X_1.Y, X_1.E3, (X_1.Y + X_1.SOMEINT) AS EXPR1 FROM (SELECT 0 AS SOMEINT, pm1.g1.e2 AS y, e3 FROM pm1.g1) AS X_1) AS Y_1 ORDER BY Y_1.EXPR1, Y_1.E3", resolvedQuery.toString()); //$NON-NLS-1$
+    	Query resolvedQuery = (Query) getCommand("SELECT 0 AS SOMEINT, pm1.g1.e2 as y FROM pm1.g1 ORDER BY e2 || e1, e3"); //$NON-NLS-1$
+        assertEquals("SELECT X_1.SOMEINT, X_1.Y FROM (SELECT 0 AS SOMEINT, pm1.g1.e2 AS y, (e2 || e1) AS EXPR1, e3 FROM pm1.g1) AS X_1 ORDER BY X_1.EXPR1, X_1.E3", resolvedQuery.toString()); //$NON-NLS-1$
     }
     
     @Test public void testRewiteOrderBy() {

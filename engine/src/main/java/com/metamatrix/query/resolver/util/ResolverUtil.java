@@ -348,8 +348,8 @@ public class ResolverUtil {
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol sortKey = orderBy.getVariable(i);
         	if (sortKey instanceof ElementSymbol) {
-        		int index = resolveSortKey(orderBy, fromClauseGroups, knownElements, metadata,
-    					isSimpleQuery, knownShortNames, (ElementSymbol)sortKey);
+        		int index = resolveSortKey(fromClauseGroups, knownElements, metadata, isSimpleQuery,
+    					knownShortNames, (ElementSymbol)sortKey);
                 if (index == -1) {
                 	index = expressions.indexOf(SymbolMap.getExpression(sortKey));
                 }
@@ -374,8 +374,7 @@ public class ResolverUtil {
     			throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.setquery_order_expression", sortKey)); //$NON-NLS-1$	 
     		}
         	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
-                resolveSortKey(orderBy, fromClauseGroups, knownElements, metadata,
-    					isSimpleQuery, knownShortNames, symbol); 
+                resolveSortKey(fromClauseGroups, null, metadata, isSimpleQuery, null, symbol); 
 			}
             ResolverVisitor.resolveLanguageObject(sortKey, metadata);
             
@@ -384,10 +383,9 @@ public class ResolverUtil {
         }
     }
     
-    private static int resolveSortKey(OrderBy orderBy, List fromClauseGroups,
-			List knownElements, QueryMetadataInterface metadata,
-			boolean isSimpleQuery, String[] knownShortNames,
-			ElementSymbol symbol) throws MetaMatrixComponentException,
+    private static int resolveSortKey(List fromClauseGroups, List knownElements,
+			QueryMetadataInterface metadata, boolean isSimpleQuery,
+			String[] knownShortNames, ElementSymbol symbol) throws MetaMatrixComponentException,
 			QueryMetadataException, QueryResolverException {
 		SingleElementSymbol matchedSymbol = null;
 		String symbolName = symbol.getName();
@@ -399,38 +397,40 @@ public class ResolverUtil {
 		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
 		}
 
-		// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
-		for(int i=0; i<knownShortNames.length; i++) {
-			if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
-		        if (groupPart != null) {
-		            Object knownSymbol = knownElements.get(i);
-		            if(knownSymbol instanceof ElementSymbol) {
-		                ElementSymbol knownElement = (ElementSymbol) knownSymbol;
-		                GroupSymbol group = knownElement.getGroupSymbol();
-		                
-		                // skip this one if the two short names are not from the same group
-		                if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
-		                    continue;
-		                }
-		            }
-		        }
-		        
-		        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
-		        if(matchedSymbol != null) {
-		            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
-		        }
-		        matchedSymbol = (SingleElementSymbol)knownElements.get(i);
-		    }
+		if (knownShortNames != null) {
+			// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
+			for(int i=0; i<knownShortNames.length; i++) {
+				if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
+			        if (groupPart != null) {
+			            Object knownSymbol = knownElements.get(i);
+			            if(knownSymbol instanceof ElementSymbol) {
+			                ElementSymbol knownElement = (ElementSymbol) knownSymbol;
+			                GroupSymbol group = knownElement.getGroupSymbol();
+			                
+			                // skip this one if the two short names are not from the same group
+			                if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
+			                    continue;
+			                }
+			            }
+			        }
+			        
+			        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
+			        if(matchedSymbol != null) {
+			            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
+			        }
+			        matchedSymbol = (SingleElementSymbol)knownElements.get(i);
+			    }
+			}
+			if (matchedSymbol != null) {
+			    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
+			    int position = knownElements.indexOf(matchedSymbol);
+			    tempMetadataID.setPosition(position);
+			    symbol.setMetadataID(tempMetadataID);
+			    symbol.setType(matchedSymbol.getType());
+			    return position;
+			}
 		}
 		            		           
-		if (matchedSymbol != null) {
-		    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
-		    int position = knownElements.indexOf(matchedSymbol);
-		    tempMetadataID.setPosition(position);
-		    symbol.setMetadataID(tempMetadataID);
-		    symbol.setType(matchedSymbol.getType());
-		    return position;
-		}
 		if (!isSimpleQuery) {
 	        throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.invalid_unrelated", symbol.getName())); //$NON-NLS-1$
 	    }
