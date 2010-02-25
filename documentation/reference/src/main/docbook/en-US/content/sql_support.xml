@@ -793,7 +793,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>Syntax Rules:
         </para>
         <listitem>
-          <para>Sort columns may be specified positionally by a 1 based
+          <para>Sort columns may be specified positionally by a 1-based positional
 	        integer, by SELECT clause alias name, by SELECT clause expression, or by an unrelated expression.</para>
         </listitem>
         <listitem>
@@ -806,7 +806,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         </listitem>
         <listitem>
           <para>Unrelated expressions, expressions not appearing as an aliased expression in the select clause, 
-          are allowed in the order by clause of a non-set QUERY.  The columns referenced in the expression must also follow the prior rule.
+          are allowed in the order by clause of a non-set QUERY.  The columns referenced in the expression must come from the
+          from clause table references.  The column references cannot be to alias names or positional.
           </para>
         </listitem>
         <listitem>
