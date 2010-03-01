@@ -97,7 +97,6 @@ public class DataTypeManager {
 	private static class HashedValueCache<T> implements ValueCache<T> {
 		
 		final Object[] cache;
-		final boolean weak = false;
 		
 		HashedValueCache(int size) {
 			cache = new Object[1 << size];
@@ -842,10 +841,9 @@ public class DataTypeManager {
     		}
     		//TODO: this initial lookup is inefficient, since there are likely collisions
 	    	ValueCache valueCache = valueMaps.get(value.getClass());
-	    	if (valueCache == null) {
-	    		return value;
+	    	if (valueCache != null) {
+	    		value = (T)valueCache.getValue(value);
 	    	}
-	    	return (T)valueCache.getValue(value);
     	}
 		return value;
     }

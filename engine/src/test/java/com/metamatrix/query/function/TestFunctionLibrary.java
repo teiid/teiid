@@ -168,19 +168,31 @@ public class TestFunctionLibrary {
 	}
 
 	private void helpInvokeMethod(String fname, Object[] inputs, Object expectedOutput) {
-        // Build type signature
-        Class[] types = new Class[inputs.length];
-        for(int i=0; i<inputs.length; i++) { 
-            types[i] = DataTypeManager.determineDataTypeClass(inputs[i]);   
-        }        
         try {
-            helpInvokeMethod(fname, types, inputs, new CommandContext(), expectedOutput);
+            helpInvokeMethod(fname, null, inputs, null, expectedOutput);
         } catch (Exception err) {
             throw new RuntimeException(err);
         } 
 	}
     
-    private void helpInvokeMethod(String fname, Class[] types, Object[] inputs, CommandContext context , Object expectedOutput) throws InvalidFunctionException, FunctionExecutionException {
+    private void helpInvokeMethod(String fname, Class[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws InvalidFunctionException, FunctionExecutionException {
+    	Object actualOutput = helpInvokeMethod(fname, types, inputs, context);
+        assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
+    }
+
+	private Object helpInvokeMethod(String fname, Class[] types,
+			Object[] inputs, CommandContext context)
+			throws InvalidFunctionException, FunctionExecutionException {
+		if (types == null) {
+            // Build type signature
+            types = new Class[inputs.length];
+            for(int i=0; i<inputs.length; i++) { 
+                types[i] = DataTypeManager.determineDataTypeClass(inputs[i]);   
+            }        
+    	}
+    	if (context == null) {
+    		context = new CommandContext();
+    	}
         Object actualOutput = null;
         // Find function descriptor
         FunctionDescriptor descriptor = library.findFunction(fname, types);         
@@ -197,64 +209,18 @@ public class TestFunctionLibrary {
             // Invoke function with inputs
             actualOutput = library.invokeFunction(descriptor, inputs);                
         }
-        assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
-    }
+		return actualOutput;
+	}
     	    
-	private void helpInvokeMethodFail(String fname, Object[] inputs, Object expectedException) {
-		Object actualOutput = null;
-		try {
-			// Build type signature
-			Class[] types = new Class[inputs.length];
-			for(int i=0; i<inputs.length; i++) { 
-				types[i] = DataTypeManager.determineDataTypeClass(inputs[i]);   
-			}
-		    
-            // Find function descriptor
-            FunctionDescriptor descriptor = library.findFunction(fname, types);         
-            if (descriptor != null && descriptor.requiresContext()) {
-                // Invoke function with inputs
-                Object[] in = new Object[inputs.length+1];
-                in[0] = new CommandContext();
-                for (int i = 0; i < inputs.length; i++) {
-                    in[i+1] = inputs[i];
-                }
-                actualOutput = library.invokeFunction(descriptor, in);
-            }
-            else {
-                // Invoke function with inputs
-                actualOutput = library.invokeFunction(descriptor, inputs);                
-            }	  
-		    
-		} catch(Throwable e) { 
-			//e.printStackTrace();
-			assertNull(actualOutput);
-			assertEquals("Unexpected exception.", e.getClass().getName(), ((FunctionExecutionException)expectedException).getClass().getName());    //$NON-NLS-1$
-		}    
+	private void helpInvokeMethodFail(String fname, Object[] inputs) throws InvalidFunctionException {
+		   helpInvokeMethodFail(fname, null, inputs);
 	}	
     	
-    private void helpInvokeMethodFail(String fname, Class types[], Object[] inputs, Object expectedException) {
-        Object actualOutput = null;
-        try {            
-            // Find function descriptor
-            FunctionDescriptor descriptor = library.findFunction(fname, types);         
-            if (descriptor != null && descriptor.requiresContext()) {
-                // Invoke function with inputs
-                Object[] in = new Object[inputs.length+1];
-                in[0] = new CommandContext();
-                for (int i = 0; i < inputs.length; i++) {
-                    in[i+1] = inputs[i];
-                }
-                actualOutput = library.invokeFunction(descriptor, in);
-            }
-            else {
-                // Invoke function with inputs
-                actualOutput = library.invokeFunction(descriptor, inputs);                
-            }     
-            
-        } catch(Throwable e) { 
-            //e.printStackTrace();
-            assertNull(actualOutput);
-            assertEquals("Unexpected exception.", e.getClass().getName(), ((FunctionExecutionException)expectedException).getClass().getName());    //$NON-NLS-1$
+    private void helpInvokeMethodFail(String fname, Class<?> types[], Object[] inputs) throws InvalidFunctionException {
+    	try {
+            helpInvokeMethod(fname, types, inputs, null);
+            fail("expected exception"); //$NON-NLS-1$
+        } catch (FunctionExecutionException err) {
         }    
     }    
 	// ################################## ACTUAL TESTS ################################
@@ -635,6 +601,10 @@ public class TestFunctionLibrary {
         helpInvokeMethod("/", new Object[] { new BigDecimal("3"), new BigDecimal("2") }, new BigDecimal("2"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
+    @Test public void testInvokeDivide7() throws Exception {
+        helpInvokeMethodFail("/", new Object[] { new Float("3"), new Float("0") });   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
+    
     @Test public void testInvokeDivideMod() {
         helpInvokeMethod("mod", new Object[] { new BigDecimal("3.1"), new BigDecimal("2") }, new BigDecimal("1.1"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
@@ -802,9 +772,8 @@ public class TestFunctionLibrary {
 			helpInvokeMethod("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("yyyy-mm-dd hh:mm:ss.SSSS") }, "2003-04-05 03:04:12.0000");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 		
-	@Test public void testInvokeFormatTimestampFail() {
-		helpInvokeMethodFail("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/nn h:mm a") },  //$NON-NLS-1$ //$NON-NLS-2$
-			new FunctionExecutionException("")); //$NON-NLS-1$
+	@Test public void testInvokeFormatTimestampFail() throws Exception {
+		helpInvokeMethodFail("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/nn h:mm a") }); //$NON-NLS-1$
 	}
 	
 	@Test public void testInvokeParseTimestamp1() {
@@ -991,15 +960,15 @@ public class TestFunctionLibrary {
 	}
 
 	/** should fail, with start > string1.length() */
-	@Test public void testInvokeInsert4() {
+	@Test public void testInvokeInsert4() throws Exception {
 		helpInvokeMethodFail("insert", new Object[] {new String(""), new Integer(2),  //$NON-NLS-1$ //$NON-NLS-2$
-			new Integer(0), new String("cat")}, new FunctionExecutionException("")); //$NON-NLS-1$ //$NON-NLS-2$
+			new Integer(0), new String("cat")}); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/** should fail, with length > 0 and input string1.length() = 0 */
-	@Test public void testInvokeInsert5() {
+	@Test public void testInvokeInsert5() throws Exception {
 		helpInvokeMethodFail("insert", new Object[] {new String(""), new Integer(1),  //$NON-NLS-1$ //$NON-NLS-2$
-			new Integer(1), new String("cat")}, new FunctionExecutionException(""));	 //$NON-NLS-1$ //$NON-NLS-2$
+			new Integer(1), new String("cat")});	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**  (length + start) > string1.length(), then just append str2 starting at start position */
@@ -1210,11 +1179,10 @@ public class TestFunctionLibrary {
         helpInvokeMethod("modifyTimeZone", new Object[] {ts, "America/New_York" }, out); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Test public void testInvokeRand() {
+    @Test public void testInvokeRand() throws Exception {
         helpInvokeMethod("rand", new Object[] {new Integer(100)}, new Double(0.7220096548596434)); //$NON-NLS-1$ 
-        helpInvokeMethodFail("rand", new Class[] {Integer.class}, new Object[] {new Double(100)}, new FunctionExecutionException("")); //$NON-NLS-1$ //$NON-NLS-2$
         // this does not actually fail but returns a result
-        helpInvokeMethodFail("rand", new Class[] {Integer.class}, new Object[] {null}, new FunctionExecutionException("")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertNotNull(helpInvokeMethod("rand", new Class[] {Integer.class}, new Object[] {null}, null)); //$NON-NLS-1$
     }
     
     @Test public void testInvokeUser() throws Exception {
@@ -1269,6 +1237,10 @@ public class TestFunctionLibrary {
     
     @Test public void testInvokeLog10() {
         helpInvokeMethod("log10", new Object[] { new Double("10") }, new Double("1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Test public void testInvokeLog10Error() throws Exception {
+        helpInvokeMethodFail("log10", new Object[] { new Double("0") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     @Test public void testInvokePower() {

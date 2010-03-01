@@ -31,6 +31,7 @@ import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
@@ -46,7 +47,9 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * and user-defined functions.
  */
 public class FunctionLibrary {
-
+	
+	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
+	
 	// Special type conversion functions
 	public static final String CONVERT = "convert"; //$NON-NLS-1$
 	public static final String CAST = "cast"; //$NON-NLS-1$
@@ -393,6 +396,19 @@ public class FunctionLibrary {
         		values = newValues;
         	}
             Object result = method.invoke(null, values);
+            if (!ALLOW_NAN_INFINITY) {
+        		if (result instanceof Double) {
+	            	Double floatVal = (Double)result;
+	            	if (Double.isInfinite(floatVal) || Double.isNaN(floatVal)) {
+	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName())); //$NON-NLS-1$
+	            	}
+	            } else if (result instanceof Float) {
+	            	Float floatVal = (Float)result;
+	            	if (Float.isInfinite(floatVal) || Float.isNaN(floatVal)) {
+	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName())); //$NON-NLS-1$
+	            	}
+	            }
+        	}
             result = DataTypeManager.convertToRuntimeType(result);
             result = DataTypeManager.transformValue(result, fd.getReturnType());
             return result;
