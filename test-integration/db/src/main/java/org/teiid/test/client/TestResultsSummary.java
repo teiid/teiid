@@ -49,6 +49,7 @@ public class TestResultsSummary  {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
 
+
     private static final String NL = System.getProperty("line.separator"); //$NON-NLS-1$
     
     // totals for scenario
@@ -57,6 +58,7 @@ public class TestResultsSummary  {
     private int total_pass = 0;
     private int total_fail = 0;
     private int total_querysets = 0;
+    private long total_seconds = 0;
     private List<String> failed_queries = new ArrayList<String>();
     private List<String> query_sets = new ArrayList<String>(10);
     
@@ -144,14 +146,21 @@ public class TestResultsSummary  {
     }
 
     private void printQueryTestResults(PrintStream outputStream,
-	    long testStartTS, long endTS, int numberOfClients,
+	    Date testStartTS, Date endTS, Date length, int numberOfClients,
 	    SimpleDateFormat formatter, Collection results) {
 	outputStream.println("Query Test Results [" + this.resultMode  + "]"); //$NON-NLS-1$
 	outputStream.println("=================="); //$NON-NLS-1$
-	outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
-	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
+	outputStream.println("Start        Time: " + testStartTS); //$NON-NLS-1$
+	outputStream.println("End          Time: " + endTS); //$NON-NLS-1$
 	outputStream
-		.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+		.println("Elapsed      Time: " + (length.getTime() / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+	
+//	outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
+//	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
+//	outputStream
+//		.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+//	
+	
 	outputStream.println("Number of Clients: " + numberOfClients); //$NON-NLS-1$
 
 	Map passFailGenMap = getPassFailGen(results);
@@ -207,7 +216,7 @@ public class TestResultsSummary  {
 	return passFailGenMap;
     }
     
-    private void addTotalPassFailGen(String scenario_name, Collection results) {
+    private void addTotalPassFailGen(String scenario_name, Collection results, Date testStartTS, Date endTS, Date lengthTime) {
 	int queries = 0;
 	int pass = 0;
 	int fail = 0;
@@ -240,7 +249,7 @@ public class TestResultsSummary  {
 	    }
 	}
 	
-	this.query_sets.add("\t" + queryset + "\t\t" + pass + "\t" + fail + "\t" + queries);
+	this.query_sets.add("\t" + queryset + "\t\t" + pass + "\t" + fail + "\t" + queries + "\t" + (lengthTime.getTime() / 1000) );
 	
 	total_fail = total_fail + fail;
 	total_pass = total_pass + pass;
@@ -296,11 +305,28 @@ public class TestResultsSummary  {
 		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
 		throw e;
 	    }
-	    addTotalPassFailGen(testname, testResults);
+	    
+	    Date starttest = new Date(testStartTS);
+	    Date endtest = new Date(endTS);
+	    long diff = endtest.getTime() - starttest.getTime();
+	    
+	    total_seconds = total_seconds + diff;
+
+	    Date diffdate =  new Date( diff);
+		
+//		endtest - starttest;
+//	    
+//		outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
+//		outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
+//		outputStream
+//			.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+
+	    
+	    addTotalPassFailGen(testname, testResults, starttest, endtest, diffdate);
 	    // Text File output
-	    printQueryTestResults(outputStream, testStartTS, endTS,
+	    printQueryTestResults(outputStream, starttest, endtest, diffdate,
 		    numberOfClients, TestClient.TSFORMAT, testResults);
-	    printQueryTestResults(overwriteStream, testStartTS, endTS,
+	    printQueryTestResults(overwriteStream, starttest, endtest, diffdate,
 		    numberOfClients, TestClient.TSFORMAT, testResults);
 
 	    // HTML Vesion of output
@@ -392,7 +418,7 @@ public class TestResultsSummary  {
 		
 		outputStream.println("=================="); //$NON-NLS-1$
 		outputStream.println("Test Query Set"); //$NON-NLS-1$
-		outputStream.println("\t" + "Name" + "\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total"); //$NON-NLS-1$
+		outputStream.println("\t" + "Name" + "\t\t\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total" + "\t" + "Time(sec)"); //$NON-NLS-1$
 
 		if (!this.query_sets.isEmpty()) {
 		    // sort so that like failed queries are show together
@@ -410,7 +436,7 @@ public class TestResultsSummary  {
 		
 		
 		outputStream
-		.println("\t" + "Totals" + "\t\t" + total_pass + "\t" + total_fail + "\t" + total_queries);
+		.println("\t" + "Totals" + "\t\t\t\t" + total_pass + "\t" + total_fail + "\t" + total_queries+ "\t" + total_seconds / 1000 );
 		
 //		outputStream
 //			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
