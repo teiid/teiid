@@ -3557,7 +3557,7 @@ public class TestProcessor {
 
     /** Test selecting a virtual element (e5) which is defined by a scalar subquery in the virtual transformation */
     @Test public void testCorrelatedSubqueryInTransformation15d() {
-        String sql = "Select e1, e2, e3, e4 from pm1.g1 where exists (select e1, e2, e3, e4, ((e4 + e5)/e4) as e from vm1.g26 where pm1.g1.e3 = e3)"; //$NON-NLS-1$
+        String sql = "Select e1, e2, e3, e4 from pm1.g1 where exists (select e1, e2, e3, e4, ((e4 + e5)/(e4 + 1)) as e from vm1.g26 where pm1.g1.e3 = e3)"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[]{
