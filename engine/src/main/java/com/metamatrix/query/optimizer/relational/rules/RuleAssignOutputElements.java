@@ -38,6 +38,7 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
@@ -160,7 +161,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {
-		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements);
+		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements, metadata, capFinder);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
 	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);
 	            SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
@@ -237,9 +238,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * So, in this case filtering should not occur.  In fact the output columns
      * that were set on root above are filtered, but we actually want all the
      * virtual elements - so just reset it and proceed as before
+     * @throws MetaMatrixComponentException 
+     * @throws QueryMetadataException 
      */
     static List<? extends SingleElementSymbol> determineSourceOutput(PlanNode root,
-                                           List<SingleElementSymbol> outputElements) {
+                                           List<SingleElementSymbol> outputElements,
+                                           QueryMetadataInterface metadata,
+                                           CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException {
         PlanNode virtualRoot = root.getLastChild();
         
         if(hasDupRemoval(virtualRoot)) {
@@ -247,7 +252,39 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
             return symbolMap.getKeys();
         } 
-    	return outputElements;
+        PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
+		if (limit == null) {
+			return outputElements;
+		}
+        //reset the output elements to be the output columns + what's required by the sort
+		PlanNode sort = NodeEditor.findNodePreOrder(limit, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
+        if (sort == null) {
+        	return outputElements;
+        }
+        PlanNode access = NodeEditor.findParent(sort, NodeConstants.Types.ACCESS);
+        if (sort.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) ||
+        		(access != null && capFinder != null && CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, RuleRaiseAccess.getModelIDFromAccess(access, metadata), metadata, capFinder))) {
+    		return outputElements;
+        }
+        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
+        
+        SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        
+        List<ElementSymbol> symbolOrder = symbolMap.getKeys();
+        
+        for (OrderByItem item : sortOrder.getOrderByItems()) {
+            final Expression expr = item.getSymbol();
+            int index = topCols.indexOf(expr);
+            if (index < 0) {
+            	continue;
+            }
+            ElementSymbol symbol = symbolOrder.get(index);
+            if (!outputElements.contains(symbol)) {
+                outputElements.add(symbol);
+            }
+        }
+        return outputElements;
     }
     
     /**

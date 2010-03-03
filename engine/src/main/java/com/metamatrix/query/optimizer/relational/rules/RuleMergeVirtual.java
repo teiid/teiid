@@ -78,7 +78,7 @@ public final class RuleMergeVirtual implements
 
     static PlanNode doMerge(PlanNode frame,
                             PlanNode root,
-                            QueryMetadataInterface metadata) throws QueryPlannerException {
+                            QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
         GroupSymbol virtualGroup = frame.getGroups().iterator().next();
 
@@ -178,11 +178,13 @@ public final class RuleMergeVirtual implements
 
     /**
      * Removes source layers that only do a simple projection of the elements below.
+     * @throws MetaMatrixComponentException 
+     * @throws QueryMetadataException 
      */
     private static PlanNode checkForSimpleProjection(PlanNode frame,
                                                      PlanNode root,
                                                      PlanNode parentProject,
-                                                     QueryMetadataInterface metadata) {
+                                                     QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
         // check that the parent only performs projection
         PlanNode nodeToCheck = parentProject.getFirstChild();
         while (nodeToCheck != frame) {
@@ -200,7 +202,7 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        List<? extends SingleElementSymbol> requiredElements = getNecessaryOutput(frame);
+        List<? extends SingleElementSymbol> requiredElements = RuleAssignOutputElements.determineSourceOutput(frame, new ArrayList<SingleElementSymbol>(), metadata, null);
         List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
 
         // check that it only performs simple projection and that all required symbols are projected
@@ -273,42 +275,6 @@ public final class RuleMergeVirtual implements
         return root;
     }
     
-	private static List<? extends SingleElementSymbol> getNecessaryOutput(PlanNode root) {
-		List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>();
-		List<? extends SingleElementSymbol> result = RuleAssignOutputElements.determineSourceOutput(root, outputElements);
-		if (!result.isEmpty()) {
-			return result;
-		}
-		PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
-		if (limit == null) {
-			return outputElements;
-		}
-        //reset the output elements to be the output columns + what's required by the sort
-		PlanNode sort = NodeEditor.findNodePreOrder(limit, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
-        if (sort == null) {
-        	return outputElements;
-        }
-        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
-        
-        SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
-        List<ElementSymbol> symbolOrder = symbolMap.getKeys();
-        
-        for (OrderByItem item : sortOrder.getOrderByItems()) {
-            final Expression expr = item.getSymbol();
-            int index = topCols.indexOf(expr);
-            if (index < 0) {
-            	continue;
-            }
-            ElementSymbol symbol = symbolOrder.get(index);
-            if (!outputElements.contains(symbol)) {
-                outputElements.add(symbol);
-            }
-        }
-        return outputElements;
-	}
-
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
      */

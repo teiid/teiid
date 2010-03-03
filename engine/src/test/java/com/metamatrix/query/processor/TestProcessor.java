@@ -6990,6 +6990,26 @@ public class TestProcessor {
         sampleData1(manager);
         helpProcess(plan, manager, expected);
     }
+    
+    @Test public void testSortWithLimit4() {
+        String sql = "select c from (select pm1.g1.e1 a, pm1.g1.e2 b, pm1.g1.e3 c from pm1.g1 order by b limit 1) x"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, false);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(caps));
+        
+        List[] expected = new List[] {
+                Arrays.asList(new Object[] { Boolean.FALSE }),
+        };
+
+        FakeDataManager manager = new FakeDataManager();
+        sampleData1(manager);
+        helpProcess(plan, manager, expected);
+        assertEquals("SELECT g_0.e3 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1", manager.getQueries().iterator().next()); //$NON-NLS-1$
+    }
 
     @Test public void testCountWithHaving() {
         String sql = "select e1, count(*) from pm1.g1 group by e1 having count(*) > 1"; //$NON-NLS-1$
