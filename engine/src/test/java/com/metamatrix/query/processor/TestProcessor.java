@@ -6971,6 +6971,25 @@ public class TestProcessor {
         sampleData1(manager);
         helpProcess(plan, manager, expected);
     }
+    
+    /**
+     * A more direct test of 1, where the nested order by is unrelated
+     */
+    @Test public void testSortWithLimit3() {
+        String sql = "select c from (select pm1.g1.e3 c from pm1.g1 order by pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        
+        List[] expected = new List[] {
+                Arrays.asList(new Object[] { Boolean.FALSE }),
+        };
+
+        FakeDataManager manager = new FakeDataManager();
+        sampleData1(manager);
+        helpProcess(plan, manager, expected);
+    }
 
     @Test public void testCountWithHaving() {
         String sql = "select e1, count(*) from pm1.g1 group by e1 having count(*) > 1"; //$NON-NLS-1$

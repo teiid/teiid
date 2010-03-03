@@ -22,11 +22,13 @@
 
 package com.metamatrix.query.optimizer;
 
-import org.junit.Test;
-
 import static junit.framework.Assert.*;
 
+import org.junit.Test;
+
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -302,6 +304,17 @@ public class TestRuleMergeVirtual {
         
         SortNode node = (SortNode)plan.getRootNode();
         assertTrue("Alias was not accounted for in sort node", node.getElements().containsAll(node.getSortElements())); //$NON-NLS-1$
+    }
+    
+    @Test public void testMergeImplicitGroupBy() throws Exception {
+    	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT min(y), max(x) as x FROM (select e1 x, e2 + 1 y from pm1.g1) a) AS b", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
 
 }

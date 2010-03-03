@@ -162,7 +162,26 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    case NodeConstants.Types.SOURCE: {
 		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
-	            assignOutputElements(root.getFirstChild(), filterVirtualElements(root, outputElements, metadata), metadata, capFinder, rules, analysisRecord, context);
+	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);
+	            SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	            int size = symbolMap.asMap().size();
+	            symbolMap.asUpdatableMap().keySet().retainAll(outputElements);
+	            //if we have removed projected symbols, then we need to update the sort columns
+	            if (size > outputElements.size()) {
+	            	PlanNode sortNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
+	            	if (sortNode != null && !sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+		            	List<Expression> symbolOrder = symbolMap.getValues();
+	            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+	            		for (OrderByItem item : elements.getOrderByItems()) {
+							int position = symbolOrder.indexOf(SymbolMap.getExpression(item.getSymbol()));
+							item.setExpressionPosition(position);
+							if (position == -1) {
+								sortNode.setProperty(NodeConstants.Info.UNRELATED_SORT, true);
+							}
+						}
+	            	}
+	            }
+	            assignOutputElements(root.getFirstChild(), childElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    }
 		    case NodeConstants.Types.SET_OP: {
@@ -228,31 +247,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
             return symbolMap.getKeys();
         } 
-    	PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
-		if (limit == null) {
-			return outputElements;
-		}
-        //reset the output elements to be the output columns + what's required by the sort
-		PlanNode sort = NodeEditor.findNodePreOrder(limit, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
-        if (sort == null) {
-        	return outputElements;
-        }
-        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
-        
-        SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
-        List<ElementSymbol> symbolOrder = symbolMap.getKeys();
-        
-        for (OrderByItem item : sortOrder.getOrderByItems()) {
-            final Expression expr = item.getSymbol();
-            int index = topCols.indexOf(expr);
-            ElementSymbol symbol = symbolOrder.get(index);
-            if (!outputElements.contains(symbol)) {
-                outputElements.add(symbol);
-            }
-        }
-        return outputElements;
+    	return outputElements;
     }
     
     /**

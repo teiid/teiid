@@ -205,7 +205,7 @@ public class TestExpressionsInGroupBy extends TestCase {
             0,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            1,      // Project
             0,      // Select
             0,      // Sort
             0       // UnionAll

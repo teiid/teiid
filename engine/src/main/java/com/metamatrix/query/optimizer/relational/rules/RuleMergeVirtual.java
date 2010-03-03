@@ -133,15 +133,20 @@ public final class RuleMergeVirtual implements
         }
         
         PlanNode parentGroup = NodeEditor.findParent(frame, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
+        List<SingleElementSymbol> groupCols = null;
+        if (parentGroup != null) {
+        	groupCols = (List<SingleElementSymbol>)parentGroup.getProperty(NodeConstants.Info.GROUP_COLS);
+        }
 
-        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, parentGroup, metadata)) {
+        SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
+
+        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, groupCols, symbolMap, metadata)) {
             return root;
         }
 
         // Otherwise merge should work
 
         // Convert parent frame before merge
-        SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
         FrameUtil.convertFrame(frame, virtualGroup, FrameUtil.findJoinSourceNode(projectNode).getGroups(), symbolMap.asMap(), metadata);
 
         PlanNode parentBottom = frame.getParent();
@@ -195,7 +200,7 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        List<? extends SingleElementSymbol> requiredElements = RuleAssignOutputElements.determineSourceOutput(frame, new ArrayList<SingleElementSymbol>());
+        List<? extends SingleElementSymbol> requiredElements = getNecessaryOutput(frame);
         List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
 
         // check that it only performs simple projection and that all required symbols are projected
@@ -267,6 +272,42 @@ public final class RuleMergeVirtual implements
                  
         return root;
     }
+    
+	private static List<? extends SingleElementSymbol> getNecessaryOutput(PlanNode root) {
+		List<SingleElementSymbol> outputElements = new ArrayList<SingleElementSymbol>();
+		List<? extends SingleElementSymbol> result = RuleAssignOutputElements.determineSourceOutput(root, outputElements);
+		if (!result.isEmpty()) {
+			return result;
+		}
+		PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
+		if (limit == null) {
+			return outputElements;
+		}
+        //reset the output elements to be the output columns + what's required by the sort
+		PlanNode sort = NodeEditor.findNodePreOrder(limit, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
+        if (sort == null) {
+        	return outputElements;
+        }
+        OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
+        
+        SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        
+        List<ElementSymbol> symbolOrder = symbolMap.getKeys();
+        
+        for (OrderByItem item : sortOrder.getOrderByItems()) {
+            final Expression expr = item.getSymbol();
+            int index = topCols.indexOf(expr);
+            if (index < 0) {
+            	continue;
+            }
+            ElementSymbol symbol = symbolOrder.get(index);
+            if (!outputElements.contains(symbol)) {
+                outputElements.add(symbol);
+            }
+        }
+        return outputElements;
+	}
 
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
@@ -274,7 +315,8 @@ public final class RuleMergeVirtual implements
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
-                                                 PlanNode parentGroup,
+                                                 List<SingleElementSymbol> parentGroupingCols,
+                                                 SymbolMap symbolMap,
                                                  QueryMetadataInterface metadata) {
         List<SingleElementSymbol> selectSymbols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
         
@@ -302,7 +344,9 @@ public final class RuleMergeVirtual implements
         }
 
         //TODO: in each of the cases below, check to see if the offending projected symbol is actually used in the upper frame
-        for (SingleElementSymbol symbol : selectSymbols) {
+        List<ElementSymbol> virtualElements = symbolMap.getKeys();
+        for (int i = 0; i < selectSymbols.size(); i++) {
+        	SingleElementSymbol symbol = selectSymbols.get(i);
             Collection scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(symbol);
             if (!scalarSubqueries.isEmpty()) {
                 return false;
@@ -310,7 +354,7 @@ public final class RuleMergeVirtual implements
             if (checkForNullDependent && JoinUtil.isNullDependent(metadata, groups, SymbolMap.getExpression(symbol))) {
                 return false;
             }
-            if (parentGroup != null && !(SymbolMap.getExpression(symbol) instanceof SingleElementSymbol)) {
+            if (parentGroupingCols != null && !(SymbolMap.getExpression(symbol) instanceof SingleElementSymbol) && parentGroupingCols.contains(virtualElements.get(i))) {
                 return false;
             }
             // TEIID-16: We do not want to merge a non-deterministic scalar function

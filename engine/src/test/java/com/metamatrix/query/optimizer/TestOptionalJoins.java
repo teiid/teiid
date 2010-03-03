@@ -287,7 +287,7 @@ public class TestOptionalJoins {
     
     @Test public void testOptionalJoinWithNestedOrderBy() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3 inner join (select pm1.g2.e1, pm1.g1.e2 as y from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1 order by pm1.g2.e1 limit 10000) AS x on pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1 ORDER BY c_1"} ); //$NON-NLS-1$ //$NON-NLS-2$ 
+            new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1 ORDER BY g_1.e1"} ); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
