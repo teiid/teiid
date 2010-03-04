@@ -1,5 +1,0 @@
-group materialized_views_SqlServer;
-
-truncateTable( table ) ::= "TRUNCATE TABLE $table$;"
-
-rename( old, new ) ::= "EXEC sp_rename '$old$', '$new$';"

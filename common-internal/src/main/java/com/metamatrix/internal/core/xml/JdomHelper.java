@@ -738,22 +738,20 @@ public class JdomHelper {
      * @throws IOException if there are problems writing to the file.
      */
     public static void write( Document doc , String filename, String indent, boolean newlines ) throws IOException {
-        if(doc == null){
-            ArgCheck.isNotNull(doc,CorePlugin.Util.getString("JdomHelper.The_Document_reference_may_not_be_null_42")); //$NON-NLS-1$
-        }
-        
-        if(filename == null){
-            ArgCheck.isNotNull(filename,CorePlugin.Util.getString("JdomHelper.The_filename_may_not_be_null_43")); //$NON-NLS-1$
-        }
+        ArgCheck.isNotNull(doc,CorePlugin.Util.getString("JdomHelper.The_Document_reference_may_not_be_null_42")); //$NON-NLS-1$
+        ArgCheck.isNotNull(filename,CorePlugin.Util.getString("JdomHelper.The_filename_may_not_be_null_43")); //$NON-NLS-1$
         
         if(filename.length() == 0){
             ArgCheck.isNotZeroLength(filename,CorePlugin.Util.getString("JdomHelper.The_filename_may_not_be_zero-length_44")); //$NON-NLS-1$
         }
         
         FileOutputStream out = new FileOutputStream( filename );
-        write(doc,out,indent,newlines);
-        out.flush();
-        out.close();
+        try {
+	        write(doc,out,indent,newlines);
+	        out.flush();
+        } finally {
+        	out.close();
+        }
     }
 
     /**

@@ -1,5 +1,0 @@
-group materialized_views_DB2;
-
-truncateTable( table ) ::= "ALTER TABLE $table$ activate not logged initially with empty table;"
-
-rename( old, new ) ::= "RENAME TABLE $old$ TO $new$;"

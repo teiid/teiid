@@ -16,6 +16,7 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
 		</dependency>
 		
 		<dependency>
@@ -27,6 +28,7 @@
         <dependency>
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-client</artifactId>
+          <scope>provided</scope>
         </dependency>    
 		
 		<dependency>
@@ -44,16 +46,11 @@
 			<artifactId>saxon-dom</artifactId>
 		</dependency>
 				
-		<dependency>
-			<groupId>antlr</groupId>
-			<artifactId>stringtemplate</artifactId>
-		</dependency>
-		
         <dependency>
-          <groupId>com.google.code.guice</groupId>
-          <artifactId>guice</artifactId>
-        </dependency>  
-        
+          <groupId>javax.resource</groupId>
+          <artifactId>connector-api</artifactId>
+          <scope>provided</scope>
+        </dependency>        
 	</dependencies>
 	
 </project>

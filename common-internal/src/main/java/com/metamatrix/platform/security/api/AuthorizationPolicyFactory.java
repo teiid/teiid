@@ -42,6 +42,7 @@ import org.jdom.Element;
 import org.jdom.input.DOMBuilder;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
+import org.teiid.adminapi.AdminRoles;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -57,7 +58,7 @@ import com.metamatrix.common.util.LogConstants;
  */
 public class AuthorizationPolicyFactory {
 
-    private static final String GROUP = "group"; //$NON-NLS-1$
+    private static final String ROLE = "role"; //$NON-NLS-1$
     private static final String PRINCIPALS = "principals"; //$NON-NLS-1$
     private static final String ALLOW = "allow-"; //$NON-NLS-1$
     private static final String RESOURCE_NAME = "resource-name"; //$NON-NLS-1$
@@ -163,7 +164,7 @@ public class AuthorizationPolicyFactory {
 
             if (principalsElem != null) {
 
-                List groups = principalsElem.getChildren(GROUP);
+                List groups = principalsElem.getChildren(ROLE);
 
                 for (final Iterator groupsIter = groups.iterator(); groupsIter.hasNext();) {
                     final Element group = (Element)groupsIter.next();
@@ -226,7 +227,7 @@ public class AuthorizationPolicyFactory {
 
                 for (final Iterator principalsIter = principals.iterator(); principalsIter.hasNext();) {
                     MetaMatrixPrincipalName principal = (MetaMatrixPrincipalName)principalsIter.next();
-                    principalsElement.addContent(new Element(GROUP).setText(principal.getName()));
+                    principalsElement.addContent(new Element(ROLE).setText(principal.getName()));
                 }
             }
         } // for
@@ -268,4 +269,14 @@ public class AuthorizationPolicyFactory {
         }
 		return result;
 	}
+	
+	public static Collection<AuthorizationPolicy> buildDefaultAdminPolicies() {
+		Properties p = new Properties();
+		for (String role:AdminRoles.getAllRoleNames()) {
+			p.setProperty(role, role);
+		}
+		return buildAdminPolicies(p);
+		
+	}
+	
 }

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
@@ -47,34 +48,32 @@ import com.metamatrix.common.util.LogConstants;
  */
 public final class AuthorizationPermissionsImpl implements AuthorizationPermissions {
 
-    private Set thePermissions;
+	private static final long serialVersionUID = -5223347499647193459L;
+	
+	private Set<AuthorizationPermission> thePermissions = new HashSet<AuthorizationPermission>();
     // Used to provide permissions collection synchronization
-    private Object lockObj = new Object();
+    private ReentrantLock lockObj = new ReentrantLock();
 
-    private boolean readOnly;
+    private boolean readOnly = false;
 
-    /**
-     * Creates a new AuthorizationPermissionsImpl object containing no AuthorizationPermission objects.
-     */
     public AuthorizationPermissionsImpl() {
-        this.readOnly = false;
-	    this.thePermissions = new HashSet();
+    	
     }
-
     /**
      * Create a new AuthorizationPermissionsImpl object that is a copy of the original.
      * Make a deep copy of the orig.
      * @param orig The original to be copied.
      */
     public AuthorizationPermissionsImpl( AuthorizationPermissions orig ) {
-	    this();
-        synchronized (this.lockObj) {
+	    
+	    lockObj.lock();
+        try {
             Iterator permItr = orig.iterator();
             while ( permItr.hasNext() ) {
                 AuthorizationPermission aPerm = (AuthorizationPermission) permItr.next();
                 if ( aPerm != null ) {
                     try {
-                        this.thePermissions.add(aPerm.clone());
+                        this.thePermissions.add((AuthorizationPermission)aPerm.clone());
                     } catch ( CloneNotSupportedException e ) {
                         // They're all clonable but log anyway
                         final Object[] params = { aPerm };
@@ -84,6 +83,8 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
                     }
                 }
             }
+        } finally {
+        	lockObj.unlock();
         }
     }
 
@@ -121,8 +122,11 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
         }
         boolean result = false;
         if ( permission != null ) {
-            synchronized (this.lockObj) {
+        	lockObj.lock();
+            try {
                 result = this.thePermissions.add(permission);
+            } finally {
+            	lockObj.unlock();
             }
         }
         return result;
@@ -177,8 +181,11 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
      */
     public boolean remove(AuthorizationPermission permission) {
         boolean result = false;
-        synchronized (this.lockObj) {
+        lockObj.lock();
+        try {
             result = this.thePermissions.remove(permission);
+        } finally {
+        	lockObj.unlock();
         }
         return result;
     }
@@ -225,8 +232,11 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
      */
     public Iterator iterator() {
         Iterator permItr = Collections.EMPTY_SET.iterator();
-        synchronized (this.lockObj) {
+        lockObj.lock();
+        try {
             permItr = this.thePermissions.iterator();
+        } finally {
+        	lockObj.unlock();
         }
         return permItr;
     }
@@ -296,13 +306,16 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
      */
     private boolean addPermissions(Iterator permIter) {
         boolean result = false;
-        synchronized (this.lockObj) {
+        lockObj.lock();
+        try {
             while ( permIter.hasNext() ) {
                 AuthorizationPermission aPerm = (AuthorizationPermission) permIter.next();
                 if ( aPerm != null && this.thePermissions.add(aPerm) && !result ) {
                     result = true;
                 }
             }
+        } finally {
+        	lockObj.unlock();
         }
         return result;
     }
@@ -316,13 +329,16 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
      */
     private boolean removePermissions(Iterator permIter) {
         boolean result = false;
-        synchronized (this.lockObj) {
+        lockObj.lock();
+        try {
             while ( permIter.hasNext() ) {
                 AuthorizationPermission aPerm = (AuthorizationPermission) permIter.next();
                 if ( aPerm != null && this.thePermissions.remove(aPerm) && !result ) {
                     result = true;
                 }
             }
+        } finally {
+        	lockObj.unlock();
         }
         return result;
     }

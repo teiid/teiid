@@ -38,10 +38,12 @@ import java.util.Set;
  */
 public class AuthorizationPolicy implements Comparable, Serializable {
 
-    /**
+	private static final long serialVersionUID = -4542635173812413914L;
+
+	/**
      * Contains principal name
      */
-    private Set principals;
+    private Set<MetaMatrixPrincipalName> principals;
 
     private AuthorizationPermissions permissions;
 
@@ -56,7 +58,7 @@ public class AuthorizationPolicy implements Comparable, Serializable {
             throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0001));
         }
         this.authorizationPolicyID = id;
-        this.principals = new LinkedHashSet();
+        this.principals = new LinkedHashSet<MetaMatrixPrincipalName>();
         this.permissions = new AuthorizationPermissionsImpl();
     }
 
@@ -67,12 +69,12 @@ public class AuthorizationPolicy implements Comparable, Serializable {
      * @param principals the set of <code>MetaMatrixPrincipalName</code>s to which this policy applies.
      * @param permissions the permissions that define the resource access for this policy.
      */
-    public AuthorizationPolicy( AuthorizationPolicyID id, Set principals, Set permissions ) {
+    public AuthorizationPolicy( AuthorizationPolicyID id, Set<MetaMatrixPrincipalName> principals, Set permissions ) {
         this.authorizationPolicyID = id;
         if ( principals != null ) {
-            this.principals = new LinkedHashSet(principals);
+            this.principals = new LinkedHashSet<MetaMatrixPrincipalName>(principals);
         } else {
-            this.principals = new LinkedHashSet();
+            this.principals = new LinkedHashSet<MetaMatrixPrincipalName>();
         }
         this.permissions = new AuthorizationPermissionsImpl();
         this.permissions.add(permissions);
@@ -84,7 +86,7 @@ public class AuthorizationPolicy implements Comparable, Serializable {
      */
     public AuthorizationPolicy( AuthorizationPolicy orig ) {
         this.authorizationPolicyID = orig.authorizationPolicyID;
-        this.principals = new LinkedHashSet( orig.principals );
+        this.principals = new LinkedHashSet<MetaMatrixPrincipalName>( orig.principals );
         this.permissions = new AuthorizationPermissionsImpl();
         Iterator iter = orig.iterator();
         while ( iter.hasNext() ) {
@@ -172,7 +174,7 @@ public class AuthorizationPolicy implements Comparable, Serializable {
      * @return the set of <code>MetaMatrixPrincipalName</code>s to which this
      * policy applies; never null but possibly empty
      */
-    public Set getPrincipals() {
+    public Set<MetaMatrixPrincipalName> getPrincipals() {
         return principals;
     }
 
@@ -387,38 +389,6 @@ public class AuthorizationPolicy implements Comparable, Serializable {
         // Compare policy IDs
         return (obj1.hashCode() == obj2.hashCode()) ? 0 :
                 obj1.authorizationPolicyID.compareTo(obj2.authorizationPolicyID);
-
-// JPC 04/25/03 - PolicyIDs are unique so doesn't seem like we need to compare all the rest of this stuff...
-//        // Compare policy IDs
-//        int compVal = AuthorizationPolicyID.compare(obj1.authorizationPolicyID, obj2.authorizationPolicyID);
-//
-//        // Compare principals
-//        if ( compVal == 0 ) {
-//            compVal += obj1.principals.equals(obj2.principals) ? 0 : -1;
-//        }
-//
-//        // Compare permissions -
-//        // One must imply all of the other AND other must imply all of the one
-//        Iterator permItr = obj2.permissions.iterator();
-//        while ( permItr.hasNext() && compVal == 0 ) {
-//            AuthorizationPermission perm = (AuthorizationPermission) permItr.next();
-//            try {
-//                compVal += obj1.permissions.implies(perm) ? 0 : -1;
-//            } catch ( MetaBaseResourceNotResolvedException e ) {
-//                // Do nothing
-//            }
-//        }
-//        permItr = obj1.permissions.iterator();
-//        while ( permItr.hasNext() && compVal == 0 ) {
-//            AuthorizationPermission perm = (AuthorizationPermission) permItr.next();
-//            try {
-//                compVal += obj2.permissions.implies(perm) ? 0 : -1;
-//            } catch ( MetaBaseResourceNotResolvedException e ) {
-//                // Do nothing
-//            }
-//        }
-//
-//        return compVal;
     }
 
     // =========================================================================
@@ -453,9 +423,9 @@ public class AuthorizationPolicy implements Comparable, Serializable {
      * this policy will apply to no principals.
      * @param principals the new set of <code>MetaMatrixPrincipalName</code>s to which this policy applies.
      */
-    public void setPrincipals(Set principals) {
+    public void setPrincipals(Set<MetaMatrixPrincipalName> principals) {
         if ( principals != null ) {
-            this.principals = new LinkedHashSet(principals);
+            this.principals = new LinkedHashSet<MetaMatrixPrincipalName>(principals);
         } else {
             this.principals.clear();
         }
@@ -542,7 +512,7 @@ public class AuthorizationPolicy implements Comparable, Serializable {
      * @return true if this policy changed as a result of the additions.
      * @throws IllegalArgumentException if the specified set of principals is null or if the set contains a null value.
      */
-    public boolean addAllPrincipals(Set newPrincipals) {
+    public boolean addAllPrincipals(Set<MetaMatrixPrincipalName> newPrincipals) {
         if ( newPrincipals == null ) {
             throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0022));
         }

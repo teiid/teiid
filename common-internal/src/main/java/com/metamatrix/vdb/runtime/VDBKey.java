@@ -22,11 +22,14 @@
 
 package com.metamatrix.vdb.runtime;
 
+import java.io.Serializable;
+
 import com.metamatrix.core.util.HashCodeUtil;
 
-public class VDBKey {
-
-    private String name;
+public class VDBKey implements Serializable{
+	private static final long serialVersionUID = -7249750823144856081L;
+	
+	private String name;
     private String version;
     
     public VDBKey(String name, String version) {
@@ -35,6 +38,11 @@ public class VDBKey {
             this.version = version.toUpperCase();
         }
     }
+    
+    public VDBKey(String name, int version) {
+        this.name = name.toUpperCase();
+        this.version = String.valueOf(version);
+    }    
     
     public String getName() {
 		return name;

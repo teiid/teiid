@@ -27,7 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import com.google.inject.Inject;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.JavaLogWriter;
@@ -87,10 +86,8 @@ import com.metamatrix.core.log.MessageLevel;
  */
 public final class LogManager {
 
-    @Inject
     static LogConfiguration configuration = new LogConfigurationImpl(MessageLevel.DETAIL); // either injected or manually set using the set methods
     
-    @Inject
     static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
 
 

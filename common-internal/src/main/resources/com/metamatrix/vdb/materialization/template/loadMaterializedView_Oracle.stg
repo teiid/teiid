@@ -1,5 +1,0 @@
-group materialized_views_Oracle;
-
-truncateTable( table ) ::= "TRUNCATE TABLE $table$ REUSE STORAGE;"
-
-rename( old, new ) ::= "ALTER TABLE $old$ RENAME TO $new$;"

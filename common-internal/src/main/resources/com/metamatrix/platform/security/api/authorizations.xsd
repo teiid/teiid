@@ -60,7 +60,7 @@
 										<xs:element minOccurs="0" name="principals">
 											<xs:complexType>
 												<xs:sequence>
-													<xs:element maxOccurs="unbounded" name="group" type="xs:string"/>
+													<xs:element maxOccurs="unbounded" name="role" type="xs:string"/>
 												</xs:sequence>
 											</xs:complexType>
 										</xs:element>
