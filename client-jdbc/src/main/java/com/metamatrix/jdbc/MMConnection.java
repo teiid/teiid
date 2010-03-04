@@ -57,8 +57,6 @@ import java.util.logging.Logger;
 
 import javax.transaction.xa.Xid;
 
-import org.teiid.adminapi.Admin;
-
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -67,6 +65,7 @@ import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
@@ -215,7 +214,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
                 String key = (String)enumeration.nextElement();
                 Object anObj = info.get(key);
                 // Log each property except for password and token.
-                if (!MMURL.JDBC.CREDENTIALS.equalsIgnoreCase(key) && !MMURL.CONNECTION.PASSWORD.equalsIgnoreCase(key) && !MMURL.CONNECTION.CLIENT_TOKEN_PROP.equalsIgnoreCase(key)) { 
+                if (!MMURL.CONNECTION.PASSWORD.equalsIgnoreCase(key)) { 
                     logger.fine(key+"="+anObj); //$NON-NLS-1$
                 }
             }
@@ -225,14 +224,6 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     String getUrl() {
         return this.url;
     }
-   
-    /** 
-     * @see com.metamatrix.jdbc.api.Connection#getAdminAPI()
-     * @since 4.3
-     */
-    public synchronized Admin getAdminAPI() throws SQLException {
-        return this.serverConn.getService(Admin.class);
-    }
     
     /**
      * Connection identifier of this connection 
@@ -240,7 +231,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
      * @throws SQLException 
      */
     public String getConnectionId() {
-    	return this.serverConn.getLogonResult().getSessionID().toString();
+    	return String.valueOf(this.serverConn.getLogonResult().getSessionID());
     }
     
     long currentRequestId() {
@@ -287,7 +278,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         	} catch (SQLException se) {
         		firstException = se;
         	} finally {
-        		this.serverConn.shutdown();
+        		this.serverConn.close();
                 if ( firstException != null )
                 	throw (SQLException)firstException;
         	}
@@ -357,8 +348,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
 
     private void directCommit() throws SQLException {
         try {
-			this.dqp.commit();
-		} catch (XATransactionException e) {
+			ResultsFuture<?> future = this.dqp.commit();
+			future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
         logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
@@ -483,12 +475,12 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         checkConnection();
         //get the virtual database name to which we are connected.
 
-        return this.serverConn.getLogonResult().getProductInfo(MMURL.JDBC.VDB_NAME);
+        return this.serverConn.getLogonResult().getVdbName();
     }
     
-    public String getVDBVersion() throws SQLException {
+    public int getVDBVersion() throws SQLException {
     	checkConnection();
-        return this.serverConn.getLogonResult().getProductInfo(MMURL.JDBC.VDB_VERSION);
+        return this.serverConn.getLogonResult().getVdbVersion();
     }
 
     /**
@@ -726,8 +718,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         if (!autoCommitFlag) {
             try {
             	try {
-            		this.dqp.rollback();
-        		} catch (XATransactionException e) {
+            		ResultsFuture<?> future = this.dqp.rollback();
+            		future.get();
+        		} catch (Exception e) {
         			throw MMSQLException.create(e);
         		}
                 logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
@@ -812,8 +805,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         transactionXid = null;
         this.autoCommitFlag = true;
         try {
-        	this.dqp.commit(arg0, arg1);
-		} catch (XATransactionException e) {
+        	ResultsFuture<?> future = this.dqp.commit(arg0, arg1);
+        	future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -822,8 +816,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         checkConnection();
         this.autoCommitFlag = true;
         try {
-        	this.dqp.end(arg0, arg1);
-		} catch (XATransactionException e) {
+        	ResultsFuture<?> future = this.dqp.end(arg0, arg1);
+        	future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -831,8 +826,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     protected void forgetTransaction(MMXid arg0) throws SQLException {
         checkConnection();
         try {
-        	this.dqp.forget(arg0);
-		} catch (XATransactionException e) {
+        	ResultsFuture<?> future = this.dqp.forget(arg0);
+        	future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -841,8 +837,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         checkConnection();
         transactionXid = null;
         try {
-        	return this.dqp.prepare(arg0);
-		} catch (XATransactionException e) {
+        	ResultsFuture<Integer> future = this.dqp.prepare(arg0);
+        	return future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -850,8 +847,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     protected Xid[] recoverTransaction(int arg0) throws SQLException  {
         checkConnection();
         try {
-			return this.dqp.recover(arg0);
-		} catch (XATransactionException e) {
+			ResultsFuture<Xid[]> future = this.dqp.recover(arg0);
+			return future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -861,8 +859,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         transactionXid = null;
         this.autoCommitFlag = true;
         try {
-        	this.dqp.rollback(arg0);
-		} catch (XATransactionException e) {
+        	ResultsFuture<?> future = this.dqp.rollback(arg0);
+        	future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
     }
@@ -870,8 +869,9 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     protected void startTransaction(MMXid arg0, int arg1, int timeout) throws SQLException {
         checkConnection();
         try {
-        	this.dqp.start(arg0, arg1, timeout);
-		} catch (XATransactionException e) {
+        	ResultsFuture<?> future = this.dqp.start(arg0, arg1, timeout);
+        	future.get();
+		} catch (Exception e) {
 			throw MMSQLException.create(e);
 		}
         transactionXid = arg0;

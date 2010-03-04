@@ -127,7 +127,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		this.statement = statement;
 		this.parameters = parameters;
 		// server latency-related timestamp
-		this.processingTimestamp = resultsMsg.getProcessingTimestamp();
+		this.processingTimestamp = statement.getProcessingTimestamp();
         this.requestID = statement.getCurrentRequestID();
         this.cursorType = statement.getResultSetType();
         this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
@@ -1121,7 +1121,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 
 	protected void setResultsData(ResultsMessage resultsMsg) {
-		this.completedTimestamp = resultsMsg.getCompletedTimestamp();
+		this.completedTimestamp = new java.util.Date();
 		this.statement.accumulateWarnings(resultsMsg.getWarnings());
 	}
 
@@ -1191,9 +1191,9 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 
 	/**
-	 * Gets the time command execution is compleated on the server.
+	 * Gets the time command execution is completed on the server.
 	 * 
-	 * @return Date object representing time the commond finished execution.
+	 * @return Date object representing time the command finished execution.
 	 */
 	public java.util.Date getCompletedTimestamp() throws SQLException {
 		checkClosed();

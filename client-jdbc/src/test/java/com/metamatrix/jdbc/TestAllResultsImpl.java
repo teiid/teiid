@@ -32,7 +32,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
@@ -675,35 +674,6 @@ public class TestAllResultsImpl {
 
 		rs.close();
 	}
-
-	/**
-	 * Case 4293 - timestamps for begin and end processing should both be set
-	 * server-side (from the same system clock)
-	 */
-	@Test public void testProcessingTime() throws Exception {
-		RequestMessage request = new RequestMessage();
-		request.setProcessingTimestamp(new Date(12345678L));
-		ResultsMessage resultsMsg = new ResultsMessage(request);
-
-		// these two lines not important to the test
-		resultsMsg.setColumnNames(new String[] { "IntNum" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER }); 
-
-		// expected results
-		long expectedProcessingTime = resultsMsg.getCompletedTimestamp()
-				.getTime()
-				- resultsMsg.getProcessingTimestamp().getTime();
-
-		// sleep for a couple milliseconds
-		Thread.sleep(200);
-
-		MMResultSet rs = new MMResultSet(resultsMsg, statement);
-
-		long actualProcessingTime = rs.getProcessingTime();
-
-		assertEquals(expectedProcessingTime, actualProcessingTime);
-
-	}
 	
 	/**
 	 * 3 batches
@@ -850,7 +820,6 @@ public class TestAllResultsImpl {
 	
 	private static ResultsMessage exampleResultsMsg4(int begin, int length, int fetchSize, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
-		request.setProcessingTimestamp(new Date(1L));
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage(request);
 		List[] results = exampleResults1(length, begin);
@@ -879,7 +848,6 @@ public class TestAllResultsImpl {
 	
 	@Test public void testDateType() throws SQLException {
 		RequestMessage request = new RequestMessage();
-		request.setProcessingTimestamp(new Date(1L));
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage(request);
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});

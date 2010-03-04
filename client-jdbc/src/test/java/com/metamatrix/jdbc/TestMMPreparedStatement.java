@@ -41,6 +41,7 @@ import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 import com.metamatrix.platform.security.api.LogonResult;
 
 /**
@@ -113,8 +114,7 @@ public class TestMMPreparedStatement {
 		// Now verify the statement's RequestMessage is what we expect 
 		assertEquals("Command does not match", sqlCommand, statement.requestMessage.getCommandString()); //$NON-NLS-1$
 		assertEquals("Parameter values do not match", expectedParameterValues, statement.requestMessage.getParameterValues()); //$NON-NLS-1$
-		assertTrue("RequestMessage.isPreparedBatchUpdate should be true", statement.requestMessage.isPreparedBatchUpdate()); //$NON-NLS-1$
-		assertFalse("RequestMessage.isBatchedUpdate should be false", statement.requestMessage.isBatchedUpdate()); //$NON-NLS-1$
+		assertTrue("RequestMessage.isBatchedUpdate should be true", statement.requestMessage.isBatchedUpdate()); //$NON-NLS-1$
 		assertFalse("RequestMessage.isCallableStatement should be false", statement.requestMessage.isCallableStatement()); //$NON-NLS-1$
 		assertTrue("RequestMessage.isPreparedStatement should be true", statement.requestMessage.isPreparedStatement()); //$NON-NLS-1$
 	}
@@ -323,9 +323,9 @@ public class TestMMPreparedStatement {
 		public RequestMessage requestMessage;
 		@Override
 		protected RequestMessage createRequestMessage(String[] commands,
-				boolean isBatchedCommand, Boolean requiresResultSet) {
+				boolean isBatchedCommand, ResultsMode resultsMode) {
 			this.requestMessage = super
-					.createRequestMessage(commands, isBatchedCommand, requiresResultSet);
+					.createRequestMessage(commands, isBatchedCommand, resultsMode);
 			return this.requestMessage;
 		}
 

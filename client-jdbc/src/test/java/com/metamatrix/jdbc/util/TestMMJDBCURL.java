@@ -29,7 +29,6 @@ import junit.framework.TestCase;
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 
@@ -243,15 +242,10 @@ public class TestMMJDBCURL extends TestCase {
         } catch (Exception e) {
             
         }
+
         try {
-            new MMJDBCURL("myVDB", null, null); //$NON-NLS-1$
-            fail("Should have failed."); //$NON-NLS-1$
-        } catch (Exception e) {
-            
-        }
-        try {
+        	// in embedded situation there is no connection url
             new MMJDBCURL("myVDB", "  ", null); //$NON-NLS-1$ //$NON-NLS-2$
-            fail("Should have failed."); //$NON-NLS-1$
         } catch (Exception e) {
             
         }
@@ -265,7 +259,6 @@ public class TestMMJDBCURL extends TestCase {
         MMJDBCURL.normalizeProperties(props);
         assertEquals("myuser", props.getProperty(BaseDataSource.USER_NAME)); //$NON-NLS-1$
         assertEquals("mypassword", props.getProperty(BaseDataSource.PASSWORD)); //$NON-NLS-1$
-        assertEquals(new Integer(1), props.get(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD));
     }
     
     public final void testEncodedPropertyProperties() throws Exception {

@@ -60,6 +60,8 @@ import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
+import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
@@ -186,7 +188,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 	@Override
 	//## JDBC4.0-end ##
     public boolean execute() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, null);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER);
         return hasResultSet();
     }
     
@@ -196,7 +198,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
    	     	return new int[0];
     	}
 	   	try{
-	   		executeSql(new String[] {this.prepareSql}, true, false);
+	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT);
 	   	}finally{
 	   		batchParameterList.clear();
 	   	}
@@ -207,7 +209,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 	@Override
 	//## JDBC4.0-end ##
     public ResultSet executeQuery() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, true);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET);
         return resultSet;
     }
 
@@ -215,17 +217,17 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 	@Override
 	//## JDBC4.0-end ##
     public int executeUpdate() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, false);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT);
         return this.updateCounts[0];
     }
     
     @Override
     protected RequestMessage createRequestMessage(String[] commands,
-    		boolean isBatchedCommand, Boolean requiresResultSet) {
-    	RequestMessage message = super.createRequestMessage(commands, false, requiresResultSet);
-    	message.setPreparedStatement(true);
+    		boolean isBatchedCommand, ResultsMode resultsMode) {
+    	RequestMessage message = super.createRequestMessage(commands, false, resultsMode);
+    	message.setStatementType(StatementType.PREPARED);
     	message.setParameterValues(isBatchedCommand?getParameterValuesList(): getParameterValues());
-    	message.setPreparedBatchUpdate(isBatchedCommand);
+    	message.setBatchedUpdate(isBatchedCommand);
     	return message;
     }
 

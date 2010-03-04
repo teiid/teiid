@@ -68,11 +68,6 @@ public class MMDataSource extends BaseDataSource {
      */
     private String serverName;
      
-    /**
-     * Specify a set of data source credentials to pass to the connectors as defined in 
-     * {@link MMURL.JDBC.CREDENTIALS}.  
-     */
-    private String credentials; 
     
     /**
      * Specify whether to make a secure (SSL, mms:) connection or a normal non-SSL mm: connection.
@@ -113,10 +108,6 @@ public class MMDataSource extends BaseDataSource {
         
         if (this.getAutoFailover() != null) {
             props.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
-        }
-        
-        if (this.getCredentials() != null) {
-            props.setProperty(MMURL.JDBC.CREDENTIALS, this.getCredentials());
         }
         
         if (this.getDiscoveryStrategy() != null) {
@@ -248,14 +239,6 @@ public class MMDataSource extends BaseDataSource {
     }
     
     /**
-     * Returns the credentials string defining credentials to use with connectors for per-user logon.
-     * @since 4.3.2
-     */
-    public String getCredentials() {
-        return credentials;
-    }
-    
-    /**
      * Returns a flag indicating whether to create a secure connection or not. 
      * @return True if using secure mms: protocol, false for normal mm: protocol.
      * @since 5.0.2
@@ -294,14 +277,6 @@ public class MMDataSource extends BaseDataSource {
      */
     public void setServerName(final String serverName) {
         this.serverName = serverName;
-    }
-    
-    /**
-     * Sets the credentials string defining credentials to use with connectors for per-user logon.
-     * @since 4.3.2
-     */
-    public void setCredentials(final String credentials) {
-        this.credentials = credentials;
     }
     
     /**

@@ -23,7 +23,6 @@
 package com.metamatrix.jdbc;
 
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
@@ -141,18 +140,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     private String description;
 
-    /**
-     * The <code>Serializable</code> client token that will be passed directly
-     * through to the connectors, which may use it and/or pass it down to their underlying data source.
-     * This property is <i>optional</i>.
-     * <p>
-     * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
-     * available for authentication/augmentation/replacement upon authentication to the system and to
-     * connectors that may require it at the data source level.
-     * </p>
-     */
-    private Serializable clientToken;
 
     /**
      * The user's name.
@@ -274,12 +261,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
             props.setProperty(BaseDataSource.APP_NAME,this.getApplicationName());
         }
         
-        Serializable token = this.getClientToken();
-        if ( token != null ) {
-            // Special case: token is a Serializable, not necessarily a String
-            props.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, token);
-        }
-
         if (this.getPartialResultsMode() != null && this.getPartialResultsMode().trim().length() != 0) {
             props.setProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, this.getPartialResultsMode());
         }
@@ -313,11 +294,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
     protected void validateProperties( final String userName, final String password) throws java.sql.SQLException {
         String reason = reasonWhyInvalidApplicationName(this.applicationName);
-        if ( reason != null ) {
-            throw new SQLException(reason);
-        }
-
-        reason = reasonWhyInvalidClientToken(this.clientToken);
         if ( reason != null ) {
             throw new SQLException(reason);
         }
@@ -553,23 +529,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * Get the <code>Serializable</code> client token that will be passed directly
-     * through to the connectors, which may use it and/or pass it down to their underlying data source.
-     * This property is <i>optional</i>.
-     * <p>
-     * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
-     * available for authentication/augmentation/replacement upon authentication to the system and to
-     * connectors that may require it at the data source level.
-     * </p>
-     * @return The client token that was supplied by the client at system connection time; may be <code>null</code>.
-     */
-    public Serializable getClientToken() {
-        return clientToken;
-    }
-
-    /**
-     * Sets the name of the application.  Supplying this property may allow an administrator of a
+<     * Sets the name of the application.  Supplying this property may allow an administrator of a
      * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      * @param applicationName The applicationName to set
@@ -618,22 +578,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     public void setPassword(final String password) {
         this.password = password;
-    }
-
-    /**
-     * Set the <code>Serializable</code> client token that will be passed directly
-     * through to the connectors, which may use it and/or pass it down to their underlying data source.
-     * This property is <i>optional</i>.
-     * <p>
-     * The form and type of the client token is up to the client but it <i>must</i> implement the
-     * <code>Serializabe</code> interface.  Teiid does nothing with this token except to make it
-     * available for authentication/augmentation/replacement upon authentication to the system and to
-     * connectors that may require it at the data source level.
-     * </p>
-     * @param clientToken The client token that will be passed with this user's requests.
-     */
-    public void setClientToken(Serializable clientToken) {
-        this.clientToken = clientToken;
     }
 
     /**
@@ -760,16 +704,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         return null;        // anything is valid
     }
 
-    /**
-     * Return the reason why the supplied client token may be invalid, or null
-     * if it is considered valid.
-     * @param clientToken a possible value for the property
-     * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setClientToken(Serializable)
-     */
-    public static String reasonWhyInvalidClientToken(final Serializable clientToken) {
-        return null;        // it is optional
-    }
+
 
     /**
      * Return the reason why the supplied virtual database name may be invalid, or null

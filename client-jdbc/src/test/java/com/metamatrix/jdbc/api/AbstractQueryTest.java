@@ -41,7 +41,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.After;
-import org.teiid.adminapi.Admin;
 
 import com.metamatrix.script.io.MetadataReader;
 import com.metamatrix.script.io.ResultSetReader;
@@ -80,17 +79,7 @@ public abstract class AbstractQueryTest {
     @After public void tearDown() throws Exception {
     	closeConnection();
     }
-    
-    public Admin getAdmin() {
-        try {
-            assertNotNull(this.internalConnection);
-            com.metamatrix.jdbc.api.Connection conn = (com.metamatrix.jdbc.api.Connection) this.internalConnection;
-            return conn.getAdminAPI();
-        } catch (SQLException e) {
-        	throw new RuntimeException(e);
-        }
-    }
-        
+           
     public void setConnection(Connection c) {
     	this.internalConnection = c;
     }
@@ -250,7 +239,6 @@ public abstract class AbstractQueryTest {
         	throw new RuntimeException(e);
         }
     }
-
 
 	private void writeResultSet(File expected, BufferedReader resultReader)
 			throws IOException {

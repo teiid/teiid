@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.sql.DriverPropertyInfo;
 
@@ -35,19 +36,19 @@ public class TestTeiidDriver {
     
     @Test public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:teiid:vdb@mm://localhost:12345", null); //$NON-NLS-1$
-        assertEquals(20, info.length);
+        assertEquals(17, info.length);
     }
     
     @Test public void testAccepts() throws Exception {
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb")); //$NON-NLS-1$
-    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
+    	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
     	
-    	assertTrue(drv.acceptsURL("jdbc:metamatrix:vdb@mm://localhost:12345")); //$NON-NLS-1$
-    	assertTrue(drv.acceptsURL("jdbc:metamatrix:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
-    	assertTrue(drv.acceptsURL("jdbc:metamatrix:vdb")); //$NON-NLS-1$
-    	assertTrue(drv.acceptsURL("jdbc:metamatrix:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb")); //$NON-NLS-1$
+    	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
     	
     }
     

@@ -31,7 +31,6 @@ import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 
@@ -59,11 +58,8 @@ public class MMJDBCURL {
         ExecutionProperties.PROP_XML_FORMAT,
         ExecutionProperties.PROP_XML_VALIDATION,
         ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-        ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD,
-        ConnectionProperties.PROP_CREDENTIALS,
         MMURL.CONNECTION.AUTO_FAILOVER,
-        MMURL.CONNECTION.DISCOVERY_STRATEGY,
-        MMURL.CONNECTION.SHUTDOWN
+        MMURL.CONNECTION.DISCOVERY_STRATEGY
     };
     
     private String vdbName;
@@ -77,8 +73,7 @@ public class MMJDBCURL {
     }
     
     public MMJDBCURL(String vdbName, String connectionURL, Properties props) {
-        if (vdbName == null || vdbName.trim().length() == 0 ||
-            connectionURL == null || connectionURL.trim().length() == 0) {
+        if (vdbName == null || vdbName.trim().length() == 0) {
             throw new IllegalArgumentException();
         }
         this.vdbName = vdbName;
@@ -201,9 +196,10 @@ public class MMJDBCURL {
     public String getJDBCURL() {
         if (urlString == null) {
             StringBuffer buf = new StringBuffer(JDBC_PROTOCOL)
-                .append(vdbName)
-                .append('@')
-                .append(connectionURL);
+                .append(vdbName);
+            	if (this.connectionURL != null) {
+            		buf.append('@').append(connectionURL);
+            	}
             for (Iterator i = properties.entrySet().iterator(); i.hasNext();) {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {

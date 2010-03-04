@@ -29,17 +29,22 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.api.MMURL;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestMMConnection extends TestCase {
 
 	protected static final String STD_DATABASE_NAME         = "QT_Ora9DS"; //$NON-NLS-1$
-    protected static final String STD_DATABASE_VERSION      = "1"; //$NON-NLS-1$
+    protected static final int STD_DATABASE_VERSION      = 1; 
     
     static String serverUrl = "jdbc:metamatrix:QT_Ora9DS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
 
@@ -49,15 +54,35 @@ public class TestMMConnection extends TestCase {
     
     public static MMConnection getMMConnection() {
     	ServerConnection mock = mock(ServerConnection.class);
-    	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
+    	ClientSideDQP dqp = mock(ClientSideDQP.class);
+    	try {
+			stub(dqp.start((MMXid)Mockito.anyObject(), Mockito.anyInt(), Mockito.anyInt())).toAnswer(new Answer() {
+				@Override
+				public Object answer(InvocationOnMock invocation) throws Throwable {
+					return ResultsFuture.NULL_FUTURE;
+				}
+			});
+			stub(dqp.rollback((MMXid)Mockito.anyObject())).toAnswer(new Answer() {
+				@Override
+				public Object answer(InvocationOnMock invocation) throws Throwable {
+					return ResultsFuture.NULL_FUTURE;
+				}
+			});
+			stub(dqp.rollback()).toAnswer(new Answer() {
+				@Override
+				public Object answer(InvocationOnMock invocation) throws Throwable {
+					return ResultsFuture.NULL_FUTURE;
+				}
+			});
+		} catch (XATransactionException e) {
+			throw new RuntimeException(e);
+		}
+    	stub(mock.getService(ClientSideDQP.class)).toReturn(dqp);
     	Properties props = new Properties();
     	props.setProperty(BaseDataSource.VDB_NAME, STD_DATABASE_NAME);
-    	props.setProperty(BaseDataSource.VDB_VERSION, STD_DATABASE_VERSION);
+    	props.setProperty(BaseDataSource.VDB_VERSION, String.valueOf(STD_DATABASE_VERSION));
     	props.setProperty(BaseDataSource.USER_NAME, "metamatrixadmin"); //$NON-NLS-1$
-    	Properties productInfo = new Properties();
-    	productInfo.setProperty(MMURL.JDBC.VDB_NAME, STD_DATABASE_NAME);
-    	productInfo.setProperty(MMURL.JDBC.VDB_VERSION, STD_DATABASE_VERSION);
-    	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "metamatrixadmin"), productInfo, "fake")); //$NON-NLS-1$
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(1, "metamatrixadmin"), STD_DATABASE_NAME,STD_DATABASE_VERSION , "fake")); //$NON-NLS-1$
     	return new MMConnection(mock, props, serverUrl);
     }
 

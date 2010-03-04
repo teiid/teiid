@@ -105,7 +105,7 @@ final class SocketProfile {
     static MMConnection createConnection(String url, Properties info)
         throws ConnectionException, CommunicationException {
 
-        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
+        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
 
         // construct a MMConnection object.
         MMConnection connection = new MMConnection(serverConn, info, url);

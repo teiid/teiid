@@ -43,7 +43,6 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionF
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -140,7 +139,7 @@ public final class MMDriver extends BaseDriver {
     MMConnection createMMConnection(String url, Properties info)
         throws ConnectionException, CommunicationException {
 
-        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
+        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
 
         // construct a MMConnection object.
         MMConnection connection = new MMConnection(serverConn, info, url);
@@ -238,7 +237,6 @@ public final class MMDriver extends BaseDriver {
         dpis.add(dpi);
         dpis.add(new DriverPropertyInfo(BaseDataSource.USER_NAME, info.getProperty(BaseDataSource.USER_NAME)));
         dpis.add(new DriverPropertyInfo(BaseDataSource.PASSWORD, info.getProperty(BaseDataSource.PASSWORD)));
-        dpis.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, info.getProperty(BaseDataSource.PASSWORD)));
         return dpis;
     }
     

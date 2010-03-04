@@ -88,10 +88,10 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
     protected void checkResult(String testName, ResultSet actualResults, String testsuite)  throws Exception {
     	ResultSetMetaData resultMetadata = actualResults.getMetaData();
         
-    	String metafilename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".metadata.txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+    	String metafilename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".metadata.txt"; //$NON-NLS-1$ //$NON-NLS-2$ 
         assertResultsSetMetadataEquals(resultMetadata, new File(metafilename));
     	
-        String filename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".txt"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+        String filename = UnitTestUtil.getTestDataPath() + File.separator+testsuite+File.separator + "expected" + File.separator+ testName.substring(4) + ".txt"; //$NON-NLS-1$ //$NON-NLS-2$ 
         assertResultsSetEquals(actualResults, new File(filename));
     }
  

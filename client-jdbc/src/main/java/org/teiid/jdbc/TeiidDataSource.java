@@ -22,21 +22,17 @@
 
 package org.teiid.jdbc;
 
-import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.protocol.URLHelper;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMSQLException;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
- * The MetaMatrix JDBC DataSource implementation class of {@link javax.sql.DataSource} and
+ * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
  * {@link javax.sql.XADataSource}.
  * <p>
  * The {@link javax.sql.DataSource} interface follows the JavaBean design pattern,
@@ -52,10 +48,11 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  * The following are the properties for this DataSource:
  * <table cellspacing="0" cellpadding="0" border="1" width="100%">
  *   <tr><td><b>Property Name</b></td><td><b>Type</b></td><td><b>Description</b></td></tr>
- *   <tr><td>portNumber       </td><td><code>int   </code></td><td>The port number where a MetaMatrix Server is listening
+ *   <tr><td>portNumber       </td><td><code>int   </code></td><td>The port number where a Teiid Server is listening
  *                                                                 for requests.</td></tr>
- *   <tr><td>serverName       </td><td><code>String</code></td><td>The hostname or IP address of the MetaMatrix Server.</td></tr>
+ *   <tr><td>serverName       </td><td><code>String</code></td><td>The hostname or IP address of the Teiid Server.</td></tr>
  * <table>
+ * If "serverName" property is not set then data source will try to create a embedded connection to the Teiid server.
  * </p>
  */
 public class TeiidDataSource extends BaseDataSource {
@@ -74,12 +71,6 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private String serverName;
      
-    /**
-     * Specify a set of data source credentials to pass to the connectors as defined in 
-     * {@link MMURL.JDBC.CREDENTIALS}.  
-     */
-    private String credentials; 
-    
     /**
      * Specify whether to make a secure (SSL, mms:) connection or a normal non-SSL mm: connection.
      * the default is to use a non-secure connection.
@@ -102,8 +93,6 @@ public class TeiidDataSource extends BaseDataSource {
     
     private String discoveryStrategy;
     
-    private String bootstrapFile;
-    
     /**
      * Constructor for MMDataSource.
      */
@@ -119,10 +108,6 @@ public class TeiidDataSource extends BaseDataSource {
         
         if (this.getAutoFailover() != null) {
             props.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
-        }
-        
-        if (this.getCredentials() != null) {
-            props.setProperty(MMURL.JDBC.CREDENTIALS, this.getCredentials());
         }
         
         if (this.getDiscoveryStrategy() != null) {
@@ -227,10 +212,9 @@ public class TeiidDataSource extends BaseDataSource {
     	final TeiidDriver driver = new TeiidDriver();
 
     	// check if this is embedded connection 
-    	if (getEmbeddedBootstrapFile() != null) {
-    		validateEmbeddedProperties(userName,password);
+    	if (getServerName() == null) {
 	        final Properties props = buildEmbeddedProperties(userName, password);	 
-	        String url = new MMJDBCURL(getDatabaseName(), getEmbeddedBootstrapFile(), props).getJDBCURL();
+	        String url = new MMJDBCURL(getDatabaseName(), null, props).getJDBCURL();
 	        return driver.connect(url, props);    		    		
     	}
     	
@@ -243,20 +227,7 @@ public class TeiidDataSource extends BaseDataSource {
     
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
 		Properties props = buildProperties(userName, password);
-
-		if (this.getEmbeddedBootstrapFile().equals(EmbeddedProfile.getDefaultConnectionURL())) {
-			props.put(DQPEmbeddedProperties.VDB_DEFINITION, getDatabaseName() + ".vdb"); //$NON-NLS-1$
-		}
-		props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE, this.bootstrapFile);
 		return props;
-	}
-
-	private void validateEmbeddedProperties(final String userName, final String password) throws java.sql.SQLException {
-		super.validateProperties(userName, password);
-		String reason = reasonWhyInvalidConfigFile(this.bootstrapFile);
-		if (reason != null) {
-			throw new SQLException(reason);
-		}
 	}    
 	
    /**
@@ -284,14 +255,6 @@ public class TeiidDataSource extends BaseDataSource {
      */
     public String getServerName() {
         return serverName;
-    }
-    
-    /**
-     * Returns the credentials string defining credentials to use with connectors for per-user logon.
-     * @since 4.3.2
-     */
-    public String getCredentials() {
-        return credentials;
     }
     
     /**
@@ -333,14 +296,6 @@ public class TeiidDataSource extends BaseDataSource {
      */
     public void setServerName(final String serverName) {
         this.serverName = serverName;
-    }
-    
-    /**
-     * Sets the credentials string defining credentials to use with connectors for per-user logon.
-     * @since 4.3.2
-     */
-    public void setCredentials(final String credentials) {
-        this.credentials = credentials;
     }
     
     /**
@@ -521,46 +476,5 @@ public class TeiidDataSource extends BaseDataSource {
 	public void setDiscoveryStrategy(String discoveryStrategy) {
 		this.discoveryStrategy = discoveryStrategy;
 	}
-
-    /**
-     * Returns the path and file name from which embedded DQP configuration information will be read.
-     * 
-     * @return the name of the config file for this data source; may be null
-     */
-    public String getEmbeddedBootstrapFile() {
-        return bootstrapFile;
-    }
-
-    /**
-     * Sets file name from which embedded DQP configuration information * will be read.
-     * 
-     * @param configFile
-     *            The name of the config file name to set
-     */
-    public void setEmbeddedBootstrapFile(final String configFile) {
-        this.bootstrapFile = configFile;
-    }
-    
-    /**
-     * Return the reason why the supplied config file may be invalid, or null if it is considered valid.
-     * 
-     * @param configFile
-     *            a possible value for the property
-     * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setEmbeddedBootstrapFile(String)
-     */
-    public static String reasonWhyInvalidConfigFile(final String configFile) {
-        if(configFile == null) {
-            return getResourceMessage("EmbeddedDataSource.The_configFile_property_is_null"); //$NON-NLS-1$
-        }
-        
-        try {
-            URL url = URLHelper.buildURL(configFile);
-            url.openStream();
-        } catch (Exception e) {
-            return getResourceMessage("EmbeddedDataSource.The_configFile_does_not_exist_or_cant_be_read"); //$NON-NLS-1$
-        }        
-        return null;
-    }    
 }
 

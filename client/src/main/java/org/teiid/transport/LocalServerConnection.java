@@ -26,15 +26,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.client.ExceptionUtil;
@@ -48,7 +45,7 @@ import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.SessionToken;
 
 public class LocalServerConnection implements ServerConnection {
-	private static final String TEIID_RUNTIME = "teiid/engine-deployer";
+	private static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
 	
 	private final LogonResult result;
 	private boolean shutdown;
@@ -119,13 +116,7 @@ public class LocalServerConnection implements ServerConnection {
 				if (writeFuture != null) {
 					writeFuture.get(5000, TimeUnit.MILLISECONDS);
 				}
-			} catch (InvalidSessionException e) {
-				//ignore
-			} catch (InterruptedException e) {
-				//ignore
-			} catch (ExecutionException e) {
-				//ignore
-			} catch (TimeoutException e) {
+			} catch (Exception e) {
 				//ignore
 			}
 		}
@@ -141,6 +132,7 @@ public class LocalServerConnection implements ServerConnection {
 		return (conn instanceof LocalServerConnection);
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected <T> T lookup(String jndiName) throws NamingException {
 		InitialContext ic = new InitialContext();
 		return (T)ic.lookup(jndiName);

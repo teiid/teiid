@@ -24,23 +24,13 @@ package com.metamatrix.jdbc.api;
 
 import java.sql.SQLException;
 
-import org.teiid.adminapi.Admin;
-
 
 
 /**
- * MetaMatrix extensions to the standard JDBC Connection interface. 
+ * Extensions to the standard JDBC Connection interface. 
  */
 public interface Connection extends java.sql.Connection {
 
-    /**
-     * Retrieve an administrative object used to control MM Query. 
-     * @return EmbeddedAdmin object to administer the MM Query component
-     * corresponding to this connection.
-     * @throws SQLException
-     */
-    Admin getAdminAPI() throws SQLException;
-    
-    String getVDBVersion() throws SQLException;
+    int getVDBVersion() throws SQLException;
 
 }

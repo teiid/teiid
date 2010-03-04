@@ -45,112 +45,81 @@ public class TestEmbeddedProfile {
      * // (\\w:[\\\\,\\/]|file:\\/\\/|\\/|\\\\|(\\.){1,2}){1}
      */
     @Test public void testAcceptsURL() {    
-//        // Windows Path
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1;autoCommitTxn=ON;partialResultsMode=YES")); //$NON-NLS-1$
-        
-        // Alternative windows path
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1;autoCommitTxn=ON;partialResultsMode=YES")); //$NON-NLS-1$
-
-        // Abosolute path (Unix or windows)
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1;autoCommitTxn=ON;partialResultsMode=YES")); //$NON-NLS-1$
-
-        // relative path
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1;autoCommitTxn=ON;partialResultsMode=YES")); //$NON-NLS-1$
-        
-        // File URL should be supported (not sure)
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@file:///c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
         // ClassPath based URL
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
+        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
         // These are specific to the MMorg.teiid.jdbc.EmbeddedProfile and should not be suported
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@mm://host:7001;version=1")); //$NON-NLS-1$
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@mms://host:7001;version=1")); //$NON-NLS-1$
-        //assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT@http://host:7001;version=1"));
+        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@mm://host:7001;version=1")); //$NON-NLS-1$
+        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@mms://host:7001;version=1")); //$NON-NLS-1$
         
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT")); //$NON-NLS-1$
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT!/path/foo.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT;")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:metamatrix:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
+        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT")); //$NON-NLS-1$
+        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
+        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;")); //$NON-NLS-1$
+        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
     }
 
     @Test public void testParseURL() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertEquals("c:\\metamatrix\\dqp\\dqp.properties", p.getProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE)); //$NON-NLS-1$
-        assertEquals(3, p.size());        
+        assertEquals(2, p.size());        
     }
 
     @Test public void testParseURL2() throws SQLException {
         Properties p = new Properties();       
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT@\\metamatrix\\dqp\\dqp.properties;version=3", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertEquals("\\metamatrix\\dqp\\dqp.properties", p.getProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE)); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
-        assertEquals(5, p.size());
+        assertEquals(4, p.size());
     }
     
     @Test public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=4;autoCommitTxn=ON;partialResultsMode=YES;", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT@/metamatrix/dqp/dqp.properties;version=4;autoCommitTxn=ON;partialResultsMode=YES;", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
-        assertEquals(7, p.size());        
+        assertEquals(6, p.size());        
     }
     
     @Test public void testParseURL4() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;partialResultsMode=true", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertEquals("testdata/dqp/dqp.properties", p.getProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE)); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
-        assertEquals(4, p.size());                
+        assertEquals(3, p.size());                
     }
     
     @Test public void testParseURL5() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertTrue(p.get(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE).equals("classpath:/deploy.properties"));         //$NON-NLS-1$
     }
     
     @Test public void testParseURL55() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT;", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertTrue(p.get(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE).equals("classpath:/deploy.properties"));         //$NON-NLS-1$
     }    
        
     @Test public void testParseURL6() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:metamatrix:BQT;partialResultsMode=true;version=1", p); //$NON-NLS-1$
+        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;partialResultsMode=true;version=1", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertTrue(p.get(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE).equals("classpath:/deploy.properties")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1")); //$NON-NLS-1$
-        assertTrue(p.getProperty("vdb.definition").equals("BQT.vdb")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(7, p.size());                
+        assertEquals(5, p.size());                
         
     }
     
     @Test public void test() throws Exception {
         try {
             Class.forName("org.teiid.jdbc.TeiidDriver"); //$NON-NLS-1$
-            DriverManager.getConnection("jdbc:metamatrix:Parts@invalidConfig.properties;version=1"); //$NON-NLS-1$
+            DriverManager.getConnection("jdbc:teiid:Parts@invalidConfig.properties;version=1"); //$NON-NLS-1$
             fail();
         } catch (SQLException e) {
         }

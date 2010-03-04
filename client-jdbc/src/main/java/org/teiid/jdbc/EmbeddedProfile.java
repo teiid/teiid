@@ -22,70 +22,41 @@
 
 package org.teiid.jdbc;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
+import org.teiid.transport.LocalServerConnection;
 
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.classloader.PostDelegatingClassLoader;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.protocol.MMURLConnection;
-import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
-import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMConnection;
-import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.api.SQLStates;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 
 final class EmbeddedProfile {
-    /** 
+    
+    private static final String BUNDLE_NAME = "com.metamatrix.jdbc.basic_i18n"; //$NON-NLS-1$
+    
+	/** 
      * Match URL like
-     * - jdbc:metamatrix:BQT@c:/foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@c:\\foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@\\foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@/foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@../foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@./foo.properties;version=1..
-     * - jdbc:metamatrix:BQT@file:///c:/foo.properties;version=1..
-     * - jdbc:metamatrix:BQT
-     * - jdbc:metamatrix:BQT;verson=1  
+     * - jdbc:teiid:BQT
+     * - jdbc:teiid:BQT;verson=1  
      */
-    static final String URL_PATTERN = "jdbc:(teiid|metamatrix):(\\w+)@(([^;]*)[;]?)((.*)*)"; //$NON-NLS-1$
-    static final String BASE_PATTERN = "jdbc:(teiid|metamatrix):((\\w+)[;]?)(;([^@])+)*"; //$NON-NLS-1$
+    static final String BASE_PATTERN = "jdbc:teiid:((\\w+)[;]?)(;([^@])+)*"; //$NON-NLS-1$
 
     private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
     
-    private static EmbeddedTransport currentTransport = null;
-    static Pattern urlPattern = Pattern.compile(URL_PATTERN);
     static Pattern basePattern = Pattern.compile(BASE_PATTERN);
     
     /**
@@ -106,79 +77,32 @@ final class EmbeddedProfile {
 
         // parse the URL to add it's properties to properties object
         parseURL(url, info);            
-        MMConnection conn = createConnection(info);
-        boolean shutdown = Boolean.parseBoolean(info.getProperty(MMURL.CONNECTION.SHUTDOWN, "false")); //$NON-NLS-1$
-        if (shutdown) {
-        	Admin admin = conn.getAdminAPI();
-        	try {
-        		// this will make sure the user has permissions to do the shutdown.
-				admin.shutdown(0); 
-				shutdown();
-				throw new MMSQLException(getResourceMessage("EmbeddedDriver.shutdown_sucessful"), SQLStates.SUCESS); //$NON-NLS-1$
-			} catch (AdminException e) {
-				conn.close();
-				throw new MMSQLException(e, getResourceMessage("EmbeddedDriver.shutdown_failure"), SQLStates.DEFAULT); //$NON-NLS-1$
-			}
-        }
-        
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
-        logger.fine(logMsg);
-        
+        MMConnection conn = createConnection(url, info);
+        logger.fine(JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess")); //$NON-NLS-1$ 
         return conn;
-
     }
     
-    static MMConnection createConnection(Properties info) throws SQLException{
+    static MMConnection createConnection(String url, Properties info) throws SQLException{
         
         // first validate the properties as this may called from the EmbeddedDataSource
         // and make sure we have all the properties we need.
         validateProperties(info);
-        
-        URL dqpURL;
-		try {
-			dqpURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE));
-		} catch (MalformedURLException e) {
-			throw MMSQLException.create(e);
+        try {
+			return new MMConnection(new LocalServerConnection(info), info, url);
+		} catch (MetaMatrixRuntimeException e) {
+			throw new SQLException(e);
+		} catch (ConnectionException e) {
+			throw new SQLException(e);
+		} catch (CommunicationException e) {
+			throw new SQLException(e);
 		}
-        
-        // now create the connection
-        EmbeddedTransport transport = getDQPTransport(dqpURL);                        
-        
-        MMConnection conn = transport.createConnection(info);
-        
-        return conn;
     }
     
-    /**
-     * Get the DQP transport or build the transport if one not available from the 
-     * DQP URL supplied. DQP transport contains all the details about DQP.   
-     * @param dqpURL - URL to the DQP.properties file
-     * @return EmbeddedTransport
-     * @throws SQLException
-     * @since 4.4
-     */
-    private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL) throws SQLException {      
-        EmbeddedTransport transport = currentTransport;
-        if (transport == null || !transport.isAlive() || !currentTransport.getURL().equals(dqpURL)) {
-        	// shutdown any previous instance; we do encourage single instance in a given VM
-       		shutdown();
-       		try {
-       			transport = new EmbeddedTransport(dqpURL);
-       		} catch (SQLException e) {
-                logger.log(Level.SEVERE, "Could not start the embedded engine", e); //$NON-NLS-1$
-       			throw e;
-       		}
-        }
-        currentTransport = transport;
-        return transport;
-    }
-
     /**
      * This method parses the URL and adds properties to the the properties object. These include required and any optional
      * properties specified in the URL. 
      * Expected URL format -- 
-     * jdbc:metamatrix:local:VDB@<pathToConfigFile>logFile=<logFile.log>; logLevel=<logLevel>;credentials=mycredentials;
+     * jdbc:teiid:VDB;[name=value]*;
      * 
      * @param The URL needed to be parsed.
      * @param The properties object which is to be updated with properties in the URL.
@@ -195,16 +119,6 @@ final class EmbeddedProfile {
 
             // Set the VDB Name
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
-
-            // Need to resolve the URL fully, if we are using the default URL like
-            // jdbc:metamatrix:<vdbName>.., where as this fully qualifies to
-            // jdbc:metamatrix:<vdbName>@classpath:<vdbName>/mm.properties;...
-            String connectionURL = jdbcURL.getConnectionURL();
-            if (connectionURL == null) {
-                connectionURL = getDefaultConnectionURL();
-                info.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, jdbcURL.getVDBName()+".vdb"); //$NON-NLS-1$
-            }
-            info.setProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE, connectionURL);
                        
             Properties optionalParams = jdbcURL.getProperties();
             MMJDBCURL.normalizeProperties(info);
@@ -231,15 +145,6 @@ final class EmbeddedProfile {
     }
 
     /** 
-     * Create the default connection URL, if one is not supplied
-     * @param jdbcURL
-     * @return default connection URL
-     */
-    static String getDefaultConnectionURL() {        
-        return "classpath:/deploy.properties"; //$NON-NLS-1$
-    }
-    
-    /** 
      * validate some required properties 
      * @param info the connection properties to be validated
      * @throws SQLException
@@ -257,226 +162,12 @@ final class EmbeddedProfile {
     }
     
     public static boolean acceptsURL(String url) {
-        Matcher m = urlPattern.matcher(url);
-        boolean matched = m.matches();
-        if (matched) {
-            // make sure the group (2) which is the name of the file 
-            // does not start with mm:// or mms://
-            String name = m.group(3).toLowerCase();
-            return (!name.startsWith("mm://") && !name.startsWith("mms://") && (name.endsWith(".properties")||name.endsWith(".properties;"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        }
-
         // Check if this can match our default one, then allow it.
-        m = basePattern.matcher(url);
-        matched = m.matches();
+        Matcher m = basePattern.matcher(url);
+        boolean matched = m.matches();
         return matched;
     }    
-
-     
-    /**
-     * Shutdown the DQP instance which has been started using the given URL 
-     * @param dqpURL
-     */
-    public static synchronized void shutdown() {
-        if (currentTransport != null) {
-        	currentTransport.shutdown();
-        	currentTransport = null;
-        }
-    }
-        
-    /** 
-     * inner class to hold DQP tansportMap object
-     * @since 4.3
-     */
-    static class EmbeddedTransport {
-		private ServerConnectionFactory connectionFactory;
-        private ClassLoader classLoader; 
-        private URL url;
-
-        public EmbeddedTransport(URL dqpURL) throws SQLException {
-        	this.url = dqpURL;
-        	
-            //Load the properties from dqp.properties file
-            Properties props = loadDQPProperties(dqpURL);
-            
-            props = PropertiesUtils.resolveNestedProperties(props);
-                        
-            // a non-delegating class loader will be created from where all third party dependent jars can be loaded
-            ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
-            String libLocation = props.getProperty(DQPEmbeddedProperties.DQP_LIBDIR, "./lib/"); //$NON-NLS-1$
-            if (!libLocation.endsWith("/")) { //$NON-NLS-1$
-            	libLocation = libLocation + "/"; //$NON-NLS-1$
-            }
-
-            // find jars in the "lib" directory; patches is reverse alpaha and not case sensitive so small letters then capitals
-            if (!EmbeddedProfile.getDefaultConnectionURL().equals(dqpURL.toString())) {
-	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
-	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
-            
-	            try {
-		            String configLocation = props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "./deploy/"); //$NON-NLS-1$ 
-		            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
-		            	configLocation = configLocation + "/"; //$NON-NLS-1$
-		            }
-		            runtimeClasspathList.add(URLHelper.buildURL(dqpURL, configLocation));
-	            } catch(IOException e) {
-	            	// ignore..
-	            }            
-            }
-                        
-            URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
-            this.classLoader = new PostDelegatingClassLoader(dqpClassPath, this.getClass().getClassLoader(), new MetaMatrixURLStreamHandlerFactory());
-            
-            String logMsg = getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
-            logger.log(Level.FINER, logMsg + " " + Arrays.toString(dqpClassPath)); //$NON-NLS-1$
-
-            props.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
-            props.setProperty(DQPEmbeddedProperties.TEIID_HOME, getHomeDirectory(props));
-            // Now using this class loader create the connection factory to the dqp.            
-            ClassLoader current = Thread.currentThread().getContextClassLoader();            
-            try {
-                Thread.currentThread().setContextClassLoader(this.classLoader);            
-                String className = "com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl"; //$NON-NLS-1$
-                try {
-	                this.connectionFactory = (ServerConnectionFactory)ReflectionHelper.create(className, null, this.classLoader);            
-	            } catch (MetaMatrixCoreException e) {
-	            	throw MMSQLException.create(e, "Could not load the embedded server, please ensure that your classpath is set correctly."); //$NON-NLS-1$
-	            }
-	            try {
-					this.connectionFactory.initialize(props);
-				} catch (MetaMatrixCoreException e) {
-					throw MMSQLException.create(e);
-				}
-            } finally {
-                Thread.currentThread().setContextClassLoader(current);
-            }                        
-        }
-                
-        URL getURL() {
-        	return this.url;
-        }
-
-        /**
-         * Note that this only works when embedded loaded with "mmfile" protocol in the URL.
-         * @param dqpURL
-         * @return
-         */
-        private List<URL> libClassPath (URL dqpURL, String directory, String sortStyle) {
-            ObjectInputStream in =  null;
-            ArrayList<URL> urlList = new ArrayList<URL>();
-            try {
-            	urlList.add(URLHelper.buildURL(dqpURL, directory));
-                dqpURL = URLHelper.buildURL(dqpURL, directory+"?action=list&filter=.jar&sort="+sortStyle); //$NON-NLS-1$       
-                in = new ObjectInputStream(dqpURL.openStream());
-                String[] urls = (String[])in.readObject();
-                for (int i = 0; i < urls.length; i++) {
-                    urlList.add(URLHelper.buildURL(urls[i]));
-                }             
-            } catch(IOException e) {
-            	//ignore, treat as if lib does not exist
-            }  catch(ClassNotFoundException e) {
-            	//ignore, treat as if lib does not exist            	
-            } finally {
-                if (in != null) {
-                    try{in.close();}catch(IOException e) {}
-                }
-            }        
-            return urlList;
-        }        
-        
-        /**
-         * Load DQP Properties from the URL supplied. 
-         * @param dqpURL - URL to the "dqp.properties" object
-         * @return Properties loaded
-         * @throws SQLException
-         */
-        Properties loadDQPProperties(URL dqpURL) throws SQLException {
-            InputStream in = null;
-            try{
-                in = dqpURL.openStream();
-                Properties props = new Properties(System.getProperties());
-                props.load(in);
-                
-                String logMsg = getResourceMessage("EmbeddedDriver.use_properties"); //$NON-NLS-1$
-                logger.log(Level.FINER, logMsg + props);
-                return props;
-            }catch(IOException e) {
-                String logMsg = getResourceMessage("EmbeddedTransport.invalid_dqpproperties_path", new Object[] {dqpURL}); //$NON-NLS-1$
-                throw MMSQLException.create(e, logMsg);
-            }finally {
-                if (in != null) {
-                    try{in.close();}catch(IOException e) {}
-                }
-            }
-        }
-     
-        /**
-         * Shutdown the current transport 
-         */
-        void shutdown() {
-            this.connectionFactory.shutdown(false);                                    
-        }
-        
-        boolean isAlive() {
-        	return this.connectionFactory.isAlive();
-        }        
-        
-        /**
-         * Create a connection to the DQP defined by this transport object based on 
-         * properties supplied 
-         * @param info
-         * @return Connection
-         */
-        MMConnection createConnection(Properties info) throws SQLException {
-            ClassLoader current = null;            
-            try {
-                current = Thread.currentThread().getContextClassLoader();             
-                Thread.currentThread().setContextClassLoader(classLoader);       
-                try {
-					ServerConnection conn = connectionFactory.createConnection(info);
-					return new MMConnection(conn, info, url.toExternalForm());
-				} catch (CommunicationException e) {
-					throw MMSQLException.create(e);
-				} catch (ConnectionException e) {
-					throw MMSQLException.create(e);
-				}
-            } finally {
-                Thread.currentThread().setContextClassLoader(current);
-            }            
-        }
-        
-        String getHomeDirectory(Properties props) throws SQLException {
-        	try {
-    			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
-        		
-        		if (teiidHome == null) {
-    	        	if (EmbeddedProfile.getDefaultConnectionURL().equals(url.toString())) {
-    	        		teiidHome = System.getProperty("user.dir")+"/teiid"; //$NON-NLS-1$ //$NON-NLS-2$
-    	        	}
-    	        	else {
-    	        		URL installDirectory = URLHelper.buildURL(url, "."); //$NON-NLS-1$
-    	        		teiidHome = installDirectory.getPath();
-    	        	}
-        		}
-        		File f = new File(teiidHome); 
-        		return f.getCanonicalPath();
-        	} catch(IOException e) {
-        		throw MMSQLException.create(e);
-        	}
-        }
-        
-    }
     
-    private static final String BUNDLE_NAME = "com.metamatrix.jdbc.basic_i18n"; //$NON-NLS-1$
-    
-
-    static String getResourceMessage(String key, Object[] args) {
-        ResourceBundle messages = ResourceBundle.getBundle(BUNDLE_NAME);          
-        String messageTemplate = messages.getString(key);
-        return MessageFormat.format(messageTemplate, args);
-    }
-    
-   
     static String getResourceMessage(String key) {
         ResourceBundle messages = ResourceBundle.getBundle(BUNDLE_NAME);          
         String messageTemplate = messages.getString(key);

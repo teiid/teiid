@@ -22,7 +22,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
@@ -33,6 +32,7 @@ import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -51,12 +51,13 @@ import java.util.regex.Pattern;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.util.SqlUtil;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 import com.metamatrix.jdbc.api.Annotation;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.api.PlanNode;
@@ -156,6 +157,8 @@ public class MMStatement extends WrapperImpl implements Statement {
     protected Map outParamIndexMap = new HashMap();
     
     private Pattern setStatement = Pattern.compile("\\s*set\\s*(\\w+)\\s*=\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    
+    private Date processingTimestamp;
     
     /**
      * Factory Constructor 
@@ -318,7 +321,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 	@Override
 	//## JDBC4.0-end ##
     public boolean execute(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, null);
+        executeSql(new String[] {sql}, false, ResultsMode.EITHER);
         return hasResultSet();
     }
     
@@ -330,7 +333,7 @@ public class MMStatement extends WrapperImpl implements Statement {
             return new int[0];
         }
         String[] commands = (String[])batchedUpdates.toArray(new String[batchedUpdates.size()]);
-        executeSql(commands, true, false);
+        executeSql(commands, true, ResultsMode.UPDATECOUNT);
         return updateCounts;
     }
 
@@ -338,7 +341,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 	@Override
 	//## JDBC4.0-end ##
     public ResultSet executeQuery(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, true);
+        executeSql(new String[] {sql}, false, ResultsMode.RESULTSET);
         return resultSet;
     }
 
@@ -347,7 +350,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 	//## JDBC4.0-end ##
     public int executeUpdate(String sql) throws SQLException {
         String[] commands = new String[] {sql};
-        executeSql(commands, false, false);
+        executeSql(commands, false, ResultsMode.UPDATECOUNT);
         return this.updateCounts[0];
     }
 
@@ -402,13 +405,13 @@ public class MMStatement extends WrapperImpl implements Statement {
 		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
     
-    protected void executeSql(String[] commands, boolean isBatchedCommand, Boolean requiresResultSet)
+    protected void executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode)
         throws SQLException, MMSQLException {
         checkStatement();
         resetExecutionState();
         
         //handle set statement
-        if (commands.length == 1 && requiresResultSet != Boolean.TRUE) {
+        if (commands.length == 1 && resultsMode != ResultsMode.RESULTSET) {
         	Matcher match = setStatement.matcher(commands[0]);
         	if (match.matches()) {
         		String key = match.group(1);
@@ -419,7 +422,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         	}
         }
         
-        RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, requiresResultSet);
+        RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
     	ResultsMessage resultsMsg = null;
         try {
         	resultsMsg = sendRequestMessageAndWait(reqMessage);
@@ -449,6 +452,15 @@ public class MMStatement extends WrapperImpl implements Statement {
             for (int i = 0; i < results.length; i++) {
             	updateCounts[i] = (Integer)results[i].get(0);
             }
+            
+            // In update scenarios close the statement implicitly
+            try {
+				getDQP().closeRequest(getCurrentRequestID());
+			} catch (MetaMatrixProcessingException e) {
+				throw MMSQLException.create(e);
+			} catch (MetaMatrixComponentException e) {
+				throw MMSQLException.create(e);
+			}            
         } else {
             createResultSet(resultsMsg);
         }
@@ -457,11 +469,11 @@ public class MMStatement extends WrapperImpl implements Statement {
     }
 
 	protected RequestMessage createRequestMessage(String[] commands,
-			boolean isBatchedCommand, Boolean requiresResultSet) {
+			boolean isBatchedCommand, ResultsMode resultsMode) {
         RequestMessage reqMessage = new RequestMessage();
     	reqMessage.setCommands(commands);
     	reqMessage.setBatchedUpdate(isBatchedCommand);
-    	reqMessage.setRequireResultSet(requiresResultSet);
+    	reqMessage.setResultsMode(resultsMode);
 		return reqMessage;
 	}
 
@@ -752,6 +764,15 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Get result set cache mode
         String rsCache = getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         res.setUseResultSetCache(Boolean.valueOf(rsCache).booleanValue());
+        
+        res.setAnsiQuotedIdentifiers(Boolean.valueOf(
+                getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS))
+                .booleanValue());
+        String sqlOptions = getExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS);
+        if (sqlOptions != null &&
+            sqlOptions.toUpperCase().indexOf(ExecutionProperties.SQL_OPTION_SHOWPLAN.toUpperCase()) >= 0) {
+            res.setShowPlan(true);
+        }
     }
 
     /**
@@ -812,34 +833,13 @@ public class MMStatement extends WrapperImpl implements Statement {
 
     /**
      * Send out request message with necessary states.
-     * @param transaction UsertTransaction
-     * @param sql String of command or prepared string
-     * @param listener Message Listener
-     * @param timeout Maybe 0
-     * @param isPreparedStatement flag indicating whether this statement is a PreparedStatement
-     * @param isCallableStatement flag indicating whether this statement is a CallableStatement
-     * @param params Parameters values of either PreparedStatement or CallableStatement
-     * @param isBatchedCommand flag indicating whether the statements are being executed as a batch
-     * @throws SQLException
-     * @throws TimeoutException 
-     * @throws InterruptedException 
-     * @throws CommunicationException 
      */
     protected ResultsMessage sendRequestMessageAndWait(RequestMessage reqMsg)
         throws SQLException, InterruptedException, TimeoutException {
-        
+        this.processingTimestamp = new Date();
         this.currentRequestID = this.driverConnection.nextRequestID();
         // Create a request message
-        reqMsg.markSubmissionStart();        
         reqMsg.setExecutionPayload(this.payload);        
-        reqMsg.setAnsiQuotedIdentifiers(Boolean.valueOf(
-                getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS))
-                .booleanValue());
-        String sqlOptions = getExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS);
-        if (sqlOptions != null &&
-            sqlOptions.toUpperCase().indexOf(ExecutionProperties.SQL_OPTION_SHOWPLAN.toUpperCase()) >= 0) {
-            reqMsg.setShowPlan(true);
-        }
         reqMsg.setCursorType(this.resultSetType);
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setStyleSheet(this.styleSheet);
@@ -896,23 +896,7 @@ public class MMStatement extends WrapperImpl implements Statement {
      * @throws IOException if unable to read the style sheet from the Reader object.
      */
     public void attachStylesheet(Reader reader) throws IOException {
-        BufferedReader bufferedReader = null;
-        StringBuffer buffer = new StringBuffer();
-        try { 
-            bufferedReader = new BufferedReader(reader);
-            while(true) {
-                String line = bufferedReader.readLine();
-                if(line == null) {
-                    break;
-                }
-                buffer.append( line );
-            }
-        } finally {
-            if(bufferedReader != null) {
-                bufferedReader.close();                
-            }
-        }
-        this.styleSheet = buffer.toString();
+        this.styleSheet = ObjectConverterUtil.convertToString(reader);
     }
 
     /**
@@ -972,6 +956,10 @@ public class MMStatement extends WrapperImpl implements Statement {
     public Collection getAnnotations() {
         return this.annotations;
     }
+    
+    public Date getProcessingTimestamp() {
+		return processingTimestamp;
+	}
 
     public void setPartialResults(boolean isPartialResults){
         if(isPartialResults){

@@ -128,7 +128,7 @@ public class TestMMDriver extends TestCase {
     public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:metamatrix:vdb@mm://localhost:12345", null); //$NON-NLS-1$
 
-        assertEquals(6, info.length);
+        assertEquals(5, info.length);
         assertEquals(true, info[0].required);
         assertEquals("VirtualDatabaseName", info[0].name); //$NON-NLS-1$
         assertEquals("vdb", info[0].value); //$NON-NLS-1$

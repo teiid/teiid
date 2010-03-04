@@ -33,23 +33,4 @@ public class EmbeddedDataSource extends TeiidDataSource {
         
     }
     
-    /**
-     * Returns the path and file name from which embedded DQP configuration information will be read.
-     * 
-     * @return the name of the config file for this data source; may be null
-     */
-    public String getBootstrapFile() {
-        return getEmbeddedBootstrapFile();
-    }
-
-    /**
-     * Sets file name from which embedded DQP configuration information * will be read.
-     * 
-     * @param configFile
-     *            The name of the config file name to set
-     */
-    public void setBootstrapFile(final String configFile) {
-        setEmbeddedBootstrapFile(configFile);
-    }
-            
 }

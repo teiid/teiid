@@ -51,6 +51,8 @@ import java.util.Map;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
+import com.metamatrix.dqp.message.RequestMessage.StatementType;
 
 /**
  * <p> This class inherits Statement methods, which deal with SQL statements in
@@ -91,10 +93,9 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
     
     @Override
     protected RequestMessage createRequestMessage(String[] commands,
-    		boolean isBatchedCommand, Boolean requiresResultSet) {
-    	RequestMessage message = super.createRequestMessage(commands, isBatchedCommand, requiresResultSet);
-    	message.setCallableStatement(true);
-    	message.setPreparedStatement(false);
+    		boolean isBatchedCommand, ResultsMode resultsMode) {
+    	RequestMessage message = super.createRequestMessage(commands, isBatchedCommand, resultsMode);
+    	message.setStatementType(StatementType.CALLABLE);
     	return message;
     }
     
