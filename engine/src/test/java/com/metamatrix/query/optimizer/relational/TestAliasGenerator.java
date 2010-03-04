@@ -142,4 +142,10 @@ public class TestAliasGenerator {
         helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
     }
     
+    @Test public void testUnrelatedOrderBy1() throws Exception {
+    	String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey"; //$NON-NLS-1$
+        String expected = "SELECT v_1.c_0 FROM (SELECT g_0.intkey AS c_0, g_0.stringkey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0, (SELECT g_1.intkey AS c_0, g_1.stringkey AS c_1 FROM BQT1.SmallA AS g_1) AS v_1 ORDER BY v_0.c_1"; //$NON-NLS-1$
+        helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
+    }
+    
 }

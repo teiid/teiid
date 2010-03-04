@@ -31,6 +31,7 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetQuery;
@@ -328,7 +329,12 @@ public class AliasGenerator extends PreOrderNavigator {
     public void visit(OrderBy obj) {
     	//add/correct aliases if necessary
         for (int i = 0; i < obj.getVariableCount(); i++) {
-            SingleElementSymbol element = obj.getVariable(i);
+            OrderByItem item = obj.getOrderByItems().get(i);
+            SingleElementSymbol element = item.getSymbol();
+            if (item.isUnrelated()) {
+            	visitNode(element);
+            	continue;
+            }
             String name = visitor.namingContext.getElementName(element, false);
             if (name != null) {
 	            boolean needsAlias = true;
