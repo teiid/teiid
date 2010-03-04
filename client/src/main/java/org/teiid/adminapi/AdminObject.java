@@ -22,6 +22,7 @@
 
 package org.teiid.adminapi;
 
+import java.io.Serializable;
 import java.util.Properties;
 
 /**
@@ -36,7 +37,7 @@ import java.util.Properties;
  *
  * @since 4.3
  */
-public interface AdminObject {
+public interface AdminObject extends Serializable {
 
     /**
      * The character that delimits the atomic components of the identifier.
@@ -75,16 +76,6 @@ public interface AdminObject {
      * @see #WILDCARD
      */
     public static final String ESCAPED_WILDCARD = "\\" + WILDCARD; //$NON-NLS-1$
-
-    
-    /**
-     * Get the Full Name for this AdminObject. This identifier will uniquely identify this object in the Teiid
-     * system.
-     *
-     * @return String the unique Identifier
-     * @since 4.3
-     */
-    String getIdentifier();
 
     /**
      * Get the name for this AdminObject, usually the last component of the identifier.

@@ -42,13 +42,6 @@ public interface PropertyDefinition extends AdminObject {
     public static final int UNBOUNDED_VALUE = Integer.MAX_VALUE;
     
     
-    
-    /**
-     * Get the current value of this property.
-     * @return the current value of this property.
-     */
-    String getValue();
-    
     /**
      * Get the localized display name of this property.
      * @return the displayable name for this property
@@ -60,14 +53,6 @@ public interface PropertyDefinition extends AdminObject {
      * @return the description for this property
      */
     String getDescription();
-    
-    
-    
-    /**
-     * Get the type for values of this property.
-     * @return the type that best describes the values of this property.
-     */
-    String getPropertyType();
     
     
     /**
@@ -120,7 +105,7 @@ public interface PropertyDefinition extends AdminObject {
      * @return true if this property is to be marked with the expert flag,
      * or false otherwise.
      */
-    boolean isExpert();
+    boolean isAdvanced();
     /**
      * The "required" flag is used to identify features that require at least
      * one value (possibly a default value) by the consumer of the property.  Whether

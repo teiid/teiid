@@ -22,14 +22,17 @@
 
 package com.metamatrix.common.comm.platform.socket;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import com.metamatrix.common.util.ApplicationInfo;
 
 /**
  * Represents the information needed in a socket connection handshake  
  */
-public class Handshake implements Serializable {
+public class Handshake implements Externalizable {
     
 	private static final long serialVersionUID = 7839271224736355515L;
     
@@ -63,6 +66,18 @@ public class Handshake implements Serializable {
     public void setPublicKey(byte[] key) {
         this.publicKey = key;
     }
-
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	version = (String)in.readObject();
+    	publicKey = (byte[])in.readObject();
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	out.writeObject(version);
+    	out.writeObject(publicKey);
+    }
     
 }

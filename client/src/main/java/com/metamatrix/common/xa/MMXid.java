@@ -28,7 +28,7 @@ import java.math.BigInteger;
 import javax.transaction.xa.Xid;
 
 /**
- * MetaMatrix implementation of Xid.
+ * Teiid implementation of Xid.
  */
 public class MMXid implements Xid, Serializable {
     private static final long serialVersionUID = -7078441828703404308L;
@@ -113,7 +113,7 @@ public class MMXid implements Xid, Serializable {
 	    if (toString == null) {
     	    StringBuffer sb = new StringBuffer();
     	    
-    	    sb.append("MMXid global:"); //$NON-NLS-1$
+    	    sb.append("Teiid-Xid global:"); //$NON-NLS-1$
             sb.append(getByteArrayString(globalTransactionId));
             sb.append(" branch:"); //$NON-NLS-1$
             sb.append(getByteArrayString(branchQualifier));

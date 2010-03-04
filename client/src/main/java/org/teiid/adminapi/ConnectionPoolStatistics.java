@@ -22,33 +22,62 @@
 
 package org.teiid.adminapi;
 
+import java.io.Serializable;
 
-public interface Transaction extends AdminObject {
+
+/** 
+ * This object holds the statistics for a ConnectionPool that is being utilized by a Connector.
+ * As per how many available connections
+ * processed etc.
+ */
+public interface ConnectionPoolStatistics extends AdminObject, Serializable {
 
 	/**
-	 * Get the session associated with the this transaction.
-	 * May be null for an unassociated Global transaction.
+	 * The maximum number of connections that are available
 	 * @return
 	 */
-	long getAssociatedSession();
+	long getAvailableConnectionCount();
 	
 	/**
-	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, or REQUEST
+	 * The number of connections that are currently in the pool
 	 * @return
 	 */
-	String getScope();
+	int getConnectionCount();
+
+	/**
+	 * The number of connections that have been created since the connector was last started
+	 * @return
+	 */
+	int getConnectionCreatedCount();
 	
 	/**
-	 * Return the Xid of the Global transaction.  Will be null for non-Global transactions.
+	 * The number of connections that have been destroyed since the connector was last started
 	 * @return
 	 */
-	String getXid();
+	int getConnectionDestroyedCount();
 	
+
+	/**
+	 * The number of connections that are currently in use
+	 * @return
+	 */
+	long getInUseConnectionCount();
 	
 	/**
-	 * Get the date the transaction was created.
+	 * The most connections that have been simultaneously in use since this connector was started
 	 * @return
 	 */
-	long getCreatedTime();
+	long getMaxConnectionsInUseCount();
 	
+	/**
+	 * Max size
+	 * @return
+	 */
+	int getMaxSize();
+	
+	/**
+	 * Min Size
+	 * @return
+	 */
+	int getMinSize();
 }

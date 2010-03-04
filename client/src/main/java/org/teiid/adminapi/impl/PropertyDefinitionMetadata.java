@@ -20,8 +20,9 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.objects;
+package org.teiid.adminapi.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -30,24 +31,18 @@ import org.teiid.adminapi.PropertyDefinition;
 import com.metamatrix.admin.AdminPlugin;
 
 
-/** 
- * @since 4.3
- */
-public class MMPropertyDefinition extends MMAdminObject implements PropertyDefinition {
+public class PropertyDefinitionMetadata extends AdminObjectImpl implements PropertyDefinition {
 	private static final long serialVersionUID = 6612838530524627205L;
-	private String value = null;
     private Collection allowedValues = new ArrayList();
     private Object defaultValue = null;
     private String description = null;
     private String displayName = null;
-    private String propertyType = "String"; //$NON-NLS-1$
     private String propertyTypeClassName = String.class.getName();
     private RestartType requiresRestart = RestartType.NONE;
-    private boolean expert = false;
+    private boolean advanced = false;
     private boolean masked = false;
     private boolean modifiable = true;
     private boolean required = false;
-    
     
     
     /**
@@ -55,49 +50,22 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
      */
     public String toString() {
         StringBuffer result = new StringBuffer();
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.MMPropertyDefinition")).append(getIdentifier()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Display_name")).append(getDisplayName()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Description")).append(getDescription()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Value")).append(getValue()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Property_type")).append(getPropertyType()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Property_type_class_name")).append(getPropertyTypeClassName()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Default_value")).append(getDefaultValue()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Constrained_to_allow_values")).append(isConstrainedToAllowedValues()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Allowed_values")).append(getAllowedValues()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Required")).append(isRequired()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Expert")).append(isExpert()); //$NON-NLS-1$
+        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Expert")).append(isAdvanced()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Masked")).append(isMasked()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Modifiable")).append(isModifiable()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.RequiresRestart")).append(getRequiresRestart()); //$NON-NLS-1$
         return result.toString();
     }
     
-    
-    
-    
-    /**
-     * Constructor.
-     * @param identifierParts
-     * @since 4.3
-     */
-    public MMPropertyDefinition(String[] identifierParts) {
-        super(identifierParts);
-    }
-    
-    
-    
-    
-    /** 
-     * @see org.teiid.adminapi.PropertyDefinition#getValue()
-     * @since 4.3
-     */
-    public String getValue() {
-        return value;
-    }
-
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#getAllowedValues()
-     * @since 4.3
      */
     public Collection getAllowedValues() {
         return allowedValues;
@@ -105,7 +73,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#getDefaultValue()
-     * @since 4.3
      */
     public Object getDefaultValue() {
         return defaultValue;
@@ -113,7 +80,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#getDescription()
-     * @since 4.3
      */
     public String getDescription() {
         return description;
@@ -121,23 +87,13 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#getDisplayName()
-     * @since 4.3
      */
     public String getDisplayName() {
         return displayName;
     }
 
     /** 
-     * @see org.teiid.adminapi.PropertyDefinition#getPropertyType()
-     * @since 4.3
-     */
-    public String getPropertyType() {
-        return propertyType;
-    }
-    
-    /** 
      * @see org.teiid.adminapi.PropertyDefinition#getPropertyTypeClassName()
-     * @since 4.3
      */
     public String getPropertyTypeClassName() {
         return propertyTypeClassName;
@@ -146,7 +102,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#getRequiresRestart()
-     * @since 4.3
      */
     public RestartType getRequiresRestart() {
         return requiresRestart;
@@ -156,13 +111,12 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
      * @see org.teiid.adminapi.PropertyDefinition#isExpert()
      * @since 4.3
      */
-    public boolean isExpert() {
-        return expert;
+    public boolean isAdvanced() {
+        return advanced;
     }
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#isMasked()
-     * @since 4.3
      */
     public boolean isMasked() {
         return masked;
@@ -170,7 +124,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#isModifiable()
-     * @since 4.3
      */
     public boolean isModifiable() {
         return modifiable;
@@ -178,20 +131,13 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @see org.teiid.adminapi.PropertyDefinition#isRequired()
-     * @since 4.3
      */
     public boolean isRequired() {
         return required;
     }
 
-
-
-
-    
-    
     /** 
      * @param allowedValues The allowedValues to set.
-     * @since 4.3
      */
     public void setAllowedValues(Collection allowedValues) {
         this.allowedValues = allowedValues;
@@ -199,15 +145,13 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
     /** 
      * @param defaultValue The defaultValue to set.
-     * @since 4.3
      */
-    public void setDefaultValue(Object defaultValue) {
+    public void setDefaultValue(Serializable defaultValue) {
         this.defaultValue = defaultValue;
     }
 
     /** 
      * @param description The description to set.
-     * @since 4.3
      */
     public void setDescription(String description) {
         this.description = description;
@@ -216,7 +160,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     /** 
      * @param displayName The displayName to set.
-     * @since 4.3
      */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
@@ -225,38 +168,26 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     /** 
      * @param expert The value of expert to set.
-     * @since 4.3
      */
-    public void setExpert(boolean expert) {
-        this.expert = expert;
+    public void setAdvanced(boolean expert) {
+        this.advanced = expert;
     }
 
     /** 
      * @param masked The value of masked to set.
-     * @since 4.3
      */
     public void setMasked(boolean masked) {
         this.masked = masked;
     }
     /** 
      * @param modifiable The value of modifiable to set.
-     * @since 4.3
      */
     public void setModifiable(boolean modifiable) {
         this.modifiable = modifiable;
     }
 
     /** 
-     * @param propertyTypeAsString The propertyTypeAsString to set.
-     * @since 4.3
-     */
-    public void setPropertyType(String propertyTypeAsString) {
-        this.propertyType = propertyTypeAsString;
-    }
-    
-    /** 
      * @param propertyTypeClassName The propertyTypeName to set.
-     * @since 4.3
      */
     public void setPropertyTypeClassName(String propertyTypeClassName) {
         this.propertyTypeClassName = propertyTypeClassName;
@@ -265,7 +196,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     /** 
      * @param required The value of required to set.
-     * @since 4.3
      */
     public void setRequired(boolean required) {
         this.required = required;
@@ -273,24 +203,13 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     /** 
      * @param requiresRestart The value of requiresRestart to set.
-     * @since 4.3
      */
     public void setRequiresRestart(RestartType requiresRestart) {
         this.requiresRestart = requiresRestart;
-    }
-
-    /** 
-     * @param value The value to set.
-     * @since 4.3
-     */
-    public void setValue(String value) {
-        this.value = value;
     }
 
 	@Override
 	public boolean isConstrainedToAllowedValues() {
 		return allowedValues != null && !allowedValues.isEmpty();
 	}
-    
-    
 }

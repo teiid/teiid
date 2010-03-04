@@ -20,32 +20,12 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.objects;
+package org.teiid.transport;
 
-import org.teiid.adminapi.Group;
+import com.metamatrix.api.exception.ComponentNotFoundException;
 
-
-/** 
- * @since 4.3
- */
-public class MMGroup extends MMAdminObject implements Group {
-	private static final long serialVersionUID = 1102507655851078982L;
-
-	/** 
-     * @param groupName
-     * @since 4.3
-     */
-    public MMGroup(String[] groupName) {
-        super(groupName);
-    }
-
-	@Override
-	public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("[Name=\""); //$NON-NLS-1$
-        sb.append(this.getName());
-        sb.append("\"]"); //$NON-NLS-1$
-        return sb.toString();
-	}
+public interface ClientServiceRegistry {
+	
+	<T> T getClientService(Class<T> iface) throws ComponentNotFoundException;
 
 }

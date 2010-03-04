@@ -26,11 +26,8 @@ import java.util.Properties;
 
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.core.MetaMatrixCoreException;
 
 public interface ServerConnectionFactory {
-	
-	void initialize(Properties info) throws MetaMatrixCoreException;
 	
     /**
      * Establish a connection to the server.  
@@ -41,18 +38,5 @@ public interface ServerConnectionFactory {
      * @throws CommunicationException If an error occurs in connecting, typically due to 
      * problems with the connection properties (bad user name, bad password, bad host name, etc)
      */
-	ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
-
-	
-	/**
-     * Shutdown the connection factory, including the DQP and all its existing connections 
-     */
-    void shutdown(boolean restart);
-    
-    /**
-     * Is the connection factory alive
-     * @return true if alive; false otherwise.
-     */
-    boolean isAlive();
-	
+	ServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
 }

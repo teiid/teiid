@@ -28,7 +28,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -69,12 +68,6 @@ public class ResultsMessage implements Externalizable {
     /** The parameters of a Stored Procedure */
     private List parameters;
 
-    /** This object represents the time when command is submitted to the server. */
-    private Date processingTimestamp;
-
-    /** This object represents the time when results are produced on the server. */
-    private Date completedTimestamp;
-
     /** OPTION DEBUG log if OPTION DEBUG was used */
     private String debugLog;
         
@@ -100,10 +93,6 @@ public class ResultsMessage implements Externalizable {
      * @since 4.2
      */
     public ResultsMessage(RequestMessage requestMsg){
-        if(requestMsg != null){
-            this.processingTimestamp = requestMsg.getProcessingTimestamp();
-            this.completedTimestamp = new Date();
-        }
         this.results = new ArrayList[0];
 
     }
@@ -236,13 +225,6 @@ public class ResultsMessage implements Externalizable {
         parameters = list;
     }
 
-    public Date getProcessingTimestamp() {
-        return this.processingTimestamp;
-    }
-
-    public Date getCompletedTimestamp() {
-        return this.completedTimestamp;
-    }
     /**
      * @param strings
      */
@@ -284,8 +266,6 @@ public class ResultsMessage implements Externalizable {
         //Parameters
         parameters = ExternalizeUtil.readList(in);
 
-        processingTimestamp = (Date)in.readObject();
-        completedTimestamp = (Date)in.readObject();
         debugLog = (String)in.readObject();
         annotations = (Collection)in.readObject();
         isUpdateResult = in.readBoolean();
@@ -320,8 +300,6 @@ public class ResultsMessage implements Externalizable {
         // Parameters
         ExternalizeUtil.writeList(out, parameters);
 
-        out.writeObject(processingTimestamp);
-        out.writeObject(completedTimestamp);
         out.writeObject(debugLog);
         out.writeObject(annotations);
         out.writeBoolean(isUpdateResult);

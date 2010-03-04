@@ -36,6 +36,12 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
  */
 public class ResultsFuture<T> implements Future<T> {
 	
+	public static ResultsFuture<Void> NULL_FUTURE = new ResultsFuture<Void>();
+	
+	static {
+		NULL_FUTURE.getResultsReceiver().receiveResults(null);
+	}
+	
 	public interface CompletionListener<T> {
 		void onCompletion(ResultsFuture<T> future);
 	}

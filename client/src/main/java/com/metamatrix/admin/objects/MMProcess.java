@@ -27,7 +27,7 @@ import java.util.Date;
 
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.ProcessObject;
-import org.teiid.adminapi.QueueWorkerPool;
+import org.teiid.adminapi.WorkerPoolStatistics;
 
 import com.metamatrix.admin.AdminPlugin;
 
@@ -52,7 +52,7 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
     private long objectsWritten = 0;
     private Date startTime;
     
-    private QueueWorkerPool queueWorkerPool = null;
+    private WorkerPoolStatistics queueWorkerPool = null;
     
 
     /**
@@ -296,14 +296,14 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
      * @return Returns the queueWorkerPool.
      * @since 4.3
      */
-    public QueueWorkerPool getQueueWorkerPool() {
+    public WorkerPoolStatistics getQueueWorkerPool() {
         return this.queueWorkerPool;
     }
     /** 
      * @param queueWorkerPool The queueWorkerPool to set.
      * @since 4.3
      */
-    public void setQueueWorkerPool(QueueWorkerPool queueWorkerPool) {
+    public void setQueueWorkerPool(WorkerPoolStatistics queueWorkerPool) {
         this.queueWorkerPool = queueWorkerPool;
     }
 

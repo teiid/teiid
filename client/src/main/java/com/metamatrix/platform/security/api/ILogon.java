@@ -53,5 +53,4 @@ public interface ILogon {
    ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException;
    
    void assertIdentity(SessionToken sessionId) throws InvalidSessionException, MetaMatrixComponentException;
-
 }

@@ -45,7 +45,6 @@ import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 /**
@@ -82,7 +81,7 @@ public class TestSocketServerConnection extends TestCase {
 				Properties connectionProperties)
 				throws LogonException,
 				MetaMatrixComponentException {
-			return new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "fooUser"), new Properties(), "fake"); //$NON-NLS-1$ //$NON-NLS-2$
+			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		//## JDBC4.0-begin ##
@@ -146,7 +145,7 @@ public class TestSocketServerConnection extends TestCase {
 	
 	public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
-		assertEquals("1", connection.getLogonResult().getSessionID().toString()); //$NON-NLS-1$
+		assertEquals(1, connection.getLogonResult().getSessionID()); //$NON-NLS-1$
 	}
 	
 	/**

@@ -33,12 +33,25 @@ import java.util.UUID;
  * transit if sent to the client.  Also it should only be sent to the client 
  * who creates the session.
  */
-public class SessionToken implements Serializable,
-		Cloneable {
+public class SessionToken implements Serializable, Cloneable {
 	public final static long serialVersionUID = -2853708320435636107L;
 
+	private static ThreadLocal<SessionToken> CONTEXTS = new ThreadLocal<SessionToken>() {
+		protected SessionToken initialValue() {
+			return null;
+		}
+	};
+
+	public static SessionToken getSession() {
+		return CONTEXTS.get();
+	}
+	
+	public static void setSession(SessionToken context) {
+		CONTEXTS.set(context);
+	}	
+	
 	/** The session ID */
-	private MetaMatrixSessionID sessionID;
+	private long sessionID;
 	private String userName;
 	private UUID secret;
 
@@ -46,7 +59,7 @@ public class SessionToken implements Serializable,
 	 * Fake SessionToken representing a trusted user
 	 */
 	public SessionToken() {
-		this.sessionID = new MetaMatrixSessionID(-1);
+		this.sessionID = -1L;
 		this.userName = "trusted"; //$NON-NLS-1$
 		this.secret = new UUID(1,1);
 	}
@@ -60,12 +73,12 @@ public class SessionToken implements Serializable,
 	 * @param userName
 	 * 		(String) the userName for this session
 	 * @throws IllegalArgumentException
-	 */
-	public SessionToken(MetaMatrixSessionID id, String userName) {
+	 */	
+	public SessionToken(long id, String userName) {
 		this.sessionID = id;
 		this.userName = userName;
 		this.secret = UUID.randomUUID();
-	}
+	}	
 
 	public UUID getSecret() {
 		return secret;
@@ -76,17 +89,8 @@ public class SessionToken implements Serializable,
 	 * 
 	 * @return the session ID
 	 */
-	public MetaMatrixSessionID getSessionID() {
+	public long getSessionID() {
 		return this.sessionID;
-	}
-
-	/**
-	 * Returns unique session identifier
-	 * 
-	 * @return the session ID value
-	 */
-	public String getSessionIDValue() {
-		return this.sessionID.toString();
 	}
 
 	/**
@@ -119,7 +123,7 @@ public class SessionToken implements Serializable,
 			return false;
 		}
 		SessionToken that = (SessionToken) obj;
-		return (this.sessionID.equals(that.sessionID))
+		return (this.sessionID == that.sessionID)
 				&& this.userName.equals(that.userName)
 				&& this.secret.equals(that.secret);
 	}
@@ -132,14 +136,14 @@ public class SessionToken implements Serializable,
 	 * @see Object#equals(Object)
 	 */
 	public int hashCode() {
-		return this.sessionID.hashCode();
+		return new Long(this.sessionID).hashCode();
 	}
 
 	/**
 	 * Returns a string representing the current state of the object.
 	 */
 	public String toString() {
-		return "SessionToken[" + getUsername() + "," + getSessionIDValue() + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return "SessionToken[" + getUsername() + "," + this.sessionID + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**

@@ -22,102 +22,22 @@
 
 package org.teiid.adminapi;
 
-import java.util.Date;
 
 /**
- * A Session is a lasting connection between a client and a MetaMatrix System.
+ * A Session is a lasting connection between a client and a Teiid System.
  * 
  * A user may be allowed to have multiple sessions active simultaneously.
  * 
- * <p>a Session identifier gets automatically assigned 
- * to a connection when user logs into the system</p>
- * 
- * @since 4.3
  */
-public interface Session extends
-                        AdminObject {
-    
-    
-    /**
-     * The session is open (active).
-     */
-    public static final int STATE_ACTIVE = 1;
-
-    /**
-     * The ejb server has passivated the session - it may become
-     *open again in the future
-     */
-    public static final int STATE_PASSIVATED = 2;
-
-    /**
-     * The session is closed - this state cannot change once it
-     *is reached.
-     */
-    public static final int STATE_CLOSED = 3;
-
-    /**
-     * The session has expired - this state cannot change once it
-     *is reached.
-     */
-    public static final int STATE_EXPIRED = 4;
-
-    /**
-     * The session is terminated - this state cannot change once it
-     *is reached.
-     */
-    public static final int STATE_TERMINATED = 5;
-    
-    /**
-     * The description when the session has expired - this state cannot change once it
-     * is reached.
-     */    
-    public static final String EXPIRED_STATE_DESC = "Expired"; //$NON-NLS-1$
-    
-    /**
-     * The description when the session is open (active).
-     */    
-    public static final String ACTIVE_STATE_DESC = "Active";//$NON-NLS-1$
-    
-    /**
-     * The description when the session is closed - this state cannot change once it
-     * is reached.
-     */    
-    public static final String CLOSED_STATE_DESC = "Closed";//$NON-NLS-1$
-    
-    /**
-     * The description when the session is terminated - this state cannot change once it
-     *is reached.
-     */    
-    public static final String TERMINATED_STATE_DESC = "Terminated";//$NON-NLS-1$
-
-    /**
-     * The description when the ejb server has passivated the session - it may become
-     * open again in the future
-     */    
-    public static final String PASSIVATED_STATE_DESC = "Passivated";//$NON-NLS-1$
-    
-    /**
-     * The description when the state of the session is not known.
-     */     
-    public static final String UNKNOWN_STATE_DESC = "Unknown";//$NON-NLS-1$
-    
-    
-    
+public interface Session extends  AdminObject {
     
     /**
      * Get the Last time Client has check to see if the server is still available
      * 
      * @return Date of the last ping to the server.
      */
-    public Date getLastPingTime();
+    public long getLastPingTime();
     
-
-    /**
-     * Get the Session State as a String. 
-     * 
-     * @return SessionState
-     */
-    public String getStateAsString();
 
     /**
      * Get the Application Name
@@ -127,19 +47,12 @@ public interface Session extends
     public String getApplicationName();
 
     /**
-     * Get the unique MetaMatrix session
-     * within a given MetaMatrix System
+     * Get the unique Teiid session
+     * within a given Teiid System
      * 
      * @return String of the Session ID
      */
-    public String getSessionID();
-
-    /**
-     * Get the State of the Session 
-     * 
-     * @return int of the Session's state
-     */
-    public int getState();
+    public long getSessionId();
 
     /**
      * Get User Name for this Session
@@ -160,7 +73,7 @@ public interface Session extends
      * 
      * @return String name/number of the VDB Version
      */
-    public String getVDBVersion();
+    public int getVDBVersion();
     
     /**
      * Get the IPAddress for this Session
@@ -174,13 +87,19 @@ public interface Session extends
      * accessing from
      * @return 
      */
-    public String getHostName() ;
+    public String getClientHostName();
     
     /**
      * Get the time the {@link Session} was created.
      * @return
      */
-    public Date getCreatedDate();
+    public long getCreatedTime();
 
+    
+    /**
+     * Security Domain user logged into currently
+     * @return
+     */
+    public String getSecurityDomain();
 
 }

@@ -53,8 +53,8 @@ public class TestMMXid extends TestCase {
     
     public void testToString() {
         assertEquals(XID1Copy.toString(), XID1.toString());
-        assertEquals("MMXid global:1 branch:null format:0", XID1.toString()); //$NON-NLS-1$
-        assertEquals("MMXid global:2 branch:3 format:0", XID2.toString()); //$NON-NLS-1$
+        assertEquals("Teiid-Xid global:1 branch:null format:0", XID1.toString()); //$NON-NLS-1$
+        assertEquals("Teiid-Xid global:2 branch:3 format:0", XID2.toString()); //$NON-NLS-1$
     }
     
 }

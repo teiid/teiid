@@ -22,58 +22,54 @@
 
 package com.metamatrix.dqp.message;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.CommonCommPlugin;
+import com.metamatrix.core.util.ExternalizeUtil;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
  * Request Message, used by MMXStatement for submitting queries.
  */
-public class RequestMessage implements Serializable {
+public class RequestMessage implements Externalizable {
 
-    static final long serialVersionUID = 2258063872049251854L;
-    
     public static final int DEFAULT_FETCH_SIZE = 2048;
+    
+    public enum StatementType {
+    	PREPARED, CALLABLE, STATEMENT
+    }
+    
+    public enum ResultsMode {
+    	RESULTSET, UPDATECOUNT, EITHER
+    }
 
     private String[] commands;
     private boolean isBatchedUpdate;
     private int fetchSize = DEFAULT_FETCH_SIZE;
     private int cursorType;
     private boolean partialResultsFlag;
-    private boolean isPreparedStatement;
-    private boolean isCallableStatement;
-    private boolean isPreparedBatchUpdate;
-    private List parameterValues;
+    private StatementType statementType = StatementType.STATEMENT;
+    private List<?> parameterValues;
     private boolean validationMode;
     private String txnAutoWrapMode;
     private String XMLFormat;
     private String styleSheet;
-    private Boolean requireResultSet;
-
-    /**The time when the command was created by the client.*/
-    private Date submittedTimestamp;
-
-    /**The time when command begins processing on the server.*/
-    private Date processingTimestamp;
-    
+    private ResultsMode resultsMode = ResultsMode.EITHER;
     //whether to use ResultSet cache if there is one
     private boolean useResultSetCache;
-        
     // Treat the double quoted strings as variables in the command
     private boolean ansiQuotedIdentifiers = true;
-    
-    private boolean showPlan = false;
-    
+    private boolean showPlan;
     private int rowLimit;
-    
     private Serializable executionPayload;
-    
     private long executionId;
     
     public RequestMessage() {
@@ -110,34 +106,24 @@ public class RequestMessage implements Serializable {
      * @return True if this request includes a prepared statement.
      */
     public boolean isPreparedStatement() {
-        return isPreparedStatement;
+        return this.statementType == StatementType.PREPARED;
     }
 
     /**
      * @return True if this request includes a callable statement.
      */
     public boolean isCallableStatement() {
-        return isCallableStatement;
+        return this.statementType == StatementType.CALLABLE;
     }
-
-    /**
-     * @param isPreparedStatement
-     */
-    public void setPreparedStatement(boolean isPreparedStatement) {
-        this.isPreparedStatement = isPreparedStatement;
-    }
-
-    /**
-     * @param isCallableStatement
-     */
-    public void setCallableStatement(boolean isCallableStatement) {
-        this.isCallableStatement = isCallableStatement;
-    }
-
-    /**
+    
+    public void setStatementType(StatementType statementType) {
+		this.statementType = statementType;
+	}
+	
+	/**
      * @return A list of parameter values. May be null.
      */
-    public List getParameterValues() {
+    public List<?> getParameterValues() {
     	if (parameterValues == null) {
     		return Collections.EMPTY_LIST;
     	}
@@ -147,7 +133,7 @@ public class RequestMessage implements Serializable {
     /**
      * @param values
      */
-    public void setParameterValues(List values) {
+    public void setParameterValues(List<?> values) {
         parameterValues = values;
     }
 
@@ -238,55 +224,6 @@ public class RequestMessage implements Serializable {
         this.styleSheet = styleSheet;
     }
 
-    /**
-     * Get time that the time when the command was created by the client.
-     * @return timestamp in millis
-     */
-    public Date getSubmittedTimestamp() {
-        return submittedTimestamp;
-    }
-    
-    /**
-     * Set time that the time when the command was created by the client.
-     * NOTE: By default, this gets set to the current time by the constructor.
-     * @param submittedTimestamp Time submitted to server.
-     */
-    public void setSubmittedTimestamp(Date submittedTimestamp) {
-        this.submittedTimestamp = submittedTimestamp;
-    }    
-    
-    /**
-     * Start the clock on submission start - this should be called when the request is originally created.
-     */
-    public void markSubmissionStart() {
-        setSubmittedTimestamp(new Date());
-    }
-    
-    
-    /**
-     * Get time that the request was assigned a unique ID by the server.
-     * @return timestamp in millis
-     */
-    public Date getProcessingTimestamp() {
-        return processingTimestamp;
-    }
-
-    /**
-     * Set time that the request is submitted on the server.
-     * @param processingTimestamp Time submitted to server.
-     */
-    public void setProcessingTimestamp(Date processingTimestamp) {
-        this.processingTimestamp = processingTimestamp;
-    }
-
-    /**
-     * Start the clock on processing times - this should be called when the query
-     * hits the QueryService or SubscriptionService.
-     */
-    public void markProcessingStart() {
-        setProcessingTimestamp(new Date());
-    }
-
 	public boolean useResultSetCache() {
 		//not use caching when there is a txn 
 		return useResultSetCache;
@@ -354,14 +291,6 @@ public class RequestMessage implements Serializable {
 		this.commands = batchedCommands;
 	}
 
-	public boolean isPreparedBatchUpdate() {
-		return isPreparedBatchUpdate;
-	}
-
-	public void setPreparedBatchUpdate(boolean isPreparedBatchUpdate) {
-		this.isPreparedBatchUpdate = isPreparedBatchUpdate;
-	}
-
 	public void setExecutionPayload(Serializable executionPayload) {
 		this.executionPayload = executionPayload;
 	}
@@ -377,7 +306,7 @@ public class RequestMessage implements Serializable {
 	public void setExecutionId(long executionId) {
 		this.executionId = executionId;
 	}
-
+	
 	public void setBatchedUpdate(boolean isBatchedUpdate) {
 		this.isBatchedUpdate = isBatchedUpdate;
 	}
@@ -385,13 +314,58 @@ public class RequestMessage implements Serializable {
 	public boolean isBatchedUpdate() {
 		return isBatchedUpdate;
 	}
-	
-	public Boolean getRequireResultSet() {
-		return requireResultSet;
+
+	public ResultsMode getResultsMode() {
+		return resultsMode;
 	}
 	
-	public void setRequireResultSet(Boolean requireResultSet) {
-		this.requireResultSet = requireResultSet;
+	public void setResultsMode(ResultsMode resultsMode) {
+		this.resultsMode = resultsMode;
 	}
 
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		this.commands = ExternalizeUtil.readStringArray(in);
+		this.isBatchedUpdate = in.readBoolean();
+		this.fetchSize = in.readInt();
+		this.cursorType = in.readInt();
+		this.partialResultsFlag = in.readBoolean();
+		this.statementType = StatementType.values()[in.readByte()];
+		this.parameterValues = ExternalizeUtil.readList(in);
+		this.validationMode = in.readBoolean();
+		this.txnAutoWrapMode = (String)in.readObject();
+		this.XMLFormat = (String)in.readObject();
+		this.styleSheet = (String)in.readObject();
+		this.resultsMode = ResultsMode.values()[in.readByte()];
+		this.useResultSetCache = in.readBoolean();
+		this.ansiQuotedIdentifiers = in.readBoolean();
+		this.showPlan = in.readBoolean();
+		this.rowLimit = in.readInt();
+		this.executionPayload = (Serializable)in.readObject();
+		this.executionId = in.readLong();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		ExternalizeUtil.writeArray(out, commands);
+		out.writeBoolean(isBatchedUpdate);
+		out.writeInt(fetchSize);
+		out.writeInt(cursorType);
+		out.writeBoolean(partialResultsFlag);
+		out.writeByte(statementType.ordinal());
+		ExternalizeUtil.writeList(out, parameterValues);
+		out.writeBoolean(validationMode);
+		out.writeObject(txnAutoWrapMode);
+		out.writeObject(XMLFormat);
+		out.writeObject(styleSheet);
+		out.writeByte(resultsMode.ordinal());
+		out.writeBoolean(useResultSetCache);
+		out.writeBoolean(ansiQuotedIdentifiers);
+		out.writeBoolean(showPlan);
+		out.writeInt(rowLimit);
+		out.writeObject(executionPayload);
+		out.writeLong(executionId);
+	}
+	
 }

@@ -31,6 +31,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.ExternalizeUtil;
 
 public final class ServiceInvocationStruct implements Externalizable {
 	private static final long serialVersionUID = 1207674062670068350L;
@@ -43,7 +44,7 @@ public final class ServiceInvocationStruct implements Externalizable {
 	}
 
 	public ServiceInvocationStruct(Object[] args, String methodName,
-			Class targetClass) {
+			Class<?> targetClass) {
 		ArgCheck.isNotNull(methodName);
 		ArgCheck.isNotNull(targetClass);
 		this.args = args;
@@ -55,12 +56,12 @@ public final class ServiceInvocationStruct implements Externalizable {
 			ClassNotFoundException {
 		this.targetClass = (String)in.readObject();
 		this.methodName = (String)in.readObject();
-		this.args = (Object[])in.readObject();
+		this.args = ExternalizeUtil.readArray(in, Object.class);
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(targetClass);
 		out.writeObject(methodName);
-		out.writeObject(args);
+		ExternalizeUtil.writeArray(out, args);
 	}
 }

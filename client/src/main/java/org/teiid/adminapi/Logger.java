@@ -20,24 +20,25 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.api;
+package org.teiid.adminapi;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.platform.security.api.LogonResult;
 
-public interface ServerConnection {
-	
-	public static final int PING_INTERVAL = 120000;
-	public static final String LOCAL_CONNECTION = "localConnection";
-
-	<T> T getService(Class<T> iface);
-	
-	void close();
-	
-	boolean isOpen();
-	
-	LogonResult getLogonResult();
-	
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
-	
+/** 
+ * Custom logging interface that provides a hook for custom implementations to log messages
+ * produced by MM Query.
+ * @since 4.3
+ */
+public interface Logger {
+    
+    /**
+     * Logs the given message if the current logging level is &gt;= the logLevel parameter. 
+     * @param logLevel logging level for this message
+     * @param timestamp timestamp at which this log message was generated
+     * @param componentName name of the component that generated this message
+     * @param threadName name of the thread that generated this message
+     * @param message message body. May be null.
+     * @param throwable exception thrown. May be null.
+     * @since 4.3
+     */
+    void log(int logLevel, long timestamp, String componentName, String threadName, String message, Throwable throwable);
 }

@@ -23,13 +23,13 @@
 package com.metamatrix.dqp.message;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestRequestMessage extends TestCase {
@@ -44,7 +44,7 @@ public class TestRequestMessage extends TestCase {
 
     public static RequestMessage example() {
         RequestMessage message = new RequestMessage();
-        message.setCallableStatement(true);
+        message.setStatementType(StatementType.CALLABLE);
         message.setFetchSize(100);
         List params = new ArrayList();
         params.add(new Integer(100));
@@ -54,9 +54,6 @@ public class TestRequestMessage extends TestCase {
         message.setParameterValues(params);
 
         message.setPartialResults(true);
-        message.setPreparedStatement(false);
-        message.setSubmittedTimestamp(new Date(11111111L));
-        message.setProcessingTimestamp(new Date(12345678L));
         message.setStyleSheet("myStyleSheet"); //$NON-NLS-1$
         message.setExecutionPayload("myExecutionPayload"); //$NON-NLS-1$
         try {
@@ -85,8 +82,6 @@ public class TestRequestMessage extends TestCase {
         assertEquals(new Integer(400), copy.getParameterValues().get(3));
 
         assertFalse(copy.isPreparedStatement());
-        assertEquals(new Date(11111111L), copy.getSubmittedTimestamp());
-        assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
         assertEquals("myStyleSheet", copy.getStyleSheet()); //$NON-NLS-1$
         assertEquals("myExecutionPayload", copy.getExecutionPayload()); //$NON-NLS-1$
         assertEquals(ExecutionProperties.TXN_WRAP_ON, copy.getTxnAutoWrapMode()); //$NON-NLS-1$

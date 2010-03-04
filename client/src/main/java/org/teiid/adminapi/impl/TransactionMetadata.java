@@ -20,35 +20,37 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.objects;
+package org.teiid.adminapi.impl;
 
-import javax.transaction.xa.Xid;
+import java.util.Date;
 
+import org.jboss.managed.api.annotation.ManagementProperty;
+import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Transaction;
 
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.common.xa.MMXid;
 
-public class TransactionImpl extends MMAdminObject implements Transaction {
+@MetaMapping(TransactionMetadataMapper.class)
+public class TransactionMetadata extends AdminObjectImpl implements Transaction {
 
 	private static final long serialVersionUID = -8588785315218789068L;
-	private String associatedSession;
+	private long associatedSession;
 	private String scope;
-	private MMXid xid;
-	private String status;
-	
-	public TransactionImpl(String ... id) {
-		super(id);
-	}
+	private String xid;
+	private long createdTime;
 
-	public String getAssociatedSession() {
+	@Override
+	@ManagementProperty(description="Session ID", readOnly=true)
+	public long getAssociatedSession() {
 		return associatedSession;
 	}
 
-	public void setAssociatedSession(String associatedSession) {
+	public void setAssociatedSession(long associatedSession) {
 		this.associatedSession = associatedSession;
 	}
 
+	@Override
+	@ManagementProperty(description="Scope", readOnly=true)
 	public String getScope() {
 		return scope;
 	}
@@ -57,30 +59,33 @@ public class TransactionImpl extends MMAdminObject implements Transaction {
 		this.scope = scope;
 	}
 
-	public Xid getXid() {
+	@Override
+	@ManagementProperty(description="XID", readOnly=true)
+	public String getXid() {
 		return xid;
 	}
 
-	public void setXid(MMXid xid) {
+	public void setXid(String xid) {
 		this.xid = xid;
 	}
-
-	public String getStatus() {
-		return status;
+	
+	@Override
+	@ManagementProperty(description="Transaction created time", readOnly=true)
+	public long getCreatedTime() {
+		return createdTime;
 	}
-
-	public void setStatus(String status) {
-		this.status = status;
+	
+	public void setCreatedTime(long time) {
+		this.createdTime = time;
 	}
 
 	@Override
 	public String toString() {
         StringBuffer result = new StringBuffer();
-        result.append(AdminPlugin.Util.getString("TransactionImpl.identifier")).append(getIdentifier());  //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("TransactionImpl.associatedSession")).append(associatedSession); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("TransactionImpl.scope")).append(scope); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("TransactionImpl.status")).append(status); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("TransactionImpl.xid")).append(xid); //$NON-NLS-1$
+        result.append(AdminPlugin.Util.getString("TransactionImpl.createdTime")).append(new Date(createdTime)); //$NON-NLS-1$
         return result.toString();
 	}
 

@@ -22,7 +22,6 @@
 
 package org.teiid.adminapi;
 
-import java.util.Date;
 
 
 /** 
@@ -33,73 +32,50 @@ import java.util.Date;
  * 
  *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged 
  *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
- * @since 4.3
  */
 public interface Request extends AdminObject {
+
     /**
-     * @return Date the request was created
-     * @since 4.3
+     * Get the ExecutionId for a Request
+     * @return ExecutionId
      */
-    public Date getCreated();
-     
-    /**
-     * Get the RequestID for a Request
-     * @return RequestID
-     */
-    public String getRequestID();
+    public long getExecutionId();
     
     /**
      * Get the SessionID for a Request
      * 
      * @return long SessionID
      */
-    public String getSessionID();
+    public long getSessionId();
 
     /**
      * Get the SQL Command sent to the Server for a Request
      * 
-     * @return MetaMatrix SQL Command
+     * @return SQL Command
      */
-    public String getSqlCommand();
+    public String getCommand();
 
     /**
-     * Get the Date processing began for the Request
+     * Get when the processing began for this Request
      * @return Date processing began
      */
-    public Date getProcessingDate();
+    public long getProcessingTime();
 
     /**
      * Get the TransactionID of the Request
      * 
      * @return String of TransactionID if in a transaction
      */
-    public String getTransactionID();
-    
-
-    /**
-     * Get the UserName of the Request
-     * 
-     * @return String username for the Request
-     */
-    public String getUserName();
-    
-    
-    /** 
-     * @return Returns the connectorBindingName.
-     * @since 4.3
-     */
-    public String getConnectorBindingName();
+    public String getTransactionId();
     
     /** 
      * @return Returns whether this is a Source Request.
-     * @since 4.3
      */
-    public boolean isSource();
+    public boolean sourceRequest();
     
     /**  
      * @return In the case that this is a source request this represents the node id. Otherwise blank
-     * @since 4.3
      */
-    public String getNodeID();
+    public int getNodeId();
     
 }

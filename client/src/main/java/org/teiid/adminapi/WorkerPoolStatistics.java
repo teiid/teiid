@@ -19,25 +19,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.adminapi;
 
-package com.metamatrix.common.comm.api;
-
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.platform.security.api.LogonResult;
-
-public interface ServerConnection {
+public interface WorkerPoolStatistics extends AdminObject {
+ 
+	/**
+	 * Current active thread count
+	 * @return
+	 */
+	public int getActiveThreads();
 	
-	public static final int PING_INTERVAL = 120000;
-	public static final String LOCAL_CONNECTION = "localConnection";
-
-	<T> T getService(Class<T> iface);
+	/**
+	 * Highest Active threads recorded so far
+	 * @return
+	 */
+	public int getHighestActiveThreads();
+	 
+	 
+	 /**
+	  * Queue Name
+	  * @return
+	  */
+	 public String getQueueName();
+	 
+	 
+	 /**
+	  * Max number of active threads allowed
+	  * @return
+	  */
+	 public int getMaxThreads();
 	
-	void close();
-	
-	boolean isOpen();
-	
-	LogonResult getLogonResult();
-	
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
-	
+	/** 
+     * @return Returns the number of requests queued.
+     * @since 4.3
+     */
+    public int getQueued();
+    
+    /**
+     * @return The number of completed tasks
+     */
+    long getTotalCompleted();
+    
+   
+    /**
+     * @return The number of submitted tasks
+     */
+    long getTotalSubmitted();
+    
+    /** 
+     * @return Returns the highest queue size
+     */
+    public int getHighestQueued();
 }

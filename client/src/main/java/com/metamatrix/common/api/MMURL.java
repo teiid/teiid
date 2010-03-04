@@ -45,8 +45,6 @@ public class MMURL {
 	    public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
 	    // constant for vdb version part of serverURL
 	    public static final String VERSION = "version"; //$NON-NLS-1$
-
-	    public static final String CREDENTIALS = "credentials"; //$NON-NLS-1$
 	}
 
 	public static interface CONNECTION {
@@ -63,11 +61,6 @@ public class MMURL {
 		 */
 		public static final String DISCOVERY_STRATEGY = "discoveryStategy"; //$NON-NLS-1$
 		
-		/**
-		 * if "true" in  the embedded mode if there is a active instance that instance will be shutdown.
-		 */
-		public static final String SHUTDOWN = "shutdown"; //$NON-NLS-1$
-		
 		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
 		/**
 		 * Non-secure MetaMatrix Protocol.
@@ -83,7 +76,8 @@ public class MMURL {
 		public static final String USER_NAME = "user"; //$NON-NLS-1$
 		// constant for password part of url
 		public static final String PASSWORD = "password"; //$NON-NLS-1$
-		public static final String CLIENT_TOKEN_PROP = "clientToken"; //$NON-NLS-1$ 
+		
+		public static final String ADMIN = "admin"; //$NON-NLS-1$
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

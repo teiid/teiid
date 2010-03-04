@@ -22,5 +22,10 @@
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
     </dependency> 
+    <dependency>
+        <groupId>org.jboss.man</groupId>
+        <artifactId>jboss-managed</artifactId>
+        <scope>provided</scope>
+    </dependency>     
   </dependencies>
 </project>

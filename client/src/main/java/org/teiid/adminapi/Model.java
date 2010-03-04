@@ -24,62 +24,47 @@ package org.teiid.adminapi;
 
 import java.util.List;
 
+
 /** 
- * Represents a metadata model in the MetaMatrix system.
+ * Represents a metadata model in the Teiid system.
  * 
  * @since 4.3
  */
 public interface Model extends AdminObject {
-
+	
+	enum Type {PHYSICAL, VIRTUAL, FUNCTION};
+	
     /**
-     * Return the connector binding names for this Virtual Databse.
-     * @return connector bindings bound to this model. 
-     */
-    List getConnectorBindingNames();
-
-    /**
-     * Determine if this model is a physical type.
+     * Determine if this model is a Source model.
      * 
-     * @return <code>true</code> iff it contains physical group(s).
+     * @return <code>true</code> if it contains physical group(s).
      */
-    boolean isPhysical();
+    boolean isSource();
 
     /**
      * Determine whether this model is exposed for querying.
      * 
-     * @return <code>true</code> iff the model is visible
+     * @return <code>true</code> if the model is visible
      * for querying.
      */
     boolean isVisible();
 
     /**
      * Retrieve the model type.
-     * TODO: one of ...
      * @return model type
      */
-    String getModelType();
-
-    /**
-     * Retrive the model URI.
-     * 
-     * @return model URI
-     */
-    String getModelURI();
+    Type getModelType();
 
     /** 
      * Determine whether this model can support more than one connector binding.
      * 
-     * @return <code>true</code> iff this model supports multi-source bindings
+     * @return <code>true</code> if this model supports multi-source bindings
      */
-    boolean supportsMultiSourceBindings();
+    boolean isSupportsMultiSourceBindings();
     
-    /** 
-     * Determine whether this model is a Materialization Model
-     *  
-     * @return isMaterialization whether the model is a Materialization Model.
-     * @since 4.3
+    /**
+     * Associated Source Names for the Models (Connector Bindings)
+     * @return String
      */
-    
-    boolean isMaterialization();
-
+    List<String> getSourceNames();    
 }

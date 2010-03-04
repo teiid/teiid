@@ -19,18 +19,42 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.adminapi;
 
-package com.metamatrix.admin;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-@Documented
-@Retention(value=RetentionPolicy.RUNTIME)
-@Target(value={ElementType.TYPE,ElementType.METHOD})
-public @interface RolesAllowed {
-	String[] value();
+public abstract class TeiidAdmin implements Admin, Serializable {
+
+	@Override
+	public void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String connectorBindingName)
+			throws AdminException {
+		// rameshTODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException {
+		ArrayList<ProcessObject> list = new ArrayList<ProcessObject>();
+		//list.add(manager.getProcess());
+		return list;		
+	}
+	
+	@Override
+	public void restart() throws AdminException {
+		// rameshTODO Auto-generated method stub
+	}
+
+	@Override
+	public void shutdown(int millisToWait) throws AdminException {
+		// rameshTODO Auto-generated method stub
+	}
+	
+	@Override
+    public void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException {
+		// rameshTODO Auto-generated method stub
+    }	
 }

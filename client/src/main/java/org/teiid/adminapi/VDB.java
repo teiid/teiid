@@ -23,12 +23,10 @@
 package org.teiid.adminapi;
 
 import java.util.Collection;
-import java.util.Date;
-
-import com.metamatrix.core.vdb.VDBStatus;
+import java.util.List;
 
 /**
- * Represents a Virtual Database in the MetaMatrix system.
+ * Represents a Virtual Database in the Teiid System.
  * <br>A VDB has a name and a version.</br>
  * 
  * <p>The identifier pattern for a VDB is <CODE>"name<{@link #DELIMITER_CHAR}>version"</CODE>, 
@@ -41,8 +39,7 @@ import com.metamatrix.core.vdb.VDBStatus;
  * 
  * @since 4.3
  */
-public interface VDB extends
-                    AdminObject {
+public interface VDB extends AdminObject {
 
     /** 
      * Constant to denote the latest version of a VDB located
@@ -51,80 +48,45 @@ public interface VDB extends
      */
     public static final String SERVER_REPOSITORY_LATEST_VERSION = "LATEST"; //$NON-NLS-1$
     
-    /**
-     * Incomplete (if import does not have all the connector bindings)
-     * 
-     * @since 4.3
-     */
-    public static final int INCOMPLETE = VDBStatus.INCOMPLETE;
-    /**
-     * Inactive VDB (can edit connector binding)
-     * 
-     * @since 4.3
-     */
-    public static final int INACTIVE = VDBStatus.INACTIVE;
-    /**
-     * Active VDB
-     * 
-     * @since 4.3
-     */
-    public static final int ACTIVE = VDBStatus.ACTIVE;
-    /**
-     * Mark VDB for Deletion
-     * 
-     * @since 4.3
-     */
-    public static final int DELETED = VDBStatus.DELETED;
-    /**
-     * Active Default
-     * 
-     * @since 5.5.3
-     */
-    public static final int ACTIVE_DEFAULT = VDBStatus.ACTIVE_DEFAULT;
+    public static enum Status{INCOMPLETE, INACTIVE, ACTIVE, DELETED, ACTIVE_DEFAULT};
 
-    /**
-     * @return date the VDB was versioned
-     */
-    public Date getVersionedDate();
-
-    /**
-     * @return user that versioned the VDB
-     */
-    public String getVersionedBy();
 
     /**
      * @return Collection of MMModels
      */
-    public Collection getModels();
+    public Collection<? extends Model> getModels();
 
     /**
      * @return the status
      */
-    public int getState();
-
-    /**
-     * @return the status
-     */
-    public String getStateAsString();
+    public Status getStatus();
 
     /**
      * @return the VDB version
      */
-    public String getVDBVersion();
+    public int getVersion();
     
     /**
-     * Check to see if this VDB has any Materialized Models
-     * 
-     * @return true or false 
-     * @since 4.3
+     * Get the URL for the VDB
+     * @return
      */
-    public boolean hasMaterializedViews();
+    public String getUrl();
     
     /**
-     * Check to see if this VDB contains a WSDL. 
-     * @return true if it contains a WSDL.
-     * @since 5.5.3
+     * Get the description of the VDB
+     * @return
      */
-    public boolean hasWSDL();
-
+    public String getDescription();
+    
+    /**
+     * Shows any validity errors present in the VDB
+     * @return
+     */
+    public List<String> getValidityErrors();
+    
+    /**
+     * Shows if VDB is a valid entity
+     * @return
+     */
+    public boolean isValid();
 }

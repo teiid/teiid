@@ -22,83 +22,21 @@
 
 package org.teiid.adminapi;
 
-import java.util.Date;
 
 /**
- * Represents a connector binding (the instance of a connector type) in the MetaMatrix system.
- * 
- * <p>The unique identifier pattern is [host]<{@link #DELIMITER}>[process]<{@link #DELIMITER}>[Connector Binding Name]
- * when running against a MetaMatrix server. The [Connector Binding Name] can itself have spaces in the name.
- * In the case of the MM Query, the [host] and [process] do not apply as MM Query is always local.</p>
- * 
- * @since 4.3
+ * Represents a connector binding (the instance of a connector type) in the Teiid system.
  */
-public interface ConnectorBinding extends
-                                 AdminObject {
-    /**Registered by not initialized*/
-    public static final int STATE_NOT_INITIALIZED = 0;
-    /**Open and running*/
-    public static final int STATE_OPEN = 1;
-    /**Registered but closed*/
-    public static final int STATE_CLOSED = 2;
-    /**Failed after running successfully*/
-    public static final int STATE_FAILED = 3;
-    /**Failed during initialization*/
-    public static final int STATE_INIT_FAILED = 4;
-    /**Not registered*/
-    public static final int STATE_NOT_REGISTERED = 5;
-    /**Running, but the underlying data source is unavailable*/
-    public static final int STATE_DATA_SOURCE_UNAVAILABLE = 6;
-    /**Running, not deployed*/
-    public static final int STATE_NOT_DEPLOYED = 7;
-    /** failed to check the status */
-    public static final int STATE_FAILED_TO_CHECK = 8;
-    
-    /** Password connector property name */
-    public static final String PASSWORD = "Password"; //$NON-NLS-1$
-    
-
-    /**
-     * Retrieve the current connector state.  This will be one of the constants: 
-     * {@link ConnectorBinding#STATE_OPEN DQP.STATE_OPEN}.
-     * {@link ConnectorBinding#STATE_NOT_INITIALIZED DQP.STATE_NOT_INITIALIZED}.
-     * {@link ConnectorBinding#STATE_CLOSED DQP.STATE_CLOSED}.
-     * {@link ConnectorBinding#STATE_FAILED DQP.STATE_FAILED}.
-     * {@link ConnectorBinding#STATE_INIT_FAILED DQP.STATE_INIT_FAILED}.
-     * {@link ConnectorBinding#STATE_NOT_REGISTERED DQP.STATE_NOT_REGISTERED}.
-     * {@link ConnectorBinding#STATE_DATA_SOURCE_UNAVAILABLE DQP.STATE_DATA_SOURCE_UNAVAILABLE}.
-     * {@link ConnectorBinding#STATE_NOT_DEPLOYED DQP.STATE_NOT_DEPLOYED}.
-     * @return current connector state.
-     */
-    int getState();
-
-    /**
-     * Retrieve the current connector state as a printable <code>String</code>.
-     * @return current connector state in String form.
-     */
-    String getStateAsString();
-
-    /**
-     * Returns time of last state change.
-     * 
-     * @return time of last state change.
-     * @since 4.3
-     */
-    Date getStateChangedTime();
-
-    /**
-     * Returns the description
-     * 
-     * @return description
-     */
-    String getDescription();
+public interface ConnectorBinding extends  AdminObject {
     
     /**
-     * Get the identifier for this connector binding's {@link ConnectorType}. 
-     * @return the Connector Type identifier which can be used to
-     * find the ConnectorType.
-     * @since 4.3
+     * Get the identifier for this connector binding's RAR file name
+     * @return Name of the RAR file used to create this binding
      */
-    String getConnectorTypeName();
+    String getRARFileName();
 
+    /**
+     * Get the JNDI Name of this connector
+     * @return
+     */
+    String getJNDIName();
 }

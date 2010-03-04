@@ -23,7 +23,6 @@
 package com.metamatrix.platform.security.api;
 
 import java.io.Serializable;
-import java.util.Properties;
 import java.util.TimeZone;
 
 
@@ -38,18 +37,19 @@ public class LogonResult implements Serializable {
         
 	private static final long serialVersionUID = 4481443514871448269L;
 	private TimeZone timeZone = TimeZone.getDefault();
-    private final Properties productInfo;
     private String clusterName;
     private SessionToken sessionToken;
+    private String vdbName;
+    private int vdbVersion;
 
     public LogonResult() {
-		this.productInfo = new Properties();
 	}
     
-    public LogonResult(SessionToken token, Properties productInfo, String clusterName) {
-		this.productInfo = productInfo;
+    public LogonResult(SessionToken token, String vdbName, int vdbVersion, String clusterName) {
 		this.clusterName = clusterName;
 		this.sessionToken = token;
+		this.vdbName = vdbName;
+		this.vdbVersion = vdbVersion;
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class LogonResult implements Serializable {
      * @return
      * @since 4.3
      */
-    public MetaMatrixSessionID getSessionID() {
+    public long getSessionID() {
         return this.sessionToken.getSessionID();
     }
 
@@ -65,9 +65,6 @@ public class LogonResult implements Serializable {
 		return timeZone;
 	}
 	
-	public String getProductInfo(String key) {
-		return this.productInfo.getProperty(key);
-	}
 
 	public String getUserName() {
 		return this.sessionToken.getUsername();
@@ -79,6 +76,14 @@ public class LogonResult implements Serializable {
 	
 	public SessionToken getSessionToken() {
 		return sessionToken;
+	}
+
+	public String getVdbName() {
+		return vdbName;
+	}
+
+	public int getVdbVersion() {
+		return vdbVersion;
 	}
     
 }

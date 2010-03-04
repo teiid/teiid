@@ -43,41 +43,43 @@ public interface ClientSideDQP {
 
 	ResultsFuture<?> closeRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	
-	void cancelRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	boolean cancelRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	
 	ResultsFuture<?> closeLobChunkStream(int lobRequestId, long requestId, String streamId) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	
 	ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 		
-	List getXmlSchemas(String docName) throws MetaMatrixComponentException, QueryMetadataException;
+	List<String> getXmlSchemas(String docName) throws MetaMatrixComponentException, QueryMetadataException;
 
 	MetadataResult getMetadata(long requestID) throws MetaMatrixComponentException, MetaMatrixProcessingException;
 	
 	MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException;
 	
     // local transaction
-    void begin() throws XATransactionException;
+ 
+	ResultsFuture<?> begin() throws XATransactionException;
 
-    void commit() throws XATransactionException;
+    ResultsFuture<?> commit() throws XATransactionException; 
 
-    void rollback() throws XATransactionException;
+    ResultsFuture<?> rollback() throws XATransactionException; 
 
     // XA
-    int prepare(MMXid xid) throws XATransactionException;
 
-    void commit(MMXid xid, boolean onePhase) throws XATransactionException;
-    
-    void rollback(MMXid xid) throws XATransactionException;
+    ResultsFuture<?> start(MMXid xid,
+            int flags,
+            int timeout) throws XATransactionException;
 
-    Xid[] recover(int flag) throws XATransactionException;
-    
-    void forget(MMXid xid) throws XATransactionException;
-    
-    void start(MMXid xid,
-               int flags,
-               int timeout) throws XATransactionException;
-    
-    void end(MMXid xid,
-             int flags) throws XATransactionException;
+    ResultsFuture<?> end(MMXid xid,
+            int flags) throws XATransactionException;
 
+    ResultsFuture<Integer> prepare(MMXid xid) throws XATransactionException;
+
+    ResultsFuture<?> commit(MMXid xid, boolean onePhase) throws XATransactionException;
+    
+    ResultsFuture<?> rollback(MMXid xid) throws XATransactionException;
+
+    ResultsFuture<?> forget(MMXid xid) throws XATransactionException;
+
+    ResultsFuture<Xid[]> recover(int flag) throws XATransactionException; 
+    
 }

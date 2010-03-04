@@ -110,7 +110,7 @@ public class SocketServerConnection implements ServerConnection {
     				} catch (InvalidSessionException e) {
     					shutdown(false);
     				} catch (MetaMatrixComponentException e) {
-    					shutdown();
+    					close();
     				} 
     				this.cancel();
     			}
@@ -190,7 +190,7 @@ public class SocketServerConnection implements ServerConnection {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();
         	}
-            throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
+            throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to")); //$NON-NLS-1$
         } 	
 	}
 	
@@ -244,7 +244,7 @@ public class SocketServerConnection implements ServerConnection {
 	public <T> T getService(Class<T> iface) {
 		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new ServerConnectionInvocationHandler(iface));
 	}
-	public synchronized void shutdown() {
+	public synchronized void close() {
 		shutdown(true);
 	}
 	private synchronized void shutdown(boolean logoff) {
@@ -318,5 +318,4 @@ public class SocketServerConnection implements ServerConnection {
 	public void setFailOver(boolean failOver) {
 		this.failOver = failOver;
 	}
-
 }

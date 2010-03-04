@@ -47,7 +47,7 @@ public class AdminRoles {
      * @return the <code>Set</code> of <code>String</code> role names.
      * @since 4.3
      */
-    public static Set getAllRoleNames() {
+    public static Set<String> getAllRoleNames() {
         return roleSet;
     }
 

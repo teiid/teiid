@@ -136,5 +136,5 @@ public interface ProcessObject extends
      * @return Returns the queueWorkerPool.
      * @since 4.3
      */
-    public QueueWorkerPool getQueueWorkerPool();
+    public WorkerPoolStatistics getQueueWorkerPool();
 }

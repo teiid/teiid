@@ -179,7 +179,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 	}
 	
-	@Override
 	public void initialize(Properties info) {
 		PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
@@ -237,13 +236,13 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	/**
 	 * @param connectionProperties will be updated with additional information before logon
 	 */
-	public SocketServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
+	public SocketServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
 		
 		updateConnectionProperties(connectionProperties);
 		
 		MMURL url = new MMURL(connectionProperties.getProperty(MMURL.CONNECTION.SERVER_URL));
 		
-		String discoveryStrategyName = connectionProperties.getProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, AdminApiServerDiscovery.class.getName());
+		String discoveryStrategyName = connectionProperties.getProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, URL);
 
 		ServerDiscovery discovery;
 
@@ -286,18 +285,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	public void setMaxCachedInstances(int maxCachedInstances) {
 		this.maxCachedInstances = maxCachedInstances;
-	}
-
-
-	@Override
-	public void shutdown(boolean restart) {
-		// only applies in the Embedded scenario.
-	}
-
-	@Override
-	public boolean isAlive() {
-		// only applies in the Embedded scenario.
-		return false;
 	}
 
 }

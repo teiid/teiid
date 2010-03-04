@@ -19,45 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
 package com.metamatrix.dqp.client;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Map;
+import java.util.Collection;
+import java.util.List;
 
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 
-public class MetadataResult implements Externalizable {
-	private static final long serialVersionUID = -1520482281079030324L;
-	private Map[] columnMetadata;
-	private int parameterCount;
-	
-	public MetadataResult(Map[] columnMetadata, int parameterCount) {
-		super();
-		this.columnMetadata = columnMetadata;
-		this.parameterCount = parameterCount;
-	}
-	public Map[] getColumnMetadata() {
-		return columnMetadata;
-	}
-	public int getParameterCount() {
-		return parameterCount;
-	}
-	
-	@Override
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		columnMetadata = ExternalizeUtil.readArray(in, Map.class);
-		parameterCount = in.readInt();
-	}
-	
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		ExternalizeUtil.writeArray(out, columnMetadata);
-		out.writeInt(parameterCount);
-	}
-	
+
+public interface DQPManagement {
+    List<RequestMetadata> getRequestsForSession(long sessionId) ;
+    List<RequestMetadata> getRequests();
+    WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier);
+    void terminateSession(long terminateeId);
+    boolean cancelRequest(long sessionId, long requestId) throws AdminException;
+    Collection<String> getCacheTypes();
+    void clearCache(String cacheType);
+    Collection<SessionMetadata> getActiveSessions() throws AdminException;
+    int getActiveSessionsCount() throws AdminException;
+    Collection<org.teiid.adminapi.Transaction> getTransactions();
+    void terminateTransaction(String xid) throws AdminException ;
 }

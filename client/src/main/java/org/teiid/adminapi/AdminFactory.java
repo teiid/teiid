@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.platform.client;
+package org.teiid.adminapi;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +50,7 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
  * Singleton factory for ServerAdmins.
  * @since 4.3
  */
-public class ServerAdminFactory {
+public class AdminFactory {
 	
     private static final int DEFAULT_BOUNCE_WAIT = 2000;
         
@@ -63,7 +63,8 @@ public class ServerAdminFactory {
     	
     	public ReconnectingProxy(Properties p) throws ConnectionException, CommunicationException {
     		this.p = p;
-    		this.registry = serverConnectionFactory.createConnection(p);
+    		this.registry = serverConnectionFactory.getConnection(p);
+    		this.target = registry.getService(Admin.class);
 		}
     	
     	private synchronized Admin getTarget() throws AdminComponentException, CommunicationException {
@@ -74,9 +75,9 @@ public class ServerAdminFactory {
     			return target;
     		}
     		try {
-    			registry = serverConnectionFactory.createConnection(p);
+    			registry = serverConnectionFactory.getConnection(p);
     		} catch (ConnectionException e) {
-    			throw new AdminComponentException(e.getMessage());
+    			throw new AdminComponentException(e);
     		}
     		target = registry.getService(Admin.class);
     		return target;
@@ -119,7 +120,7 @@ public class ServerAdminFactory {
 			}
 			this.closed = true;
 			if (registry != null) {
-				registry.shutdown();
+				registry.close();
 			}
 		}
 		
@@ -154,18 +155,18 @@ public class ServerAdminFactory {
 	public static final String DEFAULT_APPLICATION_NAME = "Admin"; //$NON-NLS-1$
 
     /**Singleton instance*/
-    private static ServerAdminFactory instance = new ServerAdminFactory(SocketServerConnectionFactory.getInstance(), DEFAULT_BOUNCE_WAIT);
+    private static AdminFactory instance = new AdminFactory(SocketServerConnectionFactory.getInstance(), DEFAULT_BOUNCE_WAIT);
     
     private ServerConnectionFactory serverConnectionFactory;
     private int bounceWait;
     
-    ServerAdminFactory(ServerConnectionFactory connFactory, int bounceWait) {
+    AdminFactory(ServerConnectionFactory connFactory, int bounceWait) {
     	this.serverConnectionFactory = connFactory;
     	this.bounceWait = bounceWait;
     }
     
     /**Get the singleton instance*/
-    public static ServerAdminFactory getInstance() {
+    public static AdminFactory getInstance() {
         return instance;
     }
     
@@ -227,14 +228,15 @@ public class ServerAdminFactory {
 		p.remove(MMURL.JDBC.VDB_NAME);
 		p.remove(MMURL.JDBC.VDB_VERSION);
     	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
+    	p.setProperty(MMURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
     	
 		try {
 			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
 			return serverAdmin;
 		} catch (ConnectionException e) {				
-			throw new AdminComponentException(e.getMessage());
+			throw new AdminComponentException(e);
 		} catch (CommunicationException e) {
-			throw new AdminComponentException(e.getMessage());
+			throw new AdminComponentException(e);
 		}
     }
     
