@@ -50,6 +50,7 @@ import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -105,14 +106,33 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
+        SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        
         PlanNode sortNode = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
         
         if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-        	// the lower group cannot contain DUP_REMOVE, GROUP, UNION
-        	// or a projected expression for an unrelated sort column (until SQL 2003 sorts are supported).
-        	
-        	// for now though the simplification is to just not remove the inline view.
-        	return root;
+        	OrderBy sortOrder = (OrderBy)sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+        	boolean unrelated = false;
+        	for (OrderByItem item : sortOrder.getOrderByItems()) {
+        		if (!item.isUnrelated()) {
+        			continue;
+        		}
+        		Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(item.getSymbol(), true);
+        		for (ElementSymbol elementSymbol : elements) {
+					if (virtualGroup.equals(elementSymbol.getGroupSymbol())) {
+						unrelated = true;
+						if (!(symbolMap.getMappedExpression(elementSymbol) instanceof ElementSymbol)) {
+							return root;
+						}
+					}
+				}
+			}
+        	// the lower frame cannot contain DUP_REMOVE, GROUP, UNION if unrelated
+        	if (unrelated && NodeEditor.findNodePreOrder(frame, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.PROJECT) != null
+        			|| NodeEditor.findNodePreOrder(frame, NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE) != null
+        			|| NodeEditor.findNodePreOrder(frame, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE) != null) {
+        		return root;
+        	}
         }
 
         //try to remove the virtual layer if we are only doing a simple projection in the following cases:
@@ -137,8 +157,6 @@ public final class RuleMergeVirtual implements
         if (parentGroup != null) {
         	groupCols = (List<SingleElementSymbol>)parentGroup.getProperty(NodeConstants.Info.GROUP_COLS);
         }
-
-        SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
 
         if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, groupCols, symbolMap, metadata)) {
             return root;
