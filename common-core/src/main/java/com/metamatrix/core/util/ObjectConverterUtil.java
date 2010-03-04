@@ -28,7 +28,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,25 +122,29 @@ public class ObjectConverterUtil {
         return convertToInputStream(new String(data));
     }
 
-    public static void write(final InputStream is, final String fileName) throws Exception {
+    public static void write(final InputStream is, final String fileName) throws IOException {
         File f = new File(fileName);
         f.delete();
 
-        FileOutputStream fio = new FileOutputStream(f);
-        BufferedOutputStream bos = new BufferedOutputStream(fio);
-
-        byte[] buff = new byte[2048];
-        int bytesRead;
-
-        // Simple read/write loop.
-        while (-1 != (bytesRead = is.read(buff, 0, buff.length))) {
-            bos.write(buff, 0, bytesRead);
-        }
-
-        bos.flush();
-        bos.close(); 
+        write(is, f);
     }
 
+    public static void write(final InputStream is, final File f) throws IOException {
+        FileOutputStream fio = new FileOutputStream(f);
+        BufferedOutputStream bos = new BufferedOutputStream(fio);
+        try {
+		    byte[] buff = new byte[2048];
+		    int bytesRead;
+		
+		    // Simple read/write loop.
+		    while (-1 != (bytesRead = is.read(buff, 0, buff.length))) {
+		        bos.write(buff, 0, bytesRead);
+		    }
+        } finally {
+        	bos.close();
+        }
+    }
+    
     public static void write(byte[] data, final String fileName) throws Exception {
         InputStream is = ObjectConverterUtil.convertToInputStream(data);
         ObjectConverterUtil.write(is, fileName);
@@ -154,16 +157,6 @@ public class ObjectConverterUtil {
         is.close();
     }
 
-    public static InputStream convertToInputStream(final File file) {
-        try {
-            FileInputStream fis = new FileInputStream(file);
-            InputStream isContent = new BufferedInputStream(fis);
-            return isContent;
-        } catch (FileNotFoundException fie) {
-            final Object[] params = new Object[]{file.getName()};
-            throw new IllegalArgumentException(CorePlugin.Util.getString("ObjectConverterUtil.File_is_not_found_4",params)); //$NON-NLS-1$
-        }
-    }
     /**
      * Returns the given bytes as a char array using a given encoding (null means platform default).
      */

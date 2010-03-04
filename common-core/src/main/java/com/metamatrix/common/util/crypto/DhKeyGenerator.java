@@ -42,7 +42,6 @@ import java.util.Properties;
 import javax.crypto.KeyAgreement;
 import javax.crypto.spec.DHParameterSpec;
 
-import com.metamatrix.common.util.crypto.cipher.SymmetricCryptor;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**

@@ -25,10 +25,10 @@ package com.metamatrix.core.util;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -66,36 +66,22 @@ public class ExternalizeUtil {
      * @param coll reference to a Collection. Can be null.
      * @throws IOException
      */
-    public static void writeCollection(ObjectOutput out, Collection coll) throws IOException {
+    public static void writeCollection(ObjectOutput out, Collection<?> coll) throws IOException {
         if (coll == null) {
             out.writeInt(0);
         } else {
             final int size = coll.size();
             if (size > 0) {
                 out.writeInt(coll.size());
-                for (Iterator i = coll.iterator(); i.hasNext();) {
-                    out.writeObject(i.next());
+                for (Object object : coll) {
+                    out.writeObject(object);
                 }
             }
         }
     }
     
-    /**
-     * Writes a List to the output using its indexes.
-     * @param out the output instance
-     * @param list reference to a List. Can be null.
-     * @throws IOException
-     */
-    public static void writeList(ObjectOutput out, List list) throws IOException {
-        if (list == null) {
-            out.writeInt(0);
-        } else {
-            final int size = list.size();
-            out.writeInt(size);
-            for (int i = 0; i < size; i++) {
-                out.writeObject(list.get(i));
-            }
-        }
+    public static void writeList(ObjectOutput out, List<?> coll) throws IOException {
+    	writeCollection(out, coll);
     }
     
     /**
@@ -104,14 +90,12 @@ public class ExternalizeUtil {
      * @param list reference to a Map. Can be null.
      * @throws IOException
      */
-    public static void writeMap(ObjectOutput out, Map map) throws IOException {
+    public static void writeMap(ObjectOutput out, Map<?, ?> map) throws IOException {
         if (map == null) {
             out.writeInt(0);
         } else {
             out.writeInt(map.size());
-            Map.Entry entry = null;
-            for (Iterator i = map.entrySet().iterator(); i.hasNext();) {
-                entry = (Map.Entry)i.next();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
                 out.writeObject(entry.getKey());
                 out.writeObject(entry.getValue());
             }
@@ -119,19 +103,24 @@ public class ExternalizeUtil {
     }
     
     /**
-     * Reads an array of String that was written to the ouput by this utility class
+     * Reads an array of String that was written to the output by this utility class
      * @param in
      * @return a non-null String[]
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static String[] readStringArray(ObjectInput in) throws IOException, ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+	public static <T> T[] readArray(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
         final int length = in.readInt();
-        String[] strings = new String[length];
+        T[] result = (T[])Array.newInstance(type, length);
         for (int i = 0; i < length; i++) {
-            strings[i] = (String)in.readObject();
+        	result[i] = type.cast(in.readObject());
         }
-        return strings;
+        return result;
+    }
+    
+    public static String[] readStringArray(ObjectInput in) throws IOException, ClassNotFoundException {
+    	return readArray(in, String.class);
     }
     
     /**
@@ -141,13 +130,12 @@ public class ExternalizeUtil {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static List readList(ObjectInput in) throws IOException, ClassNotFoundException {
-        final int size = in.readInt();
-        Object [] array = new Object[size];
-        for (int i = 0; i < size; i++) {
-            array[i] = in.readObject();
-        }
-        return Arrays.asList(array);
+    public static <T> List<T> readList(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
+        return Arrays.asList(readArray(in, type));
+    }
+    
+    public static List<?> readList(ObjectInput in) throws IOException, ClassNotFoundException {
+    	return readList(in, Object.class);
     }
     
     /**
@@ -157,11 +145,12 @@ public class ExternalizeUtil {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static Map readMap(ObjectInput in) throws IOException, ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+	public static <K, V> Map<K, V> readMap(ObjectInput in) throws IOException, ClassNotFoundException {
         final int size = in.readInt();
-        HashMap map = new HashMap(size + 1, 1);
+        HashMap<K, V> map = new HashMap<K, V>(size);
         for (int i = 0; i < size; i++) {
-            map.put(in.readObject(), in.readObject());
+            map.put((K)in.readObject(), (V)in.readObject());
         }
         return map;
     }

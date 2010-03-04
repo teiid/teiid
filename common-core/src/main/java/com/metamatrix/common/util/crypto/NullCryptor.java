@@ -24,7 +24,7 @@ package com.metamatrix.common.util.crypto;
 
 import java.io.Serializable;
 
-public class NullCryptor implements Cryptor, Serializable {
+public class NullCryptor implements Cryptor {
 
 	public byte[] encrypt(byte[] cleartext) throws CryptoException {
 		return cleartext;

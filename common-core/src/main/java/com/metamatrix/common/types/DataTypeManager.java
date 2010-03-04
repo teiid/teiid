@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,6 +138,15 @@ public class DataTypeManager {
 	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128); 
 
 	public static final int MAX_STRING_LENGTH = 4000;
+	
+	public static final class DataTypeAliases {
+		public static final String VARCHAR = "varchar"; //$NON-NLS-1$
+		public static final String TINYINT = "tinyint"; //$NON-NLS-1$
+		public static final String SMALLINT = "smallint"; //$NON-NLS-1$
+		public static final String BIGINT = "bigint"; //$NON-NLS-1$
+		public static final String REAL = "real"; //$NON-NLS-1$
+		public static final String DECIMAL = "decimal"; //$NON-NLS-1$
+	}
 
 	public static final class DefaultDataTypes {
 		public static final String STRING = "string"; //$NON-NLS-1$
@@ -216,7 +226,7 @@ public class DataTypeManager {
 	/** Base data type names and classes, Type class --> Type name */
 	private static Map<Class, String> dataTypeClasses = new LinkedHashMap<Class, String>(128);
 
-	private static Set<String> DATA_TYPE_NAMES = Collections.unmodifiableSet(dataTypeNames.keySet());
+	private static Set<String> DATA_TYPE_NAMES;
 
 	private static Set<Class> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
 
@@ -490,6 +500,13 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.OBJECT, DefaultDataClasses.OBJECT);
 		DataTypeManager.addDataType(DefaultDataTypes.NULL, DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
+		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
+		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
+		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
+		dataTypeNames.put(DataTypeAliases.REAL, DefaultDataClasses.FLOAT);
+		dataTypeNames.put(DataTypeAliases.SMALLINT, DefaultDataClasses.SHORT);
+		dataTypeNames.put(DataTypeAliases.TINYINT, DefaultDataClasses.BYTE);
+		dataTypeNames.put(DataTypeAliases.VARCHAR, DefaultDataClasses.STRING);
 		
 		if (USE_VALUE_CACHE) {
 			valueMaps.put(DefaultDataClasses.BOOLEAN, new ValueCache<Boolean>() {

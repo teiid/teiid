@@ -22,10 +22,45 @@
 
 package com.metamatrix.common.util.crypto;
 
+import java.io.Serializable;
+
 /**
  * Interface defining a utility that can perform both encryption and decryption.
- * @see Encryptor
- * @see Decryptor
  */
-public interface Cryptor extends Encryptor, Decryptor {
+public interface Cryptor {
+	
+    /**
+     * Encrypt the cleartext in byte array format.
+     * @param cleartext The text to be encrypted, in byte form
+     * @param The encrypted ciphertext, in byte form
+     */
+    byte[] encrypt( byte[] cleartext ) throws CryptoException;
+
+    /**
+     * Encrypt the cleartext
+     * @param cleartext The text to be encrypted
+     * @param The encrypted ciphertext
+     */
+    String encrypt( String cleartext ) throws CryptoException;
+    
+    Serializable sealObject(Serializable object) throws CryptoException;
+    
+    /**
+     * Decrypt the ciphertext in byte array format to yield the original
+     * cleartext.
+     * @param ciphertext The text to be encrypted, in byte form
+     * @param The decrypted cleartext, in byte form
+     */
+    byte[] decrypt( byte[] ciphertext ) throws CryptoException;
+
+    /**
+     * Decrypt the ciphertext to yield the original
+     * cleartext.
+     * @param ciphertext The text to be encrypted
+     * @param The decrypted cleartext
+     */
+    String decrypt( String ciphertext ) throws CryptoException;
+    
+    Serializable unsealObject(Serializable object) throws CryptoException;
+    
 }

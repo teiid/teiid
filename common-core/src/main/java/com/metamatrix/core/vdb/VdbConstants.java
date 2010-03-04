@@ -40,17 +40,8 @@ public interface VdbConstants {
     public final static String INDEX_EXT        = ".INDEX";     //$NON-NLS-1$
     public final static String SEARCH_INDEX_EXT = ".SEARCH_INDEX";     //$NON-NLS-1$
     public final static String MODEL_EXT = ".xmi";     //$NON-NLS-1$
+    public final static String UDF_FILE_NAME = "FunctionDefinitions.xmi";     //$NON-NLS-1$
     
-    /**
-     * These are virtual database status.
-     */
-    final public static class VDB_STATUS {
-        public static final short INCOMPLETE = 1;
-        public static final short INACTIVE = 2;
-        public static final short ACTIVE = 3;
-        public static final short DELETED = 4;
-    }
-
 	public static final String VDB = ".vdb"; //$NON-NLS-1$
 	public static final String DEF = ".def"; //$NON-NLS-1$    
     

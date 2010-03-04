@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.util.crypto.cipher;
+package com.metamatrix.common.util.crypto;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,12 +34,10 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.util.ArgCheck;
 
 /**
- * Provides a symmetric cryptor
- * 
+ * Provides a symmetric cryptor using AES
  */
 public class SymmetricCryptor extends BasicCryptor {
     

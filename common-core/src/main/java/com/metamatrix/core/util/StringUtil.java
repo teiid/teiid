@@ -12,8 +12,11 @@
 
 package com.metamatrix.core.util;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +29,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * This is a common place to put String utility methods.
@@ -880,6 +884,9 @@ public final class StringUtil {
     public static boolean isLetterOrDigit(char c) {
         return isBasicLatinLetter(c) || isBasicLatinDigit(c) || Character.isLetterOrDigit(c);
     }
+    public static boolean isValid(String str) {
+    	return (!(str == null || str.trim().length() == 0));
+    }
     
     public static String toUpperCase(String str) {
         String newStr = convertBasicLatinToUpper(str);
@@ -1040,4 +1047,20 @@ public final class StringUtil {
 
     	throw new IllegalArgumentException("Conversion from String to "+ type.getName() + " is not supported"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+
+	public static String[] getLines(final String value) {
+	    StringReader stringReader = new StringReader(value);
+	    BufferedReader reader = new BufferedReader(stringReader);
+	    ArrayList result = new ArrayList();
+	    try {
+	        String line = reader.readLine();
+	        while (line != null) {
+	            result.add(line);
+	            line = reader.readLine();
+	        }
+	    } catch (IOException e) {
+	        throw new MetaMatrixRuntimeException(e);
+	    }
+	    return (String[]) result.toArray(new String[result.size()]);
+	}
 }

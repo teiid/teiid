@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,7 +39,7 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.DateUtil;
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 public final class ApplicationInfo implements Serializable {
     
@@ -123,7 +125,7 @@ public final class ApplicationInfo implements Serializable {
         String classPath = getClassPath(); 
 
         StringBuffer sb = new StringBuffer();
-        sb.append("\nDate: " + DateUtil.getCurrentDateAsString());//$NON-NLS-1$
+        sb.append("\nDate: " + DateFormat.getDateInstance().format(new Date()));//$NON-NLS-1$
         sb.append( LINE_SEPARATOR );        
         
         Map pathResults = new HashMap();
@@ -187,7 +189,7 @@ public final class ApplicationInfo implements Serializable {
                     sb.append("Patch " + url.getFile() + ":"); //$NON-NLS-1$ //$NON-NLS-2$
                     sb.append( LINE_SEPARATOR );
                     InputStream is = url.openStream();
-                    byte[] data = ByteArrayHelper.toByteArray(is);
+                    byte[] data = ObjectConverterUtil.convertToByteArray(is);
                     sb.append(new String(data));
                     sb.append("-------------------------------------");//$NON-NLS-1$
                     sb.append( LINE_SEPARATOR );

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.util.crypto.cipher;
+package com.metamatrix.common.util.crypto;
 
 import java.io.Serializable;
 import java.security.InvalidKeyException;
@@ -31,25 +31,12 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.common.util.crypto.Cryptor;
-import com.metamatrix.common.util.crypto.Decryptor;
-import com.metamatrix.common.util.crypto.Encryptor;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 import com.metamatrix.core.util.Base64;
 
 /**
- * <p>Implementation of <code>Cryptor</code> interface that can perform both
- * encryption and decryption.  Instances of this class can be cast to any
- * of the following interfaces: <code>Cryptor</code>, <code>Encryptor</code>,
- * or <code>Decryptor</code>. </p>
- *
  * <p>Public methods in this class throw only <code>CryptoException</code>s. </p>
- *
- * @see Encryptor
- * @see Decryptor
  */
 public class BasicCryptor implements Cryptor {
 
@@ -62,6 +49,8 @@ public class BasicCryptor implements Cryptor {
     /** The <code>Cipher</code> to use for encryption. */
     protected Cipher encryptCipher;
     protected String cipherAlgorithm;
+	public static final String OLD_ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
+	public static final String ENCRYPT_PREFIX = "{teiid-encrypt}"; //$NON-NLS-1$
        
     public BasicCryptor( Key encryptKey, Key decryptKey, String algorithm) throws CryptoException {
     	this.encryptKey = encryptKey;
@@ -111,10 +100,10 @@ public class BasicCryptor implements Cryptor {
     }
 
 	public static String stripEncryptionPrefix(String ciphertext) {
-        if (ciphertext.startsWith(CryptoUtil.ENCRYPT_PREFIX)) {
-            ciphertext = ciphertext.substring(CryptoUtil.ENCRYPT_PREFIX.length()); 
-        } else if (ciphertext.startsWith(CryptoUtil.OLD_ENCRYPT_PREFIX)) {
-        	ciphertext = ciphertext.substring(CryptoUtil.OLD_ENCRYPT_PREFIX.length());
+        if (ciphertext.startsWith(BasicCryptor.ENCRYPT_PREFIX)) {
+            ciphertext = ciphertext.substring(BasicCryptor.ENCRYPT_PREFIX.length()); 
+        } else if (ciphertext.startsWith(BasicCryptor.OLD_ENCRYPT_PREFIX)) {
+        	ciphertext = ciphertext.substring(BasicCryptor.OLD_ENCRYPT_PREFIX.length());
         }
 		return ciphertext;
 	}
@@ -192,7 +181,7 @@ public class BasicCryptor implements Cryptor {
         // Perform specialized encoding now, and return result
         
         String encoded = Base64.encodeBytes( cipherBytes );
-        return CryptoUtil.ENCRYPT_PREFIX + encoded;
+        return BasicCryptor.ENCRYPT_PREFIX + encoded;
     }
 
     /**

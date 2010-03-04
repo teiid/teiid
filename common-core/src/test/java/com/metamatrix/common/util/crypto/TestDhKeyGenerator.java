@@ -24,7 +24,6 @@ package com.metamatrix.common.util.crypto;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.util.crypto.cipher.SymmetricCryptor;
 
 public class TestDhKeyGenerator extends TestCase {
 	
@@ -42,7 +41,7 @@ public class TestDhKeyGenerator extends TestCase {
 		String cleartext2 = clientCryptor.decrypt(ciphertext);
 		
 		assertEquals(cleartext, cleartext2);
-		assertTrue(CryptoUtil.isValueEncrypted(new String(ciphertext)));
+		assertTrue(!ciphertext.equals(cleartext));
 	}
 
 }
