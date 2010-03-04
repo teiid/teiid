@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+    <!-- This file defines the connector templates for Teiid based connectors -->
+   <bean name="connector-jdbc-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-jdbc-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-jdbc-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-jdbc-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid JDBC Connector</parameter>
+      </constructor>
+   </bean> 
+   
+   <bean name="connector-ldap-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-ldap-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-ldap-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-ldap-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid LDAP Connector</parameter>
+      </constructor>
+   </bean>    
+   
+   <bean name="connector-loopback-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-loopback-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-loopback-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-loopback-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid Loopback Connector</parameter>
+      </constructor>
+   </bean>    
+   
+   <bean name="connector-salesforce-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-salesforce-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-salesforce-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-salesforce-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid Salesforce Connector</parameter>
+      </constructor>
+   </bean>    
+   
+   <bean name="connector-text-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-text-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-text-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-text-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid Text Connector</parameter>
+      </constructor>
+   </bean>    
+   
+   <bean name="connector-xmlsource-file-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-xmlsource-file-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-xmlsource-file-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-xmlsource-file-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid XML File Connector</parameter>
+      </constructor>
+   </bean>    
+   
+   <bean name="connector-xmlsource-soap-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-xmlsource-soap-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-xmlsource-soap-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-xmlsource-soap-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid XML SOAP Connector</parameter>
+      </constructor>
+   </bean> 
+   
+   <bean name="connector-xml-http-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
+      <property name="info"><inject bean="connector-xml-http-templateinfo"/></property>
+      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
+   </bean>
+   <bean name="connector-xml-http-templateinfo" class="org.teiid.templates.connector.ConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-xml-http-${project.version}</parameter>
+         <parameter class="java.lang.String">Teiid XML HTTP Connector</parameter>
+      </constructor>
+   </bean>   
+   
+</deployment>

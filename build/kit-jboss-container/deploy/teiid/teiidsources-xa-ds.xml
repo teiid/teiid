@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  JBoss DataSource Configuration                                       -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<!-- $Id: derby-xa-ds.xml 77479 2008-08-26 10:33:09Z alex.loubyansky@jboss.com $ -->
+
+<datasources>
+   <xa-datasource>
+      <jndi-name>DerbyDS</jndi-name>
+
+      <!-- uncomment to enable interleaving <interleaving/> -->
+
+        <isSameRM-override-value>false</isSameRM-override-value>
+        <xa-datasource-class>org.apache.derby.jdbc.ClientXADataSource</xa-datasource-class>
+        <xa-datasource-property name="DatabaseName">teiid/txntest</xa-datasource-property>
+        <xa-datasource-property name="User">rareddy</xa-datasource-property>
+        <xa-datasource-property name="Password">mm</xa-datasource-property>
+        <xa-datasource-property name="PortNumber">1527</xa-datasource-property>
+        <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
+
+        <track-connection-by-tx>true</track-connection-by-tx>
+        <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+
+        <max-pool-size>5</max-pool-size>
+        <min-pool-size>1</min-pool-size>
+      <metadata>
+         <type-mapping>Derby</type-mapping>
+      </metadata>
+   </xa-datasource>
+
+    <xa-datasource>
+        <jndi-name>MySQLDS</jndi-name>
+
+        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+        <xa-datasource-property name="DatabaseName">txntest</xa-datasource-property>
+        <xa-datasource-property name="PortNumber">3306</xa-datasource-property>
+        <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
+        <user-name>rareddy</user-name>
+        <password>mm</password>
+
+        <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+
+        <max-pool-size>5</max-pool-size>
+        <min-pool-size>1</min-pool-size>
+
+        <blocking-timeout-millis>2000</blocking-timeout-millis>
+        <idle-timeout-minutes>2</idle-timeout-minutes>
+        <track-connection-by-tx>true</track-connection-by-tx>
+        <new-connection-sql>set autocommit=1</new-connection-sql>
+        <no-tx-separate-pools>true</no-tx-separate-pools>
+        <exception-sorter-class-name>org.jboss.resource.adapter.jdbc.vendor.MySQLExceptionSorter</exception-sorter-class-name>
+      <metadata>
+         <type-mapping>mySQL</type-mapping>
+      </metadata>
+    </xa-datasource>
+
+
+</datasources>

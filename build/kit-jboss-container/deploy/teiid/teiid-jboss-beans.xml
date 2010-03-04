@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+   <interceptor xmlns="urn:jboss:aop-beans:1.0" name="JndiAspect" class="org.jboss.aop.microcontainer.aspects.jndi.JndiIntroduction">
+      <property name="env">
+           <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
+              <entry><key>java.naming.factory.initial</key><value>org.jnp.interfaces.NamingContextFactory</value></entry>
+           </map>
+      </property>
+   </interceptor>
+   
+   <introduction xmlns="urn:jboss:aop-beans:1.0" class="@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding">
+      <interfaces>org.jboss.kernel.spi.dependency.KernelControllerContextAware</interfaces>
+   </introduction>
+
+   <bind xmlns="urn:jboss:aop-beans:1.0" pointcut="execution(* $instanceof{org.jboss.kernel.spi.dependency.KernelControllerContextAware}->$implements{org.jboss.kernel.spi.dependency.KernelControllerContextAware}(..))">
+      <interceptor-ref name="JndiAspect"/>
+   </bind>
+    
+    <!-- Teiid Services -->
+    <bean name="AuthorizationService" class="org.teiid.services.AuthorizationServiceImpl">
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="useEntitlements" class="java.lang.Boolean">false</property>
+    </bean>
+    
+    <bean name="SessionService" class="org.teiid.services.SessionServiceImpl">
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="securityHelper"><inject bean="SecurityHelper"/></property>
+        <!-- Comma separated list of domains to be used -->
+        <property name="securityDomains">teiid-security</property>
+        <property name="adminSecurityDomain">jmx-console</property>
+        <property name="sessionMaxLimit">5000</property>
+        <property name="sessionExpirationTimeLimit">0</property>
+    </bean>
+    
+    <bean name="BufferService" class="org.teiid.services.BufferServiceImpl">
+        <property name="contextCache"><inject bean="ContextCache"/></property>
+        <property name="cacheFactory"><inject bean="TeiidCache"/></property>
+        <property name="useDisk">true</property>
+        <property name="diskDirectory">${jboss.server.temp.dir}/teiid</property>
+        <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512) -->
+        <property name="processorBatchSize">512</property>
+        <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) -->
+        <property name="connectorBatchSize">1024</property>
+        <!-- 
+            The number of batch columns to allow in memory (default 16384).  
+            This value should be set lower or higher depending on the available memory to Teiid in the VM.  
+            16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.        
+         -->
+        <property name="maxReserveBatchColumns">16384</property>
+        <!-- 
+            The number of batch columns guaranteed to a processing operation.  Set this value lower if the workload typically
+            processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, 
+            grouping, etc. (default 124)        
+         -->
+        <property name="maxProcessingBatchesColumns">128</property>
+        <!--  Max File size in MB -->
+        <property name="maxFileSize">2024</property> 
+        <property name="maxOpenFiles">256</property>
+    </bean>
+    
+    <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">
+        <annotation>@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding(name="teiid/engine-deployer")</annotation>
+        <property name="jdbcSocketConfiguration"><inject bean="JdbcSocketConfiguration"/></property>
+        <property name="adminSocketConfiguration"><inject bean="AdminSocketConfiguration"/></property>
+        <property name="workManager"><inject bean="WorkManager"/></property>
+        <property name="XATerminator"><inject bean="TransactionManager" property="XATerminator"/></property>
+        <property name="authorizationService"><inject bean="AuthorizationService"/></property>
+        <property name="sessionService"><inject bean="SessionService"/></property>
+        <property name="bufferService"><inject bean="BufferService"/></property>
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+        <property name="securityHelper"><inject bean="SecurityHelper"/></property>
+        
+        <!-- Name of the process that uniquely identifies this process -->
+        <property name="processName">localhost</property>
+        <!-- Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8. -->
+        <property name="maxThreads">16</property>
+        <!-- Query processor time slice, in milliseconds. (default 2000) -->
+        <property name="timeSliceInMilli">2000</property>
+        <!-- Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480) -->
+        <property name="maxRowsFetchSize">20480</property>
+        <!-- The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default) -->
+        <property name="lobChunkSizeInKB">10</property>
+        <!-- The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)  -->
+        <property name="preparedPlanCacheMaxCount">250</property>
+        <!-- Maximum number of cached lookup tables. Note: this is a memory based cache and should be set to a value of at least 10 to accomidate system usage. (default 200) -->
+        <property name="codeTablesMaxCount">200</property>
+        <!-- Maximum number of records in a single lookup table (default 10000) -->
+        <property name="codeTablesMaxRowsPerTable">10000</property>
+        <!-- Maximum number of records in all lookup tables (default 200000) -->
+        <property name="codeTablesMaxRows">200000</property>
+        <!-- Max Entries allowed for ResultSet Cache -->
+        <property name="resultSetCacheMaxEntries">1024</property>
+        <!-- Enable Resultset Caching -->
+        <property name="resultSetCacheEnabled">true</property>
+    </bean>
+
+    
+    <bean name="JdbcSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
+        <property name="enabled">true</property>
+        <property name="bindAddress">localhost</property>
+        <property name="portNumber">31000</property>
+        <!-- Max number of threads dedicated to Admin and initial request processing (default 15) -->
+        <property name="maxSocketThreads">15</property>
+        <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
+        <property name="inputBufferSize">0</property>
+        <!-- SO_SNDBUF size, 0 indicates that system default should be used (default 0) -->
+        <property name="outputBufferSize">0</property>
+        <property name="SSLConfiguration"><inject bean="JdbcSslConfiguration"/></property>
+    </bean>
+    
+    <bean name="JdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
+        <property name="sslEnabled">false</property>
+        <property name="keystoreFilename">cert.keystore</property>
+        <property name="keystorePassword">passwd</property>
+        <property name="keystoreType">JKS</property>
+        <property name="sslProtocol">SSLv3</property>
+        <property name="keymanagementAlgorithm">false</property>
+        <property name="truststoreFilename">cert.truststore</property>
+        <property name="truststorePassword">passwd</property>
+        <!--  1-way, 2-way, anonymous -->
+        <property name="authenticationMode">1-way</property>
+        <property name="clientEncryptionEnabled">true</property>
+    </bean>
+    
+    <bean name="AdminSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
+        <property name="enabled">true</property>
+        <property name="bindAddress">localhost</property>
+        <property name="portNumber">31443</property>
+        <!-- Max number of threads dedicated to Admin and initial request processing (default 15) -->
+        <property name="maxSocketThreads">4</property>
+        <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
+        <property name="inputBufferSize">0</property>
+        <!-- SO_SNDBUF size, 0 indicates that system default should be used (default 0) -->
+        <property name="outputBufferSize">0</property>
+        <property name="SSLConfiguration"><inject bean="AdminSslConfiguration"/></property>
+    </bean>
+    
+    <bean name="AdminSslConfiguration" class="org.teiid.transport.SSLConfiguration">
+        <property name="sslEnabled">false</property>
+        <property name="keystoreFilename">cert.keystore</property>
+        <property name="keystorePassword">passwd</property>
+        <property name="keystoreType">JKS</property>
+        <property name="sslProtocol">SSLv3</property>
+        <property name="keymanagementAlgorithm">false</property>
+        <property name="truststoreFilename">cert.truststore</property>
+        <property name="truststorePassword">passwd</property>
+        <!--  1-way, 2-way, anonymous -->
+        <property name="authenticationMode">anonymous</property>
+        <property name="clientEncryptionEnabled">true</property>
+    </bean>
+            
+    <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+        <authentication>
+            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                <!-- property files can found under conf/props directory -->
+                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+            </login-module>
+        </authentication>
+    </application-policy>    
+
+</deployment>

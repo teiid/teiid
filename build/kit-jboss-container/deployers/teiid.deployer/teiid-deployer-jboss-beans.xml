@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+    <!-- Deployer specific Stuff -->
+    <bean name="VDBStructure" class="org.teiid.deployers.VDBStructure" />
+    <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository"/>
+    <bean name="ConnectorManagerRepository" class="org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository"/>
+    <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    
+        
+    <bean name="VDBParserDeployer" class="org.teiid.deployers.VDBParserDeployer">
+        <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
+    </bean>
+    
+    
+    <bean name="DynamicVDBDeployer" class="org.teiid.deployers.DynamicVDBDeployer">
+        <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+    </bean>
+    
+    
+    <bean name="ObjectSerializer" class="org.teiid.deployers.ObjectSerializer">
+        <property name="attachmentStoreRoot">${jboss.server.data.dir}/teiid</property>
+    </bean>
+    
+    <bean name="VDBDeployer" class="org.teiid.deployers.VDBDeployer">
+        <install bean="ManagedDeploymentCreator" method="addAttachmentType">
+            <parameter>
+                <value>org.teiid.adminapi.impl.VDBMetaData</value>
+            </parameter>
+            <parameter>
+                <value>teiid-vdb</value>
+            </parameter>
+        </install>
+        <uninstall bean="ManagedDeploymentCreator" method="removeAttachmentType">
+            <parameter>
+                <value>org.teiid.adminapi.impl.VDBMetaData</value>
+            </parameter>
+        </uninstall>
+        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="contextCache"><inject bean="ContextCache"/></property>
+        <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
+        <depends>SystemVDBDeployer</depends>
+    </bean>       
+    
+    
+    
+    <bean name="SystemVDBDeployer" class="org.teiid.deployers.SystemVDBDeployer">
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+    </bean>      
+             
+    <bean name="ConnectorBindingDeployer" class="org.teiid.jboss.deployers.ConnectorBindingDeployer">
+        <property name="securityHelper"><inject bean="SecurityHelper"/></property>
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
+    </bean>
+    
+    <!-- Persistence class for the VDB deployment file -->
+   <bean name="VDBMetadataComponentMapper" class="org.teiid.jboss.deployers.VDBMetadataComponentMapper">
+        <constructor><parameter><inject bean="PersistenceFactory" /></parameter></constructor>
+   </bean>    
+        
+   <!--  JBOSS Cache -->
+   <!-- Uncomment for JBoss Cache -->
+   <!-- 
+   <bean name="TeiidJBossCacheConfig" class="org.jboss.cache.config.Configuration">
+      <property name="runtimeConfig">
+         <bean class="org.jboss.cache.config.RuntimeConfig">
+            <property name="transactionManager">
+               <inject bean="TransactionManager" property="transactionManager"/>
+            </property>
+         </bean>
+      </property>
+    
+      <property name="isolationLevel">READ_COMMITTED</property>
+
+      <property name="cacheMode">LOCAL</property>     
+
+      <property name="lockAcquisitionTimeout">15000</property>
+
+      <property name="exposeManagementStatistics">true</property>
+
+      <property name="evictionConfig">
+         <bean class="org.jboss.cache.config.EvictionConfig">
+            <property name="defaultEvictionPolicyClass">org.jboss.cache.eviction.LRUPolicy</property>
+            <property name="wakeupIntervalSeconds">15</property>
+            <property name="evictionRegionConfigs">
+               <list>
+                  <bean class="org.jboss.cache.config.EvictionRegionConfig">
+                     <property name="regionName">/_default_</property>
+                     <property name="evictionAlgorithmConfig">
+                        <bean class="org.jboss.cache.eviction.LRUAlgorithmConfig">
+                           <property name="maxAge">-1</property>
+                           <property name="timeToLive">-1</property>
+                           <property name="maxNodes">10000</property>
+                        </bean>
+                     </property>
+                  </bean>
+               </list>
+            </property>
+         </bean>
+      </property>
+   </bean>
+
+   <bean name="TeiidDefaultCacheFactory" class="org.jboss.cache.DefaultCacheFactory">      
+      <constructor factoryClass="org.jboss.cache.DefaultCacheFactory" factoryMethod="getInstance"/>
+   </bean>
+
+   <bean name="TeiidJBossCache" class="org.jboss.cache.Cache">  
+      <constructor factoryMethod="createCache">
+          <factory bean="TeiidDefaultCacheFactory"/>
+          <parameter class="org.jboss.cache.config.Configuration"><inject bean="TeiidJBossCacheConfig"/></parameter>
+          <parameter class="boolean">false</parameter>
+      </constructor>
+   </bean>
+   
+   <bean name="TeiidJBossCacheMBean" class="org.jboss.cache.jmx.CacheJmxWrapper">
+        <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.cache:service=TeiidCache",exposedInterface=org.jboss.cache.jmx.CacheJmxWrapperMBean.class,registerDirectly=true)</annotation> 
+        <constructor>
+          <parameter class="org.jboss.cache.Cache"><inject bean="TeiidJBossCache"/></parameter>
+      </constructor>
+   </bean>
+   
+    <bean name="TeiidCache" class="com.metamatrix.cache.jboss.JBossCacheFactory">
+        <property name="cacheName">jboss.cache:service=TeiidCache</property>
+        <demand>TransactionManager</demand>
+        <demand>TeiidJBossCacheMBean</demand>
+    </bean>       
+    --> 
+    
+    <bean name="TeiidCache" class="org.teiid.cache.DefaultCacheFactory">
+    </bean> 
+    
+    <bean name="ContextCache" class="org.teiid.dqp.internal.cache.DQPContextCache">
+        <property name="cacheFactory"><inject bean="TeiidCache"/></property>
+        <property name="processName">localhost</property>
+    </bean>    
+</deployment>

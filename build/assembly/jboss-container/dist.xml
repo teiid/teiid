@@ -1,0 +1,107 @@
+<!--This script builds a JAR for the Embedded Server Installation -->
+<assembly>
+  
+  <id>jboss-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>teiid-${version}</baseDirectory>
+
+  <fileSets>
+          
+    <fileSet>
+        <directory>build/target/kit-jboss-container</directory>       
+        <outputDirectory>/</outputDirectory>     
+    </fileSet>
+                    
+    <!-- only true dependency file for any client --> 
+    <fileSet>
+      <directory>target/distribution</directory>
+      <includes>
+        <include>teiid-${version}-client.jar</include>
+      </includes>
+      <outputDirectory>lib</outputDirectory>      
+    </fileSet>
+    
+  </fileSets>
+  
+  <!--  these have external dependent clients like connectors-->
+  <moduleSets>
+    <moduleSet>
+      <includes>
+      	<include>org.jboss.teiid:teiid-hibernate-dialect</include>   
+      </includes>
+      <binaries>
+		<includeDependencies>false</includeDependencies>
+		<unpack>false</unpack>
+        <outputDirectory>lib</outputDirectory>
+      </binaries>
+    </moduleSet>
+
+    <!-- These are Teiid internal dependencies; to make JCA work -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+
+        <includes>
+            <include>org.jboss.teiid:teiid-jboss-integration</include>
+            <include>org.jboss.teiid.connectors:connector-xml</include>
+        </includes>
+
+        <binaries>
+            <includeDependencies>true</includeDependencies>
+            <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+            <outputDirectory>deployers/teiid.deployer</outputDirectory>
+        </binaries>
+    </moduleSet>
+    
+    <!-- These are built in connectors  -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-jdbc:rar</include>
+            <include>org.jboss.teiid.connectors:connector-loopback:rar</include>
+            <include>org.jboss.teiid.connectors:connector-text:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <include>org.jboss.teiid.connectors:connector-xml-http:rar</include>
+            <include>org.jboss.teiid.connectors:connector-xmlsource-file:rar</include>
+            <include>org.jboss.teiid.connectors:connector-xmlsource-soap:rar</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+          <outputDirectory>deploy/teiid/connectors</outputDirectory>
+        </binaries>
+      
+    </moduleSet>
+        
+    <!-- Include the JOPR plugin -->    
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
+            <include>org.jboss.teiid:teiid-console</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+          <outputDirectory>deploy/admin-console.war/plugins</outputDirectory>
+        </binaries>
+      
+    </moduleSet>        
+    </moduleSets>  
+</assembly>

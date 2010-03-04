@@ -28,11 +28,6 @@
               <unpack>false</unpack>
               <useTransitiveDependencies>true</useTransitiveDependencies>
               <useDefaultExcludes>true</useDefaultExcludes>
-              <excludes>
-                    <exclude>org.jboss.teiid:teiid-client</exclude>
-                    <exclude>org.jboss.teiid:teiid-client-jdbc</exclude>    
-                    <exclude>org.jboss.teiid:teiid-common-core</exclude>    
-              </excludes>              
             </dependencySet>
           </dependencySets>
           

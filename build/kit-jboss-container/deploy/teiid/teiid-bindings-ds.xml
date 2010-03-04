@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <jndi-name>mysql-connector-binding</jndi-name>
+      <rar-name>connector-jdbc-7.0.0-SNAPSHOT.rar</rar-name>
+      <connection-definition>org.teiid.connector.api.Connector</connection-definition>
+      
+      <config-property name="CapabilitiesClass" type="java.lang.String">org.teiid.connector.jdbc.mysql.MySQLCapabilities</config-property>
+      <config-property name="XaCapable" type="java.lang.Boolean">true</config-property>
+
+      <config-property name="ExtensionTranslationClassName" type="java.lang.String">org.teiid.connector.jdbc.mysql.MySQLTranslator</config-property>
+      <config-property name="SourceJNDIName" type="java.lang.String">java:MySQLDS</config-property>
+            
+      <max-pool-size>20</max-pool-size>
+      <!--  security-domain-and-application>teiid-security</security-domain-and-application--> 
+    </no-tx-connection-factory>
+    
+    
+   <no-tx-connection-factory>
+      <jndi-name>derby-connector-binding</jndi-name>
+      <rar-name>connector-jdbc-7.0.0-SNAPSHOT.rar</rar-name>
+      <connection-definition>org.teiid.connector.api.Connector</connection-definition>
+      
+      <config-property name="CapabilitiesClass" type="java.lang.String">org.teiid.connector.jdbc.derby.DerbyCapabilities</config-property>
+      <config-property name="XaCapable" type="java.lang.Boolean">true</config-property>
+
+      <config-property name="ExtensionTranslationClassName" type="java.lang.String">org.teiid.connector.jdbc.derby.DerbySQLTranslator</config-property>
+      <config-property name="SourceJNDIName" type="java.lang.String">java:DerbyDS</config-property>
+            
+      <max-pool-size>20</max-pool-size>
+      <!-- security-domain-and-application>teiid-security</security-domain-and-application--> 
+    </no-tx-connection-factory>    
+
+</connection-factories>
