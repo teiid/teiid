@@ -11,17 +11,19 @@
 	<name>JBoss Cache</name>
 	<description>JBossCache provider.</description>
 	<dependencies>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>    
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-engine</artifactId>
+            <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.cache</groupId>
 			<artifactId>jbosscache-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.guice</groupId>
-			<artifactId>guice</artifactId>
 		</dependency>
 	</dependencies>
 </project>

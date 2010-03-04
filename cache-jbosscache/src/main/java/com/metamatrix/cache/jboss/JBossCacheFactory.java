@@ -22,6 +22,14 @@
 
 package com.metamatrix.cache.jboss;
 
+import java.io.Serializable;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
@@ -30,39 +38,31 @@ import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
-import org.jboss.cache.jmx.JmxRegistrationManager;
+import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
-import com.metamatrix.common.util.JMXUtil;
-import com.metamatrix.common.util.JMXUtil.FailedToRegisterException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
-@Singleton
-public class JBossCacheFactory implements CacheFactory {
-	private static final String NAME = "Cache"; //$NON-NLS-1$
-	private org.jboss.cache.Cache cacheStore;
+public class JBossCacheFactory implements CacheFactory, Serializable{
+	private transient org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
-	JmxRegistrationManager jmxManager;
 	
-	@Inject
-	public JBossCacheFactory(org.jboss.cache.Cache cacheStore, @Named("jmx") JMXUtil jmx) {
-		this.cacheStore =  cacheStore;
-		try {
-			this.cacheStore =  cacheStore;
-			jmxManager = new JmxRegistrationManager(jmx.getMBeanServer(), cacheStore, jmx.buildName(JMXUtil.MBeanType.SERVICE, NAME));
-			jmxManager.registerAllMBeans();
-		} catch (FailedToRegisterException e) {
-			throw new MetaMatrixRuntimeException(e.getCause());
-		}
-	}
 
+	public void setCacheName(String jmxName) {
+		try {
+			MBeanServer server = MBeanServerFactory.findMBeanServer(null).get(0);
+			ObjectName on = new ObjectName(jmxName);
+			CacheJmxWrapperMBean cacheWrapper = MBeanServerInvocationHandler.newProxyInstance(server, on, CacheJmxWrapperMBean.class, false);
+			this.cacheStore = cacheWrapper.getCache();
+		} catch (MalformedObjectNameException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} 
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -104,9 +104,11 @@ public class JBossCacheFactory implements CacheFactory {
 	}    
 	
 	public void destroy() {
-		jmxManager.unregisterAllMBeans();
-		this.cacheStore.stop();
-		this.cacheStore.destroy();
 		this.destroyed = true;		
 	}	
+	
+	// this will be called by microcontainer.
+	public void stop() {
+		destroy();
+	}
 }
