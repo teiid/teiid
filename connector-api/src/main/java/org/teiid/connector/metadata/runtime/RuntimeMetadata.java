@@ -34,14 +34,14 @@ public interface RuntimeMetadata {
      * @param fullName
      * @return The object
      */
-    Group getGroup(String fullName) throws ConnectorException;
+    Table getGroup(String fullName) throws ConnectorException;
 
     /**
      * Look up an object by identifier
      * @param fullName
      * @return The object
      */
-    Element getElement(String fullName) throws ConnectorException;
+    Column getElement(String fullName) throws ConnectorException;
 
     /**
      * Look up an object by identifier

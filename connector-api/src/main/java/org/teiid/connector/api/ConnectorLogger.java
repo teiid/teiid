@@ -23,7 +23,7 @@
 package org.teiid.connector.api;
 
 /**
- * Provide access to write messages to the MetaMatrix logs.
+ * Provide access to write messages to the logs.
  */
 public interface ConnectorLogger {
 

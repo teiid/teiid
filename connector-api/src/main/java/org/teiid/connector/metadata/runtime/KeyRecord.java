@@ -43,8 +43,4 @@ public class KeyRecord extends ColumnSet<Table> {
 		return type;
 	}
 	
-	public Table getTable() {
-		return super.getParent();
-	}
-	
 }

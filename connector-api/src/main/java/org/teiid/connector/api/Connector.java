@@ -22,67 +22,49 @@
 
 package org.teiid.connector.api;
 
+import javax.security.auth.Subject;
+
 
 /**
  * <p>The primary entry point for a Connector.  This interface should be implemented
  * by the connector writer.</p>
  * 
- * <p>The Connector Manager will instantiate the implementation
- * of this class by reflection in an isolated classloader.  Once the class has been 
+ * <p>The JCA Container will instantiate the implementation of this class. Once the class has been 
  * instantiated, the {@link #initialize(ConnectorEnvironment)} method will be called
- * with all necessary connector properties.  The {@link #start()} and {@link #stop()} 
- * methods are lifecycle methods called when starting or stopping the connector.</p>  
+ * with all necessary connector properties. </p>  
  */
 public interface Connector {
 
-    /**
-     * Start the connector with the connector environment.  The environment
-     * provides access to external resources the connector implementation may
-     * need to use.  
-     * @param environment The connector environment, provided by the Connector Manager
-     * @throws ConnectorException
-     */
-    void start(ConnectorEnvironment environment) throws ConnectorException;
-
-    /**
-     * Stop the connector.  No commands will be executed on the connector when it is
-     * stopped.
-     */
-    void stop();
-
+	/**
+	 * Initialize the connector with supplied configuration
+	 * @param config
+	 */
+	void initialize(ConnectorEnvironment config) throws ConnectorException;
+	
     /**
      * Obtain a connection with the connector.  The connection typically is associated
-     * with a particular security context.  The connection is assumed to be pooled in 
-     * the underlying source if pooling is necessary - the connection will be closed 
-     * when execution has completed against it.  
-     * @param context The context of the current user that will be using this connection, 
-     * may be null if this connection is for an administrative operation. 
+     * with a particular security context.  The connection is assumed to be pooled by container 
+     * if pooling is necessary - the connection will be closed when execution has completed against it.
+     *   
+     * If you need to authenticate/authorize and need to get access to {{@link Subject}, then use
+     * {@link ConnectionContext}
+     *   
      * @return A Connection, created by the Connector
      * @throws ConnectorException If an error occurred obtaining a connection
      */
-    Connection getConnection( ExecutionContext context ) throws ConnectorException;
+    Connection getConnection() throws ConnectorException;
     
     /**
      * Get the capabilities of this connector.  The capabilities affect what kinds of 
      * queries (and other commands) will be sent to the connector.
      * @return ConnectorCapabilities, may return null if the Connector provides User scoped capabilities {@link Connection#getCapabilities()}
      */
-    ConnectorCapabilities getCapabilities();
+    ConnectorCapabilities getCapabilities() throws ConnectorException;
     
-	/**
-	 * Create an identity object based on a security context.
-	 * 
-	 * If single identity is not supported then an exception should be thrown when a
-	 * null context is supplied.
-	 * 
-	 * Implementors of this class may use a different implementation of the 
-	 * {@link ConnectorIdentity} interface to similarly affect pooling.
-	 *  
-	 * @param context The context provided by the Connector Manager
-	 * @return The associated connector identity
-	 * @throws ConnectorException If a null context is not accepted or an error occurs while creating the identity.
-	 */
-	ConnectorIdentity createIdentity(ExecutionContext context)
-			throws ConnectorException;
-
+    /**
+     * Get the ConnectorEnvironment that this connector is initialized with.
+     * @return
+     * @throws ConnectorException
+     */
+    ConnectorEnvironment getConnectorEnvironment();
 }

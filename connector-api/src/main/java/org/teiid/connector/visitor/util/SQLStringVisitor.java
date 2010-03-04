@@ -24,55 +24,53 @@ package org.teiid.connector.visitor.util;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IGroupBy;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.IIsNullCriteria;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IPredicateCriteria;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.IScalarSubquery;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.ISetClauseList;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.ISubqueryCompareCriteria;
-import org.teiid.connector.language.ISubqueryInCriteria;
-import org.teiid.connector.language.IUpdate;
-import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.DerivedTable;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.GroupBy;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.IsNull;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryIn;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.language.Update;
+import org.teiid.connector.language.Argument.Direction;
+import org.teiid.connector.language.SQLReservedWords.Tokens;
+import org.teiid.connector.language.SortSpecification.Ordering;
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.visitor.framework.AbstractLanguageVisitor;
 
 import com.metamatrix.common.types.DataTypeManager;
@@ -97,23 +95,19 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * @param id the id of the group or element
      * @return the name of that element or group as defined in the source
      */
-    protected String getName(MetadataObject object) {
-        try {
-            String nameInSource = object.getNameInSource();
-            if(nameInSource != null && nameInSource.length() > 0) {
-                return nameInSource;
-            }
-            return object.getName();
-        } catch(ConnectorException e) {
-            return object.getName();
+    protected String getName(AbstractMetadataRecord object) {
+        String nameInSource = object.getNameInSource();
+        if(nameInSource != null && nameInSource.length() > 0) {
+            return nameInSource;
         }
+        return object.getName();
     }
     
     /**
      * Appends the string form of the ILanguageObject to the current buffer.
      * @param obj the language object instance
      */
-    public void append(ILanguageObject obj) {
+    public void append(LanguageObject obj) {
         if (obj == null) {
             buffer.append(UNDEFINED);
         } else {
@@ -126,12 +120,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * by creating a comma-separated list.
      * @param items a list of ILanguageObjects
      */
-    protected void append(List<? extends ILanguageObject> items) {
+    protected void append(List<? extends LanguageObject> items) {
         if (items != null && items.size() != 0) {
             append(items.get(0));
             for (int i = 1; i < items.size(); i++) {
-                buffer.append(SQLReservedWords.COMMA)
-                      .append(SQLReservedWords.SPACE);
+                buffer.append(Tokens.COMMA)
+                      .append(Tokens.SPACE);
                 append(items.get(i));
             }
         }
@@ -142,12 +136,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * by creating a comma-separated list.
      * @param items an array of ILanguageObjects
      */
-    protected void append(ILanguageObject[] items) {
+    protected void append(LanguageObject[] items) {
         if (items != null && items.length != 0) {
             append(items[0]);
             for (int i = 1; i < items.length; i++) {
-                buffer.append(SQLReservedWords.COMMA)
-                      .append(SQLReservedWords.SPACE);
+                buffer.append(Tokens.COMMA)
+                      .append(Tokens.SPACE);
                 append(items[i]);
             }
         }
@@ -166,94 +160,69 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return buffer.toString();
     }
     
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IAggregate)
-     */
-    public void visit(IAggregate obj) {
+    public void visit(AggregateFunction obj) {
         buffer.append(obj.getName())
-              .append(SQLReservedWords.LPAREN);
+              .append(Tokens.LPAREN);
         
         if ( obj.isDistinct()) {
             buffer.append(SQLReservedWords.DISTINCT)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.SPACE);
         }
         
         if (obj.getExpression() == null) {
-             buffer.append(SQLReservedWords.ALL_COLS);
+             buffer.append(Tokens.ALL_COLS);
         } else {
             append(obj.getExpression());
         }
-        buffer.append(SQLReservedWords.RPAREN);
+        buffer.append(Tokens.RPAREN);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ICompareCriteria)
-     */
-    public void visit(ICompareCriteria obj) {
+    public void visit(Comparison obj) {
         append(obj.getLeftExpression());
-        buffer.append(SQLReservedWords.SPACE);
-        
-        switch(obj.getOperator()) {
-            case EQ: buffer.append(SQLReservedWords.EQ); break;
-            case GE: buffer.append(SQLReservedWords.GE); break;
-            case GT: buffer.append(SQLReservedWords.GT); break;
-            case LE: buffer.append(SQLReservedWords.LE); break;
-            case LT: buffer.append(SQLReservedWords.LT); break;
-            case NE: buffer.append(SQLReservedWords.NE); break;
-            default: buffer.append(UNDEFINED);
-        }
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
+        buffer.append(obj.getOperator());
+        buffer.append(Tokens.SPACE);
         append(obj.getRightExpression());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ICompoundCriteria)
-     */
-    public void visit(ICompoundCriteria obj) {
-        String opString = null;
-        switch(obj.getOperator()) {
-            case AND: opString = SQLReservedWords.AND; break;
-            case OR:  opString = SQLReservedWords.OR;  break;
-            default: opString = UNDEFINED;
-        }
-        
-        List criteria = obj.getCriteria();
-        if (criteria == null || criteria.size() == 0) {
-            buffer.append(UNDEFINED);
-        } else if(criteria.size() == 1) {
-            // Special case - should really never happen, but we are tolerant
-            append((ILanguageObject)criteria.get(0));
-        } else {
-            buffer.append(SQLReservedWords.LPAREN);
-            append((ILanguageObject)criteria.get(0));
-            buffer.append(SQLReservedWords.RPAREN);
-            for (int i = 1; i < criteria.size(); i++) {
-                buffer.append(SQLReservedWords.SPACE)
-                      .append(opString)
-                      .append(SQLReservedWords.SPACE)
-                      .append(SQLReservedWords.LPAREN);
-                append((ILanguageObject)criteria.get(i));
-                buffer.append(SQLReservedWords.RPAREN);
-            }
-            
-        }
+    public void visit(AndOr obj) {
+        String opString = obj.getOperator().toString();
+
+        appendNestedCondition(obj, obj.getLeftCondition());
+	    buffer.append(Tokens.SPACE)
+	          .append(opString)
+	          .append(Tokens.SPACE);
+        appendNestedCondition(obj, obj.getRightCondition());
+    }
+    
+    protected void appendNestedCondition(AndOr parent, Condition condition) {
+    	if (condition instanceof AndOr) {
+    		AndOr nested = (AndOr)condition;
+    		if (nested.getOperator() != parent.getOperator()) {
+    			buffer.append(Tokens.LPAREN);
+    			append(condition);
+    			buffer.append(Tokens.RPAREN);
+    			return;
+    		}
+    	}
+    	append(condition);
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IDelete)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.Delete)
      */
-    public void visit(IDelete obj) {
+    public void visit(Delete obj) {
         buffer.append(SQLReservedWords.DELETE)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         buffer.append(getSourceComment(obj));
         buffer.append(SQLReservedWords.FROM)
-              .append(SQLReservedWords.SPACE);
-        append(obj.getGroup());
-        if (obj.getCriteria() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+              .append(Tokens.SPACE);
+        append(obj.getTable());
+        if (obj.getWhere() != null) {
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.WHERE)
-                  .append(SQLReservedWords.SPACE);
-            append(obj.getCriteria());
+                  .append(Tokens.SPACE);
+            append(obj.getWhere());
         }
     }
 
@@ -278,30 +247,30 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IElement)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ColumnReference)
      */
-    public void visit(IElement obj) {
+    public void visit(ColumnReference obj) {
         buffer.append(getElementName(obj, true));
     }
 
-	private String getElementName(IElement obj, boolean qualify) {
+	private String getElementName(ColumnReference obj, boolean qualify) {
 		String groupName = null;
-        IGroup group = obj.getGroup();
+        NamedTable group = obj.getTable();
         if (group != null && qualify) {
-            if(group.getDefinition() != null) { 
-                groupName = group.getContext();
+            if(group.getCorrelationName() != null) { 
+                groupName = group.getCorrelationName();
             } else {  
-                MetadataObject groupID = group.getMetadataObject();
+                AbstractMetadataRecord groupID = group.getMetadataObject();
                 if(groupID != null) {              
                     groupName = getName(groupID);
                 } else {
-                    groupName = group.getContext();
+                    groupName = group.getName();
                 }
             }
         }
         
 		String elemShortName = null;        
-        MetadataObject elementID = obj.getMetadataObject();
+		AbstractMetadataRecord elementID = obj.getMetadataObject();
         if(elementID != null) {
             elemShortName = getName(elementID);            
         } else {
@@ -319,7 +288,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         // If not, do normal logic:  [group + "."] + element
         if(groupName != null) {
         	elementName.append(groupName);
-        	elementName.append(SQLReservedWords.DOT);
+        	elementName.append(Tokens.DOT);
         }
         elementName.append(elemShortName);
         return elementName.toString();
@@ -341,9 +310,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExecute)
      */
-    public void visit(IProcedure obj) {              
+    public void visit(Call obj) {              
         buffer.append(SQLReservedWords.EXEC)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         
         if(obj.getMetadataObject() != null) {
             buffer.append(getName(obj.getMetadataObject()));                         
@@ -351,139 +320,119 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(obj.getProcedureName());
         }
               
-        buffer.append(SQLReservedWords.LPAREN);
-        final List params = obj.getParameters();
+        buffer.append(Tokens.LPAREN);
+        final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {
-            IParameter param = null;
+            Argument param = null;
             for (int i = 0; i < params.size(); i++) {
-                param = (IParameter)params.get(i);
+                param = params.get(i);
                 if (param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT) {
                     if (i != 0) {
-                        buffer.append(SQLReservedWords.COMMA)
-                              .append(SQLReservedWords.SPACE);
+                        buffer.append(Tokens.COMMA)
+                              .append(Tokens.SPACE);
                     }
-                    if (param.getValue() != null) {
-                        buffer.append(param.getValue().toString());
-                    } else {
-                        buffer.append(UNDEFINED_PARAM);
-                    }
+                    append(param);
                 }
             }
         }
-        buffer.append(SQLReservedWords.RPAREN);
+        buffer.append(Tokens.RPAREN);
     }
 
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
      */
-    public void visit(IExistsCriteria obj) {
+    public void visit(Exists obj) {
         buffer.append(SQLReservedWords.EXISTS)
-              .append(SQLReservedWords.SPACE)
-              .append(SQLReservedWords.LPAREN);
-        append(obj.getQuery());
-        buffer.append(SQLReservedWords.RPAREN);
+              .append(Tokens.SPACE)
+              .append(Tokens.LPAREN);
+        append(obj.getSubquery());
+        buffer.append(Tokens.RPAREN);
     }
     
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IFrom)
-     */
-    public void visit(IFrom obj) {
-        buffer.append(SQLReservedWords.FROM)
-              .append(SQLReservedWords.SPACE);
-        append(obj.getItems());
-    }
-        
     protected boolean isInfixFunction(String function) {
     	return infixFunctions.contains(function);
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IFunction)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.Function)
      */
-    public void visit(IFunction obj) {
+    public void visit(Function obj) {
 
         String name = obj.getName();
-        List<IExpression> args = obj.getParameters();
+        List<Expression> args = obj.getParameters();
         if(name.equalsIgnoreCase(SQLReservedWords.CONVERT) || name.equalsIgnoreCase(SQLReservedWords.CAST)) { 
             
-            Object typeValue = ((ILiteral)args.get(1)).getValue();
+            Object typeValue = ((Literal)args.get(1)).getValue();
                
             buffer.append(name);
-            buffer.append(SQLReservedWords.LPAREN); 
+            buffer.append(Tokens.LPAREN); 
             
             append(args.get(0));
 
             if(name.equalsIgnoreCase(SQLReservedWords.CONVERT)) { 
-                buffer.append(SQLReservedWords.COMMA); 
-                buffer.append(SQLReservedWords.SPACE); 
+                buffer.append(Tokens.COMMA); 
+                buffer.append(Tokens.SPACE); 
             } else {
-                buffer.append(SQLReservedWords.SPACE); 
+                buffer.append(Tokens.SPACE); 
                 buffer.append(SQLReservedWords.AS); 
-                buffer.append(SQLReservedWords.SPACE); 
+                buffer.append(Tokens.SPACE); 
             }
             buffer.append(typeValue);
-            buffer.append(SQLReservedWords.RPAREN); 
+            buffer.append(Tokens.RPAREN); 
         } else if(isInfixFunction(name)) { 
-            buffer.append(SQLReservedWords.LPAREN); 
+            buffer.append(Tokens.LPAREN); 
 
             if(args != null) {
                 for(int i=0; i<args.size(); i++) {
                     append(args.get(i));
                     if(i < (args.size()-1)) {
-                        buffer.append(SQLReservedWords.SPACE);
+                        buffer.append(Tokens.SPACE);
                         buffer.append(name);
-                        buffer.append(SQLReservedWords.SPACE);
+                        buffer.append(Tokens.SPACE);
                     }
                 }
             }
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
 
         } else if(name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPDIFF)) {
             buffer.append(name);
-            buffer.append(SQLReservedWords.LPAREN); 
+            buffer.append(Tokens.LPAREN); 
 
             if(args != null && args.size() > 0) {
-                buffer.append(((ILiteral)args.get(0)).getValue());
+                buffer.append(((Literal)args.get(0)).getValue());
 
                 for(int i=1; i<args.size(); i++) {
-                	buffer.append(SQLReservedWords.COMMA); 
-                    buffer.append(SQLReservedWords.SPACE);
+                	buffer.append(Tokens.COMMA); 
+                    buffer.append(Tokens.SPACE);
                 	append(args.get(i));
                 }
             }
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
 
         } else {
 
             buffer.append(obj.getName())
-                  .append(SQLReservedWords.LPAREN);
+                  .append(Tokens.LPAREN);
             append(obj.getParameters());
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
         }
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IGroup)
-     */
-    public void visit(IGroup obj) {
-        MetadataObject groupID = obj.getMetadataObject();
+    public void visit(NamedTable obj) {
+    	AbstractMetadataRecord groupID = obj.getMetadataObject();
         if(groupID != null) {              
             buffer.append(getName(groupID));
         } else {
-            if(obj.getDefinition() == null) {
-                buffer.append(obj.getContext());                
-            } else {
-                buffer.append(obj.getDefinition());
-            }
+            buffer.append(obj.getName());
         }        
         
-        if (obj.getDefinition() != null) {
-            buffer.append(SQLReservedWords.SPACE);
+        if (obj.getCorrelationName() != null) {
+            buffer.append(Tokens.SPACE);
             if (useAsInGroupAlias()){
                 buffer.append(SQLReservedWords.AS)
-                      .append(SQLReservedWords.SPACE);
+                      .append(Tokens.SPACE);
             }
-        	buffer.append(obj.getContext());
+        	buffer.append(obj.getCorrelationName());
         }
     }
     
@@ -499,110 +448,98 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IGroupBy)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.GroupBy)
      */
-    public void visit(IGroupBy obj) {
+    public void visit(GroupBy obj) {
         buffer.append(SQLReservedWords.GROUP)
-              .append(SQLReservedWords.SPACE)
+              .append(Tokens.SPACE)
               .append(SQLReservedWords.BY)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         append(obj.getElements());
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IInCriteria)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.In)
      */
-    public void visit(IInCriteria obj) {
+    public void visit(In obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.NOT);
         }
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.IN)
-              .append(SQLReservedWords.SPACE)
-              .append(SQLReservedWords.LPAREN);
+              .append(Tokens.SPACE)
+              .append(Tokens.LPAREN);
         append(obj.getRightExpressions());
-        buffer.append(SQLReservedWords.RPAREN);
+        buffer.append(Tokens.RPAREN);
     }
 
-    public void visit(IInlineView obj) {
-        buffer.append(SQLReservedWords.LPAREN);
-        if (obj.getOutput() != null) {
-        	buffer.append(obj.getOutput());
-        } else {
-        	append(obj.getQuery());
-        }
-        buffer.append(SQLReservedWords.RPAREN);
-        buffer.append(SQLReservedWords.SPACE);
+    public void visit(DerivedTable obj) {
+        buffer.append(Tokens.LPAREN);
+    	append(obj.getQuery());
+        buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.SPACE);
         if(useAsInGroupAlias()) {
             buffer.append(SQLReservedWords.AS);
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
         }
-        buffer.append(obj.getContext());
+        buffer.append(obj.getCorrelationName());
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IInsert)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.Insert)
      */
-    public void visit(IInsert obj) {
-    	buffer.append(SQLReservedWords.INSERT).append(SQLReservedWords.SPACE);
+    public void visit(Insert obj) {
+    	buffer.append(SQLReservedWords.INSERT).append(Tokens.SPACE);
 		buffer.append(getSourceComment(obj));
-		buffer.append(SQLReservedWords.INTO).append(SQLReservedWords.SPACE);
-		append(obj.getGroup());
-		if (obj.getElements() != null && obj.getElements().size() != 0) {
-			buffer.append(SQLReservedWords.SPACE).append(SQLReservedWords.LPAREN);
+		buffer.append(SQLReservedWords.INTO).append(Tokens.SPACE);
+		append(obj.getTable());
+		buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
 
-			int elementCount = obj.getElements().size();
-			for (int i = 0; i < elementCount; i++) {
-				buffer.append(getElementName(obj.getElements().get(i), false));
-				if (i < elementCount - 1) {
-					buffer.append(SQLReservedWords.COMMA);
-					buffer.append(SQLReservedWords.SPACE);
-				}
+		int elementCount = obj.getColumns().size();
+		for (int i = 0; i < elementCount; i++) {
+			buffer.append(getElementName(obj.getColumns().get(i), false));
+			if (i < elementCount - 1) {
+				buffer.append(Tokens.COMMA);
+				buffer.append(Tokens.SPACE);
 			}
-
-			buffer.append(SQLReservedWords.RPAREN);
 		}
-        buffer.append(SQLReservedWords.SPACE);
+
+		buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.SPACE);
         append(obj.getValueSource());
     }
     
     @Override
-	public void visit(IInsertExpressionValueSource obj) {
-		buffer.append(SQLReservedWords.VALUES).append(SQLReservedWords.SPACE).append(SQLReservedWords.LPAREN);
+	public void visit(ExpressionValueSource obj) {
+		buffer.append(SQLReservedWords.VALUES).append(Tokens.SPACE).append(Tokens.LPAREN);
 		append(obj.getValues());
-		buffer.append(SQLReservedWords.RPAREN);
+		buffer.append(Tokens.RPAREN);
 	}
         
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IIsNullCriteria)
-     */
-    public void visit(IIsNullCriteria obj) {
+    public void visit(IsNull obj) {
         append(obj.getExpression());
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.IS)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         if (obj.isNegated()) {
             buffer.append(SQLReservedWords.NOT)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.SPACE);
         }
         buffer.append(SQLReservedWords.NULL);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IJoin)
-     */
-    public void visit(IJoin obj) {
-        IFromItem leftItem = obj.getLeftItem();
-        if(useParensForJoins() && leftItem instanceof IJoin) {
-            buffer.append(SQLReservedWords.LPAREN);
+    public void visit(Join obj) {
+        TableReference leftItem = obj.getLeftItem();
+        if(useParensForJoins() && leftItem instanceof Join) {
+            buffer.append(Tokens.LPAREN);
             append(leftItem);
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
         } else {
             append(leftItem);
         }
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
         
         switch(obj.getJoinType()) {
             case CROSS_JOIN:
@@ -610,7 +547,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 break;
             case FULL_OUTER_JOIN:
                 buffer.append(SQLReservedWords.FULL)
-                      .append(SQLReservedWords.SPACE)
+                      .append(Tokens.SPACE)
                       .append(SQLReservedWords.OUTER);
                 break;
             case INNER_JOIN:
@@ -618,100 +555,77 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 break;
             case LEFT_OUTER_JOIN:
                 buffer.append(SQLReservedWords.LEFT)
-                      .append(SQLReservedWords.SPACE)
+                      .append(Tokens.SPACE)
                       .append(SQLReservedWords.OUTER);
                 break;
             case RIGHT_OUTER_JOIN:
                 buffer.append(SQLReservedWords.RIGHT)
-                      .append(SQLReservedWords.SPACE)
+                      .append(Tokens.SPACE)
                       .append(SQLReservedWords.OUTER);
                 break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.JOIN)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         
-        IFromItem rightItem = obj.getRightItem();
-        if(rightItem instanceof IJoin && (useParensForJoins() || obj.getJoinType() == IJoin.JoinType.CROSS_JOIN)) {
-            buffer.append(SQLReservedWords.LPAREN);
+        TableReference rightItem = obj.getRightItem();
+        if(rightItem instanceof Join && (useParensForJoins() || obj.getJoinType() == Join.JoinType.CROSS_JOIN)) {
+            buffer.append(Tokens.LPAREN);
             append(rightItem);
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
         } else {
             append(rightItem);
         }
         
-        final List criteria = obj.getCriteria();
-        if (criteria != null && criteria.size() != 0) {
-            buffer.append(SQLReservedWords.SPACE)
+        final Condition condition = obj.getCondition();
+        if (condition != null) {
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.ON)
-                  .append(SQLReservedWords.SPACE);
-
-            Iterator critIter = criteria.iterator();
-            while(critIter.hasNext()) {
-                ICriteria crit = (ICriteria) critIter.next();
-                if(crit instanceof IPredicateCriteria) {
-                    append(crit);                    
-                } else {
-                    buffer.append(SQLReservedWords.LPAREN);
-                    append(crit);                    
-                    buffer.append(SQLReservedWords.RPAREN);
-                }
-                
-                if(critIter.hasNext()) {
-                    buffer.append(SQLReservedWords.SPACE)
-                          .append(SQLReservedWords.AND)
-                          .append(SQLReservedWords.SPACE);
-                }
-            }
+                  .append(Tokens.SPACE);
+            append(condition);                    
         }        
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ILikeCriteria)
-     */
-    public void visit(ILikeCriteria obj) {
+    public void visit(Like obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.NOT);
         }
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.LIKE)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         append(obj.getRightExpression());
         if (obj.getEscapeCharacter() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.ESCAPE)
-                  .append(SQLReservedWords.SPACE)
-                  .append(SQLReservedWords.QUOTE)
+                  .append(Tokens.SPACE)
+                  .append(Tokens.QUOTE)
                   .append(obj.getEscapeCharacter().toString())
-                  .append(SQLReservedWords.QUOTE);
+                  .append(Tokens.QUOTE);
         }
         
     }
     
-    public void visit(ILimit obj) {
+    public void visit(Limit obj) {
         buffer.append(SQLReservedWords.LIMIT)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         if (obj.getRowOffset() > 0) {
             buffer.append(obj.getRowOffset())
-                  .append(SQLReservedWords.COMMA)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.COMMA)
+                  .append(Tokens.SPACE);
         }
         buffer.append(obj.getRowLimit());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ILiteral)
-     */
-    public void visit(ILiteral obj) {
+    public void visit(Literal obj) {
     	if (obj.isBindValue()) {
     		buffer.append("?"); //$NON-NLS-1$
     	} else if (obj.getValue() == null) {
             buffer.append(SQLReservedWords.NULL);
         } else {
-            Class type = obj.getType();
+            Class<?> type = obj.getType();
             String val = obj.getValue().toString();
             if(Number.class.isAssignableFrom(type)) {
                 buffer.append(val);
@@ -732,277 +646,218 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                       .append(val)
                       .append("'}"); //$NON-NLS-1$
             } else {
-                buffer.append(SQLReservedWords.QUOTE)
-                      .append(escapeString(val, SQLReservedWords.QUOTE))
-                      .append(SQLReservedWords.QUOTE);
+                buffer.append(Tokens.QUOTE)
+                      .append(escapeString(val, Tokens.QUOTE))
+                      .append(Tokens.QUOTE);
             }
         }
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.INotCriteria)
-     */
-    public void visit(INotCriteria obj) {
+    public void visit(Not obj) {
         buffer.append(SQLReservedWords.NOT)
-              .append(SQLReservedWords.SPACE)
-              .append(SQLReservedWords.LPAREN);
+              .append(Tokens.SPACE)
+              .append(Tokens.LPAREN);
         append(obj.getCriteria());
-        buffer.append(SQLReservedWords.RPAREN);
+        buffer.append(Tokens.RPAREN);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IOrderBy)
-     */
-    public void visit(IOrderBy obj) {
+    public void visit(OrderBy obj) {
         buffer.append(SQLReservedWords.ORDER)
-              .append(SQLReservedWords.SPACE)
+              .append(Tokens.SPACE)
               .append(SQLReservedWords.BY)
-              .append(SQLReservedWords.SPACE);
-        append(obj.getItems());
+              .append(Tokens.SPACE);
+        append(obj.getSortSpecifications());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IOrderByItem)
-     */
-    public void visit(IOrderByItem obj) {
-        if(obj.getName() != null) {
-            String name = getShortName(obj.getName());
-            buffer.append(name);
-        } else if (obj.getElement() != null) {
-            append(obj.getElement());            
-        } else {
-            buffer.append(UNDEFINED);
-        }
-        if (obj.getDirection() == IOrderByItem.DESC) {
-            buffer.append(SQLReservedWords.SPACE)
+    public void visit(SortSpecification obj) {
+    	append(obj.getExpression());            
+        if (obj.getOrdering() == Ordering.DESC) {
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.DESC);
         } // Don't print default "ASC"
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IParameter)
-     */
-    public void visit(IParameter obj) {
-        if (obj.getValue() == null) {
-            buffer.append(UNDEFINED_PARAM);
-        } else if (obj.getValue() == null) {
-            buffer.append(SQLReservedWords.NULL);
-        } else {
-            buffer.append(obj.getValue().toString());
-        }
+    public void visit(Argument obj) {
+        buffer.append(obj.getArgumentValue());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IQuery)
-     */
-    public void visit(IQuery obj) {
-        visitSelect(obj.getSelect(), obj);
+    public void visit(Select obj) {
+		buffer.append(SQLReservedWords.SELECT).append(Tokens.SPACE);
+        buffer.append(getSourceComment(obj));
+        if (obj.isDistinct()) {
+            buffer.append(SQLReservedWords.DISTINCT).append(Tokens.SPACE);
+        }
+        if (useSelectLimit() && obj.getLimit() != null) {
+            append(obj.getLimit());
+            buffer.append(Tokens.SPACE);
+        }
+        append(obj.getDerivedColumns());
         if (obj.getFrom() != null) {
-            buffer.append(SQLReservedWords.SPACE);
+        	buffer.append(Tokens.SPACE).append(SQLReservedWords.FROM).append(Tokens.SPACE);      
             append(obj.getFrom());
         }
         if (obj.getWhere() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.WHERE)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.SPACE);
             append(obj.getWhere());
         }
         if (obj.getGroupBy() != null) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             append(obj.getGroupBy());
         }
         if (obj.getHaving() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.HAVING)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.SPACE);
             append(obj.getHaving());
         }
         if (obj.getOrderBy() != null) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             append(obj.getOrderBy());
         }
         if (!useSelectLimit() && obj.getLimit() != null) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             append(obj.getLimit());
         }
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ISearchedCaseExpression)
-     */
-    public void visit(ISearchedCaseExpression obj) {
+    public void visit(SearchedCase obj) {
         buffer.append(SQLReservedWords.CASE);
-        final int whenCount = obj.getWhenCount();
-        for (int i = 0; i < whenCount; i++) {
-            buffer.append(SQLReservedWords.SPACE)
-                  .append(SQLReservedWords.WHEN)
-                  .append(SQLReservedWords.SPACE);
-            append(obj.getWhenCriteria(i));
-            buffer.append(SQLReservedWords.SPACE)
-                  .append(SQLReservedWords.THEN)
-                  .append(SQLReservedWords.SPACE);
-            append(obj.getThenExpression(i));
-        }
+        for (SearchedWhenClause swc : obj.getCases()) {
+			append(swc);
+		}
         if (obj.getElseExpression() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.ELSE)
-                  .append(SQLReservedWords.SPACE);
+                  .append(Tokens.SPACE);
             append(obj.getElseExpression());
         }
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.END);
     }
-
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ISelect)
-     */
-    public void visit(ISelect obj) {
-    	visitSelect(obj, null);
+    
+    @Override
+    public void visit(SearchedWhenClause obj) {
+		buffer.append(Tokens.SPACE).append(SQLReservedWords.WHEN)
+				.append(Tokens.SPACE);
+		append(obj.getCondition());
+		buffer.append(Tokens.SPACE).append(SQLReservedWords.THEN)
+				.append(Tokens.SPACE);
+		append(obj.getResult());
     }
 
-	private void visitSelect(ISelect obj, IQuery command) {
-		buffer.append(SQLReservedWords.SELECT).append(SQLReservedWords.SPACE);
-        buffer.append(getSourceComment(command));
-        if (obj.isDistinct()) {
-            buffer.append(SQLReservedWords.DISTINCT).append(SQLReservedWords.SPACE);
-        }
-        if (useSelectLimit() && command.getLimit() != null) {
-            append(command.getLimit());
-            buffer.append(SQLReservedWords.SPACE);
-        }
-        append(obj.getSelectSymbols());
-	}
-
-    protected String getSourceComment(ICommand command) {
+    protected String getSourceComment(Command command) {
         return ""; //$NON-NLS-1$
     }
     
-    /*
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IScalarSubquery)
-     */
-    public void visit(IScalarSubquery obj) {
-        buffer.append(SQLReservedWords.LPAREN);   
-        append(obj.getQuery());     
-        buffer.append(SQLReservedWords.RPAREN);        
+    public void visit(ScalarSubquery obj) {
+        buffer.append(Tokens.LPAREN);   
+        append(obj.getSubquery());     
+        buffer.append(Tokens.RPAREN);        
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ISelectSymbol)
-     */
-    public void visit(ISelectSymbol obj) {
+    public void visit(DerivedColumn obj) {
         append(obj.getExpression());
-        if (obj.hasAlias()) {
-            buffer.append(SQLReservedWords.SPACE)
+        if (obj.getAlias() != null) {
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.AS)
-                  .append(SQLReservedWords.SPACE)
-                  .append(obj.getOutputName());
+                  .append(Tokens.SPACE)
+                  .append(obj.getAlias());
         }
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryCompareCriteria)
-     */
-    public void visit(ISubqueryCompareCriteria obj) {
+    public void visit(SubqueryComparison obj) {
         append(obj.getLeftExpression());
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
         
         switch(obj.getOperator()) {
-            case EQ: buffer.append(SQLReservedWords.EQ); break;
-            case GE: buffer.append(SQLReservedWords.GE); break;
-            case GT: buffer.append(SQLReservedWords.GT); break;
-            case LE: buffer.append(SQLReservedWords.LE); break;
-            case LT: buffer.append(SQLReservedWords.LT); break;
-            case NE: buffer.append(SQLReservedWords.NE); break;
+            case EQ: buffer.append(Tokens.EQ); break;
+            case GE: buffer.append(Tokens.GE); break;
+            case GT: buffer.append(Tokens.GT); break;
+            case LE: buffer.append(Tokens.LE); break;
+            case LT: buffer.append(Tokens.LT); break;
+            case NE: buffer.append(Tokens.NE); break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
         switch(obj.getQuantifier()) {
             case ALL: buffer.append(SQLReservedWords.ALL); break;
             case SOME: buffer.append(SQLReservedWords.SOME); break;
             default: buffer.append(UNDEFINED);
         }
-        buffer.append(SQLReservedWords.SPACE);
-        buffer.append(SQLReservedWords.LPAREN);        
-        append(obj.getQuery());
-        buffer.append(SQLReservedWords.RPAREN);        
+        buffer.append(Tokens.SPACE);
+        buffer.append(Tokens.LPAREN);        
+        append(obj.getSubquery());
+        buffer.append(Tokens.RPAREN);        
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryInCriteria)
-     */
-    public void visit(ISubqueryInCriteria obj) {
+    public void visit(SubqueryIn obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
-            buffer.append(SQLReservedWords.SPACE)
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.NOT);
         }
-        buffer.append(SQLReservedWords.SPACE)
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.IN)
-              .append(SQLReservedWords.SPACE)
-              .append(SQLReservedWords.LPAREN);
-        append(obj.getQuery());
-        buffer.append(SQLReservedWords.RPAREN);
+              .append(Tokens.SPACE)
+              .append(Tokens.LPAREN);
+        append(obj.getSubquery());
+        buffer.append(Tokens.RPAREN);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IUpdate)
-     */
-    public void visit(IUpdate obj) {
+    public void visit(Update obj) {
         buffer.append(SQLReservedWords.UPDATE)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         buffer.append(getSourceComment(obj));
-        append(obj.getGroup());
-        buffer.append(SQLReservedWords.SPACE)
+        append(obj.getTable());
+        buffer.append(Tokens.SPACE)
               .append(SQLReservedWords.SET)
-              .append(SQLReservedWords.SPACE);
+              .append(Tokens.SPACE);
         append(obj.getChanges()); 
-        if (obj.getCriteria() != null) {
-            buffer.append(SQLReservedWords.SPACE)
+        if (obj.getWhere() != null) {
+            buffer.append(Tokens.SPACE)
                   .append(SQLReservedWords.WHERE)
-                  .append(SQLReservedWords.SPACE);
-            append(obj.getCriteria());
+                  .append(Tokens.SPACE);
+            append(obj.getWhere());
         }
     }
     
-    public void visit(ISetClauseList obj) {
-    	append(obj.getClauses());
-    }
-    
-    public void visit(ISetClause clause) {
+    public void visit(SetClause clause) {
         buffer.append(getElementName(clause.getSymbol(), false));
-        buffer.append(SQLReservedWords.SPACE).append(SQLReservedWords.EQ).append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE).append(Tokens.EQ).append(Tokens.SPACE);
         append(clause.getValue());
     }
     
-    public void visit(ISetQuery obj) {
+    public void visit(SetQuery obj) {
         appendSetQuery(obj, obj.getLeftQuery(), false);
         
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
         
         appendSetOperation(obj.getOperation());
 
         if(obj.isAll()) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             buffer.append(SQLReservedWords.ALL);                
         }
-        buffer.append(SQLReservedWords.SPACE);
+        buffer.append(Tokens.SPACE);
 
         appendSetQuery(obj, obj.getRightQuery(), true);
         
-        IOrderBy orderBy = obj.getOrderBy();
+        OrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             append(orderBy);
         }
 
-        ILimit limit = obj.getLimit();
+        Limit limit = obj.getLimit();
         if(limit != null) {
-            buffer.append(SQLReservedWords.SPACE);
+            buffer.append(Tokens.SPACE);
             append(limit);
         }
     }
 
-    protected void appendSetOperation(ISetQuery.Operation operation) {
+    protected void appendSetOperation(SetQuery.Operation operation) {
         buffer.append(operation);
     }
     
@@ -1010,17 +865,17 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	return false;
     }
 
-    protected void appendSetQuery(ISetQuery parent, IQueryCommand obj, boolean right) {
-        if((!(obj instanceof ISetQuery) && useParensForSetQueries()) 
-        		|| (right && obj instanceof ISetQuery 
-        				&& ((parent.isAll() && !((ISetQuery)obj).isAll()) 
-        						|| parent.getOperation() != ((ISetQuery)obj).getOperation()))) {
-            buffer.append(SQLReservedWords.LPAREN);
+    protected void appendSetQuery(SetQuery parent, QueryExpression obj, boolean right) {
+        if((!(obj instanceof SetQuery) && useParensForSetQueries()) 
+        		|| (right && obj instanceof SetQuery 
+        				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
+        						|| parent.getOperation() != ((SetQuery)obj).getOperation()))) {
+            buffer.append(Tokens.LPAREN);
             append(obj);
-            buffer.append(SQLReservedWords.RPAREN);
+            buffer.append(Tokens.RPAREN);
         } else {
-        	if (!parent.isAll() && obj instanceof ISetQuery) {
-        		((ISetQuery)obj).setAll(false);
+        	if (!parent.isAll() && obj instanceof SetQuery) {
+        		((SetQuery)obj).setAll(false);
         	}
             append(obj);
         }
@@ -1033,7 +888,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * command
      * @return the SQL representation of that ILanguageObject hierarchy
      */
-    public static String getSQLString(ILanguageObject obj) {
+    public static String getSQLString(LanguageObject obj) {
         SQLStringVisitor visitor = new SQLStringVisitor();
         visitor.append(obj);
         return visitor.toString();

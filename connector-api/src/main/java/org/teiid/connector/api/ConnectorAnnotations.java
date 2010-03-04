@@ -31,20 +31,6 @@ import java.lang.annotation.Target;
 
 public class ConnectorAnnotations {
 	
-	/**
-	 * The Pooling Annotation can be used to enable/suppress automatic pooling.
-	 * 
-	 * This is especially useful in situations where legacy ConnectionPool properties 
-	 * are still in use and thus {@link ConnectorPropertyNames#CONNECTION_POOL_ENABLED}
-	 * is set to true or when a connector cannot possibly provide a proper implementation
-	 * of a {@link ConnectorIdentityFactory}.
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target({ElementType.TYPE})
-	public @interface ConnectionPooling {
-		boolean enabled() default true;
-	}
-	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ElementType.TYPE})
 	public @interface SynchronousWorkers {

@@ -16,6 +16,7 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -26,15 +27,9 @@
     </dependency>
         
     <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-common-internal</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>javax.transaction</groupId>
-      <artifactId>jta</artifactId>
+      <groupId>javax.resource</groupId>
+      <artifactId>connector-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     
   </dependencies>

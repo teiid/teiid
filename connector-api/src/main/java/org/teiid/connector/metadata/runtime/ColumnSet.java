@@ -22,6 +22,7 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
@@ -34,6 +35,9 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     }
     
     public void addColumn(Column column) {
+    	if (columns == null) {
+    		columns = new ArrayList<Column>();
+    	}
     	columns.add(column);
     }
 

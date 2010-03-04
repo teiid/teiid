@@ -22,15 +22,15 @@
 
 package org.teiid.connector.api;
 
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.Update;
 
 
 /**
  * The update execution represents the case where a connector can 
- * execute an {@link IInsert}, {@link IUpdate}, {@link IDelete}, or {@link IBatchedUpdates} command.
+ * execute an {@link Insert}, {@link Update}, {@link Delete}, or {@link BatchedUpdates} command.
  */
 public interface UpdateExecution extends Execution {
 

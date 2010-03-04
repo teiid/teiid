@@ -46,10 +46,10 @@ public class Table extends ColumnSet<Schema> {
     private boolean isSystem;
     private boolean isMaterialized;
     private boolean supportsUpdate;
-    private List<ForeignKey> foriegnKeys;
-    private List<KeyRecord> indexes;
-    private List<KeyRecord> uniqueKeys;
-    private List<KeyRecord> accessPatterns;
+    private List<ForeignKey> foriegnKeys = new LinkedList<ForeignKey>();
+    private List<KeyRecord> indexes = new LinkedList<KeyRecord>();
+    private List<KeyRecord> uniqueKeys = new LinkedList<KeyRecord>();
+    private List<KeyRecord> accessPatterns = new LinkedList<KeyRecord>();
     private KeyRecord primaryKey;
 
     //view information
@@ -64,10 +64,6 @@ public class Table extends ColumnSet<Schema> {
     private List<String> bindings;
 	private List<String> schemaPaths;
 	private String resourcePath;
-	
-	public Schema getSchema() {
-		return super.getParent();
-	}
 	
     public List<String> getBindings() {
 		return bindings;
@@ -265,6 +261,12 @@ public class Table extends ColumnSet<Schema> {
 		keys.addAll(getIndexes());
 		keys.addAll(getUniqueKeys());
 		return keys;
+	}
+	
+	@Override
+	public void addColumn(Column column) {
+		super.addColumn(column);
+		column.setParent(this);
 	}
 	
 }

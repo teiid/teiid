@@ -22,6 +22,8 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import org.teiid.connector.api.TypeFacility;
+
 public abstract class BaseColumn extends AbstractMetadataRecord {
 	
 	public enum NullType {
@@ -56,6 +58,10 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 
     public String getRuntimeType() {
         return runtimeType;
+    }
+    
+    public Class<?> getJavaType() {
+    	return TypeFacility.getDataTypeClass(runtimeType);
     }
 
     public int getLength() {
@@ -128,5 +134,25 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     public void setDatatype(Datatype datatype) {
 		this.datatype = datatype;
 	}
+    
+	public String getDatatypeID() {
+		if (this.datatype != null) {
+			return this.datatype.getDatatypeID();
+		}
+		return null;
+	}
+	
+	public String getBaseTypeID() {
+		if (this.datatype != null) {
+			return this.datatype.getBasetypeID();
+		}
+		return null;
+	}
 
+	public String getPrimitiveTypeID() {
+		if (this.datatype != null) {
+			return this.datatype.getPrimitiveTypeID();
+		}
+		return null;
+	}
 }

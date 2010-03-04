@@ -47,22 +47,22 @@ public class Column extends BaseColumn implements Comparable<Column> {
 	
     private boolean selectable = true;
     private boolean updatable;
-    private boolean autoIncrementable;
+    private boolean autoIncremented;
     private boolean caseSensitive;
     private boolean signed;
     private boolean currency;
     private boolean fixedLength;
     private SearchType searchType;
-    private String minValue;
-    private String maxValue;
+    private String minimumValue;
+    private String maximumValue;
     private String nativeType;
     private String format;
     private int charOctetLength;
     private int distinctValues = -1;
     private int nullValues = -1;
-    private ColumnSet parent;
+    private ColumnSet<?> parent;
     
-    public void setParent(ColumnSet parent) {
+    public void setParent(ColumnSet<?> parent) {
 		this.parent = parent;
 	}
     
@@ -80,12 +80,12 @@ public class Column extends BaseColumn implements Comparable<Column> {
         return charOctetLength;
     }
 
-    public String getMaxValue() {
-        return maxValue;
+    public String getMaximumValue() {
+        return maximumValue;
     }
 
-    public String getMinValue() {
-        return minValue;
+    public String getMinimumValue() {
+        return minimumValue;
     }
 
     public SearchType getSearchType() {
@@ -99,8 +99,8 @@ public class Column extends BaseColumn implements Comparable<Column> {
         return format;
     }
 
-    public boolean isAutoIncrementable() {
-        return autoIncrementable;
+    public boolean isAutoIncremented() {
+        return autoIncremented;
     }
 
     public boolean isCaseSensitive() {
@@ -142,8 +142,8 @@ public class Column extends BaseColumn implements Comparable<Column> {
     /**
      * @param b
      */
-    public void setAutoIncrementable(boolean b) {
-        autoIncrementable = b;
+    public void setAutoIncremented(boolean b) {
+    	autoIncremented = b;
     }
 
     /**
@@ -177,15 +177,15 @@ public class Column extends BaseColumn implements Comparable<Column> {
     /**
      * @param object
      */
-    public void setMaxValue(String object) {
-        maxValue = object;
+    public void setMaximumValue(String object) {
+        maximumValue = object;
     }
 
     /**
      * @param object
      */
-    public void setMinValue(String object) {
-        minValue = object;
+    public void setMinimumValue(String object) {
+        minimumValue = object;
     }
 
     /**

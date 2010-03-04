@@ -22,37 +22,35 @@
 
 package org.teiid.connector.visitor.framework;
 
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroupBy;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.IIsNullCriteria;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.IScalarSubquery;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.ISetClauseList;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.ISubqueryCompareCriteria;
-import org.teiid.connector.language.ISubqueryInCriteria;
-import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.DerivedTable;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.GroupBy;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.IsNull;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryIn;
+import org.teiid.connector.language.Update;
 
 /**
  * Visits each node in  a hierarchy of ILanguageObjects. The default
@@ -77,96 +75,91 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     	this.visitSubcommands = visitSubcommands;
     }
     
-    public void visit(IAggregate obj) {
+    public void visit(AggregateFunction obj) {
         visitNode(obj.getExpression());
     }
     
-    public void visit(IBatchedUpdates obj) {
+    public void visit(BatchedUpdates obj) {
         visitNodes(obj.getUpdateCommands());
     }
     
-    public void visit(ICompareCriteria obj) {
+    public void visit(Comparison obj) {
         visitNode(obj.getLeftExpression());
         visitNode(obj.getRightExpression());
     }
     
-    public void visit(ICompoundCriteria obj) {
-        visitNodes(obj.getCriteria());
+    public void visit(AndOr obj) {
+        visitNode(obj.getLeftCondition());
+        visitNode(obj.getRightCondition());
     }
     
-    public void visit(IDelete obj) {
-        visitNode(obj.getGroup());
-        visitNode(obj.getCriteria());
+    public void visit(Delete obj) {
+        visitNode(obj.getTable());
+        visitNode(obj.getWhere());
     }
     
-    public void visit(IProcedure obj) {
-        visitNodes(obj.getParameters());
+    public void visit(Call obj) {
+        visitNodes(obj.getArguments());
     }
     
-    public void visit(IExistsCriteria obj) {
+    public void visit(Exists obj) {
         if (visitSubcommands) {
-        	visitNode(obj.getQuery());
+        	visitNode(obj.getSubquery());
         }
     }
     
-    public void visit(IFrom obj) {
-        visitNodes(obj.getItems());
-    }
-    
-    public void visit(IFunction obj) {
+    public void visit(Function obj) {
         visitNodes(obj.getParameters());
     }
 
-    public void visit(IGroupBy obj) {
+    public void visit(GroupBy obj) {
         visitNodes(obj.getElements());
     }
     
-    public void visit(IInCriteria obj) {
+    public void visit(In obj) {
         visitNode(obj.getLeftExpression());
         visitNodes(obj.getRightExpressions());
     }
     
-    public void visit(IInsert obj) {
-        visitNode(obj.getGroup());
-        visitNodes(obj.getElements());
-        if (!(obj.getValueSource() instanceof IQueryCommand) || visitSubcommands) {
+    public void visit(Insert obj) {
+        visitNode(obj.getTable());
+        visitNodes(obj.getColumns());
+        if (!(obj.getValueSource() instanceof QueryExpression) || visitSubcommands) {
     		visitNode(obj.getValueSource());
         }
     }
     
     @Override
-    public void visit(IInsertExpressionValueSource obj) {
+    public void visit(ExpressionValueSource obj) {
     	visitNodes(obj.getValues());
     }
     
-    public void visit(IIsNullCriteria obj) {
+    public void visit(IsNull obj) {
         visitNode(obj.getExpression());
     }
     
-    public void visit(IJoin obj) {
+    public void visit(Join obj) {
         visitNode(obj.getLeftItem());
         visitNode(obj.getRightItem());
-        if(obj.getCriteria() != null) {
-            visitNodes(obj.getCriteria());
-        }
+        visitNode(obj.getCondition());
     }
     
-    public void visit(ILikeCriteria obj) {
+    public void visit(Like obj) {
         visitNode(obj.getLeftExpression());
         visitNode(obj.getRightExpression());
     }
 
-    public void visit(INotCriteria obj) {
+    public void visit(Not obj) {
         visitNode(obj.getCriteria());
     }
     
-    public void visit(IOrderBy obj) {
-        visitNodes(obj.getItems());
+    public void visit(OrderBy obj) {
+        visitNodes(obj.getSortSpecifications());
     }
 
-    public void visit(IQuery obj) {
-        visitNode(obj.getSelect());
-        visitNode(obj.getFrom());
+    public void visit(Select obj) {
+    	visitNodes(obj.getDerivedColumns());
+        visitNodes(obj.getFrom());
         visitNode(obj.getWhere());
         visitNode(obj.getGroupBy());
         visitNode(obj.getHaving());
@@ -174,44 +167,42 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getLimit());
     }
 
-    public void visit(IScalarSubquery obj) {
+    public void visit(ScalarSubquery obj) {
     	if (visitSubcommands) {
-    		visitNode(obj.getQuery());
+    		visitNode(obj.getSubquery());
     	}
     }
     
-    public void visit(ISearchedCaseExpression obj) {
-        int whenCount = obj.getWhenCount();
-        for (int i = 0; i < whenCount; i++) {
-            visitNode(obj.getWhenCriteria(i));
-            visitNode(obj.getThenExpression(i));
-        }
+    public void visit(SearchedCase obj) {
+    	visitNodes(obj.getCases());
         visitNode(obj.getElseExpression());
     }
     
-    public void visit(ISelect obj) {
-        visitNodes(obj.getSelectSymbols());
+    @Override
+    public void visit(SearchedWhenClause obj) {
+    	visitNode(obj.getCondition());
+    	visitNode(obj.getResult());
     }
     
-    public void visit(ISelectSymbol obj) {
+    public void visit(DerivedColumn obj) {
         visitNode(obj.getExpression());
     }
 
-    public void visit(ISubqueryCompareCriteria obj) {
+    public void visit(SubqueryComparison obj) {
         visitNode(obj.getLeftExpression());
         if (visitSubcommands) {
-        	visitNode(obj.getQuery());
+        	visitNode(obj.getSubquery());
         }
     }
 
-    public void visit(ISubqueryInCriteria obj) {
+    public void visit(SubqueryIn obj) {
         visitNode(obj.getLeftExpression());        
         if (visitSubcommands) {
-        	visitNode(obj.getQuery());
+        	visitNode(obj.getSubquery());
         }
     }
     
-    public void visit(ISetQuery obj) {
+    public void visit(SetQuery obj) {
     	if (visitSubcommands) {
 	    	visitNode(obj.getLeftQuery());
 	        visitNode(obj.getRightQuery());
@@ -220,26 +211,21 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getLimit());
     }
     
-    public void visit(IUpdate obj) {
-        visitNode(obj.getGroup());
-        visitNode(obj.getChanges());
-        visitNode(obj.getCriteria());
+    public void visit(Update obj) {
+        visitNode(obj.getTable());
+        visitNodes(obj.getChanges());
+        visitNode(obj.getWhere());
     }
     
     @Override
-    public void visit(IInlineView obj) {
+    public void visit(DerivedTable obj) {
     	if (visitSubcommands) {
     		visitNode(obj.getQuery());
     	}
     }
     
     @Override
-    public void visit(ISetClauseList obj) {
-    	visitNodes(obj.getClauses());
-    }
-    
-    @Override
-    public void visit(ISetClause obj) {
+    public void visit(SetClause obj) {
     	visitNode(obj.getSymbol());
     	visitNode(obj.getValue());
     }

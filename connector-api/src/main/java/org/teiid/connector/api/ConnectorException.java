@@ -22,13 +22,13 @@
 
 package org.teiid.connector.api;
 
-import com.metamatrix.core.MetaMatrixCoreException;
+import javax.resource.ResourceException;
 
 /**
  * An exception the connector writer can return in case of an 
  * error while using the connector.
  */
-public class ConnectorException extends MetaMatrixCoreException{
+public class ConnectorException extends ResourceException{
 
 	private static final long serialVersionUID = -5980862789340592219L;
 
@@ -49,11 +49,11 @@ public class ConnectorException extends MetaMatrixCoreException{
     }
     
     public ConnectorException( String errorCode, String message ) {
-        super( errorCode, message );
+        super( message, errorCode);
     }
     
     public ConnectorException( int errorCode, String message ) {
-        super( Integer.toString(errorCode), message );
+        super(message, Integer.toString(errorCode));
     }    
     
 
@@ -64,7 +64,7 @@ public class ConnectorException extends MetaMatrixCoreException{
      * @param e An exception to nest within this one
      */
     public ConnectorException( Throwable e, String message ) {
-        super( e, message );
+        super(message,e);
     }  
     
     /**

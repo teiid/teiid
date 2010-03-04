@@ -23,42 +23,40 @@
 package org.teiid.connector.visitor.framework;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IGroupBy;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IIsNullCriteria;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IScalarSubquery;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.ISetClauseList;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.ISubqueryCompareCriteria;
-import org.teiid.connector.language.ISubqueryInCriteria;
-import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.DerivedTable;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.GroupBy;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.IsNull;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryIn;
+import org.teiid.connector.language.Update;
 
 /**
  * Delegates pre- and post-processing for each node in the hierarchy to
@@ -86,7 +84,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         return preVisitor;
     }
 
-    public void visit(IAggregate obj) {
+    public void visit(AggregateFunction obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -96,7 +94,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
     
-    public void visit(IBatchedUpdates obj) {
+    public void visit(BatchedUpdates obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -106,7 +104,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
 
-    public void visit(ICompareCriteria obj) {
+    public void visit(Comparison obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -115,7 +113,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ICompoundCriteria obj) {
+    public void visit(AndOr obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -124,7 +122,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IDelete obj) {
+    public void visit(Delete obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -133,7 +131,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IElement obj) {
+    public void visit(ColumnReference obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -142,7 +140,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IProcedure obj) {
+    public void visit(Call obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -154,7 +152,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
      */
-    public void visit(IExistsCriteria obj) {
+    public void visit(Exists obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -163,16 +161,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IFrom obj) {
-        if (preVisitor != null) {
-            preVisitor.visit(obj);
-        }
-        super.visit(obj);
-        if (postVisitor != null) {
-            postVisitor.visit(obj);
-        }        
-    }
-    public void visit(IFunction obj) {
+    public void visit(Function obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -181,7 +170,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IGroup obj) {
+    public void visit(NamedTable obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -190,7 +179,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IGroupBy obj) {
+    public void visit(GroupBy obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -199,7 +188,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IInCriteria obj) {
+    public void visit(In obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -209,7 +198,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
     
-    public void visit(IInlineView obj) {
+    public void visit(DerivedTable obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -219,7 +208,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
 
-    public void visit(IInsert obj) {
+    public void visit(Insert obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -228,7 +217,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IIsNullCriteria obj) {
+    public void visit(IsNull obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -237,7 +226,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IJoin obj) {
+    public void visit(Join obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -246,7 +235,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ILikeCriteria obj) {
+    public void visit(Like obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -255,7 +244,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ILimit obj) {
+    public void visit(Limit obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -264,7 +253,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ILiteral obj) {
+    public void visit(Literal obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -273,7 +262,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(INotCriteria obj) {
+    public void visit(Not obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -282,7 +271,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IOrderBy obj) {
+    public void visit(OrderBy obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -291,7 +280,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IOrderByItem obj) {
+    public void visit(SortSpecification obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -300,7 +289,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IParameter obj) {
+    public void visit(Argument obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -309,7 +298,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(IQuery obj) {
+    public void visit(Select obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -319,10 +308,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IScalarSubquery)
-     */
-    public void visit(IScalarSubquery obj) {
+    public void visit(ScalarSubquery obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -331,7 +317,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ISearchedCaseExpression obj) {
+    public void visit(SearchedCase obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -340,7 +326,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ISelect obj) {
+    public void visit(DerivedColumn obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -349,7 +335,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ISelectSymbol obj) {
+    public void visit(SubqueryComparison obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -358,16 +344,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    public void visit(ISubqueryCompareCriteria obj) {
-        if (preVisitor != null) {
-            preVisitor.visit(obj);
-        }
-        super.visit(obj);
-        if (postVisitor != null) {
-            postVisitor.visit(obj);
-        }
-    }
-    public void visit(ISubqueryInCriteria obj) {
+    public void visit(SubqueryIn obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -377,8 +354,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
     
-    
-    public void visit(ISetQuery obj) {
+    public void visit(SetQuery obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -388,7 +364,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
 
-    public void visit(IUpdate obj) {
+    public void visit(Update obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -399,7 +375,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
     }
     
     @Override
-    public void visit(ISetClauseList obj) {
+    public void visit(SetClause obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);
         }
@@ -407,12 +383,11 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         if (postVisitor != null) {
             postVisitor.visit(obj);
         }
-
     }
     
     @Override
-    public void visit(ISetClause obj) {
-        if (preVisitor != null) {
+    public void visit(SearchedWhenClause obj) {
+    	if (preVisitor != null) {
             preVisitor.visit(obj);
         }
         super.visit(obj);
@@ -430,7 +405,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
      * @param behaviorVisitor The visitor specifying what behavior is performed at each node type
      * @param object The root of the object tree to perform visitation on
      */
-    public static void preOrderVisit(LanguageObjectVisitor behaviorVisitor, ILanguageObject object) {
+    public static void preOrderVisit(LanguageObjectVisitor behaviorVisitor, LanguageObject object) {
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(behaviorVisitor, null);
         object.acceptVisitor(hierarchyVisitor);
     }
@@ -444,7 +419,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
      * @param behaviorVisitor The visitor specifying what behavior is performed at each node type
      * @param object The root of the object tree to perform visitation on
      */
-    public static void postOrderVisit(LanguageObjectVisitor behaviorVisitor, ILanguageObject object) {
+    public static void postOrderVisit(LanguageObjectVisitor behaviorVisitor, LanguageObject object) {
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(null, behaviorVisitor);
         object.acceptVisitor(hierarchyVisitor);
     }

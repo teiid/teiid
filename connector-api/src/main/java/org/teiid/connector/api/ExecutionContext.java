@@ -24,6 +24,8 @@ package org.teiid.connector.api;
 
 import java.io.Serializable;
 
+import javax.security.auth.Subject;
+
 
 /**
  * The security context provides information about the user context in which
@@ -37,25 +39,15 @@ import java.io.Serializable;
 public interface ExecutionContext {
 
 	/**
-	 * Get the {@link ConnectorIdentity} created by the Connector's {@link
-	 * ConnectorIdentityFactory}
-	 * 
-	 * @return the {@link ConnectorIdentity} or {@link SingleIdentity} if the
-	 * 	Connector does not implement {@link ConnectorIdentityFactory}
-	 * @since 6.0
-	 */
-	ConnectorIdentity getConnectorIdentity();
-	
-	/**
      * Get the identifier for the current connector running the command
      * @return Connector identifier; never null
      */
     String getConnectorIdentifier();
     
     /**
-     * Get the identifier for the MetaMatrix command being executed.  This can be
-     * correlated back to identifiers exposed in other parts of the MetaMatrix system.
-     * @return MetaMatrix command identifier
+     * Get the identifier for the command being executed.  This can be
+     * correlated back to identifiers exposed in other parts of the system.
+     * @return command identifier
      */
     String getRequestIdentifier();
     
@@ -67,7 +59,7 @@ public interface ExecutionContext {
     
     /**
      * Execution count defines an id; where every access to the connector from  
-     * the MetaMatrix server in a given command execution boundary is uniquely defined;
+     * the server in a given command execution boundary is uniquely defined;
      * Like for example in the case of "batched execution" of commands, each execution of 
      * command gets new identifier.  
      */
@@ -83,48 +75,32 @@ public interface ExecutionContext {
      * Get the version of the VDB this query is being run against.
      * @return VDB version, never null
      */
-    String getVirtualDatabaseVersion();
+    int getVirtualDatabaseVersion();
 
     /**
-     * Get the user name for the user running this query.
-     * @return User name, never null
+     * Get the user for the user running this query.
+     * @return User, never null
      */
-    String getUser();
-
-    /**
-     * Get the trusted payload passed when the user connected.  MetaMatrix has no
-     * knowledge about what the payload contains - it is merely passed through
-     * the system.  It is most often used to pass security information such as
-     * credentials.  It is available in the connector, as is the Execution Payload,
-     * for connector developers to utilize.
-     * @return Trusted payload if one exists, otherwise null
-     */
-    Serializable getTrustedPayload();
-
+    Subject getSubject();
+    
     /**
      * Get the trusted payload passed when the user statement was executed.
-     * MetaMatrix has no knowledge about what the payload contains - it is merely
+     * Teiid has no knowledge about what the payload contains - it is merely
      * passed through the system.  It is most often used to pass security
      * information such as credentials.
      * 
-     * <p>The execution payload differs from the Trusted Payload in that it
-     * is set on the Statement and so may not be constant over the Connection lifecycle
-     * and may be changed upon each statement execution.  The Execution Payload is
-     * <em>not</em> authenticated or validated by the MetaMatrix system.</p>
-     * 
-     * <p>Given that the Execution Payload is not authenticated by the MetaMatrix
-     * system, connector writers are responsible for ensuring its validity.  This
-     * can possibly be accomplished by comparing it against the Trusted Payload.</p>
+     * <p>Given that the Execution Payload is not authenticated by the Teiid
+     * system, connector writers are responsible for ensuring its validity. </p>
      * 
      * @return Trusted execution payload if one exists, otherwise null
      * @since 4.2
      */
     Serializable getExecutionPayload();
-    
+        
     /**
      * Get the identifier for the connection through which 
      * the command is being executed. This represents the original JDBC user
-     * connection to the MetaMatrix system
+     * connection to the Teiid system
      * @return Connection identifier
      */
     String getConnectionIdentifier();
@@ -150,6 +126,10 @@ public interface ExecutionContext {
      */
     void addWarning(Exception ex);
     
+    /**
+     * Flag indicates that the operation needs to be executed in a XA transaction.
+     * @return
+     */
     boolean isTransactional();
 
 	/**
@@ -166,4 +146,21 @@ public interface ExecutionContext {
 	 * @param value
 	 */
 	void put(Object key, Object value);    
+	
+	/**
+	 * Get a item that has been placed previously from cache. If no such object then a null will be returned. The item looked
+	 * up in the specified scope.
+	 * @param scope
+	 * @param key
+	 * @return
+	 */
+	Object getFromCache(CacheScope scope, Object key);
+
+	/**
+	 * Place a item in the Cache in the given scope.
+	 * @param scope
+	 * @param key
+	 * @param value
+	 */
+	void storeInCache(CacheScope scope, Object key, Object value);
 }

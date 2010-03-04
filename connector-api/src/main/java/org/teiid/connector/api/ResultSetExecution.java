@@ -24,11 +24,11 @@ package org.teiid.connector.api;
 
 import java.util.List;
 
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.QueryExpression;
 
 /**
- * Defines an execution for {@link IQueryCommand}s and {@link IProcedure}s that
+ * Defines an execution for {@link QueryExpression}s and {@link Call}s that
  * returns a resultset, which is represented through the iterator method
  * {@link #next()}.
  */

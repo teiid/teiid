@@ -27,43 +27,41 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IGroupBy;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.IIsNullCriteria;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IScalarSubquery;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.ISetClauseList;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.ISubqueryCompareCriteria;
-import org.teiid.connector.language.ISubqueryInCriteria;
-import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.DerivedTable;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.GroupBy;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.IsNull;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryIn;
+import org.teiid.connector.language.Update;
 import org.teiid.connector.visitor.framework.DelegatingHierarchyVisitor;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
@@ -83,7 +81,7 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     }
 
     @SuppressWarnings("unchecked")
-	private void checkInstance(ILanguageObject obj) {
+	private void checkInstance(LanguageObject obj) {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
@@ -93,246 +91,142 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
         return this.objects;
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IAggregate)
-     */
-    public void visit(IAggregate obj) {
+    public void visit(AggregateFunction obj) {
         checkInstance(obj);        
     }
     
-    /*
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IBatchedUpdates)
-     * @since 4.2
-     */
-    public void visit(IBatchedUpdates obj) {
+    public void visit(BatchedUpdates obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompareCriteria)
-     */
-    public void visit(ICompareCriteria obj) {
+    public void visit(Comparison obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompoundCriteria)
-     */
-    public void visit(ICompoundCriteria obj) {
+    public void visit(AndOr obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IDelete)
-     */
-    public void visit(IDelete obj) {
+    public void visit(Delete obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IElement)
-     */
-    public void visit(IElement obj) {
+    public void visit(ColumnReference obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
-     */
-    public void visit(IExistsCriteria obj) {
+    public void visit(Exists obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IFrom)
-     */
-    public void visit(IFrom obj) {
+    public void visit(Function obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IFunction)
-     */
-    public void visit(IFunction obj) {
+    public void visit(NamedTable obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IGroup)
-     */
-    public void visit(IGroup obj) {
+    public void visit(GroupBy obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IGroupBy)
-     */
-    public void visit(IGroupBy obj) {
+    public void visit(In obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IInCriteria)
-     */
-    public void visit(IInCriteria obj) {
+    public void visit(DerivedTable obj) {
         checkInstance(obj);
     }
 
-    public void visit(IInlineView obj) {
+    public void visit(Insert obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IInsert)
-     */
-    public void visit(IInsert obj) {
+    public void visit(ExpressionValueSource obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IBulkInsert)
-     */
-    public void visit(IInsertExpressionValueSource obj) {
-        checkInstance(obj);
-    }
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IIsNullCriteria)
-     */
-    public void visit(IIsNullCriteria obj) {
+    public void visit(IsNull obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IJoin)
-     */
-    public void visit(IJoin obj) {
+    public void visit(Join obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ILikeCriteria)
-     */
-    public void visit(ILikeCriteria obj) {
+    public void visit(Like obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ILimit)
-     */
-    public void visit(ILimit obj) {
+    public void visit(Limit obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ILiteral)
-     */
-    public void visit(ILiteral obj) {
+    public void visit(Literal obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.INotCriteria)
-     */
-    public void visit(INotCriteria obj) {
+    public void visit(Not obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IOrderBy)
-     */
-    public void visit(IOrderBy obj) {
+    public void visit(OrderBy obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IOrderByItem)
-     */
-    public void visit(IOrderByItem obj) {
+    public void visit(SortSpecification obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IParameter)
-     */
-    public void visit(IParameter obj) {
+    public void visit(Argument obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IProcedure)
-     */
-    public void visit(IProcedure obj) {
+    public void visit(Call obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IQuery)
-     */
-    public void visit(IQuery obj) {
+    public void visit(Select obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IScalarSubquery)
-     */
-    public void visit(IScalarSubquery obj) {
+    public void visit(ScalarSubquery obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISearchedCaseExpression)
-     */
-    public void visit(ISearchedCaseExpression obj) {
+    public void visit(SearchedCase obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISelect)
-     */
-    public void visit(ISelect obj) {
+    public void visit(DerivedColumn obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISelectSymbol)
-     */
-    public void visit(ISelectSymbol obj) {
+    public void visit(SubqueryComparison obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryCompareCriteria)
-     */
-    public void visit(ISubqueryCompareCriteria obj) {
+    public void visit(SubqueryIn obj) {
         checkInstance(obj);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryInCriteria)
-     */
-    public void visit(ISubqueryInCriteria obj) {
-        checkInstance(obj);
-    }
-
-    /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IUpdate)
-     */
-    public void visit(IUpdate obj) {
+    public void visit(Update obj) {
         checkInstance(obj);
     }
     
-    public void visit(ISetQuery obj) {
+    public void visit(SetQuery obj) {
         checkInstance(obj);
     }
     
     @Override
-    public void visit(ISetClauseList obj) {
+    public void visit(SetClause obj) {
         checkInstance(obj);
     }
     
     @Override
-    public void visit(ISetClause obj) {
-        checkInstance(obj);
+    public void visit(SearchedWhenClause obj) {
+    	checkInstance(obj);    	
     }
 
     /**
@@ -343,7 +237,7 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of ILanguageObject of the specified type
      */
-    public static <T> Collection<T> collectObjects(Class<T> type, ILanguageObject object) {
+    public static <T> Collection<T> collectObjects(Class<T> type, LanguageObject object) {
         CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(visitor, null);
         object.acceptVisitor(hierarchyVisitor);
@@ -357,8 +251,8 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of IElement of the specified type
      */
-    public static Collection<IElement> collectElements(ILanguageObject object) {
-        return CollectorVisitor.collectObjects(IElement.class, object);
+    public static Collection<ColumnReference> collectElements(LanguageObject object) {
+        return CollectorVisitor.collectObjects(ColumnReference.class, object);
     }
 
     /**
@@ -368,8 +262,8 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of IGroup of the specified type
      */
-    public static Collection<IGroup> collectGroups(ILanguageObject object) {
-        return CollectorVisitor.collectObjects(IGroup.class, object);
+    public static Collection<NamedTable> collectGroups(LanguageObject object) {
+        return CollectorVisitor.collectObjects(NamedTable.class, object);
     }
         
     /**
@@ -379,11 +273,11 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Set of IGroup
      */
-    public static Set<IGroup> collectGroupsUsedByElements(ILanguageObject object) {
-        Set<IGroup> groups = new HashSet<IGroup>();
-        for (IElement element : CollectorVisitor.collectElements(object)) {
-            if(element.getGroup() != null) {
-                groups.add(element.getGroup());
+    public static Set<NamedTable> collectGroupsUsedByElements(LanguageObject object) {
+        Set<NamedTable> groups = new HashSet<NamedTable>();
+        for (ColumnReference element : CollectorVisitor.collectElements(object)) {
+            if(element.getTable() != null) {
+                groups.add(element.getTable());
             }
         }
         return groups;

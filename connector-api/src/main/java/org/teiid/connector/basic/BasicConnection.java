@@ -22,52 +22,55 @@
 
 package org.teiid.connector.basic;
 
+import javax.resource.spi.LocalTransaction;
+import javax.transaction.xa.XAResource;
+
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Provides a default implementation of a {@link PoolAwareConnection} for a Connector
  * that supports global capabilities.  Extensions of this class should implement
- * {@link #createProcedureExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
- * {@link #createResultSetExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
- * {@link #createUpdateExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
+ * {@link #createProcedureExecution(Call, ExecutionContext, RuntimeMetadata)}
+ * {@link #createResultSetExecution(Call, ExecutionContext, RuntimeMetadata)}
+ * {@link #createUpdateExecution(Call, ExecutionContext, RuntimeMetadata)}
  * as necessary.
  */
 public abstract class BasicConnection implements Connection {
 
+
 	@Override
-	public Execution createExecution(ICommand command,
+	public Execution createExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		if (command instanceof IQueryCommand) {
-			return createResultSetExecution((IQueryCommand)command, executionContext, metadata);
+		if (command instanceof QueryExpression) {
+			return createResultSetExecution((QueryExpression)command, executionContext, metadata);
 		}
-		if (command instanceof IProcedure) {
-			return createProcedureExecution((IProcedure)command, executionContext, metadata);
+		if (command instanceof Call) {
+			return createProcedureExecution((Call)command, executionContext, metadata);
 		}
 		return createUpdateExecution(command, executionContext, metadata);
 	}
 
-	public ResultSetExecution createResultSetExecution(IQueryCommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
 		throw new ConnectorException("Unsupported Execution");
 	}
 
-	public ProcedureExecution createProcedureExecution(IProcedure command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
 		throw new ConnectorException("Unsupported Execution");
 	}
 
-	public UpdateExecution createUpdateExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
 		throw new ConnectorException("Unsupported Execution");
 	}
 		
@@ -82,14 +85,12 @@ public abstract class BasicConnection implements Connection {
 	}
 		
 	@Override
-	public void closeCalled() {
-		
+	public LocalTransaction getLocalTransaction() {
+		return null;
 	}
 	
 	@Override
-	public void setConnectorIdentity(ConnectorIdentity context)
-			throws ConnectorException {
-		
+	public XAResource getXAResource() throws ConnectorException {
+		return null;
 	}
-	
 }

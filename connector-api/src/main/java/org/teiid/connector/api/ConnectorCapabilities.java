@@ -24,8 +24,8 @@ package org.teiid.connector.api;
 
 import java.util.List;
 
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.SetQuery;
 
 
 /**
@@ -373,7 +373,7 @@ public interface ConnectorCapabilities {
     boolean requiresCriteria();
     
     /**
-     * Whether the source supports {@link IBatchedUpdates}
+     * Whether the source supports {@link BatchedUpdates}
      * @since 6.0
      */
     boolean supportsBatchedUpdates();
@@ -386,7 +386,7 @@ public interface ConnectorCapabilities {
     
     /**
      * Support indicates that the connector can accept INSERTs with
-     * values specified by an {@link ISetQuery}.
+     * values specified by an {@link SetQuery}.
      * @since 6.1
      */
     boolean supportsInsertWithQueryExpression();

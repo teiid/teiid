@@ -22,6 +22,9 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import java.util.Collections;
+import java.util.List;
+
 
 /**
  * ProcedureParameterRecordImpl
@@ -39,7 +42,7 @@ public class ProcedureParameter extends BaseColumn {
 	
 	private Type type;
 	private boolean optional;
-	private ProcedureRecordImpl procedure;
+	private Procedure procedure;
 	
 	public void setType(Type type) {
 		this.type = type;
@@ -57,17 +60,24 @@ public class ProcedureParameter extends BaseColumn {
 		return optional;
 	}
 	
-	public ProcedureRecordImpl getProcedure() {
-		return procedure;
-	}
-	
-	public void setProcedure(ProcedureRecordImpl procedure) {
+	public void setProcedure(Procedure procedure) {
 		this.procedure = procedure;
 	}
 	
 	@Override
-	public AbstractMetadataRecord getParent() {
+	public Procedure getParent() {
 		return this.procedure;
+	}
+
+	/**
+	 * Get the result set columns only if this parameter represents a result set.
+	 * @return
+	 */
+	public List<Column> getResultSetColumns() {
+		if (this.type == Type.ResultSet) {
+			return this.procedure.getResultSet().getColumns();
+		}
+		return Collections.emptyList();
 	}
     
 }

@@ -32,15 +32,15 @@ public class Schema extends AbstractMetadataRecord {
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
     private Map<String, Table> tables = new LinkedHashMap<String, Table>();
-	private Map<String, ProcedureRecordImpl> procedures = new LinkedHashMap<String, ProcedureRecordImpl>();
+	private Map<String, Procedure> procedures = new LinkedHashMap<String, Procedure>();
 	
 	public void addTable(Table table) {
 		table.setParent(this);
 		this.tables.put(table.getName().toLowerCase(), table);
 	}
 	
-	public void addProcedure(ProcedureRecordImpl procedure) {
-		procedure.setSchema(this);
+	public void addProcedure(Procedure procedure) {
+		procedure.setParent(this);
 		this.procedures.put(procedure.getName().toLowerCase(), procedure);
 	}
 
@@ -56,7 +56,7 @@ public class Schema extends AbstractMetadataRecord {
 	 * Get the procedures defined in this schema
 	 * @return
 	 */
-	public Map<String, ProcedureRecordImpl> getProcedures() {
+	public Map<String, Procedure> getProcedures() {
 		return procedures;
 	}
 	

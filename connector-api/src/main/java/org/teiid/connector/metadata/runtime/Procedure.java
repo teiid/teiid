@@ -22,12 +22,108 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Represents a procedure construct (such as a Stored Procedure).
+ * ProcedureRecordImpl
  */
-public interface Procedure extends MetadataObject{
-            
-	List<Parameter> getChildren();
+public class Procedure extends AbstractMetadataRecord {
+    
+	public enum Type {
+		Function,
+		UDF,
+		StoredProc,
+		StoredQuery
+	}
+	
+    private boolean isFunction;
+    private boolean isVirtual;
+    private int updateCount = 1;
+    private List<ProcedureParameter> parameters = new LinkedList<ProcedureParameter>();
+    private ColumnSet<Procedure> resultSet;
+    private String queryPlan;
+    
+    private Schema parent;
+    
+    public void setParent(Schema parent) {
+		this.parent = parent;
+	}
+    
+    public boolean isFunction() {
+        return isFunction;
+    }
+
+    public boolean isVirtual() {
+        return this.isVirtual;
+    }
+
+    public Type getType() {
+    	if (isFunction()) {
+        	if (isVirtual()) {
+        		return Type.UDF;
+        	}
+        	return Type.Function;
+        }
+        if (isVirtual()) {
+            return Type.StoredQuery;
+        }
+        return Type.StoredProc;
+    }
+    
+    public int getUpdateCount() {
+        return this.updateCount;
+    }
+    
+	public List<ProcedureParameter> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(List<ProcedureParameter> parameters) {
+		this.parameters = parameters;
+	}
+
+	public String getQueryPlan() {
+		return queryPlan;
+	}
+
+	public void setQueryPlan(String queryPlan) {
+		this.queryPlan = queryPlan;
+	}
+
+    /**
+     * @param b
+     */
+    public void setFunction(boolean b) {
+        isFunction = b;
+    }
+
+    /**
+     * @param b
+     */
+    public void setVirtual(boolean b) {
+        isVirtual = b;
+    }
+    
+    public void setUpdateCount(int count) {
+    	this.updateCount = count;
+    }
+
+	public void setResultSet(ColumnSet<Procedure> resultSet) {
+		this.resultSet = resultSet;
+		if (resultSet != null) {
+			resultSet.setParent(this);
+		}
+	}
+
+	public ColumnSet<Procedure> getResultSet() {
+		return resultSet;
+	}
+	
+	@Override
+	public Schema getParent() {
+		return parent;
+	}
+
 }

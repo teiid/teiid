@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 
@@ -33,8 +34,10 @@ import com.metamatrix.core.util.EquivalenceUtil;
  * AbstractMetadataRecord
  */
 public abstract class AbstractMetadataRecord implements Serializable {
-	    
-    public final static char NAME_DELIM_CHAR = '.';
+	
+	public final static char NAME_DELIM_CHAR = '.';
+	
+	private static AtomicLong UUID_SEQUENCE = new AtomicLong();
     
     private String uuid; //globally unique id
     private String name; //contextually unique name
@@ -45,6 +48,9 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	private String annotation;
 	
 	public String getUUID() {
+		if (uuid == null) {
+			uuid = String.valueOf(UUID_SEQUENCE.getAndIncrement());
+		}
 		return uuid;
 	}
 	
@@ -97,9 +103,9 @@ public abstract class AbstractMetadataRecord implements Serializable {
     }
     
     /**
-     * Return the extension properties for this record - may be null
+     * Return the extension properties for this record - may be unmodifiable
      * if {@link #setProperties(LinkedHashMap)} or {@link #setProperty(String, String)}
-     * has not been called
+     * has not been called.
      * @return
      */
     public Map<String, String> getProperties() {
@@ -109,6 +115,11 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	return properties;
 	}
     
+    /**
+     * The preferred setter for extension properties.
+     * @param key
+     * @param value
+     */
     public void setProperty(String key, String value) {
     	if (this.properties == null) {
     		this.properties = new LinkedHashMap<String, String>();
@@ -146,7 +157,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     }
 
     public int hashCode() {
-        return this.uuid.hashCode();
+        return getUUID().hashCode();
     }
         
 }
