@@ -25,6 +25,7 @@ package com.metamatrix.jdbc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -688,8 +689,12 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		if (value instanceof Clob) {
 			return ((Clob) value).getCharacterStream();
 		}
-
-		throw new MMSQLException(JDBCPlugin.Util.getString("MMResultSet.cannot_convert_to_character_stream")); //$NON-NLS-1$
+		
+		if (value instanceof SQLXML) {
+			return ((SQLXML)value).getCharacterStream();
+		}
+		
+		return new StringReader(getString(columnIndex));
 	}
 
 	/**

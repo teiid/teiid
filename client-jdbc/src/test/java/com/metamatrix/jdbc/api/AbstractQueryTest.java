@@ -142,7 +142,7 @@ public abstract class AbstractQueryTest {
     }
     
     protected Statement createPrepareCallStatement(String sql) throws SQLException{
-    	return this.internalConnection.prepareCall("{?=call "+sql+"}");
+    	return this.internalConnection.prepareCall("{?=call "+sql+"}");  //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     protected Statement createPrepareStatement(String sql) throws SQLException{
@@ -153,8 +153,6 @@ public abstract class AbstractQueryTest {
     	return this.internalConnection.createStatement();
     }
     
-    
-            
     private void setParameters(PreparedStatement stmt, Object[] params) throws SQLException{
         for (int i = 0; i < params.length; i++) {
             stmt.setObject(i+1, params[i]);
@@ -239,27 +237,17 @@ public abstract class AbstractQueryTest {
     }
     
     public void assertResultsSetEquals(ResultSet resultSet, File expected) {
-        assertNotNull(resultSet);
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;
+        assertNotNull(resultSet);        
         try {
-        	resultReader = new BufferedReader(new ResultSetReader(resultSet, DELIMITER));
             writeResultSet(expected, new BufferedReader(new ResultSetReader(resultSet, DELIMITER)));
             if (resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY) {
             	resultSet.beforeFirst();
             }
-            expectedReader = new BufferedReader(new FileReader(expected));    
-            compareResults(resultReader, expectedReader);
-        } catch (Exception e) {
+            assertReaderEquals(new ResultSetReader(resultSet, DELIMITER), new FileReader(expected));
+        } catch (IOException e) {
         	throw new RuntimeException(e);
-        }finally {
-            try {
-                resultReader.close();
-                expectedReader.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(e);
-            }               
+        } catch (SQLException e) {
+        	throw new RuntimeException(e);
         }
     }
 
@@ -283,23 +271,7 @@ public abstract class AbstractQueryTest {
     
     public void assertResultsSetEquals(ResultSet resultSet,String expected) {
         assertNotNull(resultSet);
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;
-        try {
-            resultReader = new BufferedReader(new ResultSetReader(resultSet, DELIMITER));
-            expectedReader = new BufferedReader(new StringReader(expected));        
-            compareResults(resultReader, expectedReader);
-        }catch(Exception e){
-        	throw new RuntimeException(e);
-        }finally {
-            try {
-                resultReader.close();
-                expectedReader.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(e);
-            }               
-        }
+        assertReaderEquals(new ResultSetReader(resultSet, DELIMITER), new StringReader(expected));
     }
 
     public void assertResults(String[] expected) {
@@ -312,32 +284,13 @@ public abstract class AbstractQueryTest {
     
     public void assertResultsSetEquals(ResultSet resultSet, String[] expected) {
         assertNotNull(resultSet);
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;
-        try {
-            resultReader = new BufferedReader(new ResultSetReader(resultSet, DELIMITER));
-            expectedReader = new BufferedReader(new StringArrayReader(expected));
-            compareResults(resultReader, expectedReader);
-        }catch(Exception e){
-        	throw new RuntimeException(e);
-        }finally {
-            try {
-                resultReader.close();
-                expectedReader.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(e);
-            } 
-        }
+        assertReaderEquals(new ResultSetReader(resultSet, DELIMITER), new StringArrayReader(expected));
     }
     
     public void assertReaderEquals(Reader expected, Reader reader) {
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;        
+        BufferedReader  resultReader = new BufferedReader(expected);
+        BufferedReader  expectedReader = new BufferedReader(reader);        
         try {
-            expectedReader = new BufferedReader(expected);
-            resultReader = new BufferedReader(reader);
             compareResults(resultReader, expectedReader);
         } catch (Exception e) {
         	throw new RuntimeException(e);
@@ -353,47 +306,19 @@ public abstract class AbstractQueryTest {
     
     public void assertResultsSetMetadataEquals(ResultSetMetaData metadata, File expected) {
         assertNotNull(metadata);
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;
         try {
-            resultReader = new BufferedReader(new MetadataReader(metadata, DELIMITER));
         	writeResultSet(expected, new BufferedReader(new MetadataReader(metadata, DELIMITER)));
-            expectedReader = new BufferedReader(new FileReader(expected));    
-            compareResults(resultReader, expectedReader);
-        } catch (Exception e) {
+        	assertReaderEquals(new MetadataReader(metadata, DELIMITER), new FileReader(expected));
+        } catch (IOException e) {
         	throw new RuntimeException(e);
-        }finally {
-            try {
-                resultReader.close();
-                expectedReader.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(e);
-            }               
-        }    	
+        }
     }
 
     public void assertResultsSetMetadataEquals(ResultSetMetaData metadata, String[] expected) {
-        assertNotNull(metadata);
-        
-        BufferedReader  resultReader = null;
-        BufferedReader  expectedReader = null;
-        try {
-            resultReader = new BufferedReader(new MetadataReader(metadata, DELIMITER));
-            expectedReader = new BufferedReader(new StringArrayReader(expected));
-            compareResults(resultReader, expectedReader);
-        } catch (Exception e) {
-        	throw new RuntimeException(e);
-        }finally {
-            try {
-                resultReader.close();
-                expectedReader.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(e);
-            }               
-        }    	
+    	assertNotNull(metadata);
+        assertReaderEquals(new MetadataReader(metadata, DELIMITER), new StringArrayReader(expected));
     }
-    
+
    protected static String read(BufferedReader r, boolean casesensitive) throws IOException {
     	StringBuffer result = new StringBuffer();
     	String s = null;

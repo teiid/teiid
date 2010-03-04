@@ -204,49 +204,34 @@ public class JDBCMetdataProcessor {
 			String remarks = tables.getString(5);
 			table.setAnnotation(remarks);
 			tableMap.put(fullName, new TableInfo(tableCatalog, tableSchema, tableName, table));
+			
+			ResultSet columns = metadata.getColumns(tableCatalog, tableSchema, tableName, null);
+			int rsColumns = columns.getMetaData().getColumnCount();
+			while (columns.next()) {
+				String columnName = columns.getString(4);
+				int type = columns.getInt(5);
+				String typeName = columns.getString(6);
+				type = checkForUnsigned(type, typeName);
+				//note that the resultset is already ordered by position, so we can rely on just adding columns in order
+				Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), table);
+				column.setNameInSource(quoteName(columnName));
+				column.setNativeType(columns.getString(6));
+				column.setRadix(columns.getInt(10));
+				column.setNullType(NullType.values()[columns.getShort(11)]);
+				column.setUpdatable(true);
+				column.setAnnotation(columns.getString(12));
+				column.setCharOctetLength(columns.getInt(16));
+				if (rsColumns >= 23) {
+					column.setAutoIncrementable("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+				}
+			}
+			columns.close();
 		}
 		tables.close();
 		
-		getColumns(metadataFactory, metadata, tableMap);
 		return tableMap;
 	}
 
-	private void getColumns(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
-			throws SQLException, ConnectorException {
-		logger.logDetail("JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
-		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
-		int rsColumns = columns.getMetaData().getColumnCount();
-		while (columns.next()) {
-			String tableCatalog = columns.getString(1);
-			String tableSchema = columns.getString(2);
-			String tableName = columns.getString(3);
-			String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-			TableInfo tableInfo = tableMap.get(fullTableName);
-			if (tableInfo == null) {
-				continue;
-			}
-			String columnName = columns.getString(4);
-			int type = columns.getInt(5);
-			String typeName = columns.getString(6);
-			type = checkForUnsigned(type, typeName);
-			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
-			column.setNameInSource(quoteName(columnName));
-			column.setNativeType(columns.getString(6));
-			column.setRadix(columns.getInt(10));
-			column.setNullType(NullType.values()[columns.getShort(11)]);
-			column.setUpdatable(true);
-			String remarks = columns.getString(12);
-			column.setAnnotation(remarks);
-			column.setCharOctetLength(columns.getInt(16));
-			if (rsColumns >= 23) {
-				column.setAutoIncrementable("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
-			}
-		}
-		columns.close();
-	}
-	
 	private String quoteName(String name) {
 		if (quoteNameInSource) {
 			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
