@@ -17,13 +17,8 @@ getBshPrompt() {
 }
 
 void checkAdmin() {
-    context = currentContext();
-    if (context == void || context == null) {
-        throw new Exception("Not connected.  You must call a \"connect\" method");
-    } 
-    
-    if (context.internalAdmin == void || context.internalAdmin == null) {
-        throw new Exception("Not connected.  You must call a \"connect\" method");
+    if (internalAdmin == void || internalAdmin == null) {
+        throw new Exception("Not connected.  You must call a \"connectAsAdmin\" method");
     }      
 }
 
@@ -89,7 +84,7 @@ class ExceptionHandler implements InvocationHandler{
 }
 
 Object createExceptionHandlingProxy(Object obj) {
-	return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new ExceptionHandler(obj));	
+	return Proxy.newProxyInstance(obj.getClass().getClassLoader(), new Class[] {Admin.class}, new ExceptionHandler(obj));	
 }
 
 boolean interactive() {

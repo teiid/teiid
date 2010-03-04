@@ -1,6 +1,7 @@
 import bsh.This;
 
 //TODO: deprecate the stacking nature of the context and only allow flat?
+internalAdmin=null;
 
 if(global.scriptContext == void) {
     global.contextMap = new HashMap();

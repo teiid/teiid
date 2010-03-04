@@ -8,23 +8,25 @@ source(getResource("/scripts/adminapi.bsh"));
 
 import java.sql.*;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
+import org.teiid.adminapi.*;
 
 // These values are default values, a user can supply a property file called
 // "connection.properties" those values will replace one below 
 String auto_jdbc_url="jdbc:teiid:admin@mm://localhost:31000";
-String auto_user="admin";
-String auto_password="teiid";
-String auto_admin_url="mm://localhost:31000";
-
+String auto_jdbc_user="admin";
+String auto_jdbc_password="teiid";
+String auto_admin_user="admin";
+String auto_admin_password="admin";
+String auto_admin_url="jnp://localhost:1099";
 String connection_prefix="conn";
+
 
 /**
  * Connect to the server using the properties specified in the connection.properties file.
  * use currentConnectionName() to get connection name
  */
 Connection connect () {
-    return connect(auto_jdbc_url+";user="+auto_user+";password="+auto_password);
+    return connect(auto_jdbc_url+";user="+auto_jdbc_user+";password="+auto_jdbc_password);
 }
 
 /**
@@ -43,7 +45,6 @@ private Connection connectURL (String url, String driver) {
         try {
         	com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);
             currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
-            currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
     		return mmConn;        	
         } catch(e) {
         	parentContext();
@@ -62,7 +63,7 @@ private Connection connectURL (String url, String driver) {
  * Current Connection Name.
  */
 String currentConnectionName() {
-    if ((getConnection() != null || currentContext().internalAdmin != null) && currentContext().name != void && currentContext().name != null) {
+    if (getConnection() != null && currentContext().name != void && currentContext().name != null) {
         return currentContext().name;
     }
     throw new Exception("No Connection exists; or it is not a named connection");
@@ -77,25 +78,20 @@ void useConnection(name) {
 * 
 * @param username
 * @param password
-* @param url - URL in the format "mm://servername:port" or "jdbc:metamatrix:VDB@mm://servername:port".
+* @param url - URL in the format "mms://localhost:31443"
 */
 void connectAsAdmin(String username, String password, String url) {
 
     if (MMURL.isValidServerURL(url)) {
-        String contextName = genConnectionName();
-        newContext(contextName);        
         try {
             //url is in "server URL format": connect via ServerAdminFactory
-            currentContext().internalAdmin = createExceptionHandlingProxy(ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
-            currentContext().internalPrompt = currentConnectionName()+"["+url+"] $ ";
+            internalAdmin = createExceptionHandlingProxy(AdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
         } catch(e) {
-        	parentContext();
         	print("Failed to connect: {"+e.getMessage()+"}");
         	debug(e);
-        	return null;
         }        
     } else {
-    	print("Wrong syntax for the URL.. connection failed.");
+    	print("Wrong syntax for the URL.. connection failed. ex: \"jnp://localhost:1099\"");
     }
 }
 
@@ -103,22 +99,25 @@ void connectAsAdmin(String username, String password, String url) {
  * Connect as Admin using the defaults from connection.properties
  */
 void connectAsAdmin() {
-    connectAsAdmin(auto_user, auto_password, auto_admin_url);
+    connectAsAdmin(auto_admin_user, auto_admin_password, auto_admin_url);
 }
 
+void closeAdmin() {
+    try {
+	    if (internalAdmin != void && internalAdmin != null) {
+	        internalAdmin.close();
+	        internalAdmin = null;
+	    }  
+    }catch(e) {
+    	//ignore..
+    }
+}
 /**
  * Disconnect the connection from the server
  */
 void disconnect() {
     closeConnection();
-    
-    try {
-	    if (currentContext().internalAdmin != void && currentContext().internalAdmin != null) {
-	        currentContext().internalAdmin=null;
-	    }  
-    }catch(e) {
-    	//ignore..
-    }
+    closeAdmin();
     currentContext().internalPrompt = null;
 }
 
@@ -138,13 +137,21 @@ private loadConnectionProperties(String propsFile){
     	auto_admin_url = p.getProperty("admin.url");
     }
 
-    if (p.getProperty("user") != null) {
-        auto_user = p.getProperty("user");
+    if (p.getProperty("jdbc.user") != null) {
+        auto_jdbc_user = p.getProperty("jdbc.user");
     }
 
-    if (p.getProperty("password") != null) {
-        auto_password = p.getProperty("password");
-    }       
+    if (p.getProperty("jdbc.password") != null) {
+        auto_jdbc_password = p.getProperty("jdbc.password");
+    }     
+    
+    if (p.getProperty("admin.user") != null) {
+        auto_admin_user = p.getProperty("admin.user");
+    }
+
+    if (p.getProperty("admin.password") != null) {
+        auto_admin_password = p.getProperty("admin.password");
+    }     
 }
 
 //help methods

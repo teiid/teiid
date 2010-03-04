@@ -13,19 +13,24 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client-jdbc</artifactId>
+      <scope>provided</scope>
     </dependency>
+   
     <dependency>
       <groupId>beanshell</groupId>
       <artifactId>bsh</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
