@@ -441,5 +441,14 @@ public class TestSQLConversionVisitor {
             input, 
             output, TRANSLATOR);
     }
+    
+    @Test public void testOrderByUnrelated() throws Exception {
+    	String input = "select part_id id FROM parts order by part_name"; //$NON-NLS-1$
+        String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS ORDER BY PARTS.PART_NAME"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
 
 }
