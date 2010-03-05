@@ -23,7 +23,6 @@
 package com.metamatrix.common.buffer.impl;
 
 import java.nio.ByteBuffer;
-import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
@@ -31,10 +30,7 @@ import com.metamatrix.common.buffer.StorageManager;
 
 public class MemoryStorageManager implements StorageManager {
     
-    /**
-     * @see StorageManager#initialize(Properties)
-     */
-    public void initialize(Properties props) throws MetaMatrixComponentException {
+    public void initialize() {
     }
 
 	@Override
