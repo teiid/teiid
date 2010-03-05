@@ -79,15 +79,22 @@
 						<version>2.2-beta-2</version>
 						<configuration>
 							<descriptors>
+                                <!--  
 								<descriptor>build/assembly/src.xml</descriptor>
+                                -->
 								<descriptor>build/assembly/client-jar.xml</descriptor>
+                                <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
+                                <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
+                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
+                                
+                                <!--
 								<descriptor>build/assembly/runtime/dependencies.xml</descriptor>
 								<descriptor>build/assembly/runtime/dist.xml</descriptor>
 								<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
 								<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
+                                 
 								<descriptor>documentation/assembly/docs.xml</descriptor>
+                                -->
 							</descriptors>
 							<outputDirectory>target/distribution</outputDirectory>
 							<workDirectory>target/assembly/work</workDirectory>
@@ -97,7 +104,9 @@
 			</build>
 			<modules>
                 <module>build</module>
+                <!-- 
 				<module>documentation</module>
+                 -->
 			</modules>
 		</profile>
 	</profiles>
@@ -346,32 +355,28 @@
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-jboss-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-runtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>    
+	        <dependency>
+		        <groupId>org.jboss.teiid</groupId>
+		        <artifactId>teiid-jboss-embedded</artifactId>
+                <version>${project.version}</version>
+		        <scope>test</scope>
+	        </dependency>
       
       <!-- External dependencies -->
 			<dependency>
 				<groupId>jdom</groupId>
 				<artifactId>jdom</artifactId>
 				<version>1.0</version>
-			</dependency>
-			<dependency>
-				<groupId>jboss.jbossts</groupId>
-				<artifactId>jbossjta-integration</artifactId>
-				<version>4.3.0.GA</version>
-			</dependency>
-			<dependency>
-				<groupId>jboss.jbossts</groupId>
-				<artifactId>jbossts-common</artifactId>
-				<version>4.3.0.GA</version>
-			</dependency>
-			<dependency>
-				<groupId>jboss.jbossts</groupId>
-				<artifactId>jbossjta</artifactId>
-				<version>4.3.0.GA</version>
-			</dependency>
-			<dependency>
-				<groupId>javax.transaction</groupId>
-				<artifactId>jta</artifactId>
-				<version>1.1</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.resource</groupId>
@@ -382,6 +387,7 @@
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
 				<version>1.2.14</version>
+                <scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>commons-logging</groupId>
@@ -399,7 +405,7 @@
                     <exclusion>
                         <groupId>javax.servlet</groupId>
                         <artifactId>servlet-api</artifactId>
-                    </exclusion>                    
+                    </exclusion>       
 				</exclusions>
 			</dependency>
 			<dependency>
@@ -411,12 +417,66 @@
 				<groupId>org.jboss.cache</groupId>
 				<artifactId>jbosscache-core</artifactId>
 				<version>3.1.0.GA</version>
+                <exclusions>
+                    <exclusion>
+                      <groupId>javax.transaction</groupId>
+                      <artifactId>jta</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>       
+                    <exclusion>
+                        <groupId>org.jboss</groupId>
+                        <artifactId>jboss-common-core</artifactId>
+                    </exclusion>                          
+                </exclusions>                
 			</dependency>
-			<dependency>
-				<groupId>com.google.code.guice</groupId>
-				<artifactId>guice</artifactId>
-				<version>1.0</version>
-			</dependency>
+            <dependency>
+                <groupId>org.jboss.man</groupId>
+                <artifactId>jboss-managed</artifactId>
+                <version>2.1.0.SP1</version>
+            </dependency>        
+            <dependency>
+              <groupId>org.jboss.man</groupId>
+              <artifactId>jboss-metatype</artifactId>
+              <version>2.1.0.SP1</version>
+            </dependency>            
+            <dependency>
+                <groupId>org.jboss.integration</groupId>
+                <artifactId>jboss-profileservice-spi</artifactId>
+                <version>5.1.0.GA</version>
+            </dependency>      
+            <dependency>    
+                <groupId>org.jboss</groupId>
+                <artifactId>jboss-vfs</artifactId>
+                <version>2.1.2.GA</version>
+            </dependency>
+            <dependency>    
+                <groupId>org.jboss.deployers</groupId>
+                <artifactId>jboss-deployers-vfs-spi</artifactId>
+                <version>2.0.7.GA</version>
+            </dependency>      
+            <dependency>    
+                <groupId>org.jboss.deployers</groupId>
+                <artifactId>jboss-deployers-vfs</artifactId>
+                <version>2.0.7.GA</version>
+            </dependency>              
+            <dependency>
+              <groupId>org.jboss.jbossas</groupId>
+              <artifactId>jboss-as-connector</artifactId>
+              <version>5.1.0.GA</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss</groupId>
+                <artifactId>jboss-reflect</artifactId>
+                <version>2.0.2.GA</version>
+            </dependency>             
+            <dependency>
+              <groupId>org.jboss.remoting</groupId>
+              <artifactId>jboss-remoting</artifactId>
+              <version>2.5.1</version>
+            </dependency>            
 			<dependency>
 				<groupId>beanshell</groupId>
 				<artifactId>bsh</artifactId>
@@ -433,11 +493,6 @@
 				<version>8.7</version>
 			</dependency>
 			<dependency>
-				<groupId>antlr</groupId>
-				<artifactId>stringtemplate</artifactId>
-				<version>3.0</version>
-			</dependency>
-			<dependency>
 				<groupId>org.jboss.netty</groupId>
 				<artifactId>netty</artifactId>
 				<version>3.0.2.GA</version>
@@ -450,6 +505,10 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
+        <!-- 
+        <module>txn-jbossts</module>
+        -->
+		<module>test-integration</module>
 		<module>common-core</module>
 		<module>common-internal</module>
 		<module>connector-api</module>
@@ -459,13 +518,14 @@
 		<module>connectors</module>
 		<module>console</module>
 		<module>metadata</module>
-		<module>txn-jbossts</module>
-		<module>connector-sdk</module>
 		<module>runtime</module>
 		<module>adminshell</module>
-		<module>test-integration</module>
 		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
+        <module>jboss-integration</module>
+        <module>connector-sdk</module>
+        <module>jboss-embedded</module>
+        
 	</modules>
 	<distributionManagement>
 		<repository>

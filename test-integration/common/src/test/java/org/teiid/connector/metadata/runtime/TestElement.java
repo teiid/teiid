@@ -22,14 +22,16 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.util.Properties;
-
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
+import java.util.HashMap;
+import java.util.Map;
 
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -39,7 +41,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 public class TestElement extends TestCase {
 
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
-    Properties props;
+    Map<String, String> props;
     /**
      * @param name
      */
@@ -55,41 +57,41 @@ public class TestElement extends TestCase {
         return new TranslationUtility(vdbName);        
     }
 
-    public Element getElement(String groupName, String elementName, TranslationUtility transUtil) throws Exception {
-        IQuery query = (IQuery) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
-        ISelectSymbol symbol = query.getSelect().getSelectSymbols().get(0);
-        IElement element = (IElement) symbol.getExpression();
+    public Column getElement(String groupName, String elementName, TranslationUtility transUtil) throws Exception {
+        Select query = (Select) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
+        DerivedColumn symbol = query.getDerivedColumns().get(0);
+        ColumnReference element = (ColumnReference) symbol.getExpression();
         return element.getMetadataObject();
     }
 
     public void helpTestElement(String fullGroupName, String elementShortName, TranslationUtility transUtil,
         String nameInSource, Object defaultValue, Object minValue, Object maxValue,
-        Class javaType, int length, int nullable, int position, int searchable,
-        boolean autoIncrement, boolean caseSensitive, Properties expectedProps, 
+        Class<?> javaType, int length, NullType nullable, int position, SearchType searchable,
+        boolean autoIncrement, boolean caseSensitive, Map<String, String> expectedProps, 
         String modeledType, String modeledBaseType, String modeledPrimitiveType) 
     throws Exception {
             
-        Element element = getElement(fullGroupName, elementShortName, transUtil);           
+        Column element = getElement(fullGroupName, elementShortName, transUtil);           
         assertEquals(nameInSource, element.getNameInSource()); 
         assertEquals(defaultValue, element.getDefaultValue());
         assertEquals(minValue, element.getMinimumValue());
         assertEquals(maxValue, element.getMaximumValue());
         assertEquals(javaType, element.getJavaType());
         assertEquals(length, element.getLength());
-        assertEquals(nullable, element.getNullability());
+        assertEquals(nullable, element.getNullType());
         assertEquals(position, element.getPosition());
-        assertEquals(searchable, element.getSearchability());
+        assertEquals(searchable, element.getSearchType());
         assertEquals(autoIncrement, element.isAutoIncremented());
         assertEquals(caseSensitive, element.isCaseSensitive());      
         
 //System.out.println("\n" + element.getModeledType() + "\n" + element.getModeledBaseType() + "\n" + element.getModeledPrimitiveType());        
 
-        assertEquals(modeledType, element.getModeledType());
-        assertEquals(modeledBaseType, element.getModeledBaseType());
-        assertEquals(modeledPrimitiveType, element.getModeledPrimitiveType());
+        assertEquals(modeledType, element.getDatatypeID());
+        assertEquals(modeledBaseType, element.getBaseTypeID());
+        assertEquals(modeledPrimitiveType, element.getPrimitiveTypeID());
         
                
-        Properties extProps = element.getProperties();
+        Map<String, String> extProps = element.getProperties();
         assertEquals(expectedProps, extProps);
     }
     
@@ -104,9 +106,9 @@ public class TestElement extends TestCase {
             null,                           // maximum value            
             String.class,                   // java type
             10,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             0,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -127,9 +129,9 @@ public class TestElement extends TestCase {
             null,                           // maximum value            
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             1,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -150,9 +152,9 @@ public class TestElement extends TestCase {
             "25000",                        // maximum value             //$NON-NLS-1$
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             2,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -173,9 +175,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             Long.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             3,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             true,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -196,9 +198,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             4,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             false,                          // case sensitive
             props,                // extension properties
@@ -219,9 +221,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             5,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -242,9 +244,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value            
             String.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             6,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -265,9 +267,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value            
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             0,                              // position
-            Element.NOT_SEARCHABLE,             // searchable
+            SearchType.Unsearchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -288,9 +290,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             1,                              // position
-            Element.SEARCHABLE_LIKE,             // searchable
+            SearchType.Like_Only,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -311,9 +313,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             2,                              // position
-            Element.SEARCHABLE_COMPARE,             // searchable
+            SearchType.All_Except_Like,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -334,9 +336,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             3,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -357,9 +359,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             0,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -380,9 +382,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value  
             String.class,                   // java type
             10,                             // length
-            Element.NOT_NULLABLE,               // nullable            
+            NullType.No_Nulls,               // nullable            
             1,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -403,9 +405,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value  
             String.class,                   // java type
             10,                             // length
-            Element.NULLABLE_UNKNOWN,               // nullable            
+            NullType.Unknown,               // nullable            
             2,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -426,9 +428,9 @@ public class TestElement extends TestCase {
             null,                        // maximum value 
             Integer.class,                   // java type
             0,                             // length
-            Element.NULLABLE,               // nullable            
+            NullType.Nullable,               // nullable            
             0,                              // position
-            Element.SEARCHABLE,             // searchable
+            SearchType.Searchable,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
             props,                // extension properties
@@ -441,7 +443,7 @@ public class TestElement extends TestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-        props = new Properties();
-        props.setProperty("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
+        props = new HashMap<String, String>();
+        props.put("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
 	}                     
 }

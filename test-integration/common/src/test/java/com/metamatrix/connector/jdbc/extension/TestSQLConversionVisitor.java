@@ -24,47 +24,44 @@ package com.metamatrix.connector.jdbc.extension;
 
 import static org.junit.Assert.*;
 
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.LanguageObject;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.language.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.language.TestInsertImpl;
 import org.teiid.dqp.internal.datamgr.language.TestProcedureImpl;
-import org.teiid.dqp.internal.datamgr.language.TestSelectImpl;
+import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
 /**
  */
 public class TestSQLConversionVisitor {
 
     public static final ExecutionContext context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
-                                                                            "Version",  //$NON-NLS-1$
-                                                                            "User",  //$NON-NLS-1$ 
+                                                                            1, 
                                                                             "Payload",  //$NON-NLS-1$
-                                                                            "ExecutionPayload",  //$NON-NLS-1$            
                                                                             "ConnectionID",   //$NON-NLS-1$
                                                                             "Connector", //$NON-NLS-1$
-                                                                            "RequestID", "PartID", "ExecCount");     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                                                            "RequestID",  //$NON-NLS-1$ 
+                                                                            "PartID",  //$NON-NLS-1$ 
+                                                                            "ExecCount");     //$NON-NLS-1$ 
     
     private static Translator TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws ConnectorException {
     	TRANSLATOR = new Translator();
-        Properties p = new Properties();
-    	p.setProperty(JDBCPropertyNames.TRIM_STRINGS, Boolean.TRUE.toString());
-    	TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(p, false));
+    	JDBCManagedConnectionFactory env = new JDBCManagedConnectionFactory();
+    	env.setTrimStrings(true);
+    	TRANSLATOR.initialize(env);
     }
     
     public String getTestVDB() {
@@ -76,31 +73,31 @@ public class TestSQLConversionVisitor {
     }
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
+        Translator trans = new Translator();
+        JDBCManagedConnectionFactory env = new JDBCManagedConnectionFactory();
+        if (usePreparedStatement) {
+        	env.setUseBindVariables(true);
+        }
         try {
-            Translator trans = new Translator();
-            Properties p = new Properties();
-            if (usePreparedStatement) {
-            	p.setProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.TRUE.toString());
-            }
-            trans.initialize(EnvironmentUtility.createEnvironment(p, false));
-
-            TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
+			trans.initialize(env);
+	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (ConnectorException e) {
 			throw new RuntimeException(e);
-		}    	
+		}
     }
+    
     public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
 
-    private String getStringWithContext(ILanguageObject obj) throws ConnectorException {
-        Properties props = new Properties();      
-        props.setProperty(JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, Boolean.TRUE.toString());
+    private String getStringWithContext(LanguageObject obj) throws ConnectorException {
+    	JDBCManagedConnectionFactory env = new JDBCManagedConnectionFactory();
+    	env.setUseCommentsInSourceQuery(true);
         Translator trans = new Translator();
-        trans.initialize(EnvironmentUtility.createEnvironment(props, false));
+        trans.initialize(env);
         SQLConversionVisitor visitor = trans.getSQLConversionVisitor();
         visitor.setExecutionContext(context);
         visitor.append(obj);
         return visitor.toString();
-    }    
+    }  
     
     @Test public void testSimple() {
         helpTestVisitor(getTestVDB(),
@@ -387,9 +384,9 @@ public class TestSQLConversionVisitor {
     
     @Test public void testVisitISelectWithComment() throws Exception {
         String expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
-        assertEquals(expected, getStringWithContext(TestSelectImpl.example(false)));
+        assertEquals(expected, getStringWithContext(TestQueryImpl.example(false)));
         expected = "SELECT /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ DISTINCT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
-        assertEquals(expected, getStringWithContext(TestSelectImpl.example(true)));
+        assertEquals(expected, getStringWithContext(TestQueryImpl.example(true)));
     }
     
     @Test public void testVisitIUpdateWithComment() throws Exception {

@@ -27,10 +27,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Parameter;
-import org.teiid.connector.metadata.runtime.Procedure;
+import org.teiid.connector.language.Call;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -66,7 +63,7 @@ public class TestProcedure extends TestCase {
             }
         }
         sql.append(")"); //$NON-NLS-1$
-        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString()); 
+        Call proc = (Call) transUtil.parseCommand(sql.toString()); 
         return proc.getMetadataObject();
     }
 
@@ -75,16 +72,16 @@ public class TestProcedure extends TestCase {
         assertEquals("Procedure name in source", proc.getNameInSource()); //$NON-NLS-1$
         
         String[] nameInSource = new String[] { "Param name in source", null, null, null }; //$NON-NLS-1$
-        int[] direction = new int[] { Parameter.IN, Parameter.OUT, Parameter.INOUT, Parameter.RETURN };
+        ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In, ProcedureParameter.Type.Out, ProcedureParameter.Type.InOut, ProcedureParameter.Type.ReturnValue };
         int[] index = new int[] { 1, 2, 3, 4 };
         Class[] type = new Class[] { Integer.class, Long.class, Short.class, java.sql.Date.class };        
         
-        List<Parameter> params = proc.getChildren();        
+        List<ProcedureParameter> params = proc.getParameters();        
         for (int i = 0; i < params.size(); i++) {
-        	Parameter param = params.get(i);
+        	ProcedureParameter param = params.get(i);
             assertEquals(nameInSource[i], param.getNameInSource());
-            assertEquals(direction[i], param.getDirection());
-            assertEquals(index[i], param.getIndex());
+            assertEquals(direction[i], param.getType());
+            assertEquals(index[i], param.getPosition());
             assertEquals(type[i], param.getJavaType());
         }
                 
@@ -95,31 +92,31 @@ public class TestProcedure extends TestCase {
         assertEquals(null, proc.getNameInSource());
         
         String[] nameInSource = new String[] { null, "Result set name in source" }; //$NON-NLS-1$
-        int[] direction = new int[] { Parameter.IN, Parameter.RESULT_SET };
+        ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In, ProcedureParameter.Type.ResultSet };
         int[] index = new int[] { 1, 2 };
         Class[] type = new Class[] { String.class, java.sql.ResultSet.class };        
         
-        List<Parameter> params = proc.getChildren();        
+        List<ProcedureParameter> params = proc.getParameters();        
         for (int i = 0; i < params.size(); i++) {
-        	Parameter param = params.get(i);
+        	ProcedureParameter param = params.get(i);
             assertEquals(nameInSource[i], param.getNameInSource());
-            assertEquals(direction[i], param.getDirection());
-            assertEquals(index[i], param.getIndex());
+            assertEquals(direction[i], param.getType());
+            assertEquals(index[i], param.getPosition());
             assertEquals(type[i], param.getJavaType());
         }
         
-        Parameter param = params.get(1);
-        List<Element> rsCols = param.getChildren();
+        ProcedureParameter param = params.get(1);
+        List<Column> rsCols = param.getResultSetColumns();
         // Check first column of result set
         assertEquals(2, rsCols.size());
-        Element elemID = rsCols.get(0);
+        Column elemID = rsCols.get(0);
         assertEquals("RSCol1", elemID.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol1", elemID.getFullName());         //$NON-NLS-1$
         assertEquals("Result set column name in source", elemID.getNameInSource());         //$NON-NLS-1$
         assertEquals(java.sql.Timestamp.class, elemID.getJavaType());
         assertEquals(0, elemID.getPosition());
         
-        Element elemID2 = rsCols.get(1);        
+        Column elemID2 = rsCols.get(1);        
         assertEquals("RSCol2", elemID2.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol2", elemID2.getFullName());         //$NON-NLS-1$
         assertEquals(null, elemID2.getNameInSource());         

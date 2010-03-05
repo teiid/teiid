@@ -26,12 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.LanguageUtil;
-import org.teiid.dqp.internal.datamgr.language.LanguageFactoryImpl;
-
 import junit.framework.TestCase;
+
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
@@ -48,17 +44,17 @@ public class TestLanguageUtil extends TestCase {
         super(name);
     }
 
-    private ICriteria convertCriteria(String criteriaStr) {
+    private Condition convertCriteria(String criteriaStr) {
         // Create ICriteria from criteriaStr
         TranslationUtility util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE " + criteriaStr; //$NON-NLS-1$
-        IQuery query = (IQuery) util.parseCommand(sql);
-        ICriteria criteria = query.getWhere();
+        Select query = (Select) util.parseCommand(sql);
+        Condition criteria = query.getWhere();
         return criteria;
     }
     
     public void helpTestSeparateByAnd(String criteriaStr, String[] expected) throws Exception {
-        ICriteria criteria = convertCriteria(criteriaStr);
+        Condition criteria = convertCriteria(criteriaStr);
 
         // Execute        
         List crits = LanguageUtil.separateCriteriaByAnd(criteria);
@@ -101,11 +97,11 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void helpTestCombineCriteria(String primaryStr, String additionalStr, String expected) throws Exception {
-        ICriteria primaryCrit = (primaryStr == null ? null : convertCriteria(primaryStr));
-        ICriteria additionalCrit = (additionalStr == null ? null : convertCriteria(additionalStr));
+        Condition primaryCrit = (primaryStr == null ? null : convertCriteria(primaryStr));
+        Condition additionalCrit = (additionalStr == null ? null : convertCriteria(additionalStr));
 
         // Execute        
-        ICriteria crit = LanguageUtil.combineCriteria(primaryCrit, additionalCrit, LanguageFactoryImpl.INSTANCE);
+        Condition crit = LanguageUtil.combineCriteria(primaryCrit, additionalCrit, LanguageFactory.INSTANCE);
         
         // Compare
         String critStr = (crit == null ? null : crit.toString());

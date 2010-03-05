@@ -44,7 +44,7 @@ public class TestStaticMetadataProvider extends TestCase {
     }
 
     private StaticMetadataProvider example1() throws Exception {
-    	MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null, "vdb", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$
         Map[] columnMetadata = new Map[] { 
             processor.getDefaultColumn("table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$ 
             processor.getDefaultColumn("table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$ 

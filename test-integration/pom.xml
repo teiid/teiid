@@ -62,6 +62,10 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client-jdbc</artifactId>
 			<type>test-jar</type>
 		</dependency>
 		<dependency>
@@ -122,10 +126,17 @@
 			<version>${derby.version}</version>
 
 		</dependency>
+		
+		<dependency>
+      		<groupId>javax.resource</groupId>
+      		<artifactId>connector-api</artifactId>
+      		<scope>provided</scope>
+    	</dependency>
+		
 	</dependencies>
 
   <modules>
     <module>common</module>
-    <module>db</module>
+    <!-- <module>db</module> -->
   </modules>
 </project>

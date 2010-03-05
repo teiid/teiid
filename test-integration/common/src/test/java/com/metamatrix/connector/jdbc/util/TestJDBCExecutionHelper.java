@@ -29,12 +29,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
-import org.teiid.dqp.internal.datamgr.language.QueryImpl;
-import org.teiid.dqp.internal.datamgr.language.SelectImpl;
-import org.teiid.dqp.internal.datamgr.language.SelectSymbolImpl;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Select;
 
 import com.metamatrix.common.types.DataTypeManager;
 
@@ -48,12 +45,11 @@ public class TestJDBCExecutionHelper extends TestCase{
     public void testGetColumnDataTypes(){
         Class[] expectedResults = new Class[2];
         List symbols = new ArrayList();
-        symbols.add(new SelectSymbolImpl("c1", new LiteralImpl("3", DataTypeManager.DefaultDataClasses.STRING)));  //$NON-NLS-1$//$NON-NLS-2$
+        symbols.add(new DerivedColumn("c1", new Literal("3", DataTypeManager.DefaultDataClasses.STRING)));  //$NON-NLS-1$//$NON-NLS-2$
         expectedResults[0] = DataTypeManager.DefaultDataClasses.STRING;
-        symbols.add(new SelectSymbolImpl("c2", new LiteralImpl(new Integer(5), DataTypeManager.DefaultDataClasses.INTEGER)));  //$NON-NLS-1$//$NON-NLS-2$
+        symbols.add(new DerivedColumn("c2", new Literal(new Integer(5), DataTypeManager.DefaultDataClasses.INTEGER)));  //$NON-NLS-1$//$NON-NLS-2$
         expectedResults[1] = DataTypeManager.DefaultDataClasses.INTEGER;
-        ISelect select = new SelectImpl(symbols, false);        
-        IQuery query = new QueryImpl(select, null, null, null, null, null);
+        Select query = new Select(symbols, false, null, null, null, null, null);
         Class[] results = query.getColumnTypes();  
         assertEquals( results[0], expectedResults[0]);
         assertEquals( results[1], expectedResults[1]);     

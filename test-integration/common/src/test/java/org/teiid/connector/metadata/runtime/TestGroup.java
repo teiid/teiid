@@ -22,13 +22,13 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.Group;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -57,17 +57,17 @@ public class TestGroup extends TestCase {
 
     // ################ TEST GROUP METADATAID ######################
     
-    public Group getGroup(String groupName, TranslationUtility transUtil) throws Exception {
-        IQuery query = (IQuery) transUtil.parseCommand("SELECT 1 FROM " + groupName); //$NON-NLS-1$
-        IGroup group = (IGroup) query.getFrom().getItems().get(0);
+    public Table getGroup(String groupName, TranslationUtility transUtil) throws Exception {
+        Select query = (Select) transUtil.parseCommand("SELECT 1 FROM " + groupName); //$NON-NLS-1$
+        NamedTable group = (NamedTable) query.getFrom().get(0);
         return group.getMetadataObject();
     }
 
     public void helpTestGroup(String fullGroupName, String nameInSource, Properties expectedProps, TranslationUtility transUtil) throws Exception {
-        Group group = getGroup(fullGroupName, transUtil);     
+        Table group = getGroup(fullGroupName, transUtil);     
         assertEquals("table name in source", group.getNameInSource()); //$NON-NLS-1$
         
-        Properties extProps = group.getProperties();
+        Map<String, String> extProps = group.getProperties();
         assertEquals(expectedProps, extProps);
     }
     

@@ -27,9 +27,10 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Argument.Direction;
+import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -58,7 +59,7 @@ public class TestParams extends TestCase {
         return new TranslationUtility(vdbName);        
     }
 
-    public IProcedure getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
+    public Call getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
         StringBuffer sql = new StringBuffer("EXEC " + procName + "("); //$NON-NLS-1$ //$NON-NLS-2$
         if(inputArgs > 0) {
             sql.append("null"); //$NON-NLS-1$
@@ -67,60 +68,58 @@ public class TestParams extends TestCase {
             }
         }
         sql.append(")"); //$NON-NLS-1$
-        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString());
+        Call proc = (Call) transUtil.parseCommand(sql.toString());
         return proc;
     }
 
-    private void checkParameter(IParameter param,
+    private void checkParameter(Argument param,
                                 String name,
                                 String fullName,
                                 int index,
                                 Direction direction,
                                 String nameInSource,
                                 String defaultValue,
-                                int nullability,
+                                NullType nullability,
                                 Class javaType,
                                 int length,
                                 int precision,
                                 int scale,
                                 TranslationUtility transUtil, String modeledType, String modeledBaseType, String modeledPrimitiveType) throws Exception {
-        Parameter p = param.getMetadataObject();
+        ProcedureParameter p = param.getMetadataObject();
         assertEquals(name, p.getName());
         assertEquals(fullName, p.getFullName());
-        assertEquals(index, param.getIndex());
         assertEquals(direction, param.getDirection());
         assertEquals(nameInSource, p.getNameInSource());
         assertEquals(defaultValue, p.getDefaultValue());
-        assertEquals(nullability, p.getNullability());
+        assertEquals(nullability, p.getNullType());
         assertEquals(javaType, p.getJavaType());
         assertEquals(javaType, param.getType());
         assertEquals(length, p.getLength());
         assertEquals(precision, p.getPrecision());
         assertEquals(scale, p.getScale());
-        assertEquals(null, param.getValue());
-        assertEquals(false, param.getValueSpecified());        
+        assertEquals(null, param.getArgumentValue());
 
         //System.out.println("\n" + p.getModeledType() + "\n" + p.getModeledBaseType() + "\n" + p.getModeledPrimitiveType());
         
-        assertEquals(modeledType, p.getModeledType());
-        assertEquals(modeledBaseType, p.getModeledBaseType());
-        assertEquals(modeledPrimitiveType, p.getModeledPrimitiveType());
+        assertEquals(modeledType, p.getDatatypeID());
+        assertEquals(modeledBaseType, p.getBaseTypeID());
+        assertEquals(modeledPrimitiveType, p.getPrimitiveTypeID());
         
     }
 
     public void testProcedureWithResultSet() throws Exception {
-        IProcedure proc = getProcedure("sptest.proc1", 4, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
-        List params = proc.getParameters();
+        Call proc = getProcedure("sptest.proc1", 4, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
+        List params = proc.getArguments();
         assertEquals(4, params.size());
         
-        checkParameter((IParameter)params.get(0),
+        checkParameter((Argument)params.get(0),
                        "in1", //$NON-NLS-1$
                        "sptest.proc1.in1", //$NON-NLS-1$
                        1,
                        Direction.IN,
                        null,
                        "sample default", //$NON-NLS-1$
-                       TypeModel.NOT_NULLABLE,
+                       NullType.No_Nulls,
                        String.class,
                        20,
                        10,
@@ -130,14 +129,14 @@ public class TestParams extends TestCase {
                        "http://www.w3.org/2001/XMLSchema#anySimpleType",  //$NON-NLS-1$
                        "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
 
-        checkParameter((IParameter)params.get(1),
+        checkParameter((Argument)params.get(1),
                        "in2", //$NON-NLS-1$
                        "sptest.proc1.in2", //$NON-NLS-1$
                        2,
                        Direction.IN,
                        null,
                        "15", //$NON-NLS-1$
-                       TypeModel.NULLABLE,
+                       NullType.Nullable,
                        Integer.class,
                        0,
                        10,
@@ -147,14 +146,14 @@ public class TestParams extends TestCase {
                        "http://www.w3.org/2001/XMLSchema#long",  //$NON-NLS-1$
                        "http://www.w3.org/2001/XMLSchema#decimal"); //$NON-NLS-1$
 
-        checkParameter((IParameter)params.get(2),
+        checkParameter((Argument)params.get(2),
                        "in3", //$NON-NLS-1$
                        "sptest.proc1.in3", //$NON-NLS-1$
                        3,
                        Direction.IN,
                        null,
                        "2003-04-23 09:30:00", //$NON-NLS-1$
-                       TypeModel.NULLABLE_UNKNOWN,
+                       NullType.Unknown,
                        Timestamp.class,
                        22,
                        10,
@@ -164,14 +163,14 @@ public class TestParams extends TestCase {
                        "http://www.w3.org/2001/XMLSchema#dateTime",  //$NON-NLS-1$
                        "http://www.w3.org/2001/XMLSchema#dateTime"); //$NON-NLS-1$
 
-        checkParameter((IParameter)params.get(3),
+        checkParameter((Argument)params.get(3),
                        "inOptional", //$NON-NLS-1$
                        "sptest.proc1.inOptional", //$NON-NLS-1$
                        4,
                        Direction.IN,
                        "optionalName", //$NON-NLS-1$
                        null,
-                       TypeModel.NULLABLE,
+                       NullType.Nullable,
                        String.class,
                        0,
                        0,

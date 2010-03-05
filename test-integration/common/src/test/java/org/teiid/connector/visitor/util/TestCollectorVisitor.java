@@ -22,15 +22,24 @@
 
 package org.teiid.connector.visitor.util;
 
-import java.util.*;
-
-import org.teiid.connector.language.*;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.visitor.util.CollectorVisitor;
-import org.teiid.dqp.internal.datamgr.language.*;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.Comparison.Operator;
 
 /**
  */
@@ -60,42 +69,40 @@ public class TestCollectorVisitor extends TestCase {
         return strings;
     }
     
-    public void helpTestCollection(ILanguageObject obj, Class type, String[] objects) {
+    public void helpTestCollection(LanguageObject obj, Class type, String[] objects) {
         Set actualObjects = getStringSet(CollectorVisitor.collectObjects(type, obj));
         Set expectedObjects = new HashSet(Arrays.asList(objects));
         
         assertEquals("Did not get expected objects", expectedObjects, actualObjects); //$NON-NLS-1$
     }
  
-    public ILanguageObject example1() {
-        GroupImpl g = new GroupImpl("g1", null, null); //$NON-NLS-1$
+    public LanguageObject example1() {
+        NamedTable g = new NamedTable("g1", null, null); //$NON-NLS-1$
         List symbols = new ArrayList();        
-        symbols.add(new ElementImpl(g, "e1", null, String.class)); //$NON-NLS-1$
-        IFunction function = new FunctionImpl("length", Arrays.asList(new ElementImpl(g, "e2", null, String.class)), Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
+        symbols.add(new ColumnReference(g, "e1", null, String.class)); //$NON-NLS-1$
+        Function function = new Function("length", Arrays.asList(new ColumnReference(g, "e2", null, String.class)), Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(function);
-        SelectImpl s = new SelectImpl(symbols, false);
         List groups = new ArrayList();
         groups.add(g);
-        FromImpl f = new FromImpl(groups);
-        QueryImpl q = new QueryImpl(s, f, null, null, null, null);
+        Select q = new Select(symbols, false, groups, null, null, null, null);
              
         return q;   
     }
  
     public void testCollection1() {
-        helpTestCollection(example1(), IElement.class, new String[] {"g1.e1", "g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestCollection(example1(), ColumnReference.class, new String[] {"g1.e1", "g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testCollection2() {
-        helpTestCollection(example1(), IFunction.class, new String[] {"length(g1.e2)" }); //$NON-NLS-1$
+        helpTestCollection(example1(), Function.class, new String[] {"length(g1.e2)" }); //$NON-NLS-1$
     }
 
     public void testCollection3() {
-        helpTestCollection(example1(), IExpression.class, new String[] {"g1.e1", "g1.e2", "length(g1.e2)" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCollection(example1(), Expression.class, new String[] {"g1.e1", "g1.e2", "length(g1.e2)" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
 
-    public void helpTestElementsUsedByGroups(ILanguageObject obj, String[] elements, String[] groups) {
+    public void helpTestElementsUsedByGroups(LanguageObject obj, String[] elements, String[] groups) {
         Set actualElements = getStringSet(CollectorVisitor.collectElements(obj));
         Set actualGroups = getStringSet(CollectorVisitor.collectGroupsUsedByElements(obj));
         
@@ -107,17 +114,17 @@ public class TestCollectorVisitor extends TestCase {
     }
     
     public void test1() {
-        GroupImpl g1 = new GroupImpl("g1", null, null); //$NON-NLS-1$
-        ElementImpl e1 = new ElementImpl(g1, "e1", null, String.class); //$NON-NLS-1$
+        NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
+        ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
         
         helpTestElementsUsedByGroups(e1, new String[] {"g1.e1"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test2() {
-        GroupImpl g1 = new GroupImpl("g1", null, null); //$NON-NLS-1$
-        ElementImpl e1 = new ElementImpl(g1, "e1", null, String.class); //$NON-NLS-1$
-        ElementImpl e2 = new ElementImpl(g1, "e2", null, String.class); //$NON-NLS-1$
-        CompareCriteriaImpl cc = new CompareCriteriaImpl(e1, e2, Operator.EQ);
+        NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
+        ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
+        ColumnReference e2 = new ColumnReference(g1, "e2", null, String.class); //$NON-NLS-1$
+        Comparison cc = new Comparison(e1, e2, Operator.EQ);
         
         helpTestElementsUsedByGroups(cc, new String[] {"g1.e1", "g1.e2"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }

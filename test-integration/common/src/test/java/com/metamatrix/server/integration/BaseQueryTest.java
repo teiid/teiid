@@ -22,7 +22,6 @@
 package com.metamatrix.server.integration;
 
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -53,10 +52,6 @@ public abstract class BaseQueryTest extends TestCase {
         return VDBMetadataFactory.getVDBMetadata(vdbFile);
     }
         
-    public static QueryMetadataInterface createMetadata(String vdbFile, String systemVDBFile) {        
-    	return VDBMetadataFactory.getVDBMetadata(new String[] {vdbFile, systemVDBFile});
-    }
-            
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
     	CommandContext context = createCommandContext();
     	context.setProcessDebug(debug);
@@ -77,10 +72,7 @@ public abstract class BaseQueryTest extends TestCase {
     }
 
     protected CommandContext createCommandContext() {
-        Properties props = new Properties();
-        //props.setProperty(ContextProperties.SOAP_HOST, "my.host.com"); //$NON-NLS-1$
-        CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        
+        CommandContext context = new CommandContext("0", "test", "user", "myvdb", 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
         return context;
     }       
     

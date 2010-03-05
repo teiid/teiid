@@ -31,26 +31,23 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.dqp.internal.datamgr.language.AggregateImpl;
-import org.teiid.dqp.internal.datamgr.language.ElementImpl;
-import org.teiid.dqp.internal.datamgr.language.FunctionImpl;
-import org.teiid.dqp.internal.datamgr.language.GroupImpl;
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
 import org.teiid.dqp.internal.datamgr.language.TestAggregateImpl;
 import org.teiid.dqp.internal.datamgr.language.TestCompareCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.language.TestElementImpl;
 import org.teiid.dqp.internal.datamgr.language.TestExistsCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.language.TestFromImpl;
 import org.teiid.dqp.internal.datamgr.language.TestFunctionImpl;
 import org.teiid.dqp.internal.datamgr.language.TestGroupByImpl;
 import org.teiid.dqp.internal.datamgr.language.TestGroupImpl;
@@ -66,7 +63,6 @@ import org.teiid.dqp.internal.datamgr.language.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.language.TestScalarSubqueryImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSearchedCaseExpressionImpl;
-import org.teiid.dqp.internal.datamgr.language.TestSelectImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSelectSymbolImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSetQueryImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSubqueryCompareCriteriaImpl;
@@ -78,7 +74,6 @@ import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -90,11 +85,11 @@ public class TestSQLStringVisitor  {
 
     public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
         
-    private String getString(ILanguageObject obj) {
+    private String getString(LanguageObject obj) {
         return SQLStringVisitor.getSQLString(obj);
     }
     
-    private String getString(ILanguageObject obj, RuntimeMetadata metadata) {
+    private String getString(LanguageObject obj, RuntimeMetadata metadata) {
         return SQLStringVisitor.getSQLString(obj);
     }
         
@@ -124,12 +119,12 @@ public class TestSQLStringVisitor  {
      */
     @Test public void testVisitIAggregate() throws Exception {
         String expected = "COUNT(42)"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestAggregateImpl.example("COUNT", ReservedWords.COUNT, false, 42))); //$NON-NLS-1$
+        assertEquals(expected, getString(TestAggregateImpl.example("COUNT", SQLReservedWords.COUNT, false, 42))); //$NON-NLS-1$
     }
 
     @Test public void testVisitIAggregateDistinct() throws Exception {
         String expected = "COUNT(DISTINCT *)"; //$NON-NLS-1$
-        AggregateImpl impl = new AggregateImpl("COUNT", true, null, Integer.class); //$NON-NLS-1$
+        AggregateFunction impl = new AggregateFunction("COUNT", true, null, Integer.class); //$NON-NLS-1$
         assertEquals(expected, getString(impl)); 
     }
 
@@ -192,14 +187,6 @@ public class TestSQLStringVisitor  {
     }
 
     /*
-     * Test for void visit(IFrom)
-     */
-    @Test public void testVisitIFrom() throws Exception {
-        String expected = "FROM g1, g2 AS myAlias, g3, g4"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestFromImpl.example()));
-    }
-
-    /*
      * Test for void visit(IFunction)
      */
     @Test public void testVisitIFunction() throws Exception {
@@ -213,12 +200,12 @@ public class TestSQLStringVisitor  {
         FakeMetadataFacade facade = new FakeMetadataFacade(exampleMetadataStore());
         RuntimeMetadataImpl metadata = exampleRuntimeMetadata(facade);
 
-        IGroup g = new GroupImpl("SmallA", null, metadata.getGroup("BQT1.SmallA")); //$NON-NLS-1$
-        IElement e = new ElementImpl(g, "DoubleNum", metadata.getElement("DoubleNum"), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
-        List<? extends IExpression> params = Arrays.asList(e, new LiteralImpl("integer", String.class)); //$NON-NLS-1$
+        NamedTable g = new NamedTable("SmallA", null, metadata.getGroup("BQT1.SmallA")); //$NON-NLS-1$
+        ColumnReference e = new ColumnReference(g, "DoubleNum", metadata.getElement("DoubleNum"), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
+        List<? extends Expression> params = Arrays.asList(e, new Literal("integer", String.class)); //$NON-NLS-1$
         
         final String expected = "convert(SmallishA.doublishNum, integer)"; //$NON-NLS-1$
-        IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
+        Function test = new Function("convert", params, Integer.class); //$NON-NLS-1$
         
         assertEquals(expected, getString(test, metadata  )); 
     }
@@ -226,8 +213,8 @@ public class TestSQLStringVisitor  {
     @Test public void testVisitConvertFunctionOracleStyle() throws Exception {
         String expected = "convert(columnA, integer)"; //$NON-NLS-1$
         
-        List<? extends IExpression> params = Arrays.asList(new ElementImpl(null, "columnA", null, String.class), new LiteralImpl("integer", String.class));
-        IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
+        List<? extends Expression> params = Arrays.asList(new ColumnReference(null, "columnA", null, String.class), new Literal("integer", String.class));
+        Function test = new Function("convert", params, Integer.class); //$NON-NLS-1$
         
         assertEquals(expected, getString(test)); 
     }
@@ -355,7 +342,7 @@ public class TestSQLStringVisitor  {
      */
     @Test public void testVisitIQuery() throws Exception {
         String expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestQueryImpl.example()));
+        assertEquals(expected, getString(TestQueryImpl.example(true)));
     }
 
     /*
@@ -379,9 +366,9 @@ public class TestSQLStringVisitor  {
      */
     @Test public void testVisitISelect() throws Exception {
         String expected = "SELECT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestSelectImpl.example(false)));
+        assertEquals(expected, getString(TestQueryImpl.example(false)));
         expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestSelectImpl.example(true)));
+        assertEquals(expected, getString(TestQueryImpl.example(true)));
     }
 
     
@@ -444,16 +431,16 @@ public class TestSQLStringVisitor  {
     @Test public void testTimestampAddFunction() throws Exception {
     	String sql = "select timestampadd(" +SQLReservedWords.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
     	assertEquals("SELECT timestampadd(SQL_TSI_DAY, 2, SmallA.TimestampValue) FROM SmallA", command.toString()); //$NON-NLS-1$
     }
     
     @Test public void testInsertWithQuery() throws Exception {
     	String sql = "insert into pm1.g1 values (null, null, null, null)"; //$NON-NLS-1$
 
-    	IInsert insert = (IInsert)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand(sql); 
+    	Insert insert = (Insert)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand(sql); 
     	
-    	IQuery command = (IQuery)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand("select * from pm1.g2"); //$NON-NLS-1$
+    	Select command = (Select)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand("select * from pm1.g2"); //$NON-NLS-1$
     	insert.setValueSource(command);
     	assertEquals("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", insert.toString()); //$NON-NLS-1$
     }
@@ -461,21 +448,21 @@ public class TestSQLStringVisitor  {
     @Test public void testUnrelatedOrderBy() throws Exception {
     	String sql = "select intkey from bqt1.smalla order by stringkey"; //$NON-NLS-1$ 
     	
-    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", command.toString()); //$NON-NLS-1$
     }
     
     @Test public void testOrderByDerivedColumn() throws Exception {
     	String sql = "select intkey as x from bqt1.smalla order by intkey"; //$NON-NLS-1$ 
     	
-    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
     }
     
     @Test public void testOrderByAlias() throws Exception {
     	String sql = "select intkey as x from bqt1.smalla order by x"; //$NON-NLS-1$ 
     	
-    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
     }
 

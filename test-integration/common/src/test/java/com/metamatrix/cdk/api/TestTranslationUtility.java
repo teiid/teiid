@@ -24,10 +24,10 @@ package com.metamatrix.cdk.api;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -45,36 +45,32 @@ public class TestTranslationUtility extends TestCase {
         return UnitTestUtil.getTestDataPath() + "/partssupplier/PartsSupplier.vdb"; //$NON-NLS-1$
     }
     
-    public void helpTestTranslate(String vdbFile, String sql, String expectedOutput) {
+    public void helpTestTranslate(String sql, String expectedOutput) {
         TranslationUtility util = new TranslationUtility(getTestVDB());
-        ICommand query = util.parseCommand(sql);         
+        Command query = util.parseCommand(sql);         
         assertEquals(expectedOutput, query.toString());        
     }
 
     public void testQuery1() {
         helpTestTranslate(
-            getTestVDB(), 
             "select * from partssupplier.parts", //$NON-NLS-1$
             "SELECT PARTS.PART_ID, PARTS.PART_NAME, PARTS.PART_COLOR, PARTS.PART_WEIGHT FROM PARTS"); //$NON-NLS-1$
     }
         
     public void testInsert1() {
         helpTestTranslate(
-            getTestVDB(), 
-            "insert into partssupplier.parts (part_name, part_color) values ('P100', 'Red')", //$NON-NLS-1$
+            "insert into partssupplier.parts (part_name, part_color) values ('P100', 'Red')", //$NON-NLS-1$ 
             "INSERT INTO PARTS (PART_NAME, PART_COLOR) VALUES ('P100', 'Red')"); //$NON-NLS-1$
     }
     
     public void testUpdate1() {
         helpTestTranslate(
-            getTestVDB(), 
             "update partssupplier.parts set part_name = 'P100' where part_color = 'Red'", //$NON-NLS-1$
             "UPDATE PARTS SET PART_NAME = 'P100' WHERE PARTS.PART_COLOR = 'Red'"); //$NON-NLS-1$
     }
 
     public void testDelete1() {
         helpTestTranslate(
-            getTestVDB(), 
             "delete from partssupplier.parts where part_color = 'Red'", //$NON-NLS-1$
             "DELETE FROM PARTS WHERE PARTS.PART_COLOR = 'Red'"); //$NON-NLS-1$
     }
@@ -83,9 +79,9 @@ public class TestTranslationUtility extends TestCase {
         TranslationUtility util = new TranslationUtility(getTestVDB());
         
         // Translate command to get some ids
-        IQuery query = (IQuery) util.parseCommand("select * from partssupplier.parts"); //$NON-NLS-1$
-        IGroup group = (IGroup) query.getFrom().getItems().get(0);
-        MetadataObject mid = group.getMetadataObject();
+        Select query = (Select) util.parseCommand("select * from partssupplier.parts"); //$NON-NLS-1$
+        NamedTable group = (NamedTable) query.getFrom().get(0);
+        AbstractMetadataRecord mid = group.getMetadataObject();
         assertEquals("PartsSupplier.PARTSSUPPLIER.PARTS", mid.getFullName()); //$NON-NLS-1$
         
         // Use RMD to get stuff
