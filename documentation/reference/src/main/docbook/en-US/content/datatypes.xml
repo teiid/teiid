@@ -28,9 +28,9 @@
         </thead>
         <tbody>
           <row>
-            <entry>string</entry>
+            <entry>string or varchar</entry>
             <entry>variable length character string with a
-              maximum length of 4000</entry>
+              maximum length of 4000.  Note that the length cannot be explicitly set with the type literal, e.g. varchar(100).</entry>
             <entry>java.lang.String</entry>
             <entry>VARCHAR</entry>
             <entry>VARCHAR</entry>
@@ -51,14 +51,14 @@
             <entry>SMALLINT</entry>
           </row>
           <row>
-            <entry>byte</entry>
+            <entry>byte or tinyint</entry>
             <entry>numeric, integral type, signed 8-bit</entry>
             <entry>java.lang.Byte</entry>
             <entry>TINYINT</entry>
             <entry>SMALLINT</entry>
           </row>
           <row>
-            <entry>short</entry>
+            <entry>short or smallint</entry>
             <entry>numeric, integral type, signed 16-bit</entry>
             <entry>java.lang.Short</entry>
             <entry>SMALLINT</entry>
@@ -72,7 +72,7 @@
             <entry>INTEGER</entry>
           </row>
           <row>
-            <entry>long</entry>
+            <entry>long or bigint</entry>
             <entry>numeric, integral type, signed 64-bit</entry>
             <entry>java.lang.Long</entry>
             <entry>BIGINT</entry>
@@ -87,7 +87,7 @@
             <entry>NUMERIC</entry>
           </row>
           <row>
-            <entry>float</entry>
+            <entry>float or real</entry>
             <entry>numeric, floating point type, 32-bit IEEE 754
               floating-point numbers</entry>
             <entry>java.lang.Float</entry>
@@ -103,9 +103,9 @@
             <entry>DOUBLE</entry>
           </row>
           <row>
-            <entry>bigdecimal</entry>
+            <entry>bigdecimal or decimal</entry>
             <entry>numeric, floating point type, arbitrary
-              precision of up to 1000 digits</entry>
+              precision of up to 1000 digits.  Note that the precision and scale cannot be explicitly set with the type literal, e.g. decimal(38, 2).</entry>
             <entry>java.math.BigDecimal</entry>
             <entry>NUMERIC</entry>
             <entry>NUMERIC</entry>
