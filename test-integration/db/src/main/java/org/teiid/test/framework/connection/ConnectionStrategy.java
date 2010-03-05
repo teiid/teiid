@@ -9,14 +9,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.sql.XAConnection;
 
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.test.framework.ConfigPropertyLoader;
@@ -109,58 +110,56 @@ public abstract class ConnectionStrategy {
   
     
    
-    void configure() throws QueryTestFailedException  {
-    	
-	if (this.isDataStoreDisabled()) {
-	    return;
-	}
+	void configure() throws QueryTestFailedException {
 
-        try {
-        	
-        	// the the driver strategy is going to be used to connection directly to the connector binding
-        	// source, then no administration can be done
-  	Admin admin = null;
- 
-    	java.sql.Connection conn = getConnection();
-    	
-	if ( conn instanceof com.metamatrix.jdbc.MMConnection) {
-	    com.metamatrix.jdbc.MMConnection c = (com.metamatrix.jdbc.MMConnection) conn;
-	    admin = (Admin)c.getAdminAPI();
-	} else if (conn instanceof com.metamatrix.jdbc.api.Connection) {
-	    com.metamatrix.jdbc.api.Connection c = (com.metamatrix.jdbc.api.Connection) conn;
-	    admin = (Admin)c.getAdminAPI();
-	} else {
-	    	TestLogger.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
-		return;
-	}
+		if (this.isDataStoreDisabled()) {
+			return;
+		}
 
-            setupVDBConnectorBindings(admin);            
-            
- //          admin.restart();
-            
-            int sleep = 5;
- 
-            TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
-            Thread.sleep(1000*sleep);
-            TestLogger.log("done."); //$NON-NLS-1$
+		try {
+			// the the driver strategy is going to be used to connection
+			// directly to the connector binding
+			// source, then no administration can be done
+			Admin admin = AdminFactory.getInstance().createAdmin(this.env.getProperty("admin.user"), this.env.getProperty("admin.password").toCharArray(), this.env.getProperty("admin.url"));
 
-        } catch (Throwable e) {
-        	e.printStackTrace();
+			java.sql.Connection conn = getConnection();
 
-            throw new TransactionRuntimeException(e.getMessage());
-        }  finally {
-        	// need to close and flush the connection after restarting
-      //  	this.shutdown();
-           	
-        }
-    }    
+			if (conn instanceof com.metamatrix.jdbc.MMConnection) {
+				com.metamatrix.jdbc.MMConnection c = (com.metamatrix.jdbc.MMConnection) conn;
+			} else if (conn instanceof com.metamatrix.jdbc.api.Connection) {
+				com.metamatrix.jdbc.api.Connection c = (com.metamatrix.jdbc.api.Connection) conn;
+			} else {
+				TestLogger.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
+				return;
+			}
+
+			setupVDBConnectorBindings(admin);
+
+			// admin.restart();
+
+			int sleep = 5;
+
+			TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
+			Thread.sleep(1000 * sleep);
+			TestLogger.log("done."); //$NON-NLS-1$
+
+		} catch (Throwable e) {
+			e.printStackTrace();
+
+			throw new TransactionRuntimeException(e.getMessage());
+		} finally {
+			// need to close and flush the connection after restarting
+			// this.shutdown();
+
+		}
+	}   
     
     protected void setupVDBConnectorBindings(Admin api) throws QueryTestFailedException {
          
     	try {
     	    
-    	    VDB vdb = null;
-	    Collection<VDB> vdbs = api.getVDBs("*");
+    	VDB vdb = null;
+	    Set<VDB> vdbs = api.getVDBs();
 	    if (vdbs == null || vdbs.isEmpty()) {
 		throw new QueryTestFailedException(
 			"AdminApi.GetVDBS returned no vdbs available");
@@ -183,11 +182,12 @@ public abstract class ConnectionStrategy {
 				+ url.getVDBName());
 	    }
 	    	    
-	    Iterator<Model> modelIt = vdb.getModels().iterator();
+	    List<Model> models = vdb.getModels();
+	    Iterator<Model> modelIt = models.iterator();
 	    while (modelIt.hasNext()) {
 		Model m = modelIt.next();
 
-		if (!m.isPhysical())
+		if (!m.isSource())
 		    continue;
 
 		// get the mapping, if defined
@@ -198,24 +198,17 @@ public abstract class ConnectionStrategy {
 		    useName = mappedName;
 		}
 
-		org.teiid.test.framework.datasource.DataSource ds = this.dsFactory
-			.getDatasource(useName, m.getName());
+		org.teiid.test.framework.datasource.DataSource ds = this.dsFactory.getDatasource(useName, m.getName());
 
 		if (ds != null) {
 
 		    TestLogger.logInfo("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
 
-		    AdminOptions ao = new AdminOptions(
-			    AdminOptions.OnConflict.OVERWRITE);
-		    ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
+		    api.addConnectorBinding(ds.getName(),ds.getConnectorType(), ds.getProperties());
 
-		    api.addConnectorBinding(ds.getName(),
-			    ds.getConnectorType(), ds.getProperties(), ao);
+		    api.assignBindingToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName());
 
-		    api.assignBindingToModel(ds.getName(), vdb.getName(), vdb
-			    .getVDBVersion(), m.getName());
-
-		    api.startConnectorBinding(ds.getName());
+		    api.startConnectorBinding(api.getConnectorBinding(ds.getName()));
 		} else {
 		    throw new QueryTestFailedException(
 			    "Error: Unable to create binding to map to model : "

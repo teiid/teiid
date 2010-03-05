@@ -23,9 +23,9 @@ public class ConnectionStrategyFactory {
     
 	    public static ConnectionStrategy createConnectionStrategy()  {
 
-		ConfigPropertyLoader configLoader = ConfigPropertyLoader.getInstance();
+	    	ConfigPropertyLoader configLoader = ConfigPropertyLoader.getInstance();
 		
-		ConnectionStrategy strategy = null;
+			ConnectionStrategy strategy = null;
 	     	Properties props = configLoader.getProperties();
            
 	        String type = props.getProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);

@@ -22,7 +22,6 @@
 
 package org.teiid.adminapi;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ import java.util.List;
  * <br>A VDB has a name and a version.</br>
  * 
  * <p>The identifier pattern for a VDB is <CODE>"name<{@link #DELIMITER_CHAR}>version"</CODE>, 
- * where the name of the VDB and its version represent its unique identifier in the MetaMatrix system.
+ * where the name of the VDB and its version represent its unique identifier in the Teiid system.
  * There are no spaces allowed in a given VDB name, and VDB name must start with a letter. 
  * A version number is automatically assigned to a VDB when it is deployed into 
  * a system. A VDB is uniquely identified by <CODE>"name<{@link #DELIMITER_CHAR}>version"</CODE>. 
@@ -52,9 +51,9 @@ public interface VDB extends AdminObject {
 
 
     /**
-     * @return Collection of MMModels
+     * @return Collection of  Teiid Models
      */
-    public Collection<? extends Model> getModels();
+    public List<Model> getModels();
 
     /**
      * @return the status

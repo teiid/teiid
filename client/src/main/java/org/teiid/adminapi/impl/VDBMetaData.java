@@ -147,9 +147,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.fileUrl = url;
 	}
 
+	@Override
 	@ManagementProperty(description="Models in a VDB", managed=true)
-	public List<ModelMetaData> getModels(){
-		return new ArrayList<ModelMetaData>(this.models.getMap().values());
+	public List<Model> getModels(){
+		return new ArrayList<Model>(this.models.getMap().values());
 	}
 	
 	public void addModel(ModelMetaData m) {

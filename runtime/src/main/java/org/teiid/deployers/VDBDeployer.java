@@ -41,6 +41,7 @@ import org.jboss.logging.Logger;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.virtual.VirtualFile;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -94,11 +95,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
 			ArrayList<MetadataStore> stores = new ArrayList<MetadataStore>();
-			for (ModelMetaData model:deployment.getModels()) {
+			for (Model model:deployment.getModels()) {
 				if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
 					continue;
 				}
-				stores.add(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, model));
+				stores.add(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, (ModelMetaData)model));
 			}
 			store = new CompositeMetadataStore(stores);
 			unit.addAttachment(CompositeMetadataStore.class, store);			
@@ -143,7 +144,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 
 	private boolean validateSources(VDBMetaData deployment) {
 		boolean valid = true;
-		for(ModelMetaData model:deployment.getModels()) {
+		for(Model m:deployment.getModels()) {
+			ModelMetaData model = (ModelMetaData)m;
 			for (String sourceName:model.getSourceNames()) {
 				String jndiName = model.getSourceJndiName(sourceName);
 				try {
@@ -191,7 +193,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		ManagedObject vdbMO = managedObjects.get(VDBMetaData.class.getName());
 		if (vdbMO != null) {
 			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
-			for (ModelMetaData m : vdb.getModels()) {
+			for (Model m : vdb.getModels()) {
 				if (m.getName().equals(CoreConstants.SYSTEM_MODEL)) {
 					continue;
 				}

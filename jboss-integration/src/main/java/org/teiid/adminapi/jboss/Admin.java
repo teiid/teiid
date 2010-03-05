@@ -63,6 +63,7 @@ import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
@@ -89,7 +90,6 @@ public class Admin extends TeiidAdmin {
 	private static final String XA_DATA_SOURCE_TEMPLATE = "XADataSourceTemplate";
 	private static final long serialVersionUID = 7081309086056911304L;
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");
-	private static ComponentType MODELTYPE = new ComponentType("teiid", "model");
 	private static ComponentType NOTXTYPE = new ComponentType("ConnectionFactory", "NoTx");
 	private static ComponentType TXTYPE = new ComponentType("ConnectionFactory", "Tx");
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");
@@ -340,10 +340,10 @@ public class Admin extends TeiidAdmin {
 		HashMap<String, ConnectorBinding> bindingMap = new HashMap<String, ConnectorBinding>();
 		VDBMetaData vdb = (VDBMetaData) getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
-			for (ModelMetaData model:vdb.getModels()) {
+			for (Model model:vdb.getModels()) {
 				if (model.isSource()) {
 					for (String sourceName : model.getSourceNames()) {
-						ConnectorBinding binding = getConnectorBinding(model.getSourceJndiName(sourceName));
+						ConnectorBinding binding = getConnectorBinding(((ModelMetaData)model).getSourceJndiName(sourceName));
 						if (binding != null) {
 							bindingMap.put(sourceName, binding);
 						}
