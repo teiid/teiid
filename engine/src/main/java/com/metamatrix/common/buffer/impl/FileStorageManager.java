@@ -29,14 +29,12 @@ import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.util.LogConstants;
@@ -47,7 +45,7 @@ import com.metamatrix.query.execution.QueryExecPlugin;
  */
 public class FileStorageManager implements StorageManager {
 	
-    private static final int DEFAULT_MAX_OPEN_FILES = 256;
+    private static final int DEFAULT_MAX_OPEN_FILES = 128;
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
 	private class FileInfo {
@@ -176,14 +174,9 @@ public class FileStorageManager implements StorageManager {
     });
     
     /**
-     * Initialize with properties
-     * @param props Initialization properties
-     * @see com.metamatrix.common.buffer.BufferManager#BUFFER_STORAGE_DIRECTORY
-     * @see com.metamatrix.common.buffer.BufferManager#MAX_OPEN_FILES
-     * @see com.metamatrix.common.buffer.BufferManager#MAX_FILE_SIZE
+     * Initialize
      */
-    public void initialize(Properties props) throws MetaMatrixComponentException {
-    	PropertiesUtils.setBeanProperties(this, props, "org.teiid.buffer"); //$NON-NLS-1$
+    public void initialize() throws MetaMatrixComponentException {
         if(this.directory == null) {
         	throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
         }
