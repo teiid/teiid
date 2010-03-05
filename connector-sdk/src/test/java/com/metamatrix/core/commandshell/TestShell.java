@@ -24,7 +24,7 @@ package com.metamatrix.core.commandshell;
 
 import junit.framework.TestCase;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.StringUtilities;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestShell extends TestCase {
@@ -45,13 +45,13 @@ public class TestShell extends TestCase {
 
     public void testHelp() {
         assertEquals("checkin String byte[] java.util.Date " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "exit " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "getLatest String " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "getTrace " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "help " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "method0 String[] " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "method1 String int[] " //$NON-NLS-1$
-        + StringUtilities.LINE_SEPARATOR + "quit" //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "exit " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "getLatest String " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "getTrace " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "help " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "method0 String[] " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "method1 String int[] " //$NON-NLS-1$
+        + StringUtil.LINE_SEPARATOR + "quit" //$NON-NLS-1$
    , shell.execute("help").trim() ); //$NON-NLS-1$
     }
 

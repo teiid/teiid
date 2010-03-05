@@ -24,7 +24,6 @@ package com.metamatrix.cdk.unittest;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.validator.TestValidator;
 
 public class FakeTranslationFactory {
 	
@@ -40,14 +39,6 @@ public class FakeTranslationFactory {
 	
 	public TranslationUtility getYahooTranslationUtility() {
 		return new TranslationUtility(FakeMetadataFactory.exampleYahoo());
-	}
-	
-	public TranslationUtility getTextTranslationUtility() {
-		return new TranslationUtility(FakeMetadataFactory.exampleText());
-	}
-	
-	public TranslationUtility getAutoIncrementTranslationUtility() {
-		return new TranslationUtility(TestValidator.exampleMetadata3());
 	}
 	
 	public TranslationUtility getExampleTranslationUtility() {

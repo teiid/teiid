@@ -22,14 +22,22 @@
 
 package com.metamatrix.cdk.api;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.Command;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.metadata.index.VDBMetadataFactory;
 
 import com.metamatrix.cdk.CommandBuilder;
+import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.FunctionTree;
+import com.metamatrix.query.function.SystemFunctionManager;
+import com.metamatrix.query.function.UDFSource;
+import com.metamatrix.query.function.metadata.FunctionMethod;
+import com.metamatrix.query.metadata.BasicQueryMetadataWrapper;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**
@@ -55,14 +63,18 @@ public class TranslationUtility {
     }
     
     public TranslationUtility(URL url) {
-		metadata = VDBMetadataFactory.getVDBMetadata(url);
+        try {
+			metadata = VDBMetadataFactory.getVDBMetadata(url, null);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}     
     }
     
     public TranslationUtility(QueryMetadataInterface metadata) {
     	this.metadata = metadata;
     }
     
-    public ICommand parseCommand(String sql, boolean generateAliases, boolean supportsGroupAliases) {
+    public Command parseCommand(String sql, boolean generateAliases, boolean supportsGroupAliases) {
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         return commandBuilder.getCommand(sql, generateAliases, supportsGroupAliases);
     }
@@ -72,7 +84,7 @@ public class TranslationUtility {
      * @param sql
      * @return Command using the language interfaces
      */
-    public ICommand parseCommand(String sql) {
+    public Command parseCommand(String sql) {
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         return commandBuilder.getCommand(sql);
     }
@@ -86,4 +98,13 @@ public class TranslationUtility {
     public RuntimeMetadata createRuntimeMetadata() {
         return new RuntimeMetadataImpl(metadata);
     }
+
+	public void setUDF(final Collection<FunctionMethod> methods) {
+		this.metadata = new BasicQueryMetadataWrapper(this.metadata) {
+			@Override
+			public FunctionLibrary getFunctionLibrary() {
+				return new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(methods)));
+			}
+		};
+	}
 }

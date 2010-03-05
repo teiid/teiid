@@ -28,7 +28,6 @@ import java.util.List;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.core.util.StringUtilities;
 
 /**
  * Understands how to read specific command line scripts from a String containing multiple scripts.
@@ -61,7 +60,7 @@ public class ScriptReader {
         testScriptIndex = 0;
         this.testName = scriptName;
         testScript = getScriptContents();
-        testLines = StringUtilities.getLines(testScript);
+        testLines = StringUtil.getLines(testScript);
     }
 
     /**
@@ -140,7 +139,7 @@ public class ScriptReader {
 
     private String getScriptContents() {
         boolean readyForNewScript = true;
-        String[] scriptLines = StringUtilities.getLines(script);
+        String[] scriptLines = StringUtil.getLines(script);
         for (int i=0; i<scriptLines.length; i++) {
             if (readyForNewScript) {
                 boolean openingBraceFound = false;
@@ -195,7 +194,7 @@ public class ScriptReader {
         List subStrings = StringUtil.split(script, "{"); //$NON-NLS-1$
         for (int i = 0; i < subStrings.size()-1; i++) {
             String fragment = ((String) subStrings.get(i)).trim();
-            String[] lines = StringUtilities.getLines(fragment);
+            String[] lines = StringUtil.getLines(fragment);
             String testName = lines[lines.length-1];
             if (!containsWhitespace(testName)) {
                 if (testName.length() > 0) {

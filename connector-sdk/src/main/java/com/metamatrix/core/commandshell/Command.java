@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -39,7 +41,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.InvalidIDException;
 import com.metamatrix.core.id.ObjectID;
-import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.StringUtil;
 
@@ -246,7 +247,7 @@ public class Command {
         }
         if (neededType.equals(Date.class)) {
             try {
-                return DateUtil.convertStringToDate(target);
+                return DateFormat.getDateTimeInstance().parse(target);
             } catch (ParseException e) {
                 throw new ArgumentConversionException(e, e.getMessage());
             }

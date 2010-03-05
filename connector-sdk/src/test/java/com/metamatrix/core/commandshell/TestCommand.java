@@ -22,25 +22,13 @@
 
 package com.metamatrix.core.commandshell;
 
-import java.util.TimeZone;
 import junit.framework.TestCase;
-
-import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestCommand extends TestCase {
 
     public TestCommand(String name) {
         super(name);
     }
-
-	public void setUp() {
-		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
-	}
-
-	public void tearDown() {
-		TimestampWithTimezone.resetCalendar(null);
-	}
 
     public void test() throws Exception {
         FakeCommandTarget target = new FakeCommandTarget();
@@ -58,15 +46,6 @@ public class TestCommand extends TestCase {
         Command command = new Command(target, commandName, args);
         command.execute();
         assertEquals("getLatest samplePath", target.getTrace()); //$NON-NLS-1$
-    }
-
-    public void testArgConversion() throws Exception {
-        FakeCommandTarget target = new FakeCommandTarget();
-        String commandName = "checkin"; //$NON-NLS-1$
-        String[] args = new String[] { "samplePath", UnitTestUtil.getTestDataPath() + "/fakeFile", "2003-10-01:00:00:00" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        Command command = new Command(target, commandName, args);
-        command.execute();
-        assertEquals("checkin samplePath <data> Wed Oct 01 00:00:00 GMT-06:00 2003", target.getTrace()); //$NON-NLS-1$
     }
 
     public void testArgConversionStringArray() throws Exception {
@@ -93,14 +72,6 @@ public class TestCommand extends TestCase {
         Command command = new Command(target, commandLine);
         command.execute();
         assertEquals("getLatest samplePath", target.getTrace()); //$NON-NLS-1$
-    }
-
-    public void testCommandParsingDates() throws Exception {
-        FakeCommandTarget target = new FakeCommandTarget();
-        String commandLine = "checkin samplePath " + UnitTestUtil.getTestDataPath() + "/fakeFile \"2003-10-01:00:00:00\""; //$NON-NLS-1$ //$NON-NLS-2$
-        Command command = new Command(target, commandLine);
-        command.execute();
-        assertEquals("checkin samplePath <data> Wed Oct 01 00:00:00 GMT-06:00 2003", target.getTrace()); //$NON-NLS-1$
     }
 
     public void testComment() throws Exception {

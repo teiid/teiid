@@ -26,10 +26,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.LanguageFactory;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
-import org.teiid.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -51,8 +49,8 @@ import com.metamatrix.query.sql.symbol.AllSymbol;
  */
 public class CommandBuilder {
 	
-	public static ILanguageFactory getLanuageFactory() {
-		return LanguageFactoryImpl.INSTANCE;
+	public static LanguageFactory getLanuageFactory() {
+		return LanguageFactory.INSTANCE;
 	}
 
     private QueryMetadataInterface metadata;
@@ -64,11 +62,11 @@ public class CommandBuilder {
         this.metadata = metadata;
     }
     
-    public ICommand getCommand(String queryString) {
+    public org.teiid.connector.language.Command getCommand(String queryString) {
         return getCommand(queryString, false, false);
     }
     
-    public ICommand getCommand(String queryString, boolean generateAliases, boolean supportsGroupAlias) {
+    public org.teiid.connector.language.Command getCommand(String queryString, boolean generateAliases, boolean supportsGroupAlias) {
         Command command = null;
         try {
             command = QueryParser.getQueryParser().parseCommand(queryString);
@@ -78,8 +76,7 @@ public class CommandBuilder {
             if (generateAliases) {
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
-            ICommand result =  new LanguageBridgeFactory(metadata).translate(command);
-            return result;
+            return new LanguageBridgeFactory(metadata).translate(command);
         } catch (QueryParserException e) {
             throw new MetaMatrixRuntimeException(e);
         } catch (QueryResolverException e) {
@@ -89,8 +86,6 @@ public class CommandBuilder {
         } catch (QueryValidatorException e) {
             throw new MetaMatrixRuntimeException(e);
         }
-
-        
     }
     
     /**
