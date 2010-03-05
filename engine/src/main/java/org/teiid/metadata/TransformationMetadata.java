@@ -54,10 +54,8 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.core.util.ObjectConverterUtil;
@@ -973,11 +971,20 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public byte[] getBinaryVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
-        String content = this.getCharacterVDBResource(resourcePath);
-        if(content != null) {
-            return content.getBytes();
-        }
-        return null;
+    	for (VirtualFile f:this.vdbEntries.keySet()) {
+    		if (f.getPathName().equals(resourcePath)) {
+    			Boolean v = this.vdbEntries.get(f);
+    			if (v.booleanValue()) {
+	    			try {
+						return ObjectConverterUtil.convertToByteArray(f.openStream());
+					} catch (IOException e) {
+						throw new MetaMatrixComponentException(e);
+					}
+    			}
+				break;
+    		}
+    	}
+    	return null;
     }
 
     /** 
@@ -985,22 +992,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public String getCharacterVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
-    	for (VirtualFile f:this.vdbEntries.keySet()) {
-    		if (f.getPathName().equals(resourcePath)) {
-    			Boolean v = this.vdbEntries.get(f);
-    			if (v.booleanValue()) {
-	    			try {
-						return ObjectConverterUtil.convertToString(f.openStream());
-					} catch (IOException e) {
-						LogManager.logError(LogConstants.CTX_CONFIG, e, e.getMessage());
-					}
-    			}
-    			else {
-    				break;
-    			}
-    		}
-    	}
-    	return null;
+    	try {
+			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(getBinaryVDBResource(resourcePath)));
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		}
     }
     
     public CompositeMetadataStore getMetadataStore() {

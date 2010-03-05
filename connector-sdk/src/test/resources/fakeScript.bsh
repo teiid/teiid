@@ -1,8 +1,0 @@
-String userName;
-
-String loadUserName() {
-	if (userName == null) {
-		return "sampleUserName";
-	}
-	return userName;
-}

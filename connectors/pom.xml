@@ -23,17 +23,6 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-connector-sdk</artifactId>      
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-connector-sdk</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -47,6 +36,11 @@
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

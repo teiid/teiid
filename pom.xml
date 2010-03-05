@@ -343,18 +343,6 @@
 				<artifactId>teiid-cache-jbosscache</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-connector-sdk</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-connector-sdk</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
             <dependency>
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-jboss-integration</artifactId>
@@ -523,7 +511,6 @@
 		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
         <module>jboss-integration</module>
-        <module>connector-sdk</module>
         <module>jboss-embedded</module>
         
 	</modules>

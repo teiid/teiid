@@ -36,7 +36,7 @@ public class MemoryStorageManager implements StorageManager {
 	@Override
 	public FileStore createFileStore(String name) {
 		return new FileStore() {
-			private ByteBuffer buffer = ByteBuffer.allocate(2 << 15);
+			private ByteBuffer buffer = ByteBuffer.allocate(1 << 16);
 			
 			@Override
 			public void writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {

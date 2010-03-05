@@ -22,7 +22,10 @@
 
 package com.metamatrix.common.xa;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigInteger;
 
 import javax.transaction.xa.Xid;
@@ -30,7 +33,7 @@ import javax.transaction.xa.Xid;
 /**
  * Teiid implementation of Xid.
  */
-public class MMXid implements Xid, Serializable {
+public class MMXid implements Xid, Externalizable {
     private static final long serialVersionUID = -7078441828703404308L;
     
     private int formatID;
@@ -137,6 +140,21 @@ public class MMXid implements Xid, Serializable {
 	 */
 	public int hashCode() {
 	    return toString().hashCode();
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		this.formatID = in.readInt();
+		this.globalTransactionId = (byte[])in.readObject();
+		this.branchQualifier = (byte[])in.readObject();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(this.formatID);
+		out.writeObject(this.globalTransactionId);
+		out.writeObject(this.branchQualifier);
 	}
 	
 }
