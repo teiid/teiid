@@ -41,7 +41,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Properties;
 
 import javax.naming.NamingException;
 import javax.naming.directory.BasicAttribute;
@@ -49,51 +48,49 @@ import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IScalarSubquery;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.language.SortSpecification.Ordering;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Table;
 
 
 /**
  * Utility class which translates a SQL query into an LDAP search.
  */
 public class IQueryToLdapSearchParser {
-	private ConnectorLogger logger; 
 	private RuntimeMetadata rm;
-	private Properties props;
+	private LDAPManagedConnectionFactory config;
 	
 	/**
 	 * Constructor.
 	 * @param logger the connector logger
 	 * @param rm the RuntimeMetadata
 	 */
-	public IQueryToLdapSearchParser(ConnectorLogger logger, RuntimeMetadata rm, Properties props) {
-		this.logger = logger;
+	public IQueryToLdapSearchParser(RuntimeMetadata rm, LDAPManagedConnectionFactory config) {
 		this.rm = rm;
-		this.props = props;
+		this.config = config;
 	}
 	
 	/** 
@@ -115,7 +112,7 @@ public class IQueryToLdapSearchParser {
 	// ou=people,dc=company,dc=com?SUBTREE_SCOPE?RESTRICT
 	// TODO - change method for calling RESTRICT to also specify
 	// object class name (RESTRICT=inetOrgPerson)
-	public LDAPSearchDetails translateSQLQueryToLDAPSearch(IQuery query) throws ConnectorException {
+	public LDAPSearchDetails translateSQLQueryToLDAPSearch(Select query) throws ConnectorException {
 			// Parse SELECT symbols.
 			// The columns will be translated into LDAP attributes of interest.
 			ArrayList attributeList = getAttributesFromSelectSymbols(query);
@@ -123,17 +120,17 @@ public class IQueryToLdapSearchParser {
 			
 			// Parse FROM table.
 			// Only one table is expected here.
-			List fromList = query.getFrom().getItems();
+			List fromList = query.getFrom();
 			Iterator itr = fromList.listIterator();
 			if(!itr.hasNext()) {
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.noTablesInFromError"); //$NON-NLS-1$
-				logger.logError(msg);  
+				this.config.getLogger().logError(msg);  
 				throw new ConnectorException(msg); 
 			}
-			IFromItem fItm = (IFromItem)itr.next();
+			TableReference fItm = (TableReference)itr.next();
 			if(itr.hasNext()) {
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.multiItemsInFromError"); //$NON-NLS-1$
-				logger.logError(msg);
+	            this.config.getLogger().logError(msg);
 				throw new ConnectorException(msg); 
 			}
 			String contextName = getContextNameFromFromItem(fItm);
@@ -159,14 +156,14 @@ public class IQueryToLdapSearchParser {
 			
 			// Parse the ORDER BY clause.
 			// Create an ordered sort list.
-			IOrderBy orderBy = (IOrderBy)query.getOrderBy();
+			OrderBy orderBy = (OrderBy)query.getOrderBy();
 			// Referenced the JNDI standard...arguably, this should not be done inside this
 			// class, and we should make our own key class. In practice, this makes things simpler.
 			SortKey[] sortKeys = getSortKeysFromOrderByClause(orderBy);
 			
 			// Parse LIMIT clause. 
 			// Note that offsets are not supported.
-			ILimit limit = (ILimit)query.getLimit();
+			Limit limit = (Limit)query.getLimit();
 			long countLimit = -1;
 			if(limit != null) {
 				countLimit = limit.getRowLimit();
@@ -176,7 +173,7 @@ public class IQueryToLdapSearchParser {
 			LDAPSearchDetails sd = new LDAPSearchDetails(contextName, searchScope, filter, attributeList, sortKeys, countLimit, elementList);
 			// Search Details logging
 			try {
-				sd.printDetailsToLog(logger);
+				sd.printDetailsToLog(this.config.getLogger());
 			} catch (NamingException nme) {
 				final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.searchDetailsLoggingError");  //$NON-NLS-1$
 				throw new ConnectorException(msg);
@@ -191,10 +188,10 @@ public class IQueryToLdapSearchParser {
 	 * @param orderBy the OrderBy clause
 	 * @param the array of SortKeys
 	 */
-	private SortKey[] getSortKeysFromOrderByClause(IOrderBy orderBy) throws ConnectorException {
+	private SortKey[] getSortKeysFromOrderByClause(OrderBy orderBy) throws ConnectorException {
 		SortKey[] sortKeys = null;
 		if(orderBy != null) {
-			List orderItems = orderBy.getItems();
+			List orderItems = orderBy.getSortSpecifications();
 			if(orderItems == null) {
 				return null;
 			}
@@ -203,15 +200,15 @@ public class IQueryToLdapSearchParser {
 			Iterator orderItr = orderItems.iterator();
 			int i = 0;
 			while(orderItr.hasNext()) {
-				IOrderByItem item = (IOrderByItem)orderItr.next();
+				SortSpecification item = (SortSpecification)orderItr.next();
 				if(item != null) {
-					String itemName = getExpressionString((IExpression)item.getElement());
-					logger.logTrace("Adding sort key for item: " + itemName); //$NON-NLS-1$
-					if(item.getDirection() == IOrderByItem.ASC) {
-						logger.logTrace("with ASC ordering."); //$NON-NLS-1$
+					String itemName = getExpressionString((Expression)item.getExpression());
+					this.config.getLogger().logTrace("Adding sort key for item: " + itemName); //$NON-NLS-1$
+					if(item.getOrdering() == Ordering.ASC) {
+						this.config.getLogger().logTrace("with ASC ordering."); //$NON-NLS-1$
 						sortKey = new SortKey(itemName, true, null);
-					} else if(item.getDirection() == IOrderByItem.DESC){
-						logger.logTrace("with DESC ordering."); //$NON-NLS-1$
+					} else if(item.getOrdering() == Ordering.DESC){
+						this.config.getLogger().logTrace("with DESC ordering."); //$NON-NLS-1$
 						sortKey = new SortKey(itemName, false, null);
 					}
 				}
@@ -232,14 +229,14 @@ public class IQueryToLdapSearchParser {
 	 */
 	// GHH 20080409 - changed to fall back on new connector property
 	// for default base DN if available
-	private String getContextNameFromFromItem(IFromItem fromItem) throws ConnectorException {
+	private String getContextNameFromFromItem(TableReference fromItem) throws ConnectorException {
 		String nameInSource;
 		String contextName;
 
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
-		if(fromItem instanceof IGroup) {
-			Group group = ((IGroup)fromItem).getMetadataObject();
+		if(fromItem instanceof NamedTable) {
+			Table group = ((NamedTable)fromItem).getMetadataObject();
 			nameInSource = group.getNameInSource();
 			// if NameInSource is null set it to an empty
 			// string instead so we can safely call split on it
@@ -252,7 +249,7 @@ public class IQueryToLdapSearchParser {
 			// if there is no context name specified
 			// try the default in the connector properties
 			if(contextName.equals("")) {  //$NON-NLS-1$
-				contextName = props.getProperty(LDAPConnectorPropertyNames.LDAP_DEFAULT_BASEDN);	
+				contextName = this.config.getSearchDefaultBaseDN();
 			}
 		} else {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.groupCountExceededError"); //$NON-NLS-1$
@@ -273,14 +270,14 @@ public class IQueryToLdapSearchParser {
 	// from item's NameInSource, and if true return name (not NameInSource)
 	// of from item as the objectClass name on to which the query should
 	// be restricted
-	private String getRestrictToNamedClass(IFromItem fromItem) throws ConnectorException {
+	private String getRestrictToNamedClass(TableReference fromItem) throws ConnectorException {
 		String nameInSource;
 		String namedClass = null;
-		if(fromItem instanceof IGroup) {
+		if(fromItem instanceof NamedTable) {
 			// Here we use slightly different logic than in
 			// getContextNameFromFromItem so it is easier to get
 			// the group name later if needed
-			Group mdIDGroup = ((IGroup)fromItem).getMetadataObject();
+			Table mdIDGroup = ((NamedTable)fromItem).getMetadataObject();
 			nameInSource = mdIDGroup.getNameInSource();
 			// groupName = mdIDGroup.getName();
 			// if NameInSource is null set it to an empty
@@ -297,8 +294,7 @@ public class IQueryToLdapSearchParser {
 			// see if the connector property is set to true.  If
 			// it is, use the Name of the class for the restriction.
 			if(namedClass == null || namedClass.equals("")) {  //$NON-NLS-1$
-				String restrictToObjectClass =  props.getProperty(LDAPConnectorPropertyNames.LDAP_RESTRICT_TO_OBJECTCLASS);	
-				if (restrictToObjectClass == null || restrictToObjectClass.toUpperCase().equals("FALSE")) {  //$NON-NLS-1$
+				if (!this.config.isRestrictToObjectClass()) {  //$NON-NLS-1$
 					namedClass = "";  //$NON-NLS-1$
 				} else {
 					namedClass = mdIDGroup.getName();
@@ -311,13 +307,13 @@ public class IQueryToLdapSearchParser {
 		return namedClass;
 	}
 
-	private int getSearchScopeFromFromItem(IFromItem fromItem) throws ConnectorException {
+	private int getSearchScopeFromFromItem(TableReference fromItem) throws ConnectorException {
 		String searchScopeString = "";  //$NON-NLS-1$
 		int searchScope = LDAPConnectorConstants.ldapDefaultSearchScope;
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
-		if(fromItem instanceof IGroup) {
-			Group group = ((IGroup)fromItem).getMetadataObject();
+		if(fromItem instanceof NamedTable) {
+			Table group = ((NamedTable)fromItem).getMetadataObject();
 			String nameInSource = group.getNameInSource();
 			// if NameInSource is null set it to an empty
 			// string instead so we can safely call split on it
@@ -332,7 +328,7 @@ public class IQueryToLdapSearchParser {
 			// if there is no search scope specified
 			// try the default in the connector properties
 			if(searchScopeString.equals("")) {  //$NON-NLS-1$
-				searchScopeString = props.getProperty(LDAPConnectorPropertyNames.LDAP_DEFAULT_SCOPE);	
+				searchScopeString = this.config.getSearchDefaultScope();	
 				// protect against getting null back from the property
 				if(searchScopeString == null) {
 					searchScopeString = "";  //$NON-NLS-1$
@@ -357,7 +353,7 @@ public class IQueryToLdapSearchParser {
 	 * @param op operator to evaluate
 	 * @return LDAP-specific string equivalent of the operator
 	 */
-	private String parseCompoundCriteriaOp(ICompoundCriteria.Operator op) throws ConnectorException {
+	private String parseCompoundCriteriaOp(AndOr.Operator op) throws ConnectorException {
 		switch(op) {
 			case AND:
 				return "&";	 //$NON-NLS-1$
@@ -377,29 +373,29 @@ public class IQueryToLdapSearchParser {
 	// GHH 20080326 - found that code to fall back on Name if NameInSource
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
-	private String getExpressionString(IExpression e) throws ConnectorException {
+	private String getExpressionString(Expression e) throws ConnectorException {
 		String expressionName = null;
 		// GHH 20080326 - changed around the IElement handling here
 		// - the rest of this method is unchanged
-		if(e instanceof IElement) {
-			Element mdIDElement = ((IElement)e).getMetadataObject();
+		if(e instanceof ColumnReference) {
+			Column mdIDElement = ((ColumnReference)e).getMetadataObject();
 			expressionName = mdIDElement.getNameInSource();
 			if(expressionName == null || expressionName.equals("")) {  //$NON-NLS-1$
 				expressionName = mdIDElement.getName();
 			}
-		} else if(e instanceof ILiteral) {
+		} else if(e instanceof Literal) {
 			try {
-				if(((ILiteral)e).getType().equals(Class.forName(Timestamp.class.getName()))) {
-					logger.logTrace("Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
-					Timestamp ts = (Timestamp)((ILiteral)e).getValue();
+				if(((Literal)e).getType().equals(Class.forName(Timestamp.class.getName()))) {
+					this.config.getLogger().logTrace("Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
+					Timestamp ts = (Timestamp)((Literal)e).getValue();
 					Date dt = new Date(ts.getTime());
 					//TODO: Fetch format if provided.
 					SimpleDateFormat sdf = new SimpleDateFormat(LDAPConnectorConstants.ldapTimestampFormat);
 					expressionName = sdf.format(dt);
-					logger.logTrace("Timestamp to stsring is: " + expressionName); //$NON-NLS-1$
+					this.config.getLogger().logTrace("Timestamp to stsring is: " + expressionName); //$NON-NLS-1$
 				}
 				else {
-					expressionName = ((ILiteral)e).getValue().toString();
+					expressionName = ((Literal)e).getValue().toString();
 				}
 			} catch (ClassNotFoundException cce) {
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.timestampClassNotFoundError"); //$NON-NLS-1$
@@ -407,14 +403,14 @@ public class IQueryToLdapSearchParser {
 			}
 				
 		} else {
-			if(e instanceof IAggregate) {
-				logger.logError("Received IAggregate, but it is not supported. Check capabilities."); //$NON-NLS-1$
-			} else if(e instanceof IFunction) {
-				logger.logError("Received IFunction, but it is not supported. Check capabilties."); //$NON-NLS-1$
-			} else if(e instanceof IScalarSubquery) {
-				logger.logError("Received IScalarSubquery, but it is not supported. Check capabilties."); //$NON-NLS-1$
-			} else if (e instanceof ISearchedCaseExpression) {
-				logger.logError("Received ISearchedCaseExpression, but it is not supported. Check capabilties."); //$NON-NLS-1$
+			if(e instanceof AggregateFunction) {
+				this.config.getLogger().logError("Received IAggregate, but it is not supported. Check capabilities."); //$NON-NLS-1$
+			} else if(e instanceof Function) {
+				this.config.getLogger().logError("Received IFunction, but it is not supported. Check capabilties."); //$NON-NLS-1$
+			} else if(e instanceof ScalarSubquery) {
+				this.config.getLogger().logError("Received IScalarSubquery, but it is not supported. Check capabilties."); //$NON-NLS-1$
+			} else if (e instanceof SearchedCase) {
+				this.config.getLogger().logError("Received ISearchedCaseExpression, but it is not supported. Check capabilties."); //$NON-NLS-1$
 			}
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError"); //$NON-NLS-1$
 			throw new ConnectorException(msg + e.toString()); 
@@ -458,37 +454,32 @@ public class IQueryToLdapSearchParser {
 	 * @param List list to hold each pre-fix character of the search filter. 
 	 * @return list list that can be traversed in order to construct the search filter.
 	 */
-	private List getSearchFilterFromWhereClause(ICriteria criteria, List filterList) throws ConnectorException {
+	private List<String> getSearchFilterFromWhereClause(Condition criteria, List<String> filterList) throws ConnectorException {
 		if(criteria == null) {
 			filterList.add("(objectClass=*)"); //$NON-NLS-1$
 		}
 		boolean isNegated = false;
 		// Recursive case: compound criteria
-		if(criteria instanceof ICompoundCriteria) {
-			logger.logTrace("Parsing compound criteria."); //$NON-NLS-1$
-			ICompoundCriteria.Operator op = ((ICompoundCriteria) criteria).getOperator();
-			List criteriaList = ((ICompoundCriteria) criteria).getCriteria();
+		if(criteria instanceof AndOr) {
+			AndOr crit = (AndOr)criteria;
+			AndOr.Operator op = crit.getOperator();
+			this.config.getLogger().logTrace("Parsing compound criteria."); //$NON-NLS-1$
 			String stringOp = parseCompoundCriteriaOp(op);
 			
 			filterList.add("("); //$NON-NLS-1$
 			filterList.add(stringOp);
-			Iterator itr = criteriaList.iterator();
-			while(itr.hasNext()) {
-				ICriteria c = (ICriteria)itr.next();
-				// recurse on each criterion
-				filterList.addAll(getSearchFilterFromWhereClause(c, new LinkedList()));
-			}
+			filterList.addAll(getSearchFilterFromWhereClause(crit.getLeftCondition(), new LinkedList<String>()));
+			filterList.addAll(getSearchFilterFromWhereClause(crit.getRightCondition(), new LinkedList<String>()));
 			filterList.add(")"); //$NON-NLS-1$
-			
 		// Base case
-		} else if(criteria instanceof ICompareCriteria) {
-			logger.logTrace("Parsing compare criteria."); //$NON-NLS-1$
-			ICompareCriteria.Operator op = ((ICompareCriteria) criteria).getOperator();
+		} else if(criteria instanceof Comparison) {
+			this.config.getLogger().logTrace("Parsing compare criteria."); //$NON-NLS-1$
+			Comparison.Operator op = ((Comparison) criteria).getOperator();
 			
 			isNegated = op == Operator.NE || op == Operator.GT || op == Operator.LT;
 			
-			IExpression lhs = ((ICompareCriteria) criteria).getLeftExpression();
-			IExpression rhs = ((ICompareCriteria) criteria).getRightExpression();
+			Expression lhs = ((Comparison) criteria).getLeftExpression();
+			Expression rhs = ((Comparison) criteria).getRightExpression();
 		
 			String lhsString = getExpressionString(lhs);
 			String rhsString = getExpressionString(rhs);
@@ -499,17 +490,17 @@ public class IQueryToLdapSearchParser {
 			
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
 		// Base case
-		} else if(criteria instanceof IExistsCriteria) {
-			logger.logTrace("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
+		} else if(criteria instanceof Exists) {
+			this.config.getLogger().logTrace("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
 			// TODO Exists should be supported in a future release.
 		// Base case
-		} else if(criteria instanceof ILikeCriteria) {
-			logger.logTrace("Parsing LIKE criteria."); //$NON-NLS-1$
-			isNegated = ((ILikeCriteria) criteria).isNegated();
+		} else if(criteria instanceof Like) {
+			this.config.getLogger().logTrace("Parsing LIKE criteria."); //$NON-NLS-1$
+			isNegated = ((Like) criteria).isNegated();
 			// Convert LIKE to Equals, where any "%" symbol is replaced with "*".
-			ICompareCriteria.Operator op = Operator.EQ;
-			IExpression lhs = ((ILikeCriteria) criteria).getLeftExpression();
-			IExpression rhs = ((ILikeCriteria) criteria).getRightExpression();
+			Comparison.Operator op = Operator.EQ;
+			Expression lhs = ((Like) criteria).getLeftExpression();
+			Expression rhs = ((Like) criteria).getRightExpression();
 		
 			String lhsString = getExpressionString(lhs);
 			String rhsString = getExpressionString(rhs);
@@ -517,17 +508,17 @@ public class IQueryToLdapSearchParser {
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
 			
 		// Base case
-		} else if(criteria instanceof IInCriteria) {
-			logger.logTrace("Parsing IN criteria."); //$NON-NLS-1$
-			isNegated = ((IInCriteria) criteria).isNegated();
-			IExpression lhs = ((IInCriteria)criteria).getLeftExpression();
-			List rhsList = ((IInCriteria)criteria).getRightExpressions();
+		} else if(criteria instanceof In) {
+			this.config.getLogger().logTrace("Parsing IN criteria."); //$NON-NLS-1$
+			isNegated = ((In) criteria).isNegated();
+			Expression lhs = ((In)criteria).getLeftExpression();
+			List rhsList = ((In)criteria).getRightExpressions();
 			// Recursively add each IN expression to the filter list.
 			processInCriteriaList(filterList, rhsList, lhs);
-		} else if (criteria instanceof INotCriteria) {
-			logger.logTrace("Parsing NOT criteria."); //$NON-NLS-1$
+		} else if (criteria instanceof Not) {
+			this.config.getLogger().logTrace("Parsing NOT criteria."); //$NON-NLS-1$
 			isNegated = true;
-			filterList.addAll(getSearchFilterFromWhereClause(((INotCriteria)criteria).getCriteria(), new LinkedList()));
+			filterList.addAll(getSearchFilterFromWhereClause(((Not)criteria).getCriteria(), new LinkedList()));
 		}
 		
 		if (isNegated) {
@@ -543,16 +534,16 @@ public class IQueryToLdapSearchParser {
 	 * Process a list of right-hand side IN expresssions and add the corresponding LDAP filter
 	 * clause string to the given filterList.
 	 */
-	private void processInCriteriaList(List filterList, List rhsList, IExpression lhs) throws ConnectorException {
+	private void processInCriteriaList(List filterList, List rhsList, Expression lhs) throws ConnectorException {
 		if(rhsList.size() == 0) {
 			return;
 		}
 		filterList.add("("); //$NON-NLS-1$
-		filterList.add(parseCompoundCriteriaOp(org.teiid.connector.language.ICompoundCriteria.Operator.OR));
+		filterList.add(parseCompoundCriteriaOp(org.teiid.connector.language.AndOr.Operator.OR));
 		Iterator rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
 			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionString(lhs), 
-					getExpressionString((IExpression)rhsItr.next()));
+					getExpressionString((Expression)rhsItr.next()));
 		}
 		filterList.add(")"); //$NON-NLS-1$
 	}
@@ -564,7 +555,7 @@ public class IQueryToLdapSearchParser {
 	 * @param lhs left hand side expression
 	 * @param rhs right hand side expression
 	 */
-	private void addCompareCriteriaToList(List filterList, ICompareCriteria.Operator op, String lhs, String rhs) throws ConnectorException {
+	private void addCompareCriteriaToList(List filterList, Comparison.Operator op, String lhs, String rhs) throws ConnectorException {
 		// Push the comparison statement into the list, e.g.:
 		// (sn=Mike)
 		// !(empNum>=100)
@@ -601,7 +592,7 @@ public class IQueryToLdapSearchParser {
     // GHH 20080326 - found that code to fall back on Name if NameInSource
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
-	public String getNameFromElement(Element e) throws ConnectorException {
+	public String getNameFromElement(Column e) throws ConnectorException {
 		String ldapAttributeName = null;
 		ldapAttributeName = e.getNameInSource();
 		if (ldapAttributeName == null || ldapAttributeName.equals("")) { //$NON-NLS-1$
@@ -616,12 +607,12 @@ public class IQueryToLdapSearchParser {
 	 * @param query the supplied Query
 	 * @return the list of SELECT elements
 	 */
-	private ArrayList getElementsFromSelectSymbols(IQuery query) throws ConnectorException {
+	private ArrayList getElementsFromSelectSymbols(Select query) throws ConnectorException {
 		ArrayList selectElementList = new ArrayList();
-		Iterator selectSymbolItr = query.getSelect().getSelectSymbols().iterator();
+		Iterator selectSymbolItr = query.getDerivedColumns().iterator();
 
 		while(selectSymbolItr.hasNext()) {
-			Element e = getElementFromSymbol((ISelectSymbol)selectSymbolItr.next());
+			Column e = getElementFromSymbol((DerivedColumn)selectSymbolItr.next());
 			selectElementList.add(e);
 		}
 		return selectElementList;
@@ -632,13 +623,13 @@ public class IQueryToLdapSearchParser {
 	 * @param query the supplied Query
 	 * @return the list of attributes
 	 */
-	private ArrayList getAttributesFromSelectSymbols(IQuery query) throws ConnectorException {
+	private ArrayList getAttributesFromSelectSymbols(Select query) throws ConnectorException {
 		ArrayList ldapAttributeList = new ArrayList();
 			
-		Iterator selectSymbolItr = query.getSelect().getSelectSymbols().iterator();
+		Iterator selectSymbolItr = query.getDerivedColumns().iterator();
 		int i=0;
 		while(selectSymbolItr.hasNext()) {
-			Element e = getElementFromSymbol((ISelectSymbol)selectSymbolItr.next());
+			Column e = getElementFromSymbol((DerivedColumn)selectSymbolItr.next());
 			String ldapAttributeName = this.getNameFromElement(e);
 			Object ldapAttributeClass = e.getJavaType();
 
@@ -652,12 +643,12 @@ public class IQueryToLdapSearchParser {
 	
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
-     * {@link org.teiid.connector.language.ISelectSymbol}.
+     * {@link org.teiid.connector.language.DerivedColumn}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */
-    private Element getElementFromSymbol(ISelectSymbol symbol) throws ConnectorException {
-        IElement expr = (IElement) symbol.getExpression();
+    private Column getElementFromSymbol(DerivedColumn symbol) throws ConnectorException {
+        ColumnReference expr = (ColumnReference) symbol.getExpression();
         return expr.getMetadataObject();
     }
 	

@@ -27,108 +27,55 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
-import com.metamatrix.connector.xml.IQueryPreprocessor;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.Table;
 
 public class QueryAnalyzer {
 
-    private IQuery m_query;
-    
-    private IQueryPreprocessor preprocessor;
+    private Select command;
+    private Table table;
+    private ExecutionInfo executionInfo;
 
-    private RuntimeMetadata m_metadata;
-
-    private Group m_table;
-
-    private ExecutionInfo m_info;
-
-	private ConnectorLogger logger;
-
-	private ConnectorEnvironment connectorEnv;
-
-	private ExecutionContext exeContext;
-
-    public QueryAnalyzer(IQuery query, RuntimeMetadata metadata, IQueryPreprocessor preprocessor, 
-    		ConnectorLogger logger, ExecutionContext exeContext, ConnectorEnvironment connectorEnv) throws ConnectorException {
-        setMetaData(metadata);
-        setQuery(query);
-        setPreprocessor(preprocessor);
-        setLogger(logger);
-        setExecutionContext(exeContext);
-        setConnectorEnvironment(connectorEnv);
-        m_info = new ExecutionInfo();
+    public QueryAnalyzer(Select query) throws ConnectorException {
+    	this.command = query;
+        executionInfo = new ExecutionInfo();
         analyze();
     }
 
-    private void setConnectorEnvironment(ConnectorEnvironment connectorEnv) {
-		this.connectorEnv = connectorEnv;
-	}
-
-	private void setExecutionContext(ExecutionContext exeContext) {
-		this.exeContext = exeContext;
-	}
-
-	private void setLogger(ConnectorLogger logger) {
-		this.logger = logger;
-	}
-
-	private void setPreprocessor(IQueryPreprocessor preprocessor) {
-		this.preprocessor = preprocessor;
-	}
-
 	public final void analyze() throws ConnectorException {
-    	IQuery newQuery = preprocessor.preprocessQuery(m_query, m_metadata, exeContext, connectorEnv, logger);
-    	logger.logTrace("XML Connector Framework: executing command: " + newQuery);
-    	setQuery(newQuery);
     	setGroupInfo();
         setRequestedColumns();
         setParametersAndCriteria();
         setProperties();
     }
 
-    private void setMetaData(RuntimeMetadata metadata) {
-        m_metadata = metadata;
-    }
 
-    private void setQuery(IQuery query) {
-        m_query = query;
-    }
 
     public ExecutionInfo getExecutionInfo() {
-        return m_info;
+        return this.executionInfo;
     }
 
     private void setGroupInfo() throws ConnectorException {
-        IFrom from = m_query.getFrom();
-        List<IFromItem> fromItems = from.getItems();
+        List<TableReference> fromItems = command.getFrom();
         //Can only be one because we do not support joins
-        IGroup group = (IGroup) fromItems.get(0);
-        m_table = group.getMetadataObject();
-        m_info.setTableXPath(m_table.getNameInSource());
+        NamedTable group = (NamedTable) fromItems.get(0);
+        this.table = group.getMetadataObject();
+        this.executionInfo.setTableXPath(table.getNameInSource());
     }
 
 	private void setRequestedColumns() throws ConnectorException {
 
         List<OutputXPathDesc> columns = new ArrayList<OutputXPathDesc>();
         //get the request items
-        ISelect select = m_query.getSelect();
-        List<ISelectSymbol> selectSymbols = select.getSelectSymbols();
+        List<DerivedColumn> selectSymbols = this.command.getDerivedColumns();
         
         //setup column numbers
         int projectedColumnCount = 0;
@@ -136,15 +83,15 @@ public class QueryAnalyzer {
         //add projected fields into XPath array and element array for later
         // lookup
         
-       for(ISelectSymbol selectSymbol : selectSymbols) {
-            IExpression expr = selectSymbol.getExpression();
+       for(DerivedColumn selectSymbol : selectSymbols) {
+            Expression expr = selectSymbol.getExpression();
             OutputXPathDesc xpath = null;
 
             //build the appropriate structure
-                if (expr instanceof ILiteral) {
-                    xpath = new OutputXPathDesc((ILiteral) expr);
-                } else if (expr instanceof IElement) {
-                    Element element = ((IElement)expr).getMetadataObject();
+                if (expr instanceof Literal) {
+                    xpath = new OutputXPathDesc((Literal) expr);
+                } else if (expr instanceof ColumnReference) {
+                    Column element = ((ColumnReference)expr).getMetadataObject();
                     xpath = new OutputXPathDesc(element);
                 }
                 if (xpath != null) {
@@ -157,8 +104,8 @@ public class QueryAnalyzer {
         }
 
         //set the column count
-        m_info.setColumnCount(projectedColumnCount);
-        m_info.setRequestedColumns(columns);
+        this.executionInfo.setColumnCount(projectedColumnCount);
+        this.executionInfo.setRequestedColumns(columns);
     }
 
     private void setParametersAndCriteria() throws ConnectorException {
@@ -174,15 +121,15 @@ public class QueryAnalyzer {
         ArrayList<CriteriaDesc> locations = new ArrayList<CriteriaDesc>();
 
         //Iterate through each field in the table
-        for (Element element : m_table.getChildren()) {
+        for (Column element : table.getColumns()) {
             CriteriaDesc criteria = CriteriaDesc.getCriteriaDescForColumn(
-                    element, m_query);
+                    element, command);
             if (criteria != null) {
                 mapCriteriaToColumn(criteria, params, crits, responses, locations);
             }
         }
-        m_info.setParameters(params);
-        m_info.setCriteria(crits);
+        this.executionInfo.setParameters(params);
+        this.executionInfo.setCriteria(crits);
         
         String location = null;
         for (Iterator<CriteriaDesc> iter = locations.iterator(); iter.hasNext(); ) {
@@ -201,19 +148,18 @@ public class QueryAnalyzer {
                 location = value;   
             }
         }
-        m_info.setLocation(location);
+        this.executionInfo.setLocation(location);
     }
 
     private void mapCriteriaToColumn(CriteriaDesc criteria, ArrayList<CriteriaDesc> params,
             ArrayList<CriteriaDesc> crits, ArrayList<CriteriaDesc> responses, ArrayList<CriteriaDesc> locations) throws ConnectorException {
-        int totalColumnCount = m_info.getColumnCount();
+        int totalColumnCount = this.executionInfo.getColumnCount();
         //check each criteria to see which projected column it maps to
         String criteriaColName = criteria.getColumnName();
         boolean matchedField = false;
         OutputXPathDesc xpath = null;
-        for (int j = 0; j < m_info.getRequestedColumns().size(); j++) {
-            xpath = (OutputXPathDesc) m_info
-                    .getRequestedColumns().get(j);
+        for (int j = 0; j < this.executionInfo.getRequestedColumns().size(); j++) {
+            xpath = (OutputXPathDesc) this.executionInfo.getRequestedColumns().get(j);
             String projColName = xpath.getColumnName();
             if (criteriaColName.equals(projColName)) {
                 matchedField = true;
@@ -237,7 +183,7 @@ public class QueryAnalyzer {
                 xpath = new OutputXPathDesc(criteria
                         .getElement());
                 xpath.setColumnNumber(totalColumnCount++);
-                m_info.getRequestedColumns().add(xpath);
+                this.executionInfo.getRequestedColumns().add(xpath);
             }
             if (xpath.isResponseId()) {
                 responses.add(criteria);
@@ -252,11 +198,11 @@ public class QueryAnalyzer {
     }
 
     private void setProperties() throws ConnectorException {
-        m_info.setOtherProperties(m_table.getProperties());
+    	this.executionInfo.setOtherProperties(table.getProperties());
     }
 
 	public List<CriteriaDesc[]> getRequestPerms() {
-		return RequestGenerator.getRequests(m_info.getParameters());
+		return RequestGenerator.getRequests(this.executionInfo.getParameters());
 	}
 
 }

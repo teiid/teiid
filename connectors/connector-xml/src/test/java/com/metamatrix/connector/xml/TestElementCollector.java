@@ -1,6 +1,9 @@
 package com.metamatrix.connector.xml;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -8,19 +11,13 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.basic.TypeFacilityImpl;
+import org.teiid.connector.language.Select;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 import com.metamatrix.connector.xml.base.QueryAnalyzer;
-import com.metamatrix.connector.xml.file.FileConnectorState;
 import com.metamatrix.connector.xml.streaming.DocumentImpl;
 import com.metamatrix.connector.xml.streaming.ElementProcessor;
 import com.metamatrix.connector.xml.streaming.ReaderFactory;
@@ -38,19 +35,12 @@ public class TestElementCollector extends TestCase {
 		Map prefixes = new HashMap<String, String>();
 		prefixes.put("po", "http://www.example.com/PO1");
 		prefixes.put("xsd", "http://www.w3.org/2001/XMLSchema");
-		ConnectorEnvironment env = EnvironmentUtility.createEnvironment(
-    			ProxyObjectFactory.getDefaultFileProps());
-		ConnectorLogger logger = new SysLogger(false);
-    	XMLConnectorState state = new FileConnectorState();
-    	state.setLogger(logger);
-    	state.setState(env);
-    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-    	IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "SELECT * FROM po_list.ITEM");
-    	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, new MockQueryPreprocessor(), logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
+    	Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "SELECT * FROM po_list.ITEM");
+    	QueryAnalyzer analyzer = new QueryAnalyzer(query);
     	analyzer.analyze();
     	ExecutionInfo info = analyzer.getExecutionInfo();
     	ElementProcessor processor = new ElementProcessor(info);
-		builder = new StreamingRowCollector(prefixes, ReaderFactory.getXMLReader(state), processor);
+		builder = new StreamingRowCollector(prefixes, ReaderFactory.getXMLReader(null), processor);
 	}
 
 	@Override
@@ -63,7 +53,7 @@ public class TestElementCollector extends TestCase {
 		String path = "/po:purchaseOrders/order/items/item";
 		int itemCount = 5968;
 		try {
-			Document doc = new DocumentImpl(new FileInputStream(filename), "foo");
+			Document doc = new DocumentImpl(getSQLXML(new FileInputStream(filename)), "foo");
 			List result = builder.getElements(doc, Arrays.asList(path));
 			assertEquals(itemCount, result.size());
 		} catch (Exception e) {
@@ -75,11 +65,21 @@ public class TestElementCollector extends TestCase {
 		String path = "/";
 		int itemCount = 1;
 		try {
-			Document doc = new DocumentImpl(new FileInputStream(filename), "foo");
+			Document doc = new DocumentImpl(getSQLXML(new FileInputStream(filename)), "foo");
 			List result = builder.getElements(doc, Arrays.asList(path));
 			assertEquals(itemCount, result.size());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
+	}
+	
+	SQLXML getSQLXML(final InputStream in) {
+		InputStreamFactory isf = new InputStreamFactory("ISO-8859-1") {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return in;
+			}
+		};
+		return (SQLXML)new TypeFacilityImpl().convertToRuntimeType(isf);
 	}
 }

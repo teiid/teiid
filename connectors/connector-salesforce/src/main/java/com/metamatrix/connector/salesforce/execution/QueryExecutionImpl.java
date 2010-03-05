@@ -31,9 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.apache.axis.message.MessageElement;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
@@ -41,12 +41,12 @@ import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Messages;
@@ -84,13 +84,13 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 
 	private String logPreamble;
 	
-	private IQueryCommand query;
+	private QueryExpression query;
 	
 	Map<String, Map<String,Integer>> sObjectToResponseField = new HashMap<String, Map<String,Integer>>();
 	
 	private int topResultIndex = 0;
 
-	public QueryExecutionImpl(IQueryCommand command, SalesforceConnection connection,
+	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		this.connection = connection;
@@ -117,9 +117,9 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 	public void execute() throws ConnectorException {
 		connectorEnv.getLogger().logInfo(
 				getLogPreamble() + "Incoming Query: " + query.toString());
-		IFrom from = ((IQuery)query).getFrom();
+		List<TableReference> from = ((Select)query).getFrom();
 		String finalQuery;
-		if(from.getItems().get(0) instanceof IJoin) {
+		if(from.get(0) instanceof Join) {
 			visitor = new JoinQueryVisitor(metadata);
 			visitor.visitNode(query);
 			finalQuery = visitor.getQuery().trim();
@@ -146,8 +146,8 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 	@Override
 	public List next() throws ConnectorException, DataNotAvailableException {
 		List<?> result;
-		if (query.getProjectedQuery().getSelect().getSelectSymbols().get(0)
-				.getExpression() instanceof IAggregate) {
+		if (query.getProjectedQuery().getDerivedColumns().get(0)
+				.getExpression() instanceof AggregateFunction) {
 			result = Arrays.asList(results.getSize());
 			results = null;
 			
@@ -179,12 +179,12 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 
 		private void loadBatch() throws ConnectorException {
 			if(null != resultBatch) { // if we have an old batch, then we have to get new results
-				results = connection.queryMore(results.getQueryLocator());
+				results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
 			}
 			resultBatch = new ArrayList<List<Object>>();
 				
 			for(int resultIndex = 0; resultIndex < results.getSize(); resultIndex++) {
-				SObject sObject = results.getRecords(resultIndex);
+				SObject sObject = results.getRecords().get(resultIndex);
 				List<Object[]> result = getObjectData(sObject);
 				for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
 					resultBatch.add(Arrays.asList(i.next()));
@@ -193,20 +193,21 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 		}
 
 		private List<Object[]> getObjectData(SObject sObject) throws ConnectorException {
-			org.apache.axis.message.MessageElement[] topFields = sObject.get_any();
+			List<Object> topFields = sObject.getAny();
 			logAndMapFields(sObject.getType(), topFields);
 			List<Object[]> result = new ArrayList<Object[]>();
-			for(int i = 0; i < topFields.length; i++) {
-				QName qName = topFields[i].getType();
+			for(int i = 0; i < topFields.size(); i++) {
+				JAXBElement element = (JAXBElement) topFields.get(i);
+				QName qName = element.getName();
 				if(null != qName) {
 					String type = qName.getLocalPart();
 					if(type.equals("sObject")) {
-						SObject parent = (SObject)topFields[i].getObjectValue();
+						SObject parent = (SObject)element.getValue();
 						result.addAll(getObjectData(parent));
 					} else if(type.equals("QueryResult")) {
-						QueryResult subResult = (QueryResult)topFields[i].getObjectValue();
+						QueryResult subResult = (QueryResult)element.getValue();
 						for(int resultIndex = 0; resultIndex < subResult.getSize(); resultIndex++) {
-							SObject subObject = subResult.getRecords(resultIndex);
+							SObject subObject = subResult.getRecords().get(resultIndex);
 							result.addAll(getObjectData(subObject));
 						}
 					}
@@ -217,10 +218,10 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 		}
 
 		private List<Object[]> extractDataFromFields(SObject sObject,
-			MessageElement[] fields, List<Object[]> result) throws ConnectorException {
+			List<Object> fields, List<Object[]> result) throws ConnectorException {
 			Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
-				Element element = visitor.getSelectSymbolMetadata(j);
+				Column element = visitor.getSelectSymbolMetadata(j);
 				if(element.getParent().getNameInSource().equals(sObject.getType())) {
 					Integer index = fieldToIndexMap.get(element.getNameInSource());
 					// id gets dropped from the result if it is not the
@@ -234,7 +235,7 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 						}
 					} else {
 						Object cell;
-						cell = getCellDatum(element, fields[index]);
+						cell = getCellDatum(element, (JAXBElement)fields.get(index));
 						setValueInColumn(j, cell, result);
 					}
 				}
@@ -259,35 +260,39 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 	 * @param fields
 	 */
 	private void logAndMapFields(String sObjectName,
-			org.apache.axis.message.MessageElement[] fields) {
+			List<Object> fields) {
 		if (!sObjectToResponseField.containsKey(sObjectName)) {
 			logFields(sObjectName, fields);
 			Map<String, Integer> responseFieldToIndexMap;
 			responseFieldToIndexMap = new HashMap<String, Integer>();
-			for (int x = 0; x < fields.length; x++) {
-				responseFieldToIndexMap.put(fields[x].getLocalName(), x);
+			for (int x = 0; x < fields.size(); x++) {
+				JAXBElement element = (JAXBElement) fields.get(x);
+				responseFieldToIndexMap.put(element.getName().getLocalPart(), x);
 			}
 			sObjectToResponseField.put(sObjectName, responseFieldToIndexMap);
 		}
 	}
 
-	private void logFields(String sObjectName, MessageElement[] fields) {
+	@SuppressWarnings("unchecked")
+	private void logFields(String sObjectName, List<Object> fields) {
 		ConnectorLogger logger = connectorEnv.getLogger();
 		logger.logDetail("SalesForce Object Name = " + sObjectName);
-		logger.logDetail("FieldCount = " + fields.length);
-		for(int i = 0; i < fields.length; i++) {
-			logger.logDetail("Field # " + i + " is " + fields[i].getLocalName());
+		logger.logDetail("FieldCount = " + fields.size());
+		for(int i = 0; i < fields.size(); i++) {
+			JAXBElement element = (JAXBElement) fields.get(i);
+			logger.logDetail("Field # " + i + " is " + element.getName().getLocalPart());
 		}
 		
 	}
 
-	private Object getCellDatum(Element element, MessageElement me)
+	@SuppressWarnings("unchecked")
+	private Object getCellDatum(Column element, JAXBElement jbe)
 			throws ConnectorException {
-		if(!element.getNameInSource().equals(me.getLocalName())) {
+		if(!element.getNameInSource().equals(jbe.getName().getLocalPart())) {
 			throw new ConnectorException("SalesforceQueryExecutionImpl.column.mismatch1" + element.getNameInSource() +
-					"SalesforceQueryExecutionImpl.column.mismatch2" + me.getLocalName());
+					"SalesforceQueryExecutionImpl.column.mismatch2" + jbe.getName().getLocalPart());
 		}
-		String value = me.getValue();
+		String value = (String) jbe.getValue();
 		Object result = null;
 		Class type = element.getJavaType();
 		

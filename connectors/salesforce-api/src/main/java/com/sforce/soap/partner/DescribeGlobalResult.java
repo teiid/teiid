@@ -1,205 +1,115 @@
-/**
- * DescribeGlobalResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class DescribeGlobalResult  implements java.io.Serializable {
-    private java.lang.String encoding;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private int maxBatchSize;
 
-    private com.sforce.soap.partner.DescribeGlobalSObjectResult[] sobjects;
+/**
+ * <p>Java class for DescribeGlobalResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="DescribeGlobalResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="encoding" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="maxBatchSize" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="sobjects" type="{urn:partner.soap.sforce.com}DescribeGlobalSObjectResult" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "DescribeGlobalResult", propOrder = {
+    "encoding",
+    "maxBatchSize",
+    "sobjects"
+})
+public class DescribeGlobalResult {
 
-    public DescribeGlobalResult() {
-    }
-
-    public DescribeGlobalResult(
-           java.lang.String encoding,
-           int maxBatchSize,
-           com.sforce.soap.partner.DescribeGlobalSObjectResult[] sobjects) {
-           this.encoding = encoding;
-           this.maxBatchSize = maxBatchSize;
-           this.sobjects = sobjects;
-    }
-
+    @XmlElement(required = true, nillable = true)
+    protected String encoding;
+    protected int maxBatchSize;
+    protected List<DescribeGlobalSObjectResult> sobjects;
 
     /**
-     * Gets the encoding value for this DescribeGlobalResult.
+     * Gets the value of the encoding property.
      * 
-     * @return encoding
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getEncoding() {
+    public String getEncoding() {
         return encoding;
     }
 
-
     /**
-     * Sets the encoding value for this DescribeGlobalResult.
+     * Sets the value of the encoding property.
      * 
-     * @param encoding
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setEncoding(java.lang.String encoding) {
-        this.encoding = encoding;
+    public void setEncoding(String value) {
+        this.encoding = value;
     }
 
-
     /**
-     * Gets the maxBatchSize value for this DescribeGlobalResult.
+     * Gets the value of the maxBatchSize property.
      * 
-     * @return maxBatchSize
      */
     public int getMaxBatchSize() {
         return maxBatchSize;
     }
 
-
     /**
-     * Sets the maxBatchSize value for this DescribeGlobalResult.
+     * Sets the value of the maxBatchSize property.
      * 
-     * @param maxBatchSize
      */
-    public void setMaxBatchSize(int maxBatchSize) {
-        this.maxBatchSize = maxBatchSize;
+    public void setMaxBatchSize(int value) {
+        this.maxBatchSize = value;
     }
 
-
     /**
-     * Gets the sobjects value for this DescribeGlobalResult.
+     * Gets the value of the sobjects property.
      * 
-     * @return sobjects
-     */
-    public com.sforce.soap.partner.DescribeGlobalSObjectResult[] getSobjects() {
-        return sobjects;
-    }
-
-
-    /**
-     * Sets the sobjects value for this DescribeGlobalResult.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the sobjects property.
      * 
-     * @param sobjects
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getSobjects().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link DescribeGlobalSObjectResult }
+     * 
+     * 
      */
-    public void setSobjects(com.sforce.soap.partner.DescribeGlobalSObjectResult[] sobjects) {
-        this.sobjects = sobjects;
-    }
-
-    public com.sforce.soap.partner.DescribeGlobalSObjectResult getSobjects(int i) {
-        return this.sobjects[i];
-    }
-
-    public void setSobjects(int i, com.sforce.soap.partner.DescribeGlobalSObjectResult _value) {
-        this.sobjects[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof DescribeGlobalResult)) return false;
-        DescribeGlobalResult other = (DescribeGlobalResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<DescribeGlobalSObjectResult> getSobjects() {
+        if (sobjects == null) {
+            sobjects = new ArrayList<DescribeGlobalSObjectResult>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.encoding==null && other.getEncoding()==null) || 
-             (this.encoding!=null &&
-              this.encoding.equals(other.getEncoding()))) &&
-            this.maxBatchSize == other.getMaxBatchSize() &&
-            ((this.sobjects==null && other.getSobjects()==null) || 
-             (this.sobjects!=null &&
-              java.util.Arrays.equals(this.sobjects, other.getSobjects())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getEncoding() != null) {
-            _hashCode += getEncoding().hashCode();
-        }
-        _hashCode += getMaxBatchSize();
-        if (getSobjects() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getSobjects());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getSobjects(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(DescribeGlobalResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeGlobalResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("encoding");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "encoding"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("maxBatchSize");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "maxBatchSize"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sobjects");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sobjects"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeGlobalSObjectResult"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.sobjects;
     }
 
 }

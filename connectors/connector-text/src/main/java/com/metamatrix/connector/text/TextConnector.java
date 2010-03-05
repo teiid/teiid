@@ -35,71 +35,48 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.MetadataProvider;
-import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.basic.BasicConnector;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.Table;
 
 
 /**
  * Implementation of text connector.
  */
-public class TextConnector extends BasicConnector implements MetadataProvider {
+public class TextConnector extends BasicConnector {
 
-    private ConnectorLogger logger;
-    private ConnectorEnvironment env;
+    private TextManagedConnectionFactory config;
     private int srcFiles = 0;
     private int srcFileErrs = 0;
     private Map<String, Properties> metadataProps = new HashMap<String, Properties>();
     private String parentDirectory;
 
-    /**
-     * Initialization with environment.
-     */
-    @Override
-    public void start(ConnectorEnvironment environment) throws ConnectorException {
-        logger = environment.getLogger();
-        this.env = environment;
+	@Override
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
+		
+        this.config = (TextManagedConnectionFactory)env;
 
         initMetaDataProps();
+        
         // test connection
-        TextConnection test = new TextConnection(this.env, metadataProps);
+        TextConnection test = new TextConnection(this.config, metadataProps);
         test.close();
-
-        // logging
-        logger = environment.getLogger();
-        logger.logInfo("Text Connector is started."); //$NON-NLS-1$
     }
 
-    public void stop() {
-        logger.logInfo("Text Connector is stoped."); //$NON-NLS-1$
-    }
 
-    /*
-     * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
-     */
-    public Connection getConnection(ExecutionContext context) throws ConnectorException {
-        return new TextConnection(this.env, metadataProps);
+    public Connection getConnection() throws ConnectorException {
+        return new TextConnection(this.config, metadataProps);
     }
 
     private void initMetaDataProps() throws ConnectorException {
-        Properties connectorProps = env.getProperties();
-        String descriptor = connectorProps.getProperty(TextPropertyNames.DESCRIPTOR_FILE);
-        boolean partialStartupAllowed = getPartialStartupAllowedValue(connectorProps);
     	reinitFileCounts();
         try {
-            readDescriptor(descriptor,partialStartupAllowed);
+            readDescriptor(this.config.getDescriptorFile(),this.config.isPartialStartupAllowed());
             reinitFileCounts();
         } catch (ConnectorException ce) {
         	// If partial startup is not allowed, throw the exception
-        	if(!partialStartupAllowed ) {
+        	if(!this.config.isPartialStartupAllowed() ) {
         		reinitFileCounts();
         		throw ce;
             // If partial startup is allowed, only throw exception if no files connected
@@ -109,11 +86,7 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
         	}
         }
     }
-    
-    private boolean getPartialStartupAllowedValue(Properties connectorProps) {
-    	String partialAllowedStr = connectorProps.getProperty(TextPropertyNames.PARTIAL_STARTUP_ALLOWED,"true"); //$NON-NLS-1$
-    	return Boolean.valueOf(partialAllowedStr).booleanValue();
-    }
+
     
     private void reinitFileCounts() {
 		this.srcFiles=0;
@@ -138,7 +111,7 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
         BufferedReader br = null;
         try {
             br = getReader(descriptorFile);
-            logger.logInfo("Reading descriptor file: " + descriptorFile); //$NON-NLS-1$
+            this.config.getLogger().logInfo("Reading descriptor file: " + descriptorFile); //$NON-NLS-1$
 
             String line = null;
             // Walk through records, finding matches
@@ -170,14 +143,14 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
             if(connExcep!=null) throw connExcep;
             
         } catch (IOException e) {
-            logger.logError(TextPlugin.Util.getString("TextConnection.Error_while_reading_text_file__{0}_1", new Object[] {e.getMessage()}), e); //$NON-NLS-1$
+        	this.config.getLogger().logError(TextPlugin.Util.getString("TextConnection.Error_while_reading_text_file__{0}_1", new Object[] {e.getMessage()}), e); //$NON-NLS-1$
             throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.Error_trying_to_establish_connection_5")); //$NON-NLS-1$
         } finally {
         	if (br != null) {
         		try {br.close();} catch (Exception ee) {}
         	}
         }
-        logger.logDetail("Successfully read metadata information from the descriptor file " + descriptorFile); //$NON-NLS-1$
+        this.config.getLogger().logDetail("Successfully read metadata information from the descriptor file " + descriptorFile); //$NON-NLS-1$
     }
 
     /**
@@ -261,7 +234,6 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
                 metadataProps.put(groupName, props);
             }
         } catch (Exception e) {
-            logger.logError(TextPlugin.Util.getString("TextConnection.Error_parsing_property_string_{0}_5", new Object[] {propStr}), e); //$NON-NLS-1$
             throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Error_parsing_property_string_{0}__{1}_6", new Object[] {propStr, e.getMessage()})); //$NON-NLS-1$
         }
 
@@ -353,35 +325,7 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
         return br;
     }
 
-	public ConnectorCapabilities getCapabilities() {
-		return TextCapabilities.INSTANCE;
-	}
 
-	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory) throws ConnectorException {
-		for (Map.Entry<String, Properties> entry : this.metadataProps.entrySet()) {
-			Properties p = entry.getValue();
-			String columns = p.getProperty(TextPropertyNames.COLUMNS);
-			if (columns == null) {
-				continue;
-			}
-			String types = p.getProperty(TextPropertyNames.TYPES);
-			String[] columnNames = columns.trim().split(","); //$NON-NLS-1$
-			String[] typeNames = null; 
-			if (types != null) {
-				typeNames = types.trim().split(","); //$NON-NLS-1$
-				if (typeNames.length != columnNames.length) {
-					throw new ConnectorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
-				}
-			}
-			Table table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
-			for (int i = 0; i < columnNames.length; i++) {
-				String type = typeNames == null?TypeFacility.RUNTIME_NAMES.STRING:typeNames[i].trim().toLowerCase();
-				Column column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
-				column.setNameInSource(String.valueOf(i));
-				column.setNativeType(TypeFacility.RUNTIME_NAMES.STRING);
-			}
-		}
-	}
+
 
 }

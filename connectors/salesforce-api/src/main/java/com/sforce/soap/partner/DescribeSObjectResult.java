@@ -1,982 +1,622 @@
-/**
- * DescribeSObjectResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class DescribeSObjectResult  implements java.io.Serializable {
-    private boolean activateable;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private com.sforce.soap.partner.ChildRelationship[] childRelationships;
 
-    private boolean createable;
+/**
+ * <p>Java class for DescribeSObjectResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="DescribeSObjectResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="activateable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="childRelationships" type="{urn:partner.soap.sforce.com}ChildRelationship" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="createable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="custom" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="customSetting" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="deletable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="deprecatedAndHidden" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="fields" type="{urn:partner.soap.sforce.com}Field" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="keyPrefix" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="labelPlural" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="layoutable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="mergeable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="queryable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="recordTypeInfos" type="{urn:partner.soap.sforce.com}RecordTypeInfo" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="replicateable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="retrieveable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="searchable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="triggerable" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="undeletable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="updateable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="urlDetail" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="urlEdit" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="urlNew" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "DescribeSObjectResult", propOrder = {
+    "activateable",
+    "childRelationships",
+    "createable",
+    "custom",
+    "customSetting",
+    "deletable",
+    "deprecatedAndHidden",
+    "fields",
+    "keyPrefix",
+    "label",
+    "labelPlural",
+    "layoutable",
+    "mergeable",
+    "name",
+    "queryable",
+    "recordTypeInfos",
+    "replicateable",
+    "retrieveable",
+    "searchable",
+    "triggerable",
+    "undeletable",
+    "updateable",
+    "urlDetail",
+    "urlEdit",
+    "urlNew"
+})
+public class DescribeSObjectResult {
 
-    private boolean custom;
-
-    private boolean customSetting;
-
-    private boolean deletable;
-
-    private boolean deprecatedAndHidden;
-
-    private com.sforce.soap.partner.Field[] fields;
-
-    private java.lang.String keyPrefix;
-
-    private java.lang.String label;
-
-    private java.lang.String labelPlural;
-
-    private boolean layoutable;
-
-    private boolean mergeable;
-
-    private java.lang.String name;
-
-    private boolean queryable;
-
-    private com.sforce.soap.partner.RecordTypeInfo[] recordTypeInfos;
-
-    private boolean replicateable;
-
-    private boolean retrieveable;
-
-    private boolean searchable;
-
-    private java.lang.Boolean triggerable;
-
-    private boolean undeletable;
-
-    private boolean updateable;
-
-    private java.lang.String urlDetail;
-
-    private java.lang.String urlEdit;
-
-    private java.lang.String urlNew;
-
-    public DescribeSObjectResult() {
-    }
-
-    public DescribeSObjectResult(
-           boolean activateable,
-           com.sforce.soap.partner.ChildRelationship[] childRelationships,
-           boolean createable,
-           boolean custom,
-           boolean customSetting,
-           boolean deletable,
-           boolean deprecatedAndHidden,
-           com.sforce.soap.partner.Field[] fields,
-           java.lang.String keyPrefix,
-           java.lang.String label,
-           java.lang.String labelPlural,
-           boolean layoutable,
-           boolean mergeable,
-           java.lang.String name,
-           boolean queryable,
-           com.sforce.soap.partner.RecordTypeInfo[] recordTypeInfos,
-           boolean replicateable,
-           boolean retrieveable,
-           boolean searchable,
-           java.lang.Boolean triggerable,
-           boolean undeletable,
-           boolean updateable,
-           java.lang.String urlDetail,
-           java.lang.String urlEdit,
-           java.lang.String urlNew) {
-           this.activateable = activateable;
-           this.childRelationships = childRelationships;
-           this.createable = createable;
-           this.custom = custom;
-           this.customSetting = customSetting;
-           this.deletable = deletable;
-           this.deprecatedAndHidden = deprecatedAndHidden;
-           this.fields = fields;
-           this.keyPrefix = keyPrefix;
-           this.label = label;
-           this.labelPlural = labelPlural;
-           this.layoutable = layoutable;
-           this.mergeable = mergeable;
-           this.name = name;
-           this.queryable = queryable;
-           this.recordTypeInfos = recordTypeInfos;
-           this.replicateable = replicateable;
-           this.retrieveable = retrieveable;
-           this.searchable = searchable;
-           this.triggerable = triggerable;
-           this.undeletable = undeletable;
-           this.updateable = updateable;
-           this.urlDetail = urlDetail;
-           this.urlEdit = urlEdit;
-           this.urlNew = urlNew;
-    }
-
+    protected boolean activateable;
+    protected List<ChildRelationship> childRelationships;
+    protected boolean createable;
+    protected boolean custom;
+    protected boolean customSetting;
+    protected boolean deletable;
+    protected boolean deprecatedAndHidden;
+    @XmlElement(nillable = true)
+    protected List<Field> fields;
+    @XmlElement(required = true, nillable = true)
+    protected String keyPrefix;
+    @XmlElement(required = true)
+    protected String label;
+    @XmlElement(required = true)
+    protected String labelPlural;
+    protected boolean layoutable;
+    protected boolean mergeable;
+    @XmlElement(required = true)
+    protected String name;
+    protected boolean queryable;
+    protected List<RecordTypeInfo> recordTypeInfos;
+    protected boolean replicateable;
+    protected boolean retrieveable;
+    protected boolean searchable;
+    protected Boolean triggerable;
+    protected boolean undeletable;
+    protected boolean updateable;
+    @XmlElement(required = true, nillable = true)
+    protected String urlDetail;
+    @XmlElement(required = true, nillable = true)
+    protected String urlEdit;
+    @XmlElement(required = true, nillable = true)
+    protected String urlNew;
 
     /**
-     * Gets the activateable value for this DescribeSObjectResult.
+     * Gets the value of the activateable property.
      * 
-     * @return activateable
      */
     public boolean isActivateable() {
         return activateable;
     }
 
-
     /**
-     * Sets the activateable value for this DescribeSObjectResult.
+     * Sets the value of the activateable property.
      * 
-     * @param activateable
      */
-    public void setActivateable(boolean activateable) {
-        this.activateable = activateable;
+    public void setActivateable(boolean value) {
+        this.activateable = value;
     }
 
-
     /**
-     * Gets the childRelationships value for this DescribeSObjectResult.
+     * Gets the value of the childRelationships property.
      * 
-     * @return childRelationships
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the childRelationships property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getChildRelationships().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link ChildRelationship }
+     * 
+     * 
      */
-    public com.sforce.soap.partner.ChildRelationship[] getChildRelationships() {
-        return childRelationships;
+    public List<ChildRelationship> getChildRelationships() {
+        if (childRelationships == null) {
+            childRelationships = new ArrayList<ChildRelationship>();
+        }
+        return this.childRelationships;
     }
-
 
     /**
-     * Sets the childRelationships value for this DescribeSObjectResult.
+     * Gets the value of the createable property.
      * 
-     * @param childRelationships
-     */
-    public void setChildRelationships(com.sforce.soap.partner.ChildRelationship[] childRelationships) {
-        this.childRelationships = childRelationships;
-    }
-
-    public com.sforce.soap.partner.ChildRelationship getChildRelationships(int i) {
-        return this.childRelationships[i];
-    }
-
-    public void setChildRelationships(int i, com.sforce.soap.partner.ChildRelationship _value) {
-        this.childRelationships[i] = _value;
-    }
-
-
-    /**
-     * Gets the createable value for this DescribeSObjectResult.
-     * 
-     * @return createable
      */
     public boolean isCreateable() {
         return createable;
     }
 
-
     /**
-     * Sets the createable value for this DescribeSObjectResult.
+     * Sets the value of the createable property.
      * 
-     * @param createable
      */
-    public void setCreateable(boolean createable) {
-        this.createable = createable;
+    public void setCreateable(boolean value) {
+        this.createable = value;
     }
 
-
     /**
-     * Gets the custom value for this DescribeSObjectResult.
+     * Gets the value of the custom property.
      * 
-     * @return custom
      */
     public boolean isCustom() {
         return custom;
     }
 
-
     /**
-     * Sets the custom value for this DescribeSObjectResult.
+     * Sets the value of the custom property.
      * 
-     * @param custom
      */
-    public void setCustom(boolean custom) {
-        this.custom = custom;
+    public void setCustom(boolean value) {
+        this.custom = value;
     }
 
-
     /**
-     * Gets the customSetting value for this DescribeSObjectResult.
+     * Gets the value of the customSetting property.
      * 
-     * @return customSetting
      */
     public boolean isCustomSetting() {
         return customSetting;
     }
 
-
     /**
-     * Sets the customSetting value for this DescribeSObjectResult.
+     * Sets the value of the customSetting property.
      * 
-     * @param customSetting
      */
-    public void setCustomSetting(boolean customSetting) {
-        this.customSetting = customSetting;
+    public void setCustomSetting(boolean value) {
+        this.customSetting = value;
     }
 
-
     /**
-     * Gets the deletable value for this DescribeSObjectResult.
+     * Gets the value of the deletable property.
      * 
-     * @return deletable
      */
     public boolean isDeletable() {
         return deletable;
     }
 
-
     /**
-     * Sets the deletable value for this DescribeSObjectResult.
+     * Sets the value of the deletable property.
      * 
-     * @param deletable
      */
-    public void setDeletable(boolean deletable) {
-        this.deletable = deletable;
+    public void setDeletable(boolean value) {
+        this.deletable = value;
     }
 
-
     /**
-     * Gets the deprecatedAndHidden value for this DescribeSObjectResult.
+     * Gets the value of the deprecatedAndHidden property.
      * 
-     * @return deprecatedAndHidden
      */
     public boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
+    /**
+     * Sets the value of the deprecatedAndHidden property.
+     * 
+     */
+    public void setDeprecatedAndHidden(boolean value) {
+        this.deprecatedAndHidden = value;
+    }
 
     /**
-     * Sets the deprecatedAndHidden value for this DescribeSObjectResult.
+     * Gets the value of the fields property.
      * 
-     * @param deprecatedAndHidden
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the fields property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getFields().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link Field }
+     * 
+     * 
      */
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
-        this.deprecatedAndHidden = deprecatedAndHidden;
+    public List<Field> getFields() {
+        if (fields == null) {
+            fields = new ArrayList<Field>();
+        }
+        return this.fields;
     }
-
 
     /**
-     * Gets the fields value for this DescribeSObjectResult.
+     * Gets the value of the keyPrefix property.
      * 
-     * @return fields
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public com.sforce.soap.partner.Field[] getFields() {
-        return fields;
-    }
-
-
-    /**
-     * Sets the fields value for this DescribeSObjectResult.
-     * 
-     * @param fields
-     */
-    public void setFields(com.sforce.soap.partner.Field[] fields) {
-        this.fields = fields;
-    }
-
-    public com.sforce.soap.partner.Field getFields(int i) {
-        return this.fields[i];
-    }
-
-    public void setFields(int i, com.sforce.soap.partner.Field _value) {
-        this.fields[i] = _value;
-    }
-
-
-    /**
-     * Gets the keyPrefix value for this DescribeSObjectResult.
-     * 
-     * @return keyPrefix
-     */
-    public java.lang.String getKeyPrefix() {
+    public String getKeyPrefix() {
         return keyPrefix;
     }
 
-
     /**
-     * Sets the keyPrefix value for this DescribeSObjectResult.
+     * Sets the value of the keyPrefix property.
      * 
-     * @param keyPrefix
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setKeyPrefix(java.lang.String keyPrefix) {
-        this.keyPrefix = keyPrefix;
+    public void setKeyPrefix(String value) {
+        this.keyPrefix = value;
     }
 
-
     /**
-     * Gets the label value for this DescribeSObjectResult.
+     * Gets the value of the label property.
      * 
-     * @return label
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLabel() {
+    public String getLabel() {
         return label;
     }
 
-
     /**
-     * Sets the label value for this DescribeSObjectResult.
+     * Sets the value of the label property.
      * 
-     * @param label
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLabel(java.lang.String label) {
-        this.label = label;
+    public void setLabel(String value) {
+        this.label = value;
     }
 
-
     /**
-     * Gets the labelPlural value for this DescribeSObjectResult.
+     * Gets the value of the labelPlural property.
      * 
-     * @return labelPlural
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLabelPlural() {
+    public String getLabelPlural() {
         return labelPlural;
     }
 
-
     /**
-     * Sets the labelPlural value for this DescribeSObjectResult.
+     * Sets the value of the labelPlural property.
      * 
-     * @param labelPlural
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLabelPlural(java.lang.String labelPlural) {
-        this.labelPlural = labelPlural;
+    public void setLabelPlural(String value) {
+        this.labelPlural = value;
     }
 
-
     /**
-     * Gets the layoutable value for this DescribeSObjectResult.
+     * Gets the value of the layoutable property.
      * 
-     * @return layoutable
      */
     public boolean isLayoutable() {
         return layoutable;
     }
 
-
     /**
-     * Sets the layoutable value for this DescribeSObjectResult.
+     * Sets the value of the layoutable property.
      * 
-     * @param layoutable
      */
-    public void setLayoutable(boolean layoutable) {
-        this.layoutable = layoutable;
+    public void setLayoutable(boolean value) {
+        this.layoutable = value;
     }
 
-
     /**
-     * Gets the mergeable value for this DescribeSObjectResult.
+     * Gets the value of the mergeable property.
      * 
-     * @return mergeable
      */
     public boolean isMergeable() {
         return mergeable;
     }
 
-
     /**
-     * Sets the mergeable value for this DescribeSObjectResult.
+     * Sets the value of the mergeable property.
      * 
-     * @param mergeable
      */
-    public void setMergeable(boolean mergeable) {
-        this.mergeable = mergeable;
+    public void setMergeable(boolean value) {
+        this.mergeable = value;
     }
 
-
     /**
-     * Gets the name value for this DescribeSObjectResult.
+     * Gets the value of the name property.
      * 
-     * @return name
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getName() {
+    public String getName() {
         return name;
     }
 
-
     /**
-     * Sets the name value for this DescribeSObjectResult.
+     * Sets the value of the name property.
      * 
-     * @param name
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setName(java.lang.String name) {
-        this.name = name;
+    public void setName(String value) {
+        this.name = value;
     }
 
-
     /**
-     * Gets the queryable value for this DescribeSObjectResult.
+     * Gets the value of the queryable property.
      * 
-     * @return queryable
      */
     public boolean isQueryable() {
         return queryable;
     }
 
-
     /**
-     * Sets the queryable value for this DescribeSObjectResult.
+     * Sets the value of the queryable property.
      * 
-     * @param queryable
      */
-    public void setQueryable(boolean queryable) {
-        this.queryable = queryable;
+    public void setQueryable(boolean value) {
+        this.queryable = value;
     }
 
-
     /**
-     * Gets the recordTypeInfos value for this DescribeSObjectResult.
+     * Gets the value of the recordTypeInfos property.
      * 
-     * @return recordTypeInfos
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the recordTypeInfos property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getRecordTypeInfos().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link RecordTypeInfo }
+     * 
+     * 
      */
-    public com.sforce.soap.partner.RecordTypeInfo[] getRecordTypeInfos() {
-        return recordTypeInfos;
+    public List<RecordTypeInfo> getRecordTypeInfos() {
+        if (recordTypeInfos == null) {
+            recordTypeInfos = new ArrayList<RecordTypeInfo>();
+        }
+        return this.recordTypeInfos;
     }
-
 
     /**
-     * Sets the recordTypeInfos value for this DescribeSObjectResult.
+     * Gets the value of the replicateable property.
      * 
-     * @param recordTypeInfos
-     */
-    public void setRecordTypeInfos(com.sforce.soap.partner.RecordTypeInfo[] recordTypeInfos) {
-        this.recordTypeInfos = recordTypeInfos;
-    }
-
-    public com.sforce.soap.partner.RecordTypeInfo getRecordTypeInfos(int i) {
-        return this.recordTypeInfos[i];
-    }
-
-    public void setRecordTypeInfos(int i, com.sforce.soap.partner.RecordTypeInfo _value) {
-        this.recordTypeInfos[i] = _value;
-    }
-
-
-    /**
-     * Gets the replicateable value for this DescribeSObjectResult.
-     * 
-     * @return replicateable
      */
     public boolean isReplicateable() {
         return replicateable;
     }
 
-
     /**
-     * Sets the replicateable value for this DescribeSObjectResult.
+     * Sets the value of the replicateable property.
      * 
-     * @param replicateable
      */
-    public void setReplicateable(boolean replicateable) {
-        this.replicateable = replicateable;
+    public void setReplicateable(boolean value) {
+        this.replicateable = value;
     }
 
-
     /**
-     * Gets the retrieveable value for this DescribeSObjectResult.
+     * Gets the value of the retrieveable property.
      * 
-     * @return retrieveable
      */
     public boolean isRetrieveable() {
         return retrieveable;
     }
 
-
     /**
-     * Sets the retrieveable value for this DescribeSObjectResult.
+     * Sets the value of the retrieveable property.
      * 
-     * @param retrieveable
      */
-    public void setRetrieveable(boolean retrieveable) {
-        this.retrieveable = retrieveable;
+    public void setRetrieveable(boolean value) {
+        this.retrieveable = value;
     }
 
-
     /**
-     * Gets the searchable value for this DescribeSObjectResult.
+     * Gets the value of the searchable property.
      * 
-     * @return searchable
      */
     public boolean isSearchable() {
         return searchable;
     }
 
-
     /**
-     * Sets the searchable value for this DescribeSObjectResult.
+     * Sets the value of the searchable property.
      * 
-     * @param searchable
      */
-    public void setSearchable(boolean searchable) {
-        this.searchable = searchable;
+    public void setSearchable(boolean value) {
+        this.searchable = value;
     }
 
-
     /**
-     * Gets the triggerable value for this DescribeSObjectResult.
+     * Gets the value of the triggerable property.
      * 
-     * @return triggerable
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getTriggerable() {
+    public Boolean isTriggerable() {
         return triggerable;
     }
 
-
     /**
-     * Sets the triggerable value for this DescribeSObjectResult.
+     * Sets the value of the triggerable property.
      * 
-     * @param triggerable
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setTriggerable(java.lang.Boolean triggerable) {
-        this.triggerable = triggerable;
+    public void setTriggerable(Boolean value) {
+        this.triggerable = value;
     }
 
-
     /**
-     * Gets the undeletable value for this DescribeSObjectResult.
+     * Gets the value of the undeletable property.
      * 
-     * @return undeletable
      */
     public boolean isUndeletable() {
         return undeletable;
     }
 
-
     /**
-     * Sets the undeletable value for this DescribeSObjectResult.
+     * Sets the value of the undeletable property.
      * 
-     * @param undeletable
      */
-    public void setUndeletable(boolean undeletable) {
-        this.undeletable = undeletable;
+    public void setUndeletable(boolean value) {
+        this.undeletable = value;
     }
 
-
     /**
-     * Gets the updateable value for this DescribeSObjectResult.
+     * Gets the value of the updateable property.
      * 
-     * @return updateable
      */
     public boolean isUpdateable() {
         return updateable;
     }
 
-
     /**
-     * Sets the updateable value for this DescribeSObjectResult.
+     * Sets the value of the updateable property.
      * 
-     * @param updateable
      */
-    public void setUpdateable(boolean updateable) {
-        this.updateable = updateable;
+    public void setUpdateable(boolean value) {
+        this.updateable = value;
     }
 
-
     /**
-     * Gets the urlDetail value for this DescribeSObjectResult.
+     * Gets the value of the urlDetail property.
      * 
-     * @return urlDetail
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUrlDetail() {
+    public String getUrlDetail() {
         return urlDetail;
     }
 
-
     /**
-     * Sets the urlDetail value for this DescribeSObjectResult.
+     * Sets the value of the urlDetail property.
      * 
-     * @param urlDetail
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUrlDetail(java.lang.String urlDetail) {
-        this.urlDetail = urlDetail;
+    public void setUrlDetail(String value) {
+        this.urlDetail = value;
     }
 
-
     /**
-     * Gets the urlEdit value for this DescribeSObjectResult.
+     * Gets the value of the urlEdit property.
      * 
-     * @return urlEdit
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUrlEdit() {
+    public String getUrlEdit() {
         return urlEdit;
     }
 
-
     /**
-     * Sets the urlEdit value for this DescribeSObjectResult.
+     * Sets the value of the urlEdit property.
      * 
-     * @param urlEdit
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUrlEdit(java.lang.String urlEdit) {
-        this.urlEdit = urlEdit;
+    public void setUrlEdit(String value) {
+        this.urlEdit = value;
     }
 
-
     /**
-     * Gets the urlNew value for this DescribeSObjectResult.
+     * Gets the value of the urlNew property.
      * 
-     * @return urlNew
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUrlNew() {
+    public String getUrlNew() {
         return urlNew;
     }
 
-
     /**
-     * Sets the urlNew value for this DescribeSObjectResult.
+     * Sets the value of the urlNew property.
      * 
-     * @param urlNew
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUrlNew(java.lang.String urlNew) {
-        this.urlNew = urlNew;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof DescribeSObjectResult)) return false;
-        DescribeSObjectResult other = (DescribeSObjectResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.activateable == other.isActivateable() &&
-            ((this.childRelationships==null && other.getChildRelationships()==null) || 
-             (this.childRelationships!=null &&
-              java.util.Arrays.equals(this.childRelationships, other.getChildRelationships()))) &&
-            this.createable == other.isCreateable() &&
-            this.custom == other.isCustom() &&
-            this.customSetting == other.isCustomSetting() &&
-            this.deletable == other.isDeletable() &&
-            this.deprecatedAndHidden == other.isDeprecatedAndHidden() &&
-            ((this.fields==null && other.getFields()==null) || 
-             (this.fields!=null &&
-              java.util.Arrays.equals(this.fields, other.getFields()))) &&
-            ((this.keyPrefix==null && other.getKeyPrefix()==null) || 
-             (this.keyPrefix!=null &&
-              this.keyPrefix.equals(other.getKeyPrefix()))) &&
-            ((this.label==null && other.getLabel()==null) || 
-             (this.label!=null &&
-              this.label.equals(other.getLabel()))) &&
-            ((this.labelPlural==null && other.getLabelPlural()==null) || 
-             (this.labelPlural!=null &&
-              this.labelPlural.equals(other.getLabelPlural()))) &&
-            this.layoutable == other.isLayoutable() &&
-            this.mergeable == other.isMergeable() &&
-            ((this.name==null && other.getName()==null) || 
-             (this.name!=null &&
-              this.name.equals(other.getName()))) &&
-            this.queryable == other.isQueryable() &&
-            ((this.recordTypeInfos==null && other.getRecordTypeInfos()==null) || 
-             (this.recordTypeInfos!=null &&
-              java.util.Arrays.equals(this.recordTypeInfos, other.getRecordTypeInfos()))) &&
-            this.replicateable == other.isReplicateable() &&
-            this.retrieveable == other.isRetrieveable() &&
-            this.searchable == other.isSearchable() &&
-            ((this.triggerable==null && other.getTriggerable()==null) || 
-             (this.triggerable!=null &&
-              this.triggerable.equals(other.getTriggerable()))) &&
-            this.undeletable == other.isUndeletable() &&
-            this.updateable == other.isUpdateable() &&
-            ((this.urlDetail==null && other.getUrlDetail()==null) || 
-             (this.urlDetail!=null &&
-              this.urlDetail.equals(other.getUrlDetail()))) &&
-            ((this.urlEdit==null && other.getUrlEdit()==null) || 
-             (this.urlEdit!=null &&
-              this.urlEdit.equals(other.getUrlEdit()))) &&
-            ((this.urlNew==null && other.getUrlNew()==null) || 
-             (this.urlNew!=null &&
-              this.urlNew.equals(other.getUrlNew())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += (isActivateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getChildRelationships() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getChildRelationships());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getChildRelationships(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += (isCreateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isCustom() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isCustomSetting() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isDeletable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isDeprecatedAndHidden() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getFields() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getFields());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getFields(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getKeyPrefix() != null) {
-            _hashCode += getKeyPrefix().hashCode();
-        }
-        if (getLabel() != null) {
-            _hashCode += getLabel().hashCode();
-        }
-        if (getLabelPlural() != null) {
-            _hashCode += getLabelPlural().hashCode();
-        }
-        _hashCode += (isLayoutable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isMergeable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getName() != null) {
-            _hashCode += getName().hashCode();
-        }
-        _hashCode += (isQueryable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getRecordTypeInfos() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getRecordTypeInfos());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getRecordTypeInfos(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += (isReplicateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isRetrieveable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isSearchable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getTriggerable() != null) {
-            _hashCode += getTriggerable().hashCode();
-        }
-        _hashCode += (isUndeletable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isUpdateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getUrlDetail() != null) {
-            _hashCode += getUrlDetail().hashCode();
-        }
-        if (getUrlEdit() != null) {
-            _hashCode += getUrlEdit().hashCode();
-        }
-        if (getUrlNew() != null) {
-            _hashCode += getUrlNew().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(DescribeSObjectResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeSObjectResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("activateable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "activateable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("childRelationships");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "childRelationships"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ChildRelationship"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("createable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "createable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("custom");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "custom"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("customSetting");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "customSetting"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("deletable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "deletable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("deprecatedAndHidden");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "deprecatedAndHidden"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("fields");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fields"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "Field"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("keyPrefix");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "keyPrefix"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("label");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "label"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("labelPlural");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "labelPlural"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("layoutable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "layoutable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("mergeable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "mergeable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("name");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "name"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("queryable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "queryable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("recordTypeInfos");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "recordTypeInfos"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "RecordTypeInfo"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("replicateable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "replicateable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("retrieveable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "retrieveable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("searchable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "searchable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("triggerable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "triggerable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("undeletable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "undeletable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("updateable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "updateable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("urlDetail");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "urlDetail"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("urlEdit");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "urlEdit"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("urlNew");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "urlNew"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setUrlNew(String value) {
+        this.urlNew = value;
     }
 
 }

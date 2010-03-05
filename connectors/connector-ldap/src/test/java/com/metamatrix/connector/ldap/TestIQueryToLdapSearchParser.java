@@ -21,32 +21,37 @@
  */
 package com.metamatrix.connector.ldap;
 
+import static org.mockito.Mockito.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
-
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
+import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
+
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
-import com.metamatrix.query.unittest.FakeMetadataStore;
+import com.metamatrix.query.unittest.RealMetadataFactory;
 
 /** 
  * Test IQueryToLdapSearchParser.  
@@ -64,7 +69,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
 	/**
      * Get Resolved Command using SQL String and metadata.
      */
-    public ICommand getCommand(String sql, QueryMetadataInterface metadata) {
+    public Command getCommand(String sql, QueryMetadataInterface metadata) {
     	CommandBuilder builder = new CommandBuilder(metadata);
     	return builder.getCommand(sql);
     }
@@ -249,26 +254,29 @@ public class TestIQueryToLdapSearchParser extends TestCase {
     }
 
 	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws ConnectorException {
-		ConnectorLogger logger = new SysLogger(false);
     	QueryMetadataInterface metadata = exampleLdap();
     	RuntimeMetadata rm = new RuntimeMetadataImpl(metadata);
-    	Properties props = new Properties();
     	
-    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);
+		LDAPManagedConnectionFactory config = mock(LDAPManagedConnectionFactory.class);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));    	
     	
-        IQuery query = (IQuery)getCommand(queryString, metadata);
+    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(rm, config);
+    	
+        Select query = (Select)getCommand(queryString, metadata);
 
         LDAPSearchDetails searchDetails = searchParser.translateSQLQueryToLDAPSearch(query);
 		return searchDetails;
 	}
     
-    public static FakeMetadataFacade exampleLdap() { 
+    public static QueryMetadataInterface exampleLdap() {
+    	MetadataStore metadataStore = new MetadataStore();
+
         // Create models
-        FakeMetadataObject ldapModel = FakeMetadataFactory.createPhysicalModel("LdapModel"); //$NON-NLS-1$
+        Schema ldapModel = RealMetadataFactory.createPhysicalModel("LdapModel", metadataStore); //$NON-NLS-1$
         
         // Create physical groups
-        FakeMetadataObject table = FakeMetadataFactory.createPhysicalGroup("LdapModel.People", ldapModel); //$NON-NLS-1$
-        table.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "ou=people,dc=metamatrix,dc=com"); //$NON-NLS-1$
+        Table table = RealMetadataFactory.createPhysicalGroup("People", ldapModel); //$NON-NLS-1$
+        table.setNameInSource("ou=people,dc=metamatrix,dc=com"); //$NON-NLS-1$
                 
         // Create physical elements
         String[] elemNames = new String[] {
@@ -278,32 +286,24 @@ public class TestIQueryToLdapSearchParser extends TestCase {
             DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
         };
         
-        List cols = FakeMetadataFactory.createElements(table, elemNames, elemTypes);
+        List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         
         // Set name in source on each column
         String[] nameInSource = new String[] {
            "uid", "cn"             //$NON-NLS-1$ //$NON-NLS-2$  
         };
         for(int i=0; i<2; i++) {
-            FakeMetadataObject obj = (FakeMetadataObject) cols.get(i);
-            obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, nameInSource[i]);
+            Column obj = cols.get(i);
+            obj.setNameInSource(nameInSource[i]);
         }
         
         // Set column-specific properties
-        ((FakeMetadataObject) cols.get(0)).putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         for(int i=1; i<2; i++) {
-            ((FakeMetadataObject) cols.get(0)).putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, Boolean.FALSE);
-            ((FakeMetadataObject) cols.get(0)).putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, Boolean.FALSE);
+            cols.get(i).setSearchType(SearchType.Unsearchable);
         }
         
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(ldapModel);
-        store.addObject(table);     
-        store.addObjects(cols);
-        
         // Create the facade from the store
-        return new FakeMetadataFacade(store);
+        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, null);
     }    
 }
 

@@ -55,9 +55,7 @@ public class StreamingRowCollector {
 			}
 		};
 
-		Builder builder = new Builder(reader, false,
-				new StreamingMultiPathFilter(xPaths, namespaces)
-						.createNodeFactory(null, myTransform));
+		Builder builder = new Builder(reader, false, new StreamingMultiPathFilter(xPaths, namespaces).createNodeFactory(null, myTransform));
 		try {
 			builder.build(xml.getStream());
 		} catch (Exception e) {

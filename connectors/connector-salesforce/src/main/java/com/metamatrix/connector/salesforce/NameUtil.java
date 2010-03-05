@@ -7,7 +7,7 @@
  */
 package com.metamatrix.connector.salesforce;
 
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.SQLReservedWords;
 
 public class NameUtil {
 

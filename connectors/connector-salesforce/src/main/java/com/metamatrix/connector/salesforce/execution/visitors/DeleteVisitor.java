@@ -24,7 +24,7 @@ package com.metamatrix.connector.salesforce.execution.visitors;
 import java.util.Iterator;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.Delete;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -35,10 +35,10 @@ public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 	@Override
-	public void visit(IDelete delete) {
+	public void visit(Delete delete) {
 		super.visit(delete);
 		try {
-			loadColumnMetadata(delete.getGroup());
+			loadColumnMetadata(delete.getTable());
 		} catch (ConnectorException ce) {
 			exceptions.add(ce);
 		}

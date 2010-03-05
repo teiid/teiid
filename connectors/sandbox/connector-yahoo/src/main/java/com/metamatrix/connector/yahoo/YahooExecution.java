@@ -35,23 +35,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -59,8 +56,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  * Represents the execution of a command.
  */
 public class YahooExecution extends BasicExecution implements ResultSetExecution {
-    public static final String HTTP_PROXY_HOST = "HttpProxyHost"; //$NON-NLS-1$
-    public static final String HTTP_PROXY_PORT = "HttpProxyPort"; //$NON-NLS-1$
 
     public static final String JAVA_PROP_HTTP_PROXY_HOST = "http.proxyHost"; //$NON-NLS-1$
     public static final String JAVA_PROP_HTTP_PROXY_PORT = "http.proxyPort"; //$NON-NLS-1$
@@ -69,15 +64,15 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     private static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mma"); //$NON-NLS-1$
 
     // Connector resources
-    private ConnectorEnvironment env;
+    private YahooManagedConnectionFactory config;
     private RuntimeMetadata metadata;
-    private IQuery command;
+    private Select command;
     
     // Execution state
     List results;
     int[] neededColumns;
     int returnIndex = 0;
-    private IQuery query;
+    private Select query;
 
     private String previousHttpProxyHost;
     private String previousHttpProxyPort;
@@ -85,8 +80,8 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     /**
      * 
      */
-    public YahooExecution(IQuery query, ConnectorEnvironment env, RuntimeMetadata metadata) {
-        this.env = env;
+    public YahooExecution(Select query, YahooManagedConnectionFactory env, RuntimeMetadata metadata) {
+        this.config = env;
         this.metadata = metadata;
         this.query = query;
     }
@@ -97,19 +92,19 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     @Override
     public void execute() throws ConnectorException {
         // Log our command
-        env.getLogger().logTrace("Yahoo executing command: " + command); //$NON-NLS-1$
+        this.config.getLogger().logTrace("Yahoo executing command: " + command); //$NON-NLS-1$
 
         // Build url
         String yahooUrl = translateIntoUrl(query);
         
         // Execute url to get results
-        this.results = executeUrl(yahooUrl, this.env.getLogger());
+        this.results = executeUrl(yahooUrl, this.config.getLogger());
         
         // Determine needed columns in results
-        this.neededColumns = getNeededColumns(query.getSelect(), this.metadata);        
+        this.neededColumns = getNeededColumns(query.getDerivedColumns(), this.metadata);        
     }    
 
-    static String translateIntoUrl(IQuery query) throws ConnectorException {
+    static String translateIntoUrl(Select query) throws ConnectorException {
         StringBuffer url = new StringBuffer();
         url.append(YahooPlugin.Util.getString("YahooExecution.URL_BEGIN")); //$NON-NLS-1$
         
@@ -132,8 +127,8 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     /**
      * @return
      */
-    static Set getTickers(IQuery query) throws ConnectorException {
-        ICriteria crit = query.getWhere();
+    static Set getTickers(Select query) throws ConnectorException {
+        Condition crit = query.getWhere();
         if(crit == null) {
             throw new ConnectorException(YahooPlugin.Util.getString("YahooExecution.Must_have_criteria")); //$NON-NLS-1$
         }
@@ -248,14 +243,14 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
      * @param select
      * @return
      */
-    static int[] getNeededColumns(ISelect select, RuntimeMetadata metadata) throws ConnectorException {
-        int[] cols = new int[select.getSelectSymbols().size()];
-        Iterator iter = select.getSelectSymbols().iterator();
+    static int[] getNeededColumns(List<DerivedColumn> select, RuntimeMetadata metadata) throws ConnectorException {
+        int[] cols = new int[select.size()];
+        Iterator iter = select.iterator();
         for(int i=0; iter.hasNext(); i++) {
-            ISelectSymbol symbol = (ISelectSymbol) iter.next();
-            IExpression expr = symbol.getExpression();
-            if(expr instanceof IElement) {
-                Element element = ((IElement)expr).getMetadataObject();
+            DerivedColumn symbol = (DerivedColumn) iter.next();
+            Expression expr = symbol.getExpression();
+            if(expr instanceof ColumnReference) {
+                Column element = ((ColumnReference)expr).getMetadataObject();
                 cols[i] = element.getPosition();
             } else {
                 throw new ConnectorException(YahooPlugin.Util.getString("YahooExecution.Invalid_select_symbol", expr)); //$NON-NLS-1$
@@ -307,16 +302,16 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     }
 
     private void setProxy() {
-        Properties props = env.getProperties();
-        String proxyHost = props.getProperty(HTTP_PROXY_HOST);
-        String proxyPort = props.getProperty(HTTP_PROXY_PORT);
+        String proxyHost = this.config.getHttpProxyHost();
+        String proxyPort = this.config.getHttpProxyPort();
+       
         previousHttpProxyHost = System.getProperty(JAVA_PROP_HTTP_PROXY_HOST);
         previousHttpProxyPort = System.getProperty(JAVA_PROP_HTTP_PROXY_PORT);
                  
         if(proxyHost != null) {
             System.setProperty(JAVA_PROP_HTTP_PROXY_HOST, proxyHost);
             if(proxyPort == null) {
-                env.getLogger().logWarning(YahooPlugin.Util.getString("YahooConnector.proxyPortNotSet"));//$NON-NLS-1$
+                this.config.getLogger().logWarning(YahooPlugin.Util.getString("YahooConnector.proxyPortNotSet"));//$NON-NLS-1$
             }else {
                 System.setProperty(JAVA_PROP_HTTP_PROXY_PORT, proxyPort);
             }

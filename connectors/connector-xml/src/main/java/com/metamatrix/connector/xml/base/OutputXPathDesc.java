@@ -26,8 +26,8 @@ package com.metamatrix.connector.xml.base;
 import java.text.MessageFormat;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.metadata.runtime.Column;
 
 public class OutputXPathDesc extends ParameterDescriptor {
 
@@ -41,7 +41,7 @@ public class OutputXPathDesc extends ParameterDescriptor {
 	/**
 	 * @see com.metamatrix.server.datatier.SynchConnectorConnection#submitRequest(java.lang.Object)
 	 */
-	public OutputXPathDesc (Element myElement)	throws ConnectorException {
+	public OutputXPathDesc (Column myElement)	throws ConnectorException {
 		super(myElement);
 		m_dataType = myElement.getJavaType();
 		if (getXPath() == null) {
@@ -57,7 +57,7 @@ public class OutputXPathDesc extends ParameterDescriptor {
 		return isParameter() || isResponseId() || isLocation();
 	}
 
-	public OutputXPathDesc (ILiteral literal) throws ConnectorException {
+	public OutputXPathDesc (Literal literal) throws ConnectorException {
 		super();
 		if (literal.getValue() == null) {
 			setCurrentValue(null);

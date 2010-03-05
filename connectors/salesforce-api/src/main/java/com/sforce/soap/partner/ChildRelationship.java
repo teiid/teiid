@@ -1,256 +1,155 @@
-/**
- * ChildRelationship.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class ChildRelationship  implements java.io.Serializable {
-    private boolean cascadeDelete;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String childSObject;
 
-    private boolean deprecatedAndHidden;
+/**
+ * <p>Java class for ChildRelationship complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="ChildRelationship">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="cascadeDelete" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="childSObject" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="deprecatedAndHidden" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="field" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="relationshipName" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "ChildRelationship", propOrder = {
+    "cascadeDelete",
+    "childSObject",
+    "deprecatedAndHidden",
+    "field",
+    "relationshipName"
+})
+public class ChildRelationship {
 
-    private java.lang.String field;
-
-    private java.lang.String relationshipName;
-
-    public ChildRelationship() {
-    }
-
-    public ChildRelationship(
-           boolean cascadeDelete,
-           java.lang.String childSObject,
-           boolean deprecatedAndHidden,
-           java.lang.String field,
-           java.lang.String relationshipName) {
-           this.cascadeDelete = cascadeDelete;
-           this.childSObject = childSObject;
-           this.deprecatedAndHidden = deprecatedAndHidden;
-           this.field = field;
-           this.relationshipName = relationshipName;
-    }
-
+    protected boolean cascadeDelete;
+    @XmlElement(required = true)
+    protected String childSObject;
+    protected boolean deprecatedAndHidden;
+    @XmlElement(required = true)
+    protected String field;
+    protected String relationshipName;
 
     /**
-     * Gets the cascadeDelete value for this ChildRelationship.
+     * Gets the value of the cascadeDelete property.
      * 
-     * @return cascadeDelete
      */
     public boolean isCascadeDelete() {
         return cascadeDelete;
     }
 
-
     /**
-     * Sets the cascadeDelete value for this ChildRelationship.
+     * Sets the value of the cascadeDelete property.
      * 
-     * @param cascadeDelete
      */
-    public void setCascadeDelete(boolean cascadeDelete) {
-        this.cascadeDelete = cascadeDelete;
+    public void setCascadeDelete(boolean value) {
+        this.cascadeDelete = value;
     }
 
-
     /**
-     * Gets the childSObject value for this ChildRelationship.
+     * Gets the value of the childSObject property.
      * 
-     * @return childSObject
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getChildSObject() {
+    public String getChildSObject() {
         return childSObject;
     }
 
-
     /**
-     * Sets the childSObject value for this ChildRelationship.
+     * Sets the value of the childSObject property.
      * 
-     * @param childSObject
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setChildSObject(java.lang.String childSObject) {
-        this.childSObject = childSObject;
+    public void setChildSObject(String value) {
+        this.childSObject = value;
     }
 
-
     /**
-     * Gets the deprecatedAndHidden value for this ChildRelationship.
+     * Gets the value of the deprecatedAndHidden property.
      * 
-     * @return deprecatedAndHidden
      */
     public boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
-
     /**
-     * Sets the deprecatedAndHidden value for this ChildRelationship.
+     * Sets the value of the deprecatedAndHidden property.
      * 
-     * @param deprecatedAndHidden
      */
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
-        this.deprecatedAndHidden = deprecatedAndHidden;
+    public void setDeprecatedAndHidden(boolean value) {
+        this.deprecatedAndHidden = value;
     }
 
-
     /**
-     * Gets the field value for this ChildRelationship.
+     * Gets the value of the field property.
      * 
-     * @return field
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getField() {
+    public String getField() {
         return field;
     }
 
-
     /**
-     * Sets the field value for this ChildRelationship.
+     * Sets the value of the field property.
      * 
-     * @param field
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setField(java.lang.String field) {
-        this.field = field;
+    public void setField(String value) {
+        this.field = value;
     }
 
-
     /**
-     * Gets the relationshipName value for this ChildRelationship.
+     * Gets the value of the relationshipName property.
      * 
-     * @return relationshipName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getRelationshipName() {
+    public String getRelationshipName() {
         return relationshipName;
     }
 
-
     /**
-     * Sets the relationshipName value for this ChildRelationship.
+     * Sets the value of the relationshipName property.
      * 
-     * @param relationshipName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setRelationshipName(java.lang.String relationshipName) {
-        this.relationshipName = relationshipName;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof ChildRelationship)) return false;
-        ChildRelationship other = (ChildRelationship) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.cascadeDelete == other.isCascadeDelete() &&
-            ((this.childSObject==null && other.getChildSObject()==null) || 
-             (this.childSObject!=null &&
-              this.childSObject.equals(other.getChildSObject()))) &&
-            this.deprecatedAndHidden == other.isDeprecatedAndHidden() &&
-            ((this.field==null && other.getField()==null) || 
-             (this.field!=null &&
-              this.field.equals(other.getField()))) &&
-            ((this.relationshipName==null && other.getRelationshipName()==null) || 
-             (this.relationshipName!=null &&
-              this.relationshipName.equals(other.getRelationshipName())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += (isCascadeDelete() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getChildSObject() != null) {
-            _hashCode += getChildSObject().hashCode();
-        }
-        _hashCode += (isDeprecatedAndHidden() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getField() != null) {
-            _hashCode += getField().hashCode();
-        }
-        if (getRelationshipName() != null) {
-            _hashCode += getRelationshipName().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(ChildRelationship.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ChildRelationship"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("cascadeDelete");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "cascadeDelete"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("childSObject");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "childSObject"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("deprecatedAndHidden");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "deprecatedAndHidden"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("field");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "field"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("relationshipName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "relationshipName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setRelationshipName(String value) {
+        this.relationshipName = value;
     }
 
 }

@@ -1,219 +1,128 @@
-/**
- * DescribeLayoutComponent.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class DescribeLayoutComponent  implements java.io.Serializable {
-    private int displayLines;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private int tabOrder;
 
-    private com.sforce.soap.partner.LayoutComponentType type;
+/**
+ * <p>Java class for DescribeLayoutComponent complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="DescribeLayoutComponent">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="displayLines" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="tabOrder" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="type" type="{urn:partner.soap.sforce.com}layoutComponentType"/>
+ *         &lt;element name="value" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "DescribeLayoutComponent", propOrder = {
+    "displayLines",
+    "tabOrder",
+    "type",
+    "value"
+})
+public class DescribeLayoutComponent {
 
-    private java.lang.String value;
-
-    public DescribeLayoutComponent() {
-    }
-
-    public DescribeLayoutComponent(
-           int displayLines,
-           int tabOrder,
-           com.sforce.soap.partner.LayoutComponentType type,
-           java.lang.String value) {
-           this.displayLines = displayLines;
-           this.tabOrder = tabOrder;
-           this.type = type;
-           this.value = value;
-    }
-
+    protected int displayLines;
+    protected int tabOrder;
+    @XmlElement(required = true)
+    protected LayoutComponentType type;
+    @XmlElement(required = true)
+    protected String value;
 
     /**
-     * Gets the displayLines value for this DescribeLayoutComponent.
+     * Gets the value of the displayLines property.
      * 
-     * @return displayLines
      */
     public int getDisplayLines() {
         return displayLines;
     }
 
-
     /**
-     * Sets the displayLines value for this DescribeLayoutComponent.
+     * Sets the value of the displayLines property.
      * 
-     * @param displayLines
      */
-    public void setDisplayLines(int displayLines) {
-        this.displayLines = displayLines;
+    public void setDisplayLines(int value) {
+        this.displayLines = value;
     }
 
-
     /**
-     * Gets the tabOrder value for this DescribeLayoutComponent.
+     * Gets the value of the tabOrder property.
      * 
-     * @return tabOrder
      */
     public int getTabOrder() {
         return tabOrder;
     }
 
-
     /**
-     * Sets the tabOrder value for this DescribeLayoutComponent.
+     * Sets the value of the tabOrder property.
      * 
-     * @param tabOrder
      */
-    public void setTabOrder(int tabOrder) {
-        this.tabOrder = tabOrder;
+    public void setTabOrder(int value) {
+        this.tabOrder = value;
     }
 
-
     /**
-     * Gets the type value for this DescribeLayoutComponent.
+     * Gets the value of the type property.
      * 
-     * @return type
+     * @return
+     *     possible object is
+     *     {@link LayoutComponentType }
+     *     
      */
-    public com.sforce.soap.partner.LayoutComponentType getType() {
+    public LayoutComponentType getType() {
         return type;
     }
 
-
     /**
-     * Sets the type value for this DescribeLayoutComponent.
+     * Sets the value of the type property.
      * 
-     * @param type
+     * @param value
+     *     allowed object is
+     *     {@link LayoutComponentType }
+     *     
      */
-    public void setType(com.sforce.soap.partner.LayoutComponentType type) {
-        this.type = type;
+    public void setType(LayoutComponentType value) {
+        this.type = value;
     }
 
-
     /**
-     * Gets the value value for this DescribeLayoutComponent.
+     * Gets the value of the value property.
      * 
-     * @return value
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getValue() {
+    public String getValue() {
         return value;
     }
 
-
     /**
-     * Sets the value value for this DescribeLayoutComponent.
+     * Sets the value of the value property.
      * 
      * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setValue(java.lang.String value) {
+    public void setValue(String value) {
         this.value = value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof DescribeLayoutComponent)) return false;
-        DescribeLayoutComponent other = (DescribeLayoutComponent) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.displayLines == other.getDisplayLines() &&
-            this.tabOrder == other.getTabOrder() &&
-            ((this.type==null && other.getType()==null) || 
-             (this.type!=null &&
-              this.type.equals(other.getType()))) &&
-            ((this.value==null && other.getValue()==null) || 
-             (this.value!=null &&
-              this.value.equals(other.getValue())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += getDisplayLines();
-        _hashCode += getTabOrder();
-        if (getType() != null) {
-            _hashCode += getType().hashCode();
-        }
-        if (getValue() != null) {
-            _hashCode += getValue().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(DescribeLayoutComponent.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeLayoutComponent"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("displayLines");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "displayLines"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("tabOrder");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "tabOrder"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("type");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "type"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "layoutComponentType"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("value");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "value"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
     }
 
 }

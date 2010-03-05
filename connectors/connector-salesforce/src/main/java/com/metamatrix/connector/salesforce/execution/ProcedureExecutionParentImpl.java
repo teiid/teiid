@@ -7,21 +7,21 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.Call;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
 public class ProcedureExecutionParentImpl implements ProcedureExecution, ProcedureExecutionParent {
 
-	private IProcedure command;
+	private Call command;
 	private ExecutionContext executionContext;
 	private RuntimeMetadata metadata;
 	private SalesforceProcedureExecution execution;
 	private SalesforceConnection connection;
 	private ConnectorEnvironment connectorEnv;
 	
-	public ProcedureExecutionParentImpl(IProcedure command,
+	public ProcedureExecutionParentImpl(Call command,
 			SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext executionContext, ConnectorEnvironment connectorEnv) {
 		this.setCommand(command);
 		this.setConnection(connection);
@@ -62,11 +62,11 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 		}
 	}
 
-	public void setCommand(IProcedure command) {
+	public void setCommand(Call command) {
 		this.command = command;
 	}
 
-	public IProcedure getCommand() {
+	public Call getCommand() {
 		return command;
 	}
 	

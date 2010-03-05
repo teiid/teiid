@@ -25,11 +25,12 @@ package com.metamatrix.connector.loopback;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Properties;
-
-import org.teiid.connector.api.ConnectorException;
 
 import junit.framework.TestCase;
+
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
@@ -41,11 +42,12 @@ public class TestLoopbackExecution extends TestCase {
         super(name);
     }
 
-    public Properties exampleProperties(int waitTime, int rowCount) {
-        Properties props = new Properties();
-        props.setProperty(LoopbackProperties.WAIT_TIME, String.valueOf(waitTime)); 
-        props.setProperty(LoopbackProperties.ROW_COUNT, String.valueOf(rowCount));
-        return props;
+    public LoopbackManagedConnectionFactory exampleProperties(int waitTime, int rowCount) {
+        LoopbackManagedConnectionFactory config = Mockito.mock(LoopbackManagedConnectionFactory.class);
+        Mockito.stub(config.getWaitTime()).toReturn(waitTime);
+        Mockito.stub(config.getRowCount()).toReturn(rowCount);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        return config;
     }
     
     public void helpTestQuery(String sql, TranslationUtility metadata, Object[][] expectedResults) throws ConnectorException {
@@ -53,7 +55,7 @@ public class TestLoopbackExecution extends TestCase {
     }
 
     public void helpTestQuery(String sql, TranslationUtility metadata, int waitTime, int rowCount, Object[][] expectedResults) throws ConnectorException {
-    	ConnectorHost host = new ConnectorHost(new LoopbackConnector(), exampleProperties(waitTime, rowCount), metadata, false);
+    	ConnectorHost host = new ConnectorHost(new LoopbackConnector(), exampleProperties(waitTime, rowCount), metadata);
                               
     	List actualResults = host.executeCommand(sql);
        

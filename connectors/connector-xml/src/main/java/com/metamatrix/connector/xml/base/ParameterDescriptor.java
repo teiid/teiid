@@ -23,7 +23,7 @@
 package com.metamatrix.connector.xml.base;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Column;
 
 public abstract class ParameterDescriptor {
 
@@ -33,7 +33,7 @@ public abstract class ParameterDescriptor {
     private boolean m_location;
     private String m_columnName;
     private int m_columnNumber = -1;
-    private Element m_element;
+    private Column m_element;
 
     public static final String PARM_INPUT_COLUMN_PROPERTY_NAME = "IsInputParameter"; //$NON-NLS-1$
     public static final String ROLE_COLUMN_PROPERTY_NAME = "Role"; //$NON-NLS-1$
@@ -42,7 +42,7 @@ public abstract class ParameterDescriptor {
     public static final String ROLE_COLUMN_PROPERTY_NAME_LOCATION = "Location"; //$NON-NLS-1$
     public static final String ROLE_COLUMN_PROPERTY_NAME_DATA = "Data"; //$NON-NLS-1$
 
-    public ParameterDescriptor( Element element ) throws ConnectorException {
+    public ParameterDescriptor( Column element ) throws ConnectorException {
         setElement(element);
         setIsParameter(testForParam(m_element));
         testRole();
@@ -114,22 +114,22 @@ public abstract class ParameterDescriptor {
         return m_columnNumber;
     }
 
-    protected void setElement( Element elem ) {
+    protected void setElement( Column elem ) {
         m_element = elem;
     }
 
-    public Element getElement() {
+    public Column getElement() {
         return m_element;
     }
 
-    protected static boolean testForParam( Element element ) throws ConnectorException {
+    protected static boolean testForParam( Column element ) throws ConnectorException {
         boolean param = false;
-        param = Boolean.valueOf(element.getProperties().getProperty(PARM_INPUT_COLUMN_PROPERTY_NAME)).booleanValue();
+        param = Boolean.valueOf(element.getProperties().get(PARM_INPUT_COLUMN_PROPERTY_NAME)).booleanValue();
         return param;
     }
 
     public String getRole() throws ConnectorException {
-        return m_element.getProperties().getProperty(ROLE_COLUMN_PROPERTY_NAME);
+        return m_element.getProperties().get(ROLE_COLUMN_PROPERTY_NAME);
     }
 
     protected void testRole() throws ConnectorException {

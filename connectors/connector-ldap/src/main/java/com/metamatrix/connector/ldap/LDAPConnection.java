@@ -35,9 +35,9 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -46,37 +46,27 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  */
 public class LDAPConnection extends BasicConnection {  
 
+	private LDAPManagedConnectionFactory config;
+	
 	// Standard Connection data members
-	private ConnectorLogger logger;
 	private InitialLdapContext initCtx;
-	private Properties props;
 	
 	// LDAP-specific properties
     public static final String LDAP_AUTH_TYPE = "simple"; //$NON-NLS-1$
     public static final String LDAP_USER_OBJECT_TYPE = "person"; //$NON-NLS-1$
     public static final String LDAP_REFERRAL_MODE = "follow"; //$NON-NLS-1$
-	private String ldapURL;
-	private String ldapAdminUserDN;
-	private String ldapAdminUserPass;
-	private String ldapTxnTimeoutInMillis;
+	
 	private String jndiLdapCtxFactory;
 
-    /**
-     * Constructor.
-     * @param ctx
-     * @param props
-     * @param logger
-     */
-	public LDAPConnection(ExecutionContext ctx, Properties props, ConnectorLogger logger) throws ConnectorException {
-		this(ctx, props, logger, LDAPConnectorConstants.JNDI_LDAP_CTX_FACTORY);
+	public LDAPConnection(LDAPManagedConnectionFactory config) throws ConnectorException {
+		this(config, LDAPConnectorConstants.JNDI_LDAP_CTX_FACTORY);
 	}
 	
-	public LDAPConnection(ExecutionContext ctx, Properties props, ConnectorLogger logger, String jndiLdapCtxFactory) throws ConnectorException {
-		this.logger = logger;
-		this.props = props;
+	public LDAPConnection(LDAPManagedConnectionFactory config, String jndiLdapCtxFactory) throws ConnectorException {
+		this.config = config;
 		this.jndiLdapCtxFactory = jndiLdapCtxFactory;
 			
-		parseProperties(props);
+		checkProperties();
 
 		// Create initial LDAP connection.
 		try {
@@ -86,7 +76,7 @@ public class LDAPConnection extends BasicConnection {
 			throw new ConnectorException(ce, msg);
 		}
 
-		logger.logDetail("LDAP Connection has been newly created."); //$NON-NLS-1$
+		this.config.getLogger().logDetail("LDAP Connection has been newly created."); //$NON-NLS-1$
 	}
 	
 	public void setJndiLdapCtxFactory(String jndiLdapCtxFactory) {
@@ -98,25 +88,21 @@ public class LDAPConnection extends BasicConnection {
      * a ConnectorException is thrown.
      * @param props
      */
-	private void parseProperties(Properties props) throws ConnectorException {
+	private void checkProperties() throws ConnectorException {
 		// LDAP URL 
-		if((ldapURL = props.getProperty(LDAPConnectorPropertyNames.LDAP_URL)) == null) {
+		if(this.config.getLdapUrl() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.urlPropNotFound"); //$NON-NLS-1$
             throw new ConnectorException(msg);
 		}
 		// LDAP Admin User DN
-		if((ldapAdminUserDN = props.getProperty(LDAPConnectorPropertyNames.LDAP_ADMIN_USER_DN)) == null) {
+		if(this.config.getLdapAdminUserDN() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
             throw new ConnectorException(msg);
 		}
 		// LDAP Admin User Password
-		if((ldapAdminUserPass = props.getProperty(LDAPConnectorPropertyNames.LDAP_ADMIN_USER_PASSWORD)) == null) {
+		if(this.config.getLdapAdminUserPassword() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
             throw new ConnectorException(msg);
-		}
-		// LDAP Txn Timeout in Milliseconds
-		if((ldapTxnTimeoutInMillis = props.getProperty(LDAPConnectorPropertyNames.LDAP_TXN_TIMEOUT_IN_MILLIS)) == null) {
-			// If unset, leave it at null, since we will default to TCP timeout value.
 		}
 	}
 	
@@ -132,22 +118,22 @@ public class LDAPConnection extends BasicConnection {
 
 		Hashtable connenv = new Hashtable();
 		connenv.put(Context.INITIAL_CONTEXT_FACTORY, jndiLdapCtxFactory);
-		connenv.put(Context.PROVIDER_URL, this.ldapURL);
+		connenv.put(Context.PROVIDER_URL, this.config.getLdapUrl());
 		connenv.put(Context.REFERRAL, LDAP_REFERRAL_MODE);
 		// If username is blank, we will perform an anonymous bind.
 		// Note: This is not supported when using Sun's VLVs, so remove this if VLVs are used.
-		if(!ldapAdminUserDN.equals("")) { //$NON-NLS-1$
+		if(!this.config.getLdapAdminUserDN().equals("")) { //$NON-NLS-1$
 
 			connenv.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTH_TYPE);
-			connenv.put(Context.SECURITY_PRINCIPAL, this.ldapAdminUserDN);
-			connenv.put(Context.SECURITY_CREDENTIALS, this.ldapAdminUserPass);
+			connenv.put(Context.SECURITY_PRINCIPAL, this.config.getLdapAdminUserDN());
+			connenv.put(Context.SECURITY_CREDENTIALS, this.config.getLdapAdminUserPassword());
 		} else {
-			logger.logWarning("LDAP Username DN was blank; performing anonymous bind."); //$NON-NLS-1$
+			this.config.getLogger().logWarning("LDAP Username DN was blank; performing anonymous bind."); //$NON-NLS-1$
 			connenv.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
 		}
 		
-		if(ldapTxnTimeoutInMillis != null && !ldapTxnTimeoutInMillis.equals("")) { //$NON-NLS-1$
-			connenv.put("com.sun.jndi.ldap.connect.timeout", ldapTxnTimeoutInMillis); //$NON-NLS-1$
+		if(this.config.getLdapTxnTimeoutInMillis() != -1) { //$NON-NLS-1$
+			connenv.put("com.sun.jndi.ldap.connect.timeout", this.config.getLdapTxnTimeoutInMillis()); //$NON-NLS-1$
 		}
 		
 		// Enable connection pooling for the Initial context.
@@ -163,22 +149,22 @@ public class LDAPConnection extends BasicConnection {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryInitError"); //$NON-NLS-1$
 			throw new ConnectorException(e, msg); 
 		}
-		logger.logDetail("Successfully obtained initial LDAP context."); //$NON-NLS-1$
+		this.config.getLogger().logDetail("Successfully obtained initial LDAP context."); //$NON-NLS-1$
 		return initContext;
 	}
 	
 	@Override
-	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		return new LDAPSyncQueryExecution((IQuery)command, executionContext, metadata, this.logger, this.initCtx, this.props);
+		return new LDAPSyncQueryExecution((Select)command, executionContext, metadata, this.initCtx, this.config);
 	}
 	
 	@Override
-	public UpdateExecution createUpdateExecution(ICommand command,
+	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		return new LDAPUpdateExecution(command, executionContext, metadata, this.logger, this.initCtx);
+		return new LDAPUpdateExecution(command, executionContext, metadata, this.initCtx, this.config);
 	}
 	
 	/** 
@@ -192,10 +178,10 @@ public class LDAPConnection extends BasicConnection {
 			try {
 				initCtx.close();
 			} catch(NamingException e) {
-				logger.logDetail(LDAPPlugin.Util.getString("LDAPConnection.contextCloseError",e.getExplanation())); //$NON-NLS-1$
+				this.config.getLogger().logDetail(LDAPPlugin.Util.getString("LDAPConnection.contextCloseError",e.getExplanation())); //$NON-NLS-1$
 			}
 		}
-		logger.logDetail("LDAP context has been closed."); //$NON-NLS-1$
+		this.config.getLogger().logDetail("LDAP context has been closed."); //$NON-NLS-1$
 	}
 
 	/** 
@@ -213,13 +199,8 @@ public class LDAPConnection extends BasicConnection {
 	 */
 	@Override
 	public boolean isAlive() {
-		logger.logTrace("LDAP Connection is alive."); //$NON-NLS-1$
+		this.config.getLogger().logTrace("LDAP Connection is alive."); //$NON-NLS-1$
 		return true;
-	}
-	
-	@Override
-	public void closeCalled() {
-		
 	}
 	
 }

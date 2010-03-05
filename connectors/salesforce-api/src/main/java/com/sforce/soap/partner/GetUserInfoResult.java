@@ -1,787 +1,558 @@
-/**
- * GetUserInfoResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class GetUserInfoResult  implements java.io.Serializable {
-    private boolean accessibilityMode;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String currencySymbol;
 
-    private java.lang.String orgDefaultCurrencyIsoCode;
+/**
+ * <p>Java class for GetUserInfoResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="GetUserInfoResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="accessibilityMode" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="currencySymbol" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="orgDefaultCurrencyIsoCode" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="orgDisallowHtmlAttachments" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="orgHasPersonAccounts" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="organizationId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="organizationMultiCurrency" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="organizationName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="profileId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="roleId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="userDefaultCurrencyIsoCode" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userEmail" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userFullName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="userLanguage" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userLocale" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userTimeZone" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userType" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userUiSkin" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "GetUserInfoResult", propOrder = {
+    "accessibilityMode",
+    "currencySymbol",
+    "orgDefaultCurrencyIsoCode",
+    "orgDisallowHtmlAttachments",
+    "orgHasPersonAccounts",
+    "organizationId",
+    "organizationMultiCurrency",
+    "organizationName",
+    "profileId",
+    "roleId",
+    "userDefaultCurrencyIsoCode",
+    "userEmail",
+    "userFullName",
+    "userId",
+    "userLanguage",
+    "userLocale",
+    "userName",
+    "userTimeZone",
+    "userType",
+    "userUiSkin"
+})
+public class GetUserInfoResult {
 
-    private boolean orgDisallowHtmlAttachments;
-
-    private boolean orgHasPersonAccounts;
-
-    private java.lang.String organizationId;
-
-    private boolean organizationMultiCurrency;
-
-    private java.lang.String organizationName;
-
-    private java.lang.String profileId;
-
-    private java.lang.String roleId;
-
-    private java.lang.String userDefaultCurrencyIsoCode;
-
-    private java.lang.String userEmail;
-
-    private java.lang.String userFullName;
-
-    private java.lang.String userId;
-
-    private java.lang.String userLanguage;
-
-    private java.lang.String userLocale;
-
-    private java.lang.String userName;
-
-    private java.lang.String userTimeZone;
-
-    private java.lang.String userType;
-
-    private java.lang.String userUiSkin;
-
-    public GetUserInfoResult() {
-    }
-
-    public GetUserInfoResult(
-           boolean accessibilityMode,
-           java.lang.String currencySymbol,
-           java.lang.String orgDefaultCurrencyIsoCode,
-           boolean orgDisallowHtmlAttachments,
-           boolean orgHasPersonAccounts,
-           java.lang.String organizationId,
-           boolean organizationMultiCurrency,
-           java.lang.String organizationName,
-           java.lang.String profileId,
-           java.lang.String roleId,
-           java.lang.String userDefaultCurrencyIsoCode,
-           java.lang.String userEmail,
-           java.lang.String userFullName,
-           java.lang.String userId,
-           java.lang.String userLanguage,
-           java.lang.String userLocale,
-           java.lang.String userName,
-           java.lang.String userTimeZone,
-           java.lang.String userType,
-           java.lang.String userUiSkin) {
-           this.accessibilityMode = accessibilityMode;
-           this.currencySymbol = currencySymbol;
-           this.orgDefaultCurrencyIsoCode = orgDefaultCurrencyIsoCode;
-           this.orgDisallowHtmlAttachments = orgDisallowHtmlAttachments;
-           this.orgHasPersonAccounts = orgHasPersonAccounts;
-           this.organizationId = organizationId;
-           this.organizationMultiCurrency = organizationMultiCurrency;
-           this.organizationName = organizationName;
-           this.profileId = profileId;
-           this.roleId = roleId;
-           this.userDefaultCurrencyIsoCode = userDefaultCurrencyIsoCode;
-           this.userEmail = userEmail;
-           this.userFullName = userFullName;
-           this.userId = userId;
-           this.userLanguage = userLanguage;
-           this.userLocale = userLocale;
-           this.userName = userName;
-           this.userTimeZone = userTimeZone;
-           this.userType = userType;
-           this.userUiSkin = userUiSkin;
-    }
-
+    protected boolean accessibilityMode;
+    @XmlElement(required = true, nillable = true)
+    protected String currencySymbol;
+    @XmlElement(required = true, nillable = true)
+    protected String orgDefaultCurrencyIsoCode;
+    protected boolean orgDisallowHtmlAttachments;
+    protected boolean orgHasPersonAccounts;
+    @XmlElement(required = true)
+    protected String organizationId;
+    protected boolean organizationMultiCurrency;
+    @XmlElement(required = true)
+    protected String organizationName;
+    @XmlElement(required = true)
+    protected String profileId;
+    @XmlElement(required = true, nillable = true)
+    protected String roleId;
+    @XmlElement(required = true, nillable = true)
+    protected String userDefaultCurrencyIsoCode;
+    @XmlElement(required = true)
+    protected String userEmail;
+    @XmlElement(required = true)
+    protected String userFullName;
+    @XmlElement(required = true)
+    protected String userId;
+    @XmlElement(required = true)
+    protected String userLanguage;
+    @XmlElement(required = true)
+    protected String userLocale;
+    @XmlElement(required = true)
+    protected String userName;
+    @XmlElement(required = true)
+    protected String userTimeZone;
+    @XmlElement(required = true)
+    protected String userType;
+    @XmlElement(required = true)
+    protected String userUiSkin;
 
     /**
-     * Gets the accessibilityMode value for this GetUserInfoResult.
+     * Gets the value of the accessibilityMode property.
      * 
-     * @return accessibilityMode
      */
     public boolean isAccessibilityMode() {
         return accessibilityMode;
     }
 
-
     /**
-     * Sets the accessibilityMode value for this GetUserInfoResult.
+     * Sets the value of the accessibilityMode property.
      * 
-     * @param accessibilityMode
      */
-    public void setAccessibilityMode(boolean accessibilityMode) {
-        this.accessibilityMode = accessibilityMode;
+    public void setAccessibilityMode(boolean value) {
+        this.accessibilityMode = value;
     }
 
-
     /**
-     * Gets the currencySymbol value for this GetUserInfoResult.
+     * Gets the value of the currencySymbol property.
      * 
-     * @return currencySymbol
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getCurrencySymbol() {
+    public String getCurrencySymbol() {
         return currencySymbol;
     }
 
-
     /**
-     * Sets the currencySymbol value for this GetUserInfoResult.
+     * Sets the value of the currencySymbol property.
      * 
-     * @param currencySymbol
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setCurrencySymbol(java.lang.String currencySymbol) {
-        this.currencySymbol = currencySymbol;
+    public void setCurrencySymbol(String value) {
+        this.currencySymbol = value;
     }
 
-
     /**
-     * Gets the orgDefaultCurrencyIsoCode value for this GetUserInfoResult.
+     * Gets the value of the orgDefaultCurrencyIsoCode property.
      * 
-     * @return orgDefaultCurrencyIsoCode
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getOrgDefaultCurrencyIsoCode() {
+    public String getOrgDefaultCurrencyIsoCode() {
         return orgDefaultCurrencyIsoCode;
     }
 
-
     /**
-     * Sets the orgDefaultCurrencyIsoCode value for this GetUserInfoResult.
+     * Sets the value of the orgDefaultCurrencyIsoCode property.
      * 
-     * @param orgDefaultCurrencyIsoCode
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setOrgDefaultCurrencyIsoCode(java.lang.String orgDefaultCurrencyIsoCode) {
-        this.orgDefaultCurrencyIsoCode = orgDefaultCurrencyIsoCode;
+    public void setOrgDefaultCurrencyIsoCode(String value) {
+        this.orgDefaultCurrencyIsoCode = value;
     }
 
-
     /**
-     * Gets the orgDisallowHtmlAttachments value for this GetUserInfoResult.
+     * Gets the value of the orgDisallowHtmlAttachments property.
      * 
-     * @return orgDisallowHtmlAttachments
      */
     public boolean isOrgDisallowHtmlAttachments() {
         return orgDisallowHtmlAttachments;
     }
 
-
     /**
-     * Sets the orgDisallowHtmlAttachments value for this GetUserInfoResult.
+     * Sets the value of the orgDisallowHtmlAttachments property.
      * 
-     * @param orgDisallowHtmlAttachments
      */
-    public void setOrgDisallowHtmlAttachments(boolean orgDisallowHtmlAttachments) {
-        this.orgDisallowHtmlAttachments = orgDisallowHtmlAttachments;
+    public void setOrgDisallowHtmlAttachments(boolean value) {
+        this.orgDisallowHtmlAttachments = value;
     }
 
-
     /**
-     * Gets the orgHasPersonAccounts value for this GetUserInfoResult.
+     * Gets the value of the orgHasPersonAccounts property.
      * 
-     * @return orgHasPersonAccounts
      */
     public boolean isOrgHasPersonAccounts() {
         return orgHasPersonAccounts;
     }
 
-
     /**
-     * Sets the orgHasPersonAccounts value for this GetUserInfoResult.
+     * Sets the value of the orgHasPersonAccounts property.
      * 
-     * @param orgHasPersonAccounts
      */
-    public void setOrgHasPersonAccounts(boolean orgHasPersonAccounts) {
-        this.orgHasPersonAccounts = orgHasPersonAccounts;
+    public void setOrgHasPersonAccounts(boolean value) {
+        this.orgHasPersonAccounts = value;
     }
 
-
     /**
-     * Gets the organizationId value for this GetUserInfoResult.
+     * Gets the value of the organizationId property.
      * 
-     * @return organizationId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getOrganizationId() {
+    public String getOrganizationId() {
         return organizationId;
     }
 
-
     /**
-     * Sets the organizationId value for this GetUserInfoResult.
+     * Sets the value of the organizationId property.
      * 
-     * @param organizationId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setOrganizationId(java.lang.String organizationId) {
-        this.organizationId = organizationId;
+    public void setOrganizationId(String value) {
+        this.organizationId = value;
     }
 
-
     /**
-     * Gets the organizationMultiCurrency value for this GetUserInfoResult.
+     * Gets the value of the organizationMultiCurrency property.
      * 
-     * @return organizationMultiCurrency
      */
     public boolean isOrganizationMultiCurrency() {
         return organizationMultiCurrency;
     }
 
-
     /**
-     * Sets the organizationMultiCurrency value for this GetUserInfoResult.
+     * Sets the value of the organizationMultiCurrency property.
      * 
-     * @param organizationMultiCurrency
      */
-    public void setOrganizationMultiCurrency(boolean organizationMultiCurrency) {
-        this.organizationMultiCurrency = organizationMultiCurrency;
+    public void setOrganizationMultiCurrency(boolean value) {
+        this.organizationMultiCurrency = value;
     }
 
-
     /**
-     * Gets the organizationName value for this GetUserInfoResult.
+     * Gets the value of the organizationName property.
      * 
-     * @return organizationName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getOrganizationName() {
+    public String getOrganizationName() {
         return organizationName;
     }
 
-
     /**
-     * Sets the organizationName value for this GetUserInfoResult.
+     * Sets the value of the organizationName property.
      * 
-     * @param organizationName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setOrganizationName(java.lang.String organizationName) {
-        this.organizationName = organizationName;
+    public void setOrganizationName(String value) {
+        this.organizationName = value;
     }
 
-
     /**
-     * Gets the profileId value for this GetUserInfoResult.
+     * Gets the value of the profileId property.
      * 
-     * @return profileId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getProfileId() {
+    public String getProfileId() {
         return profileId;
     }
 
-
     /**
-     * Sets the profileId value for this GetUserInfoResult.
+     * Sets the value of the profileId property.
      * 
-     * @param profileId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setProfileId(java.lang.String profileId) {
-        this.profileId = profileId;
+    public void setProfileId(String value) {
+        this.profileId = value;
     }
 
-
     /**
-     * Gets the roleId value for this GetUserInfoResult.
+     * Gets the value of the roleId property.
      * 
-     * @return roleId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getRoleId() {
+    public String getRoleId() {
         return roleId;
     }
 
-
     /**
-     * Sets the roleId value for this GetUserInfoResult.
+     * Sets the value of the roleId property.
      * 
-     * @param roleId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setRoleId(java.lang.String roleId) {
-        this.roleId = roleId;
+    public void setRoleId(String value) {
+        this.roleId = value;
     }
 
-
     /**
-     * Gets the userDefaultCurrencyIsoCode value for this GetUserInfoResult.
+     * Gets the value of the userDefaultCurrencyIsoCode property.
      * 
-     * @return userDefaultCurrencyIsoCode
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserDefaultCurrencyIsoCode() {
+    public String getUserDefaultCurrencyIsoCode() {
         return userDefaultCurrencyIsoCode;
     }
 
-
     /**
-     * Sets the userDefaultCurrencyIsoCode value for this GetUserInfoResult.
+     * Sets the value of the userDefaultCurrencyIsoCode property.
      * 
-     * @param userDefaultCurrencyIsoCode
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserDefaultCurrencyIsoCode(java.lang.String userDefaultCurrencyIsoCode) {
-        this.userDefaultCurrencyIsoCode = userDefaultCurrencyIsoCode;
+    public void setUserDefaultCurrencyIsoCode(String value) {
+        this.userDefaultCurrencyIsoCode = value;
     }
 
-
     /**
-     * Gets the userEmail value for this GetUserInfoResult.
+     * Gets the value of the userEmail property.
      * 
-     * @return userEmail
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserEmail() {
+    public String getUserEmail() {
         return userEmail;
     }
 
-
     /**
-     * Sets the userEmail value for this GetUserInfoResult.
+     * Sets the value of the userEmail property.
      * 
-     * @param userEmail
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserEmail(java.lang.String userEmail) {
-        this.userEmail = userEmail;
+    public void setUserEmail(String value) {
+        this.userEmail = value;
     }
 
-
     /**
-     * Gets the userFullName value for this GetUserInfoResult.
+     * Gets the value of the userFullName property.
      * 
-     * @return userFullName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserFullName() {
+    public String getUserFullName() {
         return userFullName;
     }
 
-
     /**
-     * Sets the userFullName value for this GetUserInfoResult.
+     * Sets the value of the userFullName property.
      * 
-     * @param userFullName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserFullName(java.lang.String userFullName) {
-        this.userFullName = userFullName;
+    public void setUserFullName(String value) {
+        this.userFullName = value;
     }
 
-
     /**
-     * Gets the userId value for this GetUserInfoResult.
+     * Gets the value of the userId property.
      * 
-     * @return userId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-
     /**
-     * Sets the userId value for this GetUserInfoResult.
+     * Sets the value of the userId property.
      * 
-     * @param userId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserId(java.lang.String userId) {
-        this.userId = userId;
+    public void setUserId(String value) {
+        this.userId = value;
     }
 
-
     /**
-     * Gets the userLanguage value for this GetUserInfoResult.
+     * Gets the value of the userLanguage property.
      * 
-     * @return userLanguage
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserLanguage() {
+    public String getUserLanguage() {
         return userLanguage;
     }
 
-
     /**
-     * Sets the userLanguage value for this GetUserInfoResult.
+     * Sets the value of the userLanguage property.
      * 
-     * @param userLanguage
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserLanguage(java.lang.String userLanguage) {
-        this.userLanguage = userLanguage;
+    public void setUserLanguage(String value) {
+        this.userLanguage = value;
     }
 
-
     /**
-     * Gets the userLocale value for this GetUserInfoResult.
+     * Gets the value of the userLocale property.
      * 
-     * @return userLocale
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserLocale() {
+    public String getUserLocale() {
         return userLocale;
     }
 
-
     /**
-     * Sets the userLocale value for this GetUserInfoResult.
+     * Sets the value of the userLocale property.
      * 
-     * @param userLocale
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserLocale(java.lang.String userLocale) {
-        this.userLocale = userLocale;
+    public void setUserLocale(String value) {
+        this.userLocale = value;
     }
 
-
     /**
-     * Gets the userName value for this GetUserInfoResult.
+     * Gets the value of the userName property.
      * 
-     * @return userName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserName() {
+    public String getUserName() {
         return userName;
     }
 
-
     /**
-     * Sets the userName value for this GetUserInfoResult.
+     * Sets the value of the userName property.
      * 
-     * @param userName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserName(java.lang.String userName) {
-        this.userName = userName;
+    public void setUserName(String value) {
+        this.userName = value;
     }
 
-
     /**
-     * Gets the userTimeZone value for this GetUserInfoResult.
+     * Gets the value of the userTimeZone property.
      * 
-     * @return userTimeZone
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserTimeZone() {
+    public String getUserTimeZone() {
         return userTimeZone;
     }
 
-
     /**
-     * Sets the userTimeZone value for this GetUserInfoResult.
+     * Sets the value of the userTimeZone property.
      * 
-     * @param userTimeZone
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserTimeZone(java.lang.String userTimeZone) {
-        this.userTimeZone = userTimeZone;
+    public void setUserTimeZone(String value) {
+        this.userTimeZone = value;
     }
 
-
     /**
-     * Gets the userType value for this GetUserInfoResult.
+     * Gets the value of the userType property.
      * 
-     * @return userType
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserType() {
+    public String getUserType() {
         return userType;
     }
 
-
     /**
-     * Sets the userType value for this GetUserInfoResult.
+     * Sets the value of the userType property.
      * 
-     * @param userType
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserType(java.lang.String userType) {
-        this.userType = userType;
+    public void setUserType(String value) {
+        this.userType = value;
     }
 
-
     /**
-     * Gets the userUiSkin value for this GetUserInfoResult.
+     * Gets the value of the userUiSkin property.
      * 
-     * @return userUiSkin
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserUiSkin() {
+    public String getUserUiSkin() {
         return userUiSkin;
     }
 
-
     /**
-     * Sets the userUiSkin value for this GetUserInfoResult.
+     * Sets the value of the userUiSkin property.
      * 
-     * @param userUiSkin
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserUiSkin(java.lang.String userUiSkin) {
-        this.userUiSkin = userUiSkin;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof GetUserInfoResult)) return false;
-        GetUserInfoResult other = (GetUserInfoResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.accessibilityMode == other.isAccessibilityMode() &&
-            ((this.currencySymbol==null && other.getCurrencySymbol()==null) || 
-             (this.currencySymbol!=null &&
-              this.currencySymbol.equals(other.getCurrencySymbol()))) &&
-            ((this.orgDefaultCurrencyIsoCode==null && other.getOrgDefaultCurrencyIsoCode()==null) || 
-             (this.orgDefaultCurrencyIsoCode!=null &&
-              this.orgDefaultCurrencyIsoCode.equals(other.getOrgDefaultCurrencyIsoCode()))) &&
-            this.orgDisallowHtmlAttachments == other.isOrgDisallowHtmlAttachments() &&
-            this.orgHasPersonAccounts == other.isOrgHasPersonAccounts() &&
-            ((this.organizationId==null && other.getOrganizationId()==null) || 
-             (this.organizationId!=null &&
-              this.organizationId.equals(other.getOrganizationId()))) &&
-            this.organizationMultiCurrency == other.isOrganizationMultiCurrency() &&
-            ((this.organizationName==null && other.getOrganizationName()==null) || 
-             (this.organizationName!=null &&
-              this.organizationName.equals(other.getOrganizationName()))) &&
-            ((this.profileId==null && other.getProfileId()==null) || 
-             (this.profileId!=null &&
-              this.profileId.equals(other.getProfileId()))) &&
-            ((this.roleId==null && other.getRoleId()==null) || 
-             (this.roleId!=null &&
-              this.roleId.equals(other.getRoleId()))) &&
-            ((this.userDefaultCurrencyIsoCode==null && other.getUserDefaultCurrencyIsoCode()==null) || 
-             (this.userDefaultCurrencyIsoCode!=null &&
-              this.userDefaultCurrencyIsoCode.equals(other.getUserDefaultCurrencyIsoCode()))) &&
-            ((this.userEmail==null && other.getUserEmail()==null) || 
-             (this.userEmail!=null &&
-              this.userEmail.equals(other.getUserEmail()))) &&
-            ((this.userFullName==null && other.getUserFullName()==null) || 
-             (this.userFullName!=null &&
-              this.userFullName.equals(other.getUserFullName()))) &&
-            ((this.userId==null && other.getUserId()==null) || 
-             (this.userId!=null &&
-              this.userId.equals(other.getUserId()))) &&
-            ((this.userLanguage==null && other.getUserLanguage()==null) || 
-             (this.userLanguage!=null &&
-              this.userLanguage.equals(other.getUserLanguage()))) &&
-            ((this.userLocale==null && other.getUserLocale()==null) || 
-             (this.userLocale!=null &&
-              this.userLocale.equals(other.getUserLocale()))) &&
-            ((this.userName==null && other.getUserName()==null) || 
-             (this.userName!=null &&
-              this.userName.equals(other.getUserName()))) &&
-            ((this.userTimeZone==null && other.getUserTimeZone()==null) || 
-             (this.userTimeZone!=null &&
-              this.userTimeZone.equals(other.getUserTimeZone()))) &&
-            ((this.userType==null && other.getUserType()==null) || 
-             (this.userType!=null &&
-              this.userType.equals(other.getUserType()))) &&
-            ((this.userUiSkin==null && other.getUserUiSkin()==null) || 
-             (this.userUiSkin!=null &&
-              this.userUiSkin.equals(other.getUserUiSkin())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += (isAccessibilityMode() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getCurrencySymbol() != null) {
-            _hashCode += getCurrencySymbol().hashCode();
-        }
-        if (getOrgDefaultCurrencyIsoCode() != null) {
-            _hashCode += getOrgDefaultCurrencyIsoCode().hashCode();
-        }
-        _hashCode += (isOrgDisallowHtmlAttachments() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isOrgHasPersonAccounts() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getOrganizationId() != null) {
-            _hashCode += getOrganizationId().hashCode();
-        }
-        _hashCode += (isOrganizationMultiCurrency() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getOrganizationName() != null) {
-            _hashCode += getOrganizationName().hashCode();
-        }
-        if (getProfileId() != null) {
-            _hashCode += getProfileId().hashCode();
-        }
-        if (getRoleId() != null) {
-            _hashCode += getRoleId().hashCode();
-        }
-        if (getUserDefaultCurrencyIsoCode() != null) {
-            _hashCode += getUserDefaultCurrencyIsoCode().hashCode();
-        }
-        if (getUserEmail() != null) {
-            _hashCode += getUserEmail().hashCode();
-        }
-        if (getUserFullName() != null) {
-            _hashCode += getUserFullName().hashCode();
-        }
-        if (getUserId() != null) {
-            _hashCode += getUserId().hashCode();
-        }
-        if (getUserLanguage() != null) {
-            _hashCode += getUserLanguage().hashCode();
-        }
-        if (getUserLocale() != null) {
-            _hashCode += getUserLocale().hashCode();
-        }
-        if (getUserName() != null) {
-            _hashCode += getUserName().hashCode();
-        }
-        if (getUserTimeZone() != null) {
-            _hashCode += getUserTimeZone().hashCode();
-        }
-        if (getUserType() != null) {
-            _hashCode += getUserType().hashCode();
-        }
-        if (getUserUiSkin() != null) {
-            _hashCode += getUserUiSkin().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(GetUserInfoResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "GetUserInfoResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("accessibilityMode");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "accessibilityMode"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("currencySymbol");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "currencySymbol"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("orgDefaultCurrencyIsoCode");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgDefaultCurrencyIsoCode"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("orgDisallowHtmlAttachments");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgDisallowHtmlAttachments"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("orgHasPersonAccounts");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgHasPersonAccounts"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("organizationId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "organizationId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("organizationMultiCurrency");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "organizationMultiCurrency"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("organizationName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "organizationName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("profileId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "profileId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("roleId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "roleId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userDefaultCurrencyIsoCode");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userDefaultCurrencyIsoCode"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userEmail");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userEmail"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userFullName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userFullName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userLanguage");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userLanguage"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userLocale");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userLocale"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userTimeZone");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userTimeZone"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userType");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userType"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userUiSkin");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userUiSkin"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setUserUiSkin(String value) {
+        this.userUiSkin = value;
     }
 
 }

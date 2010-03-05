@@ -1,328 +1,211 @@
-/**
- * LoginResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class LoginResult  implements java.io.Serializable {
-    private java.lang.String metadataServerUrl;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private boolean passwordExpired;
 
-    private boolean sandbox;
+/**
+ * <p>Java class for LoginResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="LoginResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="metadataServerUrl" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="passwordExpired" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="sandbox" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="serverUrl" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="sessionId" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="userId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="userInfo" type="{urn:partner.soap.sforce.com}GetUserInfoResult" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "LoginResult", propOrder = {
+    "metadataServerUrl",
+    "passwordExpired",
+    "sandbox",
+    "serverUrl",
+    "sessionId",
+    "userId",
+    "userInfo"
+})
+public class LoginResult {
 
-    private java.lang.String serverUrl;
-
-    private java.lang.String sessionId;
-
-    private java.lang.String userId;
-
-    private com.sforce.soap.partner.GetUserInfoResult userInfo;
-
-    public LoginResult() {
-    }
-
-    public LoginResult(
-           java.lang.String metadataServerUrl,
-           boolean passwordExpired,
-           boolean sandbox,
-           java.lang.String serverUrl,
-           java.lang.String sessionId,
-           java.lang.String userId,
-           com.sforce.soap.partner.GetUserInfoResult userInfo) {
-           this.metadataServerUrl = metadataServerUrl;
-           this.passwordExpired = passwordExpired;
-           this.sandbox = sandbox;
-           this.serverUrl = serverUrl;
-           this.sessionId = sessionId;
-           this.userId = userId;
-           this.userInfo = userInfo;
-    }
-
+    @XmlElement(required = true, nillable = true)
+    protected String metadataServerUrl;
+    protected boolean passwordExpired;
+    protected boolean sandbox;
+    @XmlElement(required = true, nillable = true)
+    protected String serverUrl;
+    @XmlElement(required = true, nillable = true)
+    protected String sessionId;
+    @XmlElement(required = true, nillable = true)
+    protected String userId;
+    protected GetUserInfoResult userInfo;
 
     /**
-     * Gets the metadataServerUrl value for this LoginResult.
+     * Gets the value of the metadataServerUrl property.
      * 
-     * @return metadataServerUrl
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getMetadataServerUrl() {
+    public String getMetadataServerUrl() {
         return metadataServerUrl;
     }
 
-
     /**
-     * Sets the metadataServerUrl value for this LoginResult.
+     * Sets the value of the metadataServerUrl property.
      * 
-     * @param metadataServerUrl
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setMetadataServerUrl(java.lang.String metadataServerUrl) {
-        this.metadataServerUrl = metadataServerUrl;
+    public void setMetadataServerUrl(String value) {
+        this.metadataServerUrl = value;
     }
 
-
     /**
-     * Gets the passwordExpired value for this LoginResult.
+     * Gets the value of the passwordExpired property.
      * 
-     * @return passwordExpired
      */
     public boolean isPasswordExpired() {
         return passwordExpired;
     }
 
-
     /**
-     * Sets the passwordExpired value for this LoginResult.
+     * Sets the value of the passwordExpired property.
      * 
-     * @param passwordExpired
      */
-    public void setPasswordExpired(boolean passwordExpired) {
-        this.passwordExpired = passwordExpired;
+    public void setPasswordExpired(boolean value) {
+        this.passwordExpired = value;
     }
 
-
     /**
-     * Gets the sandbox value for this LoginResult.
+     * Gets the value of the sandbox property.
      * 
-     * @return sandbox
      */
     public boolean isSandbox() {
         return sandbox;
     }
 
-
     /**
-     * Sets the sandbox value for this LoginResult.
+     * Sets the value of the sandbox property.
      * 
-     * @param sandbox
      */
-    public void setSandbox(boolean sandbox) {
-        this.sandbox = sandbox;
+    public void setSandbox(boolean value) {
+        this.sandbox = value;
     }
 
-
     /**
-     * Gets the serverUrl value for this LoginResult.
+     * Gets the value of the serverUrl property.
      * 
-     * @return serverUrl
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getServerUrl() {
+    public String getServerUrl() {
         return serverUrl;
     }
 
-
     /**
-     * Sets the serverUrl value for this LoginResult.
+     * Sets the value of the serverUrl property.
      * 
-     * @param serverUrl
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setServerUrl(java.lang.String serverUrl) {
-        this.serverUrl = serverUrl;
+    public void setServerUrl(String value) {
+        this.serverUrl = value;
     }
 
-
     /**
-     * Gets the sessionId value for this LoginResult.
+     * Gets the value of the sessionId property.
      * 
-     * @return sessionId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getSessionId() {
+    public String getSessionId() {
         return sessionId;
     }
 
-
     /**
-     * Sets the sessionId value for this LoginResult.
+     * Sets the value of the sessionId property.
      * 
-     * @param sessionId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setSessionId(java.lang.String sessionId) {
-        this.sessionId = sessionId;
+    public void setSessionId(String value) {
+        this.sessionId = value;
     }
 
-
     /**
-     * Gets the userId value for this LoginResult.
+     * Gets the value of the userId property.
      * 
-     * @return userId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-
     /**
-     * Sets the userId value for this LoginResult.
+     * Sets the value of the userId property.
      * 
-     * @param userId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setUserId(java.lang.String userId) {
-        this.userId = userId;
+    public void setUserId(String value) {
+        this.userId = value;
     }
 
-
     /**
-     * Gets the userInfo value for this LoginResult.
+     * Gets the value of the userInfo property.
      * 
-     * @return userInfo
+     * @return
+     *     possible object is
+     *     {@link GetUserInfoResult }
+     *     
      */
-    public com.sforce.soap.partner.GetUserInfoResult getUserInfo() {
+    public GetUserInfoResult getUserInfo() {
         return userInfo;
     }
 
-
     /**
-     * Sets the userInfo value for this LoginResult.
+     * Sets the value of the userInfo property.
      * 
-     * @param userInfo
+     * @param value
+     *     allowed object is
+     *     {@link GetUserInfoResult }
+     *     
      */
-    public void setUserInfo(com.sforce.soap.partner.GetUserInfoResult userInfo) {
-        this.userInfo = userInfo;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof LoginResult)) return false;
-        LoginResult other = (LoginResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.metadataServerUrl==null && other.getMetadataServerUrl()==null) || 
-             (this.metadataServerUrl!=null &&
-              this.metadataServerUrl.equals(other.getMetadataServerUrl()))) &&
-            this.passwordExpired == other.isPasswordExpired() &&
-            this.sandbox == other.isSandbox() &&
-            ((this.serverUrl==null && other.getServerUrl()==null) || 
-             (this.serverUrl!=null &&
-              this.serverUrl.equals(other.getServerUrl()))) &&
-            ((this.sessionId==null && other.getSessionId()==null) || 
-             (this.sessionId!=null &&
-              this.sessionId.equals(other.getSessionId()))) &&
-            ((this.userId==null && other.getUserId()==null) || 
-             (this.userId!=null &&
-              this.userId.equals(other.getUserId()))) &&
-            ((this.userInfo==null && other.getUserInfo()==null) || 
-             (this.userInfo!=null &&
-              this.userInfo.equals(other.getUserInfo())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getMetadataServerUrl() != null) {
-            _hashCode += getMetadataServerUrl().hashCode();
-        }
-        _hashCode += (isPasswordExpired() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isSandbox() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getServerUrl() != null) {
-            _hashCode += getServerUrl().hashCode();
-        }
-        if (getSessionId() != null) {
-            _hashCode += getSessionId().hashCode();
-        }
-        if (getUserId() != null) {
-            _hashCode += getUserId().hashCode();
-        }
-        if (getUserInfo() != null) {
-            _hashCode += getUserInfo().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(LoginResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "LoginResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("metadataServerUrl");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "metadataServerUrl"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("passwordExpired");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "passwordExpired"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sandbox");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sandbox"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("serverUrl");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "serverUrl"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sessionId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sessionId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("userInfo");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "userInfo"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "GetUserInfoResult"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setUserInfo(GetUserInfoResult value) {
+        this.userInfo = value;
     }
 
 }

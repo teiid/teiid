@@ -1,115 +1,54 @@
-/**
- * AllowFieldTruncationHeader.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class AllowFieldTruncationHeader  implements java.io.Serializable {
-    private boolean allowFieldTruncation;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-    public AllowFieldTruncationHeader() {
-    }
 
-    public AllowFieldTruncationHeader(
-           boolean allowFieldTruncation) {
-           this.allowFieldTruncation = allowFieldTruncation;
-    }
+/**
+ * <p>Java class for anonymous complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType>
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="allowFieldTruncation" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+    "allowFieldTruncation"
+})
+@XmlRootElement(name = "AllowFieldTruncationHeader")
+public class AllowFieldTruncationHeader {
 
+    protected boolean allowFieldTruncation;
 
     /**
-     * Gets the allowFieldTruncation value for this AllowFieldTruncationHeader.
+     * Gets the value of the allowFieldTruncation property.
      * 
-     * @return allowFieldTruncation
      */
     public boolean isAllowFieldTruncation() {
         return allowFieldTruncation;
     }
 
-
     /**
-     * Sets the allowFieldTruncation value for this AllowFieldTruncationHeader.
+     * Sets the value of the allowFieldTruncation property.
      * 
-     * @param allowFieldTruncation
      */
-    public void setAllowFieldTruncation(boolean allowFieldTruncation) {
-        this.allowFieldTruncation = allowFieldTruncation;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof AllowFieldTruncationHeader)) return false;
-        AllowFieldTruncationHeader other = (AllowFieldTruncationHeader) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.allowFieldTruncation == other.isAllowFieldTruncation();
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += (isAllowFieldTruncation() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(AllowFieldTruncationHeader.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", ">AllowFieldTruncationHeader"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("allowFieldTruncation");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "allowFieldTruncation"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setAllowFieldTruncation(boolean value) {
+        this.allowFieldTruncation = value;
     }
 
 }

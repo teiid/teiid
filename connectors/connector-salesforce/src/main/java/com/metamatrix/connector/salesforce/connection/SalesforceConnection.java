@@ -21,23 +21,27 @@
  */
 package com.metamatrix.connector.salesforce.connection;
 
-import java.net.URL;
-import java.util.Calendar;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorEnvironment;
+import javax.security.auth.Subject;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Messages;
+import com.metamatrix.connector.salesforce.MetadataProcessor;
+import com.metamatrix.connector.salesforce.SalesForceManagedConnectionFactory;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
 import com.metamatrix.connector.salesforce.execution.DeleteExecutionImpl;
@@ -47,69 +51,58 @@ import com.metamatrix.connector.salesforce.execution.ProcedureExecutionParentImp
 import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdateExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdatedResult;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
-public class SalesforceConnection extends BasicConnection {
+public class SalesforceConnection extends BasicConnection implements MetadataProvider {
 
-	private ConnectorEnvironment connectorEnv;
+	private SalesForceManagedConnectionFactory connectorEnv;
 	private ConnectionImpl connection;
 	
-	public SalesforceConnection(String username, String password, URL url, ConnectorEnvironment env) throws ConnectorException {
+	public SalesforceConnection(Subject subject,  SalesForceManagedConnectionFactory env) {
+		throw new MetaMatrixRuntimeException("not supported yet..");
+	}
+	
+	public SalesforceConnection(SalesForceManagedConnectionFactory env) throws ConnectorException {
 		try {
 			connectorEnv = env;
 			
-			long pingInterval = 5000;
-			try {
-				String pingIntervalString = env.getProperties().getProperty("SourceConnectionTestInterval");
-				if(null != pingIntervalString) {
-					pingInterval = Long.decode(pingIntervalString);
-				}
-			}	catch (NumberFormatException e) {
-				throw new ConnectorException(Messages.getString("SalesforceConnection.bad.ping.value"));
-			}
+			long pingInterval = env.getSourceConnectionTestInterval();
+	
 			//600000 - 10 minutes
-			int timeout = 120000; // two minutes
-			try {
-				String timeoutString = env.getProperties().getProperty("SourceConnectionTimeout");
-				if(null != timeoutString) {
-					timeout = Integer.decode(timeoutString).intValue();
-				}
-			}	catch (NumberFormatException e) {
-				throw new ConnectorException(Messages.getString("SalesforceConnection.bad.timeout.value"));
-			}
+			int timeout = env.getSourceConnectionTimeout();
 			
-			connection = new ConnectionImpl(username, password, url, pingInterval, env.getLogger(), timeout);
+			connection = new ConnectionImpl(env.getUsername(), env.getPassword(), env.getURL(), pingInterval, env.getLogger(), timeout);
 		} catch(Throwable t) {
 			env.getLogger().logError("SalesforceConnection() ErrorMessage: " + t.getMessage());
 			if(t instanceof ConnectorException) {
 				// don't wrap it again
 				throw (ConnectorException) t;
-			} else {
-				throw new ConnectorException(t);
-			}
+			} 
+			throw new ConnectorException(t);
 		}
 	}
 	
 	@Override
-	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
 		return new QueryExecutionImpl(command, this, metadata, executionContext, connectorEnv);
 	}
 	
 	@Override
-	public UpdateExecution createUpdateExecution(ICommand command,
+	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
 		UpdateExecution result = null;
-		if(command instanceof org.teiid.connector.language.IDelete) {
+		if(command instanceof org.teiid.connector.language.Delete) {
 			result = new DeleteExecutionImpl(command, this, metadata, executionContext, connectorEnv);
-		} else if (command instanceof org.teiid.connector.language.IInsert) {
+		} else if (command instanceof org.teiid.connector.language.Insert) {
 			result = new InsertExecutionImpl(command, this, metadata, executionContext, connectorEnv);
-		} else if (command instanceof org.teiid.connector.language.IUpdate) {
+		} else if (command instanceof org.teiid.connector.language.Update) {
 			result = new UpdateExecutionImpl(command, this, metadata, executionContext, connectorEnv);
 		}
 		return result;
@@ -117,7 +110,7 @@ public class SalesforceConnection extends BasicConnection {
 	}
 	
 	@Override
-	public ProcedureExecution createProcedureExecution(IProcedure command,
+	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
 		return new ProcedureExecutionParentImpl(command, this, metadata, executionContext, connectorEnv);
@@ -136,8 +129,8 @@ public class SalesforceConnection extends BasicConnection {
 		return connection.query(queryString, maxBatchSize, queryAll);
 	}
 
-	public QueryResult queryMore(String queryLocator) throws ConnectorException {
-		return connection.queryMore(queryLocator);
+	public QueryResult queryMore(String queryLocator, int batchSize) throws ConnectorException {
+		return connection.queryMore(queryLocator, batchSize);
 	}
 	
 	@Override
@@ -145,11 +138,6 @@ public class SalesforceConnection extends BasicConnection {
 		return connection.isAlive();
 	}
 	
-	@Override
-	public void closeCalled() {
-		
-	}
-
 	public int delete(String[] ids) throws ConnectorException {
 		return connection.delete(ids);
 	}
@@ -162,20 +150,21 @@ public class SalesforceConnection extends BasicConnection {
 		return connection.update(updateDataList);
 	}
 
-	public UpdatedResult getUpdated(String objectName, Calendar startCalendar,
-			Calendar endCalendar) throws ConnectorException {
+	public UpdatedResult getUpdated(String objectName, XMLGregorianCalendar startCalendar,
+			XMLGregorianCalendar endCalendar) throws ConnectorException {
 		return connection.getUpdated(objectName, startCalendar, endCalendar);
 	}
 
-	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
-			Calendar endCalendar) throws ConnectorException {
+	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar,
+			XMLGregorianCalendar endCalendar) throws ConnectorException {
 		return connection.getDeleted(objectName, startCalendar, endCalendar);
 	}
 	
-	public QueryResult retrieve(String fieldList, String sObjectType, String[] ids) throws ConnectorException {
-		SObject[] objects = connection.retrieve(fieldList, sObjectType, ids);
-		QueryResult result = new QueryResult(true, "teiid_created_result",
-		           objects, objects.length);
+	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ConnectorException {
+		List<SObject> objects = connection.retrieve(fieldList, sObjectType, ids);
+		QueryResult result = new QueryResult();
+		result.getRecords().addAll(objects);
+		result.setSize(objects.size());
 		return result;
 	}
 	
@@ -186,4 +175,11 @@ public class SalesforceConnection extends BasicConnection {
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ConnectorException {
 		return connection.getObjectMetaData(objectName);
 	}
+	
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory)
+			throws ConnectorException {
+		MetadataProcessor processor = new MetadataProcessor(this,metadataFactory, connectorEnv);
+		processor.processMetadata();
+	}	
 }

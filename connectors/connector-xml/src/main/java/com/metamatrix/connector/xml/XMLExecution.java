@@ -23,7 +23,6 @@
 package com.metamatrix.connector.xml;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 
 /**
@@ -48,11 +47,6 @@ import org.teiid.connector.api.ResultSetExecution;
  * 
  */
 public interface XMLExecution extends ResultSetExecution {
-	
-	public XMLConnection getConnection();
-	
-	public ExecutionContext getExeContext();
-
 	/**
 	 * Gets all the ResultProducers for a single query.
 	 * This could be any number or results and is implementation dependent.

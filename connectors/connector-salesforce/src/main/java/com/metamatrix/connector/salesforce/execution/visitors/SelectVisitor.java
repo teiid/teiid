@@ -21,22 +21,21 @@
  */
 package com.metamatrix.connector.salesforce.execution.visitors;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Constants;
@@ -45,11 +44,11 @@ import com.metamatrix.connector.salesforce.Util;
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 
-	private Map<Integer, Element> selectSymbolIndexToElement = new HashMap<Integer, Element>();
+	private Map<Integer, Column> selectSymbolIndexToElement = new HashMap<Integer, Column>();
 	private Map<String, Integer> selectSymbolNameToIndex = new HashMap<String, Integer>();
 	private int selectSymbolCount;
 	private int idIndex = -1; // index of the ID select symbol.
-	protected List<ISelectSymbol> selectSymbols;
+	protected List<DerivedColumn> selectSymbols;
 	protected StringBuffer limitClause = new StringBuffer();
 	private Boolean objectSupportsRetrieve;
 	
@@ -57,72 +56,59 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		super(metadata);
 	}
 
-	
-	public void visit(IQuery query) {
+	public void visit(Select query) {
 		super.visit(query);
-		if(null != query.getLimit()) {
-			limitClause.append(LIMIT).append(SPACE).append(query.getLimit().getRowLimit());
-		}
-	}
-
-
-	public void visit(ISelect select) {
-		super.visit(select);
-		if (select.isDistinct()) {
+		if (query.isDistinct()) {
 			exceptions.add(new ConnectorException(
 					Messages.getString("SelectVisitor.distinct.not.supported")));
 		}
-		try {
-			selectSymbols = select.getSelectSymbols();
-			selectSymbolCount = selectSymbols.size();
-			Iterator<ISelectSymbol> symbolIter = selectSymbols.iterator();
-			int index = 0;
-			while (symbolIter.hasNext()) {
-				ISelectSymbol symbol = symbolIter.next();
-				// get the name in source
-				IExpression expression = symbol.getExpression();
-				if (expression instanceof IElement) {
-					Element element = ((IElement) expression).getMetadataObject();
-					selectSymbolIndexToElement.put(index, element);
-					selectSymbolNameToIndex .put(element.getNameInSource(), index);
-					String nameInSource = element.getNameInSource();
-					if (null == nameInSource || nameInSource.length() == 0) {
-						exceptions.add(new ConnectorException(
-								"name in source is null or empty for column "
-										+ symbol.toString()));
-						continue;
-					}
-					if (nameInSource.equalsIgnoreCase("id")) {
-						idIndex = index;
-					}
+		selectSymbols = query.getDerivedColumns();
+		selectSymbolCount = selectSymbols.size();
+		Iterator<DerivedColumn> symbolIter = selectSymbols.iterator();
+		int index = 0;
+		while (symbolIter.hasNext()) {
+			DerivedColumn symbol = symbolIter.next();
+			// get the name in source
+			Expression expression = symbol.getExpression();
+			if (expression instanceof ColumnReference) {
+				Column element = ((ColumnReference) expression).getMetadataObject();
+				selectSymbolIndexToElement.put(index, element);
+				selectSymbolNameToIndex .put(element.getNameInSource(), index);
+				String nameInSource = element.getNameInSource();
+				if (null == nameInSource || nameInSource.length() == 0) {
+					exceptions.add(new ConnectorException(
+							"name in source is null or empty for column "
+									+ symbol.toString()));
+					continue;
 				}
-				++index;
+				if (nameInSource.equalsIgnoreCase("id")) {
+					idIndex = index;
+				}
 			}
+			++index;
+		}
+	}
+	
+	@Override
+	public void visit(NamedTable obj) {
+		try {
+			table = obj.getMetadataObject();
+	        String supportsQuery = table.getProperties().get(Constants.SUPPORTS_QUERY);
+	        objectSupportsRetrieve = Boolean.valueOf(table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
+	        if (!Boolean.valueOf(supportsQuery)) {
+	            throw new ConnectorException(table.getNameInSource() + " "
+	                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
+	        }
+			loadColumnMetadata(obj);
 		} catch (ConnectorException ce) {
 			exceptions.add(ce);
 		}
 	}
-
+	
 	@Override
-	public void visit(IFrom from) {
-		super.visit(from);
-		try {
-			// could be a join here, but if so we do nothing and handle 
-			// it in visit(IJoin join).
-			IFromItem fromItem = (IFromItem) from.getItems().get(0);
-			if(fromItem instanceof IGroup) {
-				table = ((IGroup)fromItem).getMetadataObject();
-		        String supportsQuery = (String)table.getProperties().get(Constants.SUPPORTS_QUERY);
-		        objectSupportsRetrieve = Boolean.valueOf((String)table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
-		        if (!Boolean.valueOf(supportsQuery)) {
-		            throw new ConnectorException(table.getNameInSource() + " "
-		                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
-		        }
-				loadColumnMetadata((IGroup)fromItem);
-			}
-		} catch (ConnectorException ce) {
-			exceptions.add(ce);
-		}
+	public void visit(Limit obj) {
+		super.visit(obj);
+		limitClause.append(LIMIT).append(SPACE).append(obj.getRowLimit());
 	}
 	
 	/*
@@ -150,20 +136,20 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
 	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws ConnectorException {
 		boolean firstTime = true;
-		for (ISelectSymbol symbol : selectSymbols) {
+		for (DerivedColumn symbol : selectSymbols) {
 			if (!firstTime) {
 				result.append(", ");
 			} else {
 				firstTime = false;
 			}
-			IExpression expression = symbol.getExpression();
-			if (expression instanceof IElement) {
-				Element element = ((IElement) expression).getMetadataObject();
+			Expression expression = symbol.getExpression();
+			if (expression instanceof ColumnReference) {
+				Column element = ((ColumnReference) expression).getMetadataObject();
 				String tableName = element.getParent().getNameInSource();
 				result.append(tableName);
 				result.append('.');
 				result.append(element.getNameInSource());
-			} else if (expression instanceof IAggregate) {
+			} else if (expression instanceof AggregateFunction) {
 				result.append("count()"); //$NON-NLS-1$
 			}
 		}
@@ -174,12 +160,12 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		return selectSymbolCount;
 	}
 
-	public Element getSelectSymbolMetadata(int index) {
+	public Column getSelectSymbolMetadata(int index) {
 		return selectSymbolIndexToElement.get(index);
 	}
 	
-	public Element getSelectSymbolMetadata(String name) {
-		Element result = null;
+	public Column getSelectSymbolMetadata(String name) {
+		Column result = null;
 		Integer index = selectSymbolNameToIndex.get(name);
 		if(null != index) {  
 			result = selectSymbolIndexToElement.get(index);
@@ -209,12 +195,12 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 
-	public String[] getIdInCriteria() throws ConnectorException {
+	public List<String> getIdInCriteria() throws ConnectorException {
 		assertRetrieveValidated();
-		List<IExpression> expressions = this.idInCriteria.getRightExpressions();
-		String[] result = new String[expressions.size()];
+		List<Expression> expressions = this.idInCriteria.getRightExpressions();
+		List<String> result = new ArrayList<String>(expressions.size());
 		for(int i = 0; i < expressions.size(); i++) {
-			result[i] = getValue(expressions.get(i));
+			result.add(getValue(expressions.get(i)));
 		}      
 		return result;
 	}

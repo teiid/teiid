@@ -34,24 +34,23 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.IUpdate;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.Update;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -71,19 +70,18 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  * of attributes to assign values in an INSERT operation * Responsible for update/insert/delete operations against LDAP
  */
 public class LDAPUpdateExecution extends BasicExecution implements UpdateExecution {
-	private ConnectorLogger logger;
 	private RuntimeMetadata rm;
 	private InitialLdapContext initialLdapContext;
 	private LdapContext ldapCtx;
-	private ICommand command;
+	private Command command;
+	private LDAPManagedConnectionFactory config;
 
-	public LDAPUpdateExecution(ICommand command, ExecutionContext ctx,
-			RuntimeMetadata rm, ConnectorLogger logger,
-			InitialLdapContext ldapCtx) throws ConnectorException {
+	public LDAPUpdateExecution(Command command, ExecutionContext ctx,
+			RuntimeMetadata rm, InitialLdapContext ldapCtx, LDAPManagedConnectionFactory config) throws ConnectorException {
 		this.rm = rm;
-		this.logger = logger;
 		this.initialLdapContext = ldapCtx;
 		this.command = command;
+		this.config = config;
 	}
 	
 	/** execute generic update-class (either an update, delete, or insert)
@@ -115,13 +113,13 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			throw new ConnectorException(msg);
 		}
 
-		if (command instanceof IUpdate) {
+		if (command instanceof Update) {
 			executeUpdate();
 		}
-		else if (command instanceof IDelete) {
+		else if (command instanceof Delete) {
 			executeDelete();
 		}
-		else if (command instanceof IInsert) {
+		else if (command instanceof Insert) {
 			executeInsert();
 		}
 		else {
@@ -164,13 +162,13 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 	private void executeInsert()
 			throws ConnectorException {
 
-		List insertElementList = ((IInsert)command).getElements();
-		List insertValueList = ((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues();
+		List<ColumnReference> insertElementList = ((Insert)command).getColumns();
+		List<Expression> insertValueList = ((ExpressionValueSource)((Insert)command).getValueSource()).getValues();
 		// create a new attribute list with case ignored in attribute
 		// names
 		Attributes insertAttrs = new BasicAttributes(true);
 		Attribute insertAttr; // what we will use to populate the attribute list
-		IElement insertElement;
+		ColumnReference insertElement;
 		String nameInsertElement;
 		Object insertValue;
 		String distinguishedName = null;
@@ -180,13 +178,13 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 		// other interfaces use ICriteria-based mechanisms for such
 		// input).
 		for (int i=0; i < insertElementList.size(); i++) {
-			insertElement = (IElement)insertElementList.get(i);
+			insertElement = insertElementList.get(i);
 			// call utility class to get NameInSource/Name of element
 			nameInsertElement = getNameFromElement(insertElement);
 			// special handling for DN attribute - use it to set
 			// distinguishedName value.
 			if (nameInsertElement.toUpperCase().equals("DN")) {  //$NON-NLS-1$
-				insertValue = ((ILiteral)insertValueList.get(i)).getValue();
+				insertValue = ((Literal)insertValueList.get(i)).getValue();
 				if (insertValue == null) { 
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
 					throw new ConnectorException(msg);
@@ -201,7 +199,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			// create a new 
 			else {
 				insertAttr = new BasicAttribute(nameInsertElement);
-				insertValue = ((ILiteral)insertValueList.get(i)).getValue();
+				insertValue = ((Literal)insertValueList.get(i)).getValue();
 				insertAttr.add(insertValue);
 				insertAttrs.put(insertAttr);
 			}
@@ -240,7 +238,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 	private void executeDelete()
 			throws ConnectorException {
 
-		ICriteria criteria = ((IDelete)command).getCriteria();
+		Condition criteria = ((Delete)command).getWhere();
 
 		// since we have the exact same processing rules for criteria
 		// for updates and deletes, we use a common private method to do this.
@@ -284,8 +282,8 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 	private void executeUpdate()
 			throws ConnectorException {
 
-		List<ISetClause> updateList = ((IUpdate)command).getChanges().getClauses();
-		ICriteria criteria = ((IUpdate)command).getCriteria();
+		List<SetClause> updateList = ((Update)command).getChanges();
+		Condition criteria = ((Update)command).getWhere();
 
 		// since we have the exact same processing rules for criteria
 		// for updates and deletes, we use a common private method to do this.
@@ -302,8 +300,8 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 		// be performed separately using Context.rename()), we will
 		// need to account for this in determining this list size. 
 		ModificationItem[] updateMods = new ModificationItem[updateList.size()];
-		IElement leftElement;
-		IExpression rightExpr;
+		ColumnReference leftElement;
+		Expression rightExpr;
 		String nameLeftElement;
 		Object valueRightExpr;
 		// iterate through the supplied list of updates (each of
@@ -311,7 +309,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 		// side and an IExpression on the right, per the Connector
 		// API).
 		for (int i=0; i < updateList.size(); i++) {
-			ISetClause setClause = updateList.get(i);
+			SetClause setClause = updateList.get(i);
 			// trust that connector API is right and left side
 			// will always be an IElement
 			leftElement = setClause.getSymbol();
@@ -320,11 +318,11 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
 			rightExpr = setClause.getValue();
-			if (!(rightExpr instanceof ILiteral)) { 
+			if (!(rightExpr instanceof Literal)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new ConnectorException(msg);
 		}
-			valueRightExpr = ((ILiteral)rightExpr).getValue();
+			valueRightExpr = ((Literal)rightExpr).getValue();
 			// add in the modification as a replacement - meaning
 			// any existing value(s) for this attribute will
 			// be replaced by the new value.  If the attribute
@@ -359,38 +357,38 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 	// this form and throw an appropriate exception if it is not
 	// since there is no way to specify this granularity of criteria
 	// right now in the connector capabilities
-	private String getDNFromCriteria(ICriteria criteria)
+	private String getDNFromCriteria(Condition criteria)
 			throws ConnectorException {
 		if (criteria == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaEmptyError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		if (!(criteria instanceof ICompareCriteria)) {
+		if (!(criteria instanceof Comparison)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotSimpleError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		ICompareCriteria compareCriteria = (ICompareCriteria)criteria;	
+		Comparison compareCriteria = (Comparison)criteria;	
 		if (compareCriteria.getOperator() != Operator.EQ) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotEqualsError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		IExpression leftExpr = compareCriteria.getLeftExpression();
-		if (!(leftExpr instanceof IElement)) {
+		Expression leftExpr = compareCriteria.getLeftExpression();
+		if (!(leftExpr instanceof ColumnReference)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaLHSNotElementError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
 		// call utility method to get NameInSource/Name for element
-		String nameLeftExpr = getNameFromElement((IElement)leftExpr);
+		String nameLeftExpr = getNameFromElement((ColumnReference)leftExpr);
 		if (!(nameLeftExpr.toUpperCase().equals("DN"))) {   //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaSrcColumnError",nameLeftExpr); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		IExpression rightExpr = compareCriteria.getRightExpression();
-		if (!(rightExpr instanceof ILiteral)) {
+		Expression rightExpr = compareCriteria.getRightExpression();
+		if (!(rightExpr instanceof Literal)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaRHSNotLiteralError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		Object valueRightExpr = ((ILiteral)rightExpr).getValue();
+		Object valueRightExpr = ((Literal)rightExpr).getValue();
 		if (!(valueRightExpr instanceof java.lang.String)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaRHSNotStringError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
@@ -400,13 +398,13 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 
 	// This is an exact copy of the method with the same name in
 	// IQueryToLdapSearchParser - really should be in a utility class
-	private String getNameFromElement(IElement e) throws ConnectorException {
+	private String getNameFromElement(ColumnReference e) throws ConnectorException {
 		String ldapAttributeName = null;
 		String elementNameDirect = e.getName();
 		if (elementNameDirect == null) {
 		} else {
 		}
-		MetadataObject mdObject = e.getMetadataObject();
+		AbstractMetadataRecord mdObject = e.getMetadataObject();
 		if (mdObject == null) {
 			return "";  //$NON-NLS-1$
 		}
@@ -440,7 +438,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			}
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-			logger.logError(msg);
+			this.config.getLogger().logError(msg);
 		}
 	}
 

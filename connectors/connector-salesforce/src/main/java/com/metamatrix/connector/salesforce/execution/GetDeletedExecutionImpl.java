@@ -2,13 +2,16 @@ package com.metamatrix.connector.salesforce.execution;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
 
 /**
  * 
@@ -31,10 +34,16 @@ public class GetDeletedExecutionImpl implements SalesforceProcedureExecution {
 
 	private DeletedResult deletedResult;
 	private int resultIndex = 0;
+	DatatypeFactory factory;
 	
 	public GetDeletedExecutionImpl(
-			ProcedureExecutionParent procedureExecutionParent) {
+			ProcedureExecutionParent procedureExecutionParent) throws ConnectorException {
 		this.parent = procedureExecutionParent;
+		try {
+			factory = DatatypeFactory.newInstance();
+		} catch (DatatypeConfigurationException e) {
+			throw new ConnectorException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -51,21 +60,23 @@ public class GetDeletedExecutionImpl implements SalesforceProcedureExecution {
 
 	@Override
 	public void execute(ProcedureExecutionParent procedureExecutionParent) throws ConnectorException {
-		IProcedure command = parent.getCommand();
-		List<IParameter> params = command.getParameters();
+		Call command = parent.getCommand();
+		List<Argument> params = command.getArguments();
 		
-		IParameter object = (IParameter) params.get(OBJECT);
-		String objectName = (String) object.getValue();
+		Argument object = params.get(OBJECT);
+		String objectName = (String) object.getArgumentValue().getValue();
 		
-		IParameter start = (IParameter) params.get(STARTDATE);
-		Timestamp startTime = (Timestamp) start.getValue();
-		Calendar startCalendar = GregorianCalendar.getInstance();
-		startCalendar.setTime(startTime);
+		Argument start = params.get(STARTDATE);
+		Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
+		GregorianCalendar tempCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+		tempCalendar.setTime(startTime);
+		XMLGregorianCalendar startCalendar = factory.newXMLGregorianCalendar(tempCalendar);
 		
-		IParameter end = (IParameter) params.get(ENDDATE);
-		Timestamp endTime = (Timestamp) end.getValue();
-		Calendar endCalendar = GregorianCalendar.getInstance();
-		endCalendar.setTime(endTime);
+		Argument end = params.get(ENDDATE);
+		Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
+		tempCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+		tempCalendar.setTime(endTime);
+		XMLGregorianCalendar endCalendar = factory.newXMLGregorianCalendar(tempCalendar);
 		
 		deletedResult = parent.getConnection().getDeleted(objectName, startCalendar, endCalendar);	
 	}

@@ -22,158 +22,74 @@
 
 package com.metamatrix.connector.salesforce;
 
-import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URL;
+import javax.security.auth.Subject;
 
 import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectionContext;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.CredentialMap;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.MetadataProvider;
-import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
 
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
-@ConnectionPooling
-public class Connector extends org.teiid.connector.basic.BasicConnector implements MetadataProvider {
+public class Connector extends org.teiid.connector.basic.BasicConnector {
 
-	private static Connector connector;
-	
-	private ConnectorLogger logger;
-
-	private ConnectorEnvironment connectorEnv;
-	private ConnectorState state;
+	private SalesForceManagedConnectionFactory connectorEnv;
 	private boolean singleIdentity;
-	private String username;
-	private String password;
-	private URL url;
-	private SalesforceCapabilities salesforceCapabilites;
 
-	public Connector() {
-		connector = this;
-	}
-	
 	// ///////////////////////////////////////////////////////////
 	// Connector implementation
 	// ///////////////////////////////////////////////////////////
-	public Connection getConnection(ExecutionContext secContext)
-			throws ConnectorException {
-		logger.logTrace("Enter SalesforceSourceConnection.getConnection()");
+	@Override
+	public Connection getConnection() throws ConnectorException {
+		getLogger().logTrace("Enter SalesforceSourceConnection.getConnection()");
 		Connection connection = null;
 		if (singleIdentity) {
-			connection = new SalesforceConnection(username, password, url, connectorEnv);
+			connection = new SalesforceConnection(connectorEnv);
 		} else {
-			Serializable trustedPayload = secContext.getTrustedPayload();
-			if(trustedPayload instanceof CredentialMap) {
-		    	CredentialMap map = (CredentialMap) trustedPayload;
-		    	String username = map.getUser(secContext.getConnectorIdentifier());
-		    	String password = map.getPassword(secContext.getConnectorIdentifier());    		
-		    	connection = new SalesforceConnection(username, password, url, connectorEnv);
+			// if the security domain is enabled, then subject is not null.
+			Subject subject = ConnectionContext.getSubject();
+			if(subject != null) {
+		    	connection = new SalesforceConnection(subject, connectorEnv);
 		    } else { 
 		    	throw new ConnectorException("Unknown trusted payload type"); 
 		    }
 		}
-		logger.logTrace("Return SalesforceSourceConnection.getConnection()");
+		getLogger().logTrace("Return SalesforceSourceConnection.getConnection()");
 		return connection;
 	}
 
 	@Override
-	public void start(ConnectorEnvironment env) throws ConnectorException {
-		this.logger = env.getLogger();
-		this.connectorEnv = env;
-		getLogger().logInfo(getLogPreamble().append("Started").toString()); //$NON-NLS-1$
-		this.state = new ConnectorState(env.getProperties(), getLogger());
-		getLogger().logInfo(getLogPreamble().append("Initialized").toString()); //$NON-NLS-1$
-		getLogger().logTrace(getLogPreamble()
-				.append("Initialization Properties: " + env.getProperties()).toString()); //$NON-NLS-1$
-		String urlString =  env.getProperties().getProperty("URL");
-		if(null != urlString && 0 != urlString.length()) {
-			try {
-				url = new URL(urlString);
-			} catch (MalformedURLException e) {
-				throw new ConnectorException(e, e.getMessage());
-			}
-		}
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
 		
-		String username = env.getProperties().getProperty("username");
-		String password =  env.getProperties().getProperty("password");
+		this.connectorEnv = (SalesForceManagedConnectionFactory)env;
+		
+		getLogger().logInfo("Started"); //$NON-NLS-1$
+		getLogger().logInfo("Initialized"); //$NON-NLS-1$
+		getLogger().logTrace("Initialization Properties: " + this.connectorEnv.toString()); //$NON-NLS-1$
 		
 		//validate that both are empty or both have values
-		if(null == username && null == password) {
-			
-		} else if ((null == username || username.equals("")) && (null != password && !password.equals("")) ||
-				((null == password || password.equals("")) && (null != username && !username.equals("")))) {
-					String msg = Messages.getString("SalesforceSourceConnectionFactory.Invalid.username.password.pair");
-					env.getLogger().logError(msg);
-					throw new ConnectorException(msg);
-		} else if(null != username && !username.equals("")) {
+		if(this.connectorEnv.getUsername() != null) {
 			singleIdentity = true;
-			this.password = password;
-			this.username = username;
-		} else {
-			this.setAdminConnectionsAllowed(false);
-			this.setUseCredentialMap(true);
 		}
-		
-		String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities", SalesforceCapabilities.class.getName());
-    	try {
-    		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(capabilitiesClass);
-    		salesforceCapabilites = (SalesforceCapabilities) clazz.newInstance();
-		} catch (Exception e) {
-			throw new ConnectorException(e, "Unable to load Capabilities Class");
-		}
-		logger.logTrace("Return SalesforceSourceConnection.initialize()");
+
+		getLogger().logTrace("Return SalesforceSourceConnection.initialize()");
 	}
 
-	public void stop() {
-		try {
-			getLogger().logInfo(getLogPreamble().append("Stopped").toString());
-		} catch (ConnectorException e) {
-			// nothing to do here
-		}
-	}
 
 	/////////////////////////////////////////////////////////////
 	//Utilities
 	/////////////////////////////////////////////////////////////
 
-	public ConnectorLogger getLogger() throws ConnectorException {
-		if(null == logger) {
-			throw new ConnectorException("Error:  Connector initialize not called");
-		}
-		return logger;
+	private ConnectorLogger getLogger(){
+		return this.config.getLogger();
 	}
 
-	public StringBuffer getLogPreamble() {
-		StringBuffer preamble = new StringBuffer();
-		preamble.append("Salesforce Connector id = ");
-		preamble.append(connectorEnv.getConnectorName());
-		preamble.append(":");
-		return preamble;
-	}
-
-	public ConnectorState getState() {
-		return state;
-	}
-	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return salesforceCapabilites;
-	}
 
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory)
-			throws ConnectorException {
-		MetadataProcessor processor = new MetadataProcessor((SalesforceConnection)getConnection(null),metadataFactory, logger);
-		processor.processMetadata();
-	}
-	
-	public static Connector getConnector() {
-		return connector;
-	}
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return SalesforceCapabilities.class;
+    }	
 }

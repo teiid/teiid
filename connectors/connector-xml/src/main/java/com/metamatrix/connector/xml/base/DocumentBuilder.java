@@ -37,12 +37,12 @@ import org.jdom.Namespace;
 import org.jdom.output.XMLOutputter;
 import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
 
 public class DocumentBuilder {
 
     public static final String PARM_INPUT_XPATH_TABLE_PROPERTY_NAME = "XPathRootForInput"; //$NON-NLS-1$
-
+    public static final String ENCODING_STYLE_URL = "http://schemas.xmlsoap.org/soap/encoding/"; //$NON-NLS-1$
+    
     private Map m_namespaceMap;
 
     private boolean m_useTypeAttributes;
@@ -62,8 +62,7 @@ public class DocumentBuilder {
         return outputDocToString(doc);
     }
 
-    public Document buildDocument(List contents, String topLevelXPath,
-            String nsDecl) throws ConnectorException {
+    public Document buildDocument(List contents, String topLevelXPath, String nsDecl) throws ConnectorException {
         Document doc = null;
         setNamespaces(nsDecl);
         // assemble table-level elements
@@ -71,13 +70,10 @@ public class DocumentBuilder {
         try {
             curElement = makeElement(curElement, topLevelXPath, false);
         } catch(IllegalNameException ex) {
-            ConnectorException ce = new ConnectorException(topLevelXPath + " is not a valid XPath for the root request node." +
-                    "Change the Request table " + PARM_INPUT_XPATH_TABLE_PROPERTY_NAME);
-            throw ce;
+            throw new ConnectorException(topLevelXPath + " is not a valid XPath for the root request node." + "Change the Request table " + PARM_INPUT_XPATH_TABLE_PROPERTY_NAME);
         }
         if (curElement == null) {
-            throw new ConnectorException(Messages
-                    .getString("HTTPExecutor.root.element.required")); //$NON-NLS-1$
+            throw new ConnectorException(Messages.getString("HTTPExecutor.root.element.required")); //$NON-NLS-1$
         }
         doc = makeTableLevelElements(curElement);
 
@@ -288,7 +284,7 @@ public class DocumentBuilder {
                 try {
                     Method method = parmCriteria.getElement().getClass()
                             .getMethod("getModeledType", new Class[] {});
-                    String type = parmCriteria.getElement().getModeledType();
+                    String type = parmCriteria.getElement().getDatatypeID();
                     String nsPart = type.substring(0, type.indexOf('#'));
                     String namePart = type.substring(type.indexOf('#') + 1);
                     Iterator nsIter = getNamespaces().values().iterator();
@@ -404,7 +400,7 @@ public class DocumentBuilder {
             //an earlier array element.
             if(null == arrayElement.getAttribute("type", Namespace.XML_NAMESPACE)) {
                 arrayElement.setAttribute("type", xsdTypeValue, Namespace.XML_NAMESPACE);
-                Namespace soapEncodingNamespace = Namespace.getNamespace(soapEncodingPrefix, SOAPDocBuilder.encodingStyleUrl);
+                Namespace soapEncodingNamespace = Namespace.getNamespace(soapEncodingPrefix, ENCODING_STYLE_URL);
                 arrayElement.setAttribute("arrayType", arrayTypeValue, soapEncodingNamespace);
             }
             curElement.detach();
@@ -420,7 +416,7 @@ public class DocumentBuilder {
             //an earlier array element.
             if(null == curElement.getAttribute("type", Namespace.XML_NAMESPACE)) {
                 curElement.setAttribute("type", xsdTypeValue, Namespace.XML_NAMESPACE);
-                Namespace soapEncodingNamespace = Namespace.getNamespace(soapEncodingPrefix, SOAPDocBuilder.encodingStyleUrl);
+                Namespace soapEncodingNamespace = Namespace.getNamespace(soapEncodingPrefix, ENCODING_STYLE_URL);
                 curElement.setAttribute("arrayType", arrayTypeValue, soapEncodingNamespace);
             }
             

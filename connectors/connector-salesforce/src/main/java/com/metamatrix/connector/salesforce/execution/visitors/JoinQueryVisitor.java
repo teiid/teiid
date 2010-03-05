@@ -1,17 +1,17 @@
 package com.metamatrix.connector.salesforce.execution.visitors;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Table;
 
 import com.metamatrix.connector.salesforce.Util;
 
@@ -27,12 +27,11 @@ import com.metamatrix.connector.salesforce.Util;
  * 
  */
 
-public class JoinQueryVisitor extends SelectVisitor implements
-		IQueryProvidingVisitor {
+public class JoinQueryVisitor extends SelectVisitor {
 
-	private Group leftTableInJoin;
-	private Group rightTableInJoin;
-	private Group childTable;
+	private Table leftTableInJoin;
+	private Table rightTableInJoin;
+	private Table childTable;
 
 	public JoinQueryVisitor(RuntimeMetadata metadata) {
 		super(metadata);
@@ -40,20 +39,20 @@ public class JoinQueryVisitor extends SelectVisitor implements
 
 	// Has to be a left outer join
 	@Override
-	public void visit(IJoin join) {
+	public void visit(Join join) {
 		try {
-			IFromItem left = join.getLeftItem();
-			if (left instanceof IGroup) {
-				IGroup leftGroup = (IGroup) left;
+			TableReference left = join.getLeftItem();
+			if (left instanceof NamedTable) {
+				NamedTable leftGroup = (NamedTable) left;
 				leftTableInJoin = leftGroup.getMetadataObject();
 				loadColumnMetadata(leftGroup);
 			}
 
-			IFromItem right = join.getRightItem();
-			if (right instanceof IGroup) {
-				IGroup rightGroup = (IGroup) right;
+			TableReference right = join.getRightItem();
+			if (right instanceof NamedTable) {
+				NamedTable rightGroup = (NamedTable) right;
 				rightTableInJoin = rightGroup.getMetadataObject();
-				loadColumnMetadata((IGroup) right);
+				loadColumnMetadata((NamedTable) right);
 			}
 			super.visit(join);
 		} catch (ConnectorException ce) {
@@ -63,19 +62,19 @@ public class JoinQueryVisitor extends SelectVisitor implements
 	}
 
 	@Override
-	public void visit(ICompareCriteria criteria) {
+	public void visit(Comparison criteria) {
 		
 		// Find the criteria that joins the two tables
 		try {
-			IExpression rExp = criteria.getRightExpression();
-			if (rExp instanceof IElement) {
-				IExpression lExp = criteria.getLeftExpression();
-				if (isIdColumn((IExpression) rExp) || isIdColumn(lExp)) {
+			Expression rExp = criteria.getRightExpression();
+			if (rExp instanceof ColumnReference) {
+				Expression lExp = criteria.getLeftExpression();
+				if (isIdColumn(rExp) || isIdColumn(lExp)) {
 
-					Element rColumn = ((IElement) rExp).getMetadataObject();
+					Column rColumn = ((ColumnReference) rExp).getMetadataObject();
 					String rTableName = rColumn.getParent().getNameInSource();
 
-					Element lColumn = ((IElement) lExp).getMetadataObject();
+					Column lColumn = ((ColumnReference) lExp).getMetadataObject();
 					String lTableName = lColumn.getParent().getNameInSource();
 
 					if (leftTableInJoin.getNameInSource().equals(rTableName)
@@ -84,8 +83,8 @@ public class JoinQueryVisitor extends SelectVisitor implements
 							|| rightTableInJoin.getNameInSource().equals(lTableName)
 							&& !rTableName.equals(lTableName)) {
 						// This is the join criteria, the one that is the ID is the parent.
-						IExpression fKey = !isIdColumn(lExp) ? lExp : rExp; 
-						table = childTable =  ((IElement) fKey).getMetadataObject().getParent();
+						Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
+						table = childTable =  (Table)((ColumnReference) fKey).getMetadataObject().getParent();
 					} else {
 						// Only add the criteria to the query if it is not the join criteria.
 						// The join criteria is implicit in the salesforce syntax.
@@ -105,30 +104,29 @@ public class JoinQueryVisitor extends SelectVisitor implements
 		
 		if (isParentToChildJoin()) {
 			return super.getQuery();
-		} else {
-			if (!exceptions.isEmpty()) {
-				throw ((ConnectorException) exceptions.get(0));
-			}
-			StringBuffer select = new StringBuffer();
-			select.append(SELECT).append(SPACE);
-			addSelectSymbols(leftTableInJoin.getNameInSource(), select);
-			select.append(COMMA).append(SPACE).append(OPEN);
-			
-			StringBuffer subselect = new StringBuffer();
-			subselect.append(SELECT).append(SPACE);
-			addSelectSymbols(rightTableInJoin.getNameInSource(), subselect);
-			subselect.append(SPACE);
-			subselect.append(FROM).append(SPACE);
-			subselect.append(rightTableInJoin.getNameInSource()).append('s');
-			subselect.append(CLOSE).append(SPACE);
-			select.append(subselect);
-			select.append(FROM).append(SPACE);
-			select.append(leftTableInJoin.getNameInSource()).append(SPACE);
-			addCriteriaString(select);
-			select.append(limitClause);
-			Util.validateQueryLength(select);
-			return select.toString();			
+		} 
+		if (!exceptions.isEmpty()) {
+			throw exceptions.get(0);
 		}
+		StringBuffer select = new StringBuffer();
+		select.append(SELECT).append(SPACE);
+		addSelectSymbols(leftTableInJoin.getNameInSource(), select);
+		select.append(COMMA).append(SPACE).append(OPEN);
+		
+		StringBuffer subselect = new StringBuffer();
+		subselect.append(SELECT).append(SPACE);
+		addSelectSymbols(rightTableInJoin.getNameInSource(), subselect);
+		subselect.append(SPACE);
+		subselect.append(FROM).append(SPACE);
+		subselect.append(rightTableInJoin.getNameInSource()).append('s');
+		subselect.append(CLOSE).append(SPACE);
+		select.append(subselect);
+		select.append(FROM).append(SPACE);
+		select.append(leftTableInJoin.getNameInSource()).append(SPACE);
+		addCriteriaString(select);
+		select.append(limitClause);
+		Util.validateQueryLength(select);
+		return select.toString();			
 	}
 
 	public boolean isParentToChildJoin() {
@@ -137,10 +135,10 @@ public class JoinQueryVisitor extends SelectVisitor implements
 
 	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws ConnectorException {
 		boolean firstTime = true;
-		for (ISelectSymbol symbol : selectSymbols) {
-			IExpression expression = symbol.getExpression();
-			if (expression instanceof IElement) {
-				Element element = ((IElement) expression).getMetadataObject();
+		for (DerivedColumn symbol : selectSymbols) {
+			Expression expression = symbol.getExpression();
+			if (expression instanceof ColumnReference) {
+				Column element = ((ColumnReference) expression).getMetadataObject();
 				String tableName = element.getParent().getNameInSource();
 				if(!isParentToChildJoin() && tableNameInSource.equals(tableName) ||
 						isParentToChildJoin()) {
@@ -153,7 +151,7 @@ public class JoinQueryVisitor extends SelectVisitor implements
 					result.append('.');
 					result.append(element.getNameInSource());
 				}
-			} else if (expression instanceof IAggregate) {
+			} else if (expression instanceof AggregateFunction) {
 				if (!firstTime) {
 					result.append(", ");
 				} else {

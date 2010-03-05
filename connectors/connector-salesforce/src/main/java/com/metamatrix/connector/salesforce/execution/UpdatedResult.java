@@ -1,11 +1,12 @@
 package com.metamatrix.connector.salesforce.execution;
 
 import java.util.Calendar;
+import java.util.List;
 
 public class UpdatedResult {
 
 	private Calendar latestDateCovered;
-	private String[] IDs;
+	private List<String> IDs;
 	
 	public Calendar getLatestDateCovered() {
 		return latestDateCovered;
@@ -15,11 +16,11 @@ public class UpdatedResult {
 		this.latestDateCovered = latestDateCovered;
 	}
 
-	public String[] getIDs() {
+	public List<String> getIDs() {
 		return IDs;
 	}
 
-	public void setIDs(String[] ids) {
-		this.IDs = ids;
+	public void setIDs(List<String> list) {
+		this.IDs = list;
 	}
 }

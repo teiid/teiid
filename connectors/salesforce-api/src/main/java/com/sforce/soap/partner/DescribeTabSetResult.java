@@ -1,278 +1,170 @@
-/**
- * DescribeTabSetResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class DescribeTabSetResult  implements java.io.Serializable {
-    private java.lang.String label;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String logoUrl;
 
-    private java.lang.String namespace;
+/**
+ * <p>Java class for DescribeTabSetResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="DescribeTabSetResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="logoUrl" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="namespace" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="selected" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="tabs" type="{urn:partner.soap.sforce.com}DescribeTab" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "DescribeTabSetResult", propOrder = {
+    "label",
+    "logoUrl",
+    "namespace",
+    "selected",
+    "tabs"
+})
+public class DescribeTabSetResult {
 
-    private boolean selected;
-
-    private com.sforce.soap.partner.DescribeTab[] tabs;
-
-    public DescribeTabSetResult() {
-    }
-
-    public DescribeTabSetResult(
-           java.lang.String label,
-           java.lang.String logoUrl,
-           java.lang.String namespace,
-           boolean selected,
-           com.sforce.soap.partner.DescribeTab[] tabs) {
-           this.label = label;
-           this.logoUrl = logoUrl;
-           this.namespace = namespace;
-           this.selected = selected;
-           this.tabs = tabs;
-    }
-
+    @XmlElement(required = true)
+    protected String label;
+    @XmlElement(required = true)
+    protected String logoUrl;
+    protected String namespace;
+    protected boolean selected;
+    protected List<DescribeTab> tabs;
 
     /**
-     * Gets the label value for this DescribeTabSetResult.
+     * Gets the value of the label property.
      * 
-     * @return label
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLabel() {
+    public String getLabel() {
         return label;
     }
 
-
     /**
-     * Sets the label value for this DescribeTabSetResult.
+     * Sets the value of the label property.
      * 
-     * @param label
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLabel(java.lang.String label) {
-        this.label = label;
+    public void setLabel(String value) {
+        this.label = value;
     }
 
-
     /**
-     * Gets the logoUrl value for this DescribeTabSetResult.
+     * Gets the value of the logoUrl property.
      * 
-     * @return logoUrl
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLogoUrl() {
+    public String getLogoUrl() {
         return logoUrl;
     }
 
-
     /**
-     * Sets the logoUrl value for this DescribeTabSetResult.
+     * Sets the value of the logoUrl property.
      * 
-     * @param logoUrl
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLogoUrl(java.lang.String logoUrl) {
-        this.logoUrl = logoUrl;
+    public void setLogoUrl(String value) {
+        this.logoUrl = value;
     }
 
-
     /**
-     * Gets the namespace value for this DescribeTabSetResult.
+     * Gets the value of the namespace property.
      * 
-     * @return namespace
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getNamespace() {
+    public String getNamespace() {
         return namespace;
     }
 
-
     /**
-     * Sets the namespace value for this DescribeTabSetResult.
+     * Sets the value of the namespace property.
      * 
-     * @param namespace
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setNamespace(java.lang.String namespace) {
-        this.namespace = namespace;
+    public void setNamespace(String value) {
+        this.namespace = value;
     }
 
-
     /**
-     * Gets the selected value for this DescribeTabSetResult.
+     * Gets the value of the selected property.
      * 
-     * @return selected
      */
     public boolean isSelected() {
         return selected;
     }
 
-
     /**
-     * Sets the selected value for this DescribeTabSetResult.
+     * Sets the value of the selected property.
      * 
-     * @param selected
      */
-    public void setSelected(boolean selected) {
-        this.selected = selected;
+    public void setSelected(boolean value) {
+        this.selected = value;
     }
 
-
     /**
-     * Gets the tabs value for this DescribeTabSetResult.
+     * Gets the value of the tabs property.
      * 
-     * @return tabs
-     */
-    public com.sforce.soap.partner.DescribeTab[] getTabs() {
-        return tabs;
-    }
-
-
-    /**
-     * Sets the tabs value for this DescribeTabSetResult.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the tabs property.
      * 
-     * @param tabs
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getTabs().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link DescribeTab }
+     * 
+     * 
      */
-    public void setTabs(com.sforce.soap.partner.DescribeTab[] tabs) {
-        this.tabs = tabs;
-    }
-
-    public com.sforce.soap.partner.DescribeTab getTabs(int i) {
-        return this.tabs[i];
-    }
-
-    public void setTabs(int i, com.sforce.soap.partner.DescribeTab _value) {
-        this.tabs[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof DescribeTabSetResult)) return false;
-        DescribeTabSetResult other = (DescribeTabSetResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<DescribeTab> getTabs() {
+        if (tabs == null) {
+            tabs = new ArrayList<DescribeTab>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.label==null && other.getLabel()==null) || 
-             (this.label!=null &&
-              this.label.equals(other.getLabel()))) &&
-            ((this.logoUrl==null && other.getLogoUrl()==null) || 
-             (this.logoUrl!=null &&
-              this.logoUrl.equals(other.getLogoUrl()))) &&
-            ((this.namespace==null && other.getNamespace()==null) || 
-             (this.namespace!=null &&
-              this.namespace.equals(other.getNamespace()))) &&
-            this.selected == other.isSelected() &&
-            ((this.tabs==null && other.getTabs()==null) || 
-             (this.tabs!=null &&
-              java.util.Arrays.equals(this.tabs, other.getTabs())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getLabel() != null) {
-            _hashCode += getLabel().hashCode();
-        }
-        if (getLogoUrl() != null) {
-            _hashCode += getLogoUrl().hashCode();
-        }
-        if (getNamespace() != null) {
-            _hashCode += getNamespace().hashCode();
-        }
-        _hashCode += (isSelected() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getTabs() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getTabs());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getTabs(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(DescribeTabSetResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeTabSetResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("label");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "label"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("logoUrl");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "logoUrl"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("namespace");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "namespace"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("selected");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "selected"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("tabs");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "tabs"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeTab"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.tabs;
     }
 
 }

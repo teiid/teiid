@@ -1,119 +1,64 @@
-/**
- * GetUpdatedResponse.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class GetUpdatedResponse  implements java.io.Serializable {
-    private com.sforce.soap.partner.GetUpdatedResult result;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-    public GetUpdatedResponse() {
-    }
 
-    public GetUpdatedResponse(
-           com.sforce.soap.partner.GetUpdatedResult result) {
-           this.result = result;
-    }
+/**
+ * <p>Java class for anonymous complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType>
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="result" type="{urn:partner.soap.sforce.com}GetUpdatedResult"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+    "result"
+})
+@XmlRootElement(name = "getUpdatedResponse")
+public class GetUpdatedResponse {
 
+    @XmlElement(required = true)
+    protected GetUpdatedResult result;
 
     /**
-     * Gets the result value for this GetUpdatedResponse.
+     * Gets the value of the result property.
      * 
-     * @return result
+     * @return
+     *     possible object is
+     *     {@link GetUpdatedResult }
+     *     
      */
-    public com.sforce.soap.partner.GetUpdatedResult getResult() {
+    public GetUpdatedResult getResult() {
         return result;
     }
 
-
     /**
-     * Sets the result value for this GetUpdatedResponse.
+     * Sets the value of the result property.
      * 
-     * @param result
+     * @param value
+     *     allowed object is
+     *     {@link GetUpdatedResult }
+     *     
      */
-    public void setResult(com.sforce.soap.partner.GetUpdatedResult result) {
-        this.result = result;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof GetUpdatedResponse)) return false;
-        GetUpdatedResponse other = (GetUpdatedResponse) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.result==null && other.getResult()==null) || 
-             (this.result!=null &&
-              this.result.equals(other.getResult())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getResult() != null) {
-            _hashCode += getResult().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(GetUpdatedResponse.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", ">getUpdatedResponse"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("result");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "result"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "GetUpdatedResult"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setResult(GetUpdatedResult value) {
+        this.result = value;
     }
 
 }

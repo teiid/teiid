@@ -24,18 +24,18 @@ package com.metamatrix.connector.salesforce.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.apache.axis.message.MessageElement;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.IUpdate;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.Update;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Util;
@@ -44,28 +44,32 @@ import com.metamatrix.connector.salesforce.execution.visitors.UpdateVisitor;
 
 public class UpdateExecutionImpl extends AbstractUpdateExecution {
 
-	public UpdateExecutionImpl(ICommand command,
+	@SuppressWarnings("unchecked")
+	private static final Class stringClazz = new String().getClass();
+	
+	public UpdateExecutionImpl(Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		super(command, salesforceConnection, metadata, context, connectorEnv);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void execute() throws ConnectorException {
 		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
-		visitor.visit((IUpdate)command);
-		String[] Ids = getIDs(((IUpdate)command).getCriteria(), visitor);
+		visitor.visit((Update)command);
+		String[] Ids = getIDs(((Update)command).getWhere(), visitor);
 
 		if (null != Ids && Ids.length > 0) {
-			List<MessageElement> elements = new ArrayList<MessageElement>();
-			for (ISetClause clause : ((IUpdate)command).getChanges().getClauses()) {
-				IElement element = clause.getSymbol();
-				Element column = element.getMetadataObject();
-				String val = ((ILiteral) clause.getValue())
+			List<JAXBElement> elements = new ArrayList<JAXBElement>();
+			for (SetClause clause : ((Update)command).getChanges()) {
+				ColumnReference element = clause.getSymbol();
+				Column column = element.getMetadataObject();
+				String val = ((Literal) clause.getValue())
 						.toString();
-				MessageElement messageElem = new MessageElement(new QName(
-						column.getNameInSource()), Util.stripQutes(val));
+				JAXBElement messageElem = new JAXBElement(new QName(
+						column.getNameInSource()), stringClazz, Util.stripQutes(val));
 				elements.add(messageElem);
 			}
 
@@ -74,8 +78,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 				DataPayload data = new DataPayload();
 				data.setType(visitor.getTableName());
 				data.setID(Ids[i]);
-				data.setMessageElements(elements
-						.toArray(new MessageElement[] {}));
+				data.setMessageElements(elements);
 				updateDataList.add(data);
 			}
 

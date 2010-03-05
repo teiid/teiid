@@ -22,13 +22,12 @@
 
 package com.metamatrix.connector.yahoo;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -37,26 +36,18 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  */
 public class YahooConnection extends BasicConnection {
 
-    private ConnectorEnvironment env;
+    private YahooManagedConnectionFactory config;
 
-    /**
-     * 
-     */
-    public YahooConnection(ConnectorEnvironment env) {
-        this.env = env;
+    public YahooConnection(YahooManagedConnectionFactory env) {
+        this.config = env;
     }
 
     @Override
-    public ResultSetExecution createResultSetExecution(IQueryCommand command,
-    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new YahooExecution((IQuery)command, env, metadata);
+    	return new YahooExecution((Select)command, config, metadata);
     }
-    
 
-    /* 
-     * @see com.metamatrix.data.Connection#close()
-     */
     public void close() {
         // nothing to do
     }

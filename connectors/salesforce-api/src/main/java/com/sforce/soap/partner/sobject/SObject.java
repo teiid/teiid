@@ -1,247 +1,161 @@
-/**
- * SObject.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner.sobject;
 
-public class SObject  implements java.io.Serializable, org.apache.axis.encoding.AnyContentType {
-    private java.lang.String type;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import org.w3c.dom.Element;
 
-    private java.lang.String[] fieldsToNull;
 
-    private java.lang.String id;
+/**
+ * <p>Java class for sObject complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="sObject">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="type" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="fieldsToNull" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="Id" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;any processContents='lax' namespace='urn:sobject.partner.soap.sforce.com' maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "sObject", propOrder = {
+    "type",
+    "fieldsToNull",
+    "id",
+    "any"
+})
+public class SObject {
 
-    private org.apache.axis.message.MessageElement [] _any;
-
-    public SObject() {
-    }
-
-    public SObject(
-           java.lang.String type,
-           java.lang.String[] fieldsToNull,
-           java.lang.String id,
-           org.apache.axis.message.MessageElement [] _any) {
-           this.type = type;
-           this.fieldsToNull = fieldsToNull;
-           this.id = id;
-           this._any = _any;
-    }
-
+    @XmlElement(required = true)
+    protected String type;
+    @XmlElement(nillable = true)
+    protected List<String> fieldsToNull;
+    @XmlElement(name = "Id", required = true, nillable = true)
+    protected String id;
+    @XmlAnyElement(lax = true)
+    protected List<Object> any;
 
     /**
-     * Gets the type value for this SObject.
+     * Gets the value of the type property.
      * 
-     * @return type
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getType() {
+    public String getType() {
         return type;
     }
 
+    /**
+     * Sets the value of the type property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setType(String value) {
+        this.type = value;
+    }
 
     /**
-     * Sets the type value for this SObject.
+     * Gets the value of the fieldsToNull property.
      * 
-     * @param type
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the fieldsToNull property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getFieldsToNull().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setType(java.lang.String type) {
-        this.type = type;
+    public List<String> getFieldsToNull() {
+        if (fieldsToNull == null) {
+            fieldsToNull = new ArrayList<String>();
+        }
+        return this.fieldsToNull;
     }
-
 
     /**
-     * Gets the fieldsToNull value for this SObject.
+     * Gets the value of the id property.
      * 
-     * @return fieldsToNull
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String[] getFieldsToNull() {
-        return fieldsToNull;
-    }
-
-
-    /**
-     * Sets the fieldsToNull value for this SObject.
-     * 
-     * @param fieldsToNull
-     */
-    public void setFieldsToNull(java.lang.String[] fieldsToNull) {
-        this.fieldsToNull = fieldsToNull;
-    }
-
-    public java.lang.String getFieldsToNull(int i) {
-        return this.fieldsToNull[i];
-    }
-
-    public void setFieldsToNull(int i, java.lang.String _value) {
-        this.fieldsToNull[i] = _value;
-    }
-
-
-    /**
-     * Gets the id value for this SObject.
-     * 
-     * @return id
-     */
-    public java.lang.String getId() {
+    public String getId() {
         return id;
     }
 
-
     /**
-     * Sets the id value for this SObject.
+     * Sets the value of the id property.
      * 
-     * @param id
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setId(java.lang.String id) {
-        this.id = id;
+    public void setId(String value) {
+        this.id = value;
     }
 
-
     /**
-     * Gets the _any value for this SObject.
+     * Gets the value of the any property.
      * 
-     * @return _any
-     */
-    public org.apache.axis.message.MessageElement [] get_any() {
-        return _any;
-    }
-
-
-    /**
-     * Sets the _any value for this SObject.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the any property.
      * 
-     * @param _any
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getAny().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link Object }
+     * {@link Element }
+     * 
+     * 
      */
-    public void set_any(org.apache.axis.message.MessageElement [] _any) {
-        this._any = _any;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof SObject)) return false;
-        SObject other = (SObject) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<Object> getAny() {
+        if (any == null) {
+            any = new ArrayList<Object>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.type==null && other.getType()==null) || 
-             (this.type!=null &&
-              this.type.equals(other.getType()))) &&
-            ((this.fieldsToNull==null && other.getFieldsToNull()==null) || 
-             (this.fieldsToNull!=null &&
-              java.util.Arrays.equals(this.fieldsToNull, other.getFieldsToNull()))) &&
-            ((this.id==null && other.getId()==null) || 
-             (this.id!=null &&
-              this.id.equals(other.getId()))) &&
-            ((this._any==null && other.get_any()==null) || 
-             (this._any!=null &&
-              java.util.Arrays.equals(this._any, other.get_any())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getType() != null) {
-            _hashCode += getType().hashCode();
-        }
-        if (getFieldsToNull() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getFieldsToNull());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getFieldsToNull(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getId() != null) {
-            _hashCode += getId().hashCode();
-        }
-        if (get_any() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(get_any());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(get_any(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(SObject.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:sobject.partner.soap.sforce.com", "sObject"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("type");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:sobject.partner.soap.sforce.com", "type"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("fieldsToNull");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:sobject.partner.soap.sforce.com", "fieldsToNull"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("id");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:sobject.partner.soap.sforce.com", "Id"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.any;
     }
 
 }

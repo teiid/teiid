@@ -22,7 +22,7 @@
 package com.metamatrix.connector.salesforce.execution.visitors;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.Update;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -33,12 +33,12 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 	@Override
-	public void visit(IUpdate update) {
+	public void visit(Update update) {
 		// don't visit the changes or they will be in the query.
-		visitNode(update.getGroup());
-        visitNode(update.getCriteria());
+		visitNode(update.getTable());
+        visitNode(update.getWhere());
 		try {
-			loadColumnMetadata(update.getGroup());
+			loadColumnMetadata(update.getTable());
 		} catch (ConnectorException ce) {
 			exceptions.add(ce);
 		}

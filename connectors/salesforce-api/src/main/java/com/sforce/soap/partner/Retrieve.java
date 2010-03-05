@@ -1,209 +1,126 @@
-/**
- * Retrieve.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class Retrieve  implements java.io.Serializable {
-    private java.lang.String fieldList;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String sObjectType;
 
-    private java.lang.String[] ids;
+/**
+ * <p>Java class for anonymous complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType>
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="fieldList" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="sObjectType" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="ids" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+    "fieldList",
+    "sObjectType",
+    "ids"
+})
+@XmlRootElement(name = "retrieve")
+public class Retrieve {
 
-    public Retrieve() {
-    }
-
-    public Retrieve(
-           java.lang.String fieldList,
-           java.lang.String sObjectType,
-           java.lang.String[] ids) {
-           this.fieldList = fieldList;
-           this.sObjectType = sObjectType;
-           this.ids = ids;
-    }
-
+    @XmlElement(required = true)
+    protected String fieldList;
+    @XmlElement(required = true)
+    protected String sObjectType;
+    protected List<String> ids;
 
     /**
-     * Gets the fieldList value for this Retrieve.
+     * Gets the value of the fieldList property.
      * 
-     * @return fieldList
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getFieldList() {
+    public String getFieldList() {
         return fieldList;
     }
 
-
     /**
-     * Sets the fieldList value for this Retrieve.
+     * Sets the value of the fieldList property.
      * 
-     * @param fieldList
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setFieldList(java.lang.String fieldList) {
-        this.fieldList = fieldList;
+    public void setFieldList(String value) {
+        this.fieldList = value;
     }
 
-
     /**
-     * Gets the sObjectType value for this Retrieve.
+     * Gets the value of the sObjectType property.
      * 
-     * @return sObjectType
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getSObjectType() {
+    public String getSObjectType() {
         return sObjectType;
     }
 
-
     /**
-     * Sets the sObjectType value for this Retrieve.
+     * Sets the value of the sObjectType property.
      * 
-     * @param sObjectType
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setSObjectType(java.lang.String sObjectType) {
-        this.sObjectType = sObjectType;
+    public void setSObjectType(String value) {
+        this.sObjectType = value;
     }
 
-
     /**
-     * Gets the ids value for this Retrieve.
+     * Gets the value of the ids property.
      * 
-     * @return ids
-     */
-    public java.lang.String[] getIds() {
-        return ids;
-    }
-
-
-    /**
-     * Sets the ids value for this Retrieve.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the ids property.
      * 
-     * @param ids
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setIds(java.lang.String[] ids) {
-        this.ids = ids;
-    }
-
-    public java.lang.String getIds(int i) {
-        return this.ids[i];
-    }
-
-    public void setIds(int i, java.lang.String _value) {
-        this.ids[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof Retrieve)) return false;
-        Retrieve other = (Retrieve) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<String> getIds() {
+        if (ids == null) {
+            ids = new ArrayList<String>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.fieldList==null && other.getFieldList()==null) || 
-             (this.fieldList!=null &&
-              this.fieldList.equals(other.getFieldList()))) &&
-            ((this.sObjectType==null && other.getSObjectType()==null) || 
-             (this.sObjectType!=null &&
-              this.sObjectType.equals(other.getSObjectType()))) &&
-            ((this.ids==null && other.getIds()==null) || 
-             (this.ids!=null &&
-              java.util.Arrays.equals(this.ids, other.getIds())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getFieldList() != null) {
-            _hashCode += getFieldList().hashCode();
-        }
-        if (getSObjectType() != null) {
-            _hashCode += getSObjectType().hashCode();
-        }
-        if (getIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(Retrieve.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", ">retrieve"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("fieldList");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fieldList"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("SObjectType");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sObjectType"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("ids");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ids"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.ids;
     }
 
 }

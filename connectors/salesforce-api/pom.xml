@@ -9,12 +9,6 @@
   <groupId>org.jboss.teiid.connectors</groupId>
   <name>Salesforce API</name>
   <description>The java API for the Salesforce.com partner web service API</description>
-    <dependencies>
-    	<dependency>
-    		<groupId>org.jboss.teiid.connectors</groupId>
-    		<artifactId>connector-xml-common</artifactId>
-    		<version>${project.version}</version>
-    		<type>pom</type>
-    	</dependency>
+    <dependencies>        
   </dependencies>
 </project>

@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -50,7 +49,7 @@ public class IDGeneratingXmlFilter extends XMLFilterImpl
         protected Map predecessorCounts; // keys: predecessor sibling names, values: count of times it has appeared
     }
     
-    public IDGeneratingXmlFilter(String documentId, ConnectorLogger logger)
+    public IDGeneratingXmlFilter(String documentId)
     {
         this.documentId = documentId;
     }

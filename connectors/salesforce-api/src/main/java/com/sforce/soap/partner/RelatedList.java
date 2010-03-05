@@ -1,398 +1,251 @@
-/**
- * RelatedList.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class RelatedList  implements java.io.Serializable {
-    private com.sforce.soap.partner.RelatedListColumn[] columns;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private boolean custom;
 
-    private java.lang.String field;
+/**
+ * <p>Java class for RelatedList complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="RelatedList">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="columns" type="{urn:partner.soap.sforce.com}RelatedListColumn" maxOccurs="unbounded"/>
+ *         &lt;element name="custom" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="field" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="limitRows" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="sobject" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="sort" type="{urn:partner.soap.sforce.com}RelatedListSort" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "RelatedList", propOrder = {
+    "columns",
+    "custom",
+    "field",
+    "label",
+    "limitRows",
+    "name",
+    "sobject",
+    "sort"
+})
+public class RelatedList {
 
-    private java.lang.String label;
-
-    private int limitRows;
-
-    private java.lang.String name;
-
-    private java.lang.String sobject;
-
-    private com.sforce.soap.partner.RelatedListSort[] sort;
-
-    public RelatedList() {
-    }
-
-    public RelatedList(
-           com.sforce.soap.partner.RelatedListColumn[] columns,
-           boolean custom,
-           java.lang.String field,
-           java.lang.String label,
-           int limitRows,
-           java.lang.String name,
-           java.lang.String sobject,
-           com.sforce.soap.partner.RelatedListSort[] sort) {
-           this.columns = columns;
-           this.custom = custom;
-           this.field = field;
-           this.label = label;
-           this.limitRows = limitRows;
-           this.name = name;
-           this.sobject = sobject;
-           this.sort = sort;
-    }
-
+    @XmlElement(required = true)
+    protected List<RelatedListColumn> columns;
+    protected boolean custom;
+    @XmlElement(required = true, nillable = true)
+    protected String field;
+    @XmlElement(required = true)
+    protected String label;
+    protected int limitRows;
+    @XmlElement(required = true)
+    protected String name;
+    @XmlElement(required = true, nillable = true)
+    protected String sobject;
+    protected List<RelatedListSort> sort;
 
     /**
-     * Gets the columns value for this RelatedList.
+     * Gets the value of the columns property.
      * 
-     * @return columns
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the columns property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getColumns().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link RelatedListColumn }
+     * 
+     * 
      */
-    public com.sforce.soap.partner.RelatedListColumn[] getColumns() {
-        return columns;
+    public List<RelatedListColumn> getColumns() {
+        if (columns == null) {
+            columns = new ArrayList<RelatedListColumn>();
+        }
+        return this.columns;
     }
-
 
     /**
-     * Sets the columns value for this RelatedList.
+     * Gets the value of the custom property.
      * 
-     * @param columns
-     */
-    public void setColumns(com.sforce.soap.partner.RelatedListColumn[] columns) {
-        this.columns = columns;
-    }
-
-    public com.sforce.soap.partner.RelatedListColumn getColumns(int i) {
-        return this.columns[i];
-    }
-
-    public void setColumns(int i, com.sforce.soap.partner.RelatedListColumn _value) {
-        this.columns[i] = _value;
-    }
-
-
-    /**
-     * Gets the custom value for this RelatedList.
-     * 
-     * @return custom
      */
     public boolean isCustom() {
         return custom;
     }
 
-
     /**
-     * Sets the custom value for this RelatedList.
+     * Sets the value of the custom property.
      * 
-     * @param custom
      */
-    public void setCustom(boolean custom) {
-        this.custom = custom;
+    public void setCustom(boolean value) {
+        this.custom = value;
     }
 
-
     /**
-     * Gets the field value for this RelatedList.
+     * Gets the value of the field property.
      * 
-     * @return field
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getField() {
+    public String getField() {
         return field;
     }
 
-
     /**
-     * Sets the field value for this RelatedList.
+     * Sets the value of the field property.
      * 
-     * @param field
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setField(java.lang.String field) {
-        this.field = field;
+    public void setField(String value) {
+        this.field = value;
     }
 
-
     /**
-     * Gets the label value for this RelatedList.
+     * Gets the value of the label property.
      * 
-     * @return label
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLabel() {
+    public String getLabel() {
         return label;
     }
 
-
     /**
-     * Sets the label value for this RelatedList.
+     * Sets the value of the label property.
      * 
-     * @param label
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLabel(java.lang.String label) {
-        this.label = label;
+    public void setLabel(String value) {
+        this.label = value;
     }
 
-
     /**
-     * Gets the limitRows value for this RelatedList.
+     * Gets the value of the limitRows property.
      * 
-     * @return limitRows
      */
     public int getLimitRows() {
         return limitRows;
     }
 
-
     /**
-     * Sets the limitRows value for this RelatedList.
+     * Sets the value of the limitRows property.
      * 
-     * @param limitRows
      */
-    public void setLimitRows(int limitRows) {
-        this.limitRows = limitRows;
+    public void setLimitRows(int value) {
+        this.limitRows = value;
     }
 
-
     /**
-     * Gets the name value for this RelatedList.
+     * Gets the value of the name property.
      * 
-     * @return name
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getName() {
+    public String getName() {
         return name;
     }
 
-
     /**
-     * Sets the name value for this RelatedList.
+     * Sets the value of the name property.
      * 
-     * @param name
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setName(java.lang.String name) {
-        this.name = name;
+    public void setName(String value) {
+        this.name = value;
     }
 
-
     /**
-     * Gets the sobject value for this RelatedList.
+     * Gets the value of the sobject property.
      * 
-     * @return sobject
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getSobject() {
+    public String getSobject() {
         return sobject;
     }
 
-
     /**
-     * Sets the sobject value for this RelatedList.
+     * Sets the value of the sobject property.
      * 
-     * @param sobject
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setSobject(java.lang.String sobject) {
-        this.sobject = sobject;
+    public void setSobject(String value) {
+        this.sobject = value;
     }
 
-
     /**
-     * Gets the sort value for this RelatedList.
+     * Gets the value of the sort property.
      * 
-     * @return sort
-     */
-    public com.sforce.soap.partner.RelatedListSort[] getSort() {
-        return sort;
-    }
-
-
-    /**
-     * Sets the sort value for this RelatedList.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the sort property.
      * 
-     * @param sort
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getSort().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link RelatedListSort }
+     * 
+     * 
      */
-    public void setSort(com.sforce.soap.partner.RelatedListSort[] sort) {
-        this.sort = sort;
-    }
-
-    public com.sforce.soap.partner.RelatedListSort getSort(int i) {
-        return this.sort[i];
-    }
-
-    public void setSort(int i, com.sforce.soap.partner.RelatedListSort _value) {
-        this.sort[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof RelatedList)) return false;
-        RelatedList other = (RelatedList) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<RelatedListSort> getSort() {
+        if (sort == null) {
+            sort = new ArrayList<RelatedListSort>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.columns==null && other.getColumns()==null) || 
-             (this.columns!=null &&
-              java.util.Arrays.equals(this.columns, other.getColumns()))) &&
-            this.custom == other.isCustom() &&
-            ((this.field==null && other.getField()==null) || 
-             (this.field!=null &&
-              this.field.equals(other.getField()))) &&
-            ((this.label==null && other.getLabel()==null) || 
-             (this.label!=null &&
-              this.label.equals(other.getLabel()))) &&
-            this.limitRows == other.getLimitRows() &&
-            ((this.name==null && other.getName()==null) || 
-             (this.name!=null &&
-              this.name.equals(other.getName()))) &&
-            ((this.sobject==null && other.getSobject()==null) || 
-             (this.sobject!=null &&
-              this.sobject.equals(other.getSobject()))) &&
-            ((this.sort==null && other.getSort()==null) || 
-             (this.sort!=null &&
-              java.util.Arrays.equals(this.sort, other.getSort())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getColumns() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getColumns());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getColumns(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += (isCustom() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getField() != null) {
-            _hashCode += getField().hashCode();
-        }
-        if (getLabel() != null) {
-            _hashCode += getLabel().hashCode();
-        }
-        _hashCode += getLimitRows();
-        if (getName() != null) {
-            _hashCode += getName().hashCode();
-        }
-        if (getSobject() != null) {
-            _hashCode += getSobject().hashCode();
-        }
-        if (getSort() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getSort());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getSort(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(RelatedList.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "RelatedList"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("columns");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "columns"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "RelatedListColumn"));
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("custom");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "custom"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("field");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "field"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("label");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "label"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("limitRows");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "limitRows"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("name");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "name"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sobject");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sobject"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sort");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sort"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "RelatedListSort"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.sort;
     }
 
 }

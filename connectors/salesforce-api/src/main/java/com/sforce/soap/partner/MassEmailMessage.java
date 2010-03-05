@@ -1,276 +1,158 @@
-/**
- * MassEmailMessage.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class MassEmailMessage  extends com.sforce.soap.partner.Email  implements java.io.Serializable {
-    private java.lang.String description;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String[] targetObjectIds;
 
-    private java.lang.String templateId;
+/**
+ * <p>Java class for MassEmailMessage complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="MassEmailMessage">
+ *   &lt;complexContent>
+ *     &lt;extension base="{urn:partner.soap.sforce.com}Email">
+ *       &lt;sequence>
+ *         &lt;element name="description" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="targetObjectIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="250" minOccurs="0"/>
+ *         &lt;element name="templateId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="whatIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="250" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/extension>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "MassEmailMessage", propOrder = {
+    "description",
+    "targetObjectIds",
+    "templateId",
+    "whatIds"
+})
+public class MassEmailMessage
+    extends Email
+{
 
-    private java.lang.String[] whatIds;
-
-    public MassEmailMessage() {
-    }
-
-    public MassEmailMessage(
-           java.lang.Boolean bccSender,
-           com.sforce.soap.partner.EmailPriority emailPriority,
-           java.lang.String replyTo,
-           java.lang.Boolean saveAsActivity,
-           java.lang.String senderDisplayName,
-           java.lang.String subject,
-           java.lang.Boolean useSignature,
-           java.lang.String description,
-           java.lang.String[] targetObjectIds,
-           java.lang.String templateId,
-           java.lang.String[] whatIds) {
-        super(
-            bccSender,
-            emailPriority,
-            replyTo,
-            saveAsActivity,
-            senderDisplayName,
-            subject,
-            useSignature);
-        this.description = description;
-        this.targetObjectIds = targetObjectIds;
-        this.templateId = templateId;
-        this.whatIds = whatIds;
-    }
-
+    @XmlElement(required = true, nillable = true)
+    protected String description;
+    protected List<String> targetObjectIds;
+    @XmlElement(required = true)
+    protected String templateId;
+    protected List<String> whatIds;
 
     /**
-     * Gets the description value for this MassEmailMessage.
+     * Gets the value of the description property.
      * 
-     * @return description
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getDescription() {
+    public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the value of the description property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setDescription(String value) {
+        this.description = value;
+    }
 
     /**
-     * Sets the description value for this MassEmailMessage.
+     * Gets the value of the targetObjectIds property.
      * 
-     * @param description
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the targetObjectIds property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getTargetObjectIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setDescription(java.lang.String description) {
-        this.description = description;
+    public List<String> getTargetObjectIds() {
+        if (targetObjectIds == null) {
+            targetObjectIds = new ArrayList<String>();
+        }
+        return this.targetObjectIds;
     }
-
 
     /**
-     * Gets the targetObjectIds value for this MassEmailMessage.
+     * Gets the value of the templateId property.
      * 
-     * @return targetObjectIds
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String[] getTargetObjectIds() {
-        return targetObjectIds;
-    }
-
-
-    /**
-     * Sets the targetObjectIds value for this MassEmailMessage.
-     * 
-     * @param targetObjectIds
-     */
-    public void setTargetObjectIds(java.lang.String[] targetObjectIds) {
-        this.targetObjectIds = targetObjectIds;
-    }
-
-    public java.lang.String getTargetObjectIds(int i) {
-        return this.targetObjectIds[i];
-    }
-
-    public void setTargetObjectIds(int i, java.lang.String _value) {
-        this.targetObjectIds[i] = _value;
-    }
-
-
-    /**
-     * Gets the templateId value for this MassEmailMessage.
-     * 
-     * @return templateId
-     */
-    public java.lang.String getTemplateId() {
+    public String getTemplateId() {
         return templateId;
     }
 
-
     /**
-     * Sets the templateId value for this MassEmailMessage.
+     * Sets the value of the templateId property.
      * 
-     * @param templateId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setTemplateId(java.lang.String templateId) {
-        this.templateId = templateId;
+    public void setTemplateId(String value) {
+        this.templateId = value;
     }
 
-
     /**
-     * Gets the whatIds value for this MassEmailMessage.
+     * Gets the value of the whatIds property.
      * 
-     * @return whatIds
-     */
-    public java.lang.String[] getWhatIds() {
-        return whatIds;
-    }
-
-
-    /**
-     * Sets the whatIds value for this MassEmailMessage.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the whatIds property.
      * 
-     * @param whatIds
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getWhatIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setWhatIds(java.lang.String[] whatIds) {
-        this.whatIds = whatIds;
-    }
-
-    public java.lang.String getWhatIds(int i) {
-        return this.whatIds[i];
-    }
-
-    public void setWhatIds(int i, java.lang.String _value) {
-        this.whatIds[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof MassEmailMessage)) return false;
-        MassEmailMessage other = (MassEmailMessage) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<String> getWhatIds() {
+        if (whatIds == null) {
+            whatIds = new ArrayList<String>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = super.equals(obj) && 
-            ((this.description==null && other.getDescription()==null) || 
-             (this.description!=null &&
-              this.description.equals(other.getDescription()))) &&
-            ((this.targetObjectIds==null && other.getTargetObjectIds()==null) || 
-             (this.targetObjectIds!=null &&
-              java.util.Arrays.equals(this.targetObjectIds, other.getTargetObjectIds()))) &&
-            ((this.templateId==null && other.getTemplateId()==null) || 
-             (this.templateId!=null &&
-              this.templateId.equals(other.getTemplateId()))) &&
-            ((this.whatIds==null && other.getWhatIds()==null) || 
-             (this.whatIds!=null &&
-              java.util.Arrays.equals(this.whatIds, other.getWhatIds())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = super.hashCode();
-        if (getDescription() != null) {
-            _hashCode += getDescription().hashCode();
-        }
-        if (getTargetObjectIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getTargetObjectIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getTargetObjectIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getTemplateId() != null) {
-            _hashCode += getTemplateId().hashCode();
-        }
-        if (getWhatIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getWhatIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getWhatIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(MassEmailMessage.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "MassEmailMessage"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("description");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "description"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("targetObjectIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "targetObjectIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("templateId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "templateId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("whatIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "whatIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.whatIds;
     }
 
 }

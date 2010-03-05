@@ -13,7 +13,5 @@
   <description>Experimental connectors in progress</description>
   <modules>
     <module>connector-yahoo</module>
-    <module>connector-exec</module>
-    <module>connector-object</module>
   </modules>
 </project>

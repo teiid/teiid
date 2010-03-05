@@ -23,22 +23,14 @@
 package com.metamatrix.connector.xml.base;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
-import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.xml.IQueryPreprocessor;
-import com.metamatrix.connector.xml.MockQueryPreprocessor;
+import org.teiid.connector.language.Select;
 
 /**
  *
@@ -69,11 +61,8 @@ public class TestExecutionInfo extends TestCase {
     @Override
 	public void setUp() throws ConnectorException {
      String vdbPath = ProxyObjectFactory.getStateCollegeVDBLocation();
-     IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-     RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-     IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-     ConnectorLogger logger = new SysLogger(false);
-     QueryAnalyzer analyzer = new QueryAnalyzer(query, meta, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
+     Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+     QueryAnalyzer analyzer = new QueryAnalyzer(query);
      analyzer.analyze();
      m_info = analyzer.getExecutionInfo();
      
@@ -117,13 +106,10 @@ public class TestExecutionInfo extends TestCase {
 
     public void testGetCriteria() {
     	String vdbPath = ProxyObjectFactory.getStateCollegeVDBLocation();
-    	String query = "Select AttributeColumn from TestTable where AttributeColumn in ('foo')";
-        IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        ConnectorLogger logger = new SysLogger(false);
+    	//String query = "Select AttributeColumn from TestTable where AttributeColumn in ('foo')";
+        Select iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
         try {
-            QueryAnalyzer analyzer = new QueryAnalyzer(iquery, meta, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
+            QueryAnalyzer analyzer = new QueryAnalyzer(iquery);
         	analyzer.analyze();
         	ExecutionInfo info = analyzer.getExecutionInfo();
         	List crits = info.getCriteria();
@@ -135,25 +121,17 @@ public class TestExecutionInfo extends TestCase {
         }
     }
 
-    public void testGetOtherProperties() {
+    public void testGetOtherProperties() throws ConnectorException {
         String vdbPath = ProxyObjectFactory.getDocumentsFolder() + "/UnitTests.vdb";
         String strQuery = "select * from Response";
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
-        RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        ConnectorLogger logger = new SysLogger(false);
-        QueryAnalyzer analyzer;
-		try {
-			analyzer = new QueryAnalyzer(query, meta, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
-			analyzer.analyze();
-            ExecutionInfo info = analyzer.getExecutionInfo();
-            Properties props = info.getOtherProperties();
-            assertFalse("properties are empty", props.isEmpty());
-            info.setOtherProperties(null);
-            assertNotNull(info.getOtherProperties());
-		} catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
+        QueryAnalyzer analyzer = new QueryAnalyzer(query);
+		analyzer.analyze();
+        ExecutionInfo info = analyzer.getExecutionInfo();
+        Map<String, String> props = info.getOtherProperties();
+        assertFalse("properties are empty", props.isEmpty());
+        info.setOtherProperties(null);
+        assertNotNull(info.getOtherProperties());
     }
 
     public void testSetTableXPath() {
@@ -198,10 +176,10 @@ public class TestExecutionInfo extends TestCase {
     public void testSetOtherProperties() {
         String prop = "myProp";
         String key = "foo";
-        Properties props = new Properties();
+        Map<String, String> props = new HashMap<String, String>();
         props.put(key, prop);
         m_info.setOtherProperties(props);
-        assertEquals(prop, m_info.getOtherProperties().getProperty(key));
+        assertEquals(prop, m_info.getOtherProperties().get(key));
         
         m_info.setOtherProperties(null);
         assertNotNull("OtherProerties was set to null", m_info.getOtherProperties());

@@ -1,155 +1,92 @@
-/**
- * CallOptions.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class CallOptions  implements java.io.Serializable {
-    private java.lang.String client;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String defaultNamespace;
 
-    public CallOptions() {
-    }
+/**
+ * <p>Java class for anonymous complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType>
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="client" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="defaultNamespace" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+    "client",
+    "defaultNamespace"
+})
+@XmlRootElement(name = "CallOptions")
+public class CallOptions {
 
-    public CallOptions(
-           java.lang.String client,
-           java.lang.String defaultNamespace) {
-           this.client = client;
-           this.defaultNamespace = defaultNamespace;
-    }
-
+    @XmlElement(required = true, nillable = true)
+    protected String client;
+    @XmlElement(required = true, nillable = true)
+    protected String defaultNamespace;
 
     /**
-     * Gets the client value for this CallOptions.
+     * Gets the value of the client property.
      * 
-     * @return client
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getClient() {
+    public String getClient() {
         return client;
     }
 
-
     /**
-     * Sets the client value for this CallOptions.
+     * Sets the value of the client property.
      * 
-     * @param client
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setClient(java.lang.String client) {
-        this.client = client;
+    public void setClient(String value) {
+        this.client = value;
     }
 
-
     /**
-     * Gets the defaultNamespace value for this CallOptions.
+     * Gets the value of the defaultNamespace property.
      * 
-     * @return defaultNamespace
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getDefaultNamespace() {
+    public String getDefaultNamespace() {
         return defaultNamespace;
     }
 
-
     /**
-     * Sets the defaultNamespace value for this CallOptions.
+     * Sets the value of the defaultNamespace property.
      * 
-     * @param defaultNamespace
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setDefaultNamespace(java.lang.String defaultNamespace) {
-        this.defaultNamespace = defaultNamespace;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof CallOptions)) return false;
-        CallOptions other = (CallOptions) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.client==null && other.getClient()==null) || 
-             (this.client!=null &&
-              this.client.equals(other.getClient()))) &&
-            ((this.defaultNamespace==null && other.getDefaultNamespace()==null) || 
-             (this.defaultNamespace!=null &&
-              this.defaultNamespace.equals(other.getDefaultNamespace())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getClient() != null) {
-            _hashCode += getClient().hashCode();
-        }
-        if (getDefaultNamespace() != null) {
-            _hashCode += getDefaultNamespace().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(CallOptions.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", ">CallOptions"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("client");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "client"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("defaultNamespace");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "defaultNamespace"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setDefaultNamespace(String value) {
+        this.defaultNamespace = value;
     }
 
 }

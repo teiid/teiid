@@ -1,9 +1,0 @@
-        <ComponentType Name="Loopback Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.945-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.945-06:00">
-            <PropertyDefinition Name="ConnectorTypeClassPath" DisplayName="Connector Type Class Path" ShortDescription="Connector Type classpath (defined by system, do not modify)" DefaultValue="extensionjar:connector_patch.jar;extensionjar:${project.artifactId}-${project.version}.jar;${classpath}" IsModifiable="false" />
-            <PropertyDefinition Name="CapabilitiesClass" DisplayName="Capabilities Class" ShortDescription="" DefaultValue="com.metamatrix.connector.loopback.LoopbackCapabilities" IsRequired="true" IsExpert="true" />
-            <PropertyDefinition Name="WaitTime" DisplayName="Max Random Wait Time" ShortDescription="" DefaultValue="0" IsRequired="true" IsExpert="true" />
-            <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.loopback.LoopbackConnector" IsRequired="true" IsExpert="true" />
-            <PropertyDefinition Name="RowCount" DisplayName="Rows Per Query" ShortDescription="" DefaultValue="1" IsRequired="true" IsExpert="true"  />
-            <PropertyDefinition Name="Standard" DisplayName="Standard Type" ShortDescription="Standard Built-in Connector Type" DefaultValue="true" PropertyType="Boolean" IsExpert="true" IsModifiable="false" />
-        </ComponentType>
-        

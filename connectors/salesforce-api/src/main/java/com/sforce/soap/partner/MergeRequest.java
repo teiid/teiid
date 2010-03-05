@@ -1,172 +1,98 @@
-/**
- * MergeRequest.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class MergeRequest  implements java.io.Serializable {
-    private com.sforce.soap.partner.sobject.SObject masterRecord;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import com.sforce.soap.partner.sobject.SObject;
 
-    private java.lang.String[] recordToMergeIds;
 
-    public MergeRequest() {
-    }
+/**
+ * <p>Java class for MergeRequest complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="MergeRequest">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="masterRecord" type="{urn:sobject.partner.soap.sforce.com}sObject"/>
+ *         &lt;element name="recordToMergeIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "MergeRequest", propOrder = {
+    "masterRecord",
+    "recordToMergeIds"
+})
+public class MergeRequest {
 
-    public MergeRequest(
-           com.sforce.soap.partner.sobject.SObject masterRecord,
-           java.lang.String[] recordToMergeIds) {
-           this.masterRecord = masterRecord;
-           this.recordToMergeIds = recordToMergeIds;
-    }
-
+    @XmlElement(required = true)
+    protected SObject masterRecord;
+    @XmlElement(required = true)
+    protected List<String> recordToMergeIds;
 
     /**
-     * Gets the masterRecord value for this MergeRequest.
+     * Gets the value of the masterRecord property.
      * 
-     * @return masterRecord
+     * @return
+     *     possible object is
+     *     {@link SObject }
+     *     
      */
-    public com.sforce.soap.partner.sobject.SObject getMasterRecord() {
+    public SObject getMasterRecord() {
         return masterRecord;
     }
 
-
     /**
-     * Sets the masterRecord value for this MergeRequest.
+     * Sets the value of the masterRecord property.
      * 
-     * @param masterRecord
+     * @param value
+     *     allowed object is
+     *     {@link SObject }
+     *     
      */
-    public void setMasterRecord(com.sforce.soap.partner.sobject.SObject masterRecord) {
-        this.masterRecord = masterRecord;
+    public void setMasterRecord(SObject value) {
+        this.masterRecord = value;
     }
 
-
     /**
-     * Gets the recordToMergeIds value for this MergeRequest.
+     * Gets the value of the recordToMergeIds property.
      * 
-     * @return recordToMergeIds
-     */
-    public java.lang.String[] getRecordToMergeIds() {
-        return recordToMergeIds;
-    }
-
-
-    /**
-     * Sets the recordToMergeIds value for this MergeRequest.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the recordToMergeIds property.
      * 
-     * @param recordToMergeIds
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getRecordToMergeIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setRecordToMergeIds(java.lang.String[] recordToMergeIds) {
-        this.recordToMergeIds = recordToMergeIds;
-    }
-
-    public java.lang.String getRecordToMergeIds(int i) {
-        return this.recordToMergeIds[i];
-    }
-
-    public void setRecordToMergeIds(int i, java.lang.String _value) {
-        this.recordToMergeIds[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof MergeRequest)) return false;
-        MergeRequest other = (MergeRequest) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<String> getRecordToMergeIds() {
+        if (recordToMergeIds == null) {
+            recordToMergeIds = new ArrayList<String>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.masterRecord==null && other.getMasterRecord()==null) || 
-             (this.masterRecord!=null &&
-              this.masterRecord.equals(other.getMasterRecord()))) &&
-            ((this.recordToMergeIds==null && other.getRecordToMergeIds()==null) || 
-             (this.recordToMergeIds!=null &&
-              java.util.Arrays.equals(this.recordToMergeIds, other.getRecordToMergeIds())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getMasterRecord() != null) {
-            _hashCode += getMasterRecord().hashCode();
-        }
-        if (getRecordToMergeIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getRecordToMergeIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getRecordToMergeIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(MergeRequest.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "MergeRequest"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("masterRecord");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "masterRecord"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:sobject.partner.soap.sforce.com", "sObject"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("recordToMergeIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "recordToMergeIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.recordToMergeIds;
     }
 
 }

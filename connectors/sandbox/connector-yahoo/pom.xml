@@ -10,7 +10,7 @@
   <groupId>org.jboss.teiid.connectors.sandbox</groupId>
   <name>Yahoo Connector</name>
   <description>Test connector used to query ticker symbols from Yahoo website</description>
-  
+  <packaging>rar</packaging>
   <dependencies>
     <dependency>
         <groupId>org.jboss.teiid</groupId>
@@ -22,5 +22,27 @@
         <artifactId>teiid-common-core</artifactId>
         <scope>provided</scope>
     </dependency>
-  </dependencies>  
+    <dependency>
+        <groupId>javax.resource</groupId>
+        <artifactId>connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>    
+  </dependencies> 
+  
+    <build>
+      <plugins>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>build_jar</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>  
 </project>

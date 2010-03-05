@@ -40,20 +40,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.Table;
 
 import com.metamatrix.core.util.StringUtil;
 
@@ -63,17 +60,12 @@ import com.metamatrix.core.util.StringUtil;
  */
 public class TextSynchExecution extends BasicExecution implements ResultSetExecution {
     // Command to be executed
-    private IQuery cmd;
-
-    private TextConnection txtConn;
+    private Select cmd;
 
     // metadata properties
     private Map metadataProps;
 
-    private ConnectorLogger logger;
-
-    // runtime metadata
-    private RuntimeMetadata rm;
+    private TextManagedConnectionFactory config;
 
     // metadata properties for a given group
     private Properties groupProps = null;
@@ -101,7 +93,6 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
     // the number of modeled columsn should match the
     // number of colums parsed from the file
     private int numModeledColumns = 0;
-    private boolean useModeledColumnCntedit=false;
     
     // If a header row is to be used, this is where the 
     // column names will be saved
@@ -119,11 +110,9 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @param cmd
      * @param txtConn
      */
-    public TextSynchExecution(IQuery query, TextConnection txtConn, RuntimeMetadata metadata) {
-        this.txtConn = txtConn;
-        this.rm = metadata;
-        this.logger = this.txtConn.env.getLogger();
-        this.metadataProps = this.txtConn.metadataProps;
+    public TextSynchExecution(TextManagedConnectionFactory config, Select query, Map <String, Properties> metaProps) {
+        this.config = config;
+        this.metadataProps = metaProps;
         this.cmd = query;
     }
 
@@ -138,7 +127,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         // translate results
         translateResults(response, cmd);
 
-        cols = getSelectCols(cmd.getSelect().getSelectSymbols());
+        cols = getSelectCols(cmd.getDerivedColumns());
     }
     
     @Override
@@ -146,7 +135,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         if (canceled) {
         	throw new ConnectorException("Execution cancelled"); //$NON-NLS-1$
         }
-        IQuery query = cmd;
+        Select query = cmd;
         
         Class[] types = query.getColumnTypes();
 
@@ -195,7 +184,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 		                    Object[] params = new Object[] { line }; 
 		                                                    
 		                    String msg = TextPlugin.Util.getString("TextSynchExecution.Text_has_no_determined_ending_qualifier", params); //$NON-NLS-1$
-		                    logger.logError(msg);
+		                    this.config.getLogger().logError(msg);
 		                               
 		                    throw new ConnectorException( msg); 
 		                }
@@ -212,11 +201,8 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 		        ++rowsProduced;
 		        // Save selected columns into query results
 		        
-		        if (this.useModeledColumnCntedit && record.size() != numModeledColumns) {
-		            Object[] params = new Object[] { new Integer(numModeledColumns), new Integer(record.size()) };
-		            String msg = TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", params); //$NON-NLS-1$
-		            logger.logError(msg);
-		            throw new ConnectorException( msg); 
+		        if (this.config.isEnforceColumnCount() && record.size() != numModeledColumns) {
+		            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", new Object[] { new Integer(numModeledColumns), new Integer(record.size()) })); 
 		        } 
 		            
 		        return getRow(record, cols, types);
@@ -224,9 +210,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         } catch(ConnectorException ce) {
             throw ce;
         } catch(Throwable e) {
-            Object[] params = new Object[] { location, e.getMessage() };
-            logger.logError(TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", params), e); //$NON-NLS-1$
-            throw new ConnectorException(e, "Error while reading text file: "+location); //$NON-NLS-1$
+            throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
         }
     }
     
@@ -277,7 +261,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 					Object[] params = new Object[] { TextPropertyNames.HEADER_ROW, new Integer(headerRowNum), new Integer(numTop) }; 
 					String msg = TextPlugin.Util.getString("TextSynchExecution.Property_contains_an_invalid_value_Using_value", params); //$NON-NLS-1$
 					// TODO: We should include the group name in the log message.
-					logger.logWarning(msg);
+					this.config.getLogger().logWarning(msg);
 					
 					headerRowNum = numTop;
 				}
@@ -309,7 +293,6 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 								else {
 									Object[] params = new Object[] { line }; 
 									String msg = TextPlugin.Util.getString("TextSynchExecution.Text_has_no_determined_ending_qualifier", params); //$NON-NLS-1$
-									logger.logError(msg);
 									throw new ConnectorException(msg); 
 								}
 							}
@@ -329,9 +312,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 						} else if (numTop >= lineNum) continue;
 					}
 				} catch (Throwable e) {
-					Object[] params = new Object[] { location, e.getMessage() };
-					logger.logError(TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", params), e); //$NON-NLS-1$
-					throw new ConnectorException(e, "Error while reading text file: " + location); //$NON-NLS-1$
+					throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
 				}
 			}
 
@@ -362,7 +343,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
             }
         }
         readerQueue.clear();
-        logger.logInfo("TextSynchExecution is successfully closed.");              //$NON-NLS-1$
+        this.config.getLogger().logInfo("TextSynchExecution is successfully closed.");              //$NON-NLS-1$
     }
 
     public void cancel() {
@@ -375,7 +356,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @return Object translated request
      * @throws ConnectorException if error occurs
      */
-    protected Object translateRequest(ICommand request) throws ConnectorException {
+    protected Object translateRequest(Command request) throws ConnectorException {
         if (request == null) {
             throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Request_is_null")); //$NON-NLS-1$
         }
@@ -386,14 +367,13 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         }
 
         // Get the columns widths for all the elements in the group.
-        IQuery query = (IQuery) request;
+        Select query = (Select) request;
         
         /* Defect 13371
          * Can't use the select columns to get the columns widths because we may not be selecting all the columns. Instead,
          * we need to get all the child elements of the group being queried, and get the columns widths of each one of them.
          */
-        IFrom from = query.getFrom();
-        IGroup group = (IGroup)from.getItems().get(0);
+        NamedTable group = (NamedTable)query.getFrom().get(0);
         try {
         	/* We need to create the reader queue before we 
 			 * attempt to create the request as we may need 
@@ -412,11 +392,11 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
                 Object[] params = new Object[] { groupName, ex.getMessage() };
                 throw new ConnectorException(ex, TextPlugin.Util.getString("TextSynchExecution.Unable_get_Reader", params)); //$NON-NLS-1$
             }
-            List<Element> elements = group.getMetadataObject().getChildren();
+            List<Column> elements = group.getMetadataObject().getColumns();
             numModeledColumns = elements.size();
             int[] colWidthArray = new int[elements.size()];
             for (int i = 0; i < colWidthArray.length; i++) {
-                Element element = elements.get(i);
+                Column element = elements.get(i);
                 colWidthArray[getColumn(element)] = element.getLength();
             }
             for (int i = 0; i < colWidthArray.length; i++) {
@@ -436,12 +416,6 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @return Object
      */
     protected Object submitRequest(Object req) {
-        Properties connprops = txtConn.env.getProperties();
-        
-        String cnt_edit = (String) connprops.get(TextPropertyNames.COLUMN_CNT_MUST_MATCH_MODEL);
-        if (cnt_edit != null && cnt_edit.equalsIgnoreCase(Boolean.TRUE.toString())) {
-            this.useModeledColumnCntedit = true;
-        }
         return metadataProps;
     }
 
@@ -452,24 +426,22 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @throws ConnectorException
      * @throws ConnectorException
      */
-    protected void translateResults(Object response, ICommand cmd) throws ConnectorException, ConnectorException {
+    protected void translateResults(Object response, Command cmd) throws ConnectorException, ConnectorException {
         if(!(response instanceof Map)) {
             throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Not_of_type_Map")); //$NON-NLS-1$
         }
 
         // get the group metadataID for group present on the command
-        IFrom from = ((IQuery) cmd).getFrom();
-        List groups = from.getItems();
-        IGroup symbol = (IGroup) groups.get(0);
-        Group group = symbol.getMetadataObject();
+        List groups = ((Select) cmd).getFrom();
+        NamedTable symbol = (NamedTable) groups.get(0);
+        Table group = symbol.getMetadataObject();
 
         String groupName = group.getFullName();
 
         Map metadataMap = (Map) response;
-        Properties connProps = this.txtConn.env.getProperties();
 
-        if(connProps.get(TextPropertyNames.DATE_RESULT_FORMATS)  != null) {
-            stringToDateTranslator = new StringToDateTranslator(connProps, logger);
+        if(this.config.getDateResultFormats() != null) {
+            stringToDateTranslator = new StringToDateTranslator(this.config);
         }
 
         groupProps = (Properties) metadataMap.get(groupName.toUpperCase());
@@ -559,13 +531,13 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 
         BufferedReader r = new BufferedReader(inSR);
                                               //new FileReader(datafile));
-        logger.logInfo("Reading file: " + fileName); //$NON-NLS-1$
+        this.config.getLogger().logInfo("Reading file: " + fileName); //$NON-NLS-1$
         readerQueue.add(r);
     }
     
-    private void addReader(String fileName, InputStreamReader inSr) throws IOException {
+    private void addReader(String fileName, InputStreamReader inSr) {
         BufferedReader r = new BufferedReader(inSr);
-        logger.logInfo("Reading URL: " + fileName); //$NON-NLS-1$
+        this.config.getLogger().logInfo("Reading URL: " + fileName); //$NON-NLS-1$
         readerQueue.add(r);
     }    
 
@@ -577,7 +549,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
     private int[] getSelectCols(List vars) throws ConnectorException{
         int[] cols = new int[vars.size()];
         for(int i=0; i<vars.size(); i++) {
-            cols[i] = getColumn((ISelectSymbol)vars.get(i));
+            cols[i] = getColumn((DerivedColumn)vars.get(i));
         }
         return cols;
     }
@@ -592,18 +564,18 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @return int The column corresponding to that id
      * @throws ConnectorException
      */
-    private int getColumn(ISelectSymbol symbol) throws ConnectorException{
+    private int getColumn(DerivedColumn symbol) throws ConnectorException{
         return this.getColumn(getElementFromSymbol(symbol));
     }
 
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
-     * {@link org.teiid.connector.language.ISelectSymbol}.
+     * {@link org.teiid.connector.language.DerivedColumn}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */
-    private Element getElementFromSymbol(ISelectSymbol symbol) throws ConnectorException {
-        IElement expr = (IElement) symbol.getExpression();
+    private Column getElementFromSymbol(DerivedColumn symbol) {
+        ColumnReference expr = (ColumnReference) symbol.getExpression();
         return expr.getMetadataObject();
     }
 
@@ -619,13 +591,8 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @return int
      * @throws ConnectorException
      */
-    private int getColumn(Element elem) throws ConnectorException{
-        String colStr = null;
-        try {
-            colStr = elem.getNameInSource();
-        } catch(ConnectorException e) {
-            throw new ConnectorException(e);
-        }
+    private int getColumn(Column elem) throws ConnectorException{
+        String colStr = elem.getNameInSource();
         try {
         	// If Name In Source is numeric, it is a column number
             return Integer.parseInt(colStr);
@@ -740,8 +707,6 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
                     if(charIndex < totalChars && line.charAt(charIndex) != delimChar) {
                         Object[] params = new Object[] { ""+(columns.size()+1), line }; //$NON-NLS-1$
                         String msg = TextPlugin.Util.getString("TextSynchExecution.Text_file_must_have_delimiter", params);//$NON-NLS-1$
-//                        Object[] params = new Object[] { location, e.getMessage() };
-                        logger.logError(msg); 
 						// changed to Connectorexception so that the exception is thrown to the user
 						// and becomes known a problem, rather than just
 						// keeping it internally to the server

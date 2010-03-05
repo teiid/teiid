@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -41,7 +40,6 @@ import org.jdom.input.SAXBuilder;
 import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.connector.xml.Constants;
-import com.metamatrix.connector.xml.http.Messages;
 
 public class ExecutionInfo {
 // TODO:Refactor.  This class was defined when the multiple reqests to an XML service
@@ -49,97 +47,95 @@ public class ExecutionInfo {
 // This case is now satified within the execute call by making a single call to Executor.getResult()
 // for each paramter of the IN clause.
 	
-    private List m_columns;
-    private int m_columnCount;
-    private List<CriteriaDesc> m_params;
-    private List<CriteriaDesc> m_criteria;
-    private Properties m_otherProps;
-    private String m_tablePath;
-    private String m_location;
-	private Map<String, String> m_prefixToNamespace;
-	private Map<String, String> m_namespaceToPrefix;
+    private List columns;
+    private int columnCount;
+    private List<CriteriaDesc> params;
+    private List<CriteriaDesc> criteria;
+    private Map<String, String> otherProps;
+    private String tablePath;
+    private String location;
+	private Map<String, String> prefixToNamespace;
+	private Map<String, String> namespaceToPrefix;
     
     public ExecutionInfo() { 
-        m_columnCount = 0;
-        m_columns = new ArrayList();
-        m_params = new ArrayList<CriteriaDesc>();
-        m_criteria = new ArrayList<CriteriaDesc>();
-        m_otherProps = new Properties();
-        m_tablePath = ""; //$NON-NLS-1$
+        this.columnCount = 0;
+        this.columns = new ArrayList();
+        this.params = new ArrayList<CriteriaDesc>();
+        this.criteria = new ArrayList<CriteriaDesc>();
+        this.otherProps = new HashMap<String, String>();
+        this.tablePath = ""; //$NON-NLS-1$
     }
     
     
     public String getTableXPath() {
-        return m_tablePath;   
+        return this.tablePath;   
     }
     
-    public String getLocation()
-    {
-        return m_location;   
+    public String getLocation() {
+        return this.location;   
     }
     
     public List getRequestedColumns() {
-        return m_columns;   
+        return this.columns;   
     }
     
     
     public int getColumnCount() {
-     return m_columnCount;   
+     return this.columnCount;   
     }
     
     
     public List<CriteriaDesc> getParameters() {
-        return m_params;
+        return this.params;
     }
     
     
     public List<CriteriaDesc> getCriteria() {
-        return m_criteria;
+        return this.criteria;
     }
     
 
-    public Properties getOtherProperties() {
-        return m_otherProps;
+    public Map<String, String> getOtherProperties() {
+        return this.otherProps;
     }
 
     public void setTableXPath(String path)  {
         if (path == null || path.trim().length() == 0) {
-         m_tablePath = null;   
+        	this.tablePath = null;   
         } else {
-        	m_tablePath = path;
+        	this.tablePath = path;
         }
     }
     
-    public void setLocation(String location)
-    {
-        m_location = location;   
+    public void setLocation(String location)  {
+        this.location = location;   
     }
     
-    public void setRequestedColumns(List columns) {
-        m_columns = columns;   
+    public void setRequestedColumns(List value) {
+        this.columns = value;   
     }
     
     
     public void setColumnCount(int count) {
-      m_columnCount = count;   
+    	this.columnCount = count;   
     }
     
     
-    public void setParameters(List<CriteriaDesc> params) {
-        m_params = params;
+    public void setParameters(List<CriteriaDesc> parameters) {
+        this.params = parameters;
     }
     
     
     public void setCriteria(List<CriteriaDesc> criteria) {
-        m_criteria = criteria;
+        this.criteria = criteria;
     }
     
 
-    public void setOtherProperties(Properties props) {
+    public void setOtherProperties(Map<String, String> props) {
     	if (props == null) {
-    		m_otherProps = new Properties();
+    		this.otherProps = new HashMap<String, String>();
     	} else {
-    		m_otherProps = props;	
+    		this.otherProps = props;	
     	}        
     }
 
@@ -148,7 +144,7 @@ public class ExecutionInfo {
 	// than one.  We could enforce this with a real metamodel.
 	public CriteriaDesc getResponseIDCriterion() {
 		CriteriaDesc result = null;
-		Iterator iter = m_params.iterator();
+		Iterator iter = this.params.iterator();
 		while(iter.hasNext()) {
 			CriteriaDesc criterion = (CriteriaDesc)iter.next();
 			if(criterion.isResponseId()) {
@@ -160,55 +156,51 @@ public class ExecutionInfo {
 	}
 
 	public Map<String, String> getNamespaceToPrefixMap() throws ConnectorException {
-		if(null != m_namespaceToPrefix) {
-			return m_namespaceToPrefix;
-		} else {
-			getPrefixToNamespacesMap();
-			return m_namespaceToPrefix;
-		}
+		if(this.namespaceToPrefix != null) {
+			return this.namespaceToPrefix;
+		} 
+		getPrefixToNamespacesMap();
+		return this.namespaceToPrefix;
 	}
 	
 	public Map<String, String> getPrefixToNamespacesMap() throws ConnectorException {
-		if (null != m_prefixToNamespace) {
-			return m_prefixToNamespace;
-		} else {
-			m_prefixToNamespace = new HashMap<String, String>();
-			m_namespaceToPrefix = new HashMap<String, String>();
-			String namespacePrefixes = getOtherProperties().getProperty(
-					Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
-			if (namespacePrefixes == null
-					|| namespacePrefixes.trim().length() == 0) {
-				return null;
-			}
-			String prefix = null;
-			String uri = null;
-			try {
-				String xml = "<e " + namespacePrefixes + "/>"; //$NON-NLS-1$ //$NON-NLS-2$
-				Reader reader = new StringReader(xml);
-				SAXBuilder builder = new SAXBuilder();
-				Document domDoc = builder.build(reader);
-				Element elem = domDoc.getRootElement();
-				List namespaces = elem.getAdditionalNamespaces();
-				for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
-					Object o = iter.next();
-					Namespace namespace = (Namespace) o;
-					prefix = namespace.getPrefix();
-					uri = namespace.getURI();
-					m_prefixToNamespace.put(prefix, uri);
-					m_namespaceToPrefix.put(uri, prefix);
-				}
-			} catch (JDOMException e) {
-				String rawMsg = Messages
-						.getString("Executor.jaxen.error.on.namespace.pairs"); //$NON-NLS-1$
-				Object[] objs = new Object[2];
-				objs[0] = prefix;
-				objs[1] = uri;
-				String msg = MessageFormat.format(rawMsg, objs);
-				throw new ConnectorException(e, msg);
-			} catch (IOException e) {
-				throw new ConnectorException(e, e.getMessage());
-			}
-			return m_prefixToNamespace;
+		if (this.prefixToNamespace != null) {
+			return this.prefixToNamespace;
+		} 
+		
+		this.prefixToNamespace = new HashMap<String, String>();
+		this.namespaceToPrefix = new HashMap<String, String>();
+		String namespacePrefixes = getOtherProperties().get(Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
+		if (namespacePrefixes == null || namespacePrefixes.trim().length() == 0) {
+			return null;
 		}
+		String prefix = null;
+		String uri = null;
+		try {
+			String xml = "<e " + namespacePrefixes + "/>"; //$NON-NLS-1$ //$NON-NLS-2$
+			Reader reader = new StringReader(xml);
+			SAXBuilder builder = new SAXBuilder();
+			Document domDoc = builder.build(reader);
+			Element elem = domDoc.getRootElement();
+			List namespaces = elem.getAdditionalNamespaces();
+			for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
+				Object o = iter.next();
+				Namespace namespace = (Namespace) o;
+				prefix = namespace.getPrefix();
+				uri = namespace.getURI();
+				this.prefixToNamespace.put(prefix, uri);
+				this.namespaceToPrefix.put(uri, prefix);
+			}
+		} catch (JDOMException e) {
+			String rawMsg = Messages.getString("Executor.jaxen.error.on.namespace.pairs"); //$NON-NLS-1$
+			Object[] objs = new Object[2];
+			objs[0] = prefix;
+			objs[1] = uri;
+			String msg = MessageFormat.format(rawMsg, objs);
+			throw new ConnectorException(e, msg);
+		} catch (IOException e) {
+			throw new ConnectorException(e, e.getMessage());
+		}
+		return this.prefixToNamespace;
 	}
 }

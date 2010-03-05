@@ -27,12 +27,11 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
 
 
 /**
@@ -69,26 +68,24 @@ public class TestParameterDescriptor extends TestCase {
      * Class under test for void ParameterDescriptor(Element)
      */
     public void testParameterDescriptorElement() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         ParameterDescriptor desc = new ParameterDescriptorImpl(element);
         assertNotNull(desc);
     }
     
     
     public void testParameterDescriptorElementParameter() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select RequiredDefaultedParam from CriteriaDescTable");
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select RequiredDefaultedParam from CriteriaDescTable");
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         ParameterDescriptor desc = new ParameterDescriptorImpl(element);
         assertNotNull(desc);
     }
@@ -96,13 +93,12 @@ public class TestParameterDescriptor extends TestCase {
     
     
     public void testParameterDescriptorElementSpaceXPath() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select OutputColumnSpaceXPath from CriteriaDescTable");
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select OutputColumnSpaceXPath from CriteriaDescTable");
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         ParameterDescriptor desc = new ParameterDescriptorImpl(element);
         assertNotNull(desc);
     }
@@ -147,13 +143,12 @@ public class TestParameterDescriptor extends TestCase {
     }
 
     public void testGetElement() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         ParameterDescriptor desc = new ParameterDescriptorImpl(element);
         assertEquals(element, desc.getElement());
     }
@@ -162,33 +157,30 @@ public class TestParameterDescriptor extends TestCase {
     	String trueQuery = "select EmptyCol from EmptyTable where EmptyCol = 'foo'";
     	String falseQuery = "select Company_id from Company";
     	
-    	IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, trueQuery);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject();
+    	Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, trueQuery);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject();
         assertTrue(ParameterDescriptor.testForParam(element));
         
         query = ProxyObjectFactory.getDefaultIQuery(vdbPath, falseQuery);
-        select = query.getSelect();
-        symbols = select.getSelectSymbols();
-        selectSymbol = (ISelectSymbol) symbols.get(0);
+        symbols = query.getDerivedColumns();
+        selectSymbol = (DerivedColumn) symbols.get(0);
         expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	element = ((IElement) expr).getMetadataObject();
+    	assertTrue(expr instanceof ColumnReference);
+    	element = ((ColumnReference) expr).getMetadataObject();
         assertFalse(ParameterDescriptor.testForParam(element));
     }
     
     private ParameterDescriptor getParameterDescriptor() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject();        
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject();        
         ParameterDescriptor desc = new ParameterDescriptorImpl(element);
         assertNotNull(desc);
         return desc;
@@ -199,7 +191,7 @@ public class TestParameterDescriptor extends TestCase {
     		super();
     	}
     	
-    	public ParameterDescriptorImpl(Element element) throws ConnectorException {
+    	public ParameterDescriptorImpl(Column element) throws ConnectorException {
     		super(element);
     	}
     	

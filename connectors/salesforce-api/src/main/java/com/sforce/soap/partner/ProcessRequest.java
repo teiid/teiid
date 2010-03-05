@@ -1,173 +1,102 @@
-/**
- * ProcessRequest.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class ProcessRequest  implements java.io.Serializable {
-    private java.lang.String comments;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String[] nextApproverIds;
 
-    public ProcessRequest() {
-    }
+/**
+ * <p>Java class for ProcessRequest complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="ProcessRequest">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="comments" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="nextApproverIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "ProcessRequest", propOrder = {
+    "comments",
+    "nextApproverIds"
+})
+@XmlSeeAlso({
+    ProcessSubmitRequest.class,
+    ProcessWorkitemRequest.class
+})
+public class ProcessRequest {
 
-    public ProcessRequest(
-           java.lang.String comments,
-           java.lang.String[] nextApproverIds) {
-           this.comments = comments;
-           this.nextApproverIds = nextApproverIds;
-    }
-
+    @XmlElement(required = true, nillable = true)
+    protected String comments;
+    @XmlElement(nillable = true)
+    protected List<String> nextApproverIds;
 
     /**
-     * Gets the comments value for this ProcessRequest.
+     * Gets the value of the comments property.
      * 
-     * @return comments
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getComments() {
+    public String getComments() {
         return comments;
     }
 
-
     /**
-     * Sets the comments value for this ProcessRequest.
+     * Sets the value of the comments property.
      * 
-     * @param comments
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setComments(java.lang.String comments) {
-        this.comments = comments;
+    public void setComments(String value) {
+        this.comments = value;
     }
 
-
     /**
-     * Gets the nextApproverIds value for this ProcessRequest.
+     * Gets the value of the nextApproverIds property.
      * 
-     * @return nextApproverIds
-     */
-    public java.lang.String[] getNextApproverIds() {
-        return nextApproverIds;
-    }
-
-
-    /**
-     * Sets the nextApproverIds value for this ProcessRequest.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the nextApproverIds property.
      * 
-     * @param nextApproverIds
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getNextApproverIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setNextApproverIds(java.lang.String[] nextApproverIds) {
-        this.nextApproverIds = nextApproverIds;
-    }
-
-    public java.lang.String getNextApproverIds(int i) {
-        return this.nextApproverIds[i];
-    }
-
-    public void setNextApproverIds(int i, java.lang.String _value) {
-        this.nextApproverIds[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof ProcessRequest)) return false;
-        ProcessRequest other = (ProcessRequest) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<String> getNextApproverIds() {
+        if (nextApproverIds == null) {
+            nextApproverIds = new ArrayList<String>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.comments==null && other.getComments()==null) || 
-             (this.comments!=null &&
-              this.comments.equals(other.getComments()))) &&
-            ((this.nextApproverIds==null && other.getNextApproverIds()==null) || 
-             (this.nextApproverIds!=null &&
-              java.util.Arrays.equals(this.nextApproverIds, other.getNextApproverIds())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getComments() != null) {
-            _hashCode += getComments().hashCode();
-        }
-        if (getNextApproverIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getNextApproverIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getNextApproverIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(ProcessRequest.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ProcessRequest"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("comments");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "comments"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("nextApproverIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "nextApproverIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.nextApproverIds;
     }
 
 }

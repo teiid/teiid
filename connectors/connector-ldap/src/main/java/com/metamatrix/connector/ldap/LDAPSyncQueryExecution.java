@@ -79,7 +79,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -95,12 +95,11 @@ import javax.naming.ldap.SortControl;
 import javax.naming.ldap.SortKey;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -110,15 +109,14 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  */
 public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetExecution {
 
-	private ConnectorLogger logger;
 	private LDAPSearchDetails searchDetails;
 	private RuntimeMetadata rm;
 	private InitialLdapContext initialLdapContext;
 	private LdapContext ldapCtx;
 	private NamingEnumeration searchEnumeration;
 	private IQueryToLdapSearchParser parser;
-	private Properties props;
-	private IQuery query;
+	private Select query;
+	private LDAPManagedConnectionFactory config;
 
 	/** 
 	 * Constructor
@@ -128,14 +126,11 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 	 * @param logger the ConnectorLogger
 	 * @param ldapCtx the LDAP Context
 	 */
-	public LDAPSyncQueryExecution(IQuery query, ExecutionContext ctx,
-			RuntimeMetadata rm, ConnectorLogger logger,
-			InitialLdapContext ldapCtx, Properties props) throws ConnectorException {
+	public LDAPSyncQueryExecution(Select query, ExecutionContext ctx, RuntimeMetadata rm, InitialLdapContext ldapCtx, LDAPManagedConnectionFactory config) throws ConnectorException {
 		this.rm = rm;
-		this.logger = logger;
 		this.initialLdapContext = ldapCtx;
-		this.props = props;
 		this.query = query;
+		this.config = config;
 	}
 
 	/** 
@@ -146,7 +141,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 	@Override
 	public void execute() throws ConnectorException {
 		// Parse the IQuery, and translate it into an appropriate LDAP search.
-		this.parser = new IQueryToLdapSearchParser(logger, this.rm, this.props);
+		this.parser = new IQueryToLdapSearchParser(this.rm, this.config);
 		searchDetails = parser.translateSQLQueryToLDAPSearch(query);
 
 		// Create and configure the new search context.
@@ -167,7 +162,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 			try {
 				sortCtrl[0] = new SortControl(keys, Control.NONCRITICAL);
 				this.ldapCtx.setRequestControls(sortCtrl);
-				logger.logTrace("Sort ordering was requested, and sort control was created successfully."); //$NON-NLS-1$
+				this.config.getLogger().logTrace("Sort ordering was requested, and sort control was created successfully."); //$NON-NLS-1$
 			} catch (NamingException ne) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError") +  //$NON-NLS-1$
 	            " : "+ne.getExplanation(); //$NON-NLS-1$
@@ -189,7 +184,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 			ldapCtx = (LdapContext) this.initialLdapContext.lookup(searchDetails.getContextName());
 		} catch (NamingException ne) {			
 			if (searchDetails.getContextName() != null) {
-				logger.logError("Attempted to search context: " //$NON-NLS-1$
+				this.config.getLogger().logError("Attempted to search context: " //$NON-NLS-1$
 						+ searchDetails.getContextName());
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
@@ -209,17 +204,12 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 		Iterator itr = modelAttrList.iterator();
 		int i = 0;
 		while(itr.hasNext()) {
-			attrs[i] = (parser.getNameFromElement((Element)itr.next()));
+			attrs[i] = (parser.getNameFromElement((Column)itr.next()));
 			//attrs[i] = (((Attribute)itr.next()).getID();
 			//logger.logTrace("Adding attribute named " + attrs[i] + " to the search list.");
 			i++;
 		}
 
-		if(attrs == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.configAttrsError"); //$NON-NLS-1$
-			throw new ConnectorException(msg); 
-		}
-		
 		ctrls.setSearchScope(searchDetails.getSearchScope());
 		ctrls.setReturningAttributes(attrs);
 		
@@ -238,17 +228,17 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 		String ctxName = searchDetails.getContextName();
 		String filter = searchDetails.getContextFilter();
 		if (ctxName == null || filter == null || ctrls == null) {
-			logger.logError("Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
+			this.config.getLogger().logError("Search context, filter, or controls were null. Cannot execute search."); //$NON-NLS-1$
 		}
 		try {
 			searchEnumeration = this.ldapCtx.search("", filter, ctrls); //$NON-NLS-1$
 		} catch (NamingException ne) {
-			logger.logError("LDAP search failed. Attempted to search context " //$NON-NLS-1$
+			this.config.getLogger().logError("LDAP search failed. Attempted to search context " //$NON-NLS-1$
 					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
 			throw new ConnectorException(msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
 		} catch(Exception e) {
-			logger.logError("LDAP search failed. Attempted to search context " //$NON-NLS-1$
+			this.config.getLogger().logError("LDAP search failed. Attempted to search context " //$NON-NLS-1$
 					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
 			throw new ConnectorException(e, msg); 
@@ -283,7 +273,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 				ldapCtx.close();
 			} catch (NamingException ne) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-				logger.logError(msg);
+	            this.config.getLogger().logError(msg);
 			}
 		}
 	}
@@ -312,12 +302,12 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 
 			return result;
 		} catch (SizeLimitExceededException e) {
-			logger.logWarning("Search results exceeded size limit. Results may be incomplete."); //$NON-NLS-1$
+			this.config.getLogger().logWarning("Search results exceeded size limit. Results may be incomplete."); //$NON-NLS-1$
 			searchEnumeration = null; // GHH 20080326 - NamingEnumartion's are no longer good after an exception so toss it
 			return null; // GHH 20080326 - if size limit exceeded don't try to read more results
 		} catch (NamingException ne) {
 			final String msg = "Ldap error while processing next batch of results: " + ne.getExplanation(); //$NON-NLS-1$
-			logger.logError(msg);  // GHH 20080326 - changed to output explanation from LDAP server
+			this.config.getLogger().logError(msg);  // GHH 20080326 - changed to output explanation from LDAP server
 			searchEnumeration = null; // GHH 20080326 - NamingEnumertion's are no longer good after an exception so toss it
 			throw new ConnectorException(msg);
 		}
@@ -330,7 +320,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 	 */
 	// GHH 20080326 - added fetching of DN of result, for directories that
 	// do not include it as an attribute
-	private List getRow(SearchResult result) throws ConnectorException, NamingException {
+	private List getRow(SearchResult result) throws ConnectorException {
 		Attributes attrs = result.getAttributes();
 		String resultDN = result.getNameInNamespace(); // added GHH 20080326 
 		ArrayList attributeList = searchDetails.getElementList();
@@ -339,7 +329,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 		if (attrs != null && attrs.size()>0) {
 			Iterator itr = attributeList.iterator();
 			while(itr.hasNext()) {
-				addResultToRow((Element)itr.next(), resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
+				addResultToRow((Column)itr.next(), resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
 			}
 			return row;
 		}
@@ -358,11 +348,11 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 	// value for that column in the result
 	// GHH 20080326 - added handling of ClassCastException when non-string
 	// attribute is returned
-	private void addResultToRow(Element modelElement, String resultDistinguishedName, Attributes attrs, List row) throws ConnectorException, NamingException {
+	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List row) throws ConnectorException {
 
 		String strResult;
 		String modelAttrName = parser.getNameFromElement(modelElement);
-		Class modelAttrClass = (Class)modelElement.getJavaType();
+		Class modelAttrClass = modelElement.getJavaType();
 		if(modelAttrName == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.nullAttrError"); //$NON-NLS-1$
 			throw new ConnectorException(msg); 
@@ -398,7 +388,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 			objResult = resultAttr.get();
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.attrValueFetchError",modelAttrName); //$NON-NLS-1$
-			logger.logWarning(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
+            this.config.getLogger().logWarning(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
 			throw new ConnectorException(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
 		}
 
@@ -441,9 +431,9 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 				row.add(strResult);
 			// java.sql.Timestamp
 			} else if(modelAttrClass.equals(Class.forName(java.sql.Timestamp.class.getName()))) {
-				Properties p = modelElement.getProperties();
+				Map<String, String> p = modelElement.getProperties();
 
-				String timestampFormat = p.getProperty("Format"); //$NON-NLS-1$
+				String timestampFormat = p.get("Format"); //$NON-NLS-1$
 				SimpleDateFormat dateFormat;
 				if(timestampFormat == null) {
 					timestampFormat = LDAPConnectorConstants.ldapTimestampFormat;

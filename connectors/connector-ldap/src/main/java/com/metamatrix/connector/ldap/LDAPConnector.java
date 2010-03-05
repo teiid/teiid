@@ -21,14 +21,10 @@
  */
 package com.metamatrix.connector.ldap;
 
-import java.util.Properties;
-
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicConnector;
 
 
@@ -37,48 +33,20 @@ import org.teiid.connector.basic.BasicConnector;
  * a connection factory, and obtaining connections to LDAP.
  */
 public class LDAPConnector extends BasicConnector {
-	private ConnectorEnvironment env;
-	private ConnectorLogger logger;
-	private Properties props;
-	private LDAPConnectorCapabilities myCaps;
+	private LDAPManagedConnectionFactory config;
 
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return myCaps;
+	public Connection getConnection() throws ConnectorException {
+		config.getLogger().logDetail(LDAPPlugin.Util.getString("LDAPSourceConnectionFactory.creatingConnection")); 
+		return new LDAPConnection(this.config);
 	}
 	
-    /*
-     * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
-     */
-	public Connection getConnection(ExecutionContext ctx) throws ConnectorException {
-        final String msg = LDAPPlugin.Util.getString("LDAPSourceConnectionFactory.creatingConnection"); //$NON-NLS-1$
-		logger.logDetail(msg); 
-		return new LDAPConnection(ctx, this.props, this.logger);
-	}
-	
-    /** 
-	 * (non-Javadoc)
-	 * @see org.teiid.connector.basic.BasicConnector#initialize(org.teiid.connector.api.ConnectorEnvironment)
-	 */
 	@Override
-	public void start(ConnectorEnvironment env) throws ConnectorException {
-		this.env = env;
-		this.logger = this.env.getLogger();
-		if(logger == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnector.loggerNotFound"); //$NON-NLS-1$
-            final ConnectorException e = new ConnectorException(msg);
-			throw e; 
-		}
-		this.props = env.getProperties();
-		
-		// Create and configure capabilities class.
-		myCaps = new LDAPConnectorCapabilities();
-	}
-
-	/** 
-	 */
-	@Override
-	public void stop() {
-	}
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
+		this.config = (LDAPManagedConnectionFactory)env;
+	}	
 	
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return LDAPConnectorCapabilities.class;
+    }	
 }

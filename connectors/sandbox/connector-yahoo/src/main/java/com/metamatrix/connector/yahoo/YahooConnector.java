@@ -22,48 +22,28 @@
 
 package com.metamatrix.connector.yahoo;
 
-import org.teiid.connector.api.*;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.basic.BasicConnector;
 
 public class YahooConnector extends BasicConnector {
 
-    private ConnectorEnvironment env;
+    private YahooManagedConnectionFactory config;
     
-    static final ConnectorCapabilities CAPABILITIES = new YahooCapabilities();
-
-    /**
-     * 
-     */
-    public YahooConnector() {
-        super();
+    @Override
+    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
+        this.config = (YahooManagedConnectionFactory)environment;
     }
 
-    /* 
-     * @see com.metamatrix.data.Connector#initialize(com.metamatrix.data.ConnectorEnvironment)
-     */
     @Override
-    public void start(ConnectorEnvironment environment) throws ConnectorException {
-        this.env = environment;
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connector#stop()
-     */
-    @Override
-    public void stop() {
-        // nothing to do
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
-     */
-    @Override
-    public Connection getConnection(ExecutionContext context) throws ConnectorException {
-        return new YahooConnection(env);
+    public Connection getConnection() throws ConnectorException {
+        return new YahooConnection(this.config);
     }
     
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return CAPABILITIES;
-	}
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return YahooCapabilities.class;
+    }
 }

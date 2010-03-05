@@ -23,7 +23,9 @@
 package com.metamatrix.connector.loopback;
 
 import java.util.List;
-import java.util.Properties;
+
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorLogger;
 
 import junit.framework.TestCase;
 
@@ -39,12 +41,13 @@ public class TestLoobackAsynch extends TestCase {
     public void test() throws Exception {
         LoopbackConnector connector = new LoopbackConnector();
 
-        Properties props = new Properties();
-        props.setProperty(LoopbackProperties.POLL_INTERVAL, "100"); //$NON-NLS-1$
-        props.setProperty(LoopbackProperties.WAIT_TIME, "200"); //$NON-NLS-1$
-        props.setProperty(LoopbackProperties.ROW_COUNT, "1000"); //$NON-NLS-1$
-                
-        ConnectorHost host = new ConnectorHost(connector, props, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
+        LoopbackManagedConnectionFactory config = Mockito.mock(LoopbackManagedConnectionFactory.class);
+        Mockito.stub(config.getWaitTime()).toReturn(200);
+        Mockito.stub(config.getRowCount()).toReturn(1000);
+        Mockito.stub(config.getPollIntervalInMilli()).toReturn(100L);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        
+        ConnectorHost host = new ConnectorHost(connector, config, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
         List results = host.executeCommand("SELECT intkey from bqt1.smalla"); //$NON-NLS-1$
         assertEquals(1000, results.size());
     }

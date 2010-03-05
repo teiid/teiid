@@ -25,14 +25,12 @@ package com.metamatrix.connector.xml.streaming;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.teiid.connector.api.ConnectorException;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 import com.metamatrix.connector.xml.Document;
-import com.metamatrix.connector.xml.XMLConnectorState;
+import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 /**
  * Converts a XML InputStream into an List containing results based upon data
@@ -44,17 +42,15 @@ public class StreamingResultsProducer {
 	private StreamingRowCollector collector;
 	private ElementProcessor elementProcessor;
 
-    public StreamingResultsProducer(ExecutionInfo info, XMLConnectorState state) throws ConnectorException {
+    public StreamingResultsProducer(ExecutionInfo info, SAXFilterProvider filter) throws ConnectorException {
     	
 		Map<String, String> namespace = info.getPrefixToNamespacesMap();
 		XMLReader reader;
 		try {
-			reader = ReaderFactory.getXMLReader(state);
+			reader = ReaderFactory.getXMLReader(filter);
 		} catch (SAXException e) {
 			throw new ConnectorException(e);
-		} catch (ParserConfigurationException e) {
-			throw new ConnectorException(e);
-		}
+		} 
 		
     	elementProcessor = new ElementProcessor(info);
         collector = new StreamingRowCollector(namespace, reader, elementProcessor);

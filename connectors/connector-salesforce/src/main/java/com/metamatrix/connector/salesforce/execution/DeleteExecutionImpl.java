@@ -24,8 +24,8 @@ package com.metamatrix.connector.salesforce.execution;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Delete;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
@@ -34,7 +34,7 @@ import com.metamatrix.connector.salesforce.execution.visitors.DeleteVisitor;
 public class DeleteExecutionImpl extends AbstractUpdateExecution {
 
 
-	public DeleteExecutionImpl(ICommand command,
+	public DeleteExecutionImpl(Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
@@ -45,7 +45,7 @@ public class DeleteExecutionImpl extends AbstractUpdateExecution {
 	public void execute() throws ConnectorException {
 		DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
 		dVisitor.visitNode(command);
-		String[] Ids = getIDs(((IDelete)command).getCriteria(), dVisitor);
+		String[] Ids = getIDs(((Delete)command).getWhere(), dVisitor);
 		if(null != Ids && Ids.length > 0) {
 			result = getConnection().delete(Ids);
 		}

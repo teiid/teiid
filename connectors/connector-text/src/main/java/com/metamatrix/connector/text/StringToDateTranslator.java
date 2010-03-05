@@ -22,10 +22,12 @@
 
 package com.metamatrix.connector.text;
 
-import java.util.*;
-import java.text.*;
-
-import org.teiid.connector.api.ConnectorLogger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 
 
 /**
@@ -44,6 +46,8 @@ import org.teiid.connector.api.ConnectorLogger;
  */
 public class StringToDateTranslator {
 
+	TextManagedConnectionFactory config;
+	
     /**
     * The SimpleDateFormat objects that are used to translate dates for this
     * connector.
@@ -62,8 +66,6 @@ public class StringToDateTranslator {
     */
     private boolean hasFormatters=false;
 
-    private ConnectorLogger logger;
-    
     /**
     * <p>This class is created by passing it a properties object that contains at least
     * one property.  The value of this property is a String that can be a delimited list of 
@@ -91,16 +93,12 @@ public class StringToDateTranslator {
     * PropertyValue: Delimiter for value of TextPropertyNames.DATE_RESULT_FORMATS
     * </pre>
     */
-    public StringToDateTranslator(Properties props, ConnectorLogger logger) {
-
-        if (props==null) {
-            return;
-        }
+    public StringToDateTranslator(TextManagedConnectionFactory config) {
+    	this.config = config;
+    	
+        String dateFormats = config.getDateResultFormats();
+        String dateFormatsDelimiter = config.getDateResultFormatsDelimiter();
         
-        this.logger = logger;
-    
-        String dateFormats = props.getProperty(TextPropertyNames.DATE_RESULT_FORMATS);
-        String dateFormatsDelimiter = props.getProperty(TextPropertyNames.DATE_RESULT_FORMATS_DELIMITER);
         if (!(dateFormatsDelimiter == null || dateFormatsDelimiter.trim().length() == 0)) {
             if (!(dateFormats == null || dateFormats.trim().length() == 0)) {
                 createSimpleDateFormats(dateFormats, dateFormatsDelimiter);
@@ -202,7 +200,7 @@ public class StringToDateTranslator {
         
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
-            logger.logTrace("Creating simple Date format for formatting String: " +token); //$NON-NLS-1$
+            this.config.getLogger().logTrace("Creating simple Date format for formatting String: " +token); //$NON-NLS-1$
         
             dateFormatStrings.add(token);
             SimpleDateFormat formatter = new SimpleDateFormat(token.trim());
@@ -220,7 +218,7 @@ public class StringToDateTranslator {
     private void createSimpleDateFormat(String dateFormats) {
         simpleDateFormats = new ArrayList();
         dateFormatStrings = new ArrayList();
-        logger.logTrace("Creating simple Date format for formatting String: " +dateFormats); //$NON-NLS-1$
+        this.config.getLogger().logTrace("Creating simple Date format for formatting String: " +dateFormats); //$NON-NLS-1$
     
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormats);
         dateFormatStrings.add(dateFormats);

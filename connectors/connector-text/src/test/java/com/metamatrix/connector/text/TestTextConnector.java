@@ -22,20 +22,21 @@
 
 package com.metamatrix.connector.text;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.teiid.connector.api.ConnectorEnvironment;
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -48,16 +49,20 @@ public class TestTextConnector {
         Properties props = new Properties();
         props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
 
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
+        
         TextConnector connector = new TextConnector();
-        connector.start(env);
+        connector.initialize(config);
         return connector;
     }
     
     // descriptor and data file both are files
     @Test public void testGetConnection() throws Exception{
         TextConnector connector = helpSetUp(DESC_FILE);
-        TextConnection conn = (TextConnection) connector.getConnection(null);
+        TextConnection conn = (TextConnection) connector.getConnection();
         assertNotNull(conn);
     }
     
@@ -68,8 +73,11 @@ public class TestTextConnector {
         datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new Datatype());
+        
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
-        connector.getConnectorMetadata(metadata); 
+        
+        ((MetadataProvider)connector.getConnection()).getConnectorMetadata(metadata); 
+        
         assertEquals(0, metadata.getMetadataStore().getSchemas().values().iterator().next().getProcedures().size());
         Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata"); //$NON-NLS-1$
         assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$

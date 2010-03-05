@@ -22,8 +22,10 @@
 
 package com.metamatrix.connector.ldap;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -31,9 +33,8 @@ import javax.naming.spi.InitialContextFactory;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorLogger;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.cdk.api.SysLogger;
 
 public class TestLDAPConnection {
 	
@@ -46,11 +47,15 @@ public class TestLDAPConnection {
 	}
 
 	@Test public void testInitialization() throws Exception {
-		Properties p = new Properties();
-		p.setProperty(LDAPConnectorPropertyNames.LDAP_URL, "ldap://foo"); //$NON-NLS-1$
-		p.setProperty(LDAPConnectorPropertyNames.LDAP_ADMIN_USER_DN, "admin"); //$NON-NLS-1$
-		p.setProperty(LDAPConnectorPropertyNames.LDAP_ADMIN_USER_PASSWORD, "password"); //$NON-NLS-1$
-		new LDAPConnection(EnvironmentUtility.createExecutionContext("1", "1"), p, EnvironmentUtility.createStdoutLogger(SysLogger.ERROR), FakeFactory.class.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		LDAPManagedConnectionFactory config = mock(LDAPManagedConnectionFactory.class);
+		stub(config.getLdapUrl()).toReturn("ldap://foo");
+		stub(config.getLdapAdminUserDN()).toReturn("admin");
+		stub(config.getLdapAdminUserPassword()).toReturn("password");
+		
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        
+		new LDAPConnection(config, FakeFactory.class.getName());
 	}
 	
 }

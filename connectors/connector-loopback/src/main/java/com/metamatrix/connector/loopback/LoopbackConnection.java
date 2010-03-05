@@ -22,12 +22,11 @@
 
 package com.metamatrix.connector.loopback;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.Command;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -36,20 +35,17 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  */
 public class LoopbackConnection extends BasicConnection {
 
-    private ConnectorEnvironment env;
+    private LoopbackManagedConnectionFactory config;
 
-    /**
-     * 
-     */
-    public LoopbackConnection(ConnectorEnvironment env) {
-        this.env = env;
+    public LoopbackConnection(LoopbackManagedConnectionFactory env) {
+        this.config = env;
     }
     
     @Override
-    public Execution createExecution(ICommand command,
+    public Execution createExecution(Command command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-        return new LoopbackExecution(command, env, metadata);
+        return new LoopbackExecution(command, config, metadata);
     }
     
     @Override

@@ -9,7 +9,9 @@
   <artifactId>connector-text</artifactId>
   <groupId>org.jboss.teiid.connectors</groupId>
   <name>Text Connector</name>
+  <packaging>rar</packaging>
   <description>This connector reads data from text files.</description>
+  
     <dependencies>
         <dependency>
           <groupId>org.jboss.teiid</groupId>
@@ -20,107 +22,29 @@
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-common-core</artifactId>
           <scope>provided</scope>
-        </dependency>      
+        </dependency>     
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>         
     </dependencies>
-    <!-- This build portion is identical for all the connectors that are deployed; so when making changes make sure
-    it applies to all the connectors. This below block computes the classpath, writes to classpath.properties; it replaces
-    classpath in the xml file, then bundles current project and its dependencies and xml file in a zip for deployment-->
+    
     <build>
         <plugins>
-            <!-- build class path -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-classpath</id>
-                        <phase>generate-sources</phase>
+                        <id>build_jar</id>
+                        <phase>process-classes</phase>
                         <goals>
-                            <goal>build-classpath</goal>
-                        </goals>
-                        <configuration>
-                            <fileSeparator>:</fileSeparator>
-                            <pathSeparator>;</pathSeparator>
-                            <prefix>extensionjar</prefix>
-                            <excludeTransitive>false</excludeTransitive>
-                            <includeScope>runtime</includeScope>
-                            <excludeTypes>pom</excludeTypes>
-                            <outputFile>target/classpath.properties</outputFile>
-                            <regenerateFile>true</regenerateFile>
-                            <outputFilterFile>true</outputFilterFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-      
-            <!-- bundles all its dependencies in a single zip file  -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <excludeTransitive>false</excludeTransitive>
-                            <includeScope>runtime</includeScope>
-                            <excludeTypes>pom</excludeTypes>
-                            <outputDirectory>target/dependency</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>             
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-2</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/bundle.xml</descriptor>
-                    </descriptors>
-                    <outputDirectory>target/distribution</outputDirectory>
-                    <workDirectory>target/assembly/work</workDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
-        <!-- replaces the classpath tokens in the xml file --> 
-        <filters>
-            <filter>target/classpath.properties</filter>
-        </filters>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/*.xml</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/*.xml</exclude>
-                </excludes>
-            </resource>            
-        </resources>
-        
-    </build> 
+    </build>    
+
 </project>

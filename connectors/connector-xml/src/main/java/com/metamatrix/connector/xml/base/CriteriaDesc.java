@@ -28,18 +28,18 @@ import java.util.List;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IBaseInCriteria;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.BaseInCondition;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Select;
 import org.teiid.connector.language.LanguageUtil;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.TypeModel;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.Column.SearchType;
 
 
 public class CriteriaDesc extends ParameterDescriptor {
@@ -104,8 +104,8 @@ public class CriteriaDesc extends ParameterDescriptor {
     public static final String PARM_AS_NAMED_ATTRIBUTE_COLUMN_PROPERTY_NAME = "DataAttributeName"; //$NON-NLS-1$
 
     //use static method do see if a criteria object needs to be created
-    public static CriteriaDesc getCriteriaDescForColumn(Element element,
-            IQuery query) throws ConnectorException {
+    public static CriteriaDesc getCriteriaDescForColumn(Column element,
+            Select query) throws ConnectorException {
     	
     	CriteriaDesc retVal = null;
         List values = parseCriteriaToValues(element, query);
@@ -126,7 +126,7 @@ public class CriteriaDesc extends ParameterDescriptor {
         return retVal;
     }
     
-    private static void handleDefaultValue(Element element, List values) throws ConnectorException {
+    private static void handleDefaultValue(Column element, List values) throws ConnectorException {
         Object defaultVal = element.getDefaultValue();
         if (defaultVal != null) {
             values.add(defaultVal);
@@ -137,16 +137,16 @@ public class CriteriaDesc extends ParameterDescriptor {
         }        
     }
 
-    private static boolean findIsRequired(Element element)
+    private static boolean findIsRequired(Column element)
             throws ConnectorException {
-            String value = element.getProperties().getProperty(
+            String value = element.getProperties().get(
                     PARM_REQUIRED_VALUE_COLUMN_PROPERTY_NAME);
 			return Boolean.valueOf(value);
     }
 
-	private static boolean findAllowEmptyValue(Element element)
+	private static boolean findAllowEmptyValue(Column element)
             throws ConnectorException {
-            String value = element.getProperties().getProperty(
+            String value = element.getProperties().get(
                     PARM_ALLOWS_EMPTY_VALUES_COLUMN_PROPERTY_NAME);
             return Boolean.valueOf(value);
     }
@@ -154,14 +154,14 @@ public class CriteriaDesc extends ParameterDescriptor {
     /**
      * @see com.metamatrix.server.datatier.SynchConnectorConnection#submitRequest(java.lang.Object)
      */
-    public CriteriaDesc(Element myElement, List myValues)
+    public CriteriaDesc(Column myElement, List myValues)
             throws ConnectorException {
 
         super(myElement);
 		m_values = myValues;
 		final String enumerated = PARM_HAS_MULTIPLE_VALUES_COMMA_DELIMITED_NAME; 
 		final String multiElement = PARM_HAS_MULTIPLE_VALUES_MULTI_ELEMENT_NAME; 
-        String multiplicityStr = getElement().getProperties().getProperty(
+        String multiplicityStr = getElement().getProperties().get(
 				PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
         if (multiplicityStr == null) {
             multiplicityStr = ""; //$NON-NLS-1$
@@ -223,7 +223,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     }
 
     private void findInputXPath() throws ConnectorException {
-    	m_inputXpath = getElement().getProperties().getProperty(PARM_XPATH_INPUT_COLUMN_PROPERTY_NAME);
+    	m_inputXpath = getElement().getProperties().get(PARM_XPATH_INPUT_COLUMN_PROPERTY_NAME);
         if (m_inputXpath == null || m_inputXpath.trim().length() == 0) {
             m_inputXpath = getColumnName();
         }
@@ -255,7 +255,7 @@ public class CriteriaDesc extends ParameterDescriptor {
 
     private void findParentAttribute() throws ConnectorException {
     	String value = getElement().getProperties()
-    			.getProperty(PARM_AS_PARENT_ATTRIBUTE_COLUMN_PROPERTY_NAME);
+    			.get(PARM_AS_PARENT_ATTRIBUTE_COLUMN_PROPERTY_NAME);
 		m_parentAttribute = Boolean.valueOf(value);
     }
 
@@ -275,7 +275,7 @@ public class CriteriaDesc extends ParameterDescriptor {
 
     private void findAllowEmptyValue() throws ConnectorException {
     	String value = getElement().getProperties()
-    			.getProperty(PARM_ALLOWS_EMPTY_VALUES_COLUMN_PROPERTY_NAME);
+    			.get(PARM_ALLOWS_EMPTY_VALUES_COLUMN_PROPERTY_NAME);
 		m_allowEmptyValue = Boolean.valueOf(value);
     }
 
@@ -298,7 +298,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     }
 
     private void findDataAttributeName() throws ConnectorException {
-    	m_dataAttributeName = getElement().getProperties().getProperty(
+    	m_dataAttributeName = getElement().getProperties().get(
     			PARM_AS_NAMED_ATTRIBUTE_COLUMN_PROPERTY_NAME);
         if (m_dataAttributeName == null) {
             m_dataAttributeName = ""; //$NON-NLS-1$
@@ -352,25 +352,25 @@ public class CriteriaDesc extends ParameterDescriptor {
         m_currentIndexInValuesList = 0;
     }
 
-    private static ArrayList parseCriteriaToValues(Element element, IQuery query) throws ConnectorException {
+    private static ArrayList parseCriteriaToValues(Column element, Select query) throws ConnectorException {
 
         String fullName = element.getFullName().trim().toUpperCase();
         ArrayList parmPair = new ArrayList();
-        if (element.getSearchability() == TypeModel.SEARCHABLE
-                || element.getSearchability() == TypeModel.SEARCHABLE_COMPARE) {
+        if (element.getSearchType() == SearchType.Searchable
+                || element.getSearchType() == SearchType.All_Except_Like) {
             // Check and set criteria for the IData input
-            ICriteria criteria = query.getWhere();
-            List<ICriteria> criteriaList = LanguageUtil.separateCriteriaByAnd(criteria);
-            for(ICriteria criteriaSeg: criteriaList) {
-                if (criteriaSeg instanceof ICompareCriteria) {
-                    ICompareCriteria compCriteria = (ICompareCriteria) criteriaSeg; 
+            Condition criteria = query.getWhere();
+            List<Condition> criteriaList = LanguageUtil.separateCriteriaByAnd(criteria);
+            for(Condition criteriaSeg: criteriaList) {
+                if (criteriaSeg instanceof Comparison) {
+                    Comparison compCriteria = (Comparison) criteriaSeg; 
                     if (compCriteria.getOperator() == Operator.EQ) {                    	
-                        IExpression lExpr = compCriteria.getLeftExpression();
-                        IExpression rExpr = compCriteria.getRightExpression();
+                        Expression lExpr = compCriteria.getLeftExpression();
+                        Expression rExpr = compCriteria.getRightExpression();
                         handleCompareCriteria(lExpr, rExpr, fullName, parmPair);
                     }
-                } else if (criteriaSeg instanceof IBaseInCriteria) {
-                    handleInCriteria((IBaseInCriteria) criteriaSeg, fullName, parmPair);
+                } else if (criteriaSeg instanceof BaseInCondition) {
+                    handleInCriteria((BaseInCondition) criteriaSeg, fullName, parmPair);
                     
                 }
             }
@@ -378,15 +378,15 @@ public class CriteriaDesc extends ParameterDescriptor {
         return parmPair;
     }
     
-    private static void handleInCriteria(IBaseInCriteria baseInCriteria, String fullName, ArrayList parmPair) {
-        IExpression expr = baseInCriteria.getLeftExpression();
-        if (expr instanceof IElement) {
+    private static void handleInCriteria(BaseInCondition baseInCriteria, String fullName, ArrayList parmPair) {
+        Expression expr = baseInCriteria.getLeftExpression();
+        if (expr instanceof ColumnReference) {
             if (nameMatch(expr, fullName)) {
                 Iterator vIter = null;
 
-                vIter = ((IInCriteria) baseInCriteria).getRightExpressions().iterator();
+                vIter = ((In) baseInCriteria).getRightExpressions().iterator();
                 while (vIter.hasNext()) {
-                    ILiteral val = (ILiteral) vIter.next();
+                    Literal val = (Literal) vIter.next();
                     String constantValue = val.getValue()
                             .toString();
                     constantValue = stringifyCriteria(constantValue);
@@ -396,16 +396,16 @@ public class CriteriaDesc extends ParameterDescriptor {
         }
     }
     
-    private static void handleCompareCriteria(IExpression lExpr, IExpression rExpr, String fullName, ArrayList parmPair) {         
+    private static void handleCompareCriteria(Expression lExpr, Expression rExpr, String fullName, ArrayList parmPair) {         
         checkElement(lExpr, rExpr, fullName, parmPair);
         checkElement(rExpr, lExpr, fullName, parmPair);                                                        
     }
     
-    private static void checkElement(IExpression expression, IExpression literalCandidate, String fullName, ArrayList parmPair) {
-        if (expression instanceof IElement) {
+    private static void checkElement(Expression expression, Expression literalCandidate, String fullName, ArrayList parmPair) {
+        if (expression instanceof ColumnReference) {
             if ((nameMatch(expression, fullName))
-                    && (literalCandidate instanceof ILiteral)) {
-                String constantValue = ((ILiteral) literalCandidate)
+                    && (literalCandidate instanceof Literal)) {
+                String constantValue = ((Literal) literalCandidate)
                         .getValue().toString();
                 constantValue = stringifyCriteria(constantValue);
                 parmPair.add(constantValue);
@@ -413,8 +413,8 @@ public class CriteriaDesc extends ParameterDescriptor {
         }        
     }
 
-    public static boolean nameMatch(IExpression expr, String elementName) {
-        IElement exprElement = (IElement) expr;
+    public static boolean nameMatch(Expression expr, String elementName) {
+        ColumnReference exprElement = (ColumnReference) expr;
         String symbolName = exprElement.getName().toUpperCase().trim();
         String tempElementName = elementName.toUpperCase();
         int indx = symbolName.lastIndexOf("."); //$NON-NLS-1$

@@ -1,162 +1,99 @@
-/**
- * ApiFault.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner.fault;
 
-public class ApiFault  extends org.apache.axis.AxisFault  implements java.io.Serializable {
-    private com.sforce.soap.partner.fault.ExceptionCode exceptionCode;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String exceptionMessage;
 
-    public ApiFault() {
-    }
+/**
+ * <p>Java class for ApiFault complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="ApiFault">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="exceptionCode" type="{urn:fault.partner.soap.sforce.com}ExceptionCode"/>
+ *         &lt;element name="exceptionMessage" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "ApiFault", propOrder = {
+    "exceptionCode",
+    "exceptionMessage"
+})
+@XmlSeeAlso({
+    InvalidIdFault.class,
+    UnexpectedErrorFault.class,
+    InvalidQueryLocatorFault.class,
+    LoginFault.class,
+    InvalidNewPasswordFault.class,
+    ApiQueryFault.class
+})
+public class ApiFault {
 
-    public ApiFault(
-           com.sforce.soap.partner.fault.ExceptionCode exceptionCode,
-           java.lang.String exceptionMessage) {
-        this.exceptionCode = exceptionCode;
-        this.exceptionMessage = exceptionMessage;
-    }
-
+    @XmlElement(required = true)
+    protected ExceptionCode exceptionCode;
+    @XmlElement(required = true)
+    protected String exceptionMessage;
 
     /**
-     * Gets the exceptionCode value for this ApiFault.
+     * Gets the value of the exceptionCode property.
      * 
-     * @return exceptionCode
+     * @return
+     *     possible object is
+     *     {@link ExceptionCode }
+     *     
      */
-    public com.sforce.soap.partner.fault.ExceptionCode getExceptionCode() {
+    public ExceptionCode getExceptionCode() {
         return exceptionCode;
     }
 
-
     /**
-     * Sets the exceptionCode value for this ApiFault.
+     * Sets the value of the exceptionCode property.
      * 
-     * @param exceptionCode
+     * @param value
+     *     allowed object is
+     *     {@link ExceptionCode }
+     *     
      */
-    public void setExceptionCode(com.sforce.soap.partner.fault.ExceptionCode exceptionCode) {
-        this.exceptionCode = exceptionCode;
+    public void setExceptionCode(ExceptionCode value) {
+        this.exceptionCode = value;
     }
 
-
     /**
-     * Gets the exceptionMessage value for this ApiFault.
+     * Gets the value of the exceptionMessage property.
      * 
-     * @return exceptionMessage
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getExceptionMessage() {
+    public String getExceptionMessage() {
         return exceptionMessage;
     }
 
-
     /**
-     * Sets the exceptionMessage value for this ApiFault.
+     * Sets the value of the exceptionMessage property.
      * 
-     * @param exceptionMessage
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setExceptionMessage(java.lang.String exceptionMessage) {
-        this.exceptionMessage = exceptionMessage;
+    public void setExceptionMessage(String value) {
+        this.exceptionMessage = value;
     }
 
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof ApiFault)) return false;
-        ApiFault other = (ApiFault) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.exceptionCode==null && other.getExceptionCode()==null) || 
-             (this.exceptionCode!=null &&
-              this.exceptionCode.equals(other.getExceptionCode()))) &&
-            ((this.exceptionMessage==null && other.getExceptionMessage()==null) || 
-             (this.exceptionMessage!=null &&
-              this.exceptionMessage.equals(other.getExceptionMessage())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getExceptionCode() != null) {
-            _hashCode += getExceptionCode().hashCode();
-        }
-        if (getExceptionMessage() != null) {
-            _hashCode += getExceptionMessage().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(ApiFault.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:fault.partner.soap.sforce.com", "ApiFault"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("exceptionCode");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:fault.partner.soap.sforce.com", "exceptionCode"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:fault.partner.soap.sforce.com", "ExceptionCode"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("exceptionMessage");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:fault.partner.soap.sforce.com", "exceptionMessage"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-
-    /**
-     * Writes the exception data to the faultDetails
-     */
-    public void writeDetails(javax.xml.namespace.QName qname, org.apache.axis.encoding.SerializationContext context) throws java.io.IOException {
-        context.serialize(qname, null, this);
-    }
 }

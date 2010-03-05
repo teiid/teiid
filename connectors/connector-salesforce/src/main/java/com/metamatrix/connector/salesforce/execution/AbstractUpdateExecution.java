@@ -29,9 +29,9 @@ import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Util;
@@ -53,10 +53,10 @@ public abstract class AbstractUpdateExecution extends BasicExecution implements 
 	protected RuntimeMetadata metadata;
 	protected ExecutionContext context;
 	protected ConnectorEnvironment connectorEnv;
-	protected ICommand command;
+	protected Command command;
 	protected int result;
 
-	public AbstractUpdateExecution(ICommand command, SalesforceConnection salesforceConnection,
+	public AbstractUpdateExecution(Command command, SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		this.connection = salesforceConnection;
@@ -92,11 +92,11 @@ public abstract class AbstractUpdateExecution extends BasicExecution implements 
 		return connection;
 	}
 
-	String[] getIDs(ICriteria criteria, IQueryProvidingVisitor visitor) throws ConnectorException {
+	String[] getIDs(Condition criteria, IQueryProvidingVisitor visitor) throws ConnectorException {
 		String[] Ids = null;
 		if (visitor.hasOnlyIDCriteria()) {
 			try {
-				String Id = ((ICompareCriteria)criteria).getRightExpression().toString();
+				String Id = ((Comparison)criteria).getRightExpression().toString();
 				Id = Util.stripQutes(Id);
 				Ids = new String[] { Id };
 			} catch (ClassCastException cce) {
@@ -109,9 +109,9 @@ public abstract class AbstractUpdateExecution extends BasicExecution implements 
 			QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
 			if (null != results && results.getSize() > 0) {
 				ArrayList<String> idList = new ArrayList<String>(results
-						.getRecords().length);
-				for (int i = 0; i < results.getRecords().length; i++) {
-					SObject sObject = results.getRecords(i);
+						.getRecords().size());
+				for (int i = 0; i < results.getRecords().size(); i++) {
+					SObject sObject = results.getRecords().get(i);
 					idList.add(sObject.getId());
 				}
 				Ids = idList.toArray(new String[0]);

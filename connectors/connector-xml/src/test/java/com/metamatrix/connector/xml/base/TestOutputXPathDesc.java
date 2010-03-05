@@ -27,16 +27,15 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.LanguageUtil;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.Column;
 
 
 /**
@@ -73,13 +72,12 @@ public class TestOutputXPathDesc extends TestCase {
      * Class under test for void OutputXPathDesc(Element)
      */
     public void testOutputXPathDescElement() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         OutputXPathDesc desc = new OutputXPathDesc(element);
         assertNull(desc.getCurrentValue());
         assertNotNull(desc.getDataType());;
@@ -87,12 +85,12 @@ public class TestOutputXPathDesc extends TestCase {
     
     public void testOutputXPathDescParam() throws Exception {
     	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam in ('foo')";
-    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	Select iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	final int colLocation = 0;
-    	ISelectSymbol symbol = iquery.getSelect().getSelectSymbols().get(colLocation);
-    	IExpression expr = symbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+    	DerivedColumn symbol = iquery.getDerivedColumns().get(colLocation);
+    	Expression expr = symbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         OutputXPathDesc desc = new OutputXPathDesc(element);
         assertNotNull("OutputXPathDesc is null", desc);
     }
@@ -101,12 +99,12 @@ public class TestOutputXPathDesc extends TestCase {
     public void testOutputXPathDescNoXPath() throws Exception {
         try {
         	String query = "select OutputColumnNoXPath from CriteriaDescTable";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+        	Select iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
         	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	assertTrue(expr instanceof IElement);
-        	Element element = ((IElement) expr).getMetadataObject(); 
+        	DerivedColumn symbol = (DerivedColumn) iquery.getDerivedColumns().get(colLocation);
+        	Expression expr = symbol.getExpression();
+        	assertTrue(expr instanceof ColumnReference);
+        	Column element = ((ColumnReference) expr).getMetadataObject(); 
             OutputXPathDesc desc = new OutputXPathDesc(element);
             fail("should not be able to create OuputXPathDesc with no XPath");
         } catch (ConnectorException ce) {
@@ -119,11 +117,11 @@ public class TestOutputXPathDesc extends TestCase {
     public void testOutputXPathDescILiteral() throws Exception { 
     	String strLiteral = "MetaMatrix";
     	String strQuery = "Select Company_id from Company where Company_id = '" + strLiteral + "'";
-    	IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
-    	ICriteria crits = query.getWhere();
+    	Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
+    	Condition crits = query.getWhere();
     	List criteriaList = LanguageUtil.separateCriteriaByAnd(crits);
-        ICompareCriteria compCriteria = (ICompareCriteria) criteriaList.get(0);                  	
-        ILiteral literal = (ILiteral) compCriteria.getRightExpression();
+        Comparison compCriteria = (Comparison) criteriaList.get(0);                  	
+        Literal literal = (Literal) compCriteria.getRightExpression();
     	OutputXPathDesc desc = new OutputXPathDesc(literal);
     	assertNotNull(desc);
     	assertEquals(strLiteral, desc.getCurrentValue().toString());
@@ -133,11 +131,11 @@ public class TestOutputXPathDesc extends TestCase {
     public void testOutputXPathDescILiteralNullValue() throws Exception { 
     	String strLiteral = "MetaMatrix";
     	String strQuery = "Select Company_id from Company where Company_id = '" + strLiteral + "'";
-    	IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
-    	ICriteria crits = query.getWhere();
+    	Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
+    	Condition crits = query.getWhere();
     	List criteriaList = LanguageUtil.separateCriteriaByAnd(crits);
-        ICompareCriteria compCriteria = (ICompareCriteria) criteriaList.get(0);                  	
-        ILiteral literal = (ILiteral) compCriteria.getRightExpression();
+        Comparison compCriteria = (Comparison) criteriaList.get(0);                  	
+        Literal literal = (Literal) compCriteria.getRightExpression();
         literal.setValue(null);
     	OutputXPathDesc desc = new OutputXPathDesc(literal);
     	assertNotNull(desc);
@@ -146,13 +144,12 @@ public class TestOutputXPathDesc extends TestCase {
     }
 
     public void testSetAndGetCurrentValue() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         OutputXPathDesc desc = new OutputXPathDesc(element);
         String myVal = "myValue";
         desc.setCurrentValue(myVal);
@@ -160,13 +157,12 @@ public class TestOutputXPathDesc extends TestCase {
     }
 
     public void testGetDataType() throws Exception {
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        ISelect select = query.getSelect();
-        List symbols = select.getSelectSymbols();
-        ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
-        IExpression expr = selectSymbol.getExpression();
-    	assertTrue(expr instanceof IElement);
-    	Element element = ((IElement) expr).getMetadataObject(); 
+        Select query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
+        List symbols = query.getDerivedColumns();
+        DerivedColumn selectSymbol = (DerivedColumn) symbols.get(0);
+        Expression expr = selectSymbol.getExpression();
+    	assertTrue(expr instanceof ColumnReference);
+    	Column element = ((ColumnReference) expr).getMetadataObject(); 
         OutputXPathDesc desc = new OutputXPathDesc(element);         
         assertNotNull(desc.getDataType());
         assertEquals(String.class, desc.getDataType());

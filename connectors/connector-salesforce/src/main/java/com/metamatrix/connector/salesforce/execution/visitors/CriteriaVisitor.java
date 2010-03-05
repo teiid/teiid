@@ -28,23 +28,24 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.visitor.framework.HierarchyVisitor;
+
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
 
@@ -53,7 +54,9 @@ import com.metamatrix.connector.salesforce.Util;
  */
 public abstract class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
 
-    protected static final String SELECT = "SELECT";
+    private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist";
+	private static final String MULTIPICKLIST = "multipicklist";
+	protected static final String SELECT = "SELECT";
     protected static final String FROM = "FROM";
     protected static final String WHERE = "WHERE";
     protected static final String ORDER_BY = "ORDER BY";
@@ -68,22 +71,22 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     protected static final String CLOSE = ")";
 
     protected RuntimeMetadata metadata;
-    private HashMap<ICompareCriteria.Operator, String> comparisonOperators;
+    private HashMap<Comparison.Operator, String> comparisonOperators;
     protected List<String> criteriaList = new ArrayList<String>();
     protected boolean hasCriteria;
-    protected Map<String, Element> columnElementsByName = new HashMap<String, Element>();
+    protected Map<String, Column> columnElementsByName = new HashMap<String, Column>();
     protected List<ConnectorException> exceptions = new ArrayList<ConnectorException>();
-    protected Group table;
+    protected Table table;
     boolean onlyIDCriteria;
     protected Boolean queryAll = Boolean.FALSE;
 	
     // support for invoking a retrieve when possible.
-    protected IInCriteria idInCriteria = null;
+    protected In idInCriteria = null;
 	
 
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
-        comparisonOperators = new HashMap<ICompareCriteria.Operator, String>();
+        comparisonOperators = new HashMap<Comparison.Operator, String>();
         comparisonOperators.put(Operator.EQ, "=");
         comparisonOperators.put(Operator.GE, ">=");
         comparisonOperators.put(Operator.GT, ">");
@@ -93,7 +96,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     @Override
-    public void visit( ICompareCriteria criteria ) {
+    public void visit( Comparison criteria ) {
         super.visit(criteria);
         try {
             addCompareCriteria(criteriaList, criteria);
@@ -105,7 +108,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     @Override
-    public void visit( ILikeCriteria criteria ) {
+    public void visit( Like criteria ) {
         try {
             if (isIdColumn(criteria.getLeftExpression())) {
                 ConnectorException e = new ConnectorException(Messages.getString("CriteriaVisitor.LIKE.not.supported.on.Id"));
@@ -131,33 +134,26 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
     
     @Override
-    public void visit(ICompoundCriteria obj) {
-    	List<List<String>> savedCriteria = new LinkedList<List<String>>();
-    	for (ICriteria crit : obj.getCriteria()) {
-        	super.visitNode(crit);
-        	if (!this.criteriaList.isEmpty()) {
-        		savedCriteria.add(this.criteriaList);
-        	}
-        	this.criteriaList = new LinkedList<String>();
-		}
-    	if (savedCriteria.size() == 1) {
-    		this.criteriaList = savedCriteria.get(0);
-    	} else if (savedCriteria.size() > 1){
-    		for (Iterator<List<String>> listIter = savedCriteria.iterator(); listIter.hasNext();) {
-    			this.criteriaList.add(OPEN);
-    			this.criteriaList.addAll(listIter.next());
-    			this.criteriaList.add(CLOSE);
-    			if (listIter.hasNext()) {
-    				this.criteriaList.add(SPACE);
-    				this.criteriaList.add(obj.getOperator().toString());
-    				this.criteriaList.add(SPACE);
-    			}
-			}
-    	}
+    public void visit(AndOr obj) {
+    	List<String> savedCriteria = new LinkedList<String>();
+    	savedCriteria.add(OPEN);
+		super.visitNode(obj.getLeftCondition());
+		savedCriteria.addAll(this.criteriaList);
+		this.criteriaList.clear();
+		savedCriteria.add(CLOSE);
+		savedCriteria.add(SPACE);
+		savedCriteria.add(obj.getOperator().toString());
+		savedCriteria.add(SPACE);
+		savedCriteria.add(OPEN);
+		super.visitNode(obj.getRightCondition());
+		savedCriteria.addAll(this.criteriaList);
+		this.criteriaList.clear();
+		this.criteriaList = savedCriteria;
+		this.criteriaList.add(CLOSE);
     }
     
     @Override
-    public void visit(INotCriteria obj) {
+    public void visit(Not obj) {
     	super.visit(obj);
     	addNot();
     }
@@ -170,14 +166,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 	}
 
     @Override
-    public void visit( IInCriteria criteria ) {
+    public void visit( In criteria ) {
         try {
-            IExpression lExpr = criteria.getLeftExpression();
+            Expression lExpr = criteria.getLeftExpression();
             String columnName = lExpr.toString();
             if (columnElementsByName.containsKey(columnName)) {
-                Element column = (Element)columnElementsByName.get(columnName);
-                if (null != column.getNativeType()
-                    && (column.getNativeType().equals("multipicklist") || column.getNativeType().equals("restrictedmultiselectpicklist"))) {
+                Column column = columnElementsByName.get(columnName);
+                if (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType())) {
                     appendMultiselectIn(column, criteria);
                 } else {
                     appendCriteria(criteria);
@@ -189,7 +184,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    public void parseFunction( IFunction func ) {
+    public void parseFunction( Function func ) {
         String functionName = func.getName();
         try {
             if (functionName.equalsIgnoreCase("includes")) {
@@ -202,20 +197,20 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    private void generateMultiSelect( IFunction func,
+    private void generateMultiSelect( Function func,
                                       String funcName ) throws ConnectorException {
-        List<IExpression> expressions = func.getParameters();
+        List<Expression> expressions = func.getParameters();
         validateFunction(expressions);
-        IExpression columnExpression = expressions.get(0);
-        Element column = ((IElement)columnExpression).getMetadataObject();
+        Expression columnExpression = expressions.get(0);
+        Column column = ((ColumnReference)columnExpression).getMetadataObject();
         StringBuffer criterion = new StringBuffer();
         criterion.append(column.getNameInSource()).append(SPACE).append(funcName);
-        addFunctionParams((ILiteral)expressions.get(1), criterion);
+        addFunctionParams((Literal)expressions.get(1), criterion);
         criteriaList.add(criterion.toString());
     }
 
-    private void appendMultiselectIn( Element column,
-                                      IInCriteria criteria ) throws ConnectorException {
+    private void appendMultiselectIn( Column column,
+                                      In criteria ) throws ConnectorException {
         StringBuffer result = new StringBuffer();
         result.append(column.getNameInSource()).append(SPACE);
         if (criteria.isNegated()) {
@@ -224,11 +219,11 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             result.append(INCLUDES).append(SPACE);
         }
         result.append('(');
-        List<IExpression> rightExpressions = criteria.getRightExpressions();
-        Iterator<IExpression> iter = rightExpressions.iterator();
+        List<Expression> rightExpressions = criteria.getRightExpressions();
+        Iterator<Expression> iter = rightExpressions.iterator();
         boolean first = true;
         while (iter.hasNext()) {
-            IExpression rightExpression = iter.next();
+            Expression rightExpression = iter.next();
             if (first) {
                 result.append(rightExpression.toString());
                 first = false;
@@ -241,19 +236,19 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         criteriaList.add(result.toString());
     }
 
-    private void validateFunction( List<IExpression> expressions ) throws ConnectorException {
+    private void validateFunction( List<Expression> expressions ) throws ConnectorException {
         if (expressions.size() != 2) {
             throw new ConnectorException(Messages.getString("CriteriaVisitor.invalid.arg.count"));
         }
-        if (!(expressions.get(0) instanceof IElement)) {
+        if (!(expressions.get(0) instanceof ColumnReference)) {
             throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.column.arg"));
         }
-        if (!(expressions.get(1) instanceof ILiteral)) {
+        if (!(expressions.get(1) instanceof Literal)) {
             throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.literal.arg"));
         }
     }
 
-    private void addFunctionParams( ILiteral param,
+    private void addFunctionParams( Literal param,
                                     StringBuffer criterion ) {
         criterion.append(OPEN);
         boolean first = true;
@@ -272,13 +267,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     protected void addCompareCriteria( List criteriaList,
-                                       ICompareCriteria compCriteria ) throws ConnectorException {
-        IExpression lExpr = compCriteria.getLeftExpression();
-        if (lExpr instanceof IFunction) {
-            parseFunction((IFunction)lExpr);
+                                       Comparison compCriteria ) throws ConnectorException {
+        Expression lExpr = compCriteria.getLeftExpression();
+        if (lExpr instanceof Function) {
+            parseFunction((Function)lExpr);
         } else {
-            IElement left = (IElement)lExpr;
-            Element column = left.getMetadataObject();
+            ColumnReference left = (ColumnReference)lExpr;
+            Column column = left.getMetadataObject();
             String columnName = column.getNameInSource();
             StringBuffer queryString = new StringBuffer();
             queryString.append(column.getParent().getNameInSource());
@@ -286,9 +281,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             queryString.append(columnName).append(SPACE);
             queryString.append(comparisonOperators.get(compCriteria.getOperator()));
             queryString.append(' ');
-            IExpression rExp = compCriteria.getRightExpression();
-            if(rExp instanceof ILiteral) {
-            	ILiteral literal = (ILiteral)rExp;
+            Expression rExp = compCriteria.getRightExpression();
+            if(rExp instanceof Literal) {
+            	Literal literal = (Literal)rExp;
             	if (column.getJavaType().equals(Boolean.class)) {
             		queryString.append(((Boolean)literal.getValue()).toString());
             	} else if (column.getJavaType().equals(java.sql.Timestamp.class)) {
@@ -305,8 +300,8 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             	} else {
             		queryString.append(compCriteria.getRightExpression().toString());
             	}
-            } else if(rExp instanceof IElement) {
-            	IElement right = (IElement)lExpr;
+            } else if(rExp instanceof ColumnReference) {
+            	ColumnReference right = (ColumnReference)lExpr;
                 column = left.getMetadataObject();
                 columnName = column.getNameInSource();
                 queryString.append(columnName);
@@ -315,7 +310,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             criteriaList.add(queryString.toString());
 
             if (columnName.equals("IsDeleted")) {
-                ILiteral isDeletedLiteral = (ILiteral)compCriteria.getRightExpression();
+                Literal isDeletedLiteral = (Literal)compCriteria.getRightExpression();
                 Boolean isDeleted = (Boolean)isDeletedLiteral.getValue();
                 if (isDeleted) {
                     this.queryAll = isDeleted;
@@ -324,9 +319,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    private void appendCriteria( IInCriteria criteria ) throws ConnectorException {
+    private void appendCriteria( In criteria ) throws ConnectorException {
         StringBuffer queryString = new StringBuffer();
-        IExpression leftExp = criteria.getLeftExpression();
+        Expression leftExp = criteria.getLeftExpression();
         if(isIdColumn(leftExp)) {
         	idInCriteria  = criteria;
         }
@@ -337,14 +332,14 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
         queryString.append("IN");
         queryString.append('(');
-        Element column = ((IElement)criteria.getLeftExpression()).getMetadataObject();
+        Column column = ((ColumnReference)criteria.getLeftExpression()).getMetadataObject();
         boolean timeColumn = isTimeColumn(column);
         boolean first = true;
         Iterator iter = criteria.getRightExpressions().iterator();
         while (iter.hasNext()) {
             if (!first) queryString.append(',');
             if (!timeColumn) queryString.append('\'');
-            queryString.append(getValue((IExpression)iter.next()));
+            queryString.append(getValue((Expression)iter.next()));
             if (!timeColumn) queryString.append('\'');
             first = false;
         }
@@ -352,7 +347,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         criteriaList.add(queryString.toString());
     }
 
-    private boolean isTimeColumn( Element column ) throws ConnectorException {
+    private boolean isTimeColumn( Column column ) throws ConnectorException {
         boolean result = false;
         if (column.getJavaType().equals(java.sql.Timestamp.class) || column.getJavaType().equals(java.sql.Time.class)
             || column.getJavaType().equals(java.sql.Date.class)) {
@@ -361,14 +356,14 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected String getValue( IExpression expr ) throws ConnectorException {
+    protected String getValue( Expression expr ) throws ConnectorException {
         String result;
-        if (expr instanceof IElement) {
-            IElement element = (IElement)expr;
-            Element element2 = element.getMetadataObject();
+        if (expr instanceof ColumnReference) {
+            ColumnReference element = (ColumnReference)expr;
+            Column element2 = element.getMetadataObject();
             result = element2.getNameInSource();
-        } else if (expr instanceof ILiteral) {
-            ILiteral literal = (ILiteral)expr;
+        } else if (expr instanceof Literal) {
+            Literal literal = (Literal)expr;
             result = literal.getValue().toString();
         } else {
             throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString());
@@ -376,32 +371,32 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected void loadColumnMetadata( IGroup group ) throws ConnectorException {
+    protected void loadColumnMetadata( NamedTable group ) throws ConnectorException {
         table = group.getMetadataObject();
-        String supportsQuery = (String)table.getProperties().get("Supports Query");
+        String supportsQuery = table.getProperties().get("Supports Query");
         if (!Boolean.valueOf(supportsQuery)) {
             throw new ConnectorException(table.getNameInSource() + " "
                                          + Messages.getString("CriteriaVisitor.query.not.supported"));
         }
-        List<Element> columnIds = table.getChildren();
-        for (Element element : columnIds) {
+        List<Column> columnIds = table.getColumns();
+        for (Column element : columnIds) {
             String name = table.getName() + '.' + element.getNameInSource();
             columnElementsByName.put(name, element);
 
             // influences queryAll behavior
             if (element.getNameInSource().equals("IsDeleted")) {
-                Boolean isDeleted = (Boolean)element.getDefaultValue();
-                if (null != isDeleted && Boolean.TRUE == isDeleted) {
-                    this.queryAll = isDeleted;
+                String isDeleted = element.getDefaultValue();
+                if (Boolean.parseBoolean(isDeleted)) {
+                    this.queryAll = true;
                 }
             }
         }
     }
 
-    protected boolean isIdColumn( IExpression expression ) throws ConnectorException {
+    protected boolean isIdColumn( Expression expression ) throws ConnectorException {
         boolean result = false;
-        if (expression instanceof IElement) {
-            Element element = ((IElement)expression).getMetadataObject();
+        if (expression instanceof ColumnReference) {
+            Column element = ((ColumnReference)expression).getMetadataObject();
             String nameInSource = element.getNameInSource();
             if (nameInSource.equalsIgnoreCase("id")) {
                 result = true;
@@ -410,12 +405,12 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected boolean isMultiSelectColumn( IExpression expression ) throws ConnectorException {
+    protected boolean isMultiSelectColumn( Expression expression ) throws ConnectorException {
         boolean result = false;
-        if (expression instanceof IElement) {
-            Element element = ((IElement)expression).getMetadataObject();
+        if (expression instanceof ColumnReference) {
+            Column element = ((ColumnReference)expression).getMetadataObject();
             String nativeType = element.getNativeType();
-            if (nativeType.equalsIgnoreCase("multipicklist") || nativeType.equalsIgnoreCase("restrictedmultiselectpicklist")) {
+            if (MULTIPICKLIST.equalsIgnoreCase(nativeType) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(nativeType)) {
                 result = true;
             }
         }

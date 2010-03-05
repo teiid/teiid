@@ -22,8 +22,8 @@
 
 package com.metamatrix.connector.yahoo;
 
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Select;
 
 import junit.framework.TestCase;
 
@@ -32,9 +32,9 @@ import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 public class TestYahooTranslation extends TestCase {
 	
     public void helpTestTranslation(String sql, String expectedUrl) throws Exception {
-        ICommand command = FakeTranslationFactory.getInstance().getYahooTranslationUtility().parseCommand(sql);
+        Command command = FakeTranslationFactory.getInstance().getYahooTranslationUtility().parseCommand(sql);
         
-        String url = YahooExecution.translateIntoUrl((IQuery) command);
+        String url = YahooExecution.translateIntoUrl((Select) command);
         assertEquals("Did not get expected url", expectedUrl, url); //$NON-NLS-1$
     }
     

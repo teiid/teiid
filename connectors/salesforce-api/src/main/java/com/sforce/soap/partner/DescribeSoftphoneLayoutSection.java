@@ -1,172 +1,97 @@
-/**
- * DescribeSoftphoneLayoutSection.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class DescribeSoftphoneLayoutSection  implements java.io.Serializable {
-    private java.lang.String entityApiName;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private com.sforce.soap.partner.DescribeSoftphoneLayoutItem[] items;
 
-    public DescribeSoftphoneLayoutSection() {
-    }
+/**
+ * <p>Java class for DescribeSoftphoneLayoutSection complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="DescribeSoftphoneLayoutSection">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="entityApiName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="items" type="{urn:partner.soap.sforce.com}DescribeSoftphoneLayoutItem" maxOccurs="unbounded"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "DescribeSoftphoneLayoutSection", propOrder = {
+    "entityApiName",
+    "items"
+})
+public class DescribeSoftphoneLayoutSection {
 
-    public DescribeSoftphoneLayoutSection(
-           java.lang.String entityApiName,
-           com.sforce.soap.partner.DescribeSoftphoneLayoutItem[] items) {
-           this.entityApiName = entityApiName;
-           this.items = items;
-    }
-
+    @XmlElement(required = true)
+    protected String entityApiName;
+    @XmlElement(required = true)
+    protected List<DescribeSoftphoneLayoutItem> items;
 
     /**
-     * Gets the entityApiName value for this DescribeSoftphoneLayoutSection.
+     * Gets the value of the entityApiName property.
      * 
-     * @return entityApiName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getEntityApiName() {
+    public String getEntityApiName() {
         return entityApiName;
     }
 
-
     /**
-     * Sets the entityApiName value for this DescribeSoftphoneLayoutSection.
+     * Sets the value of the entityApiName property.
      * 
-     * @param entityApiName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setEntityApiName(java.lang.String entityApiName) {
-        this.entityApiName = entityApiName;
+    public void setEntityApiName(String value) {
+        this.entityApiName = value;
     }
 
-
     /**
-     * Gets the items value for this DescribeSoftphoneLayoutSection.
+     * Gets the value of the items property.
      * 
-     * @return items
-     */
-    public com.sforce.soap.partner.DescribeSoftphoneLayoutItem[] getItems() {
-        return items;
-    }
-
-
-    /**
-     * Sets the items value for this DescribeSoftphoneLayoutSection.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the items property.
      * 
-     * @param items
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getItems().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link DescribeSoftphoneLayoutItem }
+     * 
+     * 
      */
-    public void setItems(com.sforce.soap.partner.DescribeSoftphoneLayoutItem[] items) {
-        this.items = items;
-    }
-
-    public com.sforce.soap.partner.DescribeSoftphoneLayoutItem getItems(int i) {
-        return this.items[i];
-    }
-
-    public void setItems(int i, com.sforce.soap.partner.DescribeSoftphoneLayoutItem _value) {
-        this.items[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof DescribeSoftphoneLayoutSection)) return false;
-        DescribeSoftphoneLayoutSection other = (DescribeSoftphoneLayoutSection) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<DescribeSoftphoneLayoutItem> getItems() {
+        if (items == null) {
+            items = new ArrayList<DescribeSoftphoneLayoutItem>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.entityApiName==null && other.getEntityApiName()==null) || 
-             (this.entityApiName!=null &&
-              this.entityApiName.equals(other.getEntityApiName()))) &&
-            ((this.items==null && other.getItems()==null) || 
-             (this.items!=null &&
-              java.util.Arrays.equals(this.items, other.getItems())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getEntityApiName() != null) {
-            _hashCode += getEntityApiName().hashCode();
-        }
-        if (getItems() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getItems());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getItems(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(DescribeSoftphoneLayoutSection.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeSoftphoneLayoutSection"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("entityApiName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "entityApiName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("items");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "items"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "DescribeSoftphoneLayoutItem"));
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.items;
     }
 
 }

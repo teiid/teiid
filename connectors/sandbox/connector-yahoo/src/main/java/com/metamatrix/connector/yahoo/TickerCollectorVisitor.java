@@ -58,26 +58,26 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompareCriteria)
      */
-    public void visit(ICompareCriteria obj) {
-        IExpression expr = obj.getRightExpression();
+    public void visit(Comparison obj) {
+        Expression expr = obj.getRightExpression();
         addTickerFromExpression(expr);        
     }
 
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IInCriteria)
      */
-    public void visit(IInCriteria obj) {
+    public void visit(In obj) {
         List exprs = obj.getRightExpressions();
         Iterator iter = exprs.iterator();
         while(iter.hasNext()) {
-            IExpression expr = (IExpression) iter.next();
+            Expression expr = (Expression) iter.next();
             addTickerFromExpression(expr);
         }
     }
     
-    private void addTickerFromExpression(IExpression expr) {
-        if(expr instanceof ILiteral) {
-            ILiteral literal = (ILiteral) expr;
+    private void addTickerFromExpression(Expression expr) {
+        if(expr instanceof Literal) {
+            Literal literal = (Literal) expr;
             if(literal.getType() == String.class) {
                 String ticker = (String) literal.getValue();
                 this.tickers.add(ticker.toUpperCase());                
@@ -91,7 +91,7 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
     }
     
     
-    public static Set getTickers(ICriteria crit) throws ConnectorException {
+    public static Set getTickers(Condition crit) throws ConnectorException {
         TickerCollectorVisitor visitor = new TickerCollectorVisitor();
         crit.acceptVisitor(visitor);
         

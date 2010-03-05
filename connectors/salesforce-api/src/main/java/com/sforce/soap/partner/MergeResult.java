@@ -1,313 +1,179 @@
-/**
- * MergeResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class MergeResult  implements java.io.Serializable {
-    private com.sforce.soap.partner.Error[] errors;
-
-    private java.lang.String id;
-
-    private java.lang.String[] mergedRecordIds;
-
-    private boolean success;
-
-    private java.lang.String[] updatedRelatedIds;
-
-    public MergeResult() {
-    }
-
-    public MergeResult(
-           com.sforce.soap.partner.Error[] errors,
-           java.lang.String id,
-           java.lang.String[] mergedRecordIds,
-           boolean success,
-           java.lang.String[] updatedRelatedIds) {
-           this.errors = errors;
-           this.id = id;
-           this.mergedRecordIds = mergedRecordIds;
-           this.success = success;
-           this.updatedRelatedIds = updatedRelatedIds;
-    }
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 
-    /**
-     * Gets the errors value for this MergeResult.
-     * 
-     * @return errors
-     */
-    public com.sforce.soap.partner.Error[] getErrors() {
-        return errors;
-    }
+/**
+ * <p>Java class for MergeResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="MergeResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="errors" type="{urn:partner.soap.sforce.com}Error" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="id" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="mergedRecordIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="success" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="updatedRelatedIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "MergeResult", propOrder = {
+    "errors",
+    "id",
+    "mergedRecordIds",
+    "success",
+    "updatedRelatedIds"
+})
+public class MergeResult {
 
-
-    /**
-     * Sets the errors value for this MergeResult.
-     * 
-     * @param errors
-     */
-    public void setErrors(com.sforce.soap.partner.Error[] errors) {
-        this.errors = errors;
-    }
-
-    public com.sforce.soap.partner.Error getErrors(int i) {
-        return this.errors[i];
-    }
-
-    public void setErrors(int i, com.sforce.soap.partner.Error _value) {
-        this.errors[i] = _value;
-    }
-
+    protected List<Error> errors;
+    @XmlElement(required = true, nillable = true)
+    protected String id;
+    protected List<String> mergedRecordIds;
+    protected boolean success;
+    protected List<String> updatedRelatedIds;
 
     /**
-     * Gets the id value for this MergeResult.
+     * Gets the value of the errors property.
      * 
-     * @return id
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the errors property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getErrors().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link Error }
+     * 
+     * 
      */
-    public java.lang.String getId() {
+    public List<Error> getErrors() {
+        if (errors == null) {
+            errors = new ArrayList<Error>();
+        }
+        return this.errors;
+    }
+
+    /**
+     * Gets the value of the id property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getId() {
         return id;
     }
 
-
     /**
-     * Sets the id value for this MergeResult.
+     * Sets the value of the id property.
      * 
-     * @param id
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setId(java.lang.String id) {
-        this.id = id;
+    public void setId(String value) {
+        this.id = value;
     }
 
-
     /**
-     * Gets the mergedRecordIds value for this MergeResult.
+     * Gets the value of the mergedRecordIds property.
      * 
-     * @return mergedRecordIds
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the mergedRecordIds property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getMergedRecordIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public java.lang.String[] getMergedRecordIds() {
-        return mergedRecordIds;
+    public List<String> getMergedRecordIds() {
+        if (mergedRecordIds == null) {
+            mergedRecordIds = new ArrayList<String>();
+        }
+        return this.mergedRecordIds;
     }
-
 
     /**
-     * Sets the mergedRecordIds value for this MergeResult.
+     * Gets the value of the success property.
      * 
-     * @param mergedRecordIds
-     */
-    public void setMergedRecordIds(java.lang.String[] mergedRecordIds) {
-        this.mergedRecordIds = mergedRecordIds;
-    }
-
-    public java.lang.String getMergedRecordIds(int i) {
-        return this.mergedRecordIds[i];
-    }
-
-    public void setMergedRecordIds(int i, java.lang.String _value) {
-        this.mergedRecordIds[i] = _value;
-    }
-
-
-    /**
-     * Gets the success value for this MergeResult.
-     * 
-     * @return success
      */
     public boolean isSuccess() {
         return success;
     }
 
-
     /**
-     * Sets the success value for this MergeResult.
+     * Sets the value of the success property.
      * 
-     * @param success
      */
-    public void setSuccess(boolean success) {
-        this.success = success;
+    public void setSuccess(boolean value) {
+        this.success = value;
     }
 
-
     /**
-     * Gets the updatedRelatedIds value for this MergeResult.
+     * Gets the value of the updatedRelatedIds property.
      * 
-     * @return updatedRelatedIds
-     */
-    public java.lang.String[] getUpdatedRelatedIds() {
-        return updatedRelatedIds;
-    }
-
-
-    /**
-     * Sets the updatedRelatedIds value for this MergeResult.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the updatedRelatedIds property.
      * 
-     * @param updatedRelatedIds
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getUpdatedRelatedIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setUpdatedRelatedIds(java.lang.String[] updatedRelatedIds) {
-        this.updatedRelatedIds = updatedRelatedIds;
-    }
-
-    public java.lang.String getUpdatedRelatedIds(int i) {
-        return this.updatedRelatedIds[i];
-    }
-
-    public void setUpdatedRelatedIds(int i, java.lang.String _value) {
-        this.updatedRelatedIds[i] = _value;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof MergeResult)) return false;
-        MergeResult other = (MergeResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
+    public List<String> getUpdatedRelatedIds() {
+        if (updatedRelatedIds == null) {
+            updatedRelatedIds = new ArrayList<String>();
         }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.errors==null && other.getErrors()==null) || 
-             (this.errors!=null &&
-              java.util.Arrays.equals(this.errors, other.getErrors()))) &&
-            ((this.id==null && other.getId()==null) || 
-             (this.id!=null &&
-              this.id.equals(other.getId()))) &&
-            ((this.mergedRecordIds==null && other.getMergedRecordIds()==null) || 
-             (this.mergedRecordIds!=null &&
-              java.util.Arrays.equals(this.mergedRecordIds, other.getMergedRecordIds()))) &&
-            this.success == other.isSuccess() &&
-            ((this.updatedRelatedIds==null && other.getUpdatedRelatedIds()==null) || 
-             (this.updatedRelatedIds!=null &&
-              java.util.Arrays.equals(this.updatedRelatedIds, other.getUpdatedRelatedIds())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getErrors() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getErrors());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getErrors(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getId() != null) {
-            _hashCode += getId().hashCode();
-        }
-        if (getMergedRecordIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getMergedRecordIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getMergedRecordIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += (isSuccess() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getUpdatedRelatedIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getUpdatedRelatedIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getUpdatedRelatedIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(MergeResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "MergeResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("errors");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "errors"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "Error"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("id");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "id"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("mergedRecordIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "mergedRecordIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("success");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "success"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("updatedRelatedIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "updatedRelatedIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+        return this.updatedRelatedIds;
     }
 
 }

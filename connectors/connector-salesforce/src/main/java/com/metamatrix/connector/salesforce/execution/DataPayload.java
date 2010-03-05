@@ -21,7 +21,10 @@
  */
 package com.metamatrix.connector.salesforce.execution;
 
-import org.apache.axis.message.MessageElement;
+import java.util.List;
+
+import javax.xml.bind.JAXBElement;
+
 /**
  * 
  * A bucket to pass data to the Salesforce connection.
@@ -30,14 +33,16 @@ import org.apache.axis.message.MessageElement;
 public class DataPayload {
 
 	private String type;
-	private MessageElement[] messageElements;
+	@SuppressWarnings("unchecked")
+	private List<JAXBElement> messageElements;
 	private String id;
 	
 	public void setType(String typeName) {
 		type = typeName;
 	}
 
-	public void setMessageElements(MessageElement[] elements) {
+	@SuppressWarnings("unchecked")
+	public void setMessageElements(List<JAXBElement> elements) {
 		this.messageElements = elements;
 	}
 
@@ -45,7 +50,8 @@ public class DataPayload {
 		return type;
 	}
 
-	public MessageElement[] getMessageElements() {
+	@SuppressWarnings("unchecked")
+	public List<JAXBElement> getMessageElements() {
 		return messageElements;
 	}
 

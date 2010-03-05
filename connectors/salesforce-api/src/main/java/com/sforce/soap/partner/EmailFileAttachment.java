@@ -1,238 +1,147 @@
-/**
- * EmailFileAttachment.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class EmailFileAttachment  implements java.io.Serializable {
-    private byte[] body;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlType;
 
-    private java.lang.String contentType;
 
-    private java.lang.String fileName;
+/**
+ * <p>Java class for EmailFileAttachment complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="EmailFileAttachment">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="body" type="{http://www.w3.org/2001/XMLSchema}base64Binary" minOccurs="0"/>
+ *         &lt;element name="contentType" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="fileName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="inline" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "EmailFileAttachment", propOrder = {
+    "body",
+    "contentType",
+    "fileName",
+    "inline"
+})
+public class EmailFileAttachment {
 
-    private java.lang.Boolean inline;
-
-    public EmailFileAttachment() {
-    }
-
-    public EmailFileAttachment(
-           byte[] body,
-           java.lang.String contentType,
-           java.lang.String fileName,
-           java.lang.Boolean inline) {
-           this.body = body;
-           this.contentType = contentType;
-           this.fileName = fileName;
-           this.inline = inline;
-    }
-
+    @XmlElementRef(name = "body", namespace = "urn:partner.soap.sforce.com", type = JAXBElement.class)
+    protected JAXBElement<byte[]> body;
+    @XmlElementRef(name = "contentType", namespace = "urn:partner.soap.sforce.com", type = JAXBElement.class)
+    protected JAXBElement<String> contentType;
+    @XmlElement(required = true)
+    protected String fileName;
+    protected Boolean inline;
 
     /**
-     * Gets the body value for this EmailFileAttachment.
+     * Gets the value of the body property.
      * 
-     * @return body
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link byte[]}{@code >}
+     *     
      */
-    public byte[] getBody() {
+    public JAXBElement<byte[]> getBody() {
         return body;
     }
 
-
     /**
-     * Sets the body value for this EmailFileAttachment.
+     * Sets the value of the body property.
      * 
-     * @param body
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link byte[]}{@code >}
+     *     
      */
-    public void setBody(byte[] body) {
-        this.body = body;
+    public void setBody(JAXBElement<byte[]> value) {
+        this.body = ((JAXBElement<byte[]> ) value);
     }
 
-
     /**
-     * Gets the contentType value for this EmailFileAttachment.
+     * Gets the value of the contentType property.
      * 
-     * @return contentType
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public java.lang.String getContentType() {
+    public JAXBElement<String> getContentType() {
         return contentType;
     }
 
-
     /**
-     * Sets the contentType value for this EmailFileAttachment.
+     * Sets the value of the contentType property.
      * 
-     * @param contentType
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public void setContentType(java.lang.String contentType) {
-        this.contentType = contentType;
+    public void setContentType(JAXBElement<String> value) {
+        this.contentType = ((JAXBElement<String> ) value);
     }
 
-
     /**
-     * Gets the fileName value for this EmailFileAttachment.
+     * Gets the value of the fileName property.
      * 
-     * @return fileName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getFileName() {
+    public String getFileName() {
         return fileName;
     }
 
-
     /**
-     * Sets the fileName value for this EmailFileAttachment.
+     * Sets the value of the fileName property.
      * 
-     * @param fileName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setFileName(java.lang.String fileName) {
-        this.fileName = fileName;
+    public void setFileName(String value) {
+        this.fileName = value;
     }
 
-
     /**
-     * Gets the inline value for this EmailFileAttachment.
+     * Gets the value of the inline property.
      * 
-     * @return inline
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getInline() {
+    public Boolean isInline() {
         return inline;
     }
 
-
     /**
-     * Sets the inline value for this EmailFileAttachment.
+     * Sets the value of the inline property.
      * 
-     * @param inline
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setInline(java.lang.Boolean inline) {
-        this.inline = inline;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof EmailFileAttachment)) return false;
-        EmailFileAttachment other = (EmailFileAttachment) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.body==null && other.getBody()==null) || 
-             (this.body!=null &&
-              java.util.Arrays.equals(this.body, other.getBody()))) &&
-            ((this.contentType==null && other.getContentType()==null) || 
-             (this.contentType!=null &&
-              this.contentType.equals(other.getContentType()))) &&
-            ((this.fileName==null && other.getFileName()==null) || 
-             (this.fileName!=null &&
-              this.fileName.equals(other.getFileName()))) &&
-            ((this.inline==null && other.getInline()==null) || 
-             (this.inline!=null &&
-              this.inline.equals(other.getInline())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getBody() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getBody());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getBody(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getContentType() != null) {
-            _hashCode += getContentType().hashCode();
-        }
-        if (getFileName() != null) {
-            _hashCode += getFileName().hashCode();
-        }
-        if (getInline() != null) {
-            _hashCode += getInline().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(EmailFileAttachment.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "EmailFileAttachment"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("body");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "body"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "base64Binary"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("contentType");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "contentType"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("fileName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fileName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("inline");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "inline"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setInline(Boolean value) {
+        this.inline = value;
     }
 
 }

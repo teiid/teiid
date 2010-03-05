@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+           http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
+           version="1.5">
+
+   <vendor-name>${vendor-name}</vendor-name>
+   <eis-type>${connector-name}</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+        ${license}
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.connector.basic.BasicResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>${package-name}.${connector-name}ManagedConnectionFactory</managedconnectionfactory-class>
+
+            <!-- Common properties for all connectors -->
+            <config-property>
+               <description>{$display:"Connector Class",$advanced:"true"}</description>
+               <config-property-name>ConnectorClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>${package-name}.${connector-name}Connector</config-property-value>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
+               <config-property-name>CapabilitiesClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>${package-name}.${connector-name}Capabilities</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Is Immutable",$description:"Is Immutable, True if the source never changes.",$advanced:"true"}</description>
+               <description>Is Immutable, True if the source never changes.</description>
+               <config-property-name>Immutable</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions",$advanced:"true"}</description>
+               <config-property-name>XaCapable</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>            
+
+            <config-property>             
+               <description>{$display:"Exception on Exceeding Max Rows",$description:"Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",$advanced:"true"}</description>
+               <config-property-name>ExceptionOnMaxRows</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>true</config-property-value>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Maximum Result Rows",$description:"Maximum Result Rows allowed",$advanced:"true"}</description>
+               <config-property-name>MaxResultRows</config-property-name>
+               <config-property-type>java.lang.Integer</config-property-type>
+               <config-property-value>10000</config-property-value>
+            </config-property>
+
+            <!-- ${connector-name} Specific properties START -->
+
+                    
+            <!-- ${connector-name} Specific properties END -->
+            
+            <connectionfactory-interface>org.teiid.connector.api.Connector</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.connector.basic.WrappedConnector</connectionfactory-impl-class>
+            <connection-interface>org.teiid.connector.api.Connection</connection-interface>
+            <connection-impl-class>org.teiid.connector.basic.WrappedConnection</connection-impl-class>
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector>

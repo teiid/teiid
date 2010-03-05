@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+           http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
+           version="1.5">
+
+   <vendor-name>Red Hat Middleware LLC</vendor-name>
+   <eis-type>Teiid Sales Force Connector</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+ JBoss, Home of Professional Open Source.
+ Copyright 2006, Red Hat Middleware LLC, and individual contributors
+ as indicated by the @author tags. See the copyright.txt file in the
+ distribution for a full listing of individual contributors.
+
+ This is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as
+ published by the Free Software Foundation; either version 2.1 of
+ the License, or (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this software; if not, write to the Free
+ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.connector.basic.BasicResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>com.metamatrix.connector.salesforce.SalesForceManagedConnectionFactory</managedconnectionfactory-class>
+
+            <config-property>
+               <description>{$display:"Connector Class",$advanced:"true"}</description>
+               <config-property-name>ConnectorClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>com.metamatrix.connector.salesforce.Connector</config-property-value>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
+               <config-property-name>CapabilitiesClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>com.metamatrix.connector.salesforce.SalesforceCapabilities</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Is Immutable",$description:"Is Immutable, True if the source never changes.",$advanced:"true"}</description>
+               <config-property-name>Immutable</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions",$advanced:"true"}</description>
+               <config-property-name>XaCapable</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>            
+
+            <config-property>             
+               <description>{$display:"Exception on Exceeding Max Rows",$description:"Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",$advanced:"true"}</description>
+               <config-property-name>ExceptionOnMaxRows</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>true</config-property-value>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Maximum Result Rows",$description:"Maximum Result Rows allowed",$advanced:"true"}</description>
+               <config-property-name>MaxResultRows</config-property-name>
+               <config-property-type>java.lang.Integer</config-property-type>
+               <config-property-value>10000</config-property-value>
+            </config-property>
+
+            <!--  Salesforce Specific properties -->
+            <config-property>
+               <description>{$display:"User Name",$description:"Name value for Salesforce authentication",$required:"true"}</description>
+               <config-property-name>username</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+         
+             <config-property>
+               <description>{$display:"Password",$description:"Password value for Salesforce authentication",$required:"true",$masked:"true"}</description>
+               <config-property-name>password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Connector State Class",$description:"",$required:"true",$advanced:"true"}</description>
+               <config-property-name>ConnectorStateClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>com.metamatrix.connector.salesforce.ConnectorState</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Salesforce URL",$description:"URL for connecting to Salesforce",$advanced:"true"}</description>
+               <config-property-name>URL</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>com.metamatrix.connector.salesforce.ConnectorState</config-property-value>
+            </config-property>     
+            
+            <config-property>
+               <description>{$display:"Source Connection Test Interval",$advanced:"true"}</description>
+               <config-property-name>SourceConnectionTestInterval</config-property-name>
+               <config-property-type>java.lang.Long</config-property-type>
+               <config-property-value>5000</config-property-value>
+            </config-property>   
+            
+            <config-property>
+               <description>{$display:"Source Connection Timeout",$advanced:"true"}</description>
+               <config-property-name>SourceConnectionTimeout</config-property-name>
+               <config-property-type>java.lang.Integer</config-property-type>
+               <config-property-value>120000</config-property-value>
+            </config-property>           
+            
+            <config-property>
+               <description>{$display:"Audit Model Fields",$advanced:"true"}</description>
+               <config-property-name>ModelAuditFields</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>
+            
+            <connectionfactory-interface>org.teiid.connector.api.Connector</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.connector.basic.WrappedConnector</connectionfactory-impl-class>
+            <connection-interface>org.teiid.connector.api.Connection</connection-interface>
+            <connection-impl-class>org.teiid.connector.basic.WrappedConnection</connection-impl-class>
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector>

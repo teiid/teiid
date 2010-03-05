@@ -1,174 +1,94 @@
-/**
- * SearchResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class SearchResult  implements java.io.Serializable {
-    private com.sforce.soap.partner.SearchRecord[] searchRecords;
-
-    private java.lang.String sforceReserved;
-
-    public SearchResult() {
-    }
-
-    public SearchResult(
-           com.sforce.soap.partner.SearchRecord[] searchRecords,
-           java.lang.String sforceReserved) {
-           this.searchRecords = searchRecords;
-           this.sforceReserved = sforceReserved;
-    }
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlType;
 
 
-    /**
-     * Gets the searchRecords value for this SearchResult.
-     * 
-     * @return searchRecords
-     */
-    public com.sforce.soap.partner.SearchRecord[] getSearchRecords() {
-        return searchRecords;
-    }
+/**
+ * <p>Java class for SearchResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="SearchResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="searchRecords" type="{urn:partner.soap.sforce.com}SearchRecord" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="sforceReserved" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "SearchResult", propOrder = {
+    "searchRecords",
+    "sforceReserved"
+})
+public class SearchResult {
 
-
-    /**
-     * Sets the searchRecords value for this SearchResult.
-     * 
-     * @param searchRecords
-     */
-    public void setSearchRecords(com.sforce.soap.partner.SearchRecord[] searchRecords) {
-        this.searchRecords = searchRecords;
-    }
-
-    public com.sforce.soap.partner.SearchRecord getSearchRecords(int i) {
-        return this.searchRecords[i];
-    }
-
-    public void setSearchRecords(int i, com.sforce.soap.partner.SearchRecord _value) {
-        this.searchRecords[i] = _value;
-    }
-
+    protected List<SearchRecord> searchRecords;
+    protected String sforceReserved;
 
     /**
-     * Gets the sforceReserved value for this SearchResult.
+     * Gets the value of the searchRecords property.
      * 
-     * @return sforceReserved
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the searchRecords property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getSearchRecords().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link SearchRecord }
+     * 
+     * 
      */
-    public java.lang.String getSforceReserved() {
+    public List<SearchRecord> getSearchRecords() {
+        if (searchRecords == null) {
+            searchRecords = new ArrayList<SearchRecord>();
+        }
+        return this.searchRecords;
+    }
+
+    /**
+     * Gets the value of the sforceReserved property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSforceReserved() {
         return sforceReserved;
     }
 
-
     /**
-     * Sets the sforceReserved value for this SearchResult.
+     * Sets the value of the sforceReserved property.
      * 
-     * @param sforceReserved
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setSforceReserved(java.lang.String sforceReserved) {
-        this.sforceReserved = sforceReserved;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof SearchResult)) return false;
-        SearchResult other = (SearchResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.searchRecords==null && other.getSearchRecords()==null) || 
-             (this.searchRecords!=null &&
-              java.util.Arrays.equals(this.searchRecords, other.getSearchRecords()))) &&
-            ((this.sforceReserved==null && other.getSforceReserved()==null) || 
-             (this.sforceReserved!=null &&
-              this.sforceReserved.equals(other.getSforceReserved())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getSearchRecords() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getSearchRecords());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getSearchRecords(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getSforceReserved() != null) {
-            _hashCode += getSforceReserved().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(SearchResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "SearchResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("searchRecords");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "searchRecords"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "SearchRecord"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sforceReserved");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sforceReserved"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setSforceReserved(String value) {
+        this.sforceReserved = value;
     }
 
 }

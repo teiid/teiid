@@ -25,9 +25,8 @@
 package com.metamatrix.connector.xml;
 
 import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 public class MockQueryPreprocessor implements IQueryPreprocessor {
@@ -36,9 +35,7 @@ public class MockQueryPreprocessor implements IQueryPreprocessor {
 		super();
 	}
 
-	public IQuery preprocessQuery(IQuery query, RuntimeMetadata m_metadata,
-			ExecutionContext exeContext, ConnectorEnvironment connectorEnv,
-			ConnectorLogger m_logger) {
+	public Select preprocessQuery(Select query, RuntimeMetadata m_metadata, ExecutionContext exeContext, ConnectorEnvironment connectorEnv) {
 		return query;
 	}
 

@@ -33,18 +33,17 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.Argument.Direction;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -56,42 +55,33 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
 
     // Connector resources
-    private ConnectorEnvironment env;
-//    private RuntimeMetadata metadata;
-    private ICommand command;
+    private LoopbackManagedConnectionFactory config;
+    private Command command;
     
-    // Configuration
-    private int rowsNeeded = 1;
-    private int waitTime = 0;
-    private boolean error = false;
-    private int pollInterval = -1;
-        
     // Execution state
     private Random randomNumber = new Random(System.currentTimeMillis());
     private List<Object> row;
     private boolean waited = false;
     private int rowsReturned = 0;
     private boolean asynch = false;
+    private int rowsNeeded = 1;
     
-    /**
-     * 
-     */
-    public LoopbackExecution(ICommand command, ConnectorEnvironment env, RuntimeMetadata metadata) {
-        this.env = env;
+    public LoopbackExecution(Command command, LoopbackManagedConnectionFactory config, RuntimeMetadata metadata) {
+        this.config = config;
         this.command = command;
     }
     
     @Override
     public List<?> next() throws ConnectorException, DataNotAvailableException {
         // Wait on first batch if necessary
-        if(waitTime > 0 && !waited) {
+        if(this.config.getWaitTime() > 0 && !waited) {
             // Wait a random amount of time up to waitTime milliseconds
-            int randomTimeToWait = randomNumber.nextInt(waitTime);
+            int randomTimeToWait = randomNumber.nextInt(this.config.getWaitTime());
 
             if(asynch) {
                 // If we're asynch and the wait time was longer than the poll interval,
                 // then just say we don't have results instead
-                if(randomTimeToWait > pollInterval) {
+                if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
                 	waited = true;
                     throw new DataNotAvailableException(randomTimeToWait);
                 } 
@@ -104,7 +94,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
             }
         }
                 
-        if(rowsReturned < rowsNeeded && row.size() > 0) {
+        if(rowsReturned < this.rowsNeeded && row.size() > 0) {
             rowsReturned++;            
             return row;
         }
@@ -117,45 +107,18 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
      */
     @Override
     public void execute() throws ConnectorException {
-        // Get poll interval
-        String pollIntervalString = env.getProperties().getProperty(LoopbackProperties.POLL_INTERVAL);            
-        if (pollIntervalString != null) {
-        	asynch = true;
-	        try {
-	            pollInterval = Integer.parseInt(pollIntervalString);
-	        } catch (Exception e) {
-	            throw new ConnectorException("Invalid " + LoopbackProperties.POLL_INTERVAL + "=" + pollIntervalString); //$NON-NLS-1$ //$NON-NLS-2$
-	        }       
-        }
-        
+       
     	// Log our command
-        env.getLogger().logTrace("Loopback executing command: " + command); //$NON-NLS-1$
+        this.config.getLogger().logTrace("Loopback executing command: " + command); //$NON-NLS-1$
 
-        // Get error mode
-        String errorString = env.getProperties().getProperty(LoopbackProperties.ERROR, "false"); //$NON-NLS-1$
-        error = errorString.equalsIgnoreCase("true"); //$NON-NLS-1$
-        if(error) {
+        if(this.config.isThrowError()) {
             throw new ConnectorException("Failing because Error=true"); //$NON-NLS-1$
         }
-               
-        // Get max wait time
-        String waitTimeString = env.getProperties().getProperty(LoopbackProperties.WAIT_TIME, "0");               //$NON-NLS-1$
-        try {
-            waitTime = Integer.parseInt(waitTimeString);
-        } catch (Exception e) {
-            throw new ConnectorException("Invalid " + LoopbackProperties.WAIT_TIME + "=" + waitTimeString); //$NON-NLS-1$ //$NON-NLS-2$
-        }        
+              
+        this.rowsNeeded = this.config.getRowCount();
         
-        // Get # of rows of data to return
-        String rowCountString = env.getProperties().getProperty(LoopbackProperties.ROW_COUNT, "1");              //$NON-NLS-1$
-        try {
-            rowsNeeded = Integer.parseInt(rowCountString);
-        } catch (Exception e) {
-            throw new ConnectorException("Invalid " + LoopbackProperties.ROW_COUNT + "=" + rowCountString); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
-        if (command instanceof IQueryCommand) {
-            IQueryCommand queryCommand = (IQueryCommand)command;
+        if (command instanceof QueryExpression) {
+            QueryExpression queryCommand = (QueryExpression)command;
             if (queryCommand.getLimit() != null) {
             	this.rowsNeeded = queryCommand.getLimit().getRowLimit();
             }
@@ -174,10 +137,10 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     
     @Override
     public List<?> getOutputParameterValues() throws ConnectorException {
-    	IProcedure proc = (IProcedure)this.command;
-    	int count = 0;
-    	for (IParameter param : proc.getParameters()) {
-			if (param.getDirection() == Direction.INOUT || param.getDirection() == Direction.OUT || param.getDirection() == Direction.RETURN) {
+    	Call proc = (Call)this.command;
+    	int count = proc.getReturnType() != null ? 1:0;
+    	for (Argument param : proc.getArguments()) {
+			if (param.getDirection() == Direction.INOUT || param.getDirection() == Direction.OUT) {
 				count++;
 			}
 		}
@@ -200,14 +163,14 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
 
     }
 
-    private List determineOutputTypes(ICommand command) throws ConnectorException {            
+    private List determineOutputTypes(Command command) throws ConnectorException {            
         // Get select columns and lookup the types in metadata
-        if(command instanceof IQueryCommand) {
-            IQueryCommand query = (IQueryCommand) command;
+        if(command instanceof QueryExpression) {
+            QueryExpression query = (QueryExpression) command;
             return Arrays.asList(query.getColumnTypes());
         }
-        if (command instanceof IProcedure) {
-        	return Arrays.asList(((IProcedure)command).getResultSetColumnTypes());
+        if (command instanceof Call) {
+        	return Arrays.asList(((Call)command).getResultSetColumnTypes());
         }
         List<Class<?>> types = new ArrayList<Class<?>>(1);
         types.add(Integer.class);
@@ -293,9 +256,9 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
         } else if(type.equals(java.sql.Timestamp.class)) {
             return TIMESTAMP_VAL;
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-            return env.getTypeFacility().convertToRuntimeType(ALPHA.toCharArray());
+            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.toCharArray());
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
-            return env.getTypeFacility().convertToRuntimeType(ALPHA.getBytes());
+            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.getBytes());
         } else {
             return getVariableString(10);
         }

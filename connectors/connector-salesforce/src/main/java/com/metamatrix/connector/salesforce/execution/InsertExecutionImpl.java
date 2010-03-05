@@ -25,8 +25,8 @@ package com.metamatrix.connector.salesforce.execution;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Insert;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
@@ -34,7 +34,7 @@ import com.metamatrix.connector.salesforce.execution.visitors.InsertVisitor;
 
 public class InsertExecutionImpl extends AbstractUpdateExecution {
 
-	public InsertExecutionImpl(ICommand command,
+	public InsertExecutionImpl(Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
@@ -44,7 +44,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 	@Override
 	public void execute() throws ConnectorException {
 		InsertVisitor visitor = new InsertVisitor(getMetadata());
-		visitor.visit((IInsert)command);
+		visitor.visit((Insert)command);
 		DataPayload data = new DataPayload();
 		data.setType(visitor.getTableName());
 		data.setMessageElements(visitor.getMessageElements());

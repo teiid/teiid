@@ -17,8 +17,8 @@ import org.teiid.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.Document;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
+import com.metamatrix.connector.xml.base.Messages;
 import com.metamatrix.connector.xml.base.OutputXPathDesc;
-import com.metamatrix.connector.xml.http.Messages;
 
 /**
  * The ElementProcessor extracts data from a Node based upon XPaths defined in
@@ -246,8 +246,7 @@ public class ElementProcessor {
 			// should never produce them in the importer, second reason is that
 			// it makes
 			// this function easier to fix under our current time constraints.
-			throw new ConnectorException(Messages
-					.getString("Executor.unsupported.compound.xpath"));//$NON-NLS-1$ 
+			throw new ConnectorException(Messages.getString("Executor.unsupported.compound.xpath"));//$NON-NLS-1$ 
 		} else if (xpath.equals("/")) {//$NON-NLS-1$ 
 			retval = ".";//$NON-NLS-1$ 
 		} else if (xpath.startsWith("/") && !(xpath.startsWith("//"))) {//$NON-NLS-1$ //$NON-NLS-2$ 

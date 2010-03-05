@@ -22,49 +22,78 @@
 
 package com.metamatrix.connector.text;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Table;
 
 
 /**
  * Implementation of Connection interface for text connection.
  */
-public class TextConnection extends BasicConnection {
+public class TextConnection extends BasicConnection implements MetadataProvider {
 
     // metadata props -- Map<groupName --> Map<propName, propValue>
-    Map metadataProps = new HashMap();
+	Map <String, Properties> metadataProps;
 
     // connector props
-    ConnectorEnvironment env;
+	private TextManagedConnectionFactory config;
 
     /**
      * Constructor.
      * @param env
      */
-    TextConnection(ConnectorEnvironment env, Map metadataProps) throws ConnectorException {
-    	this.env = env;
+    TextConnection(TextManagedConnectionFactory env, Map metadataProps) {
+    	this.config = env;
         this.metadataProps = metadataProps;
     }
 
     @Override
-    public ResultSetExecution createResultSetExecution(IQueryCommand command,
-    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new TextSynchExecution((IQuery)command, this, metadata);
+    	return new TextSynchExecution(this.config, (Select)command, this.metadataProps);
     }
 
     @Override
     public void close() {
         metadataProps = null;
-        env.getLogger().logDetail("Text Connection is successfully closed."); //$NON-NLS-1$
     }
+    
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory) throws ConnectorException {
+		for (Map.Entry<String, Properties> entry : this.metadataProps.entrySet()) {
+			Properties p = entry.getValue();
+			String columns = p.getProperty(TextPropertyNames.COLUMNS);
+			if (columns == null) {
+				continue;
+			}
+			String types = p.getProperty(TextPropertyNames.TYPES);
+			String[] columnNames = columns.trim().split(","); //$NON-NLS-1$
+			String[] typeNames = null; 
+			if (types != null) {
+				typeNames = types.trim().split(","); //$NON-NLS-1$
+				if (typeNames.length != columnNames.length) {
+					throw new ConnectorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
+				}
+			}
+			Table table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
+			for (int i = 0; i < columnNames.length; i++) {
+				String type = typeNames == null?TypeFacility.RUNTIME_NAMES.STRING:typeNames[i].trim().toLowerCase();
+				Column column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
+				column.setNameInSource(String.valueOf(i));
+				column.setNativeType(TypeFacility.RUNTIME_NAMES.STRING);
+			}
+		}
+	}    
 }

@@ -1,692 +1,455 @@
-/**
- * SingleEmailMessage.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class SingleEmailMessage  extends com.sforce.soap.partner.Email  implements java.io.Serializable {
-    private java.lang.String[] bccAddresses;
-
-    private java.lang.String[] ccAddresses;
-
-    private java.lang.String charset;
-
-    private java.lang.String[] documentAttachments;
-
-    private java.lang.String htmlBody;
-
-    private java.lang.String inReplyTo;
-
-    private com.sforce.soap.partner.EmailFileAttachment[] fileAttachments;
-
-    private java.lang.String orgWideEmailAddressId;
-
-    private java.lang.String plainTextBody;
-
-    private java.lang.String references;
-
-    private java.lang.String targetObjectId;
-
-    private java.lang.String templateId;
-
-    private java.lang.String[] toAddresses;
-
-    private java.lang.String whatId;
-
-    public SingleEmailMessage() {
-    }
-
-    public SingleEmailMessage(
-           java.lang.Boolean bccSender,
-           com.sforce.soap.partner.EmailPriority emailPriority,
-           java.lang.String replyTo,
-           java.lang.Boolean saveAsActivity,
-           java.lang.String senderDisplayName,
-           java.lang.String subject,
-           java.lang.Boolean useSignature,
-           java.lang.String[] bccAddresses,
-           java.lang.String[] ccAddresses,
-           java.lang.String charset,
-           java.lang.String[] documentAttachments,
-           java.lang.String htmlBody,
-           java.lang.String inReplyTo,
-           com.sforce.soap.partner.EmailFileAttachment[] fileAttachments,
-           java.lang.String orgWideEmailAddressId,
-           java.lang.String plainTextBody,
-           java.lang.String references,
-           java.lang.String targetObjectId,
-           java.lang.String templateId,
-           java.lang.String[] toAddresses,
-           java.lang.String whatId) {
-        super(
-            bccSender,
-            emailPriority,
-            replyTo,
-            saveAsActivity,
-            senderDisplayName,
-            subject,
-            useSignature);
-        this.bccAddresses = bccAddresses;
-        this.ccAddresses = ccAddresses;
-        this.charset = charset;
-        this.documentAttachments = documentAttachments;
-        this.htmlBody = htmlBody;
-        this.inReplyTo = inReplyTo;
-        this.fileAttachments = fileAttachments;
-        this.orgWideEmailAddressId = orgWideEmailAddressId;
-        this.plainTextBody = plainTextBody;
-        this.references = references;
-        this.targetObjectId = targetObjectId;
-        this.templateId = templateId;
-        this.toAddresses = toAddresses;
-        this.whatId = whatId;
-    }
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlType;
 
 
-    /**
-     * Gets the bccAddresses value for this SingleEmailMessage.
-     * 
-     * @return bccAddresses
-     */
-    public java.lang.String[] getBccAddresses() {
-        return bccAddresses;
-    }
+/**
+ * <p>Java class for SingleEmailMessage complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="SingleEmailMessage">
+ *   &lt;complexContent>
+ *     &lt;extension base="{urn:partner.soap.sforce.com}Email">
+ *       &lt;sequence>
+ *         &lt;element name="bccAddresses" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="25" minOccurs="0"/>
+ *         &lt;element name="ccAddresses" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="25" minOccurs="0"/>
+ *         &lt;element name="charset" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="documentAttachments" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="htmlBody" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="inReplyTo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="fileAttachments" type="{urn:partner.soap.sforce.com}EmailFileAttachment" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="orgWideEmailAddressId" type="{urn:partner.soap.sforce.com}ID" minOccurs="0"/>
+ *         &lt;element name="plainTextBody" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="references" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="targetObjectId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="templateId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="toAddresses" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="100" minOccurs="0"/>
+ *         &lt;element name="whatId" type="{urn:partner.soap.sforce.com}ID"/>
+ *       &lt;/sequence>
+ *     &lt;/extension>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "SingleEmailMessage", propOrder = {
+    "bccAddresses",
+    "ccAddresses",
+    "charset",
+    "documentAttachments",
+    "htmlBody",
+    "inReplyTo",
+    "fileAttachments",
+    "orgWideEmailAddressId",
+    "plainTextBody",
+    "references",
+    "targetObjectId",
+    "templateId",
+    "toAddresses",
+    "whatId"
+})
+public class SingleEmailMessage
+    extends Email
+{
 
-
-    /**
-     * Sets the bccAddresses value for this SingleEmailMessage.
-     * 
-     * @param bccAddresses
-     */
-    public void setBccAddresses(java.lang.String[] bccAddresses) {
-        this.bccAddresses = bccAddresses;
-    }
-
-    public java.lang.String getBccAddresses(int i) {
-        return this.bccAddresses[i];
-    }
-
-    public void setBccAddresses(int i, java.lang.String _value) {
-        this.bccAddresses[i] = _value;
-    }
-
+    @XmlElement(nillable = true)
+    protected List<String> bccAddresses;
+    @XmlElement(nillable = true)
+    protected List<String> ccAddresses;
+    @XmlElement(required = true, nillable = true)
+    protected String charset;
+    protected List<String> documentAttachments;
+    @XmlElement(required = true, nillable = true)
+    protected String htmlBody;
+    @XmlElementRef(name = "inReplyTo", namespace = "urn:partner.soap.sforce.com", type = JAXBElement.class)
+    protected JAXBElement<String> inReplyTo;
+    protected List<EmailFileAttachment> fileAttachments;
+    @XmlElementRef(name = "orgWideEmailAddressId", namespace = "urn:partner.soap.sforce.com", type = JAXBElement.class)
+    protected JAXBElement<String> orgWideEmailAddressId;
+    @XmlElement(required = true, nillable = true)
+    protected String plainTextBody;
+    @XmlElementRef(name = "references", namespace = "urn:partner.soap.sforce.com", type = JAXBElement.class)
+    protected JAXBElement<String> references;
+    @XmlElement(required = true, nillable = true)
+    protected String targetObjectId;
+    @XmlElement(required = true, nillable = true)
+    protected String templateId;
+    @XmlElement(nillable = true)
+    protected List<String> toAddresses;
+    @XmlElement(required = true, nillable = true)
+    protected String whatId;
 
     /**
-     * Gets the ccAddresses value for this SingleEmailMessage.
+     * Gets the value of the bccAddresses property.
      * 
-     * @return ccAddresses
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the bccAddresses property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getBccAddresses().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public java.lang.String[] getCcAddresses() {
-        return ccAddresses;
+    public List<String> getBccAddresses() {
+        if (bccAddresses == null) {
+            bccAddresses = new ArrayList<String>();
+        }
+        return this.bccAddresses;
     }
-
 
     /**
-     * Sets the ccAddresses value for this SingleEmailMessage.
+     * Gets the value of the ccAddresses property.
      * 
-     * @param ccAddresses
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the ccAddresses property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getCcAddresses().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setCcAddresses(java.lang.String[] ccAddresses) {
-        this.ccAddresses = ccAddresses;
+    public List<String> getCcAddresses() {
+        if (ccAddresses == null) {
+            ccAddresses = new ArrayList<String>();
+        }
+        return this.ccAddresses;
     }
-
-    public java.lang.String getCcAddresses(int i) {
-        return this.ccAddresses[i];
-    }
-
-    public void setCcAddresses(int i, java.lang.String _value) {
-        this.ccAddresses[i] = _value;
-    }
-
 
     /**
-     * Gets the charset value for this SingleEmailMessage.
+     * Gets the value of the charset property.
      * 
-     * @return charset
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getCharset() {
+    public String getCharset() {
         return charset;
     }
 
+    /**
+     * Sets the value of the charset property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setCharset(String value) {
+        this.charset = value;
+    }
 
     /**
-     * Sets the charset value for this SingleEmailMessage.
+     * Gets the value of the documentAttachments property.
      * 
-     * @param charset
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the documentAttachments property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getDocumentAttachments().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setCharset(java.lang.String charset) {
-        this.charset = charset;
+    public List<String> getDocumentAttachments() {
+        if (documentAttachments == null) {
+            documentAttachments = new ArrayList<String>();
+        }
+        return this.documentAttachments;
     }
-
 
     /**
-     * Gets the documentAttachments value for this SingleEmailMessage.
+     * Gets the value of the htmlBody property.
      * 
-     * @return documentAttachments
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String[] getDocumentAttachments() {
-        return documentAttachments;
-    }
-
-
-    /**
-     * Sets the documentAttachments value for this SingleEmailMessage.
-     * 
-     * @param documentAttachments
-     */
-    public void setDocumentAttachments(java.lang.String[] documentAttachments) {
-        this.documentAttachments = documentAttachments;
-    }
-
-    public java.lang.String getDocumentAttachments(int i) {
-        return this.documentAttachments[i];
-    }
-
-    public void setDocumentAttachments(int i, java.lang.String _value) {
-        this.documentAttachments[i] = _value;
-    }
-
-
-    /**
-     * Gets the htmlBody value for this SingleEmailMessage.
-     * 
-     * @return htmlBody
-     */
-    public java.lang.String getHtmlBody() {
+    public String getHtmlBody() {
         return htmlBody;
     }
 
-
     /**
-     * Sets the htmlBody value for this SingleEmailMessage.
+     * Sets the value of the htmlBody property.
      * 
-     * @param htmlBody
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setHtmlBody(java.lang.String htmlBody) {
-        this.htmlBody = htmlBody;
+    public void setHtmlBody(String value) {
+        this.htmlBody = value;
     }
 
-
     /**
-     * Gets the inReplyTo value for this SingleEmailMessage.
+     * Gets the value of the inReplyTo property.
      * 
-     * @return inReplyTo
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public java.lang.String getInReplyTo() {
+    public JAXBElement<String> getInReplyTo() {
         return inReplyTo;
     }
 
+    /**
+     * Sets the value of the inReplyTo property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
+     */
+    public void setInReplyTo(JAXBElement<String> value) {
+        this.inReplyTo = ((JAXBElement<String> ) value);
+    }
 
     /**
-     * Sets the inReplyTo value for this SingleEmailMessage.
+     * Gets the value of the fileAttachments property.
      * 
-     * @param inReplyTo
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the fileAttachments property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getFileAttachments().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link EmailFileAttachment }
+     * 
+     * 
      */
-    public void setInReplyTo(java.lang.String inReplyTo) {
-        this.inReplyTo = inReplyTo;
+    public List<EmailFileAttachment> getFileAttachments() {
+        if (fileAttachments == null) {
+            fileAttachments = new ArrayList<EmailFileAttachment>();
+        }
+        return this.fileAttachments;
     }
-
 
     /**
-     * Gets the fileAttachments value for this SingleEmailMessage.
+     * Gets the value of the orgWideEmailAddressId property.
      * 
-     * @return fileAttachments
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public com.sforce.soap.partner.EmailFileAttachment[] getFileAttachments() {
-        return fileAttachments;
-    }
-
-
-    /**
-     * Sets the fileAttachments value for this SingleEmailMessage.
-     * 
-     * @param fileAttachments
-     */
-    public void setFileAttachments(com.sforce.soap.partner.EmailFileAttachment[] fileAttachments) {
-        this.fileAttachments = fileAttachments;
-    }
-
-    public com.sforce.soap.partner.EmailFileAttachment getFileAttachments(int i) {
-        return this.fileAttachments[i];
-    }
-
-    public void setFileAttachments(int i, com.sforce.soap.partner.EmailFileAttachment _value) {
-        this.fileAttachments[i] = _value;
-    }
-
-
-    /**
-     * Gets the orgWideEmailAddressId value for this SingleEmailMessage.
-     * 
-     * @return orgWideEmailAddressId
-     */
-    public java.lang.String getOrgWideEmailAddressId() {
+    public JAXBElement<String> getOrgWideEmailAddressId() {
         return orgWideEmailAddressId;
     }
 
-
     /**
-     * Sets the orgWideEmailAddressId value for this SingleEmailMessage.
+     * Sets the value of the orgWideEmailAddressId property.
      * 
-     * @param orgWideEmailAddressId
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public void setOrgWideEmailAddressId(java.lang.String orgWideEmailAddressId) {
-        this.orgWideEmailAddressId = orgWideEmailAddressId;
+    public void setOrgWideEmailAddressId(JAXBElement<String> value) {
+        this.orgWideEmailAddressId = ((JAXBElement<String> ) value);
     }
 
-
     /**
-     * Gets the plainTextBody value for this SingleEmailMessage.
+     * Gets the value of the plainTextBody property.
      * 
-     * @return plainTextBody
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getPlainTextBody() {
+    public String getPlainTextBody() {
         return plainTextBody;
     }
 
-
     /**
-     * Sets the plainTextBody value for this SingleEmailMessage.
+     * Sets the value of the plainTextBody property.
      * 
-     * @param plainTextBody
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setPlainTextBody(java.lang.String plainTextBody) {
-        this.plainTextBody = plainTextBody;
+    public void setPlainTextBody(String value) {
+        this.plainTextBody = value;
     }
 
-
     /**
-     * Gets the references value for this SingleEmailMessage.
+     * Gets the value of the references property.
      * 
-     * @return references
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public java.lang.String getReferences() {
+    public JAXBElement<String> getReferences() {
         return references;
     }
 
-
     /**
-     * Sets the references value for this SingleEmailMessage.
+     * Sets the value of the references property.
      * 
-     * @param references
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
      */
-    public void setReferences(java.lang.String references) {
-        this.references = references;
+    public void setReferences(JAXBElement<String> value) {
+        this.references = ((JAXBElement<String> ) value);
     }
 
-
     /**
-     * Gets the targetObjectId value for this SingleEmailMessage.
+     * Gets the value of the targetObjectId property.
      * 
-     * @return targetObjectId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getTargetObjectId() {
+    public String getTargetObjectId() {
         return targetObjectId;
     }
 
-
     /**
-     * Sets the targetObjectId value for this SingleEmailMessage.
+     * Sets the value of the targetObjectId property.
      * 
-     * @param targetObjectId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setTargetObjectId(java.lang.String targetObjectId) {
-        this.targetObjectId = targetObjectId;
+    public void setTargetObjectId(String value) {
+        this.targetObjectId = value;
     }
 
-
     /**
-     * Gets the templateId value for this SingleEmailMessage.
+     * Gets the value of the templateId property.
      * 
-     * @return templateId
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getTemplateId() {
+    public String getTemplateId() {
         return templateId;
     }
 
+    /**
+     * Sets the value of the templateId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTemplateId(String value) {
+        this.templateId = value;
+    }
 
     /**
-     * Sets the templateId value for this SingleEmailMessage.
+     * Gets the value of the toAddresses property.
      * 
-     * @param templateId
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the toAddresses property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getToAddresses().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setTemplateId(java.lang.String templateId) {
-        this.templateId = templateId;
+    public List<String> getToAddresses() {
+        if (toAddresses == null) {
+            toAddresses = new ArrayList<String>();
+        }
+        return this.toAddresses;
     }
-
 
     /**
-     * Gets the toAddresses value for this SingleEmailMessage.
+     * Gets the value of the whatId property.
      * 
-     * @return toAddresses
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String[] getToAddresses() {
-        return toAddresses;
-    }
-
-
-    /**
-     * Sets the toAddresses value for this SingleEmailMessage.
-     * 
-     * @param toAddresses
-     */
-    public void setToAddresses(java.lang.String[] toAddresses) {
-        this.toAddresses = toAddresses;
-    }
-
-    public java.lang.String getToAddresses(int i) {
-        return this.toAddresses[i];
-    }
-
-    public void setToAddresses(int i, java.lang.String _value) {
-        this.toAddresses[i] = _value;
-    }
-
-
-    /**
-     * Gets the whatId value for this SingleEmailMessage.
-     * 
-     * @return whatId
-     */
-    public java.lang.String getWhatId() {
+    public String getWhatId() {
         return whatId;
     }
 
-
     /**
-     * Sets the whatId value for this SingleEmailMessage.
+     * Sets the value of the whatId property.
      * 
-     * @param whatId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setWhatId(java.lang.String whatId) {
-        this.whatId = whatId;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof SingleEmailMessage)) return false;
-        SingleEmailMessage other = (SingleEmailMessage) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = super.equals(obj) && 
-            ((this.bccAddresses==null && other.getBccAddresses()==null) || 
-             (this.bccAddresses!=null &&
-              java.util.Arrays.equals(this.bccAddresses, other.getBccAddresses()))) &&
-            ((this.ccAddresses==null && other.getCcAddresses()==null) || 
-             (this.ccAddresses!=null &&
-              java.util.Arrays.equals(this.ccAddresses, other.getCcAddresses()))) &&
-            ((this.charset==null && other.getCharset()==null) || 
-             (this.charset!=null &&
-              this.charset.equals(other.getCharset()))) &&
-            ((this.documentAttachments==null && other.getDocumentAttachments()==null) || 
-             (this.documentAttachments!=null &&
-              java.util.Arrays.equals(this.documentAttachments, other.getDocumentAttachments()))) &&
-            ((this.htmlBody==null && other.getHtmlBody()==null) || 
-             (this.htmlBody!=null &&
-              this.htmlBody.equals(other.getHtmlBody()))) &&
-            ((this.inReplyTo==null && other.getInReplyTo()==null) || 
-             (this.inReplyTo!=null &&
-              this.inReplyTo.equals(other.getInReplyTo()))) &&
-            ((this.fileAttachments==null && other.getFileAttachments()==null) || 
-             (this.fileAttachments!=null &&
-              java.util.Arrays.equals(this.fileAttachments, other.getFileAttachments()))) &&
-            ((this.orgWideEmailAddressId==null && other.getOrgWideEmailAddressId()==null) || 
-             (this.orgWideEmailAddressId!=null &&
-              this.orgWideEmailAddressId.equals(other.getOrgWideEmailAddressId()))) &&
-            ((this.plainTextBody==null && other.getPlainTextBody()==null) || 
-             (this.plainTextBody!=null &&
-              this.plainTextBody.equals(other.getPlainTextBody()))) &&
-            ((this.references==null && other.getReferences()==null) || 
-             (this.references!=null &&
-              this.references.equals(other.getReferences()))) &&
-            ((this.targetObjectId==null && other.getTargetObjectId()==null) || 
-             (this.targetObjectId!=null &&
-              this.targetObjectId.equals(other.getTargetObjectId()))) &&
-            ((this.templateId==null && other.getTemplateId()==null) || 
-             (this.templateId!=null &&
-              this.templateId.equals(other.getTemplateId()))) &&
-            ((this.toAddresses==null && other.getToAddresses()==null) || 
-             (this.toAddresses!=null &&
-              java.util.Arrays.equals(this.toAddresses, other.getToAddresses()))) &&
-            ((this.whatId==null && other.getWhatId()==null) || 
-             (this.whatId!=null &&
-              this.whatId.equals(other.getWhatId())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = super.hashCode();
-        if (getBccAddresses() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getBccAddresses());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getBccAddresses(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getCcAddresses() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getCcAddresses());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getCcAddresses(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getCharset() != null) {
-            _hashCode += getCharset().hashCode();
-        }
-        if (getDocumentAttachments() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getDocumentAttachments());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getDocumentAttachments(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getHtmlBody() != null) {
-            _hashCode += getHtmlBody().hashCode();
-        }
-        if (getInReplyTo() != null) {
-            _hashCode += getInReplyTo().hashCode();
-        }
-        if (getFileAttachments() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getFileAttachments());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getFileAttachments(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getOrgWideEmailAddressId() != null) {
-            _hashCode += getOrgWideEmailAddressId().hashCode();
-        }
-        if (getPlainTextBody() != null) {
-            _hashCode += getPlainTextBody().hashCode();
-        }
-        if (getReferences() != null) {
-            _hashCode += getReferences().hashCode();
-        }
-        if (getTargetObjectId() != null) {
-            _hashCode += getTargetObjectId().hashCode();
-        }
-        if (getTemplateId() != null) {
-            _hashCode += getTemplateId().hashCode();
-        }
-        if (getToAddresses() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getToAddresses());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getToAddresses(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getWhatId() != null) {
-            _hashCode += getWhatId().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(SingleEmailMessage.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "SingleEmailMessage"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("bccAddresses");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "bccAddresses"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("ccAddresses");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ccAddresses"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("charset");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "charset"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("documentAttachments");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "documentAttachments"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("htmlBody");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "htmlBody"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("inReplyTo");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "inReplyTo"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("fileAttachments");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fileAttachments"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "EmailFileAttachment"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("orgWideEmailAddressId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "orgWideEmailAddressId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("plainTextBody");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "plainTextBody"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("references");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "references"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("targetObjectId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "targetObjectId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("templateId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "templateId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("toAddresses");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "toAddresses"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("whatId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "whatId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setWhatId(String value) {
+        this.whatId = value;
     }
 
 }

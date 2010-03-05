@@ -1,385 +1,236 @@
-/**
- * ProcessResult.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class ProcessResult  implements java.io.Serializable {
-    private java.lang.String[] actorIds;
-
-    private java.lang.String entityId;
-
-    private com.sforce.soap.partner.Error[] errors;
-
-    private java.lang.String instanceId;
-
-    private java.lang.String instanceStatus;
-
-    private java.lang.String[] newWorkitemIds;
-
-    private boolean success;
-
-    public ProcessResult() {
-    }
-
-    public ProcessResult(
-           java.lang.String[] actorIds,
-           java.lang.String entityId,
-           com.sforce.soap.partner.Error[] errors,
-           java.lang.String instanceId,
-           java.lang.String instanceStatus,
-           java.lang.String[] newWorkitemIds,
-           boolean success) {
-           this.actorIds = actorIds;
-           this.entityId = entityId;
-           this.errors = errors;
-           this.instanceId = instanceId;
-           this.instanceStatus = instanceStatus;
-           this.newWorkitemIds = newWorkitemIds;
-           this.success = success;
-    }
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 
-    /**
-     * Gets the actorIds value for this ProcessResult.
-     * 
-     * @return actorIds
-     */
-    public java.lang.String[] getActorIds() {
-        return actorIds;
-    }
+/**
+ * <p>Java class for ProcessResult complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="ProcessResult">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="actorIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="entityId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="errors" type="{urn:partner.soap.sforce.com}Error" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="instanceId" type="{urn:partner.soap.sforce.com}ID"/>
+ *         &lt;element name="instanceStatus" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="newWorkitemIds" type="{urn:partner.soap.sforce.com}ID" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="success" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "ProcessResult", propOrder = {
+    "actorIds",
+    "entityId",
+    "errors",
+    "instanceId",
+    "instanceStatus",
+    "newWorkitemIds",
+    "success"
+})
+public class ProcessResult {
 
-
-    /**
-     * Sets the actorIds value for this ProcessResult.
-     * 
-     * @param actorIds
-     */
-    public void setActorIds(java.lang.String[] actorIds) {
-        this.actorIds = actorIds;
-    }
-
-    public java.lang.String getActorIds(int i) {
-        return this.actorIds[i];
-    }
-
-    public void setActorIds(int i, java.lang.String _value) {
-        this.actorIds[i] = _value;
-    }
-
+    protected List<String> actorIds;
+    @XmlElement(required = true, nillable = true)
+    protected String entityId;
+    protected List<Error> errors;
+    @XmlElement(required = true, nillable = true)
+    protected String instanceId;
+    @XmlElement(required = true, nillable = true)
+    protected String instanceStatus;
+    @XmlElement(nillable = true)
+    protected List<String> newWorkitemIds;
+    protected boolean success;
 
     /**
-     * Gets the entityId value for this ProcessResult.
+     * Gets the value of the actorIds property.
      * 
-     * @return entityId
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the actorIds property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getActorIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public java.lang.String getEntityId() {
+    public List<String> getActorIds() {
+        if (actorIds == null) {
+            actorIds = new ArrayList<String>();
+        }
+        return this.actorIds;
+    }
+
+    /**
+     * Gets the value of the entityId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getEntityId() {
         return entityId;
     }
 
+    /**
+     * Sets the value of the entityId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setEntityId(String value) {
+        this.entityId = value;
+    }
 
     /**
-     * Sets the entityId value for this ProcessResult.
+     * Gets the value of the errors property.
      * 
-     * @param entityId
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the errors property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getErrors().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link Error }
+     * 
+     * 
      */
-    public void setEntityId(java.lang.String entityId) {
-        this.entityId = entityId;
+    public List<Error> getErrors() {
+        if (errors == null) {
+            errors = new ArrayList<Error>();
+        }
+        return this.errors;
     }
-
 
     /**
-     * Gets the errors value for this ProcessResult.
+     * Gets the value of the instanceId property.
      * 
-     * @return errors
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public com.sforce.soap.partner.Error[] getErrors() {
-        return errors;
-    }
-
-
-    /**
-     * Sets the errors value for this ProcessResult.
-     * 
-     * @param errors
-     */
-    public void setErrors(com.sforce.soap.partner.Error[] errors) {
-        this.errors = errors;
-    }
-
-    public com.sforce.soap.partner.Error getErrors(int i) {
-        return this.errors[i];
-    }
-
-    public void setErrors(int i, com.sforce.soap.partner.Error _value) {
-        this.errors[i] = _value;
-    }
-
-
-    /**
-     * Gets the instanceId value for this ProcessResult.
-     * 
-     * @return instanceId
-     */
-    public java.lang.String getInstanceId() {
+    public String getInstanceId() {
         return instanceId;
     }
 
-
     /**
-     * Sets the instanceId value for this ProcessResult.
+     * Sets the value of the instanceId property.
      * 
-     * @param instanceId
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setInstanceId(java.lang.String instanceId) {
-        this.instanceId = instanceId;
+    public void setInstanceId(String value) {
+        this.instanceId = value;
     }
 
-
     /**
-     * Gets the instanceStatus value for this ProcessResult.
+     * Gets the value of the instanceStatus property.
      * 
-     * @return instanceStatus
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getInstanceStatus() {
+    public String getInstanceStatus() {
         return instanceStatus;
     }
 
-
     /**
-     * Sets the instanceStatus value for this ProcessResult.
+     * Sets the value of the instanceStatus property.
      * 
-     * @param instanceStatus
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setInstanceStatus(java.lang.String instanceStatus) {
-        this.instanceStatus = instanceStatus;
+    public void setInstanceStatus(String value) {
+        this.instanceStatus = value;
     }
 
-
     /**
-     * Gets the newWorkitemIds value for this ProcessResult.
+     * Gets the value of the newWorkitemIds property.
      * 
-     * @return newWorkitemIds
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the newWorkitemIds property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getNewWorkitemIds().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public java.lang.String[] getNewWorkitemIds() {
-        return newWorkitemIds;
+    public List<String> getNewWorkitemIds() {
+        if (newWorkitemIds == null) {
+            newWorkitemIds = new ArrayList<String>();
+        }
+        return this.newWorkitemIds;
     }
-
 
     /**
-     * Sets the newWorkitemIds value for this ProcessResult.
+     * Gets the value of the success property.
      * 
-     * @param newWorkitemIds
-     */
-    public void setNewWorkitemIds(java.lang.String[] newWorkitemIds) {
-        this.newWorkitemIds = newWorkitemIds;
-    }
-
-    public java.lang.String getNewWorkitemIds(int i) {
-        return this.newWorkitemIds[i];
-    }
-
-    public void setNewWorkitemIds(int i, java.lang.String _value) {
-        this.newWorkitemIds[i] = _value;
-    }
-
-
-    /**
-     * Gets the success value for this ProcessResult.
-     * 
-     * @return success
      */
     public boolean isSuccess() {
         return success;
     }
 
-
     /**
-     * Sets the success value for this ProcessResult.
+     * Sets the value of the success property.
      * 
-     * @param success
      */
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof ProcessResult)) return false;
-        ProcessResult other = (ProcessResult) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            ((this.actorIds==null && other.getActorIds()==null) || 
-             (this.actorIds!=null &&
-              java.util.Arrays.equals(this.actorIds, other.getActorIds()))) &&
-            ((this.entityId==null && other.getEntityId()==null) || 
-             (this.entityId!=null &&
-              this.entityId.equals(other.getEntityId()))) &&
-            ((this.errors==null && other.getErrors()==null) || 
-             (this.errors!=null &&
-              java.util.Arrays.equals(this.errors, other.getErrors()))) &&
-            ((this.instanceId==null && other.getInstanceId()==null) || 
-             (this.instanceId!=null &&
-              this.instanceId.equals(other.getInstanceId()))) &&
-            ((this.instanceStatus==null && other.getInstanceStatus()==null) || 
-             (this.instanceStatus!=null &&
-              this.instanceStatus.equals(other.getInstanceStatus()))) &&
-            ((this.newWorkitemIds==null && other.getNewWorkitemIds()==null) || 
-             (this.newWorkitemIds!=null &&
-              java.util.Arrays.equals(this.newWorkitemIds, other.getNewWorkitemIds()))) &&
-            this.success == other.isSuccess();
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        if (getActorIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getActorIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getActorIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getEntityId() != null) {
-            _hashCode += getEntityId().hashCode();
-        }
-        if (getErrors() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getErrors());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getErrors(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getInstanceId() != null) {
-            _hashCode += getInstanceId().hashCode();
-        }
-        if (getInstanceStatus() != null) {
-            _hashCode += getInstanceStatus().hashCode();
-        }
-        if (getNewWorkitemIds() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getNewWorkitemIds());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getNewWorkitemIds(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += (isSuccess() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(ProcessResult.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ProcessResult"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("actorIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "actorIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("entityId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "entityId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("errors");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "errors"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "Error"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("instanceId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "instanceId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("instanceStatus");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "instanceStatus"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("newWorkitemIds");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "newWorkitemIds"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "ID"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("success");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "success"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setSuccess(boolean value) {
+        this.success = value;
     }
 
 }

@@ -1,1387 +1,899 @@
-/**
- * Field.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
- */
 
 package com.sforce.soap.partner;
 
-public class Field  implements java.io.Serializable {
-    private boolean autoNumber;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-    private int byteLength;
 
-    private boolean calculated;
+/**
+ * <p>Java class for Field complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="Field">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="autoNumber" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="byteLength" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="calculated" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="calculatedFormula" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="caseSensitive" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="controllerName" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="createable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="custom" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="defaultValueFormula" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="defaultedOnCreate" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="dependentPicklist" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="deprecatedAndHidden" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="digits" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="externalId" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="filterable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="htmlFormatted" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="idLookup" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="inlineHelpText" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="label" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="length" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="nameField" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="namePointing" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="nillable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="picklistValues" type="{urn:partner.soap.sforce.com}PicklistEntry" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="precision" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="referenceTo" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="relationshipName" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+ *         &lt;element name="relationshipOrder" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/>
+ *         &lt;element name="restrictedPicklist" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="scale" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="soapType" type="{urn:partner.soap.sforce.com}soapType"/>
+ *         &lt;element name="sortable" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *         &lt;element name="type" type="{urn:partner.soap.sforce.com}fieldType"/>
+ *         &lt;element name="unique" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="updateable" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+ *         &lt;element name="writeRequiresMasterRead" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+ *       &lt;/sequence>
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "Field", propOrder = {
+    "autoNumber",
+    "byteLength",
+    "calculated",
+    "calculatedFormula",
+    "caseSensitive",
+    "controllerName",
+    "createable",
+    "custom",
+    "defaultValueFormula",
+    "defaultedOnCreate",
+    "dependentPicklist",
+    "deprecatedAndHidden",
+    "digits",
+    "externalId",
+    "filterable",
+    "htmlFormatted",
+    "idLookup",
+    "inlineHelpText",
+    "label",
+    "length",
+    "name",
+    "nameField",
+    "namePointing",
+    "nillable",
+    "picklistValues",
+    "precision",
+    "referenceTo",
+    "relationshipName",
+    "relationshipOrder",
+    "restrictedPicklist",
+    "scale",
+    "soapType",
+    "sortable",
+    "type",
+    "unique",
+    "updateable",
+    "writeRequiresMasterRead"
+})
+public class Field {
 
-    private java.lang.String calculatedFormula;
-
-    private boolean caseSensitive;
-
-    private java.lang.String controllerName;
-
-    private boolean createable;
-
-    private boolean custom;
-
-    private java.lang.String defaultValueFormula;
-
-    private boolean defaultedOnCreate;
-
-    private java.lang.Boolean dependentPicklist;
-
-    private boolean deprecatedAndHidden;
-
-    private int digits;
-
-    private java.lang.Boolean externalId;
-
-    private boolean filterable;
-
-    private java.lang.Boolean htmlFormatted;
-
-    private boolean idLookup;
-
-    private java.lang.String inlineHelpText;
-
-    private java.lang.String label;
-
-    private int length;
-
-    private java.lang.String name;
-
-    private boolean nameField;
-
-    private java.lang.Boolean namePointing;
-
-    private boolean nillable;
-
-    private com.sforce.soap.partner.PicklistEntry[] picklistValues;
-
-    private int precision;
-
-    private java.lang.String[] referenceTo;
-
-    private java.lang.String relationshipName;
-
-    private java.lang.Integer relationshipOrder;
-
-    private boolean restrictedPicklist;
-
-    private int scale;
-
-    private com.sforce.soap.partner.SoapType soapType;
-
-    private java.lang.Boolean sortable;
-
-    private com.sforce.soap.partner.FieldType type;
-
-    private boolean unique;
-
-    private boolean updateable;
-
-    private java.lang.Boolean writeRequiresMasterRead;
-
-    public Field() {
-    }
-
-    public Field(
-           boolean autoNumber,
-           int byteLength,
-           boolean calculated,
-           java.lang.String calculatedFormula,
-           boolean caseSensitive,
-           java.lang.String controllerName,
-           boolean createable,
-           boolean custom,
-           java.lang.String defaultValueFormula,
-           boolean defaultedOnCreate,
-           java.lang.Boolean dependentPicklist,
-           boolean deprecatedAndHidden,
-           int digits,
-           java.lang.Boolean externalId,
-           boolean filterable,
-           java.lang.Boolean htmlFormatted,
-           boolean idLookup,
-           java.lang.String inlineHelpText,
-           java.lang.String label,
-           int length,
-           java.lang.String name,
-           boolean nameField,
-           java.lang.Boolean namePointing,
-           boolean nillable,
-           com.sforce.soap.partner.PicklistEntry[] picklistValues,
-           int precision,
-           java.lang.String[] referenceTo,
-           java.lang.String relationshipName,
-           java.lang.Integer relationshipOrder,
-           boolean restrictedPicklist,
-           int scale,
-           com.sforce.soap.partner.SoapType soapType,
-           java.lang.Boolean sortable,
-           com.sforce.soap.partner.FieldType type,
-           boolean unique,
-           boolean updateable,
-           java.lang.Boolean writeRequiresMasterRead) {
-           this.autoNumber = autoNumber;
-           this.byteLength = byteLength;
-           this.calculated = calculated;
-           this.calculatedFormula = calculatedFormula;
-           this.caseSensitive = caseSensitive;
-           this.controllerName = controllerName;
-           this.createable = createable;
-           this.custom = custom;
-           this.defaultValueFormula = defaultValueFormula;
-           this.defaultedOnCreate = defaultedOnCreate;
-           this.dependentPicklist = dependentPicklist;
-           this.deprecatedAndHidden = deprecatedAndHidden;
-           this.digits = digits;
-           this.externalId = externalId;
-           this.filterable = filterable;
-           this.htmlFormatted = htmlFormatted;
-           this.idLookup = idLookup;
-           this.inlineHelpText = inlineHelpText;
-           this.label = label;
-           this.length = length;
-           this.name = name;
-           this.nameField = nameField;
-           this.namePointing = namePointing;
-           this.nillable = nillable;
-           this.picklistValues = picklistValues;
-           this.precision = precision;
-           this.referenceTo = referenceTo;
-           this.relationshipName = relationshipName;
-           this.relationshipOrder = relationshipOrder;
-           this.restrictedPicklist = restrictedPicklist;
-           this.scale = scale;
-           this.soapType = soapType;
-           this.sortable = sortable;
-           this.type = type;
-           this.unique = unique;
-           this.updateable = updateable;
-           this.writeRequiresMasterRead = writeRequiresMasterRead;
-    }
-
+    protected boolean autoNumber;
+    protected int byteLength;
+    protected boolean calculated;
+    protected String calculatedFormula;
+    protected boolean caseSensitive;
+    protected String controllerName;
+    protected boolean createable;
+    protected boolean custom;
+    protected String defaultValueFormula;
+    protected boolean defaultedOnCreate;
+    protected Boolean dependentPicklist;
+    protected boolean deprecatedAndHidden;
+    protected int digits;
+    protected Boolean externalId;
+    protected boolean filterable;
+    protected Boolean htmlFormatted;
+    protected boolean idLookup;
+    protected String inlineHelpText;
+    @XmlElement(required = true)
+    protected String label;
+    protected int length;
+    @XmlElement(required = true)
+    protected String name;
+    protected boolean nameField;
+    protected Boolean namePointing;
+    protected boolean nillable;
+    @XmlElement(nillable = true)
+    protected List<PicklistEntry> picklistValues;
+    protected int precision;
+    @XmlElement(nillable = true)
+    protected List<String> referenceTo;
+    protected String relationshipName;
+    protected Integer relationshipOrder;
+    protected boolean restrictedPicklist;
+    protected int scale;
+    @XmlElement(required = true)
+    protected SoapType soapType;
+    protected Boolean sortable;
+    @XmlElement(required = true)
+    protected FieldType type;
+    protected boolean unique;
+    protected boolean updateable;
+    protected Boolean writeRequiresMasterRead;
 
     /**
-     * Gets the autoNumber value for this Field.
+     * Gets the value of the autoNumber property.
      * 
-     * @return autoNumber
      */
     public boolean isAutoNumber() {
         return autoNumber;
     }
 
-
     /**
-     * Sets the autoNumber value for this Field.
+     * Sets the value of the autoNumber property.
      * 
-     * @param autoNumber
      */
-    public void setAutoNumber(boolean autoNumber) {
-        this.autoNumber = autoNumber;
+    public void setAutoNumber(boolean value) {
+        this.autoNumber = value;
     }
 
-
     /**
-     * Gets the byteLength value for this Field.
+     * Gets the value of the byteLength property.
      * 
-     * @return byteLength
      */
     public int getByteLength() {
         return byteLength;
     }
 
-
     /**
-     * Sets the byteLength value for this Field.
+     * Sets the value of the byteLength property.
      * 
-     * @param byteLength
      */
-    public void setByteLength(int byteLength) {
-        this.byteLength = byteLength;
+    public void setByteLength(int value) {
+        this.byteLength = value;
     }
 
-
     /**
-     * Gets the calculated value for this Field.
+     * Gets the value of the calculated property.
      * 
-     * @return calculated
      */
     public boolean isCalculated() {
         return calculated;
     }
 
-
     /**
-     * Sets the calculated value for this Field.
+     * Sets the value of the calculated property.
      * 
-     * @param calculated
      */
-    public void setCalculated(boolean calculated) {
-        this.calculated = calculated;
+    public void setCalculated(boolean value) {
+        this.calculated = value;
     }
 
-
     /**
-     * Gets the calculatedFormula value for this Field.
+     * Gets the value of the calculatedFormula property.
      * 
-     * @return calculatedFormula
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getCalculatedFormula() {
+    public String getCalculatedFormula() {
         return calculatedFormula;
     }
 
-
     /**
-     * Sets the calculatedFormula value for this Field.
+     * Sets the value of the calculatedFormula property.
      * 
-     * @param calculatedFormula
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setCalculatedFormula(java.lang.String calculatedFormula) {
-        this.calculatedFormula = calculatedFormula;
+    public void setCalculatedFormula(String value) {
+        this.calculatedFormula = value;
     }
 
-
     /**
-     * Gets the caseSensitive value for this Field.
+     * Gets the value of the caseSensitive property.
      * 
-     * @return caseSensitive
      */
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
 
-
     /**
-     * Sets the caseSensitive value for this Field.
+     * Sets the value of the caseSensitive property.
      * 
-     * @param caseSensitive
      */
-    public void setCaseSensitive(boolean caseSensitive) {
-        this.caseSensitive = caseSensitive;
+    public void setCaseSensitive(boolean value) {
+        this.caseSensitive = value;
     }
 
-
     /**
-     * Gets the controllerName value for this Field.
+     * Gets the value of the controllerName property.
      * 
-     * @return controllerName
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getControllerName() {
+    public String getControllerName() {
         return controllerName;
     }
 
-
     /**
-     * Sets the controllerName value for this Field.
+     * Sets the value of the controllerName property.
      * 
-     * @param controllerName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setControllerName(java.lang.String controllerName) {
-        this.controllerName = controllerName;
+    public void setControllerName(String value) {
+        this.controllerName = value;
     }
 
-
     /**
-     * Gets the createable value for this Field.
+     * Gets the value of the createable property.
      * 
-     * @return createable
      */
     public boolean isCreateable() {
         return createable;
     }
 
-
     /**
-     * Sets the createable value for this Field.
+     * Sets the value of the createable property.
      * 
-     * @param createable
      */
-    public void setCreateable(boolean createable) {
-        this.createable = createable;
+    public void setCreateable(boolean value) {
+        this.createable = value;
     }
 
-
     /**
-     * Gets the custom value for this Field.
+     * Gets the value of the custom property.
      * 
-     * @return custom
      */
     public boolean isCustom() {
         return custom;
     }
 
-
     /**
-     * Sets the custom value for this Field.
+     * Sets the value of the custom property.
      * 
-     * @param custom
      */
-    public void setCustom(boolean custom) {
-        this.custom = custom;
+    public void setCustom(boolean value) {
+        this.custom = value;
     }
 
-
     /**
-     * Gets the defaultValueFormula value for this Field.
+     * Gets the value of the defaultValueFormula property.
      * 
-     * @return defaultValueFormula
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getDefaultValueFormula() {
+    public String getDefaultValueFormula() {
         return defaultValueFormula;
     }
 
-
     /**
-     * Sets the defaultValueFormula value for this Field.
+     * Sets the value of the defaultValueFormula property.
      * 
-     * @param defaultValueFormula
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setDefaultValueFormula(java.lang.String defaultValueFormula) {
-        this.defaultValueFormula = defaultValueFormula;
+    public void setDefaultValueFormula(String value) {
+        this.defaultValueFormula = value;
     }
 
-
     /**
-     * Gets the defaultedOnCreate value for this Field.
+     * Gets the value of the defaultedOnCreate property.
      * 
-     * @return defaultedOnCreate
      */
     public boolean isDefaultedOnCreate() {
         return defaultedOnCreate;
     }
 
-
     /**
-     * Sets the defaultedOnCreate value for this Field.
+     * Sets the value of the defaultedOnCreate property.
      * 
-     * @param defaultedOnCreate
      */
-    public void setDefaultedOnCreate(boolean defaultedOnCreate) {
-        this.defaultedOnCreate = defaultedOnCreate;
+    public void setDefaultedOnCreate(boolean value) {
+        this.defaultedOnCreate = value;
     }
 
-
     /**
-     * Gets the dependentPicklist value for this Field.
+     * Gets the value of the dependentPicklist property.
      * 
-     * @return dependentPicklist
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getDependentPicklist() {
+    public Boolean isDependentPicklist() {
         return dependentPicklist;
     }
 
-
     /**
-     * Sets the dependentPicklist value for this Field.
+     * Sets the value of the dependentPicklist property.
      * 
-     * @param dependentPicklist
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setDependentPicklist(java.lang.Boolean dependentPicklist) {
-        this.dependentPicklist = dependentPicklist;
+    public void setDependentPicklist(Boolean value) {
+        this.dependentPicklist = value;
     }
 
-
     /**
-     * Gets the deprecatedAndHidden value for this Field.
+     * Gets the value of the deprecatedAndHidden property.
      * 
-     * @return deprecatedAndHidden
      */
     public boolean isDeprecatedAndHidden() {
         return deprecatedAndHidden;
     }
 
-
     /**
-     * Sets the deprecatedAndHidden value for this Field.
+     * Sets the value of the deprecatedAndHidden property.
      * 
-     * @param deprecatedAndHidden
      */
-    public void setDeprecatedAndHidden(boolean deprecatedAndHidden) {
-        this.deprecatedAndHidden = deprecatedAndHidden;
+    public void setDeprecatedAndHidden(boolean value) {
+        this.deprecatedAndHidden = value;
     }
 
-
     /**
-     * Gets the digits value for this Field.
+     * Gets the value of the digits property.
      * 
-     * @return digits
      */
     public int getDigits() {
         return digits;
     }
 
-
     /**
-     * Sets the digits value for this Field.
+     * Sets the value of the digits property.
      * 
-     * @param digits
      */
-    public void setDigits(int digits) {
-        this.digits = digits;
+    public void setDigits(int value) {
+        this.digits = value;
     }
 
-
     /**
-     * Gets the externalId value for this Field.
+     * Gets the value of the externalId property.
      * 
-     * @return externalId
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getExternalId() {
+    public Boolean isExternalId() {
         return externalId;
     }
 
-
     /**
-     * Sets the externalId value for this Field.
+     * Sets the value of the externalId property.
      * 
-     * @param externalId
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setExternalId(java.lang.Boolean externalId) {
-        this.externalId = externalId;
+    public void setExternalId(Boolean value) {
+        this.externalId = value;
     }
 
-
     /**
-     * Gets the filterable value for this Field.
+     * Gets the value of the filterable property.
      * 
-     * @return filterable
      */
     public boolean isFilterable() {
         return filterable;
     }
 
-
     /**
-     * Sets the filterable value for this Field.
+     * Sets the value of the filterable property.
      * 
-     * @param filterable
      */
-    public void setFilterable(boolean filterable) {
-        this.filterable = filterable;
+    public void setFilterable(boolean value) {
+        this.filterable = value;
     }
 
-
     /**
-     * Gets the htmlFormatted value for this Field.
+     * Gets the value of the htmlFormatted property.
      * 
-     * @return htmlFormatted
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getHtmlFormatted() {
+    public Boolean isHtmlFormatted() {
         return htmlFormatted;
     }
 
-
     /**
-     * Sets the htmlFormatted value for this Field.
+     * Sets the value of the htmlFormatted property.
      * 
-     * @param htmlFormatted
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setHtmlFormatted(java.lang.Boolean htmlFormatted) {
-        this.htmlFormatted = htmlFormatted;
+    public void setHtmlFormatted(Boolean value) {
+        this.htmlFormatted = value;
     }
 
-
     /**
-     * Gets the idLookup value for this Field.
+     * Gets the value of the idLookup property.
      * 
-     * @return idLookup
      */
     public boolean isIdLookup() {
         return idLookup;
     }
 
-
     /**
-     * Sets the idLookup value for this Field.
+     * Sets the value of the idLookup property.
      * 
-     * @param idLookup
      */
-    public void setIdLookup(boolean idLookup) {
-        this.idLookup = idLookup;
+    public void setIdLookup(boolean value) {
+        this.idLookup = value;
     }
 
-
     /**
-     * Gets the inlineHelpText value for this Field.
+     * Gets the value of the inlineHelpText property.
      * 
-     * @return inlineHelpText
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getInlineHelpText() {
+    public String getInlineHelpText() {
         return inlineHelpText;
     }
 
-
     /**
-     * Sets the inlineHelpText value for this Field.
+     * Sets the value of the inlineHelpText property.
      * 
-     * @param inlineHelpText
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setInlineHelpText(java.lang.String inlineHelpText) {
-        this.inlineHelpText = inlineHelpText;
+    public void setInlineHelpText(String value) {
+        this.inlineHelpText = value;
     }
 
-
     /**
-     * Gets the label value for this Field.
+     * Gets the value of the label property.
      * 
-     * @return label
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getLabel() {
+    public String getLabel() {
         return label;
     }
 
-
     /**
-     * Sets the label value for this Field.
+     * Sets the value of the label property.
      * 
-     * @param label
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setLabel(java.lang.String label) {
-        this.label = label;
+    public void setLabel(String value) {
+        this.label = value;
     }
 
-
     /**
-     * Gets the length value for this Field.
+     * Gets the value of the length property.
      * 
-     * @return length
      */
     public int getLength() {
         return length;
     }
 
-
     /**
-     * Sets the length value for this Field.
+     * Sets the value of the length property.
      * 
-     * @param length
      */
-    public void setLength(int length) {
-        this.length = length;
+    public void setLength(int value) {
+        this.length = value;
     }
 
-
     /**
-     * Gets the name value for this Field.
+     * Gets the value of the name property.
      * 
-     * @return name
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String getName() {
+    public String getName() {
         return name;
     }
 
-
     /**
-     * Sets the name value for this Field.
+     * Sets the value of the name property.
      * 
-     * @param name
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setName(java.lang.String name) {
-        this.name = name;
+    public void setName(String value) {
+        this.name = value;
     }
 
-
     /**
-     * Gets the nameField value for this Field.
+     * Gets the value of the nameField property.
      * 
-     * @return nameField
      */
     public boolean isNameField() {
         return nameField;
     }
 
-
     /**
-     * Sets the nameField value for this Field.
+     * Sets the value of the nameField property.
      * 
-     * @param nameField
      */
-    public void setNameField(boolean nameField) {
-        this.nameField = nameField;
+    public void setNameField(boolean value) {
+        this.nameField = value;
     }
 
-
     /**
-     * Gets the namePointing value for this Field.
+     * Gets the value of the namePointing property.
      * 
-     * @return namePointing
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getNamePointing() {
+    public Boolean isNamePointing() {
         return namePointing;
     }
 
-
     /**
-     * Sets the namePointing value for this Field.
+     * Sets the value of the namePointing property.
      * 
-     * @param namePointing
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setNamePointing(java.lang.Boolean namePointing) {
-        this.namePointing = namePointing;
+    public void setNamePointing(Boolean value) {
+        this.namePointing = value;
     }
 
-
     /**
-     * Gets the nillable value for this Field.
+     * Gets the value of the nillable property.
      * 
-     * @return nillable
      */
     public boolean isNillable() {
         return nillable;
     }
 
-
     /**
-     * Sets the nillable value for this Field.
+     * Sets the value of the nillable property.
      * 
-     * @param nillable
      */
-    public void setNillable(boolean nillable) {
-        this.nillable = nillable;
+    public void setNillable(boolean value) {
+        this.nillable = value;
     }
 
-
     /**
-     * Gets the picklistValues value for this Field.
+     * Gets the value of the picklistValues property.
      * 
-     * @return picklistValues
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the picklistValues property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getPicklistValues().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link PicklistEntry }
+     * 
+     * 
      */
-    public com.sforce.soap.partner.PicklistEntry[] getPicklistValues() {
-        return picklistValues;
+    public List<PicklistEntry> getPicklistValues() {
+        if (picklistValues == null) {
+            picklistValues = new ArrayList<PicklistEntry>();
+        }
+        return this.picklistValues;
     }
-
 
     /**
-     * Sets the picklistValues value for this Field.
+     * Gets the value of the precision property.
      * 
-     * @param picklistValues
-     */
-    public void setPicklistValues(com.sforce.soap.partner.PicklistEntry[] picklistValues) {
-        this.picklistValues = picklistValues;
-    }
-
-    public com.sforce.soap.partner.PicklistEntry getPicklistValues(int i) {
-        return this.picklistValues[i];
-    }
-
-    public void setPicklistValues(int i, com.sforce.soap.partner.PicklistEntry _value) {
-        this.picklistValues[i] = _value;
-    }
-
-
-    /**
-     * Gets the precision value for this Field.
-     * 
-     * @return precision
      */
     public int getPrecision() {
         return precision;
     }
 
+    /**
+     * Sets the value of the precision property.
+     * 
+     */
+    public void setPrecision(int value) {
+        this.precision = value;
+    }
 
     /**
-     * Sets the precision value for this Field.
+     * Gets the value of the referenceTo property.
      * 
-     * @param precision
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the referenceTo property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getReferenceTo().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
      */
-    public void setPrecision(int precision) {
-        this.precision = precision;
+    public List<String> getReferenceTo() {
+        if (referenceTo == null) {
+            referenceTo = new ArrayList<String>();
+        }
+        return this.referenceTo;
     }
-
 
     /**
-     * Gets the referenceTo value for this Field.
+     * Gets the value of the relationshipName property.
      * 
-     * @return referenceTo
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public java.lang.String[] getReferenceTo() {
-        return referenceTo;
-    }
-
-
-    /**
-     * Sets the referenceTo value for this Field.
-     * 
-     * @param referenceTo
-     */
-    public void setReferenceTo(java.lang.String[] referenceTo) {
-        this.referenceTo = referenceTo;
-    }
-
-    public java.lang.String getReferenceTo(int i) {
-        return this.referenceTo[i];
-    }
-
-    public void setReferenceTo(int i, java.lang.String _value) {
-        this.referenceTo[i] = _value;
-    }
-
-
-    /**
-     * Gets the relationshipName value for this Field.
-     * 
-     * @return relationshipName
-     */
-    public java.lang.String getRelationshipName() {
+    public String getRelationshipName() {
         return relationshipName;
     }
 
-
     /**
-     * Sets the relationshipName value for this Field.
+     * Sets the value of the relationshipName property.
      * 
-     * @param relationshipName
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
      */
-    public void setRelationshipName(java.lang.String relationshipName) {
-        this.relationshipName = relationshipName;
+    public void setRelationshipName(String value) {
+        this.relationshipName = value;
     }
 
-
     /**
-     * Gets the relationshipOrder value for this Field.
+     * Gets the value of the relationshipOrder property.
      * 
-     * @return relationshipOrder
+     * @return
+     *     possible object is
+     *     {@link Integer }
+     *     
      */
-    public java.lang.Integer getRelationshipOrder() {
+    public Integer getRelationshipOrder() {
         return relationshipOrder;
     }
 
-
     /**
-     * Sets the relationshipOrder value for this Field.
+     * Sets the value of the relationshipOrder property.
      * 
-     * @param relationshipOrder
+     * @param value
+     *     allowed object is
+     *     {@link Integer }
+     *     
      */
-    public void setRelationshipOrder(java.lang.Integer relationshipOrder) {
-        this.relationshipOrder = relationshipOrder;
+    public void setRelationshipOrder(Integer value) {
+        this.relationshipOrder = value;
     }
 
-
     /**
-     * Gets the restrictedPicklist value for this Field.
+     * Gets the value of the restrictedPicklist property.
      * 
-     * @return restrictedPicklist
      */
     public boolean isRestrictedPicklist() {
         return restrictedPicklist;
     }
 
-
     /**
-     * Sets the restrictedPicklist value for this Field.
+     * Sets the value of the restrictedPicklist property.
      * 
-     * @param restrictedPicklist
      */
-    public void setRestrictedPicklist(boolean restrictedPicklist) {
-        this.restrictedPicklist = restrictedPicklist;
+    public void setRestrictedPicklist(boolean value) {
+        this.restrictedPicklist = value;
     }
 
-
     /**
-     * Gets the scale value for this Field.
+     * Gets the value of the scale property.
      * 
-     * @return scale
      */
     public int getScale() {
         return scale;
     }
 
-
     /**
-     * Sets the scale value for this Field.
+     * Sets the value of the scale property.
      * 
-     * @param scale
      */
-    public void setScale(int scale) {
-        this.scale = scale;
+    public void setScale(int value) {
+        this.scale = value;
     }
 
-
     /**
-     * Gets the soapType value for this Field.
+     * Gets the value of the soapType property.
      * 
-     * @return soapType
+     * @return
+     *     possible object is
+     *     {@link SoapType }
+     *     
      */
-    public com.sforce.soap.partner.SoapType getSoapType() {
+    public SoapType getSoapType() {
         return soapType;
     }
 
-
     /**
-     * Sets the soapType value for this Field.
+     * Sets the value of the soapType property.
      * 
-     * @param soapType
+     * @param value
+     *     allowed object is
+     *     {@link SoapType }
+     *     
      */
-    public void setSoapType(com.sforce.soap.partner.SoapType soapType) {
-        this.soapType = soapType;
+    public void setSoapType(SoapType value) {
+        this.soapType = value;
     }
 
-
     /**
-     * Gets the sortable value for this Field.
+     * Gets the value of the sortable property.
      * 
-     * @return sortable
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getSortable() {
+    public Boolean isSortable() {
         return sortable;
     }
 
-
     /**
-     * Sets the sortable value for this Field.
+     * Sets the value of the sortable property.
      * 
-     * @param sortable
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setSortable(java.lang.Boolean sortable) {
-        this.sortable = sortable;
+    public void setSortable(Boolean value) {
+        this.sortable = value;
     }
 
-
     /**
-     * Gets the type value for this Field.
+     * Gets the value of the type property.
      * 
-     * @return type
+     * @return
+     *     possible object is
+     *     {@link FieldType }
+     *     
      */
-    public com.sforce.soap.partner.FieldType getType() {
+    public FieldType getType() {
         return type;
     }
 
-
     /**
-     * Sets the type value for this Field.
+     * Sets the value of the type property.
      * 
-     * @param type
+     * @param value
+     *     allowed object is
+     *     {@link FieldType }
+     *     
      */
-    public void setType(com.sforce.soap.partner.FieldType type) {
-        this.type = type;
+    public void setType(FieldType value) {
+        this.type = value;
     }
 
-
     /**
-     * Gets the unique value for this Field.
+     * Gets the value of the unique property.
      * 
-     * @return unique
      */
     public boolean isUnique() {
         return unique;
     }
 
-
     /**
-     * Sets the unique value for this Field.
+     * Sets the value of the unique property.
      * 
-     * @param unique
      */
-    public void setUnique(boolean unique) {
-        this.unique = unique;
+    public void setUnique(boolean value) {
+        this.unique = value;
     }
 
-
     /**
-     * Gets the updateable value for this Field.
+     * Gets the value of the updateable property.
      * 
-     * @return updateable
      */
     public boolean isUpdateable() {
         return updateable;
     }
 
-
     /**
-     * Sets the updateable value for this Field.
+     * Sets the value of the updateable property.
      * 
-     * @param updateable
      */
-    public void setUpdateable(boolean updateable) {
-        this.updateable = updateable;
+    public void setUpdateable(boolean value) {
+        this.updateable = value;
     }
 
-
     /**
-     * Gets the writeRequiresMasterRead value for this Field.
+     * Gets the value of the writeRequiresMasterRead property.
      * 
-     * @return writeRequiresMasterRead
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
      */
-    public java.lang.Boolean getWriteRequiresMasterRead() {
+    public Boolean isWriteRequiresMasterRead() {
         return writeRequiresMasterRead;
     }
 
-
     /**
-     * Sets the writeRequiresMasterRead value for this Field.
+     * Sets the value of the writeRequiresMasterRead property.
      * 
-     * @param writeRequiresMasterRead
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
      */
-    public void setWriteRequiresMasterRead(java.lang.Boolean writeRequiresMasterRead) {
-        this.writeRequiresMasterRead = writeRequiresMasterRead;
-    }
-
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
-        if (!(obj instanceof Field)) return false;
-        Field other = (Field) obj;
-        if (obj == null) return false;
-        if (this == obj) return true;
-        if (__equalsCalc != null) {
-            return (__equalsCalc == obj);
-        }
-        __equalsCalc = obj;
-        boolean _equals;
-        _equals = true && 
-            this.autoNumber == other.isAutoNumber() &&
-            this.byteLength == other.getByteLength() &&
-            this.calculated == other.isCalculated() &&
-            ((this.calculatedFormula==null && other.getCalculatedFormula()==null) || 
-             (this.calculatedFormula!=null &&
-              this.calculatedFormula.equals(other.getCalculatedFormula()))) &&
-            this.caseSensitive == other.isCaseSensitive() &&
-            ((this.controllerName==null && other.getControllerName()==null) || 
-             (this.controllerName!=null &&
-              this.controllerName.equals(other.getControllerName()))) &&
-            this.createable == other.isCreateable() &&
-            this.custom == other.isCustom() &&
-            ((this.defaultValueFormula==null && other.getDefaultValueFormula()==null) || 
-             (this.defaultValueFormula!=null &&
-              this.defaultValueFormula.equals(other.getDefaultValueFormula()))) &&
-            this.defaultedOnCreate == other.isDefaultedOnCreate() &&
-            ((this.dependentPicklist==null && other.getDependentPicklist()==null) || 
-             (this.dependentPicklist!=null &&
-              this.dependentPicklist.equals(other.getDependentPicklist()))) &&
-            this.deprecatedAndHidden == other.isDeprecatedAndHidden() &&
-            this.digits == other.getDigits() &&
-            ((this.externalId==null && other.getExternalId()==null) || 
-             (this.externalId!=null &&
-              this.externalId.equals(other.getExternalId()))) &&
-            this.filterable == other.isFilterable() &&
-            ((this.htmlFormatted==null && other.getHtmlFormatted()==null) || 
-             (this.htmlFormatted!=null &&
-              this.htmlFormatted.equals(other.getHtmlFormatted()))) &&
-            this.idLookup == other.isIdLookup() &&
-            ((this.inlineHelpText==null && other.getInlineHelpText()==null) || 
-             (this.inlineHelpText!=null &&
-              this.inlineHelpText.equals(other.getInlineHelpText()))) &&
-            ((this.label==null && other.getLabel()==null) || 
-             (this.label!=null &&
-              this.label.equals(other.getLabel()))) &&
-            this.length == other.getLength() &&
-            ((this.name==null && other.getName()==null) || 
-             (this.name!=null &&
-              this.name.equals(other.getName()))) &&
-            this.nameField == other.isNameField() &&
-            ((this.namePointing==null && other.getNamePointing()==null) || 
-             (this.namePointing!=null &&
-              this.namePointing.equals(other.getNamePointing()))) &&
-            this.nillable == other.isNillable() &&
-            ((this.picklistValues==null && other.getPicklistValues()==null) || 
-             (this.picklistValues!=null &&
-              java.util.Arrays.equals(this.picklistValues, other.getPicklistValues()))) &&
-            this.precision == other.getPrecision() &&
-            ((this.referenceTo==null && other.getReferenceTo()==null) || 
-             (this.referenceTo!=null &&
-              java.util.Arrays.equals(this.referenceTo, other.getReferenceTo()))) &&
-            ((this.relationshipName==null && other.getRelationshipName()==null) || 
-             (this.relationshipName!=null &&
-              this.relationshipName.equals(other.getRelationshipName()))) &&
-            ((this.relationshipOrder==null && other.getRelationshipOrder()==null) || 
-             (this.relationshipOrder!=null &&
-              this.relationshipOrder.equals(other.getRelationshipOrder()))) &&
-            this.restrictedPicklist == other.isRestrictedPicklist() &&
-            this.scale == other.getScale() &&
-            ((this.soapType==null && other.getSoapType()==null) || 
-             (this.soapType!=null &&
-              this.soapType.equals(other.getSoapType()))) &&
-            ((this.sortable==null && other.getSortable()==null) || 
-             (this.sortable!=null &&
-              this.sortable.equals(other.getSortable()))) &&
-            ((this.type==null && other.getType()==null) || 
-             (this.type!=null &&
-              this.type.equals(other.getType()))) &&
-            this.unique == other.isUnique() &&
-            this.updateable == other.isUpdateable() &&
-            ((this.writeRequiresMasterRead==null && other.getWriteRequiresMasterRead()==null) || 
-             (this.writeRequiresMasterRead!=null &&
-              this.writeRequiresMasterRead.equals(other.getWriteRequiresMasterRead())));
-        __equalsCalc = null;
-        return _equals;
-    }
-
-    private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
-        if (__hashCodeCalc) {
-            return 0;
-        }
-        __hashCodeCalc = true;
-        int _hashCode = 1;
-        _hashCode += (isAutoNumber() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += getByteLength();
-        _hashCode += (isCalculated() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getCalculatedFormula() != null) {
-            _hashCode += getCalculatedFormula().hashCode();
-        }
-        _hashCode += (isCaseSensitive() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getControllerName() != null) {
-            _hashCode += getControllerName().hashCode();
-        }
-        _hashCode += (isCreateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isCustom() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getDefaultValueFormula() != null) {
-            _hashCode += getDefaultValueFormula().hashCode();
-        }
-        _hashCode += (isDefaultedOnCreate() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getDependentPicklist() != null) {
-            _hashCode += getDependentPicklist().hashCode();
-        }
-        _hashCode += (isDeprecatedAndHidden() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += getDigits();
-        if (getExternalId() != null) {
-            _hashCode += getExternalId().hashCode();
-        }
-        _hashCode += (isFilterable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getHtmlFormatted() != null) {
-            _hashCode += getHtmlFormatted().hashCode();
-        }
-        _hashCode += (isIdLookup() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getInlineHelpText() != null) {
-            _hashCode += getInlineHelpText().hashCode();
-        }
-        if (getLabel() != null) {
-            _hashCode += getLabel().hashCode();
-        }
-        _hashCode += getLength();
-        if (getName() != null) {
-            _hashCode += getName().hashCode();
-        }
-        _hashCode += (isNameField() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getNamePointing() != null) {
-            _hashCode += getNamePointing().hashCode();
-        }
-        _hashCode += (isNillable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getPicklistValues() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getPicklistValues());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getPicklistValues(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        _hashCode += getPrecision();
-        if (getReferenceTo() != null) {
-            for (int i=0;
-                 i<java.lang.reflect.Array.getLength(getReferenceTo());
-                 i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(getReferenceTo(), i);
-                if (obj != null &&
-                    !obj.getClass().isArray()) {
-                    _hashCode += obj.hashCode();
-                }
-            }
-        }
-        if (getRelationshipName() != null) {
-            _hashCode += getRelationshipName().hashCode();
-        }
-        if (getRelationshipOrder() != null) {
-            _hashCode += getRelationshipOrder().hashCode();
-        }
-        _hashCode += (isRestrictedPicklist() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += getScale();
-        if (getSoapType() != null) {
-            _hashCode += getSoapType().hashCode();
-        }
-        if (getSortable() != null) {
-            _hashCode += getSortable().hashCode();
-        }
-        if (getType() != null) {
-            _hashCode += getType().hashCode();
-        }
-        _hashCode += (isUnique() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        _hashCode += (isUpdateable() ? Boolean.TRUE : Boolean.FALSE).hashCode();
-        if (getWriteRequiresMasterRead() != null) {
-            _hashCode += getWriteRequiresMasterRead().hashCode();
-        }
-        __hashCodeCalc = false;
-        return _hashCode;
-    }
-
-    // Type metadata
-    private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(Field.class, true);
-
-    static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "Field"));
-        org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("autoNumber");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "autoNumber"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("byteLength");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "byteLength"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("calculated");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "calculated"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("calculatedFormula");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "calculatedFormula"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("caseSensitive");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "caseSensitive"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("controllerName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "controllerName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("createable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "createable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("custom");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "custom"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("defaultValueFormula");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "defaultValueFormula"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("defaultedOnCreate");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "defaultedOnCreate"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("dependentPicklist");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "dependentPicklist"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("deprecatedAndHidden");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "deprecatedAndHidden"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("digits");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "digits"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("externalId");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "externalId"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("filterable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "filterable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("htmlFormatted");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "htmlFormatted"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("idLookup");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "idLookup"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("inlineHelpText");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "inlineHelpText"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("label");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "label"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("length");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "length"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("name");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "name"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("nameField");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "nameField"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("namePointing");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "namePointing"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("nillable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "nillable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("picklistValues");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "picklistValues"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "PicklistEntry"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("precision");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "precision"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("referenceTo");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "referenceTo"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(true);
-        elemField.setMaxOccursUnbounded(true);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("relationshipName");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "relationshipName"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("relationshipOrder");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "relationshipOrder"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("restrictedPicklist");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "restrictedPicklist"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("scale");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "scale"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("soapType");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "soapType"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "soapType"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("sortable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "sortable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("type");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "type"));
-        elemField.setXmlType(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "fieldType"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("unique");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "unique"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("updateable");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "updateable"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-        elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("writeRequiresMasterRead");
-        elemField.setXmlName(new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "writeRequiresMasterRead"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
-        elemField.setMinOccurs(0);
-        elemField.setNillable(false);
-        typeDesc.addFieldDesc(elemField);
-    }
-
-    /**
-     * Return type metadata object
-     */
-    public static org.apache.axis.description.TypeDesc getTypeDesc() {
-        return typeDesc;
-    }
-
-    /**
-     * Get Custom Serializer
-     */
-    public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanSerializer(
-            _javaType, _xmlType, typeDesc);
-    }
-
-    /**
-     * Get Custom Deserializer
-     */
-    public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
-           javax.xml.namespace.QName _xmlType) {
-        return 
-          new  org.apache.axis.encoding.ser.BeanDeserializer(
-            _javaType, _xmlType, typeDesc);
+    public void setWriteRequiresMasterRead(Boolean value) {
+        this.writeRequiresMasterRead = value;
     }
 
 }

@@ -23,39 +23,79 @@
 package com.metamatrix.connector.text;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
+
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
+import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.unittest.RealMetadataFactory;
 
 public class Util {
 
 	static void helpTestExecution(String vdb, String descriptorFile, String sql, int maxBatchSize, int expectedRowCount) throws Exception {
 		descriptorFile = UnitTestUtil.getTestDataPath() + File.separator + descriptorFile;
-		Properties connProps = new Properties();
-		connProps.load(new FileInputStream(descriptorFile));
-	    connProps.put(TextPropertyNames.DESCRIPTOR_FILE, descriptorFile);
-	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS, "yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
-	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS_DELIMITER, ","); //$NON-NLS-1$
-	    ConnectorHost host = new ConnectorHost(new TextConnector(), connProps, UnitTestUtil.getTestDataPath() + File.separator + vdb, false);
+	   
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descriptorFile);
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
+        Mockito.stub(config.getDateResultFormats()).toReturn("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy");
+        Mockito.stub(config.getDateResultFormatsDelimiter()).toReturn(",");
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));	    
+	    
+	    ConnectorHost host = new ConnectorHost(new TextConnector(), config, UnitTestUtil.getTestDataPath() + File.separator + vdb);
 	    List results = host.executeCommand(sql);
 	    Assert.assertEquals("Total row count doesn't match expected size. ", expectedRowCount, results.size()); //$NON-NLS-1$
 	}
 
 	public static ConnectorHost getConnectorHostWithFakeMetadata(String descriptorFile) throws Exception {
-		Properties connProps = new Properties();
-		connProps.load(new FileInputStream(descriptorFile));
-	    connProps.put(TextPropertyNames.DESCRIPTOR_FILE, descriptorFile);
-	    connProps.put(TextPropertyNames.COLUMN_CNT_MUST_MATCH_MODEL, "true");
-	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS, "yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
-	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS_DELIMITER, ","); //$NON-NLS-1$
-	    ConnectorHost host = new ConnectorHost(new TextConnector(), connProps, FakeTranslationFactory.getInstance().getTextTranslationUtility(), false);
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descriptorFile);
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
+        Mockito.stub(config.getDateResultFormats()).toReturn("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy");
+        Mockito.stub(config.getDateResultFormatsDelimiter()).toReturn(",");
+        Mockito.stub(config.isEnforceColumnCount()).toReturn(true);
+        
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));	
+	    
+	    
+	    ConnectorHost host = new ConnectorHost(new TextConnector(), config, new TranslationUtility(exampleText()));
 	    return host;
 	}
+	
+    public static QueryMetadataInterface exampleText() { 
+    	MetadataStore store = new MetadataStore();
+        // Create models
+        Schema lib = RealMetadataFactory.createPhysicalModel("Text", store); //$NON-NLS-1$
+
+        // Create physical groups
+        Table library = RealMetadataFactory.createPhysicalGroup("Library", lib); //$NON-NLS-1$
+        
+        // Create physical elements
+        String[] elemNames = new String[] { 
+             "ID", "PDate", "Author" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+             
+        String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.DATE, 
+            DataTypeManager.DefaultDataTypes.STRING };
+               
+        List<Column> libe1 = RealMetadataFactory.createElements( library, elemNames, elemTypes);
+        int index = 0;
+        for (Column column : libe1) {
+			column.setNameInSource(String.valueOf(index++));
+		}
+        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, null);
+    }
 
 }

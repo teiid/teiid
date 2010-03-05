@@ -25,12 +25,12 @@ package com.metamatrix.connector.text;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -49,10 +49,14 @@ public class TestTextConnection extends TestCase {
         String descFile = UnitTestUtil.getTestDataPath() + "/EmployeeTestDataSalary.txt"; //$NON-NLS-1$
         props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
         
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        
         TextConnector txr = new TextConnector();
-        txr.start(env);
-        TextConnection conn = (TextConnection)txr.getConnection(null);
+        txr.initialize(config);
+        
+        TextConnection conn = (TextConnection)txr.getConnection();
         
         Map actualProps = conn.metadataProps;
         assertNotNull(actualProps);
@@ -65,11 +69,13 @@ public class TestTextConnection extends TestCase {
         Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
             
-        props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
         
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
-    	txr.start(env);
+        txr.initialize(config);
     }
 
     /**
@@ -79,13 +85,14 @@ public class TestTextConnection extends TestCase {
         Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
             
-        props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
-        props.put(TextPropertyNames.PARTIAL_STARTUP_ALLOWED, "false"); //$NON-NLS-1$
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(false);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
         try {
-        	txr.start(env);
+        	txr.initialize(config);
         	fail("expected exception"); //$NON-NLS-1$
         } catch (ConnectorException e) {
             String m1 = "Error parsing property string text.library2.location"; //$NON-NLS-1$
@@ -106,12 +113,13 @@ public class TestTextConnection extends TestCase {
         Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
         
-        props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
-        props.put(TextPropertyNames.PARTIAL_STARTUP_ALLOWED, "true"); //$NON-NLS-1$
+        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
+        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
+        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
+        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
-    	txr.start(env);
+    	txr.initialize(config);
     }
 
 }
