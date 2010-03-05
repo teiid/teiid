@@ -22,41 +22,40 @@
 
 package org.teiid.connector.jdbc.oracle;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Properties;
-
-import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */
 public class TestOracleConvertModifier {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
+    
     private static Translator TRANSLATOR = new OracleSQLTranslator(); 
     
     @BeforeClass public static void oneTimeSetup() throws Exception {
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
     
-    public String helpGetString(IExpression expr) throws Exception {
+    public String helpGetString(Expression expr) throws Exception {
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
         
         SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor(); 
         sqlVisitor.append(expr);  
@@ -64,8 +63,8 @@ public class TestOracleConvertModifier {
         return sqlVisitor.toString();        
     }
 
-    public void helpTest(IExpression srcExpression, String tgtType, String expectedExpression) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+    public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
             Arrays.asList( 
                 srcExpression,
                 LANG_FACTORY.createLiteral(tgtType, String.class)),

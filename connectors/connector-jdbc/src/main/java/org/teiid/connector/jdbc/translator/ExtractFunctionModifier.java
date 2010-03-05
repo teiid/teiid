@@ -28,9 +28,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.connector.language.SQLReservedWords.Tokens;
 
 
 /**
@@ -68,18 +69,18 @@ public class ExtractFunctionModifier extends FunctionModifier {
     public ExtractFunctionModifier() {
     }
     
-    public List<?> translate(IFunction function) {
-        List<IExpression> args = function.getParameters();
+    public List<?> translate(Function function) {
+        List<Expression> args = function.getParameters();
         List<Object> objs = new ArrayList<Object>();
         objs.add("EXTRACT("); //$NON-NLS-1$
         objs.add(FUNCTION_PART_MAP.get(function.getName().toLowerCase()));
-        objs.add(SQLReservedWords.SPACE);
+        objs.add(Tokens.SPACE);
         objs.add(SQLReservedWords.FROM); 
-        objs.add(SQLReservedWords.SPACE);               
+        objs.add(Tokens.SPACE);               
         objs.add(args.get(0));
-        objs.add(SQLReservedWords.RPAREN);
+        objs.add(Tokens.RPAREN);
         if (function.getName().toLowerCase().equals(SourceSystemFunctions.DAYOFWEEK)) {
-        	objs.add(0, SQLReservedWords.LPAREN);
+        	objs.add(0, Tokens.LPAREN);
         	objs.add(" + 1)"); //$NON-NLS-1$
         }
         return objs;

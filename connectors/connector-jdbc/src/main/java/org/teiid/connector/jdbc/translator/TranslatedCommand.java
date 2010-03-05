@@ -29,8 +29,8 @@ import java.util.List;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Literal;
 import org.teiid.connector.visitor.util.CollectorVisitor;
 
 
@@ -64,7 +64,7 @@ public class TranslatedCommand {
      * @param command ICommand to be translated
      * @throws ConnectorException 
      */
-    public void translateCommand(ICommand command) throws ConnectorException {
+    public void translateCommand(Command command) throws ConnectorException {
     	SQLConversionVisitor sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
         sqlConversionVisitor.setExecutionContext(context);
         if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
@@ -83,8 +83,8 @@ public class TranslatedCommand {
      * @param command
      * @return
      */
-    private boolean hasBindValue(ICommand command) {
-        for (ILiteral l : CollectorVisitor.collectObjects(ILiteral.class, command)) {
+    private boolean hasBindValue(Command command) {
+        for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
             if (l.isBindValue() || isBindEligible(l)) {
                 return true;
             }
@@ -96,7 +96,7 @@ public class TranslatedCommand {
      * @param l
      * @return
      */
-    static boolean isBindEligible(ILiteral l) {
+    static boolean isBindEligible(Literal l) {
 		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())

@@ -27,9 +27,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SQLReservedWords;
 
 import junit.framework.TestCase;
 
@@ -49,23 +49,23 @@ public class TestEscapeSyntaxModifier extends TestCase {
     }
 
     public void testEscape() {
-        ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral("arg1", String.class); //$NON-NLS-1$
-        ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral("arg2", String.class);//$NON-NLS-1$
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("concat", Arrays.asList( arg1, arg2), Integer.class); //$NON-NLS-1$
+        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral("arg1", String.class); //$NON-NLS-1$
+        Literal arg2 = CommandBuilder.getLanuageFactory().createLiteral("arg2", String.class);//$NON-NLS-1$
+        Function func = CommandBuilder.getLanuageFactory().createFunction("concat", Arrays.asList( arg1, arg2), Integer.class); //$NON-NLS-1$
                 
         helpTest(func, "{fn concat('arg1', 'arg2')}");
     }
     
     public void testTimestampAdd() {
-        ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); 
-        ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);
-        ILiteral arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
+        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); 
+        Literal arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);
+        Literal arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
+        Function func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
                 
         helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts '1899-12-31 00:00:00.0'})}");
     }
 
-	private void helpTest(IFunction func, String expected) {
+	private void helpTest(Function func, String expected) {
         EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
 
         List parts = mod.translate(func);

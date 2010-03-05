@@ -31,9 +31,9 @@ import java.util.Set;
 
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 /**
  * Adds mod (remainder) support for non-integral types
@@ -42,13 +42,13 @@ public class ModFunctionModifier extends AliasModifier {
 
 	private Set<Class> supportedTypes = new HashSet<Class>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
 
-	private ILanguageFactory langFactory;
+	private LanguageFactory langFactory;
 
-    public ModFunctionModifier(String modFunction, ILanguageFactory langFactory) {
+    public ModFunctionModifier(String modFunction, LanguageFactory langFactory) {
     	this(modFunction, langFactory, null);
     }
 
-    public ModFunctionModifier(String modFunction, ILanguageFactory langFactory, Collection<Class> supportedTypes) {
+    public ModFunctionModifier(String modFunction, LanguageFactory langFactory, Collection<Class> supportedTypes) {
     	super(modFunction);
     	this.langFactory = langFactory;
     	if (supportedTypes != null) {
@@ -57,26 +57,26 @@ public class ModFunctionModifier extends AliasModifier {
     }
     
     @Override
-    public List<?> translate(IFunction function) {
-    	List<IExpression> expressions = function.getParameters();
+    public List<?> translate(Function function) {
+    	List<Expression> expressions = function.getParameters();
 		Class<?> type = function.getType();
 		if (supportedTypes.contains(type)) {
 			modify(function);
 			return null;
 		}
 		//x % y => x - sign(x) * floor(abs(x / y)) * y
-		IFunction divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<IExpression>(expressions), type); 
+		Function divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<Expression>(expressions), type); 
 
-		IFunction abs = langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(divide), type);
+		Function abs = langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(divide), type);
 		
-		IFunction floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type); 
+		Function floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type); 
 		
-		IFunction sign = langFactory.createFunction(SourceSystemFunctions.SIGN, Arrays.asList(expressions.get(0)), type);
+		Function sign = langFactory.createFunction(SourceSystemFunctions.SIGN, Arrays.asList(expressions.get(0)), type);
 		
-		List<? extends IExpression> multArgs = Arrays.asList(sign, floor, langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(expressions.get(1)), type));
-		IFunction mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type); 
+		List<? extends Expression> multArgs = Arrays.asList(sign, floor, langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(expressions.get(1)), type));
+		Function mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type); 
 
-		List<IExpression> minusArgs = Arrays.asList(expressions.get(0), mult);
+		List<Expression> minusArgs = Arrays.asList(expressions.get(0), mult);
 		
 		return Arrays.asList(langFactory.createFunction(SourceSystemFunctions.SUBTRACT_OP, minusArgs, type)); 
 	}

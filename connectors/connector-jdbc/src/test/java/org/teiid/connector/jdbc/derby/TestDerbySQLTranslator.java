@@ -22,14 +22,12 @@
 
 package org.teiid.connector.jdbc.derby;
 
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
 
 /**
  */
@@ -40,7 +38,7 @@ public class TestDerbySQLTranslator {
     @BeforeClass
     public static void setUp() throws ConnectorException {
         TRANSLATOR = new DerbySQLTranslator();        
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
     
     @Test

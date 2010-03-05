@@ -23,9 +23,9 @@
 package org.teiid.connector.jdbc.derby;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.db2.DB2SQLTranslator;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
@@ -40,7 +40,7 @@ public class DerbySQLTranslator extends DB2SQLTranslator {
 	private String version = DerbyCapabilities.TEN_1;
 	
 	@Override
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+	public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
 		super.initialize(env);
 		//additional derby functions
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
@@ -54,11 +54,6 @@ public class DerbySQLTranslator extends DB2SQLTranslator {
     @Override
     public boolean addSourceComment() {
         return false;
-    }
-    
-    @Override
-    public String getDefaultConnectionTestQuery() {
-    	return "Select 0 from sys.systables where 1 = 2"; //$NON-NLS-1$
     }
     
     @Override

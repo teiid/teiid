@@ -22,17 +22,16 @@
 
 package org.teiid.connector.jdbc.access;
 
-import java.util.Properties;
-
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.access.AccessSQLTranslator;
-import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
+import org.teiid.connector.jdbc.translator.TranslatedCommand;
+import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.Command;
+
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 
@@ -46,7 +45,7 @@ public class TestAccessSQLTranslator extends TestCase {
     static {
         try {
             TRANSLATOR = new AccessSQLTranslator();        
-            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+            TRANSLATOR.initialize( Mockito.mock(JDBCManagedConnectionFactory.class));
         } catch(ConnectorException e) {
             e.printStackTrace();    
         }
@@ -54,9 +53,9 @@ public class TestAccessSQLTranslator extends TestCase {
     
     public void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
-        ICommand obj = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(input);
+        Command obj = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(input);
         
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), TRANSLATOR);
+        TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), TRANSLATOR);
         tc.translateCommand(obj);
         
         

@@ -26,24 +26,24 @@ import java.util.List;
 
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 
 public class Log10FunctionModifier extends FunctionModifier {
     
-    private ILanguageFactory languageFactory;
+    private LanguageFactory languageFactory;
 
-    public Log10FunctionModifier(ILanguageFactory languageFactory) {
+    public Log10FunctionModifier(LanguageFactory languageFactory) {
         this.languageFactory = languageFactory;
     }
 
     @Override
-    public List<?> translate(IFunction function) {
+    public List<?> translate(Function function) {
         function.setName("log"); //$NON-NLS-1$
         
-        List<IExpression> args = function.getParameters();
+        List<Expression> args = function.getParameters();
         args.add(args.get(0));
         args.set(0, languageFactory.createLiteral(new Integer(10), TypeFacility.RUNTIME_TYPES.INTEGER));
         return null;

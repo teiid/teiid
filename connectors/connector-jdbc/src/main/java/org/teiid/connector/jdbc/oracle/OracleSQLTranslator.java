@@ -36,10 +36,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
@@ -47,20 +47,20 @@ import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetQuery.Operation;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SQLReservedWords.Tokens;
+import org.teiid.connector.language.SetQuery.Operation;
+import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.visitor.util.CollectorVisitor;
-import org.teiid.connector.visitor.util.SQLReservedWords;
 
 public class OracleSQLTranslator extends Translator {
 
@@ -78,7 +78,7 @@ public class OracleSQLTranslator extends Translator {
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
 	
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
@@ -118,13 +118,13 @@ public class OracleSQLTranslator extends Translator {
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
     		@Override
-    		public List<?> translate(IFunction function) {
+    		public List<?> translate(Function function) {
     			return Arrays.asList("case when ", function.getParameters().get(0), " is null then null else to_date('1970-01-01 ' || to_char(",function.getParameters().get(0),", 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     		}
     	});
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
@@ -140,7 +140,7 @@ public class OracleSQLTranslator extends Translator {
     			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
     	convertModifier.addTypeConversion(new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				if (Number.class.isAssignableFrom(function.getParameters().get(0).getType())) {
 					return Arrays.asList("trunc(", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
@@ -153,24 +153,24 @@ public class OracleSQLTranslator extends Translator {
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
     
-    public void handleInsertSequences(IInsert insert) throws ConnectorException {
+    public void handleInsertSequences(Insert insert) throws ConnectorException {
         /* 
          * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence 
          * then pull the Sequence name out of the name in source of the column.
          */
-    	if (!(insert.getValueSource() instanceof IInsertExpressionValueSource)) {
+    	if (!(insert.getValueSource() instanceof ExpressionValueSource)) {
     		return;
     	}
-    	IInsertExpressionValueSource values = (IInsertExpressionValueSource)insert.getValueSource();
-    	List<Element> allElements = insert.getGroup().getMetadataObject().getChildren();
+    	ExpressionValueSource values = (ExpressionValueSource)insert.getValueSource();
+    	List<Column> allElements = insert.getTable().getMetadataObject().getColumns();
     	if (allElements.size() == values.getValues().size()) {
     		return;
     	}
     	
     	int index = 0;
-    	List<IElement> elements = insert.getElements();
+    	List<ColumnReference> elements = insert.getColumns();
     	
-    	for (Element element : allElements) {
+    	for (Column element : allElements) {
     		if (!element.isAutoIncremented()) {
     			continue;
     		}
@@ -193,38 +193,38 @@ public class OracleSQLTranslator extends Translator {
     		
             String sequence = name.substring(seqIndex + SEQUENCE.length());
             
-            int delimiterIndex = sequence.indexOf(SQLReservedWords.DOT);
+            int delimiterIndex = sequence.indexOf(Tokens.DOT);
             if (delimiterIndex == -1) {
             	throw new ConnectorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name); //$NON-NLS-1$ //$NON-NLS-2$
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);
                 
-            IGroup sequenceGroup = this.getLanguageFactory().createGroup(sequenceGroupName, null, null);
-            IElement sequenceElement = this.getLanguageFactory().createElement(sequenceElementName, sequenceGroup, null, element.getJavaType());
-            insert.getElements().add(index, this.getLanguageFactory().createElement(element.getName(), insert.getGroup(), element, element.getJavaType()));
+            NamedTable sequenceGroup = this.getLanguageFactory().createNamedTable(sequenceGroupName, null, null);
+            ColumnReference sequenceElement = this.getLanguageFactory().createColumnReference(sequenceElementName, sequenceGroup, null, element.getJavaType());
+            insert.getColumns().add(index, this.getLanguageFactory().createColumnReference(element.getName(), insert.getTable(), element, element.getJavaType()));
             values.getValues().add(index, sequenceElement);
 		}
     }
     
     @Override
-    public List<?> translateCommand(ICommand command, ExecutionContext context) {
-    	if (command instanceof IInsert) {
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof Insert) {
     		try {
-				handleInsertSequences((IInsert)command);
+				handleInsertSequences((Insert)command);
 			} catch (ConnectorException e) {
 				throw new RuntimeException(e);
 			}
     	}
     	
-    	if (!(command instanceof IQueryCommand)) {
+    	if (!(command instanceof QueryExpression)) {
     		return null;
     	}
-		IQueryCommand queryCommand = (IQueryCommand)command;
+		QueryExpression queryCommand = (QueryExpression)command;
 		if (queryCommand.getLimit() == null) {
 			return null;
     	}
-		ILimit limit = queryCommand.getLimit();
+		Limit limit = queryCommand.getLimit();
 		queryCommand.setLimit(null);
     	List<Object> parts = new ArrayList<Object>();
     	parts.add("SELECT "); //$NON-NLS-1$
@@ -234,8 +234,8 @@ public class OracleSQLTranslator extends Translator {
     	 * we just use the projected names 
     	 */
     	boolean allAliased = true;
-    	for (ISelectSymbol selectSymbol : queryCommand.getProjectedQuery().getSelect().getSelectSymbols()) {
-			if (!selectSymbol.hasAlias()) {
+    	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
+			if (selectSymbol.getAlias() == null) {
 				allAliased = false;
 				break;
 			}
@@ -283,7 +283,7 @@ public class OracleSQLTranslator extends Translator {
     }
     
     @Override
-    public String getSourceComment(ExecutionContext context, ICommand command) {
+    public String getSourceComment(ExecutionContext context, Command command) {
     	String comment = super.getSourceComment(context, command);
     	
     	if (context != null) {
@@ -297,7 +297,7 @@ public class OracleSQLTranslator extends Translator {
 		    }
     	}
     	
-		if (command instanceof IQuery) {
+		if (command instanceof Select) {
 	        //
 	        // This simple algorithm determines the hint which will be added to the
 	        // query.
@@ -305,8 +305,8 @@ public class OracleSQLTranslator extends Translator {
 	        // (returned as a collection)
 	        // Then we check if any of those functions are sdo_relate
 	        // If so, the ORDERED hint is added, if not, it isn't
-	        Collection<IFunction> col = CollectorVisitor.collectObjects(IFunction.class, command);
-	        for (IFunction func : col) {
+	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
+	        for (Function func : col) {
 	            if (func.getName().equalsIgnoreCase(RELATE)) {
 	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
 	            }
@@ -329,13 +329,13 @@ public class OracleSQLTranslator extends Translator {
         if (useIndex >= 0) {
         	String name = element.substring(0, useIndex);
         	if (group != null) {
-        		return group + SQLReservedWords.DOT + name;
+        		return group + Tokens.DOT + name;
         	}
         	return name;
         }
 
         // Check if the group name should be discarded
-        if((group != null && group.equalsIgnoreCase(DUAL)) || element.equalsIgnoreCase(ROWNUM)) {
+        if((group != null && DUAL.equalsIgnoreCase(group)) || element.equalsIgnoreCase(ROWNUM)) {
             // Strip group if group or element are pseudo-columns
             return element;
         }
@@ -347,12 +347,7 @@ public class OracleSQLTranslator extends Translator {
     public boolean hasTimeType() {
     	return false;
     }
-    
-    @Override
-    public String getDefaultConnectionTestQuery() {
-    	return "Select 'x' from DUAL"; //$NON-NLS-1$
-    }
-    
+       
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
     	if(param == null && Object.class.equals(paramType)){

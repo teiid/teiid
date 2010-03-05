@@ -25,19 +25,17 @@ package org.teiid.connector.jdbc.translator;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
 
 /**
  * Test <code>ModFunctionModifier</code> by invoking its methods with varying 
@@ -45,7 +43,7 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
  */
 public class TestModFunctionModifier extends TestCase {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     /**
      * Constructor for TestModFunctionModifier.
@@ -67,7 +65,7 @@ public class TestModFunctionModifier extends TestCase {
      * @return On success, the modified expression.
      * @throws Exception
      */
-    public void helpTestMod(IExpression[] args, String expectedStr) throws Exception {
+    public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
     	this.helpTestMod("MOD", args, expectedStr); //$NON-NLS-1$
     }
 
@@ -85,23 +83,23 @@ public class TestModFunctionModifier extends TestCase {
      * @return On success, the modified expression.
      * @throws Exception
      */
-    public void helpTestMod(final String modFunctionName, IExpression[] args, String expectedStr) throws Exception {
-    	IExpression param1 = args[0];
-    	IExpression param2 = args[1];
+    public void helpTestMod(final String modFunctionName, Expression[] args, String expectedStr) throws Exception {
+    	Expression param1 = args[0];
+    	Expression param2 = args[1];
     	
-    	IFunction func = LANG_FACTORY.createFunction(modFunctionName,
+    	Function func = LANG_FACTORY.createFunction(modFunctionName,
             Arrays.asList(param1, param2), param1.getType());
 
     	Translator trans = new Translator() {
 			@Override
-			public void initialize(ConnectorEnvironment env)
+			public void initialize(JDBCManagedConnectionFactory env)
 					throws ConnectorException {
 				super.initialize(env);
 				registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(modFunctionName, getLanguageFactory()));
 			}
     	};
     	
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  
@@ -110,7 +108,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
      * MOD(x,y).  {@link ModFunctionModifier} will be constructed without 
      * specifying a function name or a supported type list.
@@ -118,7 +116,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoIntConst() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
         };
@@ -127,7 +125,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
      * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" but without a supported type list.
@@ -135,7 +133,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoIntConst2() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
         };
@@ -144,7 +142,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * x % y using {@link Integer} constants for both parameters returns (x % y).  
      * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
@@ -152,7 +150,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoIntConst5() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
         		LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)           
         };
@@ -160,7 +158,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
      * MOD(x,y).  {@link ModFunctionModifier} will be constructed without 
      * specifying a function name or a supported type list.
@@ -168,7 +166,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoLongConst() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Long(10), Long.class),
                 LANG_FACTORY.createLiteral(new Long(6), Long.class)           
         };
@@ -176,7 +174,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
      * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" but without a supported type list.
@@ -184,7 +182,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoLongConst2() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Long(10), Long.class),
                 LANG_FACTORY.createLiteral(new Long(6), Long.class)           
         };
@@ -192,7 +190,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * x % y using {@link Long} constants for both parameters returns (x % y).  
      * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
@@ -200,7 +198,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoLongConst5() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Long(10), Long.class),
                 LANG_FACTORY.createLiteral(new Long(6), Long.class)           
         };
@@ -208,7 +206,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link Float} constants for both parameters returns 
      * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
@@ -216,7 +214,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoFloatConst() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new Float(10), Float.class),
                 LANG_FACTORY.createLiteral(new Float(6), Float.class)           
         };
@@ -224,7 +222,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link BigInteger} constants for both parameters returns 
      * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
@@ -232,7 +230,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoBigIntConst() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new BigInteger("10"), BigInteger.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new BigInteger("6"), BigInteger.class) //$NON-NLS-1$
         };
@@ -240,7 +238,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(x,y) using {@link BigDecimal} constants for both parameters returns 
      * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
@@ -248,7 +246,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testTwoBigDecConst() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
                 LANG_FACTORY.createLiteral(new BigDecimal("10"), BigDecimal.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new BigDecimal("6"), BigDecimal.class) //$NON-NLS-1$
         };
@@ -256,7 +254,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
      * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
@@ -264,15 +262,15 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testOneIntElemOneIntConst() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
+        Expression[] args = new Expression[] {
+                LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
         };
         helpTestMod(args, "MOD(e1, 6)"); //$NON-NLS-1$
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
      * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" but without a supported type 
@@ -281,8 +279,8 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testOneIntElemOneIntConst2() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
+        Expression[] args = new Expression[] {
+                LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
         };
         // mod / default 
@@ -290,7 +288,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
      * parameters returns (e1 % y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
@@ -298,8 +296,8 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testOneIntElemOneIntConst5() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
+        Expression[] args = new Expression[] {
+                LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
         };
         // % / default 
@@ -307,7 +305,7 @@ public class TestModFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(Function)} to validate a call to 
      * MOD(e1,y) using a {@link BigDecimal} element and a {@link BigDecimal} 
      * constant for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
      * {@link ModFunctionModifier} will be constructed without specifying a 
@@ -316,8 +314,8 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void testOneBigDecElemOneBigDecConst() throws Exception {
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createElement("e1", null, null, BigDecimal.class), //$NON-NLS-1$
+        Expression[] args = new Expression[] {
+                LANG_FACTORY.createColumnReference("e1", null, null, BigDecimal.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral(new BigDecimal(6), BigDecimal.class)
         };
         // default / default

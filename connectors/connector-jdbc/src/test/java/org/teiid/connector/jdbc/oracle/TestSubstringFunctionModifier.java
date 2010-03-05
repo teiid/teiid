@@ -23,24 +23,21 @@
 package org.teiid.connector.jdbc.oracle;
 
 import java.util.Arrays;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 /**
  */
 public class TestSubstringFunctionModifier extends TestCase {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
 
     /**
@@ -51,12 +48,12 @@ public class TestSubstringFunctionModifier extends TestCase {
         super(name);
     }
 
-    public void helpTestMod(IExpression[] args, String expectedStr) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
+    public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
+        Function func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
             Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  
@@ -65,7 +62,7 @@ public class TestSubstringFunctionModifier extends TestCase {
     }
 
     public void testTwoArgs() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(new Integer(1), Integer.class)           
         }; 
@@ -73,7 +70,7 @@ public class TestSubstringFunctionModifier extends TestCase {
     }
 
     public void testThreeArgsWithConstant() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(new Integer(3), Integer.class),
             LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
@@ -82,16 +79,16 @@ public class TestSubstringFunctionModifier extends TestCase {
     }
 
     public void testThreeArgsWithElement() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
-            LANG_FACTORY.createElement("e1", null, null, Integer.class), //$NON-NLS-1$
+            LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
         }; 
         helpTestMod(args, "substr('a.b.c', e1, 1)"); //$NON-NLS-1$
     }
 
     public void testThreeArgsWithNull() throws Exception {
-        IExpression[] args = new IExpression[] {
+        Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(null, Integer.class),
             LANG_FACTORY.createLiteral(new Integer(5), Integer.class) 

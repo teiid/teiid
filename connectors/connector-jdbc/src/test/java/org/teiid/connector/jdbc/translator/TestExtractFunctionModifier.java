@@ -24,28 +24,26 @@ package org.teiid.connector.jdbc.translator;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */
 public class TestExtractFunctionModifier extends TestCase {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     /**
      * Constructor for TestMonthFunctionModifier.
@@ -55,15 +53,15 @@ public class TestExtractFunctionModifier extends TestCase {
         super(name);
     }
 
-    public void helpTestMod(IExpression c, String expectedStr, String target) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction(target, 
+    public void helpTestMod(Expression c, String expectedStr, String target) throws Exception {
+        Function func = LANG_FACTORY.createFunction(target, 
             Arrays.asList(c),
             Integer.class);
         
         ExtractFunctionModifier mod = new ExtractFunctionModifier ();
         Translator trans = new Translator();
         trans.registerFunctionModifier(target, mod);
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
 
@@ -71,45 +69,45 @@ public class TestExtractFunctionModifier extends TestCase {
         assertEquals(expectedStr, sqlVisitor.toString());
     }
     public void test1() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, "EXTRACT(MONTH FROM {d '2004-01-21'})" , "month");   //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test2() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, "EXTRACT(MONTH FROM {ts '2004-01-21 17:05:00.0'})", "month"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test3() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, "EXTRACT(YEAR FROM {d '2004-01-21'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void test4() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, "EXTRACT(YEAR FROM {ts '2004-01-21 17:05:00.0'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test5() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, "EXTRACT(DAY FROM {d '2004-01-21'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void test6() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, "EXTRACT(DAY FROM {ts '2004-01-21 17:05:00.0'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     public void test11() throws Exception {
-        IGroup group = LANG_FACTORY.createGroup(null, "group", null); //$NON-NLS-1$
-        IElement elem = LANG_FACTORY.createElement("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
-        helpTestMod(elem, "EXTRACT(DAY FROM col)", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+        NamedTable group = LANG_FACTORY.createNamedTable("group", null, null); //$NON-NLS-1$
+        ColumnReference elem = LANG_FACTORY.createColumnReference("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
+        helpTestMod(elem, "EXTRACT(DAY FROM group.col)", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void test12() throws Exception {
-        IGroup group = LANG_FACTORY.createGroup(null, "group", null); //$NON-NLS-1$
-        IElement elem = LANG_FACTORY.createElement("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
-        helpTestMod(elem, "(EXTRACT(DOW FROM col) + 1)", SourceSystemFunctions.DAYOFWEEK); //$NON-NLS-1$
+        NamedTable group = LANG_FACTORY.createNamedTable("group", null, null); //$NON-NLS-1$
+        ColumnReference elem = LANG_FACTORY.createColumnReference("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
+        helpTestMod(elem, "(EXTRACT(DOW FROM group.col) + 1)", SourceSystemFunctions.DAYOFWEEK); //$NON-NLS-1$
     }
     
 }

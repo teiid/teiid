@@ -48,22 +48,21 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.JDBCCapabilities;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.Argument.Direction;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
 
 /**
@@ -130,7 +129,7 @@ public class Translator {
     };
 
 	private Map<String, FunctionModifier> functionModifiers = new HashMap<String, FunctionModifier>();
-    private ConnectorEnvironment environment;
+    private JDBCManagedConnectionFactory environment;
     
     private boolean useComments;
     private boolean usePreparedStatements;
@@ -138,8 +137,6 @@ public class Translator {
     private TypeFacility typeFacility;
 
     private volatile boolean initialConnection;
-    private String connectionTestQuery;
-    private int isValidTimeout = -1;
     private boolean trimChar;
     
     /**
@@ -148,11 +145,11 @@ public class Translator {
      * @param metadata
      * @throws ConnectorException
      */
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         this.environment = env;
         this.typeFacility = env.getTypeFacility();
 
-        String timeZone = env.getProperties().getProperty(JDBCPropertyNames.DATABASE_TIME_ZONE);
+        String timeZone = this.environment.getDatabaseTimeZone();
         if(timeZone != null && timeZone.trim().length() > 0) {
         	TimeZone tz = TimeZone.getTimeZone(timeZone);
             if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
@@ -160,11 +157,9 @@ public class Translator {
             }
         }   
         
-        this.useComments = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, false);
-        this.usePreparedStatements = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_BIND_VARIABLES, false);
-    	this.connectionTestQuery = env.getProperties().getProperty(JDBCPropertyNames.CONNECTION_TEST_QUERY, getDefaultConnectionTestQuery());
-    	this.isValidTimeout = PropertiesUtils.getIntProperty(env.getProperties(), JDBCPropertyNames.IS_VALID_TIMEOUT, -1);   
-    	this.trimChar = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.TRIM_STRINGS, false);
+        this.useComments = this.environment.isUseCommentsInSourceQuery();
+        this.usePreparedStatements = this.environment.isUseBindVariables();
+        trimChar = this.environment.isTrimStrings();
     }
     
     /**
@@ -186,66 +181,62 @@ public class Translator {
 	}
     
     /**
-     * Gets the {@link ILanguageFactory}
+     * Gets the {@link LanguageFactory}
      */
-    public final ILanguageFactory getLanguageFactory() {
+    public final LanguageFactory getLanguageFactory() {
     	return environment.getLanguageFactory();
     }
 
     /**
-     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if to rely on the default translation.  Override with care.
      * @param command
      * @param context
      * @return
      */
-    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		List<?> parts = null;
-    	if (obj instanceof IFunction) {
-    		IFunction function = (IFunction)obj;
+    	if (obj instanceof Function) {
+    		Function function = (Function)obj;
     		if (functionModifiers != null) {
     			FunctionModifier modifier = functionModifiers.get(function.getName().toLowerCase());
     			if (modifier != null) {
     				parts = modifier.translate(function);
     			}
     		}
-    	} else if (obj instanceof ICommand) {
-    		parts = translateCommand((ICommand)obj, context);
-    	} else if (obj instanceof ILimit) {
-    		parts = translateLimit((ILimit)obj, context);
-    	} else if (obj instanceof IElement) {
-    		IElement elem = (IElement)obj;
-    		try {
-    			if (trimChar && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING && elem.getMetadataObject() != null 
-    					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
-    				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new IExpression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
-    			}
-    		} catch (ConnectorException e) {
-    			throw new MetaMatrixRuntimeException(e);
-    		}
+    	} else if (obj instanceof Command) {
+    		parts = translateCommand((Command)obj, context);
+    	} else if (obj instanceof Limit) {
+    		parts = translateLimit((Limit)obj, context);
+    	} else if (obj instanceof ColumnReference) {
+    		ColumnReference elem = (ColumnReference)obj;
+			if (trimChar && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING && elem.getMetadataObject() != null 
+					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
+				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new Expression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
+			}
     	}
     	return parts;
     }
     
     /**
-     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if to rely on the default translation. 
      * @param command
      * @param context
      * @return
      */
-    public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    public List<?> translateCommand(Command command, ExecutionContext context) {
     	return null;
     }
 
     /**
-     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if to rely on the default translation. 
      * @param limit
      * @param context
      * @return
      */
-    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return null;
     }
     
@@ -367,7 +358,7 @@ public class Translator {
     /**
      * Use PreparedStatements (or CallableStatements) as
      * appropriate for all commands.  Bind values will be 
-     * determined by the {@link BindValueVisitor}.  {@link ILiteral#setBindValue(boolean)}
+     * determined by the {@link BindValueVisitor}.  {@link Literal#setBindValue(boolean)}
      * can be used to force a literal to be a bind value.  
      */
     public boolean usePreparedStatements() {
@@ -393,11 +384,11 @@ public class Translator {
     }
     
     /**
-     * Returns the name for a given {@link ISetQuery.Operation}
+     * Returns the name for a given {@link SetQuery.Operation}
      * @param operation
      * @return
      */
-    public String getSetOperationString(ISetQuery.Operation operation) {
+    public String getSetOperationString(SetQuery.Operation operation) {
     	return operation.toString();
     }
     
@@ -407,7 +398,7 @@ public class Translator {
      * @param command
      * @return
      */
-    public String getSourceComment(ExecutionContext context, ICommand command) {
+    public String getSourceComment(ExecutionContext context, Command command) {
 	    if (addSourceComment() && context != null) {
             return COMMENT.get().format(new Object[] {context.getConnectionIdentifier(), context.getRequestIdentifier(), context.getPartIdentifier()});
 	    }
@@ -432,14 +423,6 @@ public class Translator {
     	return 9;
     }
     
-    public String getConnectionTestQuery() {
-		return connectionTestQuery;
-	}
-    
-    public String getDefaultConnectionTestQuery() {
-    	return "select 1"; //$NON-NLS-1$
-    }
-    
     public TypeFacility getTypeFacility() {
     	return typeFacility;
     }
@@ -449,33 +432,28 @@ public class Translator {
      * stored procedures differently, subclasses should override this method
      * if necessary.
      */
-    public ResultSet executeStoredProcedure(CallableStatement statement, TranslatedCommand command) throws SQLException {
+    public ResultSet executeStoredProcedure(CallableStatement statement, TranslatedCommand command, Class<?> returnType) throws SQLException {
         List params = command.getPreparedValues();
         int index = 1;
         
-        Iterator iter = params.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == Direction.RETURN){
-                registerSpecificTypeOfOutParameter(statement,param, index++);
-            }
+        if(returnType != null){
+            registerSpecificTypeOfOutParameter(statement, returnType, index++);
         }
         
-        iter = params.iterator();
+        Iterator iter = params.iterator();
         while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
+            Argument param = (Argument)iter.next();
                     
             if(param.getDirection() == Direction.INOUT){
-                registerSpecificTypeOfOutParameter(statement,param, index);
+                registerSpecificTypeOfOutParameter(statement,param.getType(), index);
             }else if(param.getDirection() == Direction.OUT){
-                registerSpecificTypeOfOutParameter(statement,param, index++);
+                registerSpecificTypeOfOutParameter(statement,param.getType(), index++);
             }
                     
             if(param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT){
-                bindValue(statement, param.getValue(), param.getType(), index++);
+                bindValue(statement, param.getArgumentValue().getValue(), param.getType(), index++);
             }
         }
-        
         boolean resultSetNext = statement.execute();
         
         while (!resultSetNext) {
@@ -496,8 +474,7 @@ public class Translator {
      * @param parameter
      * @throws SQLException
      */
-    protected void registerSpecificTypeOfOutParameter(CallableStatement statement, IParameter param, int index) throws SQLException {
-        Class runtimeType = param.getType();
+    protected void registerSpecificTypeOfOutParameter(CallableStatement statement, Class<?> runtimeType, int index) throws SQLException {
         int typeToSet = TypeFacility.getSQLTypeFromRuntimeType(runtimeType);
         
         statement.registerOutParameter(index,typeToSet);
@@ -763,14 +740,7 @@ public class Translator {
         }
     }
     
-    /**
-     * Returns a positive number if query testing should use the JDBC 4.0 isValid check.
-     * Can be set via the {@link JDBCPropertyNames#IS_VALID_TIMEOUT} property
-     * @return
-     */
-    public int getIsValidTimeout() {
-		return isValidTimeout;
-	}
+
     
     /**
      * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
@@ -798,12 +768,11 @@ public class Translator {
      */
     public ConnectorCapabilities getConnectorCapabilities() throws ConnectorException {
 		// create Capabilities
-		String className = this.environment.getProperties().getProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS);
+		String className = this.environment.getCapabilitiesClass();
 		try {
 			ConnectorCapabilities result = null;
 			if (className != null && className.length() > 0) {
-				result = (ConnectorCapabilities) ReflectionHelper.create(
-						className, null, Thread.currentThread().getContextClassLoader());
+				result = (ConnectorCapabilities) ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
 			} else {
 				result = getDefaultCapabilities().newInstance();
 			}

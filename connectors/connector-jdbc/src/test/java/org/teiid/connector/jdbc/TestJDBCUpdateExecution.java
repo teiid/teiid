@@ -25,26 +25,23 @@ package org.teiid.connector.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Arrays;
-import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.ILiteral;
-
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Literal;
 
 public class TestJDBCUpdateExecution {
 
 	@Test public void testBulkUpdate() throws Exception {
-		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into bqt1.smalla (intkey, intnum) values (1, 2)"); //$NON-NLS-1$
-		ILiteral value = ((ILiteral)((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues().get(0));
-		ILiteral value1 = ((ILiteral)((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues().get(1));
+		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (IntKey, IntNum) values (1, 2)"); //$NON-NLS-1$
+		Literal value = ((Literal)((ExpressionValueSource)((Insert)command).getValueSource()).getValues().get(0));
+		Literal value1 = ((Literal)((ExpressionValueSource)((Insert)command).getValueSource()).getValues().get(1));
 		value.setMultiValued(true);
 		value.setBindValue(true);
 		value.setValue(Arrays.asList(1, 2));
@@ -55,9 +52,12 @@ public class TestJDBCUpdateExecution {
 		PreparedStatement p = Mockito.mock(PreparedStatement.class);
 		Mockito.stub(p.executeBatch()).toReturn(new int [] {1, 1});
 		Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, ?)")).toReturn(p); //$NON-NLS-1$
-		Translator sqlTranslator = new Translator();
-		ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
-		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, sqlTranslator, Mockito.mock(ConnectorLogger.class), new Properties(), context);
+		
+		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
+		Mockito.stub(config.getExtensionTranslationClass()).toReturn(new Translator());
+		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+		
+		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
 		updateExecution.execute();
 		Mockito.verify(p, Mockito.times(2)).addBatch();
 	}

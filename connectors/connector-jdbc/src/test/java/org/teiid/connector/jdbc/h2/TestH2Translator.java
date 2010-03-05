@@ -22,14 +22,11 @@
 
 package org.teiid.connector.jdbc.h2;
 
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
-
-import com.metamatrix.cdk.api.EnvironmentUtility;
 
 public class TestH2Translator {
 	
@@ -38,7 +35,7 @@ public class TestH2Translator {
     @BeforeClass
     public static void setUp() throws ConnectorException {
         TRANSLATOR = new H2Translator();        
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
 	
 	@Test public void testTimestampDiff() throws Exception {

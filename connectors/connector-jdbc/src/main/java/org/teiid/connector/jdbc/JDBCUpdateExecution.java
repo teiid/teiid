@@ -27,26 +27,22 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Literal;
 
 
 /**
  */
-public class JDBCUpdateExecution extends JDBCBaseExecution implements
-                                                          UpdateExecution {
+public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExecution {
 
-	private ICommand command;
+	private Command command;
 	private int[] result;
 	
     /**
@@ -56,12 +52,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
      * @param props
      * @param id
      */
-    public JDBCUpdateExecution(ICommand command, Connection connection,
-                               Translator sqlTranslator,
-                               ConnectorLogger logger,
-                               Properties props,
-                               ExecutionContext context) {
-        super(connection, sqlTranslator, logger, props, context);
+	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCManagedConnectionFactory env) throws ConnectorException {
+        super(connection, context, env);
         this.command = command;
     }
 
@@ -71,8 +63,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
 
     @Override
     public void execute() throws ConnectorException {
-        if (command instanceof IBatchedUpdates) {
-        	result = execute(((IBatchedUpdates)command));
+        if (command instanceof BatchedUpdates) {
+        	result = execute(((BatchedUpdates)command));
         } else {
             // translate command
             TranslatedCommand translatedComm = translateCommand(command);
@@ -82,14 +74,14 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
     }
 
     /**
-     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(org.teiid.connector.language.ICommand[])
+     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(org.teiid.connector.language.Command[])
      * @since 4.2
      */
-    public int[] execute(IBatchedUpdates batchedCommand) throws ConnectorException {
+    public int[] execute(BatchedUpdates batchedCommand) throws ConnectorException {
         boolean succeeded = false;
 
         boolean commitType = getAutoCommit(null);
-        ICommand[] commands = batchedCommand.getUpdateCommands().toArray(new ICommand[batchedCommand.getUpdateCommands().size()]);
+        Command[] commands = batchedCommand.getUpdateCommands().toArray(new Command[batchedCommand.getUpdateCommands().size()]);
         int[] results = new int[commands.length];
 
         TranslatedCommand tCommand = null;
@@ -180,7 +172,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             	PreparedStatement pstatement = getPreparedStatement(sql);
                 int rowCount = 1;
                 for (int i = 0; i< translatedComm.getPreparedValues().size(); i++) {
-                    ILiteral paramValue = (ILiteral)translatedComm.getPreparedValues().get(i);
+                    Literal paramValue = (Literal)translatedComm.getPreparedValues().get(i);
                     if (paramValue.isMultiValued()) {
                     	rowCount = ((List<?>)paramValue.getValue()).size();
                     	break;
@@ -248,6 +240,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         	throw new JDBCExecutionException(err, tCommand);
         } finally {
         	try {
+        		connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
         		connection.setAutoCommit(true);
         	} catch (SQLException err) {
             	throw new JDBCExecutionException(err, tCommand);

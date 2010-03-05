@@ -27,19 +27,17 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.unittest.TimestampUtil;
 
@@ -47,27 +45,27 @@ import com.metamatrix.query.unittest.TimestampUtil;
  */
 public class TestSybaseConvertModifier {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
     private static SybaseSQLTranslator trans = new SybaseSQLTranslator();
     
     @BeforeClass
     public static void setup() throws ConnectorException {
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
     }
     
-    public String helpGetString(IExpression expr) throws Exception {
+    public String helpGetString(Expression expr) throws Exception {
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(expr);  
         return sqlVisitor.toString();        
     }
 
-    private void helpGetString1(IFunction func, String expectedStr) throws Exception {
+    private void helpGetString1(Function func, String expectedStr) throws Exception {
         assertEquals(expectedStr, helpGetString(func)); 
     }
     
-    public void helpTest(IExpression srcExpression, String tgtType, String expectedExpression) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+    public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 srcExpression,
                 LANG_FACTORY.createLiteral(tgtType, String.class)},
             DataTypeManager.getDataTypeClass(tgtType));
@@ -78,8 +76,8 @@ public class TestSybaseConvertModifier {
     
     // original test -- this is not a drop one anymore
     @Test public void testModDrop() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("5", String.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("integer", String.class)     //$NON-NLS-1$
             },
@@ -91,8 +89,8 @@ public class TestSybaseConvertModifier {
     /********************Beginning of cast(date AS INPUT) ******************/
     @Test public void testStringToDate() throws Exception {
         String dateStr = "2003-12-31"; //$NON-NLS-1$
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(dateStr, String.class), 
                 LANG_FACTORY.createLiteral("date", String.class)}, //$NON-NLS-1$
             java.sql.Date.class);
@@ -101,9 +99,9 @@ public class TestSybaseConvertModifier {
     }
     
     @Test public void testTimestampToDate() throws Exception {
-        ILiteral c = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(89, 2, 3, 7, 8, 12, 99999), Timestamp.class); 
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Literal c = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(89, 2, 3, 7, 8, 12, 99999), Timestamp.class); 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 c, 
                 LANG_FACTORY.createLiteral("date", String.class)}, //$NON-NLS-1$
             java.sql.Date.class);
@@ -115,8 +113,8 @@ public class TestSybaseConvertModifier {
     /********************Beginning of cast(time AS INPUT) ******************/
     @Test public void testStringToTime() throws Exception {
         String timeStr = "12:08:07"; //$NON-NLS-1$
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(timeStr, String.class), 
                 LANG_FACTORY.createLiteral("time", String.class)}, //$NON-NLS-1$
             java.sql.Time.class);
@@ -125,9 +123,9 @@ public class TestSybaseConvertModifier {
     }
     
     @Test public void testTimestampToTime() throws Exception {
-        ILiteral c = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(89, 2, 3, 7, 8, 12, 99999), Timestamp.class); 
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Literal c = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(89, 2, 3, 7, 8, 12, 99999), Timestamp.class); 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 c, 
                 LANG_FACTORY.createLiteral("time", String.class)}, //$NON-NLS-1$
             java.sql.Time.class);
@@ -139,8 +137,8 @@ public class TestSybaseConvertModifier {
     /********************Beginning of cast(timestamp AS INPUT) ******************/
     @Test public void testStringToTimestamp() throws Exception {
         String timestampStr = "1989-07-09 12:08:07"; //$NON-NLS-1$
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(timestampStr, String.class), 
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
@@ -149,8 +147,8 @@ public class TestSybaseConvertModifier {
     }
     
     @Test public void testTimeToTimestamp() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(TimestampUtil.createTime(12, 2, 3), java.sql.Time.class), 
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
@@ -159,8 +157,8 @@ public class TestSybaseConvertModifier {
     }
         
     @Test public void testDateToTimestamp() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(TimestampUtil.createDate(89, 2, 3), java.sql.Date.class), 
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
@@ -171,8 +169,8 @@ public class TestSybaseConvertModifier {
 
     /*****************Beginning of cast(string AS input)******************/
     @Test public void testBooleanToStringa() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class),
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
@@ -182,8 +180,8 @@ public class TestSybaseConvertModifier {
     
     @Test public void testTimestampToString() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(ts, Timestamp.class),
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
@@ -193,8 +191,8 @@ public class TestSybaseConvertModifier {
     
     @Test public void testDateToString() throws Exception {
         java.sql.Date d = TimestampUtil.createDate(103, 10, 1);
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(d, java.sql.Date.class),
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
@@ -204,8 +202,8 @@ public class TestSybaseConvertModifier {
     
     @Test public void testTimeToString() throws Exception {
         java.sql.Time t = TimestampUtil.createTime(3, 10, 1);
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(t, java.sql.Time.class),
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
@@ -215,8 +213,8 @@ public class TestSybaseConvertModifier {
     
     @Test public void testBigDecimalToString() throws Exception {
         java.math.BigDecimal m = new java.math.BigDecimal("-123124534.3"); //$NON-NLS-1$
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(m, java.math.BigDecimal.class),
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
@@ -227,8 +225,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(char AS input) ************/
     @Test public void testStringToChar() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("12", String.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("char", Character.class)}, //$NON-NLS-1$
         Character.class);
@@ -239,8 +237,8 @@ public class TestSybaseConvertModifier {
      
     /***************** Beginning of cast(boolean AS input) ************/
     @Test public void testStringToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("true", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -249,8 +247,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testByteToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -259,8 +257,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testShortToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Short((short) 0), Short.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -269,8 +267,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testIntegerToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Integer(1), Integer.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -279,8 +277,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testLongToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Long(1), Long.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -289,8 +287,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigIntegerToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigInteger("1"), java.math.BigInteger.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -299,8 +297,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testFloatToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Float((float)1.0), Float.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -309,8 +307,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testDoubleToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Double(1.0), Double.class),  
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -319,8 +317,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigDecimalToBoolean() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigDecimal("1.0"), java.math.BigDecimal.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("boolean", Boolean.class)}, //$NON-NLS-1$
             Boolean.class);
@@ -333,8 +331,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(byte AS input) ************/
     @Test public void testStringToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("12", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("byte", Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -343,8 +341,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToBytea() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class),
                 LANG_FACTORY.createLiteral("byte", Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -353,8 +351,8 @@ public class TestSybaseConvertModifier {
     }  
     
     @Test public void testShortToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Short((short) 123), Short.class),
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -363,8 +361,8 @@ public class TestSybaseConvertModifier {
     } 
 
     @Test public void testIntegerToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Integer(1232321), Integer.class),
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -373,8 +371,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testLongToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Long(1231232341), Long.class),
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -383,8 +381,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigIntegerToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigInteger("123"), java.math.BigInteger.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -393,8 +391,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testFloatToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Float((float) 123.0), Float.class),
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -403,8 +401,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testDoubleToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Double(1.0), Double.class),
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -413,8 +411,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigDecimalToByte() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigDecimal("12.3"), java.math.BigDecimal.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("byte",  Byte.class)}, //$NON-NLS-1$
             Byte.class);
@@ -426,8 +424,8 @@ public class TestSybaseConvertModifier {
 
     /*****************Beginning of cast(short AS input)************/
     @Test public void testStringToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("123", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("short", Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -436,8 +434,8 @@ public class TestSybaseConvertModifier {
     }    
     
     @Test public void testBooleanToShorta() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class),
                 LANG_FACTORY.createLiteral("short", Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -446,8 +444,8 @@ public class TestSybaseConvertModifier {
     }  
     
     @Test public void testByteToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Byte((byte) 12), Byte.class),
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -456,8 +454,8 @@ public class TestSybaseConvertModifier {
     } 
 
     @Test public void testIntegerToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Integer(1232321), Integer.class),
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -466,8 +464,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testLongToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Long(1231232341), Long.class),
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -476,8 +474,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigIntegerToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigInteger("123"), java.math.BigInteger.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -486,8 +484,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testFloatToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Float((float) 123.0), Float.class),
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -496,8 +494,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testDoubleToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Double(1.0), Double.class),
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -506,8 +504,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigDecimalToShort() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigDecimal("12.3"), java.math.BigDecimal.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("short",  Short.class)}, //$NON-NLS-1$
             Short.class);
@@ -518,8 +516,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(integer AS input) ************/
     @Test public void testStringToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("12332", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("integer", Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -528,8 +526,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToIntegera() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class),
                 LANG_FACTORY.createLiteral("integer", Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -538,8 +536,8 @@ public class TestSybaseConvertModifier {
     }  
     
     @Test public void testBooleanToIntegerb() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(Boolean.FALSE, Boolean.class),
                 LANG_FACTORY.createLiteral("integer", Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -548,8 +546,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testByteToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Byte((byte)12), Byte.class),
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -558,8 +556,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testShortToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Short((short)1243 ), Short.class),
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -568,8 +566,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testLongToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Long(1231232341), Long.class),
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -578,8 +576,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigIntegerToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigInteger("123"), java.math.BigInteger.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -588,8 +586,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testFloatToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Float((float) 123.0), Float.class),
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -598,8 +596,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testDoubleToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new Double(1.0), Double.class),
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -608,8 +606,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBigDecimalToInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral(new java.math.BigDecimal("12.3"), java.math.BigDecimal.class), //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("integer",  Integer.class)}, //$NON-NLS-1$
             Integer.class);
@@ -621,8 +619,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(long AS input) ************/
     @Test public void testStringToLong() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("12332131413", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("long", Long.class)}, //$NON-NLS-1$
             Long.class);
@@ -631,8 +629,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToLonga() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), LANG_FACTORY.createLiteral("long", Long.class)}, //$NON-NLS-1$
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), LANG_FACTORY.createLiteral("long", Long.class)}, //$NON-NLS-1$
             Long.class);
 
         helpGetString1(func, "cast(1 AS numeric(19,0))"); //$NON-NLS-1$
@@ -642,8 +640,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(biginteger AS input) ************/
     @Test public void testStringToBigInteger() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("12323143241414", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("biginteger", java.math.BigInteger.class)}, //$NON-NLS-1$
             java.math.BigInteger.class);
@@ -652,8 +650,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToBigIntegera() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), LANG_FACTORY.createLiteral("biginteger", java.math.BigInteger.class)}, //$NON-NLS-1$
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), LANG_FACTORY.createLiteral("biginteger", java.math.BigInteger.class)}, //$NON-NLS-1$
             BigInteger.class);
 
         helpGetString1(func, "cast(1 AS numeric(38, 0))"); //$NON-NLS-1$
@@ -663,8 +661,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(float AS input) ************/
     @Test public void testStringToFloat() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("123", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("float", Float.class)}, //$NON-NLS-1$
             Float.class);
@@ -673,8 +671,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToFloata() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
                 LANG_FACTORY.createLiteral("float", Float.class)}, //$NON-NLS-1$
             Float.class);
 
@@ -682,8 +680,8 @@ public class TestSybaseConvertModifier {
     }
 
     @Test public void testBooleanToFloatb() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.FALSE, Boolean.class), 
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.FALSE, Boolean.class), 
                 LANG_FACTORY.createLiteral("float", Float.class)}, //$NON-NLS-1$
             Float.class);
 
@@ -694,8 +692,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(double AS input) ************/
     @Test public void testStringToDouble() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("123", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("double", Double.class)}, //$NON-NLS-1$
             Double.class);
@@ -704,8 +702,8 @@ public class TestSybaseConvertModifier {
     } 
     
     @Test public void testBooleanToDoublea() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
                 LANG_FACTORY.createLiteral("double", Double.class)}, //$NON-NLS-1$
             Double.class);
 
@@ -713,8 +711,8 @@ public class TestSybaseConvertModifier {
     }
 
     @Test public void testBooleanToDoubleb() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.FALSE, Boolean.class), 
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.FALSE, Boolean.class), 
                 LANG_FACTORY.createLiteral("double", Double.class)}, //$NON-NLS-1$
             Double.class);
 
@@ -725,8 +723,8 @@ public class TestSybaseConvertModifier {
     
     /***************** Beginning of cast(bigdecimal AS input) ************/
     @Test public void testStringToBigDecimal() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+        Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new Expression[] { 
                 LANG_FACTORY.createLiteral("123", String.class),  //$NON-NLS-1$
                 LANG_FACTORY.createLiteral("bigdecimal", java.math.BigDecimal.class)}, //$NON-NLS-1$
             java.math.BigDecimal.class);
@@ -735,8 +733,8 @@ public class TestSybaseConvertModifier {
     } 
 
     @Test public void testBooleanToBigDecimala() throws Exception {
-        IFunction func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
+        Function func = LANG_FACTORY.createFunction("convert", //$NON-NLS-1$
+            new Expression[] { LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), 
                 LANG_FACTORY.createLiteral("bigdecimal", java.math.BigDecimal.class)}, //$NON-NLS-1$
             java.math.BigDecimal.class);
 

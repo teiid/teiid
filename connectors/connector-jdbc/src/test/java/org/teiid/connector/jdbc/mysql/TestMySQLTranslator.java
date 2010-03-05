@@ -22,15 +22,12 @@
 
 package org.teiid.connector.jdbc.mysql;
 
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
-
-import com.metamatrix.cdk.api.EnvironmentUtility;
 
 /**
  */
@@ -40,7 +37,7 @@ public class TestMySQLTranslator {
     
     @BeforeClass public static void oneTimeSetup() throws ConnectorException {
         TRANSLATOR = new MySQLTranslator();        
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
 
     private String getTestVDB() {

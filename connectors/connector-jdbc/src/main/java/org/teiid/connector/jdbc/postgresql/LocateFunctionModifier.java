@@ -26,32 +26,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
 
 public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.LocateFunctionModifier {
 	
-	public LocateFunctionModifier(ILanguageFactory factory) {
+	public LocateFunctionModifier(LanguageFactory factory) {
 		super(factory);
 	}
 
 	@Override
-	public List<?> translate(IFunction function) {
+	public List<?> translate(Function function) {
 		modify(function);
 		List<Object> parts = new ArrayList<Object>();
-		List<IExpression> params = function.getParameters();
+		List<Expression> params = function.getParameters();
 		parts.add("position("); //$NON-NLS-1$
 		parts.add(params.get(0));		
 		parts.add(" in "); //$NON-NLS-1$
 		boolean useSubStr = false;
 		if (params.size() == 3) {
 			useSubStr = true;
-			if (params.get(2) instanceof ILiteral && ((ILiteral)params.get(2)).getValue() instanceof Integer) {
-				Integer value = (Integer)((ILiteral)params.get(2)).getValue();
+			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
+				Integer value = (Integer)((Literal)params.get(2)).getValue();
 				if (value > 1) {
-					((ILiteral)params.get(2)).setValue(value - 1);
+					((Literal)params.get(2)).setValue(value - 1);
 				} else {
 					useSubStr = false;
 				}
@@ -62,7 +62,7 @@ public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.
 			parts.add(this.getLanguageFactory().createFunction("substr", params.subList(1, 3), TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
 			parts.add(")"); //$NON-NLS-1$
 			parts.add(" + "); //$NON-NLS-1$
-			if (params.get(2) instanceof ILiteral && ((ILiteral)params.get(2)).getValue() instanceof Integer) {
+			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
 				parts.add(params.get(2));
 			} else {
 				parts.add(params.get(2));

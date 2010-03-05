@@ -25,12 +25,13 @@ package org.teiid.connector.jdbc.translator;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Comparison.Operator;
 
 
 /**
@@ -73,7 +74,7 @@ public class LocateFunctionModifier extends AliasModifier {
 
 	public static String LOCATE = "LOCATE"; //$NON-NLS-1$
 	
-    private ILanguageFactory langFactory;
+    private LanguageFactory langFactory;
     private boolean sourceStringFirst;
     
 	/**
@@ -83,7 +84,7 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * 
 	 * @param langFactory the language factory associated with translation
 	 */
-    public LocateFunctionModifier(ILanguageFactory langFactory) {
+    public LocateFunctionModifier(LanguageFactory langFactory) {
     	this(langFactory, LOCATE, false);
     }
 
@@ -96,7 +97,7 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * @param functionName the function name or alias to be used instead of LOCATE
 	 * @param sourceStringFirst
 	 */
-    public LocateFunctionModifier(ILanguageFactory langFactory, final String functionName, boolean sourceStringFirst) {
+    public LocateFunctionModifier(LanguageFactory langFactory, final String functionName, boolean sourceStringFirst) {
     	super(functionName);
     	this.langFactory = langFactory;
     	this.sourceStringFirst = sourceStringFirst;
@@ -113,14 +114,14 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * and <code>startIndex</code> is a literal value, it is translated for 
 	 * consistency between the built-in system function 
 	 * <code>LOCATE(searchStr, sourceStr, startIndex)</code> and the sources 
-	 * implementation.  This is done by calling {@link #getStartIndexExpression(ILiteral)} 
+	 * implementation.  This is done by calling {@link #getStartIndexExpression(Literal)} 
 	 * and passing it the literal <code>startIndex</code> value.
 	 * <p>
 	 * If <code>function</code> represents <code>LOCATE(searchStr, sourceStr, startIndex)</code>
 	 * and <code>startIndex</code> is not a literal value, it is translated for 
 	 * consistency between the built-in system function 
 	 * <code>LOCATE(searchStr, sourceStr, startIndex)</code> and the sources 
-	 * implementation.  This is done by calling {@link #getStartIndexExpression(IExpression)} 
+	 * implementation.  This is done by calling {@link #getStartIndexExpression(Expression)} 
 	 * and passing it the non-literal <code>startIndex</code> value.
 	 * <p>
 	 * Finally, <code>function</code>'s parameters may be rearranged depending 
@@ -141,11 +142,11 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * 
 	 * @param function the LOCATE function that may need to be modified
 	 */
-    public void modify(IFunction function) {
+    public void modify(Function function) {
     	super.modify(function);
-        List<IExpression> args = function.getParameters();
-        IExpression searchStr = args.get(0);
-        IExpression sourceStr = args.get(1);
+        List<Expression> args = function.getParameters();
+        Expression searchStr = args.get(0);
+        Expression sourceStr = args.get(1);
 
         // if startIndex was given then we may need to do additional work
         if (args.size() > 2) {
@@ -157,30 +158,30 @@ public class LocateFunctionModifier extends AliasModifier {
         }
     }
 
-	private IExpression ensurePositiveStartIndex(IExpression startIndex) {
-		if (startIndex instanceof ILiteral) {
-			ILiteral literal = (ILiteral)startIndex;  
+	private Expression ensurePositiveStartIndex(Expression startIndex) {
+		if (startIndex instanceof Literal) {
+			Literal literal = (Literal)startIndex;  
 			if (literal.getValue() instanceof Integer && ((Integer)literal.getValue() < 1)) {
 				literal.setValue(1);
 			}
 		} else {
-			ICompareCriteria[] whenExpr = {langFactory.createCompareCriteria(
+			Comparison whenExpr = langFactory.createCompareCriteria(
 					Operator.LT, 
 					startIndex, 
 					langFactory.createLiteral(1, Integer.class)
-				)};
-			ILiteral[] thenExpr = {langFactory.createLiteral(1, Integer.class)};
-			startIndex = langFactory.createSearchedCaseExpression(Arrays.asList(whenExpr), Arrays.asList(thenExpr), startIndex, Integer.class);
+				);
+			Literal thenExpr = langFactory.createLiteral(1, Integer.class);
+			startIndex = langFactory.createSearchedCaseExpression(Arrays.asList(langFactory.createSearchedWhenCondition(whenExpr, thenExpr)), startIndex, TypeFacility.RUNTIME_TYPES.INTEGER);
 		}
 		return startIndex;
 	}
 	
 	/**
-     * Get the instance of {@link ILanguageFactory} set during construction.
+     * Get the instance of {@link LanguageFactory} set during construction.
      * 
      * @return the <code>ILanguageFactory</code> instance
      */
-	protected ILanguageFactory getLanguageFactory() {
+	protected LanguageFactory getLanguageFactory() {
 		return this.langFactory;
 	}
 

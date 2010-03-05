@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageObject;
 
 
 /**
@@ -90,13 +90,13 @@ public abstract class FunctionModifier {
     }
     
     /**
-     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if this FunctionModifier wishes to rely on the default translation of the
      * conversion visitor. 
      * @param function IFunction to be translated
      * @return List of translated parts, or null
      * @since 4.2
      */
-    public abstract List<?> translate(IFunction function);
+    public abstract List<?> translate(Function function);
     
 }

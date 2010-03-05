@@ -31,18 +31,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
 
 
 /**
@@ -55,29 +51,22 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // ===========================================================================================================================
 
     protected ResultSet results;
-    protected ConnectorEnvironment env;
-    protected ICommand command;
+    protected Command command;
     protected Class<?>[] columnDataTypes;
 
     // ===========================================================================================================================
     // Constructors
     // ===========================================================================================================================
 
-    public JDBCQueryExecution(ICommand command, Connection connection,
-                              Translator sqlTranslator,
-                              ConnectorLogger logger,
-                              Properties props,
-                              ExecutionContext context,
-                              ConnectorEnvironment env) {
-        super(connection, sqlTranslator, logger, props, context);
+    public JDBCQueryExecution(Command command, Connection connection, ExecutionContext context, JDBCManagedConnectionFactory env) throws ConnectorException {
+        super(connection, context, env);
         this.command = command;
-        this.env = env;
     }
     
     @Override
     public void execute() throws ConnectorException {
         // get column types
-        columnDataTypes = ((IQueryCommand)command).getColumnTypes();
+        columnDataTypes = ((QueryExpression)command).getColumnTypes();
 
         // translate command
         TranslatedCommand translatedComm = translateCommand(command);
@@ -125,7 +114,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     /**
      * @see org.teiid.connector.jdbc.JDBCBaseExecution#close()
      */
-    public void close() throws ConnectorException {
+    public synchronized void close() throws ConnectorException {
         // first we would need to close the result set here then we can close
         // the statement, using the base class.
         if (results != null) {

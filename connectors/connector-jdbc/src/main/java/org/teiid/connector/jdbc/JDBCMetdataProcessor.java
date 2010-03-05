@@ -41,7 +41,7 @@ import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.BaseColumn;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
@@ -70,17 +70,16 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
-	private String catalog;
-	private String schemaPattern;
-	private String tableNamePattern;
+	private boolean importProcedures;
+	private boolean importKeys;
+	private boolean importIndexes;
 	private String procedureNamePattern;
+	private boolean useFullSchemaName;	
 	private String[] tableTypes;
-	
-	private boolean useFullSchemaName = true;
-	private boolean importKeys = true;
-	private boolean importIndexes = true;
+	private String tableNamePattern;
+	private String catalog;
+	private String schemaPattern;	
 	private boolean importApproximateIndexes = true;
-	private boolean importProcedures = true;
 	private boolean widenUnsingedTypes = true;
 	private boolean quoteNameInSource = true;
 	//TODO add an option to not fully qualify name in source
@@ -88,6 +87,8 @@ public class JDBCMetdataProcessor {
 	private ConnectorLogger logger;
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
+	
+
 	
 	public JDBCMetdataProcessor(ConnectorLogger logger) {
 		this.logger = logger;
@@ -140,7 +141,7 @@ public class JDBCMetdataProcessor {
 			String procedureSchema = procedures.getString(2);
 			String procedureName = procedures.getString(3);
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
-			ProcedureRecordImpl procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
+			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
 			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName, true));
 			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
 			while (columns.next()) {
@@ -204,34 +205,53 @@ public class JDBCMetdataProcessor {
 			String remarks = tables.getString(5);
 			table.setAnnotation(remarks);
 			tableMap.put(fullName, new TableInfo(tableCatalog, tableSchema, tableName, table));
-			
-			ResultSet columns = metadata.getColumns(tableCatalog, tableSchema, tableName, null);
-			int rsColumns = columns.getMetaData().getColumnCount();
-			while (columns.next()) {
-				String columnName = columns.getString(4);
-				int type = columns.getInt(5);
-				String typeName = columns.getString(6);
-				type = checkForUnsigned(type, typeName);
-				//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-				Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), table);
-				column.setNameInSource(quoteName(columnName));
-				column.setNativeType(columns.getString(6));
-				column.setRadix(columns.getInt(10));
-				column.setNullType(NullType.values()[columns.getShort(11)]);
-				column.setUpdatable(true);
-				column.setAnnotation(columns.getString(12));
-				column.setCharOctetLength(columns.getInt(16));
-				if (rsColumns >= 23) {
-					column.setAutoIncrementable("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
-				}
-			}
-			columns.close();
+			tableMap.put(tableName, new TableInfo(tableCatalog, tableSchema, tableName, table));
 		}
 		tables.close();
 		
+		getColumns(metadataFactory, metadata, tableMap);
 		return tableMap;
 	}
 
+	private void getColumns(MetadataFactory metadataFactory,
+			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
+			throws SQLException, ConnectorException {
+		logger.logDetail("JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
+		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
+		int rsColumns = columns.getMetaData().getColumnCount();
+		while (columns.next()) {
+			String tableCatalog = columns.getString(1);
+			String tableSchema = columns.getString(2);
+			String tableName = columns.getString(3);
+			String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
+			TableInfo tableInfo = tableMap.get(fullTableName);
+			if (tableInfo == null) {
+				tableInfo = tableMap.get(tableName);
+				if (tableInfo == null) {
+					continue;
+				}
+			}
+			String columnName = columns.getString(4);
+			int type = columns.getInt(5);
+			String typeName = columns.getString(6);
+			type = checkForUnsigned(type, typeName);
+			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
+			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
+			column.setNameInSource(quoteName(columnName));
+			column.setNativeType(columns.getString(6));
+			column.setRadix(columns.getInt(10));
+			column.setNullType(NullType.values()[columns.getShort(11)]);
+			column.setUpdatable(true);
+			String remarks = columns.getString(12);
+			column.setAnnotation(remarks);
+			column.setCharOctetLength(columns.getInt(16));
+			if (rsColumns >= 23) {
+				column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+			}
+		}
+		columns.close();
+	}
+	
 	private String quoteName(String name) {
 		if (quoteNameInSource) {
 			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
@@ -367,13 +387,7 @@ public class JDBCMetdataProcessor {
 		return fullName;
 	}
 		
-	public void setCatalog(String catalog) {
-		this.catalog = catalog;
-	}
 
-	public void setSchemaPattern(String schemaPattern) {
-		this.schemaPattern = schemaPattern;
-	}
 
 	public void setTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
@@ -415,4 +429,13 @@ public class JDBCMetdataProcessor {
 		this.quoteNameInSource = quoteIdentifiers;
 	}
 
+	// Importer specific properties
+	public void setCatalog(String catalog) {
+		this.catalog = catalog;
+	}
+
+	public void setSchemaPattern(String schema) {
+		this.schemaPattern = schema;
+	}
+	
 }

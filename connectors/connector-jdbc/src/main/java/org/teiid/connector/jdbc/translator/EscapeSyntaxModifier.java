@@ -25,7 +25,7 @@ package org.teiid.connector.jdbc.translator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.Function;
 
 
 /**
@@ -36,10 +36,10 @@ import org.teiid.connector.language.IFunction;
 public class EscapeSyntaxModifier extends FunctionModifier {
 
     /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.connector.language.Function)
      * @since 5.0
      */
-    public List<?> translate(IFunction function) {
+    public List<?> translate(Function function) {
     	List<Object> objs = new ArrayList<Object>();
         objs.add("{fn "); //$NON-NLS-1$
         objs.add(function);

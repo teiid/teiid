@@ -23,10 +23,6 @@
 package org.teiid.connector.jdbc;
 
 import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.Collection;
-
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
@@ -38,55 +34,32 @@ import org.teiid.connector.language.Command;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
-import com.metamatrix.query.function.metadata.FunctionMethod;
 
-public class TranslationHelper {
+public class FakeMetadataFactory {
 	
     public static final String PARTS_VDB = "/PartsSupplier.vdb"; //$NON-NLS-1$
     public static final String BQT_VDB = "/bqt.vdb"; //$NON-NLS-1$
 
     public static Command helpTranslate(String vdbFileName, String sql) {
-    	return helpTranslate(vdbFileName, null, sql);
-    }
-    
-    public static Command helpTranslate(String vdbFileName, String udf, String sql) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
-    		util = new TranslationUtility(TranslationHelper.class.getResource(vdbFileName));
+    		util = new TranslationUtility(FakeMetadataFactory.class.getResource(vdbFileName));
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
     		Assert.fail("unknown vdb"); //$NON-NLS-1$
     	}
-    	
-    	if (udf != null) {
-    		try {
-				Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
-				util.setUDF(methods);
-			} catch (IOException e) {
-				throw new MetaMatrixRuntimeException("failed to load UDF");
-			}
-    	}
         return util.parseCommand(sql);        
-    }    
+    }
 
 	public static void helpTestVisitor(String vdb, String input, String expectedOutput, Translator translator) throws ConnectorException {
-		helpTestVisitor(vdb,null,input, expectedOutput, translator);
-	}
-	
-	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, Translator translator) throws ConnectorException {
 	    // Convert from sql to objects
-	    Command obj = helpTranslate(vdb, udf, input);
+	    Command obj = helpTranslate(vdb, input);
 	    
-	    helpTestVisitor(expectedOutput, translator, obj);
-	}	
-
-	public static void helpTestVisitor(String expectedOutput,
-			Translator translator, Command obj) throws ConnectorException {
-		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
+	    TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator); //$NON-NLS-1$
 	    tc.translateCommand(obj);
+	    
+	    // Check stuff
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
 	}
 

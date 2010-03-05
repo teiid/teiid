@@ -30,11 +30,11 @@ import java.util.Map;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SQLReservedWords;
 
 public class AddDiffModifier extends FunctionModifier {
 
@@ -50,21 +50,21 @@ public class AddDiffModifier extends FunctionModifier {
 	}
 	
 	private boolean add;
-	private ILanguageFactory factory;
+	private LanguageFactory factory;
 
-	public AddDiffModifier(boolean add, ILanguageFactory factory) {
+	public AddDiffModifier(boolean add, LanguageFactory factory) {
 		this.add = add;
 		this.factory = factory;
 	}
 	
 	@Override
-	public List<?> translate(IFunction function) {
+	public List<?> translate(Function function) {
 		if (add) {
 			function.setName("dateadd"); //$NON-NLS-1$
 		} else {
 			function.setName("datediff"); //$NON-NLS-1$
 		}
-		ILiteral intervalType = (ILiteral)function.getParameters().get(0);
+		Literal intervalType = (Literal)function.getParameters().get(0);
 		String interval = ((String)intervalType.getValue()).toUpperCase();
 		String newInterval = INTERVAL_MAP.get(interval);
 		if (newInterval != null) {
@@ -74,15 +74,15 @@ public class AddDiffModifier extends FunctionModifier {
 		if (add) {
 			if (interval.equals(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
 				intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
-				IExpression[] args = new IExpression[] {function.getParameters().get(1), factory.createLiteral(1000000, TypeFacility.RUNTIME_TYPES.INTEGER)};
+				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(1000000, TypeFacility.RUNTIME_TYPES.INTEGER)};
 				function.getParameters().set(1, factory.createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
 			} else if (interval.equals(SQLReservedWords.SQL_TSI_QUARTER)) {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
-				IExpression[] args = new IExpression[] {function.getParameters().get(1), factory.createLiteral(91, TypeFacility.RUNTIME_TYPES.INTEGER)};
+				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(91, TypeFacility.RUNTIME_TYPES.INTEGER)};
 				function.getParameters().set(1, factory.createFunction("*", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
 			} else {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
-				IExpression[] args = new IExpression[] {function.getParameters().get(1), factory.createLiteral(7, TypeFacility.RUNTIME_TYPES.INTEGER)};
+				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(7, TypeFacility.RUNTIME_TYPES.INTEGER)};
 				function.getParameters().set(1, factory.createFunction("*", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
 			}
 			return null;

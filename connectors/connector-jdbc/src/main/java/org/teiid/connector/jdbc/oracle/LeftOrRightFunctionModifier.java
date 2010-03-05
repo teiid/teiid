@@ -27,9 +27,9 @@ import java.util.List;
 
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 
 /**
@@ -37,16 +37,16 @@ import org.teiid.connector.language.ILanguageFactory;
  * or right(string, count) --> substr(string, -1 * count) - we lack a way to express a unary negation
  */
 public class LeftOrRightFunctionModifier extends FunctionModifier {
-    private ILanguageFactory langFactory;
+    private LanguageFactory langFactory;
     
-    public LeftOrRightFunctionModifier(ILanguageFactory langFactory) {
+    public LeftOrRightFunctionModifier(LanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
     
     @Override
-    public List<?> translate(IFunction function) {
-        List<IExpression> args = function.getParameters();
-        IFunction func = null;
+    public List<?> translate(Function function) {
+        List<Expression> args = function.getParameters();
+        Function func = null;
         
         if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
             func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
@@ -56,7 +56,7 @@ public class LeftOrRightFunctionModifier extends FunctionModifier {
                     args.get(1)),
                     String.class);   
         } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
-            IFunction negIndex = langFactory.createFunction("*",  //$NON-NLS-1$
+            Function negIndex = langFactory.createFunction("*",  //$NON-NLS-1$
                 Arrays.asList(langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args.get(1)),
                 Integer.class);
                             

@@ -24,25 +24,23 @@ package org.teiid.connector.jdbc.oracle;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */
 public class TestDayWeekQuarterFunctionModifier extends TestCase {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     /**
      * Constructor for TestHourFunctionModifier.
@@ -52,13 +50,13 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
         super(name);
     }
 
-    public void helpTestMod(ILiteral c, String format, String expectedStr) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction(format,  
+    public void helpTestMod(Literal c, String format, String expectedStr) throws Exception {
+        Function func = LANG_FACTORY.createFunction(format,  
             Arrays.asList(c),
             String.class);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  
@@ -66,25 +64,25 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
     }
 
     public void test1() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
             "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'DDD'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
             "to_number(TO_CHAR({d '2004-01-21'}, 'DDD'))"); //$NON-NLS-1$
     }
     
     public void test9() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER,
             "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'Q'))"); //$NON-NLS-1$
     }
 
     public void test10() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER, 
             "to_number(TO_CHAR({d '2004-01-21'}, 'Q'))"); //$NON-NLS-1$
     }

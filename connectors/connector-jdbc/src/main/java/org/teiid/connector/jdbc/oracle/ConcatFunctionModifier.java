@@ -29,12 +29,13 @@ import java.util.List;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.ICompoundCriteria.Operator;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.AndOr.Operator;
 
 
 
@@ -45,23 +46,22 @@ import org.teiid.connector.language.ICompoundCriteria.Operator;
  * </code>   
  */
 public class ConcatFunctionModifier extends FunctionModifier {
-    private ILanguageFactory langFactory;
+    private LanguageFactory langFactory;
     
     /** 
      * @param langFactory
      */
-    public ConcatFunctionModifier(ILanguageFactory langFactory) {
+    public ConcatFunctionModifier(LanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
     
     @Override
-    public List<?> translate(IFunction function) {
-    	List when = new ArrayList();
-        IExpression a = function.getParameters().get(0);
-        IExpression b = function.getParameters().get(1);
-        List crits = new ArrayList();
+    public List<?> translate(Function function) {
+        Expression a = function.getParameters().get(0);
+        Expression b = function.getParameters().get(1);
+        List<Condition> crits = new ArrayList<Condition>();
         
-        ILiteral nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
+        Literal nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
         if (isNull(a)) {
         	return Arrays.asList(nullValue);
         } else if (!isNotNull(a)) {
@@ -73,27 +73,26 @@ public class ConcatFunctionModifier extends FunctionModifier {
         	crits.add(langFactory.createIsNullCriteria(b, false));
         }
         
-        ICriteria crit = null;
+        Condition crit = null;
         
         if (crits.isEmpty()) {
         	return null;
         } else if (crits.size() == 1) {
-        	crit = (ICriteria)crits.get(0);
+        	crit = crits.get(0);
         } else {
-        	crit = langFactory.createCompoundCriteria(Operator.OR, crits);
+        	crit = langFactory.createAndOr(Operator.OR, crits.get(0), crits.get(1));
         }
-        when.add(crit);
-        List then = Arrays.asList(new IExpression[] {nullValue}); 
-        return Arrays.asList(langFactory.createSearchedCaseExpression(when, then, function, TypeFacility.RUNTIME_TYPES.STRING));
+        List<SearchedWhenClause> cases = Arrays.asList(langFactory.createSearchedWhenCondition(crit, nullValue));
+        return Arrays.asList(langFactory.createSearchedCaseExpression(cases, function, TypeFacility.RUNTIME_TYPES.STRING));
     }
     
-    private boolean isNotNull(IExpression expr) {
-    	if (expr instanceof ILiteral) {
-    		ILiteral literal = (ILiteral)expr;
+    private boolean isNotNull(Expression expr) {
+    	if (expr instanceof Literal) {
+    		Literal literal = (Literal)expr;
     		return literal.getValue() != null;
     	}
-    	if (expr instanceof IFunction) {
-    		IFunction function = (IFunction)expr;
+    	if (expr instanceof Function) {
+    		Function function = (Function)expr;
     		if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase(SourceSystemFunctions.IFNULL)) { //$NON-NLS-1$
     			return isNotNull(function.getParameters().get(1));
     		}
@@ -101,9 +100,9 @@ public class ConcatFunctionModifier extends FunctionModifier {
     	return false;
     }
     
-    private boolean isNull(IExpression expr) {
-    	if (expr instanceof ILiteral) {
-    		ILiteral literal = (ILiteral)expr;
+    private boolean isNull(Expression expr) {
+    	if (expr instanceof Literal) {
+    		Literal literal = (Literal)expr;
     		return literal.getValue() == null;
     	}
     	return false;

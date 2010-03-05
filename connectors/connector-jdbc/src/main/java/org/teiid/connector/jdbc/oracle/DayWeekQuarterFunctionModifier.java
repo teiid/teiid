@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.Function;
 
 
 /**
@@ -45,7 +45,7 @@ public class DayWeekQuarterFunctionModifier extends FunctionModifier {
     }
     
     @Override
-    public List<?> translate(IFunction function) {
+    public List<?> translate(Function function) {
         return Arrays.asList("to_number(TO_CHAR(",function.getParameters().get(0), ", '", format,"'))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$    
     }
 }

@@ -26,21 +26,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.Function;
 
 public class MySQL5Translator extends MySQLTranslator {
 	
 	@Override
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
 			
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});

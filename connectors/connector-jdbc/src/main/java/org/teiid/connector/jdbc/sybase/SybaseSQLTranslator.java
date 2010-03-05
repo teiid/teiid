@@ -29,21 +29,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.SetQuery;
 
 
 /**
@@ -53,7 +53,7 @@ public class SybaseSQLTranslator extends Translator {
     /* 
      * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#initialize(com.metamatrix.data.api.ConnectorEnvironment, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
      */
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$ 
@@ -93,7 +93,7 @@ public class SybaseSQLTranslator extends Translator {
     	convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				List<Object> result = new ArrayList<Object>();
 				result.add("cast("); //$NON-NLS-1$
 				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
@@ -104,7 +104,7 @@ public class SybaseSQLTranslator extends Translator {
 		});
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				List<Object> result = new ArrayList<Object>();
 				result.add("cast("); //$NON-NLS-1$
 				result.addAll(convertDateToString(function));
@@ -114,19 +114,19 @@ public class SybaseSQLTranslator extends Translator {
 		});
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return convertTimeToString(function);
 			}
 		}); 
     	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return convertDateToString(function);
 			}
 		});
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return convertTimestampToString(function);
 			}
 		});
@@ -134,11 +134,11 @@ public class SybaseSQLTranslator extends Translator {
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
     
-	private List<Object> convertTimeToString(IFunction function) {
+	private List<Object> convertTimeToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
-    protected List<Object> convertDateToString(IFunction function) {
+    protected List<Object> convertDateToString(Function function) {
 		return Arrays.asList("stuff(stuff(convert(varchar, ", function.getParameters().get(0), ", 102), 5, 1, '-'), 8, 1, '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
@@ -147,7 +147,7 @@ public class SybaseSQLTranslator extends Translator {
      * @param function
      * @return
      */
-	protected List<?> convertTimestampToString(IFunction function) {
+	protected List<?> convertTimestampToString(Function function) {
 		return Arrays.asList("stuff(convert(varchar, ", function.getParameters().get(0), ", 123), 11, 1, ' ')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
@@ -170,16 +170,16 @@ public class SybaseSQLTranslator extends Translator {
      * SetQueries don't have a concept of TOP, an inline view is needed.
      */
     @Override
-    public List<?> translateCommand(ICommand command, ExecutionContext context) {
-    	if (!(command instanceof ISetQuery)) {
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (!(command instanceof SetQuery)) {
     		return null;
     	}
-    	ISetQuery queryCommand = (ISetQuery)command;
+    	SetQuery queryCommand = (SetQuery)command;
 		if (queryCommand.getLimit() == null) {
 			return null;
     	}
-		ILimit limit = queryCommand.getLimit();
-		IOrderBy orderBy = queryCommand.getOrderBy();
+		Limit limit = queryCommand.getLimit();
+		OrderBy orderBy = queryCommand.getOrderBy();
 		queryCommand.setLimit(null);
 		queryCommand.setOrderBy(null);
 		List<Object> parts = new ArrayList<Object>(6);
@@ -197,7 +197,7 @@ public class SybaseSQLTranslator extends Translator {
     
     @SuppressWarnings("unchecked")
 	@Override
-    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
     }
     

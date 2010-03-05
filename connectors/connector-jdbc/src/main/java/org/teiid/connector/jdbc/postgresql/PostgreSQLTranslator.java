@@ -29,11 +29,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.connector.jdbc.translator.AliasModifier;
@@ -43,13 +43,13 @@ import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SQLReservedWords;
 
 
 
@@ -61,7 +61,7 @@ public class PostgreSQLTranslator extends Translator {
 	
 	private String version = PostgreSQLCapabilities.EIGHT_0;
 
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
@@ -118,13 +118,13 @@ public class PostgreSQLTranslator extends Translator {
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), " + TIMESTAMP '1970-01-01'"); //$NON-NLS-1$
 			}
 		});
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("cast(date_trunc('second', ", function.getParameters().get(0), ") AS time)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
@@ -133,15 +133,15 @@ public class PostgreSQLTranslator extends Translator {
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.UF")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
-				IExpression stringValue = function.getParameters().get(0);
+			public List<?> translate(Function function) {
+				Expression stringValue = function.getParameters().get(0);
 				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
     	convertModifier.addSourceConversion(new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
-				((ILiteral)function.getParameters().get(1)).setValue("integer"); //$NON-NLS-1$
+			public List<?> translate(Function function) {
+				((Literal)function.getParameters().get(1)).setValue("integer"); //$NON-NLS-1$
 				return null;
 			}
 		}, FunctionModifier.BOOLEAN);
@@ -178,7 +178,7 @@ public class PostgreSQLTranslator extends Translator {
     
     @SuppressWarnings("unchecked")
 	@Override
-    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (limit.getRowOffset() > 0) {
     		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
     	}
@@ -188,13 +188,13 @@ public class PostgreSQLTranslator extends Translator {
     /**
      * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as 
      * bool_and(BooleanValue)
-     * @see org.teiid.connector.visitor.framework.LanguageObjectVisitor#visit(org.teiid.connector.language.IAggregate)
+     * @see org.teiid.connector.visitor.framework.LanguageObjectVisitor#visit(org.teiid.connector.language.AggregateFunction)
      * @since 4.3
      */
     @Override
-    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof IAggregate) {
-    		IAggregate agg = (IAggregate)obj;
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof AggregateFunction) {
+    		AggregateFunction agg = (AggregateFunction)obj;
     		if (TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
             	if (agg.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
             		agg.setName("bool_and"); //$NON-NLS-1$

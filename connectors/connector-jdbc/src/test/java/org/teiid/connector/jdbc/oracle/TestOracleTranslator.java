@@ -22,86 +22,70 @@
 
 package org.teiid.connector.jdbc.oracle;
 
-import java.io.File;
-import java.net.URL;
+import static org.junit.Assert.*;
+
+import java.util.List;
 import java.util.Properties;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
+import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
+import org.teiid.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.query.function.FunctionLibraryManager;
-import com.metamatrix.query.function.UDFSource;
+import com.metamatrix.cdk.CommandBuilder;
+import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
+import com.metamatrix.query.unittest.RealMetadataFactory;
 
 public class TestOracleTranslator {
 	
     /**
      * An instance of {@link Translator} which has already been initialized.  
      */
-    private static Translator TRANSLATOR; 
+    private Translator TRANSLATOR;
+    private String UDF = "/OracleSpatialFunctions.xmi"; //$NON-NLS-1$;
+    private static ExecutionContext EMPTY_CONTEXT = new FakeExecutionContextImpl();
 
-    @BeforeClass public static void oneTimeSetup() throws Exception {
-        TRANSLATOR = new OracleSQLTranslator();        
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
-        // Define a UDFSource to hold the reference to our function definitions
-        File udfFile = new File("src/main/resources/OracleSpatialFunctions.xmi"); //$NON-NLS-1$;
-        URL[] urls = new URL[0];            
-        UDFSource udfSource = new UDFSource(udfFile.toURI().toURL(), urls);
-        FunctionLibraryManager.deregisterSource(udfSource);
-        FunctionLibraryManager.registerSource(udfSource);
-    }
-
-    /**
-     * Performs cleanup tasks that should be executed after all test methods 
-     * have been executed.  This method should only be executed once and does 
-     * not protect from multiple executions.  It is intended to be executed by 
-     * the JUnit4 test framework.
-     * <p>
-     * This method unloads the function definitions supported by the Oracle Spatial 
-     * Connector from the global instance of <code>FunctionLibraryManager</code> 
-     * so that they are no longer resolvable during query parsing. 
-     * 
-     * @throws Exception
-     */
-    @AfterClass public static void oneTimeFinished() throws Exception {
-        // Define a UDFSource to hold the reference to our function definitions
-        File udfFile = new File("src/main/resources/OracleSpatialFunctions.xmi"); //$NON-NLS-1$;
-        URL[] urls = new URL[0];            
-        UDFSource udfSource = new UDFSource(udfFile.toURI().toURL(), urls);
-        FunctionLibraryManager.deregisterSource(udfSource);
+    @Before 
+    public void setup() throws Exception {
+        TRANSLATOR = new OracleSQLTranslator();     
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
 
 	private void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
-        // Convert from sql to objects
-        ICommand obj = FakeTranslationFactory.getInstance().getAutoIncrementTranslationUtility().parseCommand(input);
-        
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), TRANSLATOR); //$NON-NLS-1$
-        tc.translateCommand(obj);
-        
-        // Check stuff
-        org.junit.Assert.assertEquals("Did not get correct sql", expectedOutput, tc.getSql()); //$NON-NLS-1$
+		helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, expectedOutput);
     }
 	
 	@Test public void testInsertWithSequnce() throws Exception {
-		helpTestVisitor("insert into test.group (e0) values (1)", "INSERT INTO group (e0, e1) VALUES (1, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
+		helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testInsertWithSequnce1() throws Exception {
-		helpTestVisitor("insert into test.group (e0, e1) values (1, 'x')", "INSERT INTO group (e0, e1) VALUES (1, 'x')"); //$NON-NLS-1$ //$NON-NLS-2$
+		helpTestVisitor("insert into smalla (doublenum, id) values (1, 1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testJoins() throws Exception {
         String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey CROSS JOIN MediumA"; //$NON-NLS-1$
           
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
             input, 
             output, TRANSLATOR);        
     }
@@ -110,7 +94,7 @@ public class TestOracleTranslator {
         String input = "select smalla.intkey from bqt1.smalla cross join (bqt1.smallb cross join bqt1.mediuma)"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA CROSS JOIN (SmallB CROSS JOIN MediumA)"; //$NON-NLS-1$
       
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
             input, 
             output, TRANSLATOR);        
     }
@@ -119,7 +103,7 @@ public class TestOracleTranslator {
         String input = "SELECT char(convert(STRINGNUM, integer) + 100) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT chr((trunc(to_number(SmallA.StringNum)) + 100)) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
             input, output, 
             TRANSLATOR);
     }
@@ -128,7 +112,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(STRINGNUM, long) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT trunc(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -137,7 +121,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(STRINGNUM, long), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -146,7 +130,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(cast(SmallA.TimestampValue AS date)), 'YYYY-MM-DD') FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -154,7 +138,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(cast(SmallA.TimeValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF') FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -162,7 +146,7 @@ public class TestOracleTranslator {
         String input = "SELECT nvl(INTNUM, 'otherString') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT nvl(to_char(SmallA.IntNum), 'otherString') FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -170,7 +154,7 @@ public class TestOracleTranslator {
         String input = "SELECT convert(convert(STRINGNUM, integer), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -187,7 +171,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', to_char(SmallA.IntNum), 1) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -204,7 +188,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -221,7 +205,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
         String output = "SELECT INSTR('234567890', to_char(SmallA.IntNum), 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -238,7 +222,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -255,7 +239,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -272,7 +256,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -289,7 +273,7 @@ public class TestOracleTranslator {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN (INSTR('chimp', SmallA.StringNum) + 1) < 1 THEN 1 ELSE (INSTR('chimp', SmallA.StringNum) + 1) END) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -298,7 +282,7 @@ public class TestOracleTranslator {
         String input = "SELECT substring(StringNum, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -306,7 +290,7 @@ public class TestOracleTranslator {
         String input = "SELECT substring(StringNum, 1, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1, 1) FROM SmallA";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -314,7 +298,7 @@ public class TestOracleTranslator {
         String input = "SELECT IntKey FROM BQT1.SMALLA UNION SELECT IntKey FROM BQT1.SMALLB ORDER BY IntKey"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallB.IntKey FROM SmallB ORDER BY IntKey NULLS FIRST";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -322,7 +306,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 10, 0"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 10) WHERE ROWNUM_ > 10"; //$NON-NLS-1$
                
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -330,7 +314,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 0, 10"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT SmallA.IntKey FROM SmallA) WHERE ROWNUM <= 10"; //$NON-NLS-1$
                
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -338,7 +322,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla limit 1, 10"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 11) WHERE ROWNUM_ > 1"; //$NON-NLS-1$
                
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -346,7 +330,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.mediuma limit 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT MediumA.IntKey FROM MediumA) WHERE ROWNUM <= 100"; //$NON-NLS-1$
                
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -354,7 +338,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.mediuma limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT MediumA.IntKey FROM MediumA) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
                
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -362,15 +346,15 @@ public class TestOracleTranslator {
     @Test public void testConcat2_useLiteral() throws Exception {        
         String input = "select concat2(stringnum,'_xx') from bqt1.Smalla"; //$NON-NLS-1$
         String output = "SELECT concat(nvl(SmallA.StringNum, ''), '_xx') FROM SmallA"; //$NON-NLS-1$
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
 
     @Test public void testConcat2() throws Exception {        
         String input = "select concat2(stringnum, stringkey) from bqt1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN (SmallA.StringNum IS NULL) AND (SmallA.StringKey IS NULL) THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringKey, '')) END FROM SmallA"; //$NON-NLS-1$
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringKey IS NULL THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringKey, '')) END FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -386,7 +370,7 @@ public class TestOracleTranslator {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_relate(A.OBJECTVALUE, b.OBJECTVALUE, 'mask=ANYINTERACT') = true"; //$NON-NLS-1$
         String output = "SELECT /*+ ORDERED */ A.IntKey FROM SmallA A, SmallB B WHERE sdo_relate(A.ObjectValue, B.ObjectValue, 'mask=ANYINTERACT') = 'true'";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -402,7 +386,7 @@ public class TestOracleTranslator {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -418,7 +402,7 @@ public class TestOracleTranslator {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SmallA.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -439,7 +423,7 @@ public class TestOracleTranslator {
         // as the signature was the best match for this query.
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.StringKey, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -460,7 +444,7 @@ public class TestOracleTranslator {
         // as the signature was the best match for this query.
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -476,7 +460,7 @@ public class TestOracleTranslator {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_within_distance(a.OBJECTVALUE, b.OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT A.IntKey FROM SmallA A, SmallB B WHERE sdo_within_distance(A.ObjectValue, B.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -485,7 +469,7 @@ public class TestOracleTranslator {
         String input = "SELECT log(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT ln(trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
     
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -494,7 +478,7 @@ public class TestOracleTranslator {
         String input = "SELECT log10(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT log(10, trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
     
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }
@@ -503,9 +487,280 @@ public class TestOracleTranslator {
         String input = "SELECT char(CONVERT(stringkey, INTEGER)), lcase(stringkey), ucase(stringkey), ifnull(stringkey, 'x') FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT chr(trunc(to_number(SmallA.StringKey))), lower(SmallA.StringKey), upper(SmallA.StringKey), nvl(SmallA.StringKey, 'x') FROM SmallA"; //$NON-NLS-1$
         
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
                 input, output, 
                 TRANSLATOR);
     }    
+    
+    private String getTestVDB() {
+        return UnitTestUtil.getTestDataPath() + "/PartsSupplierOracle.vdb"; //$NON-NLS-1$
+    }
+    
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+        helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, false);
+    }
+
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+        helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, correctNaming);
+    }
+
+    private void helpTestVisitor(String vdb, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+        // Convert from sql to objects
+        TranslationUtility util = new TranslationUtility(vdb);
+        Command obj =  util.parseCommand(input, correctNaming, true);        
+		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+    }
+
+    /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
+     * @throws ConnectorException 
+     */
+    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+        // Convert from sql to objects
+        CommandBuilder commandBuilder = new CommandBuilder(metadata);
+        Command obj = commandBuilder.getCommand(input);
+		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+    }
+    
+    private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+        OracleSQLTranslator translator = new OracleSQLTranslator();
+        Properties p = new Properties();
+        if (dbmsTimeZone != null) {
+        	p.setProperty(JDBCPropertyNames.DATABASE_TIME_ZONE, dbmsTimeZone);
+        }
+        translator.initialize(new JDBCManagedConnectionFactory());
+        // Convert back to SQL
+        TranslatedCommand tc = new TranslatedCommand(context, translator);
+        tc.translateCommand(obj);
+        
+        // Check stuff
+        assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+    }
+    
+    /** defect 21775 */
+    @Test public void testDateStuff() throws Exception {
+        String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY datevalue"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END IS NULL OR to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat(CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END, to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
+        
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
+    @Test public void testAliasedGroup() throws Exception {
+        helpTestVisitor(getTestVDB(),
+            "select y.part_name from parts as y", //$NON-NLS-1$
+            null,
+            "SELECT y.PART_NAME FROM PARTS y"); //$NON-NLS-1$
+    }
+    
+    @Test public void testDateLiteral() throws Exception {
+        helpTestVisitor(getTestVDB(),
+            "select {d '2002-12-31'} FROM parts", //$NON-NLS-1$
+            null,
+            "SELECT {d '2002-12-31'} FROM PARTS"); //$NON-NLS-1$
+    }
+
+    @Test public void testTimeLiteral() throws Exception {
+        helpTestVisitor(getTestVDB(),
+            "select {t '13:59:59'} FROM parts", //$NON-NLS-1$
+            null,
+            "SELECT {ts '1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+    }
+
+    @Test public void testTimestampLiteral() throws Exception {
+        helpTestVisitor(getTestVDB(),
+            "select {ts '2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
+            null,
+            "SELECT {ts '2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
+    }
+
+    @Test public void testUnionOrderByWithThreeBranches() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                        "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id", //$NON-NLS-1$
+                        null,
+                        "SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
+                        true); 
+    }
+    
+    @Test public void testUnionOrderBy() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                        "select part_id FROM parts UNION ALL select part_name FROM parts ORDER BY part_id", //$NON-NLS-1$
+                        null,
+                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
+                        true); 
+    }
+
+    @Test public void testUnionOrderBy2() throws Exception {
+        helpTestVisitor(getTestVDB(),
+                        "select part_id as p FROM parts UNION ALL select part_name FROM parts ORDER BY p", //$NON-NLS-1$
+                        null,
+                        "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p NULLS FIRST"); //$NON-NLS-1$
+    }
+
+    @Test public void testUpdateWithFunction() throws Exception {
+        String input = "UPDATE bqt1.smalla SET intkey = intkey + 1"; //$NON-NLS-1$
+        String output = "UPDATE SmallA SET IntKey = (SmallA.IntKey + 1)"; //$NON-NLS-1$
+        
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+                input, 
+                EMPTY_CONTEXT, null, output);
+    }
+    
+
+    /**
+     * Oracle's DUAL table is a pseudo-table; element names cannot be 
+     * fully qualified since the table doesn't really exist nor contain
+     * any columns.  But this requires modeling the DUAL table in 
+     * MM as if it were a real physical table, and also modeling any
+     * columns in the table.  Case 3742
+     * 
+     * @since 4.3
+     */
+    @Test public void testDUAL() throws Exception {
+        String input = "SELECT something FROM DUAL"; //$NON-NLS-1$
+        String output = "SELECT something FROM DUAL"; //$NON-NLS-1$
+               
+        helpTestVisitor(getOracleSpecificMetadata(),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
+
+    /**
+     * Test Oracle's rownum pseudo-column.  Not a real column, so it can't
+     * be fully-qualified with a table name.  MM requires this column to be
+     * modeled in any table which the user wants to use rownum with.
+     * Case 3739
+     * 
+     * @since 4.3
+     */
+    @Test public void testROWNUM() throws Exception {
+        String input = "SELECT part_name, rownum FROM parts"; //$NON-NLS-1$
+        String output = "SELECT PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
+               
+        helpTestVisitor(getTestVDB(),
+            input, 
+            null,
+            output);        
+    }
+    
+    /**
+     * Test Oracle's rownum pseudo-column.  Not a real column, so it can't
+     * be fully-qualified with a table name.  MM requires this column to be
+     * modeled in any table which the user wants to use rownum with.  Case 3739
+     * 
+     * @since 4.3
+     */
+    @Test public void testROWNUM2() throws Exception {
+        String input = "SELECT part_name FROM parts where rownum < 100"; //$NON-NLS-1$
+        String output = "SELECT PARTS.PART_NAME FROM PARTS WHERE ROWNUM < 100"; //$NON-NLS-1$
+               
+        helpTestVisitor(getTestVDB(),
+            input, 
+            null,
+            output);            }    
+    
+    /**
+     * Case 3744.  Test that an Oracle-specific db hint, delivered as a String via command
+     * payload, is added to the translated SQL.
+     * 
+     * @since 4.3
+     */
+    @Test public void testOracleCommentPayload() throws Exception {
+        String input = "SELECT part_name, rownum FROM parts"; //$NON-NLS-1$
+        String output = "SELECT /*+ ALL_ROWS */ PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
+               
+        String hint = "/*+ ALL_ROWS */"; //$NON-NLS-1$
+        ExecutionContext context = new ExecutionContextImpl(null, 1, hint, null, "", null, null, null); //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+            input, 
+            context,
+            null,
+            output,
+            false);        
+    }
+    
+    /**
+     * reproducing this case relies on the name in source for the table being different from
+     * the name
+     */
+    @Test public void testCase3845() throws Exception {
+        
+        String input = "SELECT (DoubleNum * 1.0) FROM BQT1.Smalla"; //$NON-NLS-1$
+        String output = "SELECT (SmallishA.DoubleNum * 1.0) FROM SmallishA"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+    }
+    
+    /** create fake BQT metadata to test this case, name in source is important */
+    private QueryMetadataInterface getOracleSpecificMetadata() { 
+    	MetadataStore metadataStore = new MetadataStore();
+    	Schema foo = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
+        Table table = RealMetadataFactory.createPhysicalGroup("SmallA", foo); //$NON-NLS-1$
+        Table dual = RealMetadataFactory.createPhysicalGroup("DUAL", foo); //$NON-NLS-1$
+        table.setNameInSource("SmallishA");//$NON-NLS-1$
+        String[] elemNames = new String[] {
+            "DoubleNum",  //$NON-NLS-1$ 
+            "ID", //$NON-NLS-1$
+        };
+        String[] elemTypes = new String[] {  
+            DataTypeManager.DefaultDataTypes.DOUBLE,
+            DataTypeManager.DefaultDataTypes.INTEGER,
+        };
+        List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
+        cols.get(1).setAutoIncremented(true);
+        cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
+        RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
+        
+        CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+        return new TransformationMetadata(null, store, null, null);
+    }
+
+	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
+		helpTestVisitor(vdb, input, null, expectedOutput);
+	}
+
+    @Test public void testLimitWithNestedInlineView() throws Exception {
+        String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey NULLS FIRST) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
+               
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+                input, 
+                EMPTY_CONTEXT, null, output);        
+    }
+    
+    @Test public void testExceptAsMinus() throws Exception {
+        String input = "select intkey, intnum from bqt1.smalla except select intnum, intkey from bqt1.smallb"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA MINUS SELECT SmallB.IntNum, SmallB.IntKey FROM SmallB"; //$NON-NLS-1$
+               
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+                input, 
+                EMPTY_CONTEXT, null, output);        
+    }
+    
+    @Test public void testConcat() throws Exception {
+        String sql = "select concat(stringnum, stringkey) from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL OR SmallA.StringKey IS NULL THEN NULL ELSE concat(SmallA.StringNum, SmallA.StringKey) END FROM SmallA"; //$NON-NLS-1$
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    @Test public void testConcat_withLiteral() throws Exception {
+        String sql = "select stringnum || '1' from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA"; //$NON-NLS-1$
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    @Test public void testRowLimitWithUnionOrderBy() throws Exception {
+        String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
+        String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0 NULLS FIRST"; //$NON-NLS-1$
+               
+        CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+		this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
+    }
 
 }

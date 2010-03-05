@@ -23,23 +23,20 @@
 package org.teiid.connector.jdbc.oracle;
 
 import java.util.Arrays;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
-
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
 
 /**
  */
 public class TestLeftOrRightFunctionModifier extends TestCase {
 
-    private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     /**
      * Constructor for TestHourFunctionModifier.
@@ -49,13 +46,13 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         super(name);
     }
 
-    public void helpTestMod(ILiteral c, ILiteral d, String target, String expectedStr) throws Exception {
-        IFunction func = LANG_FACTORY.createFunction(target,
+    public void helpTestMod(Literal c, Literal d, String target, String expectedStr) throws Exception {
+        Function func = LANG_FACTORY.createFunction(target,
             Arrays.asList( c, d ),
             String.class);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  
@@ -63,15 +60,15 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
     }
 
     public void test1() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
-        ILiteral count = LANG_FACTORY.createLiteral(new Integer(11), Integer.class);
+        Literal arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
+        Literal count = LANG_FACTORY.createLiteral(new Integer(11), Integer.class);
         helpTestMod(arg1, count, "left", //$NON-NLS-1$
             "SUBSTR('1234214', 1, 11)"); //$NON-NLS-1$
     }
     
     public void test2() throws Exception {
-        ILiteral arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
-        ILiteral count = LANG_FACTORY.createLiteral(new Integer(2), Integer.class);
+        Literal arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
+        Literal count = LANG_FACTORY.createLiteral(new Integer(2), Integer.class);
         helpTestMod(arg1, count, "right", //$NON-NLS-1$
             "SUBSTR('1234214', (-1 * 2))"); //$NON-NLS-1$
     }

@@ -25,9 +25,9 @@
 package org.teiid.connector.jdbc.informix;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 
@@ -37,15 +37,10 @@ import org.teiid.connector.jdbc.translator.Translator;
 public class InformixSQLTranslator extends Translator {
 
 	@Override
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+	public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
 		super.initialize(env);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, new ConvertModifier());
     }
-	
-	@Override
-	public String getDefaultConnectionTestQuery() {
-		return "select 'x' from informix.sysusers where 1=0"; //$NON-NLS-1$
-	}
 	
 	@Override
 	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {

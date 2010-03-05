@@ -29,20 +29,15 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ILiteral;
-
-import com.metamatrix.common.util.PropertiesUtils;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Literal;
 
 /**
  */
@@ -55,11 +50,12 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // Passed to constructor
     protected Connection connection;
     protected Translator sqlTranslator;
-    protected ConnectorIdentity id;
     protected ConnectorLogger logger;
     protected ExecutionContext context;
+    protected JDBCManagedConnectionFactory env;
 
     // Derived from properties
+    protected boolean trimString;
     protected int fetchSize;
     protected int maxResultRows;
 
@@ -70,23 +66,19 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // Constructors
     // ===========================================================================================================================
 
-    protected JDBCBaseExecution(Connection connection,
-                                Translator sqlTranslator,
-                                ConnectorLogger logger,
-                                Properties props,
-                                ExecutionContext context) {
+    protected JDBCBaseExecution(Connection connection, ExecutionContext context, JDBCManagedConnectionFactory env) throws ConnectorException {
         this.connection = connection;
-        this.sqlTranslator = sqlTranslator;
-        this.logger = logger;
+        this.sqlTranslator = env.getExtensionTranslationClass();
+        this.logger = env.getLogger();
         this.context = context;
+        this.env = env;
 
-        fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, 0);
-        if (fetchSize == 0) {
-        	fetchSize = context.getBatchSize();
-        }
-        maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, -1);
+        trimString = env.isTrimStrings();
+        fetchSize = (env.getFetchSize() != -1)?env.getFetchSize():context.getBatchSize();
+        maxResultRows = env.getMaxResultRows();
+      
         //if the connector work needs to throw an excpetion, set the size plus 1
-        if (maxResultRows > 0 && PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false)) {
+        if (maxResultRows > 0 && env.isExceptionOnMaxRows()) {
         	maxResultRows++;
         }
         if (maxResultRows > 0) {
@@ -102,7 +94,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 
         for (int row = 0; row < rowCount; row++) {
 	        for (int i = 0; i< params.size(); i++) {
-	            ILiteral paramValue = (ILiteral)params.get(i);
+	            Literal paramValue = (Literal)params.get(i);
 	            Object value = paramValue.getValue();
 	            if (paramValue.isMultiValued()) {
 	            	value = ((List<?>)value).get(row);
@@ -120,7 +112,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // Methods
     // ===========================================================================================================================
 
-    protected TranslatedCommand translateCommand(ICommand command) throws ConnectorException {
+    protected TranslatedCommand translateCommand(Command command) throws ConnectorException {
         TranslatedCommand translatedCommand = new TranslatedCommand(context, sqlTranslator);
         translatedCommand.translateCommand(command);
 

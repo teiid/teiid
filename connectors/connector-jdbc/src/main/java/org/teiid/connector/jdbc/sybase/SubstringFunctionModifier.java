@@ -28,9 +28,9 @@ import java.util.List;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 
 /**
@@ -38,15 +38,15 @@ import org.teiid.connector.language.ILanguageFactory;
  */
 public class SubstringFunctionModifier extends FunctionModifier {
 
-    private ILanguageFactory languageFactory;
+    private LanguageFactory languageFactory;
     
-    public SubstringFunctionModifier(ILanguageFactory languageFactory) {
+    public SubstringFunctionModifier(LanguageFactory languageFactory) {
     	this.languageFactory = languageFactory; 
     }
 
     @Override
-    public List<?> translate(IFunction function) {
-        List<IExpression> args = function.getParameters();
+    public List<?> translate(Function function) {
+        List<Expression> args = function.getParameters();
         
         if(args.size() == 2) {
             args.add(languageFactory.createFunction(SourceSystemFunctions.LENGTH, Arrays.asList(args.get(0)), TypeFacility.RUNTIME_TYPES.INTEGER)); 

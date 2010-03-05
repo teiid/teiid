@@ -26,26 +26,26 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.language.IJoin.JoinType;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.language.Join.JoinType;
 
 public class DB2SQLTranslator extends Translator {
 
@@ -56,10 +56,10 @@ public class DB2SQLTranslator extends Translator {
 		}
 
 		@Override
-		public List<?> translate(IFunction function) {
-			IExpression arg = function.getParameters().get(0);
-			if (arg instanceof ILiteral && ((ILiteral)arg).getValue() == null) {
-				((ILiteral)function.getParameters().get(1)).setValue(this.alias);
+		public List<?> translate(Function function) {
+			Expression arg = function.getParameters().get(0);
+			if (arg instanceof Literal && ((Literal)arg).getValue() == null) {
+				((Literal)function.getParameters().get(1)).setValue(this.alias);
 				return null;
 			}
 			return super.translate(function);
@@ -67,7 +67,7 @@ public class DB2SQLTranslator extends Translator {
 	}
 
 	@Override
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+	public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
 		super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
@@ -87,20 +87,20 @@ public class DB2SQLTranslator extends Translator {
     	convertModifier.addTypeMapping("clob", FunctionModifier.CLOB, FunctionModifier.XML); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("timestamp('1970-01-01', ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
     	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("timestamp(",function.getParameters().get(0), ", '00:00:00')"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
     	//the next convert is not strictly necessary for db2, but it also works for derby
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.FLOAT, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList("cast(double(", function.getParameters().get(0), ") as real)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
@@ -118,26 +118,26 @@ public class DB2SQLTranslator extends Translator {
 		
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+	public List<?> translateLimit(Limit limit, ExecutionContext context) {
 		return Arrays.asList("FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ 
 	}
 	
 	@Override
-	public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+	public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		//DB2 doesn't support cross join
-		if (obj instanceof IJoin) {
-			IJoin join = (IJoin)obj;
+		if (obj instanceof Join) {
+			Join join = (Join)obj;
 			if (join.getJoinType() == JoinType.CROSS_JOIN) {
-				ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
-				join.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
+				Literal one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
+				join.setCondition(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
 				join.setJoinType(JoinType.INNER_JOIN);
 			}
 		}
 		//DB2 needs projected nulls wrapped in casts
-		if (obj instanceof ISelectSymbol) {
-			ISelectSymbol selectSymbol = (ISelectSymbol)obj;
-			if (selectSymbol.getExpression() instanceof ILiteral) {
-				ILiteral literal = (ILiteral)selectSymbol.getExpression();
+		if (obj instanceof DerivedColumn) {
+			DerivedColumn selectSymbol = (DerivedColumn)obj;
+			if (selectSymbol.getExpression() instanceof Literal) {
+				Literal literal = (Literal)selectSymbol.getExpression();
 				if (literal.getValue() == null) {
 					selectSymbol.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), literal, TypeFacility.getDataTypeName(literal.getType())));
 				}
@@ -145,11 +145,7 @@ public class DB2SQLTranslator extends Translator {
 		}
 		return super.translate(obj, context);
 	}
-	
-	@Override
-	public String getDefaultConnectionTestQuery() {
-		return "Select 'x' from sysibm.systables where 1 = 2"; //$NON-NLS-1$
-	}
+
 	
 	@Override
 	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {

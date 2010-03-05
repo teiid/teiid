@@ -24,61 +24,58 @@
  */
 package org.teiid.connector.jdbc;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicConnection;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
+import com.metamatrix.common.util.PropertiesUtils;
 
 
 /**
  * 
  */
-public class JDBCSourceConnection extends BasicConnection {
+public class JDBCSourceConnection extends BasicConnection implements MetadataProvider{
     protected java.sql.Connection physicalConnection;
-    protected ConnectorEnvironment environment;
-    private ConnectorLogger logger;
+    protected JDBCManagedConnectionFactory environment;
     private Translator sqlTranslator;
 
-    public JDBCSourceConnection(java.sql.Connection connection, ConnectorEnvironment environment, Translator sqlTranslator) throws ConnectorException {
+    public JDBCSourceConnection(java.sql.Connection connection, JDBCManagedConnectionFactory environment) throws ConnectorException {
         this.physicalConnection = connection;
         this.environment = environment;
-        this.logger = environment.getLogger();
-        this.sqlTranslator = sqlTranslator;
+        this.sqlTranslator = environment.getExtensionTranslationClass();
         this.sqlTranslator.afterConnectionCreation(connection);
     }
     
     @Override
-    public ResultSetExecution createResultSetExecution(IQueryCommand command,
-    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCQueryExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
+    	return new JDBCQueryExecution(command, this.physicalConnection, executionContext, this.environment);
     }
     
     @Override
-    public ProcedureExecution createProcedureExecution(IProcedure command,
+    public ProcedureExecution createProcedureExecution(Call command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCProcedureExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
+    	return new JDBCProcedureExecution(command, this.physicalConnection, executionContext, this.environment);
     }
 
     @Override
-    public UpdateExecution createUpdateExecution(ICommand command,
+    public UpdateExecution createUpdateExecution(Command command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCUpdateExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), executionContext);    
+    	return new JDBCUpdateExecution(command, this.physicalConnection, executionContext, this.environment);    
     }
     
     @Override
@@ -90,38 +87,18 @@ public class JDBCSourceConnection extends BasicConnection {
 		try {
             this.physicalConnection.close();
         } catch(SQLException e) {
-        	logger.logDetail("Exception during close: " + e.getMessage()); //$NON-NLS-1$
+        	environment.getLogger().logDetail("Exception during close: " + e.getMessage()); //$NON-NLS-1$
         }
 	}
 
-    @Override
-    public boolean isAlive() {
-    	Connection connection = this.physicalConnection;
-        Statement statement = null;
-    	try {
-    		int timeout = this.sqlTranslator.getIsValidTimeout();
-    		if (timeout >= 0) {
-    			return connection.isValid(timeout);
-    		}
-            if(connection.isClosed()){
-                return false;
-            } 
-            String connectionTestQuery = sqlTranslator.getConnectionTestQuery();
-            if (connectionTestQuery != null) {
-		        statement = connection.createStatement();
-		        statement.executeQuery(connectionTestQuery);
-            }
-        } catch(SQLException e) {
-        	return false;
-        } finally {
-            if ( statement != null ) {
-                try {
-                    statement.close();
-                } catch ( SQLException e ) {
-                }
-            }
-        }
-        return true;
-    }
-    
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory) throws ConnectorException {
+		try {
+			JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor(this.environment.getLogger());
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
+			metadataProcessor.getConnectorMetadata(this.physicalConnection, metadataFactory);
+		} catch (SQLException e) {
+			throw new ConnectorException(e);
+		}
+	}	
 }

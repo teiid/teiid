@@ -28,15 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageObject;
-
-import com.metamatrix.core.MetaMatrixRuntimeException;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageObject;
 
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
@@ -46,12 +43,12 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	
 	@Override
-	protected List<Object> convertDateToString(IFunction function) {
+	protected List<Object> convertDateToString(Function function) {
 		return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
 	@Override
-	protected List<?> convertTimestampToString(IFunction function) {
+	protected List<?> convertTimestampToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 21)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
@@ -61,15 +58,11 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
     }
     
     @Override
-    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof IElement) {
-    		IElement elem = (IElement)obj;
-    		try {
-				if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
-					return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-			} catch (ConnectorException e) {
-				throw new MetaMatrixRuntimeException(e);
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof ColumnReference) {
+    		ColumnReference elem = (ColumnReference)obj;
+			if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+				return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
     	}
     	return super.translate(obj, context);

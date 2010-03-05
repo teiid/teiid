@@ -27,21 +27,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
 
 /**
  */
@@ -54,19 +48,13 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
      * @param props
      * @param id
      */
-    public JDBCProcedureExecution(ICommand command,
-        Connection connection,
-        Translator sqlTranslator,
-        ConnectorLogger logger,
-        Properties props,
-        RuntimeMetadata metadata, ExecutionContext context,
-        ConnectorEnvironment env) {
-        super(command, connection, sqlTranslator, logger, props, context, env);
+	public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCManagedConnectionFactory env) throws ConnectorException {
+        super(command, connection, context, env);
     }
 
     @Override
     public void execute() throws ConnectorException {
-    	IProcedure procedure = (IProcedure)command;
+    	Call procedure = (Call)command;
         columnDataTypes = procedure.getResultSetColumnTypes();
 
         //translate command
@@ -77,7 +65,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         try{
             //create parameter index map
             CallableStatement cstmt = getCallableStatement(sql);
-            this.results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm);
+            this.results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
             addStatementWarnings();
         }catch(SQLException e){
             throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
@@ -96,25 +84,21 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     @Override
     public List<?> getOutputParameterValues() throws ConnectorException {
         try {
-        	IProcedure proc = (IProcedure)this.command;
+        	Call proc = (Call)this.command;
         	List<Object> result = new ArrayList<Object>();
         	int paramIndex = 1;
-        	for (IParameter parameter : proc.getParameters()) {
-        		if (parameter.getDirection() == Direction.RETURN) {
-                	addParameterValue(result, paramIndex++, parameter);
-                	break;
-        		}
-			}
-        	for (IParameter parameter : proc.getParameters()) {
+        	if (proc.getReturnType() != null) {
+        		addParameterValue(result, paramIndex++, proc.getReturnType());
+        	}
+        	for (Argument parameter : proc.getArguments()) {
         		switch (parameter.getDirection()) {
         		case IN:
         			paramIndex++;
-        		case RETURN:
-        		case RESULT_SET:
-        			continue;
+        			break;
         		case INOUT:
         		case OUT:
-        			addParameterValue(result, paramIndex++, parameter);
+        			addParameterValue(result, paramIndex++, parameter.getType());
+        			break;
         		}
 			}
         	return result;
@@ -124,8 +108,8 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     }
 
 	private void addParameterValue(List<Object> result, int paramIndex,
-			IParameter parameter) throws SQLException {
-		Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, paramIndex, parameter.getType());
+			Class<?> type) throws SQLException {
+		Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, paramIndex, type);
 		result.add(value);
 	}
     

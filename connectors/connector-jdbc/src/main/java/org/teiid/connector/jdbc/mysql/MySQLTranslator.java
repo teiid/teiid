@@ -32,15 +32,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.Function;
 
 /** 
  * @since 4.3
@@ -52,7 +52,7 @@ public class MySQLTranslator extends Translator {
 	 */
 	private final class PadFunctionModifier extends FunctionModifier {
 		@Override
-		public List<?> translate(IFunction function) {
+		public List<?> translate(Function function) {
 			if (function.getParameters().size() == 2) {
 				function.getParameters().add(getLanguageFactory().createLiteral(" ", TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
 			}
@@ -61,7 +61,7 @@ public class MySQLTranslator extends Translator {
 	}
 
 	@Override
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+    public void initialize(JDBCManagedConnectionFactory env) throws ConnectorException {
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$
@@ -87,7 +87,7 @@ public class MySQLTranslator extends Translator {
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d %H:%i:%S.%f")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addTypeConversion(new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
+			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
 			}
 		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);

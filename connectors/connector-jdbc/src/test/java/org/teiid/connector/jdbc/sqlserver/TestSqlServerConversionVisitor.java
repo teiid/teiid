@@ -23,22 +23,24 @@
 package org.teiid.connector.jdbc.sqlserver;
 
 import java.util.List;
-import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
-import com.metamatrix.query.unittest.FakeMetadataStore;
+import com.metamatrix.query.unittest.RealMetadataFactory;
 
 /**
  */
@@ -48,7 +50,7 @@ public class TestSqlServerConversionVisitor {
     
     @BeforeClass
     public static void setup() throws ConnectorException {
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
     }
 
     public String getTestVDB() {
@@ -141,31 +143,26 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
-    @Test public void testUniqueidentifier() throws Exception { 
-        FakeMetadataObject ldapModel = FakeMetadataFactory.createPhysicalModel("foo"); //$NON-NLS-1$
-        FakeMetadataObject table = FakeMetadataFactory.createPhysicalGroup("bar", ldapModel); //$NON-NLS-1$
+    @Test public void testUniqueidentifier() throws Exception {
+    	MetadataStore metadataStore = new MetadataStore();
+    	Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
+        Table table = RealMetadataFactory.createPhysicalGroup("bar", foo); //$NON-NLS-1$
         String[] elemNames = new String[] {
             "x"  //$NON-NLS-1$ 
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.STRING
         };
+        List<Column> cols =RealMetadataFactory.createElements(table, elemNames, elemTypes);
         
-        List cols = FakeMetadataFactory.createElements(table, elemNames, elemTypes);
+        Column obj = cols.get(0);
+        obj.setNativeType("uniqueidentifier"); //$NON-NLS-1$
         
-        FakeMetadataObject obj = (FakeMetadataObject) cols.get(0);
-        obj.putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "uniqueidentifier"); //$NON-NLS-1$
-        
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(ldapModel);
-        store.addObject(table);     
-        store.addObjects(cols);
-        
-        // Create the facade from the store
-        QueryMetadataInterface metadata = new FakeMetadataFacade(store);
+        CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, null);
         
         TranslationUtility tu = new TranslationUtility(metadata);
-        ICommand command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
+        Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("SELECT MAX(cast(bar.x as char(36))) FROM bar", trans, command); //$NON-NLS-1$
         
         command = tu.parseCommand("select * from (select max(x) from bar) x"); //$NON-NLS-1$

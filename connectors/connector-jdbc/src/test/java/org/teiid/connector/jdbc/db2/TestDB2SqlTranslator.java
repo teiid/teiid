@@ -24,17 +24,16 @@ package org.teiid.connector.jdbc.db2;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.Command;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -48,7 +47,7 @@ public class TestDB2SqlTranslator {
     @BeforeClass
     public static void setUp() throws ConnectorException {
         TRANSLATOR = new DB2SQLTranslator();        
-        TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        TRANSLATOR.initialize(new JDBCManagedConnectionFactory());
     }
     
     public String getTestVDB() {
@@ -57,11 +56,9 @@ public class TestDB2SqlTranslator {
     
     public void helpTestVisitor(TranslationUtility util, String input, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
-        ICommand obj = util.parseCommand(input);
+        Command obj = util.parseCommand(input);
         
-        ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
-                
-        TranslatedCommand tc = new TranslatedCommand(context, TRANSLATOR);
+        TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), TRANSLATOR);
         tc.translateCommand(obj);
         
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$

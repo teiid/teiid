@@ -28,13 +28,13 @@ import java.util.List;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ConvertModifier;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 public class BitFunctionModifier extends AliasModifier {
-	private ILanguageFactory langFactory;
+	private LanguageFactory langFactory;
 
-	public BitFunctionModifier(String alias, ILanguageFactory langFactory) {
+	public BitFunctionModifier(String alias, LanguageFactory langFactory) {
 		super(alias);
 		this.langFactory = langFactory;
 	}
@@ -43,7 +43,7 @@ public class BitFunctionModifier extends AliasModifier {
 	 * Wrap the renamed function in a convert back to integer
 	 */
 	@Override
-	public List<?> translate(IFunction function) {
+	public List<?> translate(Function function) {
 		modify(function);
 		return Arrays.asList(ConvertModifier.createConvertFunction(langFactory, function, TypeFacility.RUNTIME_NAMES.INTEGER));
 	}

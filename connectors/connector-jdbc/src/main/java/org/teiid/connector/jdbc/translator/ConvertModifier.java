@@ -29,10 +29,10 @@ import java.util.Map;
 
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
 
 /**
  * Base class for handling the convert function.
@@ -68,12 +68,12 @@ public class ConvertModifier extends FunctionModifier {
 		}
 
 		@Override
-		public List<?> translate(IFunction function) {
+		public List<?> translate(Function function) {
 			modify(function);
 			if (format == null) {
 				function.getParameters().remove(1);
 			} else {
-				((ILiteral)function.getParameters().get(1)).setValue(format);
+				((Literal)function.getParameters().get(1)).setValue(format);
 			}
 			return null;
 		}
@@ -114,10 +114,10 @@ public class ConvertModifier extends FunctionModifier {
     }
     
     @Override
-    public List<?> translate(IFunction function) {
+    public List<?> translate(Function function) {
     	function.setName("cast"); //$NON-NLS-1$
     	int targetCode = getCode(function.getType());
-    	List<IExpression> args = function.getParameters();
+    	List<Expression> args = function.getParameters();
         Class<?> srcType = args.get(0).getType();
         int sourceCode = getCode(srcType);
         
@@ -154,7 +154,7 @@ public class ConvertModifier extends FunctionModifier {
 	    	
 	    	if (type != null 
 	    			&& (!type.equals(typeMapping.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts 
-	    		((ILiteral)function.getParameters().get(1)).setValue(type);
+	    		((Literal)function.getParameters().get(1)).setValue(type);
 	    		return null;
 	    	}
 		}
@@ -162,10 +162,10 @@ public class ConvertModifier extends FunctionModifier {
     	return Arrays.asList(function.getParameters().get(0));
 	}
 
-	public static IFunction createConvertFunction(ILanguageFactory langFactory, IExpression expr, String typeName) {
+	public static Function createConvertFunction(LanguageFactory langFactory, Expression expr, String typeName) {
 		Class<?> type = TypeFacility.getDataTypeClass(typeName);
 		return langFactory.createFunction(SourceSystemFunctions.CONVERT, 
-				new IExpression[] {expr, langFactory.createLiteral(typeName, type)}, type);
+				new Expression[] {expr, langFactory.createLiteral(typeName, type)}, type);
 	}
 	
 	public void addNumericBooleanConversions() {
@@ -173,17 +173,17 @@ public class ConvertModifier extends FunctionModifier {
 		//number -> boolean
 		this.addTypeConversion(new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
-				IExpression stringValue = function.getParameters().get(0);
+			public List<?> translate(Function function) {
+				Expression stringValue = function.getParameters().get(0);
 				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		}, FunctionModifier.BOOLEAN);
 		this.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
-				IExpression booleanValue = function.getParameters().get(0);
-				if (booleanValue instanceof IFunction) {
-					IFunction nested = (IFunction)booleanValue;
+			public List<?> translate(Function function) {
+				Expression booleanValue = function.getParameters().get(0);
+				if (booleanValue instanceof Function) {
+					Function nested = (Function)booleanValue;
 					if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) { //$NON-NLS-1$
 						booleanValue = nested.getParameters().get(0);
 					}
@@ -193,8 +193,8 @@ public class ConvertModifier extends FunctionModifier {
 		});
     	this.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new FunctionModifier() {
 			@Override
-			public List<?> translate(IFunction function) {
-				IExpression stringValue = function.getParameters().get(0);
+			public List<?> translate(Function function) {
+				Expression stringValue = function.getParameters().get(0);
 				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});

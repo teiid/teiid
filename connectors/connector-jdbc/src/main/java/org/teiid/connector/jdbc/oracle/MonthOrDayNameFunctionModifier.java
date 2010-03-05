@@ -28,9 +28,9 @@ import java.util.List;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
 
 
 /**
@@ -38,26 +38,26 @@ import org.teiid.connector.language.ILanguageFactory;
  * Format: to_char(timestampvalue/dayvalue, 'Month'/'Day') 
  */
 public class MonthOrDayNameFunctionModifier extends FunctionModifier {
-    private ILanguageFactory langFactory;
+    private LanguageFactory langFactory;
     private String format;
     
-    public MonthOrDayNameFunctionModifier(ILanguageFactory langFactory, String format) {
+    public MonthOrDayNameFunctionModifier(LanguageFactory langFactory, String format) {
         this.langFactory = langFactory;
         this.format = format;
     }
     
     @Override
-    public List<?> translate(IFunction function) {
-        List<IExpression> args = function.getParameters();
+    public List<?> translate(Function function) {
+        List<Expression> args = function.getParameters();
     
-        IFunction func = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
+        Function func = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
             Arrays.asList( 
                 args.get(0), 
                 langFactory.createLiteral(format, TypeFacility.RUNTIME_TYPES.STRING)),  
             TypeFacility.RUNTIME_TYPES.STRING);
         
         // For some reason, these values have trailing spaces
-        IFunction trimFunc = langFactory.createFunction(SourceSystemFunctions.RTRIM,
+        Function trimFunc = langFactory.createFunction(SourceSystemFunctions.RTRIM,
             Arrays.asList( func ), TypeFacility.RUNTIME_TYPES.STRING);
         
         return Arrays.asList(trimFunc);    

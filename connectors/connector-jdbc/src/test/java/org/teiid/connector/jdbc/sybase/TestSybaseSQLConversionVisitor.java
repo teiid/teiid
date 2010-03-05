@@ -22,18 +22,17 @@
 
 package org.teiid.connector.jdbc.sybase;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Properties;
+import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-import org.teiid.connector.language.ICommand;
-
-import com.metamatrix.cdk.api.EnvironmentUtility;
+import org.teiid.connector.language.Command;
 
 /**
  */
@@ -43,7 +42,7 @@ public class TestSybaseSQLConversionVisitor {
     
     @BeforeClass
     public static void setup() throws ConnectorException {
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        trans.initialize(new JDBCManagedConnectionFactory());
     }
 
     public String getTestVDB() {
@@ -56,9 +55,9 @@ public class TestSybaseSQLConversionVisitor {
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput) {
         // Convert from sql to objects
-        ICommand obj = TranslationHelper.helpTranslate(vdb, input);
+        Command obj = TranslationHelper.helpTranslate(vdb, input);
         
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans); //$NON-NLS-1$
+        TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), trans);
 		try {
 			tc.translateCommand(obj);
 		} catch (ConnectorException e) {

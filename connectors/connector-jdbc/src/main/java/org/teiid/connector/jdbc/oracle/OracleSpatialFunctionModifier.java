@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.Literal;
 
 
 public class OracleSpatialFunctionModifier extends FunctionModifier {
@@ -37,8 +37,8 @@ public class OracleSpatialFunctionModifier extends FunctionModifier {
      * If either of the first two parameters are a Literal String, then we need to put the literal itself in the SQL
      * to be passed to Oracle, without the tick marks
      */
-    public List<?> translate(IFunction function) {
-        List<IExpression> params = function.getParameters();
+    public List<?> translate(Function function) {
+        List<Expression> params = function.getParameters();
     	List<Object> objs = new ArrayList<Object>();
         objs.add(function.getName());
         objs.add("("); //$NON-NLS-1$
@@ -55,10 +55,10 @@ public class OracleSpatialFunctionModifier extends FunctionModifier {
     }
 	
 	protected void addParamWithConversion(List<Object> objs,
-                                          IExpression expression) {
-		if ((expression instanceof ILiteral) 
-				&& (((ILiteral) expression).getValue() instanceof String)) {
-			objs.add(((ILiteral) expression).getValue());
+                                          Expression expression) {
+		if ((expression instanceof Literal) 
+				&& (((Literal) expression).getValue() instanceof String)) {
+			objs.add(((Literal) expression).getValue());
 		} else {
 			objs.add(expression);
 		}

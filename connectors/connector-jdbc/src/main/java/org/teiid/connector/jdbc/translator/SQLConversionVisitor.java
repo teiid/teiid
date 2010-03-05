@@ -30,7 +30,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,23 +37,25 @@ import java.util.Set;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.Translator.NullOrder;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.language.ISetQuery.Operation;
-import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.LanguageObject;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SetClause;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.Argument.Direction;
+import org.teiid.connector.language.SQLReservedWords.Tokens;
+import org.teiid.connector.language.SetQuery.Operation;
+import org.teiid.connector.language.SortSpecification.Ordering;
 import org.teiid.connector.visitor.util.SQLStringVisitor;
 
 
@@ -76,8 +77,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     private List preparedValues = new ArrayList();
     
-    private Set<ILanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<ILanguageObject, Boolean>());
-    private Map<ILanguageObject, Object> translations = new IdentityHashMap<ILanguageObject, Object>(); 
+    private Set<LanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<LanguageObject, Boolean>());
+    private Map<LanguageObject, Object> translations = new IdentityHashMap<LanguageObject, Object>(); 
     
     private boolean replaceWithBinding = false;
     
@@ -87,9 +88,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
     
     @Override
-    public void append(ILanguageObject obj) {
+    public void append(LanguageObject obj) {
         boolean replacementMode = replaceWithBinding;
-        if (obj instanceof ICommand || obj instanceof IFunction) {
+        if (obj instanceof Command || obj instanceof Function) {
     	    /*
     	     * In general it is not appropriate to use bind values within a function
     	     * unless the particulars of the function parameters are know.  
@@ -103,8 +104,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     		Object trans = this.translations.get(obj);
     		if (trans instanceof List<?>) {
     			parts = (List<?>)trans;
-    		} else if (trans instanceof ILanguageObject) {
-    			obj = (ILanguageObject)trans;
+    		} else if (trans instanceof LanguageObject) {
+    			obj = (LanguageObject)trans;
     		} else {
     			parts = translator.translate(obj, context);
     			if (parts != null) {
@@ -117,8 +118,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		if (parts != null) {
 			recursionObjects.add(obj);
 			for (Object part : parts) {
-			    if(part instanceof ILanguageObject) {
-			        append((ILanguageObject)part);
+			    if(part instanceof LanguageObject) {
+			        append((LanguageObject)part);
 			    } else {
 			        buffer.append(part);
 			    }
@@ -131,13 +132,13 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
     
 	@Override
-	public void visit(IOrderByItem obj) {
+	public void visit(SortSpecification obj) {
 		super.visit(obj);
 		NullOrder nullOrder = this.translator.getDefaultNullOrder();
 		if (!this.translator.supportsExplicitNullOrdering() || nullOrder == NullOrder.LOW) {
 			return;
 		}
-		if (obj.getDirection() == IOrderByItem.ASC) {
+		if (obj.getOrdering() == Ordering.ASC) {
 			if (nullOrder != NullOrder.FIRST) {
 				buffer.append(" NULLS FIRST"); //$NON-NLS-1$
 			}
@@ -188,29 +189,29 @@ public class SQLConversionVisitor extends SQLStringVisitor{
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 
-                valuesbuffer.append(SQLReservedWords.QUOTE)
-                      .append(escapeString(obj.toString(), SQLReservedWords.QUOTE))
-                      .append(SQLReservedWords.QUOTE);
+                valuesbuffer.append(Tokens.QUOTE)
+                      .append(escapeString(obj.toString(), Tokens.QUOTE))
+                      .append(Tokens.QUOTE);
             }
         }        
     }
 
     /**
-     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.IProcedure)
+     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.Call)
      */
-    public void visit(IProcedure obj) {
+    public void visit(Call obj) {
         this.prepared = true;
         /*
          * preparedValues is now a list of procedure params instead of just values
          */
-        this.preparedValues = obj.getParameters();
+        this.preparedValues = obj.getArguments();
         buffer.append(generateSqlForStoredProcedure(obj));
     }
 
     /**
-     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.ILiteral)
+     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.Literal)
      */
-    public void visit(ILiteral obj) {
+    public void visit(Literal obj) {
         if (this.prepared && (replaceWithBinding || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj);
@@ -220,43 +221,43 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
     
     @Override
-    public void visit(IInCriteria obj) {
+    public void visit(In obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
 
     @Override
-    public void visit(ILikeCriteria obj) {
+    public void visit(Like obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
 
     @Override
-    public void visit(ICompareCriteria obj) {
+    public void visit(Comparison obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
 
     @Override
-    public void visit(IInsertExpressionValueSource obj) {
+    public void visit(ExpressionValueSource obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
     
     @Override
-    public void visit(ISetClause obj) {
+    public void visit(SetClause obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
     
     @Override
-    public void visit(ISelectSymbol obj) {
+    public void visit(DerivedColumn obj) {
     	replaceWithBinding = false;
     	super.visit(obj);
     }
     
     @Override
-    public void visit(ISearchedCaseExpression obj) {
+    public void visit(SearchedCase obj) {
     	replaceWithBinding = false;
     	super.visit(obj);
     }
@@ -280,7 +281,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         return this.context;
     }
 
-    protected String getSourceComment(ICommand command) {
+    protected String getSourceComment(Command command) {
     	return this.translator.getSourceComment(this.context, command);
     }
     
@@ -290,22 +291,14 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @param exec The command for the stored procedure.
      * @return String to be executed by CallableStatement.
      */
-    protected String generateSqlForStoredProcedure(IProcedure exec) {
+    protected String generateSqlForStoredProcedure(Call exec) {
         StringBuffer prepareCallBuffer = new StringBuffer();
         prepareCallBuffer.append("{ "); //$NON-NLS-1$
 
-        List params = exec.getParameters();
+        List<Argument> params = exec.getArguments();
 
         //check whether a "?" is needed if there are returns
-        boolean needQuestionMark = false;
-        Iterator iter = params.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == Direction.RETURN){
-                needQuestionMark = true;
-                break;
-            }
-        }
+        boolean needQuestionMark = exec.getReturnType() != null;
         
         prepareCallBuffer.append(getSourceComment(exec));
         
@@ -318,9 +311,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         prepareCallBuffer.append("("); //$NON-NLS-1$
 
         int numberOfParameters = 0;
-        iter = params.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
+        for (Argument param : params) {
             if(param.getDirection() == Direction.IN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                 if(numberOfParameters > 0){
                     prepareCallBuffer.append(","); //$NON-NLS-1$

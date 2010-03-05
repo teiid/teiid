@@ -22,54 +22,54 @@
 
 package org.teiid.connector.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
-
-import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
+import org.teiid.connector.language.Command;
 
 public class TestJDBCProcedureExecution {
 	
 	@Test public void testProcedureExecution() throws Exception {
-		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
+		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
 		Connection connection = Mockito.mock(Connection.class);
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(1)).toReturn(5);
 		Mockito.stub(connection.prepareCall("{  call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
 		Translator sqlTranslator = new Translator();
-		ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
-		RuntimeMetadataImpl runtimeMetadata = new RuntimeMetadataImpl(FakeMetadataFactory.exampleBQTCached());
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, sqlTranslator, Mockito.mock(ConnectorLogger.class), new Properties(), runtimeMetadata, context, EnvironmentUtility.createEnvironment(new Properties()) );
+		
+		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
+		Mockito.stub(config.getExtensionTranslationClass()).toReturn(sqlTranslator);
+		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  config);
 		procedureExecution.execute();
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, Types.INTEGER);
 	}
-	
 	@Test public void testProcedureExecution1() throws Exception {
-		ICommand command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
+		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
 		Connection connection = Mockito.mock(Connection.class);
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(2)).toReturn(5);
 		Mockito.stub(connection.prepareCall("{  call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
 		Translator sqlTranslator = new Translator();
-		ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
-		RuntimeMetadataImpl runtimeMetadata = new RuntimeMetadataImpl(FakeMetadataFactory.exampleBQTCached());
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, sqlTranslator, Mockito.mock(ConnectorLogger.class), new Properties(), runtimeMetadata, context, EnvironmentUtility.createEnvironment(new Properties()) );
+
+		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
+		Mockito.stub(config.getExtensionTranslationClass()).toReturn(sqlTranslator);
+		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config );
 		procedureExecution.execute();
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, Types.INTEGER);
