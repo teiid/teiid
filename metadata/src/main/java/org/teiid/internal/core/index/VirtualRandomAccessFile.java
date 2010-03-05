@@ -19,38 +19,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.internal.core.index;
 
-package com.metamatrix.jdbc;
+import java.io.File;
+import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.jboss.virtual.VirtualFile;
 
-import com.metamatrix.core.log.LogListener;
+import com.metamatrix.core.util.ObjectConverterUtil;
 
-public class LogListernerProvider {
+public class VirtualRandomAccessFile {
+	File indexFile;
+	String mode;
 	
-	public LogListener get() {
-    	return new Log4jListener();
+	public VirtualRandomAccessFile(VirtualFile file, String mode) throws IOException{
+		this.indexFile = File.createTempFile(file.getName(), null);
+		ObjectConverterUtil.write(file.openStream(), indexFile);
+		this.mode = mode;
 	}
-
-	/**
-	 * Log4J Listener
-	 */
-	static class Log4jListener implements LogListener{
-
-		@Override
-		public void log(int level, String context, Object msg) {
-			Logger log4j = Log4JUtil.getLogger(context);
-			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg);
-		}
-
-		public void log(int level, String context, Throwable t, Object msg) {
-			Logger log4j = Log4JUtil.getLogger(context);
-			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg, t);
-		}
-						
-		@Override
-		public void shutdown() {
-		}
-
+	
+	public SafeRandomAccessFile getSafeRandomAccessFile() throws IOException {
+		return new SafeRandomAccessFile(indexFile, mode);
+	}
+	
+	public void close() {
+		indexFile.delete();
 	}
 }

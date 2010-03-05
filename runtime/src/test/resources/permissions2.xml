@@ -20,8 +20,8 @@
         </permission>
       </permissions>
       <principals>
-        <group>group1</group>
-        <group>group2</group>
+        <role>group1</role>
+        <role>group2</role>
       </principals>
     </data-role>
     <data-role>

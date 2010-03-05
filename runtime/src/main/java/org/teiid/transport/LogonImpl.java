@@ -22,42 +22,38 @@
 
 package org.teiid.transport;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.CredentialMap;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
+
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionService;
 
 public class LogonImpl implements ILogon {
 	
-	private SessionServiceInterface service;
+	private SessionService service;
 	private String clusterName;
 
-	public LogonImpl(SessionServiceInterface service, String clusterName) {
+	public LogonImpl(SessionService service, String clusterName) {
 		this.service = service;
 		this.clusterName = clusterName;
 	}
@@ -75,103 +71,87 @@ public class LogonImpl implements ILogon {
             credential = new Credentials(password.toCharArray());
         }
         
-        if(connProps.containsKey(ConnectionProperties.PROP_CREDENTIALS)) {
-            handleCredentials(connProps, user, password);
-        }
-        
-		Object payload = connProps.get(MMURL.CONNECTION.CLIENT_TOKEN_PROP);
-        
+        boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(MMURL.CONNECTION.ADMIN));
 		try {
-			MetaMatrixSessionInfo sessionInfo = service.createSession(user,credential, (Serializable) payload, applicationName, connProps);
-			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
+			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection);
+	        
+			long sessionID = updateDQPContext(sessionInfo, adminConnection);
 			LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getProductInfo(), clusterName);
-		} catch (MetaMatrixAuthenticationException e) {
-			throw new LogonException(e, e.getMessage());
+			if (Boolean.parseBoolean(connProps.getProperty(ServerConnection.LOCAL_CONNECTION))) {
+				service.setLocalSession(sessionID);
+			}
+			return new LogonResult(sessionInfo.getAttachment(SessionToken.class), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
+		} catch (LoginException e) {
+			throw new LogonException(e.getMessage());
 		} catch (SessionServiceException e) {
 			throw new LogonException(e, e.getMessage());
 		}
 	}
 
-	private void handleCredentials(Properties connProps, String user, String password) throws LogonException {
-
-		// Check if both credentials AND session token are used - if so, this is an error
-		if(connProps.containsKey(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD)) {
-		    throw new LogonException(DQPEmbeddedPlugin.Util.getString("LogonImpl.Invalid_use_of_credentials_and_token"));                //$NON-NLS-1$
-		} 
+	private long updateDQPContext(SessionMetadata s, boolean adminConnection) {
+		long sessionID = s.getSessionId();
 		
-		// Parse credentials and store CredentialMap as session token
-		try { 
-		    String credentials = connProps.getProperty(ConnectionProperties.PROP_CREDENTIALS);
-		    CredentialMap credentialMap = null;
-		    boolean defaultToLogon = false;
-		    if(credentials.startsWith(ConnectionProperties.DEFAULT_TO_LOGON)) {
-		        defaultToLogon = true;
-		    }
-		    int parenIndex = credentials.indexOf("("); //$NON-NLS-1$
-		    if(parenIndex >= 0) {
-		        credentialMap = CredentialMap.parseCredentials(credentials.substring(parenIndex));                    
-		    } else {
-		        credentialMap = new CredentialMap();
-		    }
-		    if(defaultToLogon) {
-		        credentialMap.setDefaultCredentialMode(CredentialMap.MODE_USE_DEFAULTS_GLOBALLY);
-		        Map<String, String> defaultCredentials = new HashMap<String, String>();
-		        defaultCredentials.put(CredentialMap.USER_KEYWORD, user);
-		        defaultCredentials.put(CredentialMap.PASSWORD_KEYWORD, password);
-		        credentialMap.setDefaultCredentials(defaultCredentials);
-		    } else {
-		        credentialMap.setDefaultCredentialMode(CredentialMap.MODE_IGNORE_DEFAULTS);
-		    }
-		    connProps.put(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, credentialMap);
-		} catch(ConnectorException e) {
-		    throw new LogonException(e.getMessage());
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		if (workContext == null) {
+			workContext = new DQPWorkContext();
+		}
+		workContext.setSessionToken(s.getAttachment(SessionToken.class));
+		workContext.setAppName(s.getApplicationName());
+		
+		LoginContext loginContext = s.getAttachment(LoginContext.class);
+		if (loginContext != null) {
+			workContext.setSubject(loginContext.getSubject());
+			workContext.setSecurityDomain(s.getSecurityDomain());
+			workContext.setSecurityContext(s.getAttachment("SecurityContext"));
 		}
 		
-		// Remove credentials from info properties
-		connProps.remove(ConnectionProperties.PROP_CREDENTIALS);
-	}
-
-	private MetaMatrixSessionID updateDQPContext(MetaMatrixSessionInfo sessionInfo) {
-		MetaMatrixSessionID sessionID = sessionInfo.getSessionID();
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		workContext.setSessionToken(sessionInfo.getSessionToken());
-		workContext.setAppName(sessionInfo.getApplicationName());
-		workContext.setTrustedPayload(sessionInfo.getTrustedToken());
-		workContext.setVdbName(sessionInfo.getProductInfo(MMURL.JDBC.VDB_NAME));
-		workContext.setVdbVersion(sessionInfo.getProductInfo(MMURL.JDBC.VDB_VERSION));
+		VDBMetaData vdb = s.getAttachment(VDBMetaData.class);
+		if (vdb != null) {
+			workContext.setVdbName(vdb.getName());
+			workContext.setVdbVersion(vdb.getVersion());		
+			workContext.setVdb(vdb);
+		}
+		
+		if (adminConnection) {
+			workContext.markAsAdmin();
+		}
+		DQPWorkContext.setWorkContext(workContext);
 		return sessionID;
 	}
 		
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
 		DQPWorkContext.getWorkContext().reset();
-		return null;
+		return ResultsFuture.NULL_FUTURE;
 	}
 
 	public ResultsFuture<?> ping() throws InvalidSessionException,MetaMatrixComponentException {
 		// ping is double used to alert the aliveness of the client, as well as check the server instance is 
 		// alive by socket server instance, so that they can be cached.
-		MetaMatrixSessionID id = DQPWorkContext.getWorkContext().getSessionId();
-		if (id != null) {
+		long id = DQPWorkContext.getWorkContext().getSessionId();
+		if (id != -1) {
 			this.service.pingServer(id);
 		}
-		return null;
+		return ResultsFuture.NULL_FUTURE;
 	}
 
 	@Override
-	public void assertIdentity(SessionToken sessionId) throws InvalidSessionException, MetaMatrixComponentException {
-		MetaMatrixSessionInfo sessionInfo;
+	public void assertIdentity(SessionToken checkSession) throws InvalidSessionException, MetaMatrixComponentException {
+		SessionMetadata sessionInfo = null;
 		try {
-			sessionInfo = this.service.validateSession(sessionId.getSessionID());
+			sessionInfo = this.service.validateSession(checkSession.getSessionID());
 		} catch (SessionServiceException e) {
 			throw new MetaMatrixComponentException(e);
 		}
 		
-		if (!sessionInfo.getSessionToken().equals(sessionInfo.getSessionToken())) {
+		if (sessionInfo == null) {
 			throw new InvalidSessionException();
 		}
-		this.updateDQPContext(sessionInfo);
+		
+		SessionToken st = sessionInfo.getAttachment(SessionToken.class);
+		if (!st.equals(checkSession)) {
+			throw new InvalidSessionException();
+		}
+		this.updateDQPContext(sessionInfo, false);
 	}
-
 }

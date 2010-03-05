@@ -36,7 +36,7 @@ import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.Column.SearchType;
@@ -484,7 +484,7 @@ public class RecordFactory {
         char[] supportFlags = ((String)tokens.get(tokenIndex++)).toCharArray();
         column.setSelectable(getBooleanValue(supportFlags[0]));
         column.setUpdatable(getBooleanValue(supportFlags[1]));
-        column.setAutoIncrementable(getBooleanValue(supportFlags[2]));
+        column.setAutoIncremented(getBooleanValue(supportFlags[2]));
         column.setCaseSensitive(getBooleanValue(supportFlags[3]));
         column.setSigned(getBooleanValue(supportFlags[4]));
         column.setCurrency(getBooleanValue(supportFlags[5]));
@@ -522,10 +522,10 @@ public class RecordFactory {
         }
 
         // The next token is the min value
-        column.setMinValue( getObjectValue((String)tokens.get(tokenIndex++)) );
+        column.setMinimumValue( getObjectValue((String)tokens.get(tokenIndex++)) );
 
         // The next token is the max value
-        column.setMaxValue( getObjectValue((String)tokens.get(tokenIndex++)) );
+        column.setMaximumValue( getObjectValue((String)tokens.get(tokenIndex++)) );
 
         // The next token is the format value
         column.setFormat( getObjectValue((String)tokens.get(tokenIndex++)) );
@@ -696,11 +696,11 @@ public class RecordFactory {
     /**
      * Create a ProcedureRecord instance from the specified index record
      */
-    public static ProcedureRecordImpl createProcedureRecord(final char[] record) {
+    public static Procedure createProcedureRecord(final char[] record) {
 
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
-        final ProcedureRecordImpl procRd = new ProcedureRecordImpl();
+        final Procedure procRd = new Procedure();
 
         // Extract the index version information from the record 
         int indexVersion = getIndexVersion(record);

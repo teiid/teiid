@@ -26,19 +26,14 @@ import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
 import com.metamatrix.common.log.LogConfiguration;
 
-@Singleton
-class LogConfigurationProvider implements Provider<LogConfiguration> {
+public class LogConfigurationProvider {
 
-	@Override
 	public LogConfiguration get() {
         return new Log4JLogConfiguration();
 	}
 
-	
 	static class Log4JLogConfiguration implements LogConfiguration {
 
 		@Override

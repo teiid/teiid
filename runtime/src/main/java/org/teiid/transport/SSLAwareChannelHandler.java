@@ -138,7 +138,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	}
 	
 	private final ChannelListener.ChannelListenerFactory listenerFactory;
-	private final SSLEngine engine;
+	private final SSLConfiguration config;
 	private final ClassLoader classLoader;
 	private Map<Channel, ChannelListener> listeners = Collections.synchronizedMap(new HashMap<Channel, ChannelListener>());
 	private AtomicLong objectsRead = new AtomicLong(0);
@@ -158,9 +158,9 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	};
 	 
 	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory,
-			SSLEngine engine, ClassLoader classloader) {
+			SSLConfiguration config, ClassLoader classloader) {
 		this.listenerFactory = listenerFactory;
-		this.engine = engine;
+		this.config = config;
 		this.classLoader = classloader;
 	}
 
@@ -172,8 +172,8 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			this.listeners.put(e.getChannel(), listener);
 			maxChannels = Math.max(maxChannels, this.listeners.size());
 		}
-		if (engine != null) {
-			SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
+		SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
+		if (sslHandler != null) {
 	        sslHandler.handshake(e.getChannel()).addListener(new ChannelFutureListener() {
 	        	public void operationComplete(ChannelFuture arg0)
 	        			throws Exception {
@@ -224,6 +224,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	public ChannelPipeline getPipeline() throws Exception {
 		ChannelPipeline pipeline = new DefaultChannelPipeline();
 
+		SSLEngine engine = config.getServerSSLEngine();
 	    if (engine != null) {
 	        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 	    }

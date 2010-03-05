@@ -28,21 +28,18 @@ import java.net.SocketAddress;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 /**
  * Sockets implementation of the communication framework class representing the server's view of a client connection.
@@ -55,20 +52,16 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 public class SocketClientInstance implements ChannelListener, ClientInstance {
 	
 	private final ObjectChannel objectSocket;
-    private final WorkerPool workerPool;
-    private final ClientServiceRegistry server;
     private Cryptor cryptor;
+    private ClientServiceRegistryImpl csr;
     private boolean usingEncryption; 
     private DhKeyGenerator keyGen;
     private DQPWorkContext workContext = new DQPWorkContext();
-    private SessionServiceInterface sessionService;
         
-    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
+    public SocketClientInstance(ObjectChannel objectSocket, ClientServiceRegistryImpl csr, boolean isClientEncryptionEnabled) {
         this.objectSocket = objectSocket;
-        this.workerPool = workerPool;
-        this.server = server;
+        this.csr = csr;
         this.usingEncryption = isClientEncryptionEnabled;
-        this.sessionService = sessionService;
         SocketAddress address = this.objectSocket.getRemoteAddress();
         if (address instanceof InetSocketAddress) {
         	InetSocketAddress addr = (InetSocketAddress)address;
@@ -145,7 +138,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) { 
 			LogManager.logDetail(LogConstants.CTX_SERVER, "processing message:" + packet); //$NON-NLS-1$
         }
-		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server, this.sessionService));
+		ServerWorkItem work = new ServerWorkItem(this, packet.getMessageKey(), packet, this.csr);
+		work.process();
 	}
 
 	public void shutdown() throws CommunicationException {

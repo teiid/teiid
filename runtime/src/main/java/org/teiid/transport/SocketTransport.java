@@ -21,22 +21,9 @@
  */
 package org.teiid.transport;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.GeneralSecurityException;
-import java.util.Properties;
-
-import com.google.inject.name.Named;
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogConstants;
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 /**
  * This class starts a Socket for DQP connections and listens on the port and hands out the connections to the 
@@ -44,59 +31,28 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
  */
 public class SocketTransport {
         
-    private static final int DEFAULT_SERVER_PORT = 31000;
-    private static final int DEFAULT_MAX_THREADS = 15;
-    private static final int DEFAULT_INPUT_BUFFER_SIZE = 0;
-    private static final int DEFAULT_OUTPUT_BUFFER_SIZE = 0;
-	
-	private Properties props; 
 	private SocketListener listener;
+	private SocketConfiguration config;
+	private ClientServiceRegistryImpl csr;
 	
-	private SessionServiceInterface sessionSerice;
-	protected ClientServiceRegistry clientServices;
-	
-	public SocketTransport(Properties props, ClientServiceRegistry serivices, SessionServiceInterface sessionService) {
-		this.props = props;
-		this.clientServices = serivices;
-		this.sessionSerice = sessionService;
+	public SocketTransport(SocketConfiguration config, ClientServiceRegistryImpl csr) {
+		this.config = config;
+		this.csr = csr;
 	}
 	
-    public void start(@Named(DQPEmbeddedProperties.HOST_ADDRESS) InetAddress hostAddress) {
-        int socketPort = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
-        int maxThreads = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.MAX_THREADS, DEFAULT_MAX_THREADS);
-        int inputBufferSize = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.INPUT_BUFFER_SIZE, DEFAULT_INPUT_BUFFER_SIZE);
-        int outputBufferSize = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.OUTPUT_BUFFER_SIZE, DEFAULT_OUTPUT_BUFFER_SIZE);
-        String bindAddress = hostAddress.getHostAddress();
+    public void start() {
+        String bindAddress = this.config.getHostAddress().getHostAddress();
         
-        try {
-			SSLConfiguration helper = new SSLConfiguration();
-			helper.init(this.props);
-			
-			LogManager.logDetail(LogConstants.CTX_SERVER, DQPEmbeddedPlugin.Util.getString("SocketTransport.1", new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
-			this.listener = new SocketListener(socketPort, bindAddress, this.clientServices, inputBufferSize, outputBufferSize, maxThreads, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), this.sessionSerice);
-			
-		} catch (UnknownHostException e) {
-			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
-		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
-		} catch (GeneralSecurityException e) {
-			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
-		}        
+		LogManager.logDetail(LogConstants.CTX_SERVER, DQPEmbeddedPlugin.Util.getString("SocketTransport.1", new Object[] {bindAddress, String.valueOf(this.config.getPortNumber())})); //$NON-NLS-1$
+		this.listener = new SocketListener(this.config.getPortNumber(), bindAddress, this.config.getInputBufferSize(), this.config.getOutputBufferSize(), this.config.getMaxSocketThreads(), this.config.getSSLConfiguration(), csr);
     }
     
     public void stop() {
     	this.listener.stop();
     }
     
-    public WorkerPoolStats getProcessPoolStats() {
-    	return listener.getProcessPoolStats();
-    }
-    
-    public int getPort() {
-    	return this.listener.getPort();
-    }
-       
     public SocketListenerStats getStats() {
     	return this.listener.getStats();
     }    
+ 	
 }

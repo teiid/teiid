@@ -14,6 +14,7 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -27,10 +28,12 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-connector-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -43,27 +46,21 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-txn-jbossts</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client-jdbc</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
     	<groupId>org.jboss.teiid</groupId>
     	<artifactId>teiid-cache-jbosscache</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.code.guice</groupId>
-    <artifactId>guice</artifactId>
-    </dependency>    
-    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
+      <scope>provided</scope>
     </dependency>    
     <dependency>
         <groupId>commons-logging</groupId>
@@ -74,5 +71,31 @@
         <artifactId>netty</artifactId>
     </dependency>
         
+    <dependency>
+        <groupId>org.jboss.cache</groupId>
+        <artifactId>jbosscache-core</artifactId>
+        <scope>test</scope>
+    </dependency>        
+    
+    <dependency>
+        <groupId>javax.resource</groupId>
+        <artifactId>connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>provided</scope>
+    </dependency>    
+    <dependency>
+        <groupId>org.jboss.deployers</groupId>
+        <artifactId>jboss-deployers-vfs-spi</artifactId>
+        <scope>provided</scope>
+    </dependency> 
+    <dependency>    
+        <groupId>org.jboss.deployers</groupId>
+        <artifactId>jboss-deployers-vfs</artifactId>
+        <scope>provided</scope>
+    </dependency>    
   </dependencies>
 </project>

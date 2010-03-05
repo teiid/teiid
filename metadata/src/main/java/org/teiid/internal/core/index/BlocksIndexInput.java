@@ -11,12 +11,12 @@
  *******************************************************************************/
 package org.teiid.internal.core.index;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.jboss.virtual.VirtualFile;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IQueryResult;
@@ -33,12 +33,13 @@ public class BlocksIndexInput extends IndexInput {
 	protected int currentIndexBlockNum;
 	protected IndexBlock currentIndexBlock;
 	private RandomAccessFile raf;
-	protected File indexFile;
+	private VirtualRandomAccessFile vraf;
+	protected VirtualFile indexFile;
 	protected LRUCache blockCache;
 
 	protected IndexSummary summary;
 
-	public BlocksIndexInput(File inputFile) {
+	public BlocksIndexInput(VirtualFile inputFile) {
 		this.indexFile= inputFile;
 		blockCache= new LRUCache(CACHE_SIZE);
 	}
@@ -60,6 +61,7 @@ public class BlocksIndexInput extends IndexInput {
 			setOpen(false);
 			if (raf != null)
 				raf.close();
+			vraf.close();
 		}
 	}
     
@@ -212,7 +214,8 @@ public class BlocksIndexInput extends IndexInput {
 	 */
 	public void open() throws IOException {
 		if (!isOpen()) {
-			raf= new SafeRandomAccessFile(indexFile, "r"); //$NON-NLS-1$
+			vraf = new VirtualRandomAccessFile(indexFile, "r");
+			raf= vraf.getSafeRandomAccessFile();
 			String sig= raf.readUTF();
 			if (!sig.equals(IIndexConstants.SIGNATURE))
 				throw new IOException(Util.bind("exception.wrongFormat")); //$NON-NLS-1$

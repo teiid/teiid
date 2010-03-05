@@ -34,70 +34,55 @@ import javax.crypto.SealedObject;
 
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.platform.socket.client.ServiceInvocationStruct;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.security.api.SessionToken;
 
-public class ServerWorkItem implements Runnable {
+public class ServerWorkItem {
+	
 	private final ClientInstance socketClientInstance;
 	private final Serializable messageKey;
     private final Message message;
-    private final ClientServiceRegistry server;
-    private final SessionServiceInterface sessionService;
+    private final ClientServiceRegistryImpl csr;
     
-    public ServerWorkItem(ClientInstance socketClientInstance,
-			Serializable messageKey, Message message,
-			ClientServiceRegistry server, SessionServiceInterface sessionService) {
+    public ServerWorkItem(ClientInstance socketClientInstance, Serializable messageKey, Message message, ClientServiceRegistryImpl server) {
 		this.socketClientInstance = socketClientInstance;
 		this.messageKey = messageKey;
 		this.message = message;
-		this.server = server;
-		this.sessionService = sessionService;
+		this.csr = server;
 	}
 
 	/**
-	 * main entry point for remote method calls. encryption/decryption is
-	 * handled here so that it won't be done by the io thread
+	 * main entry point for remote method calls.
 	 */
-	public void run() {
-		DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
+	public void process() {
 		Message result = null;
-		String service = null;
+		String loggingContext = null;
+		DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
 		final boolean encrypt = message.getContents() instanceof SealedObject;
         try {
             message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
-            
 			if (!(message.getContents() instanceof ServiceInvocationStruct)) {
 				throw new AssertionError("unknown message contents"); //$NON-NLS-1$
 			}
 			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
-			Object instance = server.getClientService(serviceStruct.targetClass);
-			if (instance == null) {
-				throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
-			}
-			if (!(instance instanceof ILogon)) {
-				DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
-				sessionService.validateSession(workContext.getSessionId());
-			}
-			service = serviceStruct.targetClass;
-			ReflectionHelper helper = new ReflectionHelper(instance.getClass());
-			Method m = helper.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
+			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass);			
+			loggingContext = clientService.getLoggingContext();
+			SessionToken.setSession(this.socketClientInstance.getWorkContext().getSessionToken());
+			Method m = clientService.getReflectionHelper().findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 			Object methodResult;
 			try {
-				methodResult = m.invoke(instance, serviceStruct.args);
+				methodResult = m.invoke(clientService.getInstance(), serviceStruct.args);
 			} catch (InvocationTargetException e) {
 				throw e.getCause();
 			}
@@ -111,9 +96,9 @@ public class ServerWorkItem implements Runnable {
 								try {
 									asynchResult.setContents(completedFuture.get());
 								} catch (InterruptedException e) {
-									asynchResult.setContents(processException(e, serviceStruct.targetClass));
+									asynchResult.setContents(processException(e, clientService.getLoggingContext()));
 								} catch (ExecutionException e) {
-									asynchResult.setContents(processException(e.getCause(), serviceStruct.targetClass));
+									asynchResult.setContents(processException(e.getCause(), clientService.getLoggingContext()));
 								}
 								sendResult(asynchResult, encrypt);
 							}
@@ -126,9 +111,13 @@ public class ServerWorkItem implements Runnable {
 			}
 		} catch (Throwable t) {
 			Message holder = new Message();
-			holder.setContents(processException(t, service));
+			holder.setContents(processException(t, loggingContext));
 			result = holder;
+		} finally {
+			DQPWorkContext.releaseWorkContext();
+			SessionToken.setSession(null);
 		}
+		
 		if (result != null) {
 			sendResult(result, encrypt);
 		}
@@ -145,11 +134,7 @@ public class ServerWorkItem implements Runnable {
 		socketClientInstance.send(result, messageKey);
 	}
 
-	private Serializable processException(Throwable e, String service) {
-		String context = null;
-		if (service != null) {
-			context = this.server.getLoggingContextForService(service);
-		}
+	private Serializable processException(Throwable e, String context) {
 		if (context == null) {
 			context = LogConstants.CTX_SERVER;
 		}
@@ -176,5 +161,4 @@ public class ServerWorkItem implements Runnable {
 		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getConnectionID()); //$NON-NLS-1$ 
 		LogManager.logWarning(context, DQPEmbeddedPlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
 	}
-
 }

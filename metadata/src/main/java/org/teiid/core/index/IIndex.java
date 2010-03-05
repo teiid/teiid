@@ -11,8 +11,9 @@
  *******************************************************************************/
 package org.teiid.core.index;
 
-import java.io.File;
 import java.io.IOException;
+
+import org.jboss.virtual.VirtualFile;
 
 /**
  * An IIndex is the interface used to generate an index file, and to make queries on
@@ -31,7 +32,7 @@ public interface IIndex {
 	/**
 	 * Returns the index file on the disk.
 	 */
-	File getIndexFile();
+	VirtualFile getIndexFile();
 	/**
 	 * Returns the number of documents indexed.
 	 */

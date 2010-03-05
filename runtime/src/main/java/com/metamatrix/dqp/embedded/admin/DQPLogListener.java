@@ -22,7 +22,7 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
-import org.teiid.adminapi.EmbeddedLogger;
+import org.teiid.adminapi.Logger;
 import org.teiid.adminapi.LogConfiguration;
 
 import com.metamatrix.core.log.LogListener;
@@ -31,9 +31,9 @@ import com.metamatrix.core.log.MessageLevel;
 
 public class DQPLogListener implements LogListener {
     
-    private EmbeddedLogger logger;
+    private Logger logger;
     
-    public DQPLogListener(EmbeddedLogger logger) {
+    public DQPLogListener(Logger logger) {
         this.logger = logger;
     }
 

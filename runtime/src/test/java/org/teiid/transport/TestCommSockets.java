@@ -22,15 +22,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
-
-import javax.net.ssl.SSLEngine;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +35,6 @@ import org.junit.Test;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
@@ -49,7 +44,7 @@ import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionService;
 
 public class TestCommSockets {
 
@@ -68,17 +63,14 @@ public class TestCommSockets {
 	}
 
 	@Test public void testFailedConnect() throws Exception {
-		ClientServiceRegistry csr = new ClientServiceRegistry();
-		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
-		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
-		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
-				csr, 1024, 1024, 1, null, true, sessionService);
+		SSLConfiguration config = new SSLConfiguration();
+		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),1024, 1024, 1, config, null);
 
 		try {
 			Properties p = new Properties();
 			String url = new MMURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
 			p.setProperty(MMURL.CONNECTION.SERVER_URL, url); //wrong port
-			SocketServerConnectionFactory.getInstance().createConnection(p);
+			SocketServerConnectionFactory.getInstance().getConnection(p);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 
@@ -88,11 +80,11 @@ public class TestCommSockets {
 	@Test public void testConnectWithoutPooling() throws Exception {
 		Properties p = new Properties();
 		p.setProperty("org.teiid.sockets.maxCachedInstances", String.valueOf(0)); //$NON-NLS-1$
-		SocketServerConnection conn = helpEstablishConnection(false, null, true, p);
+		SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
-		conn.shutdown();
+		conn.close();
 		stats = listener.getStats();
 		assertEquals(1, stats.maxSockets);
 		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
@@ -106,18 +98,18 @@ public class TestCommSockets {
 	}
 	
 	@Test public void testConnectWithPooling() throws Exception {
-		SocketServerConnection conn = helpEstablishConnection(false, null);
+		SocketServerConnection conn = helpEstablishConnection(false);
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
-		conn.shutdown();
+		conn.close();
 		stats = listener.getStats();
 		assertEquals(1, stats.maxSockets);
 		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
 		stats = listener.getStats();
 		assertEquals(1, stats.sockets);
-		conn = helpEstablishConnection(false, null);
-		conn.shutdown();
+		conn = helpEstablishConnection(false);
+		conn.close();
 		stats = listener.getStats();
 		assertEquals(1, stats.sockets);
 		assertEquals(1, stats.maxSockets);
@@ -125,31 +117,31 @@ public class TestCommSockets {
 
 
 	@Test public void testConnectWithoutClientEncryption() throws Exception {
-		SocketServerConnection conn = helpEstablishConnection(false, null, false, new Properties());
+		SSLConfiguration config = new SSLConfiguration();
+		config.setClientEncryptionEnabled(false);
+		SocketServerConnection conn = helpEstablishConnection(false, config, new Properties());
 		assertTrue(conn.selectServerInstance().getCryptor() instanceof NullCryptor);
-		conn.shutdown();
+		conn.close();
 	}
 
-	private SocketServerConnection helpEstablishConnection(boolean secure,
-			SSLEngine serverSSL) throws CommunicationException, ConnectionException {
-		return helpEstablishConnection(secure, serverSSL, true, new Properties());
+	private SocketServerConnection helpEstablishConnection(boolean secure) throws CommunicationException, ConnectionException {
+		return helpEstablishConnection(secure, new SSLConfiguration(), new Properties());
 	}
 
-	private SocketServerConnection helpEstablishConnection(boolean secure,
-			SSLEngine serverSSL, boolean isClientEncryptionEnabled, Properties socketConfig) throws CommunicationException,
+	private SocketServerConnection helpEstablishConnection(boolean clientSecure, SSLConfiguration config, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
 		if (listener == null) {
-			SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
-			ClientServiceRegistry csr = new ClientServiceRegistry();
-			csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster") { //$NON-NLS-1$
+			ClientServiceRegistryImpl server = new ClientServiceRegistryImpl();
+			server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
 				@Override
 				public LogonResult logon(Properties connProps)
 						throws LogonException, ComponentNotFoundException {
 					return new LogonResult();
 				}
-			}, "foo"); //$NON-NLS-1$
-			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
-					csr, 1024, 1024, 1, serverSSL, isClientEncryptionEnabled, sessionService);
+
+			}, null); 
+			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server);
+			
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);
 			assertEquals(0, stats.objectsRead);
@@ -158,19 +150,19 @@ public class TestCommSockets {
 		}
 
 		Properties p = new Properties();
-		String url = new MMURL(addr.getHostName(), listener.getPort(),secure).getAppServerURL();
+		String url = new MMURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
 		p.setProperty(MMURL.CONNECTION.SERVER_URL, url); 
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);
 		}
-		return sscf.createConnection(p);
+		return sscf.getConnection(p);
 	}
 
 	@Test public void testSSLConnectWithNonSSLServer() throws Exception {
 		try {
-			helpEstablishConnection(true, null);
+			helpEstablishConnection(true);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 			
@@ -178,13 +170,18 @@ public class TestCommSockets {
 	}
 
 	@Test public void testAnonSSLConnect() throws Exception {
-		SSLEngine engine = SocketUtil.getAnonSSLContext().createSSLEngine();
-		engine.setUseClientMode(false);
-		engine.setEnabledCipherSuites(new String[] { SocketUtil.ANON_CIPHER_SUITE });
+		SSLConfiguration config = new SSLConfiguration();
+		config.setSslEnabled(true);
+		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
-		SocketServerConnection conn = helpEstablishConnection(true, engine, true, p);
-		conn.shutdown();
+		try {
+			helpEstablishConnection(false, config, p);
+		} catch (CommunicationException e) {
+			
+		}
+		SocketServerConnection conn = helpEstablishConnection(true, config, p);
+		conn.close();
 	}
 	
 }

@@ -20,8 +20,8 @@
         </permission>
       </permissions>
       <principals>
-        <group>group1</group>
-        <group>group2</group>
+        <role>group1</role>
+        <role>group2</role>
       </principals>
     </data-role>
     <data-role>
@@ -44,7 +44,7 @@
       <vdb-version>1</vdb-version>
       <description>I have no permissions</description>
       <principals>
-        <group>group3</group>
+        <role>group3</role>
       </principals>
     </data-role>
   </roles>

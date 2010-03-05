@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.virtual.VirtualFile;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IIndex;
@@ -61,7 +62,7 @@ public class Index implements IIndex {
 	protected Map removedInOld;
 	protected static final int CAN_MERGE= 0;
 	protected static final int MERGED= 1;
-	private File indexFile;
+	private VirtualFile indexFile;
     
     /* 
      * Caching the index input object so we can keep it open for multiple pass querying rather than
@@ -76,34 +77,13 @@ public class Index implements IIndex {
 	 */
 	public String toString;
     
-	public Index(File indexDirectory, boolean reuseExistingFile) throws IOException {
-		this(indexDirectory,".index", reuseExistingFile); //$NON-NLS-1$
-	}
-    
-	public Index(File indexDirectory, String indexName, boolean reuseExistingFile) throws IOException {
-		super();
-		state= MERGED;
-		indexFile= new File(indexDirectory, indexName);
+	public Index(VirtualFile f, boolean reuseExistingFile) throws IOException {
+		state = MERGED;
+		indexFile = f;
 		initialize(reuseExistingFile);
         //System.out.println("  Index()  Name = " + indexName);
 	}
-    
-    public Index(String indexName, boolean reuseExistingFile) throws IOException {
-        this(indexName, null, null, reuseExistingFile);
-    }
-    
-	public Index(String indexName, String resourceFileName, boolean reuseExistingFile) throws IOException {
-		this(indexName, resourceFileName, null, reuseExistingFile);
-	}
-    
-	public Index(String indexName, String resourceFileName, String toString, boolean reuseExistingFile) throws IOException {
-		super();
-		state= MERGED;
-		indexFile= new File(indexName);
-		this.toString = toString;
-        this.resourceFileName = resourceFileName;
-		initialize(reuseExistingFile);
-	}
+
 	/**
 	 * Indexes the given document, using the appropriate indexer registered in the indexerRegistry.
 	 * If the document already exists in the index, it overrides the previous one. The changes will be 
@@ -160,7 +140,7 @@ public class Index implements IIndex {
 	/**
 	 * @see IIndex#getIndexFile
 	 */
-	public File getIndexFile() {
+	public VirtualFile getIndexFile() {
 		return indexFile;
 	}
     
@@ -232,7 +212,7 @@ public class Index implements IIndex {
 		removedInOld= new HashMap(11);
 
 		// check whether existing index file can be read
-		if (reuseExistingFile && indexFile.exists() && indexFile.length() > 0) {
+		if (reuseExistingFile && indexFile.exists() && indexFile.getSize() > 0) {
             BlocksIndexInput mainIndexInput= getBlocksIndexInput();
 			try {
 				mainIndexInput.open();
@@ -263,8 +243,9 @@ public class Index implements IIndex {
 	 * Merges the in memory index and the index on the disk, and saves the results on the disk.
 	 */
 	protected void merge() throws IOException {
+		/*
 		//initialisation of tempIndex
-		File tempFile= new File(indexFile.getAbsolutePath() + "TempVA"); //$NON-NLS-1$
+		VirtualFile tempFile= new File(indexFile.getAbsolutePath() + "TempVA"); //$NON-NLS-1$
 
 		IndexInput mainIndexInput= getBlocksIndexInput();
 		BlocksIndexOutput tempIndexOutput= new BlocksIndexOutput(tempFile);
@@ -303,6 +284,8 @@ public class Index implements IIndex {
             }
 			state= MERGED;
 		}
+		*/
+		throw new IOException("Can not merge the Index files. These are read only files for Teiid purpose.");
 	}
     
 	/**
@@ -478,9 +461,12 @@ public class Index implements IIndex {
     
     public void dispose() {
         close();
-        if( !indexFile.delete() ) {
-            indexFile.deleteOnExit();
-        }
+        try {
+			if( !indexFile.delete() ) {
+			    indexFile.delete(1000);
+			}
+		} catch (IOException e) {
+		}
     }
     
 	/**
@@ -494,7 +480,10 @@ public class Index implements IIndex {
     public String toString() {
     	String str = this.toString;
     	if (str == null) str = super.toString();
-    	str += "(length: "+ getIndexFile().length() +")"; //$NON-NLS-1$ //$NON-NLS-2$
+    	try {
+			str += "(length: "+ getIndexFile().getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (IOException e) {
+		}
     	return str;
     }
     

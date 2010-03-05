@@ -22,6 +22,8 @@
 
 package org.teiid.transport;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Properties;
@@ -29,11 +31,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.transport.ClientInstance;
-import org.teiid.transport.ServerWorkItem;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -41,7 +40,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -53,16 +51,13 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImp
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
-public class TestSocketRemoting extends TestCase {
+public class TestSocketRemoting {
 	
 	public interface FakeService {
 		
@@ -88,12 +83,12 @@ public class TestSocketRemoting extends TestCase {
 	
 	private static class FakeClientServerInstance extends SocketServerInstanceImpl implements ClientInstance {
 		
-		ClientServiceRegistry clientServiceRegistry;
+		ClientServiceRegistryImpl server;
 		private ResultsReceiver<Object> listener;
 
-		public FakeClientServerInstance(ClientServiceRegistry clientServiceRegistry) {
+		public FakeClientServerInstance(ClientServiceRegistryImpl server) {
 			super();
-			this.clientServiceRegistry = clientServiceRegistry;
+			this.server = server;
 		}
 
 		public HostInfo getHostInfo() {
@@ -108,9 +103,9 @@ public class TestSocketRemoting extends TestCase {
 		public void send(Message message, ResultsReceiver<Object> listener,
 				Serializable messageKey) throws CommunicationException,
 				InterruptedException {
-			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, clientServiceRegistry, SimpleMock.createSimpleMock(SessionServiceInterface.class));
+			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, server);
 			this.listener = listener;
-			workItem.run();
+			workItem.process();
 		}
 
 		public void shutdown() {
@@ -134,18 +129,20 @@ public class TestSocketRemoting extends TestCase {
 	/**
 	 * No server was supplied, will throw an NPE under the covers
 	 */
+	@Test
 	public void testUnckedException() throws Exception {
 		FakeClientServerInstance serverInstance = new FakeClientServerInstance(null);
 		try {
 			createFakeConnection(serverInstance);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("Unable to find a component used in logging on to MetaMatrix", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	
+	@Test
 	public void testMethodInvocation() throws Exception {
-		ClientServiceRegistry csr = new ClientServiceRegistry();
+		ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();
 		csr.registerClientService(ILogon.class, new ILogon() {
 
 				public ResultsFuture<?> logoff()
@@ -197,10 +194,11 @@ public class TestSocketRemoting extends TestCase {
 		}
 		ClientSideDQP dqp = connection.getService(ClientSideDQP.class);
 		try {
-			dqp.begin();
+			ResultsFuture<?> future = dqp.begin();
+			future.get();
 			fail("exception expected"); //$NON-NLS-1$
-		} catch (XATransactionException e) {
-			assertEquals("Component not found: com.metamatrix.dqp.client.ClientSideDQP", e.getMessage()); //$NON-NLS-1$
+		} catch (Exception e) {
+			assertTrue(e.getMessage().endsWith("Component not found: com.metamatrix.dqp.client.ClientSideDQP")); //$NON-NLS-1$
 		}
 	}
 

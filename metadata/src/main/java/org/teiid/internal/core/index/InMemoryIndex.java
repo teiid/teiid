@@ -11,12 +11,12 @@
  *******************************************************************************/
 package org.teiid.internal.core.index;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jboss.virtual.VirtualFile;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IIndex;
 
@@ -163,7 +163,7 @@ public class InMemoryIndex {
 	 *			"ref/String 1 2"
 	 */
 
-	public void save(File file) throws IOException {
+	public void save(VirtualFile file) throws IOException {
 		BlocksIndexOutput output= new BlocksIndexOutput(file);
 		save(output);
 	}

@@ -28,63 +28,39 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.security.api.service.SessionService;
 
 public class TestLogonImpl extends TestCase {
 
 	public void testLogonResult() throws Exception {
-		SessionServiceInterface ssi = Mockito
-				.mock(SessionServiceInterface.class);
-
+		SessionService ssi = Mockito.mock(SessionService.class);
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		String userName = "Fred"; //$NON-NLS-1$
 		String applicationName = "test"; //$NON-NLS-1$
 		Properties p = new Properties();
 		p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
 		p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
 
-		MetaMatrixSessionInfo resultInfo = new MetaMatrixSessionInfo(
-				new MetaMatrixSessionID(1), userName, 0, applicationName, new Properties(),
-				null, null); 
+		SessionMetadata session = new SessionMetadata();
+		session.setUserName(userName);
+		session.setApplicationName(applicationName);
+		session.setSessionId(1);
+		session.addAttchment(SessionToken.class, new SessionToken(1, userName));
 
-		Mockito.stub(ssi.createSession(userName, null, null, applicationName,
-								p)).toReturn(resultInfo);
+		Mockito.stub(ssi.createSession(userName, null, applicationName,p, false)).toReturn(session);
 
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 
 		LogonResult result = impl.logon(p);
 		assertEquals(userName, result.getUserName());
-		assertEquals(new MetaMatrixSessionID(1), result.getSessionID());
+		assertEquals(1, result.getSessionID());
 	}
 	
-	public void testCredentials() throws Exception {
-		SessionServiceInterface ssi = Mockito.mock(SessionServiceInterface.class);
-		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-		Properties p = new Properties();
-		p.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, new Object());
-		//invalid credentials
-		p.setProperty(MMURL.JDBC.CREDENTIALS, "(...)"); //$NON-NLS-1$
-		
-		try {
-			impl.logon(p);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (LogonException e) {
-			assertEquals("Conflicting use of both client session token and credentials.", e.getMessage()); //$NON-NLS-1$
-		}
-		
-		p.remove(MMURL.CONNECTION.CLIENT_TOKEN_PROP);
-		
-		try {
-			impl.logon(p);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (LogonException e) {
-			assertEquals("Credentials string must contain \"system\" property.", e.getMessage()); //$NON-NLS-1$
-		}
-	}
 	
 }

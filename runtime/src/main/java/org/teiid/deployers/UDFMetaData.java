@@ -19,38 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.deployers;
 
-package com.metamatrix.jdbc;
+import java.util.Collection;
 
-import org.apache.log4j.Logger;
+import org.jboss.managed.api.annotation.ManagementObject;
 
-import com.metamatrix.core.log.LogListener;
+import com.metamatrix.query.function.metadata.FunctionMethod;
 
-public class LogListernerProvider {
+@ManagementObject
+public class UDFMetaData {
+	private Collection <FunctionMethod> methods = null;
 	
-	public LogListener get() {
-    	return new Log4jListener();
+	public UDFMetaData(Collection <FunctionMethod> methods) {
+		this.methods = methods;
 	}
-
-	/**
-	 * Log4J Listener
-	 */
-	static class Log4jListener implements LogListener{
-
-		@Override
-		public void log(int level, String context, Object msg) {
-			Logger log4j = Log4JUtil.getLogger(context);
-			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg);
-		}
-
-		public void log(int level, String context, Throwable t, Object msg) {
-			Logger log4j = Log4JUtil.getLogger(context);
-			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg, t);
-		}
-						
-		@Override
-		public void shutdown() {
-		}
-
+	
+	public Collection <FunctionMethod> getMethods(){
+		return this.methods;
 	}
 }

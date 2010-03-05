@@ -22,21 +22,13 @@
 
 package com.metamatrix.dqp.service.buffer;
 
-import java.util.Properties;
+import org.teiid.services.BufferServiceImpl;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
-import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
-import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
-import com.metamatrix.dqp.service.ConfigurationService;
-import com.metamatrix.dqp.service.DQPServiceNames;
 
 public class TestLocalBufferService extends TestCase {
 
@@ -45,69 +37,42 @@ public class TestLocalBufferService extends TestCase {
     }
 
     public void testMissingRequiredProperties() throws Exception {        
-        try {
-        	ApplicationEnvironment r = new ApplicationEnvironment();
-            ConfigurationService cs = new EmbeddedConfigurationService();
-            Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
-            p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
-            cs.initialize(p);
-            r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-            EmbeddedBufferService svc = new EmbeddedBufferService();
-            svc.initialize(null);
-            r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
+        BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid");
 
-            // These are defaults if none of the properties are set.
-            assertTrue("64".equals(cs.getBufferMemorySize())); //$NON-NLS-1$
-            assertTrue(cs.getDiskBufferDirectory().isDirectory() && cs.getDiskBufferDirectory().exists());
-            assertTrue(cs.useDiskBuffering());
-            
-        } catch(ApplicationInitializationException e) {
-            // expected
-        } 
+        // These are defaults if none of the properties are set.
+        assertTrue(64 == svc.getBufferMemorySizeInMB()); //$NON-NLS-1$
+        assertTrue(svc.getBufferDirectory().isDirectory() && svc.getBufferDirectory().exists());
+        assertTrue(svc.isUseDisk());
     }
     
     public void testCheckMemPropertyGotSet() throws Exception {
-        EmbeddedBufferService svc = null;
-        ConfigurationService cs = null;
-        ApplicationEnvironment r = new ApplicationEnvironment();
-        cs = new EmbeddedConfigurationService();
-        Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
-        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
-        cs.initialize(p);
-        r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-        svc = new EmbeddedBufferService();
-        svc.initialize(null);
-        r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
+        BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc.setBufferMemorySizeInMB(96);
+        svc.setUseDisk(true);
         
+        svc.start();
         // all the properties are set
-        assertTrue("96".equals(cs.getBufferMemorySize()));     //$NON-NLS-1$
-        cs.getDiskBufferDirectory();
-        assertTrue("Not Directory", cs.getDiskBufferDirectory().isDirectory()); //$NON-NLS-1$
-        assertTrue("does not exist", cs.getDiskBufferDirectory().exists()); //$NON-NLS-1$
-        assertTrue("does not end with one", cs.getDiskBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue(cs.useDiskBuffering());
+        assertEquals(96 , svc.getBufferMemorySizeInMB());     //$NON-NLS-1$
+        assertTrue("Not Directory", svc.getBufferDirectory().isDirectory()); //$NON-NLS-1$
+        assertTrue("does not exist", svc.getBufferDirectory().exists()); //$NON-NLS-1$
+        assertTrue("does not end with one", svc.getBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue(svc.isUseDisk());
         
         BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
-        assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(cs.getDiskBufferDirectory().getName()));
+        assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 
     public void testCheckMemPropertyGotSet2() throws Exception {
-        EmbeddedBufferService svc = null;
-        ApplicationEnvironment r = new ApplicationEnvironment();
-        ConfigurationService cs = new EmbeddedConfigurationService();
-        Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
-        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
-        cs.initialize(p);            
-        r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-        svc = new EmbeddedBufferService();
-        svc.initialize(null);
-        r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
+        BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc.setBufferMemorySizeInMB(96);
+        svc.setUseDisk(false);
+        svc.start();
         
         // all the properties are set
-        assertFalse(cs.useDiskBuffering());
+        assertFalse(svc.isUseDisk());
     }
     
 }

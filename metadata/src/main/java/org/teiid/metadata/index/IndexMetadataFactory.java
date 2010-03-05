@@ -22,16 +22,17 @@
 
 package org.teiid.metadata.index;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.virtual.VirtualFile;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
@@ -39,8 +40,8 @@ import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
 import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.core.index.IEntryResult;
@@ -53,7 +54,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.UUID;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.metadata.runtime.api.MetadataSource;
 
 /**
  * Loads MetadataRecords from index files.  
@@ -64,27 +64,38 @@ public class IndexMetadataFactory {
     private Map<String, Datatype> datatypeCache;
     private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
     private Map<String, Table> tableCache = new HashMap<String, Table>();
-	private MetadataStore store = new MetadataStore();
+	private MetadataStore store;
+	private HashSet<VirtualFile> indexFiles = new HashSet<VirtualFile>();
+	private Map<VirtualFile, Boolean> vdbEntries;
     
-    public IndexMetadataFactory(MetadataSource source) throws IOException {
-    	ArrayList<Index> tmp = new ArrayList<Index>();
-		for (String fileName : source.getEntries()) {
-			if (SimpleIndexUtil.isIndexFile(fileName)) {
-				File f = source.getFile(fileName);
-	            tmp.add( new Index(f.getAbsolutePath(), true) );
-	        } 
+	public MetadataStore getMetadataStore() throws IOException {
+		if (this.store == null) {
+			this.store = new MetadataStore();
+	    	ArrayList<Index> tmp = new ArrayList<Index>();
+			for (VirtualFile f : indexFiles) {
+	            tmp.add( new Index(f, true) );
+			}
+			this.indexes = tmp.toArray(new Index[tmp.size()]);
+			getDatatypeCache();
+			getModels();
+			getTables();
+			getProcedures();
 		}
-		this.indexes = tmp.toArray(new Index[tmp.size()]);
-		getDatatypeCache();
-		getModels();
-		getTables();
-		getProcedures();
+		return store;
     }
 
-    public MetadataStore getMetadataStore() {
-		return store;
-	}
+    public void addIndexFile(VirtualFile f) {
+    	this.indexFiles.add(f);
+    }
     
+	public void addEntriesPlusVisibilities(Map<VirtualFile, Boolean> entries) {
+		this.vdbEntries = entries;
+	}
+	
+	public Map<VirtualFile, Boolean> getEntriesPlusVisibilities(){
+		return this.vdbEntries;
+	}
+	
     public void getModels() {
     	Collection<Schema> records = findMetadataRecords(MetadataConstants.RECORD_TYPE.MODEL, null, false);
     	for (Schema modelRecord : records) {
@@ -235,8 +246,8 @@ public class IndexMetadataFactory {
     
     public void getProcedures() {
     	for (Schema model : store.getSchemas().values()) {
-			Collection<ProcedureRecordImpl> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
-			for (ProcedureRecordImpl procedureRecord : procedureRecordImpls) {
+			Collection<Procedure> procedureRecordImpls = findMetadataRecords(MetadataConstants.RECORD_TYPE.CALLABLE, model.getName() + IndexConstants.NAME_DELIM_CHAR + IndexConstants.RECORD_STRING.MATCH_CHAR, true);
+			for (Procedure procedureRecord : procedureRecordImpls) {
 		        // get the parameter metadata info
 		        for (int i = 0; i < procedureRecord.getParameters().size(); i++) {
 		            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(procedureRecord.getParameters().get(i).getUUID(), MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
@@ -245,9 +256,9 @@ public class IndexMetadataFactory {
 		            paramRecord.setProcedure(procedureRecord);
 		        }
 		    	
-		        ColumnSet<ProcedureRecordImpl> result = procedureRecord.getResultSet();
+		        ColumnSet<Procedure> result = procedureRecord.getResultSet();
 		        if(result != null) {
-		            ColumnSet<ProcedureRecordImpl> resultRecord = (ColumnSet<ProcedureRecordImpl>) getRecordByType(result.getUUID(), MetadataConstants.RECORD_TYPE.RESULT_SET, false);
+		            ColumnSet<Procedure> resultRecord = (ColumnSet<Procedure>) getRecordByType(result.getUUID(), MetadataConstants.RECORD_TYPE.RESULT_SET, false);
 		            if (resultRecord != null) {
 		            	resultRecord.setParent(procedureRecord);
 		            	resultRecord.setName("RSParam"); //$NON-NLS-1$
@@ -488,6 +499,5 @@ public class IndexMetadataFactory {
         } catch (MetaMatrixCoreException e) {
             throw new MetaMatrixRuntimeException(e);
         }
-    }
-    
+    }    
 }

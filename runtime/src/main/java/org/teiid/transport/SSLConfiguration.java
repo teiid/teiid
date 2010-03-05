@@ -25,38 +25,20 @@ package org.teiid.transport;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Properties;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 
 
 public class SSLConfiguration {
 
-    private static final String SSL_ENABLED = "ssl.enabled"; //$NON-NLS-1$
-    
-    private static final String KEYSTORE_FILENAME = "ssl.keystore.filename"; //$NON-NLS-1$
-    private static final String KEYSTORE_PASSWORD = "ssl.keystore.Password"; //$NON-NLS-1$
-    private static final String KEYSTORE_TYPE = "ssl.keystoretype"; //$NON-NLS-1$
-    private static final String SSL_PROTOCOL = "ssl.protocol"; //$NON-NLS-1$
-    private static final String KEY_MANAGER_ALGORITHM = "ssl.keymanagementalgorithm"; //$NON-NLS-1$
-    
-    private static final String TRUSTSTORE_FILENAME = "ssl.truststore.filename"; //$NON-NLS-1$
-    private static final String TRUSTSTORE_PASSWORD = "ssl.truststore.Password"; //$NON-NLS-1$
-    private static final String AUTHENTICATION_MODE = "ssl.authenticationMode"; //$NON-NLS-1$
-    private static final String CLIENT_ENCRYPTION_ENABLED = "client.encryption.enabled"; //$NON-NLS-1$
-    
-    private static final String ONEWAY = "1-way"; //$NON-NLS-1$ - one way is the default
-    private static final String TWOWAY = "2-way"; //$NON-NLS-1$
-    private static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
+    public static final String ONEWAY = "1-way"; //$NON-NLS-1$ - one way is the default
+    public static final String TWOWAY = "2-way"; //$NON-NLS-1$
+    public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
 
     private static final String DEFAULT_SSL_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     private static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
@@ -64,9 +46,9 @@ public class SSLConfiguration {
     /*
      * External SSL resource settings
      */
-    private boolean ssl_enabled;
+    private boolean sslEnabled = false;
     private String sslProtocol = DEFAULT_SSL_PROTOCOL;
-    private String keyManagerFactoryAlgorithm;
+    private String keyManagerFactoryAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
     private String keyStoreType = DEFAULT_KEYSTORE_TYPE;
     private String keyStoreFileName;
     private String keyStorePassword = ""; //$NON-NLS-1$
@@ -77,39 +59,10 @@ public class SSLConfiguration {
     /*
      * Client encryption property.  This may belong somewhere else
      */
-    boolean client_encryption_enabled = false;
-    
-    public void init(Properties props) {
-        ssl_enabled = PropertiesUtils.getBooleanProperty(props, SSL_ENABLED, false);
-        client_encryption_enabled = PropertiesUtils.getBooleanProperty(props, CLIENT_ENCRYPTION_ENABLED, true);
-        
-        if (ssl_enabled) {
-	        keyStoreFileName = props.getProperty(KEYSTORE_FILENAME);
-	        try {
-	            keyStorePassword = CryptoUtil.stringDecrypt(props.getProperty(KEYSTORE_PASSWORD, "")); //$NON-NLS-1$
-	        } catch (CryptoException err) {
-	            throw new MetaMatrixRuntimeException(err);
-	        }
-	
-	        keyStoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE);
-	                 
-	        keyManagerFactoryAlgorithm = props.getProperty(KEY_MANAGER_ALGORITHM, KeyManagerFactory.getDefaultAlgorithm());
-	    
-	        authenticationMode = props.getProperty(AUTHENTICATION_MODE);
-	
-	        trustStoreFileName = props.getProperty(TRUSTSTORE_FILENAME);
-	        try {
-	            trustStorePassword = CryptoUtil.stringDecrypt(props.getProperty(TRUSTSTORE_PASSWORD, "")); //$NON-NLS-1$
-	        } catch (CryptoException err) {
-	            throw new MetaMatrixRuntimeException(err);
-	        }
-	        
-	        sslProtocol = props.getProperty(SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);
-        }
-    } 
+    boolean clientEncryptionEnabled = true;
     
     public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
-        if (!isServerSSLEnabled()) {
+        if (!isSslEnabled()) {
         	return null;
         }
         
@@ -140,12 +93,51 @@ public class SSLConfiguration {
         return result;
     }
 
-    public boolean isServerSSLEnabled() {
-        return this.ssl_enabled;
+    public boolean isSslEnabled() {
+        return this.sslEnabled;
     }
     
     public boolean isClientEncryptionEnabled() {
-        return this.client_encryption_enabled;
+        return this.clientEncryptionEnabled;
     }
     
+    public void setSslEnabled(boolean value) {
+    	this.sslEnabled = value;
+    }
+    
+    public void setKeystoreFilename(String value) {
+    	this.keyStoreFileName = value;
+    }
+    
+    public void setKeystorePassword(String value) {
+    	this.keyStorePassword = value;
+    }
+    
+    public void setKeystoreType(String value) {
+    	this.keyStoreType = value;
+    }
+    
+    public void setSslProtocol(String value) {
+    	this.sslProtocol = value;
+    }
+    
+    public void setKeymanagementAlgorithm(String value) {
+    	this.keyManagerFactoryAlgorithm = value;
+    }
+    
+    public void setTruststoreFilename(String value) {
+    	this.trustStoreFileName = value;
+    }
+    
+    public void setTruststorePassword(String value) {
+    	this.trustStorePassword = value;
+    }
+    
+    public void setAuthenticationMode(String value) {
+    	this.authenticationMode = value;
+    }
+    
+    public void setClientEncryptionEnabled(boolean value) {
+    	this.clientEncryptionEnabled = value;
+    }
 }

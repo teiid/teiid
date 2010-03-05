@@ -24,20 +24,23 @@ package org.teiid.metadata.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.jboss.virtual.VFS;
+import org.jboss.virtual.VirtualFile;
+import org.jboss.virtual.VirtualFileFilter;
+import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.query.function.metadata.FunctionMetadataReader;
+import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBMetadataFactory {
@@ -46,48 +49,54 @@ public class VDBMetadataFactory {
 	
 	public static QueryMetadataInterface getVDBMetadata(String vdbFile) {
 		try {
-			return getVDBMetadata(new File(vdbFile).toURI().toURL());
+			return getVDBMetadata(new File(vdbFile).toURI().toURL(), null);
 		} catch (IOException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
     }
 	
-	public static QueryMetadataInterface getVDBMetadata(URL vdbURL) {
-		QueryMetadataInterface vdb = VDB_CACHE.get(vdbURL);
-		if (vdb != null) {
-			return vdb;
+	public static QueryMetadataInterface getVDBMetadata(URL vdbURL, URL udfFile) throws IOException {
+		QueryMetadataInterface vdbmetadata = VDB_CACHE.get(vdbURL);
+		if (vdbmetadata != null) {
+			return vdbmetadata;
 		}
+
 		try {
-			MetadataSource source = new VDBArchive(vdbURL.openStream());
-			IndexMetadataFactory selector = new IndexMetadataFactory(source);
-	        vdb = new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector.getMetadataStore()), source));
-	        VDB_CACHE.put(vdbURL, vdb);
-	        return vdb;
-		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e);
-		} catch (MetaMatrixComponentException e) {
-			throw new MetaMatrixRuntimeException(e);
+			VFS.init();
+			VDBContext vdbContext = new VDBContext(vdbURL);
+			VirtualFile vdbFile = new VirtualFile(vdbContext.getRoot());
+			
+			List<VirtualFile> children = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
+				@Override
+				public boolean accepts(VirtualFile file) {
+					return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
+				}
+			});
+			
+			IndexMetadataFactory imf = new IndexMetadataFactory();
+			for (VirtualFile f: children) {
+				imf.addIndexFile(f);
+			}
+			
+			Collection <FunctionMethod> methods = null;
+			if (udfFile != null) {
+				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
+			}
+			
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(imf.getMetadataStore())), null, methods);
+			VDB_CACHE.put(vdbURL, vdbmetadata);
+			return vdbmetadata;
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
 		}
     }	
 	
-	public static QueryMetadataInterface getVDBMetadata(String[] vdbFile) {
-		
-        List<MetadataStore> selectors = new ArrayList<MetadataStore>();
-        MetadataSource source = null;
-        for (int i = 0; i < vdbFile.length; i++){
-        	try {
-	        	MetadataSource tempSource = new VDBArchive(new File(vdbFile[i]));
-	        	if (i == 0) {
-	        		source = tempSource;
-	        	}
-				selectors.add(new IndexMetadataFactory(tempSource).getMetadataStore());
-			} catch (IOException e) {
-				throw new MetaMatrixRuntimeException(e);
-			} catch (MetaMatrixComponentException e) {
-				throw new MetaMatrixRuntimeException(e);
-			}        
-        }
-        
-        return new TransformationMetadata(new CompositeMetadataStore(selectors, source));
-    }	
+
+	private static class VDBContext extends ZipEntryContext{
+		private static final long serialVersionUID = -6504988258841073415L;
+
+		protected VDBContext(URL url) throws IOException, URISyntaxException {
+			super(url,false);
+		}
+	}
 }

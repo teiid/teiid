@@ -26,67 +26,55 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.net.ssl.SSLEngine;
-
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
-import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.WorkerPool;
-import com.metamatrix.common.queue.WorkerPoolFactory;
-import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 /**
  * Server-side class to listen for new connection requests and create a SocketClientConnection for each connection request.
  */
 public class SocketListener implements ChannelListenerFactory {
-    private ClientServiceRegistry server;
-    private SSLAwareChannelHandler channelHandler;
+	private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
     private boolean isClientEncryptionEnabled;
-    private SessionServiceInterface sessionService;
-    private WorkerPool workerPool;
     private ExecutorService nettyPool;
+    private ClientServiceRegistryImpl csr;
     
     /**
      * 
      * @param port
-     * @param bindaddress
-     * @param server
      * @param inputBufferSize
      * @param outputBufferSize
-     * @param workerPool
      * @param engine null if SSL is disabled
+     * @param bindaddress
+     * @param server
      */
-    public SocketListener(int port, String bindAddress, ClientServiceRegistry server, int inputBufferSize,
-			int outputBufferSize, int maxWorkers, SSLEngine engine, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
-    	this.isClientEncryptionEnabled = isClientEncryptionEnabled;
-    	this.sessionService = sessionService;
+    public SocketListener(int port, String bindAddress, int inputBufferSize,
+			int outputBufferSize, int maxWorkers, SSLConfiguration config, ClientServiceRegistryImpl csr) {
+    	this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
+    	this.csr = csr;
     	if (port < 0 || port > 0xFFFF) {
             throw new IllegalArgumentException("port out of range:" + port); //$NON-NLS-1$
         }
 
-       	this.server = server;
-        this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers); //$NON-NLS-1$
-        this.nettyPool = Executors.newCachedThreadPool(new NamedThreadFactory("NIO")); //$NON-NLS-1$
+    	this.nettyPool = Executors.newCachedThreadPool(new NamedThreadFactory("NIO")); //$NON-NLS-1$
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) { 
             LogManager.logDetail(LogConstants.CTX_SERVER, "server = " + bindAddress + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-        ChannelFactory factory = new NioServerSocketChannelFactory(nettyPool, nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
+        ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
-        this.channelHandler = new SSLAwareChannelHandler(this, engine, Thread.currentThread().getContextClassLoader());
+        this.channelHandler = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader());
         bootstrap.setPipelineFactory(channelHandler);
         if (inputBufferSize != 0) {
         	bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
@@ -99,10 +87,6 @@ public class SocketListener implements ChannelListenerFactory {
         this.serverChanel = bootstrap.bind(new InetSocketAddress(bindAddress, port));
     }
     
-    public WorkerPoolStats getProcessPoolStats() {
-    	return this.workerPool.getStats();
-    }
-    
     public int getPort() {
     	return ((InetSocketAddress)this.serverChanel.getLocalAddress()).getPort();
     }
@@ -113,7 +97,6 @@ public class SocketListener implements ChannelListenerFactory {
     
     public void stop() {
     	this.serverChanel.close();
-    	this.workerPool.shutdownNow();
     	this.nettyPool.shutdownNow();
     }
    
@@ -127,7 +110,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
 
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new SocketClientInstance(channel, this.workerPool, this.server, this.isClientEncryptionEnabled, this.sessionService);
+		return new SocketClientInstance(channel, csr, this.isClientEncryptionEnabled);
 	}
-
+	
 }

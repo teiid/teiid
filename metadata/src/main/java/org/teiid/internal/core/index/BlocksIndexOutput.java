@@ -11,9 +11,10 @@
  *******************************************************************************/
 package org.teiid.internal.core.index;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+
+import org.jboss.virtual.VirtualFile;
 
 /**
  * A blocksIndexOutput is used to save an index in a file with the given structure:<br>
@@ -27,7 +28,7 @@ public class BlocksIndexOutput extends IndexOutput {
 	protected RandomAccessFile indexOut;
 	protected int blockNum;
 	protected boolean opened= false;
-	protected File indexFile;
+	protected VirtualFile indexFile;
 	protected FileListBlock fileListBlock;
 	protected IndexBlock indexBlock;
 	protected int numWords= 0;
@@ -36,8 +37,9 @@ public class BlocksIndexOutput extends IndexOutput {
 	protected boolean firstInBlock;
 	protected boolean firstIndexBlock;
 	protected boolean firstFileListBlock;
+	private VirtualRandomAccessFile vraf;
 
-	public BlocksIndexOutput(File indexFile) {
+	public BlocksIndexOutput(VirtualFile indexFile) {
 		this.indexFile= indexFile;
 		summary= new IndexSummary();
 		blockNum= 1;
@@ -102,6 +104,7 @@ public class BlocksIndexOutput extends IndexOutput {
 			summary= null;
 			numFiles= 0;
 			opened= false;
+			vraf.close();
 		}
 	}
 	/**
@@ -161,7 +164,8 @@ public class BlocksIndexOutput extends IndexOutput {
 			firstInBlock= true;
 			firstIndexBlock= true;
 			firstFileListBlock= true;
-			indexOut= new SafeRandomAccessFile(this.indexFile, "rw"); //$NON-NLS-1$
+			vraf = new VirtualRandomAccessFile(indexFile, "rw");
+			indexOut= vraf.getSafeRandomAccessFile();
 			opened= true;
 		}
 	}
