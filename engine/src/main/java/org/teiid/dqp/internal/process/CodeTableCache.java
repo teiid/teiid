@@ -250,7 +250,7 @@ class CodeTableCache {
         
         private int hashCode;
         
-        public CacheKey(String codeTable, String returnElement, String keyElement, String vdbName, String vdbVersion) {
+        public CacheKey(String codeTable, String returnElement, String keyElement, String vdbName, int vdbVersion) {
             this.codeTable = codeTable;
             this.returnElement = returnElement;
             this.keyElement = keyElement;

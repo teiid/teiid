@@ -30,24 +30,17 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.FakeAuthorizationService;
-import com.metamatrix.dqp.service.FakeVDBService;
-import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -67,7 +60,7 @@ public class TestRequest extends TestCase {
 
     private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
     private final static String VDB = "VDB";  //$NON-NLS-1$
-    private final static String VDB_VERSION = "1";  //$NON-NLS-1$
+    private final static int VDB_VERSION = 1;  //$NON-NLS-1$
     private final static String MODEL = "pm1";  //$NON-NLS-1$
     private final static String BINDING_ID = "1";  //$NON-NLS-1$
     private final static String BINDING_NAME = "BINDING";  //$NON-NLS-1$
@@ -87,13 +80,8 @@ public class TestRequest extends TestCase {
         doc1.putProperty(FakeMetadataObject.Props.XML_SCHEMAS, schemas);
         RequestMessage message = new RequestMessage("select * from xmltest.doc1"); //$NON-NLS-1$
         message.setValidationMode(true);
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(VDB); 
-        workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
-        FakeApplicationEnvironment environment = 
-            new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
-        Request request = helpProcessMessage(environment, message, null, workContext);
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        Request request = helpProcessMessage(message, null, workContext);
         assertEquals(schemas, request.schemas);
     }
 
@@ -113,15 +101,14 @@ public class TestRequest extends TestCase {
         Command command = QueryParser.getQueryParser().parseCommand(QUERY);
         QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
         
-        RequestMessage message = new RequestMessage();
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(VDB); 
-        workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
-        FakeApplicationEnvironment environment = 
-            new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
-        request.initialize(message, environment, null, null, null, false, null, workContext, 101024);
+        
+        RequestMessage message = new RequestMessage();
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        
+        request.initialize(message, null, null, null,null,false, null, workContext, 101024, repo);
         request.initMetadata();
         request.validateAccess(command);
     }
@@ -137,46 +124,32 @@ public class TestRequest extends TestCase {
     public void testProcessRequest() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         
-        FakeApplicationEnvironment environment = 
-            new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
-
-        
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(VDB); 
-        workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
 
-        helpProcessMessage(environment, message, null, workContext);
+        helpProcessMessage(message, null, workContext);
         
         //Try again, now that plan is already cached.
         //If this doesn't throw an exception, assume it was successful.        
         message = new RequestMessage(QUERY);
-        helpProcessMessage(environment, message, null, workContext);
+        helpProcessMessage(message, null, workContext);
     }
     
     public void testCommandContext() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         
-        FakeApplicationEnvironment environment = 
-            new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
-
-        
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(VDB); 
-        workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
-        Request request = helpProcessMessage(environment, message, null, workContext);
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        
+        Request request = helpProcessMessage(message, null, workContext);
         assertEquals("5", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
     }
 
-    private Request helpProcessMessage(FakeApplicationEnvironment environment,
-                                    RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws QueryValidatorException,
+    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws QueryValidatorException,
                                                            QueryParserException,
                                                            QueryResolverException,
                                                            MetaMatrixComponentException,
@@ -187,9 +160,13 @@ public class TestRequest extends TestCase {
         } else {
         	request = new Request();
         }
-        request.initialize(message, environment, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), null, false, null, workContext,
-				101024);
+        
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
+        
+        request.initialize(message, Mockito.mock(BufferManager.class),
+				new FakeDataManager(),  null, null, false, null, workContext,
+				101024, repo);
         
         request.processRequest();
         return request;
@@ -207,66 +184,24 @@ public class TestRequest extends TestCase {
     public void testProcessRequestPreparedStatement() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
-        FakeApplicationEnvironment environment = 
-            new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         
 
         //Try before plan is cached.
         //If this doesn't throw an exception, assume it was successful.
         RequestMessage message = new RequestMessage(QUERY);
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(VDB); 
-        workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
-        message.setPreparedStatement(true);
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
+        
+        message.setStatementType(StatementType.PREPARED);
         message.setParameterValues(new ArrayList());
         
-        helpProcessMessage(environment, message, cache, workContext);
+        helpProcessMessage(message, cache, workContext);
         
         //Try again, now that plan is already cached.
         //If this doesn't throw an exception, assume it was successful.
         message = new RequestMessage(QUERY);
-        message.setPreparedStatement(true);
+        message.setStatementType(StatementType.PREPARED);
         message.setParameterValues(new ArrayList());
 
-        helpProcessMessage(environment, message, cache, workContext);
+        helpProcessMessage(message, cache, workContext);
     }
-    
-    
-    /**Fake ApplicationEnvironment that always returns the same metadata*/
-    public static final class FakeApplicationEnvironment extends ApplicationEnvironment {
-        private QueryMetadataInterface metadata;
-        
-        private FakeVDBService fakeVDBService;
-        
-        public FakeApplicationEnvironment(QueryMetadataInterface metadata, String vdbname, String version, String model, 
-                                          String bindingID, String bindingName) {
-            this.metadata = metadata; 
-            
-            fakeVDBService = new FakeVDBService();
-            fakeVDBService.addModel(vdbname, version, model, ModelInfo.PUBLIC, false);
-            fakeVDBService.addBinding(vdbname, version, model, bindingID, bindingName);
-        }
-        
-        public ApplicationService findService(String type) {
-            if (type == DQPServiceNames.METADATA_SERVICE) {
-                MetadataService mdSvc = Mockito.mock(MetadataService.class);
-                try {
-					Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
-				} catch (MetaMatrixComponentException e) {
-					throw new RuntimeException(e);
-				}
-                return mdSvc;
-            } else if (type == DQPServiceNames.VDB_SERVICE) {
-                return fakeVDBService;
-            } else if (type == DQPServiceNames.DATA_SERVICE) {
-                return new AutoGenDataService();
-            } else if (type == DQPServiceNames.AUTHORIZATION_SERVICE) {
-                return new FakeAuthorizationService(true);
-            }
-            
-            return null;
-        }
-    }
-    
 }

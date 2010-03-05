@@ -178,7 +178,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g1", //$NON-NLS-1$
 			"select e1 as a, e2 from pm1.g1 where e4 > 5",              //$NON-NLS-1$
 		    TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (INPUT.a, INPUT.e2);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (INPUTS.a, INPUTS.e2);\nEND"); //$NON-NLS-1$
 	}
 	
 	public void testCreateInsertCommand2(){ //put a constant in select statement
@@ -186,7 +186,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g1", //$NON-NLS-1$
 			"select e1 as a, 5 from pm1.g1 where e4 > 5",              //$NON-NLS-1$
 		    TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1) VALUES (INPUT.a);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1) VALUES (INPUTS.a);\nEND"); //$NON-NLS-1$
 	}
 	
 	public void testCreateInsertCommand3(){ 
@@ -194,7 +194,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g2", //$NON-NLS-1$
 			"select * from pm1.g2 where e4 > 5",              //$NON-NLS-1$
 		    TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (INPUTS.e1, INPUTS.e2, INPUTS.e3, INPUTS.e4);\nEND"); //$NON-NLS-1$
 	}
 	
 	public void testCreateInsertCommand4(){ //test group alias
@@ -202,7 +202,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g2", //$NON-NLS-1$
 			"select * from pm1.g2 as g_alias",              //$NON-NLS-1$
 			TestUpdateProcedureGenerator.example1(),
-			"CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4);\nEND"); //$NON-NLS-1$
+			"CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (INPUTS.e1, INPUTS.e2, INPUTS.e3, INPUTS.e4);\nEND"); //$NON-NLS-1$
 	}	
 
 	public void testCreateInsertCommand5(){
@@ -210,7 +210,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g1", //$NON-NLS-1$
 			"select e1 as a, e2 from pm1.g1 as g_alias where e4 > 5",              //$NON-NLS-1$
 			TestUpdateProcedureGenerator.example1(),
-			"CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (INPUT.a, INPUT.e2);\nEND"); //$NON-NLS-1$
+			"CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (INPUTS.a, INPUTS.e2);\nEND"); //$NON-NLS-1$
 	}
 		
 	public void testCreateUpdateCommand(){
@@ -218,7 +218,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 			"vm1.g1", //$NON-NLS-1$
 			"select e1 as a, e2 from pm1.g1 where e4 > 5",              //$NON-NLS-1$
 		    TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = UPDATE pm1.g1 SET e1 = INPUT.a, e2 = INPUT.e2 WHERE TRANSLATE CRITERIA;\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = UPDATE pm1.g1 SET e1 = INPUTS.a, e2 = INPUTS.e2 WHERE TRANSLATE CRITERIA;\nEND"); //$NON-NLS-1$
 	}
 	
 	public void testCreateDeleteCommand(){
@@ -339,7 +339,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
             "vm1.g3", //$NON-NLS-1$
             "SELECT e1, e2 FROM pm1.g3", //$NON-NLS-1$
             TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g3 (pm1.g3.e1, pm1.g3.e2) VALUES (INPUT.e1, INPUT.e2);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g3 (pm1.g3.e1, pm1.g3.e2) VALUES (INPUTS.e1, INPUTS.e2);\nEND"); //$NON-NLS-1$
     }
 
     // Check that e2 is not required (it is auto-incremented)
@@ -348,7 +348,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
             "vm1.g4", //$NON-NLS-1$
             "SELECT e1, e3 FROM pm1.g3", //$NON-NLS-1$
             TestUpdateProcedureGenerator.example1(),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g3 (pm1.g3.e1, pm1.g3.e3) VALUES (INPUT.e1, INPUT.e3);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g3 (pm1.g3.e1, pm1.g3.e3) VALUES (INPUTS.e1, INPUTS.e3);\nEND"); //$NON-NLS-1$
     }
 
     // Check that e1 is required (it is not-nullable, not auto-incrementable, and has no default value)
@@ -366,7 +366,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
                     "vm1.g1", //$NON-NLS-1$
                     "select e1 as a, e2 from pm1.g1 where e4 > 5",              //$NON-NLS-1$
                     TestUpdateProcedureGenerator.example1(false),
-                    "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = UPDATE pm1.g1 SET e2 = INPUT.e2 WHERE TRANSLATE CRITERIA;\nEND"); //$NON-NLS-1$
+                    "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = UPDATE pm1.g1 SET e2 = INPUTS.e2 WHERE TRANSLATE CRITERIA;\nEND"); //$NON-NLS-1$
 	}
 	
     // Verify that elements that are not updateable are exlcluded from update and delete procedures
@@ -375,7 +375,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
             "vm1.g1", //$NON-NLS-1$
             "SELECT e1, e2 FROM pm1.g1", //$NON-NLS-1$
             TestUpdateProcedureGenerator.example1(false),
-            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e2) VALUES (INPUT.e2);\nEND"); //$NON-NLS-1$
+            "CREATE PROCEDURE\nBEGIN\nROWS_UPDATED = INSERT INTO pm1.g1 (pm1.g1.e2) VALUES (INPUTS.e2);\nEND"); //$NON-NLS-1$
     }
 
 }

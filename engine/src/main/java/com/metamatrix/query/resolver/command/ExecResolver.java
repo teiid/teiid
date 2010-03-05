@@ -209,8 +209,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
     
     @Override
     public GroupContext findChildCommandMetadata(ProcedureContainer container,
-    		Command subCommand, TempMetadataStore discoveredMetadata,
-    		QueryMetadataInterface metadata) throws QueryMetadataException,
+    		TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata) throws QueryMetadataException,
     		QueryResolverException, MetaMatrixComponentException {
 
         StoredProcedure storedProcedureCommand = (StoredProcedure) container;
@@ -276,7 +275,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                     Expression result = null;
                     
                     try {
-                        result = ResolverUtil.convertExpression(expr, tgtType);
+                        result = ResolverUtil.convertExpression(expr, tgtType, metadata);
                     } catch (QueryResolverException e) {
                         throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
                     }                                                       

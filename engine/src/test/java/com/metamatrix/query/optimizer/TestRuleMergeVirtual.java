@@ -26,6 +26,7 @@ import static junit.framework.Assert.*;
 
 import org.junit.Test;
 
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -281,7 +282,7 @@ public class TestRuleMergeVirtual {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
 
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 

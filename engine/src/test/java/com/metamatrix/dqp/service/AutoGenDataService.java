@@ -25,25 +25,19 @@ package com.metamatrix.dqp.service;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
-import org.teiid.connector.metadata.runtime.MetadataStore;
+import javax.resource.spi.work.WorkManager;
+
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -52,22 +46,17 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
  * This data service will automatically generate results when called with a query - basically
  * the same as the old loopback connector.
  */
-public class AutoGenDataService extends FakeAbstractService implements DataService {
+public class AutoGenDataService extends ConnectorManager{
 
     // Number of rows that will be generated for each query
     private int rows = 10;
     private SourceCapabilities caps;
     
-    /**
-     * 
-     */
     public AutoGenDataService() {
-        this(new BasicSourceCapabilities());
+    	super("FakeConnector");
+        caps = new BasicSourceCapabilities();
     }
     
-    public AutoGenDataService(SourceCapabilities caps) {
-    	this.caps = caps;
-    }
 
     public void setRows(int rows) {
         this.rows = rows;
@@ -77,17 +66,9 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
         return this.rows;
     }
 
-    /* 
-     * @see com.metamatrix.dqp.service.DataService#selectConnector(java.lang.String)
-     */
-    public ConnectorID selectConnector(String connectorBindingID) {
-        return null;
-    }
-    
-	public void executeRequest(AtomicRequestMessage request,
-			ConnectorID connector,
-			ResultsReceiver<AtomicResultsMessage> resultListener)
-			throws MetaMatrixComponentException {
+    @Override
+	public void executeRequest(WorkManager workManager, ResultsReceiver<AtomicResultsMessage> resultListener, AtomicRequestMessage request)
+			throws ConnectorException{
         List projectedSymbols = (request.getCommand()).getProjectedSymbols();               
         List[] results = createResults(projectedSymbols);
                 
@@ -165,94 +146,10 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
     }
 
     @Override
-    public SourceCapabilities getCapabilities(RequestMessage request,
-    		DQPWorkContext dqpWorkContext, String modelName)
-    		throws MetaMatrixComponentException {
-    	return caps;
-    }
-        
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#startConnectorBinding(java.lang.String)
-     * @since 4.3
-     */
-    public void startConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,
-                                                                  MetaMatrixComponentException {
+	public SourceCapabilities getCapabilities(){
+        return caps;
     }
 
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#stopConnectorBinding(java.lang.String)
-     * @since 4.3
-     */
-    public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,
-                                                                 MetaMatrixComponentException {
-    }
 
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorBindings()
-     * @since 4.3
-     */
-    public List getConnectorBindings() throws MetaMatrixComponentException {
-        return null;
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
-     * @since 4.3
-     */
-    public ConnectorStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
-        return null;
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorBinding(java.lang.String)
-     * @since 4.3
-     */
-    public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {
-        return null;
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorBindingStatistics(java.lang.String)
-     * @since 4.3
-     */
-    public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {
-        return null;
-    }
-    
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectionPoolStatistics(java.lang.String)
-     * @since 6.1
-     */
-    public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
-    	return null;
-    } 
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#clearConnectorBindingCache(java.lang.String)
-     * @since 4.3
-     */
-    public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {
-    }
-
-	public void cancelRequest(AtomicRequestID request, ConnectorID connectorId)
-			throws MetaMatrixComponentException {
-		
-	}
-
-	public void closeRequest(AtomicRequestID request, ConnectorID connectorId)
-			throws MetaMatrixComponentException {
-		
-	}
-
-	public void requestBatch(AtomicRequestID request, ConnectorID connectorId)
-			throws MetaMatrixComponentException {
-		
-	}
-	
-    @Override
-    public MetadataStore getConnectorMetadata(String vdbName,
-    		String vdbVersion, String modelName, Properties importProperties) {
-    	throw new UnsupportedOperationException();
-    }
 
 }

@@ -26,12 +26,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.dqp.internal.datamgr.language.OrderByImpl;
-
-import com.metamatrix.query.sql.lang.OrderBy;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.SortSpecification;
 
 public class TestOrderByImpl extends TestCase {
 
@@ -43,7 +41,7 @@ public class TestOrderByImpl extends TestCase {
         super(name);
     }
 
-    public static OrderBy helpExample() {
+    public static com.metamatrix.query.sql.lang.OrderBy helpExample() {
         ArrayList elements = new ArrayList();
         elements.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -55,19 +53,19 @@ public class TestOrderByImpl extends TestCase {
         types.add(Boolean.FALSE);
         types.add(Boolean.TRUE);
         types.add(Boolean.FALSE);
-        return new OrderBy(elements, types);
+        return new com.metamatrix.query.sql.lang.OrderBy(elements, types);
     }
     
-    public static OrderByImpl example() throws Exception {
-        return (OrderByImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static OrderBy example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetItems() throws Exception {
-        List items = example().getItems();
+        List items = example().getSortSpecifications();
         assertNotNull(items);
         assertEquals(4, items.size());
         for (Iterator i = items.iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IOrderByItem);
+            assertTrue(i.next() instanceof SortSpecification);
         }
         
     }

@@ -28,36 +28,34 @@ package org.teiid.dqp.internal.datamgr.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Argument.Direction;
 
 import com.metamatrix.dqp.DQPPlugin;
 
 class ProcedureBatchHandler {
-	private IProcedure proc;
+	private Call proc;
 	private ProcedureExecution procExec;
 	private int paramCols = 0;
 	private int resultSetCols = 0;
 	private List filler;
     
-	public ProcedureBatchHandler(IProcedure proc, ProcedureExecution procExec) throws ConnectorException {
+	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) throws ConnectorException {
 		this.proc = proc;
 		this.procExec = procExec;
-        List params = proc.getParameters();
-
+        List<Argument> params = proc.getArguments();
+        resultSetCols = proc.getResultSetColumnTypes().length;
+        if (proc.getReturnType() != null) {
+        	paramCols++;
+        }
         if(params != null && !params.isEmpty()){
-            Iterator iter = params.iterator();
-            while(iter.hasNext()){
-                IParameter param = (IParameter)iter.next();
-                if (param.getDirection() == Direction.RESULT_SET) {
-                    resultSetCols = param.getMetadataObject().getChildren().size();
-                } else if(param.getDirection() == Direction.RETURN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
+        	for (Argument param : params) {
+                if(param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                     paramCols += 1;
                 }
             }

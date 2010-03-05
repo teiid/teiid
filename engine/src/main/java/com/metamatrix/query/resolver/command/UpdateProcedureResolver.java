@@ -92,6 +92,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        	GroupSymbol groupSymbol = (GroupSymbol) groupIter.next();
 	        	String groupName = groupSymbol.getName();
 	        	if(!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUT) &&
+	        		!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUTS) &&
 		        	 !groupName.equalsIgnoreCase(ProcedureReservedWords.CHANGING) ) {
 		        	 // set the groupSymbol on the procedure
 		        	 ResolverUtil.resolveGroup(groupSymbol, metadata);
@@ -277,7 +278,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                         throw new QueryResolverException(QueryPlugin.Util.getString("ResolveVariablesVisitor.datatype_for_the_expression_not_resolvable")); //$NON-NLS-1$
                     }
                     String varTypeName = DataTypeManager.getDataTypeName(varType);
-                    assStmt.setExpression(ResolverUtil.convertExpression(expr, varTypeName));                    
+                    assStmt.setExpression(ResolverUtil.convertExpression(expr, varTypeName, metadata));                    
                 }
                 
                 break;

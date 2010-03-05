@@ -24,24 +24,18 @@ package com.metamatrix.dqp.service;
 
 import java.util.Collection;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
-import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
-import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 
 /**
  * This service provides a means to check whether a connection is authorized to access
  * various data resources.
  */
-public interface AuthorizationService extends ApplicationService, SecurityFunctionEvaluator {
+public interface AuthorizationService extends SecurityFunctionEvaluator {
 
     public static final int ACTION_READ = 0;
     public static final int ACTION_CREATE = 1;
@@ -60,14 +54,13 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     /**
      * Determine which of a set of resources a connection does not have permission to
      * perform the specified action.
-     * @param connectionID Connection ID identifying the connection (and thus the user credentials)
      * @param action Action connection wishes to perform
      * @param resources Resources the connection wishes to perform the action on, Collection of String
      * @param context Auditing context
      * @return Collection Subset of resources
      * @throws MetaMatrixComponentException If an error occurs in the service while checking resources
      */
-    Collection getInaccessibleResources(String connectionID, int action, Collection resources, int context) throws MetaMatrixComponentException;
+    Collection getInaccessibleResources(int action, Collection resources, int context) throws MetaMatrixComponentException;
 
     /**
      * Determine whether entitlements checking is enabled on the server.
@@ -75,22 +68,7 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
      */
     boolean checkingEntitlements();
     
-    boolean isCallerInRole(SessionToken session, String roleName ) throws AuthorizationMgmtException;
-    
-    
-    /**
-     * Returns a Collection of String names of MetaMatrix roles to which the
-     * given principal is assigned.
-     * @param caller the session token of the principal that is attempting to access the roles.
-     * @param principal <code>MetaMatrixPrincipalName</code> for which roles are sought
-     * @return The <code>Collection</code> of role names the principal is assigned.
-     * @throws InvalidSessionException if the administrative session is invalid
-     * @throws MetaMatrixSecurityException if there is a problem internally with the MembershipService
-     * @throws AuthorizationException if administrator does not have the authority to see the requested information
-     * @throws ComponentNotFoundException if a component required by this method could not be found within the server
-     */
-    Collection<String> getRoleNamesForPrincipal(MetaMatrixPrincipalName principal)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
+    boolean isCallerInRole(String roleName ) throws AuthorizationMgmtException;
     
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicy</code>s

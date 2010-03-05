@@ -186,7 +186,7 @@ public class UpdateProcedureGenerator {
                     // Construct properly named INPUT variable based on short name of virtual element
                     String virtualElementName = metadata.getFullName(virtualElements.get(i));
                     String virtualElementShortName = metadata.getShortElementName(virtualElementName);
-                    ElementSymbol inputElement = new ElementSymbol(ProcedureReservedWords.INPUT + "." + virtualElementShortName); //$NON-NLS-1$
+                    ElementSymbol inputElement = new ElementSymbol(ProcedureReservedWords.INPUTS + "." + virtualElementShortName); //$NON-NLS-1$
                     values.add(inputElement);
                 }
             }

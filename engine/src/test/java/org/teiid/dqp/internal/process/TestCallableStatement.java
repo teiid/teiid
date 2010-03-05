@@ -39,7 +39,7 @@ public class TestCallableStatement extends TestCase {
 		String sql = "{? = call pm4.spTest9()}"; //$NON-NLS-1$
 
 		try {
-			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, new HardcodedDataManager(), FakeMetadataFactory.exampleBQTCached(), true);
+			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, new HardcodedDataManager(), FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 			fail();
 		} catch (QueryResolverException e) {
 			assertEquals("Required parameter 'PM4.SPTEST9.INKEY' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$
@@ -58,7 +58,7 @@ public class TestCallableStatement extends TestCase {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm4.spTest9(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true);
+		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class TestCallableStatement extends TestCase {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm4.spTest9(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true);
+		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 		
 	public void testOutParameter() throws Exception {
@@ -92,7 +92,7 @@ public class TestCallableStatement extends TestCase {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm2.spTest8(2)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true);
+		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 	
 	public void testInputExpression() throws Exception {
@@ -104,7 +104,7 @@ public class TestCallableStatement extends TestCase {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm2.spTest8(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, null, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true);
+		TestPreparedStatement.helpTestProcessing(sql, null, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 
 }

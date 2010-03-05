@@ -118,7 +118,7 @@ public class TestQueryRewriter {
         Criteria actual = null;
         // rewrite
         try { 
-            actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+            actual = QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
         } catch(QueryValidatorException e) { 
         	throw new RuntimeException(e);
@@ -1492,10 +1492,11 @@ public class TestQueryRewriter {
         Command command = parser.parseCommand("exec pm1.sp4(5)");             //$NON-NLS-1$
         
         // resolve
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
+        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        QueryResolver.resolveCommand(command, metadata);
         
         // rewrite
-        Command rewriteCommand = QueryRewriter.rewrite(command, null, null);
+        Command rewriteCommand = QueryRewriter.rewrite(command, metadata, null);
         
         List<SPParameter> parameters = ((StoredProcedure)rewriteCommand).getParameters();
 
@@ -1512,7 +1513,7 @@ public class TestQueryRewriter {
         
         // rewrite
         try { 
-            QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+            QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
         } catch(QueryValidatorException e) {
         	// looks like message is being wrapped with another exception with same message
@@ -1526,7 +1527,7 @@ public class TestQueryRewriter {
         
         // rewrite
         try { 
-            QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+            QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             fail("Expected QueryValidatorException due to invalid string"); //$NON-NLS-1$
         } catch(QueryValidatorException e) {
             assertEquals("Error Code:ERR.015.009.0004 Message:Unable to convert 'x' of type [string] to the expected type [integer].", e.getMessage()); //$NON-NLS-1$
@@ -1735,7 +1736,7 @@ public class TestQueryRewriter {
         Properties props = new Properties();
         props.setProperty(ContextProperties.SESSION_ID, "1"); //$NON-NLS-1$
         context.setEnvironmentProperties(props);
-        Command rewriteCommand = QueryRewriter.rewrite(command, null, context);
+        Command rewriteCommand = QueryRewriter.rewrite(command, FakeMetadataFactory.example1Cached(), context);
         
         assertEquals("EXEC pm1.sq2('1')", rewriteCommand.toString()); //$NON-NLS-1$
     }
@@ -2232,20 +2233,19 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteParseDate() {
     	String original = "parsedate(BQT1.SmallA.stringkey, 'yymmdd') = {d'1970-01-01'}"; //$NON-NLS-1$
-    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(parsetimestamp(BQT1.SmallA.stringkey, 'yymmdd'), date) = {d'1970-01-01'}", metadata), metadata); //$NON-NLS-1$
     }
 
     @Test public void testRewriteFormatTime() {
     	String original = "formattime(BQT1.SmallA.timevalue, 'hh:mm') = '08:02'"; //$NON-NLS-1$
-    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("formattimestamp(convert(BQT1.SmallA.timevalue, timestamp), 'hh:mm') = '08:02'", metadata), metadata); //$NON-NLS-1$
     }
     
     @Test public void testRewriteTimestampAdd() {
     	String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
-    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
     }
-    
 }

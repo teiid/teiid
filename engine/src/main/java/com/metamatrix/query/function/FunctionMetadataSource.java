@@ -22,9 +22,9 @@
 
 package com.metamatrix.query.function;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
+
+import com.metamatrix.query.function.metadata.FunctionMethod;
 
 /**
  * A FunctionMetadataSource represents a source of function metadata for
@@ -42,7 +42,7 @@ public interface FunctionMetadataSource {
      * always return the newest information available.
      * @return Collection of FunctionMethod objects
      */
-    Collection getFunctionMethods();
+    Collection<FunctionMethod> getFunctionMethods();
     
     /**
      * This method determines where the invocation classes specified in the 
@@ -52,7 +52,4 @@ public interface FunctionMetadataSource {
      * @throws ClassNotFoundException If class could not be found
      */
     Class getInvocationClass(String className) throws ClassNotFoundException;    
-    
-    
-    void loadFunctions(InputStream source) throws IOException;
 }

@@ -35,6 +35,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
@@ -107,15 +108,15 @@ public class AccessNode extends RelationalNode {
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	return prepareCommand(atomicCommand, this, this.getContext());
+    	return prepareCommand(atomicCommand, this, this.getContext(), this.getContext().getMetadata());
     }
 
-	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context)
+	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context, QueryMetadataInterface metadata)
 			throws ExpressionEvaluationException, MetaMatrixComponentException,
 			MetaMatrixProcessingException, CriteriaEvaluationException {
         try {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
-            QueryRewriter.evaluateAndRewrite(atomicCommand, node.getDataManager(), context);
+            QueryRewriter.evaluateAndRewrite(atomicCommand, node.getDataManager(), context, metadata);
         } catch (QueryValidatorException e) {
             throw new MetaMatrixProcessingException(e, QueryExecPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
         }

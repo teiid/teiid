@@ -31,25 +31,20 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestAggregatePushdown;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestAggregateProcessing {
 
 	static void sampleDataBQT3(FakeDataManager dataMgr) throws Exception {
-		FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+		QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
 
 		// Group bqt1.smalla
-		FakeMetadataObject groupID = (FakeMetadataObject) metadata
-				.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-		List elementIDs = metadata.getElementIDsInGroupID(groupID);
-		List elementSymbols = FakeDataStore.createElements(elementIDs);
 
 		List[] tuples = new List[20];
 		for (int i = 0; i < tuples.length; i++) {
@@ -62,12 +57,7 @@ public class TestAggregateProcessing {
 			}
 		}
 
-		dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
-		// Group bqt2.mediumb
-		groupID = (FakeMetadataObject) metadata.getGroupID("bqt2.mediumb"); //$NON-NLS-1$
-		elementIDs = metadata.getElementIDsInGroupID(groupID);
-		elementSymbols = FakeDataStore.createElements(elementIDs);
+		dataMgr.registerTuples(metadata, "bqt1.smalla", tuples); //$NON-NLS-1$
 
 		tuples = new List[20];
 		for (int i = 0; i < tuples.length; i++) {
@@ -78,17 +68,11 @@ public class TestAggregateProcessing {
 			}
 		}
 
-		dataMgr.registerTuples(groupID, elementSymbols, tuples);
+		dataMgr.registerTuples(metadata, "bqt2.mediumb", tuples); //$NON-NLS-1$
 	}
 
 	private void sampleDataBQT_defect9842(FakeDataManager dataMgr) throws Exception {
-		FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
-
-		// Group bqt1.smalla
-		FakeMetadataObject groupID = (FakeMetadataObject) metadata
-				.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-		List elementIDs = metadata.getElementIDsInGroupID(groupID);
-		List elementSymbols = FakeDataStore.createElements(elementIDs);
+		QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
 
 		List[] tuples = new List[5];
 		for (int i = 0; i < tuples.length; i++) {
@@ -112,7 +96,7 @@ public class TestAggregateProcessing {
 			tuples[i].add(null);
 		}
 
-		dataMgr.registerTuples(groupID, elementSymbols, tuples);
+		dataMgr.registerTuples(metadata, "bqt1.smalla", tuples); //$NON-NLS-1$
 	}
 
 	@Test public void testAggregateOnBQT() throws Exception {

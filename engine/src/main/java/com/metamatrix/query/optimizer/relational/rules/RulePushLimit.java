@@ -31,7 +31,7 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
@@ -120,7 +120,7 @@ public class RulePushLimit implements OptimizerRule {
             {
                 //combine the limits
                 Expression minLimit = getMinValue((Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT), (Expression)child.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT)); 
-                Expression offSet = getSum((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT)); 
+                Expression offSet = getSum((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), metadata.getFunctionLibrary()); 
                 
                 NodeEditor.removeChildNode(limitNode, child);
                 
@@ -142,7 +142,7 @@ public class RulePushLimit implements OptimizerRule {
                     PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
                     Expression limit = (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
                     Expression offset = (Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset));
+                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset, metadata.getFunctionLibrary()));
                     grandChild.addAsParent(newLimit);
                     limitNodes.add(newLimit);
                 }
@@ -205,7 +205,7 @@ public class RulePushLimit implements OptimizerRule {
                 
                 // since we're pushing underneath the offset, we want enough rows to satisfy both the limit and the row offset
                 
-                pushedLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset)); 
+                pushedLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset, metadata.getFunctionLibrary())); 
                 
                 if (accessNode.getChildCount() == 0) {
                     accessNode.addFirstChild(pushedLimit);
@@ -224,7 +224,7 @@ public class RulePushLimit implements OptimizerRule {
      * @param limitNode
      * @param child
      */
-    static Expression getSum(Expression expr1, Expression expr2) {
+    static Expression getSum(Expression expr1, Expression expr2, FunctionLibrary functionLibrary) {
         if (expr1 == null) {
             return expr2;
         }
@@ -233,7 +233,7 @@ public class RulePushLimit implements OptimizerRule {
         }
         
         Function newExpr = new Function("+", new Expression[] {expr1, expr2}); //$NON-NLS-1$
-        newExpr.setFunctionDescriptor(FunctionLibraryManager.getFunctionLibrary().findFunction("+", new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER})); //$NON-NLS-1$
+        newExpr.setFunctionDescriptor(functionLibrary.findFunction("+", new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER})); //$NON-NLS-1$
         newExpr.setType(newExpr.getFunctionDescriptor().getReturnType());
         return newExpr;
     }

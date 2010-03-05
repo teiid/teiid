@@ -36,6 +36,7 @@ import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -67,7 +68,7 @@ public class CommandContext implements Cloneable {
 	    
 	    private String vdbName;
 	    
-	    private String vdbVersion;
+	    private int vdbVersion;
 	    
 	    private Properties environmentProperties;
 	    
@@ -96,6 +97,8 @@ public class CommandContext implements Cloneable {
 	    private long timeSliceEnd = Long.MAX_VALUE;
 	    
 	    private long timeoutEnd = Long.MAX_VALUE;
+	    
+	    private QueryMetadataInterface metadata; 
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -108,7 +111,7 @@ public class CommandContext implements Cloneable {
      * Construct a new context.
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable commandPayload, String vdbName, String vdbVersion, Properties envProperties, boolean processDebug, boolean collectNodeStatistics) {
+        Serializable commandPayload, String vdbName, int vdbVersion, Properties envProperties, boolean processDebug, boolean collectNodeStatistics) {
         setProcessorID(processorID);
         setConnectionID(connectionID);
         setUserName(userName);
@@ -124,7 +127,7 @@ public class CommandContext implements Cloneable {
      * Construct a new context.
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        String vdbName, String vdbVersion) {
+        String vdbName, int vdbVersion) {
 
         this(processorID, connectionID, userName, null, vdbName, 
             vdbVersion, null, false, false);            
@@ -203,7 +206,7 @@ public class CommandContext implements Cloneable {
     /**
      * @return String
      */
-    public String getVdbVersion() {
+    public int getVdbVersion() {
         return globalState.vdbVersion;
     }
 
@@ -235,7 +238,7 @@ public class CommandContext implements Cloneable {
      * Sets the vdbVersion.
      * @param vdbVersion The vdbVersion to set
      */
-    public void setVdbVersion(String vdbVersion) {
+    public void setVdbVersion(int vdbVersion) {
         this.globalState.vdbVersion = vdbVersion;
     }
 
@@ -425,5 +428,12 @@ public class CommandContext implements Cloneable {
 	public void setTimeoutEnd(long timeoutEnd) {
 		globalState.timeoutEnd = timeoutEnd;
 	}
+
+	public void setMetadata(QueryMetadataInterface metadata) {
+		globalState.metadata = metadata;
+	}
 	
+	public QueryMetadataInterface getMetadata() {
+		return globalState.metadata;
+	}
 }

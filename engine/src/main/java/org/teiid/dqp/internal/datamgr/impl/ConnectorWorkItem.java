@@ -27,19 +27,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.SystemException;
+import javax.resource.spi.work.WorkEvent;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
@@ -75,14 +76,16 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     protected AtomicRequestID id;
     protected ConnectorManager manager;
     protected AtomicRequestMessage requestMsg;
-    protected boolean isTransactional;
+    protected Connector connector;
+    QueryMetadataInterface queryMetadata;
     
     /* Created on new request */
     protected Connection connection;
+    protected ConnectorEnvironment connectorEnv;
     protected ExecutionContextImpl securityContext;
     protected volatile ResultSetExecution execution;
     protected ProcedureBatchHandler procedureBatchHandler;
-    private ICommand translatedCommand;
+    private org.teiid.connector.language.Command translatedCommand;
     private Class<?>[] schema;
     private List<Integer> convertToRuntimeType;
     private boolean[] convertToDesiredRuntimeType;
@@ -104,53 +107,51 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 
     protected ResultsReceiver<AtomicResultsMessage> resultsReceiver;
     
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) throws ConnectorException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
         this.resultsReceiver = resultsReceiver;
         AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
         this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
-                requestMsg.getWorkContext().getVdbVersion(),
-                requestMsg.getWorkContext().getUserName(),
-                requestMsg.getWorkContext().getTrustedPayload(),
+                requestMsg.getWorkContext().getVdbVersion(),                
                 requestMsg.getExecutionPayload(),                                                                       
                 requestMsg.getWorkContext().getConnectionID(),                                                                      
-                requestMsg.getConnectorID().getID(),
+                requestMsg.getConnectorName(),
                 requestMsg.getRequestID().toString(),
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId())
                 );
+        this.securityContext.setUser(requestMsg.getWorkContext().getSubject());
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setContextCache(manager.getContextCache());
+        
+        this.connector = manager.getConnector();
+        this.connectorEnv = connector.getConnectorEnvironment();
+        try {
+        	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
+        	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
+	        this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
+	        
+	        if (requestMsg.isTransactional()){
+	        	if (this.connectorEnv.isXaCapable()) {
+		    		this.securityContext.setTransactional(true);
+	        	} else if (!this.connectorEnv.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
+	    	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
+	    	    }
+	        }
+        } catch(MetaMatrixComponentException e) {
+        	throw new ConnectorException(e);
+        }
     }
 
-    protected void createConnection(ConnectorWrapper connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
+    protected void createConnection() throws ConnectorException {
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating connection for atomic-request"});  //$NON-NLS-1$
-         
-        if (requestMsg.isTransactional()){
-        	if (manager.isXa()) {
-	    		this.securityContext.setTransactional(true);
-	    		this.isTransactional = true;
-	    		try {
-					manager.getTransactionService().getTransactionManager().resume(requestMsg.getTransactionContext().getTransaction());
-				} catch (InvalidTransactionException e) {
-					throw new ConnectorException(e);
-				} catch (SystemException e) {
-					throw new ConnectorException(e);
-				}
-        	} else if (!manager.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
-    	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
-    	    }
-    	}
-        
-    	connection = connector.getConnection(this.securityContext, this.isTransactional?requestMsg.getTransactionContext():null);
+    	this.connection = this.connector.getConnection();
     }
     
     protected void process() {
     	DQPWorkContext.setWorkContext(this.requestMsg.getWorkContext());
-        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-    	Thread.currentThread().setContextClassLoader(this.manager.getClassloader());
     	boolean success = true;
     	try {
     		checkForCloseEvent();
@@ -180,13 +181,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     		this.requestState = RequestState.CLOSE;
         	handleError(t);
         } finally {
-        	try {
-	        	if (this.requestState == RequestState.CLOSE) {
-	    			processClose(success);
-	        	} 
-        	} finally {
-            	Thread.currentThread().setContextClassLoader(contextloader);
-        	}
+        	if (this.requestState == RequestState.CLOSE) {
+    			processClose(success);
+        	} 
+        	DQPWorkContext.releaseWorkContext();
         }
     }
 
@@ -264,26 +262,16 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
-        	try {
-                if (connection != null) {
-                    connection.close();
-                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
-                }
-            } finally {
-                manager.removeState(this.id);
-                sendClose();
+        	// Close the underlying connection, but send the close response only upon the notification from
+        	// container in workCompleted call.
+            if (connection != null) {
+                connection.close();
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
             }
         }        
     }
 
-	private void sendClose() {
-		if (this.isTransactional) {
-			try {
-				manager.getTransactionService().getTransactionManager().suspend();
-			} catch (SystemException e) {
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, e.getMessage());
-			}
-		}
+	protected void sendClose() {
 		AtomicResultsMessage response = new AtomicResultsMessage(this.requestMsg);
 		response.setRequestClosed(true);
 		this.resultsReceiver.receiveResults(response);
@@ -300,9 +288,8 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 	protected void createExecution() throws MetaMatrixComponentException,
 			ConnectorException {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
-
-		QueryMetadataInterface queryMetadata = new TempMetadataAdapter(manager.getMetadataService().lookupMetadata(this.requestMsg.getWorkContext().getVdbName(), this.requestMsg.getWorkContext().getVdbVersion()), new TempMetadataStore());
-        createConnection(manager.getConnector(), queryMetadata);
+		
+        createConnection();
         
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating execution for atomic-request"});  //$NON-NLS-1$
 
@@ -326,14 +313,14 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         
         // Create the execution based on mode
         final Execution exec = connection.createExecution(this.translatedCommand, this.securityContext, rmd);
-        if (this.translatedCommand instanceof IProcedure) {
+        if (this.translatedCommand instanceof Call) {
         	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "IProcedure Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
         	this.execution = (ProcedureExecution)exec;
         	StoredProcedure proc = (StoredProcedure)command;
         	if (proc.returnParameters()) {
-        		this.procedureBatchHandler = new ProcedureBatchHandler((IProcedure)this.translatedCommand, (ProcedureExecution)this.execution);
+        		this.procedureBatchHandler = new ProcedureBatchHandler((Call)this.translatedCommand, (ProcedureExecution)this.execution);
         	}
-        } else if (this.translatedCommand instanceof IQueryCommand){
+        } else if (this.translatedCommand instanceof QueryExpression){
         	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "IQueryCommand Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
         	this.execution = (ResultSetExecution)exec;
         } else {
@@ -380,8 +367,14 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         int batchSize = 0;
         List<List> rows = new ArrayList<List>(batchSize/4);
         boolean sendResults = true;
-    	try {
+        
+        try {
 	        while (batchSize < this.requestMsg.getFetchSize()) {
+	        	
+	        	if (shouldAbortProcessing()) {
+	        		throw new ConnectorException("Container requested to abort the operation!");
+	        	}
+	        	
         		List row = this.execution.next();
             	if (row == null) {
             		this.lastBatch = true;
@@ -397,13 +390,13 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
             	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
-	            if(manager.getMaxResultRows() != 0 && this.rowCount >= manager.getMaxResultRows()){
-	                if (this.rowCount == manager.getMaxResultRows() && !manager.isExceptionOnMaxRows()) {
-		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", manager.getMaxResultRows()}); //$NON-NLS-1$
+	            if(this.connectorEnv.getMaxResultRows() != 0 && this.rowCount >= this.connectorEnv.getMaxResultRows()){
+	                if (this.rowCount == this.connectorEnv.getMaxResultRows() && !this.connectorEnv.isExceptionOnMaxRows()) {
+		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.connectorEnv.getMaxResultRows()}); //$NON-NLS-1$
 		        		this.lastBatch = true;
 		        		break;
-	            	} else if (this.rowCount > manager.getMaxResultRows() && manager.isExceptionOnMaxRows()) {
-	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", manager.getMaxResultRows()); //$NON-NLS-1$
+	            	} else if (this.rowCount > this.connectorEnv.getMaxResultRows() && this.connectorEnv.isExceptionOnMaxRows()) {
+	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.connectorEnv.getMaxResultRows()); //$NON-NLS-1$
 	                    throw new ConnectorException(msg);
 	                }
 	            }
@@ -436,7 +429,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		if ( !lastBatch && currentRowCount == 0 ) {
 		    // Defect 13366 - Should send all batches, even if they're zero size.
 		    // Log warning if received a zero-size non-last batch from the connector.
-		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorID())); //$NON-NLS-1$
+		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
 		}
 
 		AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
@@ -535,4 +528,35 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		return this.id.toString();
 	}
 
+	@Override
+	public void workCompleted(WorkEvent arg0) {
+        manager.removeState(this.id);
+        sendClose();
+	}
+
+	@Override
+	public void workRejected(WorkEvent event) {
+		try {
+			asynchCancel();
+		} catch (ConnectorException e) {
+			LogManager.logError(LogConstants.CTX_CONNECTOR, event.getException(), this.id.toString()); 
+		}
+	}
+	
+	@Override
+    protected boolean assosiateSecurityContext() {
+		DQPWorkContext context = requestMsg.getWorkContext();
+		if (context.getSubject() != null) {
+        	return manager.getSecurityHelper().assosiateSecurityContext(context.getSecurityDomain(), context.getSecurityContext());			
+		}
+		return false;
+	}
+    
+	@Override
+    protected void clearSecurityContext() {
+		DQPWorkContext context = requestMsg.getWorkContext();
+		if (context.getSubject() != null) {
+			manager.getSecurityHelper().clearSecurityContext(context.getSecurityDomain());			
+		}
+	}
 }

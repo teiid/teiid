@@ -41,6 +41,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.batch.BatchedUpdatePlanner;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -102,7 +103,7 @@ public class PreparedStatementRequest extends Request {
 		List<SPParameter> spParams = proc.getParameters();
 		proc.clearParameters();
 		int inParameterCount = values.size();
-		if (this.requestMsg.isPreparedBatchUpdate() && values.size() > 0) {
+		if (this.requestMsg.isBatchedUpdate() && values.size() > 0) {
 			inParameterCount = ((List)values.get(0)).size();
 		}
 		int index = 1;
@@ -160,13 +161,13 @@ public class PreparedStatementRequest extends Request {
             createCommandContext();
         }
                 
-        if (requestMsg.isPreparedBatchUpdate()) {
+        if (requestMsg.isBatchedUpdate()) {
 	        handlePreparedBatchUpdate();
         } else {
 	        List<Reference> params = prepPlan.getReferences();
 	        List<?> values = requestMsg.getParameterValues();
 	
-	    	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
+	    	PreparedStatementRequest.resolveParameterValues(params, values, this.context, this.metadata);
         }
     }
 
@@ -185,7 +186,7 @@ public class PreparedStatementRequest extends Request {
      */
 	private void handlePreparedBatchUpdate() throws QueryMetadataException,
 			MetaMatrixComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
-		List<List<?>> paramValues = requestMsg.getParameterValues();
+		List<List<?>> paramValues = (List<List<?>>) requestMsg.getParameterValues();
 		if (paramValues.isEmpty()) {
 			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
 		}
@@ -205,7 +206,7 @@ public class PreparedStatementRequest extends Request {
 		List<VariableContext> contexts = new LinkedList<VariableContext>();
 		List<List<Object>> multiValues = new ArrayList<List<Object>>(this.prepPlan.getReferences().size());
 		for (List<?> values : paramValues) {
-	    	PreparedStatementRequest.resolveParameterValues(this.prepPlan.getReferences(), values, this.context);
+	    	PreparedStatementRequest.resolveParameterValues(this.prepPlan.getReferences(), values, this.context, this.metadata);
 			contexts.add(this.context.getVariableContext());
 			if(supportPreparedBatchUpdate){
 				if (multiValues.isEmpty()) {
@@ -256,7 +257,7 @@ public class PreparedStatementRequest extends Request {
 	 * @throws QueryValidatorException 
 	 */
 	public static void resolveParameterValues(List<Reference> params,
-	                                    List values, CommandContext context) throws QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
+	                                    List values, CommandContext context, QueryMetadataInterface metadata) throws QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
 		VariableContext result = new VariableContext();
 	    //the size of the values must be the same as that of the parameters
 	    if (params.size() != values.size()) {
@@ -274,7 +275,7 @@ public class PreparedStatementRequest extends Request {
         	if(value != null && !(value instanceof List)) {
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
-                    Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName);
+                    Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName, metadata);
                     value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
                     String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$

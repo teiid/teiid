@@ -25,7 +25,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.transaction.xa.XAResource;
+import junit.framework.Assert;
 
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
@@ -40,17 +40,12 @@ import org.teiid.connector.basic.BasicConnection;
 import org.teiid.connector.basic.BasicConnector;
 import org.teiid.connector.basic.BasicConnectorCapabilities;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.Command;
+import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.connector.xa.api.XAConnection;
-import org.teiid.connector.xa.api.XAConnector;
-
-import junit.framework.Assert;
 
 
-public class FakeConnector extends BasicConnector implements XAConnector {
+public class FakeConnector extends BasicConnector {
 	private static final int RESULT_SIZE = 5;
 	
 	private boolean executeBlocks;
@@ -63,6 +58,8 @@ public class FakeConnector extends BasicConnector implements XAConnector {
     private int connectionCount;
     private int executionCount;
     
+    private ConnectorEnvironment env;
+    
     public int getConnectionCount() {
 		return connectionCount;
 	}
@@ -71,31 +68,27 @@ public class FakeConnector extends BasicConnector implements XAConnector {
 		return executionCount;
 	}
     
+    public ConnectorEnvironment getConnectorEnvironment() {
+    	return this.env;
+    }
+    
+    public void setConnectorEnvironment(ConnectorEnvironment env) {
+    	this.env = env;
+    }
+    
     @Override
-    public Connection getConnection(org.teiid.connector.api.ExecutionContext context) throws ConnectorException {
+    public Connection getConnection() throws ConnectorException {
         return new FakeConnection();
     }
-    @Override
-    public void start(ConnectorEnvironment environment)
-    		throws ConnectorException {
-    	
-    }
-    @Override
-    public void stop() {}
-    @Override
-	public XAConnection getXAConnection(ExecutionContext executionContext,
-			TransactionContext transactionContext) throws ConnectorException {
-		return new FakeConnection();
-	}
 	
-    private class FakeConnection extends BasicConnection implements XAConnection {
+    private class FakeConnection extends BasicConnection {
     	
     	public FakeConnection() {
 			connectionCount++;
 		}
     	
         public boolean released = false;
-        public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+        public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
         	executionCount++;
             return new FakeBlockingExecution(executionContext);
         }
@@ -106,10 +99,6 @@ public class FakeConnector extends BasicConnector implements XAConnector {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;
         }
-		@Override
-		public XAResource getXAResource() throws ConnectorException {
-			return null;
-		}
     }   
     
     private final class FakeBlockingExecution extends BasicExecution implements ResultSetExecution, UpdateExecution {
@@ -120,7 +109,7 @@ public class FakeConnector extends BasicConnector implements XAConnector {
         public FakeBlockingExecution(ExecutionContext ec) {
             this.ec = ec;
         }
-        public void execute(IQueryCommand query, int maxBatchSize) throws ConnectorException {
+        public void execute(QueryExpression query, int maxBatchSize) throws ConnectorException {
             if (executeBlocks) {
                 waitForCancel();
             }

@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
@@ -47,7 +49,6 @@ import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.function.aggregate.Sum;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -163,19 +164,19 @@ public class GroupingNode extends RelationalNode {
                     }
                 	aggProjectionIndexes[i] = index;
                     String function = aggSymbol.getAggregateFunction();
-                    if(function.equals(ReservedWords.COUNT)) {
+                    if(function.equals(SQLReservedWords.COUNT)) {
                         functions[i] = new Count();
-                    } else if(function.equals(ReservedWords.SUM)) {
+                    } else if(function.equals(SQLReservedWords.SUM)) {
                         functions[i] = new Sum();
-                    } else if(function.equals(ReservedWords.AVG)) {
+                    } else if(function.equals(SQLReservedWords.AVG)) {
                         functions[i] = new Avg();
-                    } else if(function.equals(ReservedWords.MIN)) {
+                    } else if(function.equals(SQLReservedWords.MIN)) {
                         functions[i] = new Min();
                     } else {
                         functions[i] = new Max();
                     }
 
-                    if(aggSymbol.isDistinct() && !function.equals(ReservedWords.MIN) && !function.equals(ReservedWords.MAX)) {
+                    if(aggSymbol.isDistinct() && !function.equals(SQLReservedWords.MIN) && !function.equals(SQLReservedWords.MAX)) {
                         functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID());
                     }
                     

@@ -25,10 +25,11 @@ package com.metamatrix.query.validator;
 import java.util.Collection;
 import java.util.Set;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
@@ -71,10 +72,10 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         
         // Verify data type of aggregate expression
         String aggregateFunction = obj.getAggregateFunction();
-        if((aggregateFunction.equals(ReservedWords.SUM) || aggregateFunction.equals(ReservedWords.AVG)) && obj.getType() == null) {
+        if((aggregateFunction.equals(SQLReservedWords.SUM) || aggregateFunction.equals(SQLReservedWords.AVG)) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
         }
-        if((aggregateFunction.equals(ReservedWords.MIN) || aggregateFunction.equals(ReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+        if((aggregateFunction.equals(SQLReservedWords.MIN) || aggregateFunction.equals(SQLReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
         validateBelow = false;

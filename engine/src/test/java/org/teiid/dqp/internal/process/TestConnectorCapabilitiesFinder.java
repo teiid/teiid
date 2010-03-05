@@ -22,15 +22,16 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
@@ -47,26 +48,29 @@ public class TestConnectorCapabilitiesFinder extends TestCase {
     }
 
     public void testFind() throws Exception {
-        String vdbName = "myvdb"; //$NON-NLS-1$
-        String vdbVersion = "1"; //$NON-NLS-1$
         String modelName = "model"; //$NON-NLS-1$
         String functionName = "fakeFunction"; //$NON-NLS-1$
         
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setFunctionSupport("fakeFunction", true); //$NON-NLS-1$
-        RequestMessage request = new RequestMessage(null);
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(vdbName);
-        workContext.setVdbVersion(vdbVersion);
+       
+        ArrayList<String> bindings = new ArrayList<String>();
+        bindings.add(modelName);
         
-        VDBService vdbService = Mockito.mock(VDBService.class); 
-        Mockito.stub(vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName)).toReturn(Arrays.asList(modelName));
-        DataService dataService = Mockito.mock(DataService.class);
+        VDBMetaData vdb = Mockito.mock(VDBMetaData.class); 
+        ModelMetaData model = Mockito.mock(ModelMetaData.class); 
+        Mockito.stub(vdb.getModel(modelName)).toReturn(model);
+        Mockito.stub(model.getSourceNames()).toReturn(bindings);
+        
         BasicSourceCapabilities basicSourceCapabilities = new BasicSourceCapabilities();
         basicSourceCapabilities.setFunctionSupport(functionName, true);
-        Mockito.stub(dataService.getCapabilities(request, workContext, modelName)).toReturn(basicSourceCapabilities);
+
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        ConnectorManager cm = Mockito.mock(ConnectorManager.class);
+        Mockito.stub(cm.getCapabilities()).toReturn(basicSourceCapabilities);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(cm);
         
-        CachedFinder finder = new CachedFinder(dataService, request, workContext);
+        CachedFinder finder = new CachedFinder(repo, vdb);
         
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);

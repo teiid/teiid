@@ -22,26 +22,23 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
-import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
-import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
-
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
-import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
@@ -68,7 +65,7 @@ import com.metamatrix.query.util.CommandContext;
  * 
  * @since 4.2
  */
-public class TestMultiSourcePlanToProcessConverter extends TestCase {
+public class TestMultiSourcePlanToProcessConverter {
     
     private final class MultiSourceDataManager extends HardcodedDataManager {
         
@@ -93,19 +90,21 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
 
     private static final boolean DEBUG = false;
     
-    public void helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List[] expectedResults) throws Exception {
-        final String vdbName = "MyVDB"; //$NON-NLS-1$
-        final String vdbVersion = "1"; //$NON-NLS-1$
-     
-        // Set up metadata and other dependencies
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addModel(vdbName, vdbVersion, multiModel, ModelInfo.PUBLIC, true); 
+    public void helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List[] expectedResults, VDBMetaData vdb) throws Exception {
         
-        char sourceID = 'a';
-        for(int i=0; i<sourceCount; i++, sourceID++) {
-            vdbService.addBinding(vdbName, vdbVersion, multiModel, "mmuuid:source_" + sourceID, "" + sourceID); //$NON-NLS-1$ //$NON-NLS-2$ 
+       DQPWorkContext dqpContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
+     
+        Set<String> multiSourceModels = vdb.getMultiSourceModelNames();
+        for (String model:multiSourceModels) {
+            char sourceID = 'a';
+            // by default every model has one binding associated, but for multi-source there were none assigned. 
+            ModelMetaData m = vdb.getModel(model);
+            int x = m.getSourceNames().size();
+            for(int i=x; i<sourceCount; i++, sourceID++) {
+            	 m.addSourceMapping("" + sourceID, null);
+            }
         }
-        Set<String> multiSourceModels = new HashSet<String>(vdbService.getMultiSourceModels(vdbName, vdbVersion));
+        
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels); 
         AnalysisRecord analysis = new AnalysisRecord(false, false, DEBUG);
         
@@ -122,8 +121,8 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         idGenerator.setDefaultFactory(new IntegerIDFactory());            
         
         Properties props = new Properties();
-        CommandContext context = new CommandContext("0", "test", "user", null, vdbName, vdbVersion, props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(metadata, idGenerator, analysis, finder, multiSourceModels, vdbName, vdbService, vdbVersion, context));
+        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(metadata, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
 
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
                         
@@ -135,7 +134,7 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         TestProcessor.helpProcess(plan, context, dataMgr, expectedResults);                        
     }
 
-    public void testNoReplacement() throws Exception {
+    @Test public void testNoReplacement() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE SOURCE_NAME = 'bogus'"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
@@ -143,10 +142,10 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         final List[] expected = 
             new List[0];
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
 
-    public void testSingleReplacement() throws Exception {
+    @Test public void testSingleReplacement() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE SOURCE_NAME = 'a'"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
@@ -155,10 +154,10 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
             new List[] { Arrays.asList(new Object[] { null, null, null}) };
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
     
-    public void testMultiReplacement() throws Exception {
+    @Test public void testMultiReplacement() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT * FROM MultiModel.Phys"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
@@ -168,10 +167,10 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
                          Arrays.asList(new Object[] { null, null, null}),
                          Arrays.asList(new Object[] { null, null, null})};
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
     
-    public void testMultiReplacementWithOrderBy() throws Exception {
+    @Test public void testMultiReplacementWithOrderBy() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleMultiBinding();
 
         final String userSql = "SELECT * FROM MultiModel.Phys order by a"; //$NON-NLS-1$
@@ -192,10 +191,10 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
                         new List[] {
                             Arrays.asList("e", "z", "b"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             Arrays.asList("f", "z", "b")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
 
-    public void testMultiReplacementWithLimit() throws Exception {
+    @Test public void testMultiReplacementWithLimit() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT distinct * FROM MultiModel.Phys order by a limit 1"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
@@ -212,10 +211,10 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
                         new List[] {
                             Arrays.asList("e", "z", "b"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             Arrays.asList("f", "z", "b")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
     
-    public void testMultiDependentJoin() throws Exception {
+    @Test public void testMultiDependentJoin() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleMultiBinding();
         
         final String userSql = "SELECT a.a FROM MultiModel.Phys a inner join MultiModel.Phys b makedep on (a.a = b.a) order by a"; //$NON-NLS-1$
@@ -238,17 +237,17 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0 WHERE g_0.a IN ('x', 'y')",  //$NON-NLS-1$
                         new List[] { Arrays.asList(new Object[] { "x" }), //$NON-NLS-1$
                                      Arrays.asList(new Object[] { "y" })}); //$NON-NLS-1$
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
     
-    public void testSingleReplacementInDynamicCommand() throws Exception {
+    @Test public void testSingleReplacementInDynamicCommand() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "exec Virt.sq1('a')"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
         final List[] expected = new List[] { Arrays.asList(new Object[] { null, null}), };
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
-        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
 
 }

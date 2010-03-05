@@ -22,8 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.ILiteral;
-import org.teiid.dqp.internal.datamgr.language.LikeCriteriaImpl;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Like;
 
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -48,8 +48,8 @@ public class TestLikeCriteriaImpl extends TestCase {
         return match;
     }
     
-    public static LikeCriteriaImpl example(String right, char escape, boolean negated) throws Exception {
-        return (LikeCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample(right, escape, negated));
+    public static Like example(String right, char escape, boolean negated) throws Exception {
+        return (Like)TstLanguageBridgeFactory.factory.translate(helpExample(right, escape, negated));
     }
 
     public void testGetLeftExpression() throws Exception {
@@ -57,10 +57,10 @@ public class TestLikeCriteriaImpl extends TestCase {
     }
 
     public void testGetRightExpression() throws Exception {
-        LikeCriteriaImpl like = example("abc", '.', false); //$NON-NLS-1$
+        Like like = example("abc", '.', false); //$NON-NLS-1$
         assertNotNull(like.getRightExpression());
-        assertTrue(like.getRightExpression() instanceof ILiteral);
-        assertEquals("abc", ((ILiteral)like.getRightExpression()).getValue()); //$NON-NLS-1$
+        assertTrue(like.getRightExpression() instanceof Literal);
+        assertEquals("abc", ((Literal)like.getRightExpression()).getValue()); //$NON-NLS-1$
     }
 
     public void testGetEscapeCharacter() throws Exception {

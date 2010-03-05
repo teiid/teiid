@@ -43,7 +43,7 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.processor.FakeDataManager;
@@ -156,7 +156,7 @@ public class TestGroupingNode {
 		List groupingElements = new ArrayList();
 		groupingElements.add(col1);
 		node.setGroupingElements(groupingElements);	  
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(2), new Integer(1), new Integer(1), new Long(3), new Long(3), new Double(3.0), new Double(3.0), new Integer(3), new Integer(3), new Integer(3), new Integer(3) }),
@@ -182,7 +182,7 @@ public class TestGroupingNode {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         GroupingNode node = getExampleGroupingNode();         
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),
@@ -204,7 +204,7 @@ public class TestGroupingNode {
         ((BufferManagerImpl)mgr).setProcessorBatchSize(5);
 
         GroupingNode node = getExampleGroupingNode();         
-        CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null,  1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),
@@ -235,7 +235,7 @@ public class TestGroupingNode {
         
         // Set grouping elements to null 
         node.setGroupingElements(null);         
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] data = new List[] {
             Arrays.asList(new Object[] { new BigDecimal("0.0") }),     //$NON-NLS-1$
@@ -275,7 +275,7 @@ public class TestGroupingNode {
         List groupingElements = new ArrayList();
         groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] data = new List[] {
             Arrays.asList(new Object[] { new Integer(1), new BigDecimal("0.0") }),     //$NON-NLS-1$
@@ -310,7 +310,7 @@ public class TestGroupingNode {
         col2.setType(Integer.class);
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), col2 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
@@ -323,7 +323,7 @@ public class TestGroupingNode {
         List groupingElements = new ArrayList();
         groupingElements.add(col1); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);   
-        CommandContext context = new CommandContext("pid", "test", null, null, null);    //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);    //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeDataManager dataMgr = new FakeDataManager();
         dataMgr.setThrowBlocked(true);
@@ -370,7 +370,7 @@ public class TestGroupingNode {
             groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
             node.setGroupingElements(groupingElements);
         }
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] data = new List[] {
         };
@@ -407,7 +407,7 @@ public class TestGroupingNode {
 
         GroupingNode node = getExampleGroupingNode();     
         node.setRemoveDuplicates(true);
-        CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null,  1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         List[] expected = new List[] {
             Arrays.asList(new Object[] { null, new Integer(1) }),

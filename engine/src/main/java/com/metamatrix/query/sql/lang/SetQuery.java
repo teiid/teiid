@@ -62,6 +62,7 @@ public class SetQuery extends QueryCommand {
     private QueryCommand rightQuery;
     
     private List<Class<?>> projectedTypes = null;  //set during resolving
+    private QueryMetadataInterface metadata = null; // set during resolving
      
     /**
      * Construct query with operation type
@@ -123,12 +124,12 @@ public class SetQuery extends QueryCommand {
 	    Query query = getProjectedQuery();
 	    List projectedSymbols = query.getProjectedSymbols();
         if (projectedTypes != null) {
-            return getTypedProjectedSymbols(projectedSymbols, projectedTypes);
+            return getTypedProjectedSymbols(projectedSymbols, projectedTypes, metadata);
         } 
         return projectedSymbols;
     }
     
-    public static List getTypedProjectedSymbols(List acutal, List projectedTypes) {
+    public static List getTypedProjectedSymbols(List acutal, List projectedTypes, QueryMetadataInterface metadata) {
         List newProject = new ArrayList();
         for (int i = 0; i < acutal.size(); i++) {
             SingleElementSymbol originalSymbol = (SingleElementSymbol)acutal.get(i);
@@ -145,7 +146,7 @@ public class SetQuery extends QueryCommand {
                 } 
                 
                 try {
-                    symbol = new ExpressionSymbol(originalSymbol.getShortName(), ResolverUtil.convertExpression(expr, DataTypeManager.getDataTypeName(type)));
+                    symbol = new ExpressionSymbol(originalSymbol.getShortName(), ResolverUtil.convertExpression(expr, DataTypeManager.getDataTypeName(type), metadata));
                 } catch (QueryResolverException err) {
                     throw new MetaMatrixRuntimeException(err);
                 }
@@ -182,7 +183,7 @@ public class SetQuery extends QueryCommand {
         }
         
         if (this.projectedTypes != null) {
-        	copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes));
+        	copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes), this.metadata);
         }
          
         return copy;
@@ -252,8 +253,9 @@ public class SetQuery extends QueryCommand {
     /** 
      * @param projectedSymbols The projectedSymbols to set.
      */
-    public void setProjectedTypes(List<Class<?>> projectedTypes) {
+    public void setProjectedTypes(List<Class<?>> projectedTypes, QueryMetadataInterface metadata) {
         this.projectedTypes = projectedTypes;
+        this.metadata = metadata;
     }
 
     /** 

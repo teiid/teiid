@@ -31,7 +31,6 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.exception.SourceWarning;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 
@@ -45,7 +44,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     private final List schema;
     private final AtomicRequestMessage aqr;
     private final DataTierManagerImpl dataMgr;
-    private final ConnectorID connectorId;
+    private final String connectorName;
     private final RequestWorkItem workItem;
     
     // Data state
@@ -64,11 +63,11 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     /**
      * Constructor for DataTierTupleSource.
      */
-    public DataTierTupleSource(List schema, AtomicRequestMessage aqr, DataTierManagerImpl dataMgr, ConnectorID connectorID, RequestWorkItem workItem) {
+    public DataTierTupleSource(List schema, AtomicRequestMessage aqr, DataTierManagerImpl dataMgr, String connectorName, RequestWorkItem workItem) {
         this.schema = schema;       
         this.aqr = aqr;
         this.dataMgr = dataMgr;
-        this.connectorId = connectorID;
+        this.connectorName = connectorName;
         this.workItem = workItem;
     }
 
@@ -104,9 +103,9 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
         synchronized (this) {
         	this.waitingForData = true;
 	        try {
-	        	this.dataMgr.executeRequest(aqr, this.connectorId, this);
+	        	this.dataMgr.executeRequest(aqr, this.connectorName, this);
 	        } catch (MetaMatrixComponentException e) {
-	        	exceptionOccurred(e);
+	        	exceptionOccurred(e, true);
 	        }
         }
     }
@@ -139,7 +138,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
         } 
         // Request the next batch immediately
         if (!this.isLast && !waitingForData) {
-            this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), connectorId);
+            this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), this.connectorName);
             
             // update waitingForData
             this.waitingForData = true;
@@ -150,11 +149,11 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     }
     
     public void fullyCloseSource() {
-    	this.dataMgr.closeRequest(aqr.getAtomicRequestID(), connectorId);
+    	this.dataMgr.closeRequest(aqr.getAtomicRequestID(), this.connectorName);
     }
     
     public void cancelRequest() throws MetaMatrixComponentException {
-    	this.dataMgr.cancelRequest(aqr.getAtomicRequestID(), connectorId);
+    	this.dataMgr.cancelRequest(aqr.getAtomicRequestID(), this.connectorName);
     }
 
     /**
@@ -162,24 +161,30 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
      */
     public void closeSource() {
     	if (this.supportsImplicitClose) {
-    		this.dataMgr.closeRequest(aqr.getAtomicRequestID(), connectorId);
+    		this.dataMgr.closeRequest(aqr.getAtomicRequestID(), this.connectorName);
     	}
     }
 
 	public void exceptionOccurred(Throwable e) {
+		exceptionOccurred(e, false);
+	}
+    
+    private void exceptionOccurred(Throwable e, boolean removeState) {
+    
 		synchronized (this) {
 			if(workItem.requestMsg.supportsPartialResults()) {
 				nextBatch = new List[0];
 				nextBatchIsLast = true;
-		        String connectorBindingName = dataMgr.getConnectorName(aqr.getConnectorBindingID());
-		        SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), connectorBindingName, e, true);
+		        SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), e, true);
 		        workItem.addSourceFailureDetails(sourceFailure);
 			} else {
 				this.exception = e;
 			}	
 			waitingForData = false;
 		}
-		workItem.closeAtomicRequest(aqr.getAtomicRequestID());
+		if (removeState) {
+			workItem.closeAtomicRequest(aqr.getAtomicRequestID());
+		}
 		this.workItem.moreWork();
 	}
 
@@ -201,9 +206,8 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	        waitingForData = false;
 		}
 		if (response.getWarnings() != null) {
-	        String connectorBindingName = dataMgr.getConnectorName(aqr.getConnectorBindingID());
 			for (Exception warning : response.getWarnings()) {
-				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), connectorBindingName, warning, true);
+				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), warning, true);
 		        workItem.addSourceFailureDetails(sourceFailure);
 			}
 		}
@@ -217,8 +221,8 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 		return aqr;
 	}
 
-	public ConnectorID getConnectorId() {
-		return connectorId;
+	public String getConnectorName() {
+		return this.connectorName;
 	}
 	
 	public boolean isTransactional() {

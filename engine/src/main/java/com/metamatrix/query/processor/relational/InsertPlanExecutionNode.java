@@ -31,6 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.symbol.Reference;
 
 public class InsertPlanExecutionNode extends PlanExecutionNode {
@@ -40,9 +41,11 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
     private int batchRow = 1;
     private int insertCount = 0;
     private TupleBatch currentBatch;
+    private QueryMetadataInterface metadata;
 	
-	public InsertPlanExecutionNode(int nodeID) {
+	public InsertPlanExecutionNode(int nodeID, QueryMetadataInterface metadata) {
 		super(nodeID);
+		this.metadata = metadata;
 	}
 	
 	public void setReferences(List<Reference> references) {
@@ -82,13 +85,13 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 			return false;
 		}
 		//assign the reference values.
-		PreparedStatementRequest.resolveParameterValues(this.references, this.currentBatch.getTuple(this.batchRow), getProcessorPlan().getContext());
+		PreparedStatementRequest.resolveParameterValues(this.references, this.currentBatch.getTuple(this.batchRow), getProcessorPlan().getContext(), this.metadata);
 		this.batchRow++;
 		return true;
 	}
 	
 	public Object clone(){
-		InsertPlanExecutionNode clonedNode = new InsertPlanExecutionNode(super.getID());
+		InsertPlanExecutionNode clonedNode = new InsertPlanExecutionNode(super.getID(), this.metadata);
 		copy(this, clonedNode);
         return clonedNode;
 	}

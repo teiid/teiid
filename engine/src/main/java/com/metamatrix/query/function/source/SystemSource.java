@@ -952,12 +952,4 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     public Class getInvocationClass(String className) throws ClassNotFoundException {
         return Class.forName(className);    
     }
-    
-    /**
-     * Never need to reload - do nothing.
-     */
-    public void loadFunctions(InputStream source) throws IOException{
-    }
-    
-    
 }

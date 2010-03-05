@@ -85,8 +85,8 @@ public class DynamicCommandResolver implements CommandResolver {
         if (dynamicCmd.getUsing() != null && !dynamicCmd.getUsing().isEmpty()) {
             for (SetClause clause : dynamicCmd.getUsing().getClauses()) {
                 ElementSymbol id = clause.getSymbol();
-                id.setName(ProcedureReservedWords.USING + SingleElementSymbol.SEPARATOR + id.getShortName());
-                id.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.USING));
+                id.setName(ProcedureReservedWords.DVARS + SingleElementSymbol.SEPARATOR + id.getShortName());
+                id.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.DVARS));
                 id.setType(clause.getValue().getType());
                 id.setMetadataID(new TempMetadataID(id.getCanonicalName(), id.getType()));
             }

@@ -22,19 +22,18 @@
 
 package com.metamatrix.dqp.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
-import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.security.api.SessionToken;
 
 /**
  */
@@ -48,14 +47,14 @@ public class FakeAuthorizationService implements AuthorizationService {
         this.defaultAllow = defaultAllow;
     }
 
-    public void addResource(String connectionID, int action, String resource) {
-        knownResources.add(new Resource(connectionID, action, resource));
+    public void addResource(int action, String resource) {
+        knownResources.add(new Resource(action, resource));
     }
 
     /*
      * @see com.metamatrix.dqp.service.AuthorizationService#getInaccessibleResources(java.lang.String, int, java.util.Collection, int)
      */
-    public Collection getInaccessibleResources(String connectionID, int action, Collection resources, int context)
+    public Collection getInaccessibleResources(int action, Collection resources, int context)
         throws MetaMatrixComponentException {
 
         List found = new ArrayList();
@@ -68,7 +67,7 @@ public class FakeAuthorizationService implements AuthorizationService {
         while(rIter.hasNext()) {
             String resourceName = (String) rIter.next();
 
-            Resource key = new Resource(connectionID, action, resourceName);
+            Resource key = new Resource(action, resourceName);
             
             boolean foundResource = knownResources.contains(key);
             if (!foundResource && !defaultAllow) {
@@ -90,34 +89,11 @@ public class FakeAuthorizationService implements AuthorizationService {
         return true;
     }
 
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
-     */
-    public void initialize(Properties props) throws ApplicationInitializationException {
-
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
-     */
-    public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#stop()
-     */
-    public void stop() throws ApplicationLifecycleException {
-
-    }
-
     private static class Resource {
-        public String connectionID;
         public int action;
         public String resource;
 
-        public Resource(String connectionID, int action, String resource) {
-            this.connectionID = connectionID;
+        public Resource(int action, String resource) {
             this.action = action;
             this.resource = resource;
         }
@@ -148,7 +124,6 @@ public class FakeAuthorizationService implements AuthorizationService {
             Resource other = (Resource)obj;
 
             return other.action == this.action
-                   && other.connectionID.equalsIgnoreCase(this.connectionID)
                    && other.resource.equalsIgnoreCase(this.resource);
         }
     }
@@ -156,14 +131,13 @@ public class FakeAuthorizationService implements AuthorizationService {
     /** 
      * @see com.metamatrix.dqp.service.AuthorizationService#hasRole(java.lang.String, java.lang.String, java.lang.String)
      */
-    public boolean hasRole(String connectionID,
-                           String roleType,
+    public boolean hasRole(String roleType,
                            String roleName) throws MetaMatrixComponentException {
         return false;
     }
 
 	@Override
-	public boolean isCallerInRole(SessionToken session, String roleName)
+	public boolean isCallerInRole(String roleName)
 			throws AuthorizationMgmtException {
 		return false;
 	}
@@ -172,12 +146,6 @@ public class FakeAuthorizationService implements AuthorizationService {
 	public Collection<AuthorizationPolicy> getPoliciesInRealm(
 			AuthorizationRealm realm)
 			throws AuthorizationException, AuthorizationMgmtException {
-		return null;
-	}
-
-	@Override
-	public Collection<String> getRoleNamesForPrincipal(MetaMatrixPrincipalName principal) throws InvalidSessionException,
-			AuthorizationException, AuthorizationMgmtException {
 		return null;
 	}
 

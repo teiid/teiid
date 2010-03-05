@@ -22,35 +22,36 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import static junit.framework.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import javax.transaction.Transaction;
+import javax.resource.spi.work.WorkManager;
+import javax.transaction.xa.Xid;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.connector.language.Call;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.FakeMetadataService;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -58,13 +59,11 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestConnectorWorkItem extends TestCase {
+public class TestConnectorWorkItem {
 
-	private static final FakeMetadataFacade EXAMPLE_BQT = FakeMetadataFactory
-			.exampleBQTCached();
+	private static final QueryMetadataInterface EXAMPLE_BQT = FakeMetadataFactory.exampleBQTCached();
 
 	private static Command helpGetCommand(String sql,
 			QueryMetadataInterface metadata) throws Exception {
@@ -73,38 +72,40 @@ public class TestConnectorWorkItem extends TestCase {
 		return command;
 	}
 
-	static ConnectorManager getConnectorManager() {
-		ConnectorManager cm = new ConnectorManager();
-		cm.setConnector(new ConnectorWrapper(new FakeConnector()));
-		cm.setTransactionService(new FakeTransactionService());
-		cm.setMetadataService(new FakeMetadataService());
+	static ConnectorManager getConnectorManager(ConnectorEnvironment env) {
+		final FakeConnector c = new FakeConnector();
+		c.setConnectorEnvironment(env);
+		
+		ConnectorManager cm = new ConnectorManager("FakeConnector") {
+			Connector getConnector() {
+				return c;
+			}			
+		};
 		return cm;
 	}
 
-	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid,
-			int nodeid) throws Exception {
+	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid, int nodeid) throws Exception {
 		RequestMessage rm = new RequestMessage();
-		DQPWorkContext workContext = new DQPWorkContext();
-		workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
-		AtomicRequestMessage request = new AtomicRequestMessage(rm,
-				workContext, nodeid);
-		request.setCommand(helpGetCommand(
-				"SELECT BQT1.SmallA.INTKEY FROM BQT1.SmallA", EXAMPLE_BQT)); //$NON-NLS-1$
+		
+		DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(EXAMPLE_BQT, FakeMetadataFactory.exampleBQTVDB());
+		workContext.setSessionToken(new SessionToken(1, "foo")); //$NON-NLS-1$
+		
+		AtomicRequestMessage request = new AtomicRequestMessage(rm, workContext, nodeid);
+		request.setCommand(helpGetCommand("SELECT BQT1.SmallA.INTKEY FROM BQT1.SmallA", EXAMPLE_BQT)); //$NON-NLS-1$
 		request.setRequestID(new RequestID(requestid));
-		request.setConnectorID(new ConnectorID("testing")); //$NON-NLS-1$
+		request.setConnectorName("testing"); //$NON-NLS-1$
 		request.setFetchSize(5);
 		return request;
 	}
 
-	public void testProcedureBatching() throws Exception {
+	@Test public void testProcedureBatching() throws Exception {
 		ProcedureExecution exec = new FakeProcedureExecution(2, 1);
 
 		// this has two result set columns and 1 out parameter
 		int total_columns = 3;
 		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
 		command.getInputParameters().get(0).setExpression(new Constant(1));
-		IProcedure proc = (IProcedure) new LanguageBridgeFactory(EXAMPLE_BQT)
-				.translate(command);
+		Call proc = (Call)new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
 
 		ProcedureBatchHandler pbh = new ProcedureBatchHandler(proc, exec);
 
@@ -121,26 +122,24 @@ public class TestConnectorWorkItem extends TestCase {
 			fail("Expected exception from resultset mismatch"); //$NON-NLS-1$
 		} catch (ConnectorException err) {
 			assertEquals(
-					"Could not process stored procedure results for EXEC spTest8(, 1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
+					"Could not process stored procedure results for EXEC spTest8(1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
 		}
 	}
 
-	public void testCancelBeforeNew() throws Exception {
+	@Test public void testCancelBeforeNew() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
 		// only one response is expected
+		FakeWorkManager wm = new FakeWorkManager();
 		ResultsFuture<AtomicResultsMessage> resultsFuture = new ResultsFuture<AtomicResultsMessage>();
-		ConnectorWorkItem state = new SynchConnectorWorkItem(request,
-				getConnectorManager(), resultsFuture
-						.getResultsReceiver());
+		ConnectorWorkItem state = new SynchConnectorWorkItem(request,getConnectorManager(Mockito.mock(ConnectorEnvironment.class)), resultsFuture.getResultsReceiver());
 
 		state.asynchCancel(); // cancel does not cause close, but the next
 								// processing will close
 		assertFalse(state.isDoneProcessing());
 
-		state.run();
+		wm.doWork(state, 0, null, state);
 
-		AtomicResultsMessage arm = resultsFuture.get(1000,
-				TimeUnit.MILLISECONDS);
+		AtomicResultsMessage arm = resultsFuture.get(1000, TimeUnit.MILLISECONDS);
 
 		assertTrue(arm.isRequestClosed());
 
@@ -149,8 +148,8 @@ public class TestConnectorWorkItem extends TestCase {
 		 */
 		try {
 			state.requestMore();
-		} catch (IllegalStateException e) {
-
+		} catch (Throwable e) {
+			// catches the assertion error
 		}
 	}
 
@@ -169,8 +168,12 @@ public class TestConnectorWorkItem extends TestCase {
 			switch (msgCount++) {
 			case 0:
 				// request more during delivery
-				((FakeConnector) manager.getConnector().getActualConnector()).setReturnsFinalBatch(true);
-				workItem.requestMore();
+				try {
+					((FakeConnector) manager.getConnector()).setReturnsFinalBatch(true);
+					workItem.requestMore();
+				} catch (ConnectorException e) {
+					exceptionOccurred(e);
+				}
 				break;
 			case 1:
 				if (results.isRequestClosed()) {
@@ -214,11 +217,10 @@ public class TestConnectorWorkItem extends TestCase {
 		}
 	}
 
-	public void testMoreAsynch() throws Throwable {
+	 @Test public void testMoreAsynch() throws Throwable {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		final ConnectorManager manager = getConnectorManager();
-		AsynchMoreResultsReceiver receiver = new AsynchMoreResultsReceiver(
-				manager);
+		final ConnectorManager manager = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
+		AsynchMoreResultsReceiver receiver = new AsynchMoreResultsReceiver(manager);
 		ConnectorWorkItem state = new SynchConnectorWorkItem(request, manager,
 				receiver);
 		receiver.workItem = state;
@@ -230,9 +232,9 @@ public class TestConnectorWorkItem extends TestCase {
 		}
 	}
 	
-	public void testSynchInterrupt() throws Exception {
+	 @Test public void testSynchInterrupt() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		final ConnectorManager manager = getConnectorManager();
+		final ConnectorManager manager = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
 		QueueResultsReceiver receiver = new QueueResultsReceiver();
 		ConnectorWorkItem state = new SynchConnectorWorkItem(request, manager, receiver);
 		Thread t = runRequest(state);
@@ -241,10 +243,10 @@ public class TestConnectorWorkItem extends TestCase {
 		assertTrue(state.isCancelled());
 	}
 
-	public void testImplicitClose() throws Exception {
+	 @Test public void testImplicitClose() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
+		ConnectorManager manager = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 
 		connector.setReturnsFinalBatch(true);
 
@@ -255,53 +257,55 @@ public class TestConnectorWorkItem extends TestCase {
 		assertTrue(state.isDoneProcessing());
 	}
 
-	public void testCloseBeforeNew() throws Exception {
+	@Test public void testCloseBeforeNew() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
+		FakeWorkManager wm = new FakeWorkManager();
 		ResultsFuture<AtomicResultsMessage> resultsFuture = new ResultsFuture<AtomicResultsMessage>();
-		ConnectorWorkItem state = new SynchConnectorWorkItem(request,
-				getConnectorManager(), resultsFuture.getResultsReceiver());
+		ConnectorWorkItem state = new SynchConnectorWorkItem(request,getConnectorManager(Mockito.mock(ConnectorEnvironment.class)), resultsFuture.getResultsReceiver());
 
 		state.requestClose();
 		assertFalse(resultsFuture.isDone());
-		state.run();
+		
+		wm.doWork(state, 0, null, state);
 
 		AtomicResultsMessage arm = resultsFuture.get(1000,
 				TimeUnit.MILLISECONDS);
 		assertTrue(arm.isRequestClosed());
 		assertTrue(state.isDoneProcessing());
 	}
-
-	public void testAsynchBasicMore() throws Exception {
+	@Test public void testAsynchBasicMore() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
+		FakeWorkManager wm = new FakeWorkManager();
+		ConnectorManager manager = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
+		
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver(); 
-		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
-				request, manager, resultsReceiver);
-
-		state.run();
-
+		
+		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(request, manager, resultsReceiver, wm);
+		
+		wm.doWork(state, 0, null, state);
+		
 		assertFalse(state.isDoneProcessing());
 		connector.setReturnsFinalBatch(true);
 
 		state.requestMore();
-		state.run();
-
+		wm.doWork(state, 0, null, state);
+		
 		assertTrue(state.isDoneProcessing());
 
 		assertEquals(3, resultsReceiver.results.size());
 		assertEquals(1, state.resumeCount);
 	}
 
-	public void testAsynchKeepAlive() throws Exception {
+	@Test public void testAsynchKeepAlive() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
+		ConnectorManager manager = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver();
-		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
-				request, manager, resultsReceiver);
+		FakeWorkManager wm = new FakeWorkManager();
+		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(request, manager, resultsReceiver, wm);
 
-		state.run();
+		wm.doWork(state, 0, null, state);
 
 		assertFalse(state.isDoneProcessing());
 
@@ -317,7 +321,7 @@ public class TestConnectorWorkItem extends TestCase {
 		assertEquals(1, state.resumeCount);
 	}
 	
-	public void testUpdateExecution() throws Throwable {
+	@Test public void testUpdateExecution() throws Throwable {
 		QueueResultsReceiver receiver = helpExecuteUpdate();
 		AtomicResultsMessage results = receiver.getResults().remove();
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
@@ -329,7 +333,7 @@ public class TestConnectorWorkItem extends TestCase {
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
 		QueueResultsReceiver receiver = new QueueResultsReceiver();
-		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(arm, getConnectorManager(), receiver);
+		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(arm, getConnectorManager(Mockito.mock(ConnectorEnvironment.class)), receiver);
 		synchConnectorWorkItem.run();
 		if (receiver.exception != null) {
 			throw receiver.exception;
@@ -337,14 +341,14 @@ public class TestConnectorWorkItem extends TestCase {
 		return receiver;
 	}
 	
-	public void testExecutionWarning() throws Throwable {
+	@Test public void testExecutionWarning() throws Throwable {
 		QueueResultsReceiver receiver = helpExecuteUpdate();
 		AtomicResultsMessage results = receiver.getResults().remove();
 		assertEquals(1, results.getWarnings().size());
 	}
 
     
-    public void testIsImmutablePropertySucceeds() throws Exception {
+	@Test public void testIsImmutablePropertySucceeds() throws Exception {
     	/*
     	 * Setup:
     	 *  1. requestMsg.isTransactional() must be TRUE 
@@ -352,16 +356,10 @@ public class TestConnectorWorkItem extends TestCase {
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to TRUE, we should SUCCEED
     	 */
-		ConnectorManager cm = getConnectorManager();
-        Properties props = new Properties();
+    	ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
+    	Mockito.stub(env.isImmutable()).toReturn(true);
+		ConnectorManager cm = getConnectorManager(env);
 
-        // to create an XA ConnectorManager
-        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
-
-        // to set IS_IMMUTABLE to true
-        props.setProperty(ConnectorPropertyNames.IS_IMMUTABLE, "true"); //$NON-NLS-1$ //$NON-NLS-2$
-		cm.initialize(props);
-        
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
@@ -369,29 +367,9 @@ public class TestConnectorWorkItem extends TestCase {
 		
 		// To make the AtomicRequestMessage transactional, construct your own
 		requestMsg.setTransactionContext( new TransactionContext(){
-
 			@Override
-			public Transaction getTransaction() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public Scope getTransactionType() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public String getTxnID() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public boolean isInTransaction() {
-				// TODO Auto-generated method stub
-				return true;
+			public Xid getXid() {
+				return Mockito.mock(Xid.class);
 			}} );
 		
 		QueueResultsReceiver receiver = new QueueResultsReceiver();
@@ -407,7 +385,7 @@ public class TestConnectorWorkItem extends TestCase {
 		}
     }
     
-    public void testIsImmutablePropertyFails() throws Exception {
+	@Test public void testIsImmutablePropertyFails() throws Exception {
     	/*
     	 * Setup:
     	 *  1. requestMsg.isTransactional() must be TRUE 
@@ -415,15 +393,9 @@ public class TestConnectorWorkItem extends TestCase {
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to FALSE, and we should FAIL
     	 */
-		ConnectorManager cm = getConnectorManager();
-        Properties props = new Properties();
-
-        // to create an XA ConnectorManager
-        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
-
-        // to set IS_IMMUTABLE to false
-        props.setProperty(ConnectorPropertyNames.IS_IMMUTABLE, "false"); //$NON-NLS-1$ //$NON-NLS-2$
-		cm.initialize(props);
+    	ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
+    	Mockito.stub(env.isImmutable()).toReturn(false);
+		ConnectorManager cm = getConnectorManager(env);
         
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
@@ -432,38 +404,18 @@ public class TestConnectorWorkItem extends TestCase {
 		
 		// To make the AtomicRequestMessage transactional, construct your own
 		requestMsg.setTransactionContext( new TransactionContext(){
-
 			@Override
-			public Transaction getTransaction() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public Scope getTransactionType() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public String getTxnID() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public boolean isInTransaction() {
-				// TODO Auto-generated method stub
-				return true;
+			public Xid getXid() {
+				return Mockito.mock(Xid.class);
 			}} );
 		
 		QueueResultsReceiver receiver = new QueueResultsReceiver();
-		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(requestMsg, cm, receiver);
 	
 		// This is the test
 		try {
+			SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(requestMsg, cm, receiver);
 			synchConnectorWorkItem.run();
-			this.assertNull("Connection should be null when IsImmutable is false", synchConnectorWorkItem.connection);  //$NON-NLS-1$ 
+			assertNull("Connection should be null when IsImmutable is false", synchConnectorWorkItem.connection);  //$NON-NLS-1$ 
 		} catch ( Exception e ) {
 			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());			
 		}
@@ -473,9 +425,8 @@ public class TestConnectorWorkItem extends TestCase {
 			AsynchConnectorWorkItem {
 		int resumeCount;
 
-		FakeQueuingAsynchConnectorWorkItem(AtomicRequestMessage message,
-				ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
-			super(message, manager, resultsReceiver);
+		FakeQueuingAsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver, WorkManager wm) throws ConnectorException {
+			super(message, manager, resultsReceiver, wm);
 		}
 
 		@Override

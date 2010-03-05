@@ -24,13 +24,10 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.NamedTable;
 
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestElementImpl extends TestCase {
@@ -75,12 +72,12 @@ public class TestElementImpl extends TestCase {
         return symbol;
     }
     
-    public static ElementImpl example(String groupName, String elementName) throws Exception {
-        return (ElementImpl)TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName));
+    public static ColumnReference example(String groupName, String elementName) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName));
     }
     
-    public static ElementImpl example(String groupName, String elementName, Object metadataID) throws Exception {
-        return (ElementImpl)TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName, metadataID));
+    public static ColumnReference example(String groupName, String elementName, Object metadataID) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName, metadataID));
     }
     
     public void testGetName() throws Exception {
@@ -90,13 +87,7 @@ public class TestElementImpl extends TestCase {
 
     public void testGetGroup() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getElementID("pm1.g1.e1"); //$NON-NLS-1$
-        assertNotNull(example("pm1.g1", "e1", metadataID).getGroup()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testGetMetadataID() throws Exception {
-        FakeMetadataObject group = FakeMetadataFactory.createPhysicalGroup("pm1.g1", FakeMetadataFactory.createPhysicalModel("pm1.g1")); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject metadataID = FakeMetadataFactory.createElement("e", group, DataTypeManager.DefaultDataTypes.STRING, 0); //$NON-NLS-1$
-        assertNotNull(example("pm1.g1", "e", metadataID).getMetadataObject()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertNotNull(example("pm1.g1", "e1", metadataID).getTable()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testGetType() throws Exception {
@@ -104,16 +95,7 @@ public class TestElementImpl extends TestCase {
         assertTrue(example("pm1.g1", "e2", metadataID).getType().equals(Integer.class)); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testSetMetadataID() throws Exception {
-        Object metadataID = TstLanguageBridgeFactory.metadata.getElementID("pm1.g1.e1"); //$NON-NLS-1$
-        ElementImpl element = example("pm1.g1", "e1", metadataID); //$NON-NLS-1$ //$NON-NLS-2$
-        Element elem = TstLanguageBridgeFactory.metadataFactory.getElement(metadataID);
-        element.setMetadataObject(elem);
-        assertNotNull(element.getMetadataObject());
-        assertEquals(elem, element.getMetadataObject());
-    }
-    
-    public void helpTestEquals(IElement e1, IElement e2, boolean equal) {
+    public void helpTestEquals(ColumnReference e1, ColumnReference e2, boolean equal) {
         boolean actual = e1.equals(e2);
         boolean actual2 = e2.equals(e1);
         
@@ -121,53 +103,12 @@ public class TestElementImpl extends TestCase {
         assertEquals("Did not get expected equal value", equal, actual); //$NON-NLS-1$
     }
     
-    public IGroup createGroup(String context, String definition) {
-        return new GroupImpl(context, definition, null);
+    public NamedTable createGroup(String context, String definition) {
+        return new NamedTable(context, definition, null);
     }
     
-    public IElement createElement(IGroup group, String name) {
-        return new ElementImpl(group, name, null, String.class);
+    public ColumnReference createElement(NamedTable group, String name) {
+        return new ColumnReference(group, name, null, String.class);
     }
-    
-    public void testEquals1() {
-        IElement e1 = createElement(createGroup("a", "m.g"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e1, true);
-    }
-
-    public void testEquals2() {
-        IElement e1 = createElement(createGroup("a", "m.g"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        IElement e2 = createElement(createGroup("a", "m.g"), "e2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e2, false);
-    }
-
-    public void testEquals3() {
-        IElement e1 = createElement(createGroup("a", "m.g1"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        IElement e2 = createElement(createGroup("a", "m.g2"), "e2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e2, false);
-    }
-
-    public void testEquals4() {
-        IElement e1 = createElement(createGroup("a", "m.g"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        IElement e2 = createElement(createGroup("b", "m.g"), "e2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e2, false);
-    }
-
-    public void testEquals5() {
-        IElement e1 = createElement(createGroup("m.g1", null), "e1"); //$NON-NLS-1$ //$NON-NLS-2$
-        IElement e2 = createElement(createGroup("m.g1", null), "e1"); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTestEquals(e1, e2, true);
-    }
-
-    public void testEquals6() {
-        IElement e1 = createElement(createGroup("a", "M.g"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        IElement e2 = createElement(createGroup("a", "m.G"), "E1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e2, true);
-    }
-
-    public void testEquals7() {
-        IElement e1 = createElement(createGroup("a", "m.g"), "m.g.e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        IElement e2 = createElement(createGroup("a", "m.g"), "e1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpTestEquals(e1, e2, true);
-    }
-
+   
 }

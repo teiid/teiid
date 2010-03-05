@@ -52,7 +52,7 @@ public class TestSortNode {
     
     private void helpTestSort(List elements, List[] data, List sortElements, List sortTypes, List[] expected, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(100, BATCH_SIZE, BATCH_SIZE);
-        CommandContext context = new CommandContext ("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(2, data);
         dataNode.setReturnPeriod(3);

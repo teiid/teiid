@@ -29,6 +29,9 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.teiid.metadata.TransformationMetadata;
+
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -731,11 +734,9 @@ public class TestDependentJoins extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g2 = metadata.getStore().findObject("BQT2.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQT();
+        FakeMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
+        FakeMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey",  //$NON-NLS-1$
@@ -777,11 +778,9 @@ public class TestDependentJoins extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
-        FakeMetadataObject g2 = metadata.getStore().findObject("BQT2.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
+        TransformationMetadata metadata = FakeMetadataFactory.exampleBQT();
+        FakeMetadataFactory.setCardinality("bqt1.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata); //$NON-NLS-1$
+        FakeMetadataFactory.setCardinality("bqt2.smalla", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1, metadata); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey AND table1comp.key1 = BQT1.SmallA.StringNum",  //$NON-NLS-1$

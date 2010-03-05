@@ -55,7 +55,7 @@ public class TestQueryProcessor extends TestCase {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager();
 
-        CommandContext context = new CommandContext("pid", "group", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", null, null, 1); //$NON-NLS-1$ //$NON-NLS-2$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
         BatchCollector collector = processor.createBatchCollector();
         TupleBuffer tsID = null;
@@ -136,5 +136,4 @@ public class TestQueryProcessor extends TestCase {
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
         helpTestProcessor(plan, 1000, expectedResults);                    
     }
-    
 }

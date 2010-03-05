@@ -24,7 +24,7 @@ package com.metamatrix.query.analysis;
 
 import java.util.*;
 
-import com.metamatrix.core.util.StringUtilities;
+import com.metamatrix.core.util.StringUtil;
 
 import junit.framework.TestCase;
 
@@ -75,7 +75,7 @@ public class TestAnalysisRecord extends TestCase {
         rec.println("b"); //$NON-NLS-1$
         
         String log = rec.getDebugLog();
-        assertEquals("a" + StringUtilities.LINE_SEPARATOR + "b" + StringUtilities.LINE_SEPARATOR, log); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("a" + StringUtil.LINE_SEPARATOR + "b" + StringUtil.LINE_SEPARATOR, log); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

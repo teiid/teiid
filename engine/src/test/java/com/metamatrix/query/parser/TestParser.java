@@ -681,9 +681,9 @@ public class TestParser {
 				 query);
 	}
 
-    /** SELECT left(fullname, 3) as x FROM system.groups */
+    /** SELECT left(fullname, 3) as x FROM sys.groups */
     @Test public void testLeftFunction() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -696,14 +696,14 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-        helpTest("SELECT left(fullname, 3) as x FROM system.groups",  //$NON-NLS-1$
-                 "SELECT left(fullname, 3) AS x FROM system.groups",  //$NON-NLS-1$
+        helpTest("SELECT left(fullname, 3) as x FROM sys.groups",  //$NON-NLS-1$
+                 "SELECT left(fullname, 3) AS x FROM sys.groups",  //$NON-NLS-1$
                  query);
     }
 
-    /** SELECT right(fullname, 3) as x FROM system.groups */
+    /** SELECT right(fullname, 3) as x FROM sys.groups */
     @Test public void testRightFunction() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -716,14 +716,14 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-        helpTest("SELECT right(fullname, 3) as x FROM system.groups",  //$NON-NLS-1$
-                 "SELECT right(fullname, 3) AS x FROM system.groups",  //$NON-NLS-1$
+        helpTest("SELECT right(fullname, 3) as x FROM sys.groups",  //$NON-NLS-1$
+                 "SELECT right(fullname, 3) AS x FROM sys.groups",  //$NON-NLS-1$
                  query);
     }
 
-    /** SELECT char('x') AS x FROM system.groups */
+    /** SELECT char('x') AS x FROM sys.groups */
     @Test public void testCharFunction() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -736,14 +736,14 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-        helpTest("SELECT char('x') AS x FROM system.groups",  //$NON-NLS-1$
-                 "SELECT char('x') AS x FROM system.groups",  //$NON-NLS-1$
+        helpTest("SELECT char('x') AS x FROM sys.groups",  //$NON-NLS-1$
+                 "SELECT char('x') AS x FROM sys.groups",  //$NON-NLS-1$
                  query);
     }
 
-    /** SELECT insert('x', 1, 'a') as x FROM system.groups */
+    /** SELECT insert('x', 1, 'a') as x FROM sys.groups */
     @Test public void testInsertFunction() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -756,15 +756,15 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-        helpTest("SELECT insert('x', 1, 'a') AS x FROM system.groups",  //$NON-NLS-1$
-                 "SELECT insert('x', 1, 'a') AS x FROM system.groups",  //$NON-NLS-1$
+        helpTest("SELECT insert('x', 1, 'a') AS x FROM sys.groups",  //$NON-NLS-1$
+                 "SELECT insert('x', 1, 'a') AS x FROM sys.groups",  //$NON-NLS-1$
                  query);
     }
 
 
     
     @Test public void testInsertIntoSelect() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -786,9 +786,9 @@ public class TestParser {
                  insert);
     }
 
-    /** SELECT translate('x', 'x', 'y') FROM system.groups */
+    /** SELECT translate('x', 'x', 'y') FROM sys.groups */
     @Test public void testTranslateFunction() {
-        GroupSymbol g = new GroupSymbol("system.groups"); //$NON-NLS-1$
+        GroupSymbol g = new GroupSymbol("sys.groups"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -800,8 +800,8 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-        helpTest("SELECT translate('x', 'x', 'y') FROM system.groups",  //$NON-NLS-1$
-                 "SELECT translate('x', 'x', 'y') FROM system.groups",  //$NON-NLS-1$
+        helpTest("SELECT translate('x', 'x', 'y') FROM sys.groups",  //$NON-NLS-1$
+                 "SELECT translate('x', 'x', 'y') FROM sys.groups",  //$NON-NLS-1$
                  query);
     }
 
@@ -2030,7 +2030,7 @@ public class TestParser {
 		query.setFrom(from);
 		query.setCriteria(crit);
 		helpTest("SELECT a from db.g where a <> \"value\"",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a <> value",  //$NON-NLS-1$
+				 "SELECT a FROM db.g WHERE a <> \"value\"",  //$NON-NLS-1$
 				 query);
 	}
 
@@ -2225,8 +2225,8 @@ public class TestParser {
         query.setSelect(select);
         query.setFrom(from);
 
-        helpTest("SELECT g.x AS year FROM g",  //$NON-NLS-1$
-                 "SELECT g.x AS year FROM g",  //$NON-NLS-1$
+        helpTest("SELECT g.x AS \"year\" FROM g",  //$NON-NLS-1$
+                 "SELECT g.x AS \"year\" FROM g",  //$NON-NLS-1$
                  query);
     }
 
@@ -6167,7 +6167,7 @@ public class TestParser {
     }
 
     @Test public void testNationCharString2() throws Exception {
-        Query query = (Query) QueryParser.getQueryParser().parseCommand("SELECT DISTINCT TABLE_QUALIFIER, NULL AS TABLE_OWNER, NULL AS TABLE_NAME, NULL AS TABLE_TYPE, NULL AS REMARKS FROM ATIODBCSystem.OA_TABLES  WHERE TABLE_QUALIFIER LIKE N'%'  ESCAPE '\\'  ORDER BY TABLE_QUALIFIER  "); //$NON-NLS-1$
+        Query query = (Query) QueryParser.getQueryParser().parseCommand("SELECT DISTINCT TABLE_QUALIFIER, NULL AS TABLE_OWNER, NULL AS TABLE_NAME, NULL AS TABLE_TYPE, NULL AS REMARKS FROM ATIODBCSYSTEM.OA_TABLES  WHERE TABLE_QUALIFIER LIKE N'%'  ESCAPE '\\'  ORDER BY TABLE_QUALIFIER  "); //$NON-NLS-1$
         MatchCriteria matchCrit = (MatchCriteria) query.getCriteria();
         Constant c = (Constant) matchCrit.getRightExpression();
         assertEquals(c, new Constant("%")); //$NON-NLS-1$
@@ -6568,11 +6568,7 @@ public class TestParser {
     @Test public void testCreateTempTable5() {
         helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$ 
     }
-    
-    @Test public void testCreateTempTable6() {
-        helpException("Create  local TEMPORARY table tempTable (c1 varchar, c2 byte)"); //$NON-NLS-1$ 
-    }
-    
+        
     @Test public void testCreateTempTable7() {
         helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"Parsing error: Invalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
@@ -6687,5 +6683,28 @@ public class TestParser {
                  "INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  insert);
     }
-    
+
+    @Test public void testTypeAliases() {
+        Create create = new Create();
+        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
+        List columns = new ArrayList();
+        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.STRING);
+        columns.add(column);
+        column = new ElementSymbol("c2");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
+        columns.add(column);
+        column = new ElementSymbol("c3");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.SHORT);
+        columns.add(column);
+        column = new ElementSymbol("c4");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.FLOAT);
+        columns.add(column);
+        column = new ElementSymbol("c5");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
+        columns.add(column);
+        create.setColumns(columns);
+        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 string, c2 byte, c3 short, c4 float, c5 bigdecimal)", create); //$NON-NLS-1$ 
+    }
+
 }

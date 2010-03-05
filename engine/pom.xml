@@ -50,11 +50,13 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-connector-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -64,20 +66,25 @@
     </dependency>
     
     <dependency>
-      <groupId>javax.transaction</groupId>
-      <artifactId>jta</artifactId>
-    </dependency>
-    
-    <dependency>
       <groupId>javax.resource</groupId>
       <artifactId>connector-api</artifactId>
-    </dependency>
+      <scope>provided</scope>
+    </dependency>    
     
     <dependency>
-    	<groupId>com.google.code.guice</groupId>
-		<artifactId>guice</artifactId>
+        <groupId>org.jboss.deployers</groupId>
+        <artifactId>jboss-deployers-vfs-spi</artifactId>
+        <scope>provided</scope>
+    </dependency> 
+    
+    <dependency>    
+        <groupId>org.jboss.deployers</groupId>
+        <artifactId>jboss-deployers-vfs</artifactId>
+        <scope>provided</scope>
     </dependency>    
     
   </dependencies>
   
+
+      
 </project>

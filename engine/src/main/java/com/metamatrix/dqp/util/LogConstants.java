@@ -22,10 +22,12 @@
 
 package com.metamatrix.dqp.util;
 
+import org.teiid.connector.basic.DefaultConnectorLogger;
+
 public interface LogConstants {
 	// add the new contexts to the Log4JUtil.java class, for configuration purpose
 	public static final String CTX_DQP = "DQP"; //$NON-NLS-1$
-    public static final String CTX_CONNECTOR = "CONNECTOR"; //$NON-NLS-1$
+    public static final String CTX_CONNECTOR = DefaultConnectorLogger.CTX_CONNECTOR;
     public static final String CTX_BUFFER_MGR = "BUFFER_MGR"; //$NON-NLS-1$
     public static final String CTX_STORAGE_MGR = "STORAGE_MGR"; //$NON-NLS-1$
     public static final String CTX_TXN_LOG = "TXN_LOG"; //$NON-NLS-1$

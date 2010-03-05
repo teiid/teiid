@@ -61,6 +61,7 @@ public class TestBatchedUpdateNode {
         BatchedUpdateNode node = new BatchedUpdateNode(1, commands, Collections.EMPTY_LIST, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
         context.setProcessorID("myProcessorID"); //$NON-NLS-1$
+        context.setMetadata(md);
         node.initialize(context, Mockito.mock(BufferManager.class), pdm); 
         return node;
     }

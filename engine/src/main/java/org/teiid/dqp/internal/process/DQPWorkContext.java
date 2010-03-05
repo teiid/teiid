@@ -24,8 +24,11 @@ package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
 
+import javax.security.auth.Subject;
+
+import org.teiid.adminapi.impl.VDBMetaData;
+
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 public class DQPWorkContext implements Serializable {
@@ -45,24 +48,25 @@ public class DQPWorkContext implements Serializable {
 	public static void setWorkContext(DQPWorkContext context) {
 		CONTEXTS.set(context);
 	}
+
+	public static void releaseWorkContext() {
+		CONTEXTS.set(null);
+	}	
 	
-    private Serializable trustedPayload;
     private String vdbName;
-    private String vdbVersion;
+    private int vdbVersion;
     private String appName;
     private SessionToken sessionToken;
     private String clientAddress;
     private String clientHostname;
+    private Subject subject;
+	private String securityDomain;
+	private Object securityContext;
+	private VDBMetaData vdb;
+	private boolean admin;
     
     public DQPWorkContext() {
 	}
-
-    /**
-     * @return
-     */
-    public Serializable getTrustedPayload() {
-        return trustedPayload;
-    }
 
     /**
      * @return
@@ -72,6 +76,14 @@ public class DQPWorkContext implements Serializable {
 			return null;
 		}
         return this.sessionToken.getUsername();
+    }
+    
+    public Subject getSubject() {
+        return this.subject;
+    }
+    
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 
     /**
@@ -84,15 +96,8 @@ public class DQPWorkContext implements Serializable {
     /**
      * @return
      */
-    public String getVdbVersion() {
+    public int getVdbVersion() {
         return vdbVersion;
-    }
-
-    /**
-     * @param serializable
-     */
-    public void setTrustedPayload(Serializable trustedPayload) {
-        this.trustedPayload = trustedPayload;
     }
 
     /**
@@ -105,20 +110,17 @@ public class DQPWorkContext implements Serializable {
     /**
      * @param string
      */
-    public void setVdbVersion(String vdbVersion) {
+    public void setVdbVersion(int vdbVersion) {
         this.vdbVersion = vdbVersion;
     }
 
 	public String getConnectionID() {
-		if (this.sessionToken == null) {
-			return null;
-		}
-		return this.sessionToken.getSessionIDValue();
+		return String.valueOf(getSessionId());
 	}
 	
-	public MetaMatrixSessionID getSessionId() {
+	public long getSessionId() {
 		if (this.sessionToken == null) {
-			return null;
+			return -1;
 		}
 		return this.sessionToken.getSessionID();
 	}
@@ -162,8 +164,44 @@ public class DQPWorkContext implements Serializable {
 	public void reset() {
 		setSessionToken(null);
 		setAppName(null);
-		setTrustedPayload(null);
 		setVdbName(null);
-		setVdbVersion(null);
+		setVdbVersion(0);
+		setSecurityContext(null);
+		setSecurityDomain(null);
+		setVdb(null);
+		setSubject(null);
+		setSessionToken(null);
+	}
+
+	public void setSecurityDomain(String securityDomain) {
+		this.securityDomain = securityDomain;
+	}
+	
+	public String getSecurityDomain() {
+		return this.securityDomain;
+	}
+
+	public Object getSecurityContext() {
+		return this.securityContext;
+	}
+	
+	public void setSecurityContext(Object securityContext) {
+		this.securityContext = securityContext;
+	}
+
+	public void setVdb(VDBMetaData vdb) {
+		this.vdb = vdb;
+	}
+	
+	public VDBMetaData getVDB() {
+		return vdb;
+	}
+
+	public void markAsAdmin() {
+		this.admin = true;
+	}
+	
+	public boolean isAdmin() {
+		return this.admin;
 	}
 }

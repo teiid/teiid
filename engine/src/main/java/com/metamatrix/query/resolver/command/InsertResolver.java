@@ -102,7 +102,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             resolveVariables(metadata, insert, groups);
         }
 
-        resolveTypes(insert);
+        resolveTypes(insert, metadata);
         
         if (!insert.getGroup().isResolved()) { //define the implicit temp group
             if(insert.getQueryExpression() != null) {
@@ -113,7 +113,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             resolveVariables(metadata, insert, groups);
             
             //ensure that the types match
-            resolveTypes(insert);
+            resolveTypes(insert, metadata);
         }
         
         if (insert.getQueryExpression() != null && metadata.isVirtualGroup(insert.getGroup().getMetadataID())) {
@@ -151,7 +151,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
      * @param insert
      * @throws QueryResolverException
      */
-    public void resolveTypes(Insert insert) throws QueryResolverException {
+    public void resolveTypes(Insert insert, TempMetadataAdapter metadata) throws QueryResolverException {
         
         boolean usingQuery = insert.getQueryExpression() != null;
         
@@ -183,7 +183,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             if(element.getType() != null && expression.getType() != null) {
                 String elementTypeName = DataTypeManager.getDataTypeName(element.getType());
                 if (!usingQuery) {
-                    newValues.add(ResolverUtil.convertExpression(expression, elementTypeName));
+                    newValues.add(ResolverUtil.convertExpression(expression, elementTypeName, metadata));
                 } else if (element.getType() != expression.getType()
                            && !DataTypeManager.isImplicitConversion(DataTypeManager.getDataTypeName(expression.getType()),
                                                                     DataTypeManager.getDataTypeName(element.getType()))) {
@@ -249,9 +249,11 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             String varName = varSymbol.getShortCanonicalName();
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
             String inputKey = ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + varName;
-            
+            String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.TRUE));
-            result.put(inputKey, valIter.next());
+            Object value = valIter.next();
+            result.put(inputKey, value);
+            result.put(inputsKey, value);
         }
         
         Collection insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
@@ -267,9 +269,10 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             String varName = varSymbol.getShortCanonicalName();
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
             String inputKey = ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + varName;
-            
+            String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.FALSE));
             result.put(inputKey, value);
+            result.put(inputsKey, value);
         }
         
         return result;

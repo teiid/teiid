@@ -24,7 +24,9 @@ package org.teiid.metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,14 +36,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.virtual.VirtualFile;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
@@ -50,16 +54,21 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.LRUCache;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
 import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.FunctionTree;
+import com.metamatrix.query.function.SystemFunctionManager;
+import com.metamatrix.query.function.UDFSource;
+import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingDocument;
 import com.metamatrix.query.mapping.xml.MappingLoader;
@@ -74,9 +83,10 @@ import com.metamatrix.query.sql.lang.SPParameter;
  * Modelers implementation of QueryMetadataInterface that reads columns, groups, models etc.
  * index files for various metadata properties.
  */
-public class TransformationMetadata extends BasicQueryMetadata {
-
-    /** Delimiter character used when specifying fully qualified entity names */
+public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
+	private static final long serialVersionUID = 1058627332954475287L;
+	
+	/** Delimiter character used when specifying fully qualified entity names */
     public static final char DELIMITER_CHAR = StringUtil.Constants.DOT_CHAR;
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
     
@@ -86,9 +96,10 @@ public class TransformationMetadata extends BasicQueryMetadata {
     private static UnmodifiableProperties EMPTY_PROPS = new UnmodifiableProperties(new Properties());
     
     private final CompositeMetadataStore store;
-	private String vdbVersion;
-	private VDBService vdbService;
-
+    private Map<VirtualFile, Boolean> vdbEntries;
+    private FunctionLibrary functionLibrary;
+    private VDBMetaData vdbMetaData;
+    
     /*
      * TODO: move caching to jboss cache structure
      */
@@ -100,15 +111,18 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(final CompositeMetadataStore store) {
-    	this(store, null, null);
-    }
-    
-    public TransformationMetadata(final CompositeMetadataStore store, VDBService service, String vdbVersion) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<VirtualFile, Boolean> vdbEntries, Collection <FunctionMethod> udfMethods) {
     	ArgCheck.isNotNull(store);
+    	this.vdbMetaData = vdbMetadata;
         this.store = store;
-        this.vdbService = service;
-        this.vdbVersion = vdbVersion;
+        if (vdbEntries == null) {
+        	vdbEntries = Collections.emptyMap();
+        }
+        this.vdbEntries = vdbEntries;
+        if (udfMethods == null) {
+        	udfMethods = Collections.emptyList();
+        }
+        this.functionLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(udfMethods)));
     }
     
     //==================================================================================
@@ -163,7 +177,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 		
 		Collection<String> filteredResult = new ArrayList<String>(matches.size());
 		for (Table table : matches) {
-	        if (vdbService == null || vdbService.getModelVisibility(getVirtualDatabaseName(), vdbVersion, table.getParent().getName()) == ModelInfo.PUBLIC) {
+			if (vdbMetaData == null || vdbMetaData.getModel(table.getParent().getName()).isVisible()) {
 	        	filteredResult.add(table.getFullName());
 	        }
 		}
@@ -277,9 +291,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
         Collection<StoredProcedureInfo> results = this.procedureCache.get(lowerGroupName);
         
         if (results == null) {
-        	Collection<ProcedureRecordImpl> procRecords = getMetadataStore().getStoredProcedure(lowerGroupName); 
+        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(lowerGroupName); 
         	results = new ArrayList<StoredProcedureInfo>(procRecords.size());
-        	for (ProcedureRecordImpl procRecord : procRecords) {
+        	for (Procedure procRecord : procRecords) {
                 String procedureFullName = procRecord.getFullName();
 
                 // create the storedProcedure info object that would hold procedure's metadata
@@ -288,7 +302,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
                 procInfo.setProcedureID(procRecord);
 
                 // modelID for the procedure
-                procInfo.setModelID(procRecord.getSchema());
+                procInfo.setModelID(procRecord.getParent());
 
                 // get the parameter metadata info
                 for (ProcedureParameter paramRecord : procRecord.getParameters()) {
@@ -303,7 +317,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
                 // if the procedure returns a resultSet, obtain resultSet metadata
                 if(procRecord.getResultSet() != null) {
-                    ColumnSet<ProcedureRecordImpl> resultRecord = procRecord.getResultSet();
+                    ColumnSet<Procedure> resultRecord = procRecord.getResultSet();
                     // resultSet is the last parameter in the procedure
                     int lastParamIndex = procInfo.getParameters().size() + 1;
                     SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
@@ -335,7 +349,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(vdbService == null || vdbService.getModelVisibility(getVirtualDatabaseName(), vdbVersion, schema.getName()) == ModelInfo.PUBLIC){
+	        if(vdbMetaData == null || vdbMetaData.getModel(schema.getName()).isVisible()){
 	        	if (result != null) {
 	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
 	    		}
@@ -396,7 +410,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
     public Object getMinimumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getMinValue();            
+            return ((Column) elementID).getMinimumValue();            
         } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
@@ -406,7 +420,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 
     public Object getMaximumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getMaxValue();            
+            return ((Column) elementID).getMaximumValue();            
         } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
@@ -427,7 +441,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @since 4.2
      */
     public boolean isProcedure(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
-    	if(groupID instanceof ProcedureRecordImpl) {
+    	if(groupID instanceof Procedure) {
             return true;            
         } 
     	if(groupID instanceof Table){
@@ -559,7 +573,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
                     }
                     return true;
                 case SupportConstants.Element.AUTO_INCREMENT:
-                    return columnRecord.isAutoIncrementable();
+                    return columnRecord.isAutoIncremented();
                 case SupportConstants.Element.CASE_SENSITIVE:
                     return columnRecord.isCaseSensitive();
                 case SupportConstants.Element.SIGNED:
@@ -773,14 +787,24 @@ public class TransformationMetadata extends BasicQueryMetadata {
         return null;
     }
 
-    /* (non-Javadoc)
+    /**
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */
     public String getVirtualDatabaseName() throws MetaMatrixComponentException, QueryMetadataException {
-    	return this.getMetadataStore().getMetadataSource().getName();
+    	if (vdbMetaData == null) {
+    		return null;
+    	}
+    	return vdbMetaData.getName();
     }
 
-    /* (non-Javadoc)
+    public int getVirtualDatabaseVersion() {
+    	if (vdbMetaData == null) {
+    		return 0;
+    	}
+    	return vdbMetaData.getVersion();
+    }
+    
+    /**
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
     public Collection getXMLTempGroups(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
@@ -948,8 +972,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.BasicQueryMetadata#getBinaryVDBResource(java.lang.String)
      * @since 4.3
      */
-    public byte[] getBinaryVDBResource(String resourcePath) throws MetaMatrixComponentException,
-                                                           QueryMetadataException {
+    public byte[] getBinaryVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
         String content = this.getCharacterVDBResource(resourcePath);
         if(content != null) {
             return content.getBytes();
@@ -961,9 +984,23 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.BasicQueryMetadata#getCharacterVDBResource(java.lang.String)
      * @since 4.3
      */
-    public String getCharacterVDBResource(String resourcePath) throws MetaMatrixComponentException,
-                                                              QueryMetadataException {
-    	return MetadataSourceUtil.getFileContentAsString(resourcePath, this.getMetadataStore().getMetadataSource());
+    public String getCharacterVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
+    	for (VirtualFile f:this.vdbEntries.keySet()) {
+    		if (f.getPathName().equals(resourcePath)) {
+    			Boolean v = this.vdbEntries.get(f);
+    			if (v.booleanValue()) {
+	    			try {
+						return ObjectConverterUtil.convertToString(f.openStream());
+					} catch (IOException e) {
+						LogManager.logError(LogConstants.CTX_CONFIG, e, e.getMessage());
+					}
+    			}
+    			else {
+    				break;
+    			}
+    		}
+    	}
+    	return null;
     }
     
     public CompositeMetadataStore getMetadataStore() {
@@ -974,9 +1011,15 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.BasicQueryMetadata#getVDBResourcePaths()
      * @since 4.3
      */
-    public String[] getVDBResourcePaths() throws MetaMatrixComponentException,
-                                         QueryMetadataException {
-        return getMetadataStore().getMetadataSource().getEntries().toArray(new String[0]);
+    public String[] getVDBResourcePaths() throws MetaMatrixComponentException, QueryMetadataException {
+    	ArrayList<String> paths = new ArrayList<String>();
+    	for (VirtualFile f:this.vdbEntries.keySet()) {
+    		Boolean v = this.vdbEntries.get(f);
+    		if (v.booleanValue()) {
+    			paths.add(f.getPathName());
+    		}
+    	}
+        return paths.toArray(new String[paths.size()]);
     }
     
     /** 
@@ -1053,4 +1096,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
 		return record.getUUID() + "/" + key; //$NON-NLS-1$
 	}
 
+	@Override
+	public FunctionLibrary getFunctionLibrary() {
+		return this.functionLibrary;
+	}
 }

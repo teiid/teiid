@@ -34,6 +34,7 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.CommandResolver;
@@ -89,7 +90,7 @@ public class SetQueryResolver implements CommandResolver {
             }
         }
 
-        setQuery.setProjectedTypes(firstProjectTypes);
+        setQuery.setProjectedTypes(firstProjectTypes, metadata.getMetadata());
         
         // ORDER BY clause
         if(setQuery.getOrderBy() != null) {
@@ -97,7 +98,7 @@ public class SetQueryResolver implements CommandResolver {
             ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), setQuery, metadata);
         } 
 
-        setProjectedTypes(setQuery, firstProjectTypes);
+        setProjectedTypes(setQuery, firstProjectTypes, metadata.getMetadata());
         
         if (setQuery.getLimit() != null) {
             ResolverUtil.resolveLimit(setQuery.getLimit());
@@ -107,7 +108,7 @@ public class SetQueryResolver implements CommandResolver {
     }
 
     private void setProjectedTypes(SetQuery setQuery,
-                                   List firstProjectTypes) throws QueryResolverException {
+                                   List firstProjectTypes, QueryMetadataInterface metadata) throws QueryResolverException {
         for (QueryCommand subCommand : setQuery.getQueryCommands()) {
             if (!(subCommand instanceof SetQuery)) {
                 continue;
@@ -126,8 +127,8 @@ public class SetQueryResolver implements CommandResolver {
                     }
                 }
             }
-            child.setProjectedTypes(firstProjectTypes);
-            setProjectedTypes(child, firstProjectTypes);
+            child.setProjectedTypes(firstProjectTypes, metadata);
+            setProjectedTypes(child, firstProjectTypes, metadata);
         }
     }
     

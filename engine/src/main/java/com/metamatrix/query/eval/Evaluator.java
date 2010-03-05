@@ -44,7 +44,6 @@ import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.LanguageObject;
@@ -640,8 +639,7 @@ public class Evaluator {
 	    } 
 	    
 		// Execute function
-		FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
-		Object result = library.invokeFunction(fd, values);
+		Object result = fd.invokeFunction(values);
 		return result;        
 	}
 	

@@ -330,8 +330,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	String groupName = variable.getGroupSymbol().getCanonicalName();
 
     	if(groupName.equals(ProcedureReservedWords.INPUT) ||
-			groupName.equals(ProcedureReservedWords.CHANGING)) {
-			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0012, new Object[] {ProcedureReservedWords.INPUT, ProcedureReservedWords.CHANGING}), obj);
+			groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
+			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0012, new Object[] {ProcedureReservedWords.INPUT, ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING}), obj);
 		}
 
 		if(obj.hasCommand()) {
@@ -376,10 +376,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	ElementSymbol variable = obj.getVariable();
     	String elementname = variable.getShortName().toUpperCase();
 
-		// varaible cnnot be one of the special variables
-    	if(elementname.equals(ProcedureReservedWords.INPUT) || elementname.equals(ProcedureReservedWords.CHANGING)
-				|| elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
-			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0017, new Object[] {ProcedureReservedWords.INPUT, ProcedureReservedWords.CHANGING, ProcedureReservedWords.ROWS_UPDATED}), obj);
+		// varible cannot be one of the special variables
+    	if(elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
+			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0017, new Object[] {ProcedureReservedWords.ROWS_UPDATED}), obj);
 		}
         
         visit((AssignmentStatement)obj);

@@ -27,12 +27,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
@@ -66,11 +67,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 
 	static {
 		AGGREGATE_FUNCTIONS = new HashSet();
-		AGGREGATE_FUNCTIONS.add(ReservedWords.COUNT);
-		AGGREGATE_FUNCTIONS.add(ReservedWords.SUM);
-		AGGREGATE_FUNCTIONS.add(ReservedWords.AVG);
-		AGGREGATE_FUNCTIONS.add(ReservedWords.MIN);
-		AGGREGATE_FUNCTIONS.add(ReservedWords.MAX);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.COUNT);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.SUM);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.AVG);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MIN);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MAX);
 
 		SUM_TYPES = new HashMap();
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, DataTypeManager.DefaultDataClasses.LONG);
@@ -109,7 +110,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	/**
 	 * Construct an aggregate symbol with all given data.
 	 * @param name Name of the function
-	 * @param aggregateFunction Aggregate function type ({@link com.metamatrix.query.sql.ReservedWords#COUNT}, etc)
+	 * @param aggregateFunction Aggregate function type ({@link org.teiid.connector.language.SQLReservedWords#COUNT}, etc)
 	 * @param isDistinct True if DISTINCT flag is set
 	 * @param expression Contained expression
 	 */
@@ -119,16 +120,16 @@ public class AggregateSymbol extends ExpressionSymbol {
 		setAggregateFunction(aggregateFunction);
 		this.distinct = isDistinct;
 	}
-
+	
 	/**
 	 * Set the aggregate function.  If the aggregate function is an invalid value, an
 	 * IllegalArgumentException is thrown.
 	 * @param aggregateFunction Aggregate function type
-	 * @see com.metamatrix.query.sql.ReservedWords#COUNT
-	 * @see com.metamatrix.query.sql.ReservedWords#SUM
-	 * @see com.metamatrix.query.sql.ReservedWords#AVG
-	 * @see com.metamatrix.query.sql.ReservedWords#MIN
-	 * @see com.metamatrix.query.sql.ReservedWords#MAX
+	 * @see org.teiid.connector.language.SQLReservedWords#COUNT
+	 * @see org.teiid.connector.language.SQLReservedWords#SUM
+	 * @see org.teiid.connector.language.SQLReservedWords#AVG
+	 * @see org.teiid.connector.language.SQLReservedWords#MIN
+	 * @see org.teiid.connector.language.SQLReservedWords#MAX
 	 */
 	private void setAggregateFunction(String aggregateFunction) {
 		// Validate aggregate
@@ -142,11 +143,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Get the aggregate function type - this will map to one of the reserved words
 	 * for the aggregate functions.
 	 * @return Aggregate function type
-	 * @see com.metamatrix.query.sql.ReservedWords#COUNT
-	 * @see com.metamatrix.query.sql.ReservedWords#SUM
-	 * @see com.metamatrix.query.sql.ReservedWords#AVG
-	 * @see com.metamatrix.query.sql.ReservedWords#MIN
-	 * @see com.metamatrix.query.sql.ReservedWords#MAX
+	 * @see org.teiid.connector.language.SQLReservedWords#COUNT
+	 * @see org.teiid.connector.language.SQLReservedWords#SUM
+	 * @see org.teiid.connector.language.SQLReservedWords#AVG
+	 * @see org.teiid.connector.language.SQLReservedWords#MIN
+	 * @see org.teiid.connector.language.SQLReservedWords#MAX
 	 */
 	public String getAggregateFunction() {
 		return this.aggregate;
@@ -167,12 +168,12 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @return Type of the symbol
 	 */
 	public Class getType() {
-		if(this.aggregate.equals(ReservedWords.COUNT)) {
+		if(this.aggregate.equals(SQLReservedWords.COUNT)) {
 			return COUNT_TYPE;
-		} else if(this.aggregate.equals(ReservedWords.SUM) ) {
+		} else if(this.aggregate.equals(SQLReservedWords.SUM) ) {
 			Class expressionType = this.getExpression().getType();
 			return (Class) SUM_TYPES.get(expressionType);
-        } else if (this.aggregate.equals(ReservedWords.AVG)) {
+        } else if (this.aggregate.equals(SQLReservedWords.AVG)) {
             Class expressionType = this.getExpression().getType();
             return (Class) AVG_TYPES.get(expressionType);
 		} else {

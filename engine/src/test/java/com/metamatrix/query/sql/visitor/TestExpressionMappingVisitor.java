@@ -32,9 +32,9 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetCriteria;
@@ -196,10 +196,10 @@ public class TestExpressionMappingVisitor {
      */
     @Test public void testRecursionDetection() {
     	ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
-    	AggregateSymbol a1 = new AggregateSymbol("x", ReservedWords.SUM, false, e1); //$NON-NLS-1$
+    	AggregateSymbol a1 = new AggregateSymbol("x", SQLReservedWords.SUM, false, e1); //$NON-NLS-1$
     	Function f = new Function(SourceSystemFunctions.ADD_OP, new Expression[] {a1, a1});
     	HashMap<AggregateSymbol, AggregateSymbol> map = new HashMap<AggregateSymbol, AggregateSymbol>();
-    	map.put(a1, new AggregateSymbol("x", ReservedWords.SUM, false, a1)); //$NON-NLS-1$
+    	map.put(a1, new AggregateSymbol("x", SQLReservedWords.SUM, false, a1)); //$NON-NLS-1$
     	ExpressionMappingVisitor.mapExpressions(f, map);
         assertEquals("(SUM(SUM(e1)) + SUM(SUM(e1)))", f.toString()); //$NON-NLS-1$
     }

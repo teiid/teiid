@@ -24,12 +24,11 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import org.teiid.dqp.internal.datamgr.language.UpdateImpl;
-
 import junit.framework.TestCase;
 
+import org.teiid.connector.language.Update;
+
 import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 
@@ -43,9 +42,9 @@ public class TestUpdateImpl extends TestCase {
         super(name);
     }
     
-    public static Update helpExample() {
+    public static com.metamatrix.query.sql.lang.Update helpExample() {
         GroupSymbol group = TestGroupImpl.helpExample("vm1.g1"); //$NON-NLS-1$
-        Update result = new Update();
+        com.metamatrix.query.sql.lang.Update result = new com.metamatrix.query.sql.lang.Update();
         result.setGroup(group);
         result.addChange(TestElementImpl.helpExample("vm1.g1", "e1"), new Constant(new Integer(1)));
         result.addChange(TestElementImpl.helpExample("vm1.g1", "e2"), new Constant(new Integer(1)));
@@ -55,22 +54,22 @@ public class TestUpdateImpl extends TestCase {
         return result;
     }
     
-    public static UpdateImpl example() throws Exception {
-        return (UpdateImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static Update example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetGroup() throws Exception {
-        assertNotNull(example().getGroup());
+        assertNotNull(example().getTable());
     }
 
     public void testGetChanges() throws Exception {
-        List changes = example().getChanges().getClauses();
+        List changes = example().getChanges();
         assertNotNull(changes);
         assertEquals(4, changes.size());
     }
 
     public void testGetCriteria() throws Exception {
-        assertNotNull(example().getCriteria());
+        assertNotNull(example().getWhere());
     }
 
 }

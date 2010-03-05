@@ -22,25 +22,48 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import javax.resource.spi.work.WorkEvent;
+import javax.resource.spi.work.WorkManager;
+
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 
 public class AsynchConnectorWorkItem extends ConnectorWorkItem {
-                
-    AsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+    private WorkManager workManager;            
+	
+    AsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver, WorkManager wm) throws ConnectorException {
     	super(message, manager, resultsReceiver);
+    	this.workManager = wm;
     }
     
     @Override
     protected boolean dataNotAvailable(long delay) {
-    	this.manager.scheduleTask(this, delay);
+    	try {
+			this.manager.scheduleTask(workManager, this, delay);
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e.getCause());
+		}
     	return false;
     }
     
 	@Override
     protected void resumeProcessing() {
-    	this.manager.reenqueueRequest(this);
+    	try {
+			this.manager.reenqueueRequest(workManager, this);
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e.getCause());
+		}
     }
 
+	@Override
+	public void workCompleted(WorkEvent arg0) {
+		if (this.lastBatch) {
+			manager.removeState(this.id);
+			sendClose();
+		}
+	}	
 }

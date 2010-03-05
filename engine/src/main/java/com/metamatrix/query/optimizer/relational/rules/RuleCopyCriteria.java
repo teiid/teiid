@@ -93,7 +93,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             return plan;
         }
         
-        if (tryToCopy(plan, new Set[2])) {
+        if (tryToCopy(plan, new Set[2], metadata)) {
             //Push any newly created criteria nodes and try to copy them afterwards
             rules.push(RuleConstants.COPY_CRITERIA);
             rules.push(RuleConstants.PUSH_NON_JOIN_CRITERIA);
@@ -123,13 +123,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                  Map tgtMap,
                                  List joinCriteria,
                                  Set combinedCriteria,
-                                 boolean checkForGroupReduction) {
+                                 boolean checkForGroupReduction,
+                                 QueryMetadataInterface metadata) {
         int startGroups = GroupsUsedByElementsVisitor.getGroups(crit).size();
         
         Criteria tgtCrit = (Criteria) crit.clone();
         
         try {
-            tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap);
+            tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap, metadata);
         } catch (QueryPlannerException err) {
             LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, err, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
             return false;
@@ -164,7 +165,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @param node
      * @return true if criteria has been created
      */
-    private boolean tryToCopy(PlanNode node, Set[] criteriaInfo) {
+    private boolean tryToCopy(PlanNode node, Set[] criteriaInfo, QueryMetadataInterface metadata) {
         boolean changedTree = false;
         
         if (node == null) {
@@ -176,14 +177,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
             JoinType jt = (JoinType)node.getProperty(NodeConstants.Info.JOIN_TYPE);
             
             if (jt == JoinType.JOIN_FULL_OUTER) {
-                return visitChildern(node, criteriaInfo, changedTree);
+                return visitChildern(node, criteriaInfo, changedTree, metadata);
             }
             
             Set[] leftChildCriteria = new Set[2];
             Set[] rightChildCriteria = new Set[2];
             
-            changedTree |= tryToCopy(node.getFirstChild(), leftChildCriteria);
-            changedTree |= tryToCopy(node.getLastChild(), rightChildCriteria);
+            changedTree |= tryToCopy(node.getFirstChild(), leftChildCriteria, metadata);
+            changedTree |= tryToCopy(node.getLastChild(), rightChildCriteria, metadata);
 
             List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             Set combinedCriteria = null;
@@ -214,11 +215,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
     
                 List newJoinCrits = new LinkedList();
     
-                changedTree = createCriteriaFromSelectCriteria(changedTree, combinedCriteria, toCopy, srcToTgt, newJoinCrits);
+                changedTree = createCriteriaFromSelectCriteria(changedTree, combinedCriteria, toCopy, srcToTgt, newJoinCrits, metadata);
                 
                 srcToTgt = buildElementMap(allCriteria);
                             
-                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits);
+                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata);
                 
                 joinCrits.addAll(newJoinCrits);
             }
@@ -235,7 +236,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             return changedTree;
         }
         
-        changedTree = visitChildern(node, criteriaInfo, changedTree);
+        changedTree = visitChildern(node, criteriaInfo, changedTree, metadata);
 
         //visit select nodes on the way back up
         switch (node.getType()) {
@@ -281,7 +282,8 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                    List joinCrits,
                                                    Set combinedCriteria,
                                                    Map srcToTgt,
-                                                   List newJoinCrits) {
+                                                   List newJoinCrits,
+                                                   QueryMetadataInterface metadata) {
         if (srcToTgt.size() == 0) {
             return changedTree;
         }
@@ -289,7 +291,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
         while (i.hasNext()) {
             Criteria crit = (Criteria)i.next();
             
-            if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, true)) {
+            if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, true, metadata)) {
             	changedTree = true;
             	if (crit instanceof CompareCriteria) {
             		CompareCriteria cc = (CompareCriteria)crit;
@@ -317,14 +319,15 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                      Set combinedCriteria,
                                                      Set toCopy,
                                                      Map srcToTgt,
-                                                     List newJoinCrits) {
+                                                     List newJoinCrits,
+                                                     QueryMetadataInterface metadata) {
         if (srcToTgt.size() == 0) {
             return changedTree;
         }
         Iterator i = toCopy.iterator();
         while (i.hasNext()) {
             Criteria crit = (Criteria)i.next();
-            changedTree |= copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, false);            
+            changedTree |= copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, false, metadata);            
         }
         return changedTree;
     }
@@ -352,12 +355,13 @@ public final class RuleCopyCriteria implements OptimizerRule {
 
     private boolean visitChildern(PlanNode node,
                                   Set[] criteriaInfo,
-                                  boolean changedTree) {
+                                  boolean changedTree,
+                                  QueryMetadataInterface metadata) {
         if (node.getChildCount() > 0) {
             List children = node.getChildren();
             for (int i = 0; i < children.size(); i++) {
                 PlanNode childNode = (PlanNode)children.get(i);
-                changedTree |= tryToCopy(childNode, i==0?criteriaInfo:new Set[2]);
+                changedTree |= tryToCopy(childNode, i==0?criteriaInfo:new Set[2], metadata);
             }
         }
         return changedTree;

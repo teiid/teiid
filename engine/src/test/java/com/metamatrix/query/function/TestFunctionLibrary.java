@@ -22,7 +22,12 @@
 
 package com.metamatrix.query.function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,6 +35,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -38,13 +44,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.query.FunctionExecutionException;
-import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.unittest.TimestampUtil;
 import com.metamatrix.query.util.CommandContext;
 
@@ -63,7 +68,7 @@ public class TestFunctionLibrary {
 	private static final Class T_DATE = DataTypeManager.DefaultDataClasses.DATE;
 	private static final Class T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
 	
-	private FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
+	private FunctionLibrary library = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Collections.EMPTY_LIST)));
 
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 
@@ -175,14 +180,14 @@ public class TestFunctionLibrary {
         } 
 	}
     
-    private void helpInvokeMethod(String fname, Class[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws InvalidFunctionException, FunctionExecutionException {
+    private void helpInvokeMethod(String fname, Class[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException {
     	Object actualOutput = helpInvokeMethod(fname, types, inputs, context);
         assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
     }
 
 	private Object helpInvokeMethod(String fname, Class[] types,
 			Object[] inputs, CommandContext context)
-			throws InvalidFunctionException, FunctionExecutionException {
+			throws FunctionExecutionException {
 		if (types == null) {
             // Build type signature
             types = new Class[inputs.length];
@@ -196,27 +201,27 @@ public class TestFunctionLibrary {
         Object actualOutput = null;
         // Find function descriptor
         FunctionDescriptor descriptor = library.findFunction(fname, types);         
-        if (descriptor != null && descriptor.requiresContext()) {
+        if (descriptor.requiresContext()) {
             // Invoke function with inputs
             Object[] in = new Object[inputs.length+1];
             in[0] = context;
             for (int i = 0; i < inputs.length; i++) {
                 in[i+1] = inputs[i];
             }
-            actualOutput = library.invokeFunction(descriptor, in);
+            actualOutput = descriptor.invokeFunction(in);
         }
         else {
             // Invoke function with inputs
-            actualOutput = library.invokeFunction(descriptor, inputs);                
+            actualOutput = descriptor.invokeFunction(inputs);                
         }
 		return actualOutput;
 	}
     	    
-	private void helpInvokeMethodFail(String fname, Object[] inputs) throws InvalidFunctionException {
+	private void helpInvokeMethodFail(String fname, Object[] inputs) {
 		   helpInvokeMethodFail(fname, null, inputs);
 	}	
     	
-    private void helpInvokeMethodFail(String fname, Class<?> types[], Object[] inputs) throws InvalidFunctionException {
+    private void helpInvokeMethodFail(String fname, Class<?> types[], Object[] inputs) {
     	try {
             helpInvokeMethod(fname, types, inputs, null);
             fail("expected exception"); //$NON-NLS-1$
@@ -460,15 +465,13 @@ public class TestFunctionLibrary {
 
     // Walk through all functions by metadata 
     @Test public void testEnumerateForms() {
-        FunctionLibrary lib = FunctionLibraryManager.getFunctionLibrary();
-        
-        Collection categories = lib.getFunctionCategories();
+        Collection categories = library.getFunctionCategories();
         Iterator catIter = categories.iterator();
         while(catIter.hasNext()) { 
             String category = (String) catIter.next();
             //System.out.println("Category: " + category);
             
-            Collection functions = lib.getFunctionForms(category);
+            Collection functions = library.getFunctionForms(category);
             Iterator functionIter = functions.iterator();
             while(functionIter.hasNext()) { 
                 FunctionForm form = (FunctionForm) functionIter.next();
@@ -984,68 +987,68 @@ public class TestFunctionLibrary {
     
 	/** date + month --> count=18, inteval=month, result should be 2004-11-15 */
 	@Test public void testInvokeTimestampAddDate2() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
 			new Integer(18), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(104, 10, 15).getTime()));	
 	}
 
 	/** date + month --> count=-18, inteval=month, result should be 2001-11-15 */
 	@Test public void testInvokeTimestampAddDate2a() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
 			new Integer(-18), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(101, 10, 15).getTime()));	
 	}
 	
 	/** date + week --> count=6, inteval=week, result should be 2003-04-03 */
 	@Test public void testInvokeTimestampAddDate3() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
 			new Integer(-6), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(103, 3, 3).getTime()));	
 	}
 
 	/** date + quarter --> count=3, inteval=quarter, result should be 2004-2-15 */
 	@Test public void testInvokeTimestampAddDate4() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_QUARTER,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_QUARTER,  //$NON-NLS-1$
 			new Integer(3), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(104, 1, 15).getTime()));	
 	}
 
 	/** date + year --> count=-1, inteval=year, result should be 2002-5-15 */
 	@Test public void testInvokeTimestampAddDate5() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_YEAR,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_YEAR,  //$NON-NLS-1$
 			new Integer(-1), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(102, 4, 15).getTime()));	
 	}
 			
 	/** time + minute --> count=23, inteval=3, result should be 03:32:12 */
 	@Test public void testInvokeTimestampAddTime1() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MINUTE,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_MINUTE,  //$NON-NLS-1$
 			new Integer(23), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, new Timestamp(TimestampUtil.createTime(3, 32, 12).getTime()));	
 	}
 
 	/** time + hour --> count=21, inteval=4, result should be 00:09:12 and overflow */
 	@Test public void testInvokeTimestampAddTime2() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
 			new Integer(21), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, TimestampUtil.createTimestamp(70, 0, 2, 0, 9, 12, 0));	
 	}
 
 	/** time + hour --> count=2, inteval=4, result should be 01:12:12*/
 	@Test public void testInvokeTimestampAddTime3() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
 			new Integer(2), new Timestamp(TimestampUtil.createTime(23, 12, 12).getTime())}, TimestampUtil.createTimestamp(70, 0, 2, 1, 12, 12, 0));	
 	}
 	
 	/** time + second --> count=23, inteval=2, result should be 03:10:01 */
 	@Test public void testInvokeTimestampAddTime4() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
 			new Integer(49), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, new Timestamp(TimestampUtil.createTime(3, 10, 1).getTime()));	
 	}
 
 	/** timestamp + second --> count=23, inteval=2, result should be 2003-05-15 03:09:35.100  */
 	@Test public void testInvokeTimestampAddTimestamp1() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
 			new Integer(23), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
 			TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 35, 100));	
 	}
 
 	/** timestamp + nanos --> count=1, inteval=1, result should be 2003-05-15 03:09:12.000000101  */
 	@Test public void testInvokeTimestampAddTimestamp2() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
 			new Integer(1), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
 			TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 101));	
 	}
@@ -1054,14 +1057,14 @@ public class TestFunctionLibrary {
 	 *  with increase in second and minutes, because second already at 59 sec originally
 	 */
 	@Test public void testInvokeTimestampAddTimestamp3() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
+		helpInvokeMethod("timestampAdd", new Object[] {SQLReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
 			new Integer(2100000000), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 59, 1)}, 
 			TimestampUtil.createTimestamp(103, 4, 15, 3, 10, 1, 100000003));	
 	}
 			
 	/** time --> interval=hour, time1 = 03:04:45, time2= 05:05:36 return = 2  */
 	@Test public void testInvokeTimestampDiffTime1() {
-		helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
+		helpInvokeMethod("timestampDiff", new Object[] {SQLReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
 				new Timestamp(TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(TimestampUtil.createTime(5, 5, 36).getTime()) }, 
 			new Long(2));	
 	}
@@ -1077,7 +1080,7 @@ public class TestFunctionLibrary {
 	 * time2= 2003-05-02 05:19:35.500 return = 45
 	 */
 	@Test public void testInvokeTimestampDiffTimestamp1() {
-		helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
+		helpInvokeMethod("timestampDiff", new Object[] {SQLReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
 			TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100), TimestampUtil.createTimestamp(103, 4, 2, 5, 19, 35, 500) }, 
 			new Long(45));	
 	}
@@ -1087,7 +1090,7 @@ public class TestFunctionLibrary {
      * time2= 2002-06-21 03:09:35.100000000 return = 999999999
      */
     @Test public void testInvokeTimestampDiffTimestamp2() {
-        helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
+        helpInvokeMethod("timestampDiff", new Object[] {SQLReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
             TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 1), TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100000000) }, 
             new Long(99999999));  
     }
@@ -1097,7 +1100,7 @@ public class TestFunctionLibrary {
      * time2= 2002-06-22 03:09:35.000000001 return = 
      */
     @Test public void testInvokeTimestampDiffTimestamp3() {
-        helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
+        helpInvokeMethod("timestampDiff", new Object[] {SQLReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
             TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 2), TimestampUtil.createTimestamp(102, 5, 22, 3, 9, 35, 1) }, 
             new Long(86399999999999L));  
     }

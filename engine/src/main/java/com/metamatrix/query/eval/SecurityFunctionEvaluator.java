@@ -29,6 +29,6 @@ public interface SecurityFunctionEvaluator {
     public static final String ADMIN_ROLE = "admin"; //$NON-NLS-1$
     public static final String DATA_ROLE = "data"; //$NON-NLS-1$
 
-    boolean hasRole(String connectionID, String roleType, String roleName) throws MetaMatrixComponentException;
+    boolean hasRole(String roleType, String roleName) throws MetaMatrixComponentException;
     
 }

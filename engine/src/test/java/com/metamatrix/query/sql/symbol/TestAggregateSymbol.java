@@ -22,10 +22,11 @@
 
 package com.metamatrix.query.sql.symbol;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.sql.ReservedWords;
 
 public class TestAggregateSymbol extends TestCase {
 
@@ -70,105 +71,105 @@ public class TestAggregateSymbol extends TestCase {
 	// ################################## ACTUAL TESTS ################################
 	
 	public void testParser1() {
-		AggregateSymbol as = new AggregateSymbol("count", ReservedWords.COUNT, false, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("count", SQLReservedWords.COUNT, false, sampleElement()); //$NON-NLS-1$
 		helpParser(as, "COUNT(m.g.c)"); //$NON-NLS-1$
 	}
 
 	public void testParser2() {
-		AggregateSymbol as = new AggregateSymbol("count", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("count", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpParser(as, "COUNT(DISTINCT m.g.c)"); //$NON-NLS-1$
 	}
 
 	public void testParser3() {
-		AggregateSymbol as = new AggregateSymbol("x", ReservedWords.MIN, false, sampleConstant()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("x", SQLReservedWords.MIN, false, sampleConstant()); //$NON-NLS-1$
 		helpParser(as, "MIN(5)"); //$NON-NLS-1$
 	}
 
 	public void testParser4() {
-		AggregateSymbol as = new AggregateSymbol("x", ReservedWords.MAX, false, sampleFunction()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("x", SQLReservedWords.MAX, false, sampleFunction()); //$NON-NLS-1$
 		helpParser(as, "MAX((m.g.c + 5))"); //$NON-NLS-1$
 	}
 
 	public void testParser5() {
-		AggregateSymbol as = new AggregateSymbol("x", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("x", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
 		helpParser(as, "COUNT(*)"); //$NON-NLS-1$
 	}
 		
 	public void testEquals1() { 
-		AggregateSymbol as = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpEquals(as, as, true);		
 	}
 
 	public void testEquals2() { 
-		AggregateSymbol as1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		AggregateSymbol as2 = (AggregateSymbol) as1.clone();
 		helpEquals(as1, as2, true);		
 	}
 
     //just changing the name of an aggregatesymbol doesn't matter
 	public void testEquals3() { 
-		AggregateSymbol as1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol as2 = new AggregateSymbol("y", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as2 = new AggregateSymbol("y", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpEquals(as1, as2, true);		
 	}
 	
 	public void testEquals4() { 
-		AggregateSymbol as1 = new AggregateSymbol("count", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol("count", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
 		AggregateSymbol as2 = (AggregateSymbol) as1.clone();
 		helpEquals(as1, as2, true);		
 	}
 
 	public void testSelfEquivalence(){
-		AggregateSymbol test = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test, test);
 	}
 
 	public void testEquivalence(){
-		AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testEquivalenceCountStar(){
-        AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, false, null); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol("x", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }
 
 	public void testEquivalenceCaseInsens(){
-		AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("X", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol("X", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testNonEquivalenceUsingDiffElements(){ 
-        AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$ 
-        AggregateSymbol test2 = new AggregateSymbol("X", ReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$ 
+        AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$ 
+        AggregateSymbol test2 = new AggregateSymbol("X", SQLReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$ 
         int equals = -1; 
         UnitTestUtil.helpTestEquivalence(equals, test1, test2); 
     } 
 	
 	public void testNonEquivalence(){
-		AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("y", ReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol("y", SQLReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
 		int equals = -1;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testNonEquivalence1(){
-        AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement()); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }
     
     public void testNonEquivalence2(){
-        AggregateSymbol test1 = new AggregateSymbol("x", ReservedWords.MAX, true, sampleElement()); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", ReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol("x", SQLReservedWords.MAX, true, sampleElement()); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol("x", SQLReservedWords.COUNT, true, sampleElement2()); //$NON-NLS-1$
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }

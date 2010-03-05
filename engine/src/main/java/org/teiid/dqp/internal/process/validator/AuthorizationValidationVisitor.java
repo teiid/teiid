@@ -31,15 +31,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -59,23 +60,12 @@ import com.metamatrix.query.validator.AbstractValidationVisitor;
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
-    private String connectionID;
     private AuthorizationService authInterface;
-    private VDBService vdbService;
-    private String vdbName;
-    private String vdbVersion;
+    private VDBMetaData vdb;
 
-    public AuthorizationValidationVisitor(
-        String connectionID,
-        AuthorizationService authInterface,
-        VDBService vdbService,
-        String vdbName,
-        String vdbVersion) {
-        this.connectionID = connectionID;
+    public AuthorizationValidationVisitor(AuthorizationService authInterface, VDBMetaData vdb) {
         this.authInterface = authInterface;
-        this.vdbService = vdbService;
-        this.vdbName = vdbName;
-        this.vdbVersion = vdbVersion;
+        this.vdb = vdb;
     }
 
     // ############### Visitor methods for language objects ##################
@@ -281,7 +271,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
         if (!nameToSymbolMap.isEmpty()) {
             try {
-                Collection inaccessibleResources = this.authInterface.getInaccessibleResources(connectionID, actionCode, nameToSymbolMap.keySet(), auditContext);
+                Collection inaccessibleResources = this.authInterface.getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
                 if(inaccessibleResources.size() > 0) {                              
                     List inaccessibleSymbols = new ArrayList(inaccessibleResources.size());
                     Iterator nameIter = inaccessibleResources.iterator();
@@ -294,7 +284,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     // is not authorized in the exception message
                     
                     handleValidationError(
-                        DQPPlugin.Util.getString("ERR.018.005.0095", new Object[]{this.connectionID, getActionLabel(actionCode)}), //$NON-NLS-1$                    
+                        DQPPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getConnectionID(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
                         inaccessibleSymbols);
                 }
             } catch(MetaMatrixComponentException e) {
@@ -310,8 +300,8 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
         try {
 		    String modelName = getMetadata().getFullName(modelID);
-		    int visibility = this.vdbService.getModelVisibility(this.vdbName, this.vdbVersion, modelName);
-		    if(visibility != ModelInfo.PUBLIC) {
+		    ModelMetaData model = vdb.getModel(modelName);
+		    if(!model.isVisible()) {
 		        handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
 		    }
         } catch (MetaMatrixComponentException e) {

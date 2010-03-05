@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.GroupImpl;
+
+import org.teiid.connector.language.NamedTable;
 
 import junit.framework.TestCase;
 
@@ -58,74 +59,26 @@ public class TestGroupImpl extends TestCase {
         return symbol;
     }
     
-    public static GroupImpl example(String groupName) throws Exception {
+    public static NamedTable example(String groupName) throws Exception {
         return example(groupName, null);
     }
 
-    public static GroupImpl example(String groupName, String definition) throws Exception {
-        return (GroupImpl)TstLanguageBridgeFactory.factory.translate(helpExample(groupName, definition));
+    public static NamedTable example(String groupName, String definition) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, definition));
     }
 
-    public static GroupImpl example(String groupName, String definition, Object metadataID) throws Exception {
-        return (GroupImpl)TstLanguageBridgeFactory.factory.translate(helpExample(groupName, definition, metadataID));
+    public static NamedTable example(String groupName, String definition, Object metadataID) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, definition, metadataID));
     }
 
     public void testGetContext() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        assertEquals("x", example("x", "pm1.g1", metadataID).getContext()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("x", example("x", "pm1.g1", metadataID).getCorrelationName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testGetDefinition() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        assertEquals("pm1.g1", example("x", "pm1.g1", metadataID).getDefinition()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-
-    public void testEquals1() throws Exception {
-        GroupImpl g1 = new GroupImpl("alias", "pm1.g1", null); //$NON-NLS-1$ //$NON-NLS-2$
-        GroupImpl g2 = new GroupImpl("alias", "pm1.g1", null); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertEquals(g1,g2);
-    }
-
-    public void testEquals2() throws Exception {
-        GroupImpl g1 = new GroupImpl("alias", "model.group1", null); //$NON-NLS-1$ //$NON-NLS-2$
-        GroupImpl g2 = new GroupImpl("alias", "model.group2", null); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertEquals(g1,g2);
-    }
-
-    public void testEquals3() {
-        GroupImpl g1 = new GroupImpl("alias1", "model.group", null); //$NON-NLS-1$ //$NON-NLS-2$
-        GroupImpl g2 = new GroupImpl("alias2", "model.group", null); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        assertTrue(! g1.equals(g2));
-    }
-
-    public void testEquals4() {
-        GroupImpl g1 = new GroupImpl("alias1", "model.group", null);   //$NON-NLS-1$ //$NON-NLS-2$
-              
-        assertEquals(g1, g1);
-    }
-
-    public void testEquals5() {
-        GroupImpl g1 = new GroupImpl("model.group", null, null); //$NON-NLS-1$
-        GroupImpl g2 = new GroupImpl("model.group", null, null); //$NON-NLS-1$
-        
-        assertEquals(g1, g2);
-    }
-
-    public void testEquals6() {
-        GroupImpl g1 = new GroupImpl("model.gRoUp", null, null); //$NON-NLS-1$
-        GroupImpl g2 = new GroupImpl("MoDeL.group", null, null); //$NON-NLS-1$
-        
-        assertEquals(g1, g2);
-    }
-
-    public void testEquals7() {
-        GroupImpl g1 = new GroupImpl("model.gRoUp", "alias", null); //$NON-NLS-1$ //$NON-NLS-2$
-        GroupImpl g2 = new GroupImpl("MoDeL.group", null, null); //$NON-NLS-1$
-        
-        assertTrue(! g1.equals(g2));
+        assertEquals("pm1.g1", example("x", "pm1.g1", metadataID).getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
 }

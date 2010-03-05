@@ -22,18 +22,17 @@
 
 package com.metamatrix.dqp.service;
 
-import java.util.Properties;
-
 import org.teiid.dqp.internal.cache.DQPContextCache;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 
 /**
  */
-public class FakeBufferService extends FakeAbstractService implements BufferService {
+public class FakeBufferService implements BufferService {
 
     private BufferManager bufferMgr;
     
@@ -59,6 +58,14 @@ public class FakeBufferService extends FakeAbstractService implements BufferServ
 
 	@Override
 	public DQPContextCache getContextCache() {
-		return new DQPContextCache(new Properties(), new FakeCacheFactory()); 
+		DQPContextCache cache =  new DQPContextCache();
+		cache.setCacheFactory(new FakeCacheFactory());
+		cache.setProcessName("test");
+		return cache;
+	}
+
+	@Override
+	public CacheFactory getCacheFactory() {
+		return null;
 	}
 }

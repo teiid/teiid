@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.sql.proc;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -57,10 +58,10 @@ public class RaiseErrorStatement extends AssignmentStatement {
          * matter that it has an invalid ID or GroupSymbol.  Setting the type to
          * String allows for the expression to be converted to String as necessary.
          */
-        ElementSymbol result = new ElementSymbol(ReservedWords.ERROR);
-        result.setMetadataID(ReservedWords.ERROR);
+        ElementSymbol result = new ElementSymbol(SQLReservedWords.ERROR);
+        result.setMetadataID(SQLReservedWords.ERROR);
         result.setType(String.class);
-        result.setGroupSymbol(new GroupSymbol(ReservedWords.ERROR));
+        result.setGroupSymbol(new GroupSymbol(SQLReservedWords.ERROR));
         return result;
     }
     

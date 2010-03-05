@@ -60,16 +60,22 @@ MORE :
 TOKEN: /* Data types */
 {
 	<STRING: "string">
+|   <VARCHAR: "varchar">
 |	<BOOLEAN: "boolean">
 |	<BYTE: "byte">
+|   <TINYINT: "tinyint">
 |	<SHORT: "short">
+|   <SMALLINT: "smallint">
 |	<CHAR: "char">
 |	<INTEGER: "integer">
 |	<LONG: "long">
+|   <BIGINT: "bigint">
 |	<BIGINTEGER: "biginteger">
-|	<FLOAT: "float"> 
+|	<FLOAT: "float">
+|   <REAL: "real"> 
 |	<DOUBLE: "double">
 |	<BIGDECIMAL: "bigdecimal">
+|   <DECIMAL: "decimal">
 |	<DATE: "date">
 |	<TIME: "time">
 |	<TIMESTAMP: "timestamp">
@@ -97,24 +103,54 @@ TOKEN: /* Functions with special syntax */
 
 TOKEN : /* Reserved words */
 {
-    <ALL: "all">
+    <ADD: "add">
+|   <ALL: "all">
+|   <ALTER: "alter">
 |   <AND: "and">
 |   <ANY: "any">
+|   <ARRAY: "array">
 |   <AS: "as">
 |   <ASC: "asc">
+|   <ATOMIC: "atomic">
+|   <AUTORIZATION: "authorization">
 |   <BEGIN: "begin">
 |   <BETWEEN: "between">
+|   <BINARY: "binary">
+|   <BOTH: "both">
 |   <BREAK: "break">
 |   <BY: "by">
+|   <CALL: "call">
+|   <CALLED: "called">
+|   <CASCADED: "cascaded">
 |   <CASE: "case">
+|   <CHARACTER: "character">
+|   <CHECK: "check">
+|   <CLOSE: "close">
+|   <COLLATE: "collate">
+|   <COLUMN: "column">
+|   <COMMIT: "commit">
+|   <CONNECT: "connect">
+|   <CONSTRAINT: "constraint">
 |   <CONTINUE: "continue">
+|   <CORRESPONDING: "corresponding">
+|   <CURRENT_DATE: "current_date">
+|   <CURRENT_TIME: "current_time">
+|   <CURRENT_TIMESTAMP: "current_timestamp">
+|   <CURRENT_USER: "current_user">
 |   <CREATE: "create">
 |   <CRITERIA: "criteria">
 |   <CROSS: "cross">
+|   <CURSOR: "cursor">
+|   <DAY: "day">
+|   <DEALLOCATE: "deallocate">
+|   <DEFAULT_KEYWORD: "default">
 |   <DEBUG: "debug">
 |   <DECLARE: "declare">
 |   <DELETE: "delete">
 |   <DESC: "desc">
+|   <DESCRIBE: "describe">
+|   <DETERMINISTIC: "deterministic">
+|   <DISCONNECT: "disconnect">
 |   <DISTINCT: "distinct">
 |   <DROP: "drop">
 |   <ELSE: "else">
@@ -124,61 +160,179 @@ TOKEN : /* Reserved words */
 |   <EXCEPT: "except">
 |   <EXEC: "exec">
 |   <EXECUTE: "execute">
+|   <EXTERNAL: "external">
 |   <EXISTS: "exists">
 |   <FALSE: "false">
+|   <FETCH: "fetch">
+|   <FILTER: "filter">
 |   <FN: "fn">
 |   <FOR: "for">
+|   <FORIEGN: "foriegn">
 |   <FROM: "from">
 |   <FULL: "full">
+|   <FUNCTION: "function">
+|   <GET: "get">
+|   <GLOBAL: "global">
+|   <GRANT: "grant">
 |   <GROUP: "group">
 |   <HAS: "has">
 |   <HAVING: "having">
+|   <HOLD: "hold">
+|   <HOUR: "hour">
 |   <IF: "if">
+|   <IDENTITY: "identity">
+|   <IMMEDIATE: "immediate">
 |   <IN: "in">
+|   <INDICATOR: "indicator">
 |   <INNER: "inner">
+|   <INPUT: "input">
+|   <INOUT: "inout">
+|   <INSENSITIVE: "insensitive">
 |   <INSERT: "insert">
 |   <INTERSECT: "intersect">
+|   <INTERVAL: "interval">
 |   <INTO: "into">
 |   <IS: "is">
+|   <ISOLATION: "isolation">
 |   <JOIN: "join">
 |   <LEFT: "left">
+|   <LANGUAGE: "language">
+|   <LARGE: "large">
+|   <LEADING: "leading">
 |   <LIKE: "like">
 |   <LIMIT: "limit">
 |   <LOCAL: "local">
 |   <LOOP: "loop">
 |   <MAKEDEP: "makedep">
 |   <MAKENOTDEP: "makenotdep">
+|   <MATCH: "match">
+|   <MERGE: "merge">
+|   <METHOD: "method">
+|   <MINUTE: "minute">
+|   <MODIFIES: "modifies">
+|   <MODULE: "module">
+|   <MONTH: "month">
+|   <NATURAL: "natural">
+|   <NEW: "new">
 |	<NOCACHE: "nocache">
+|   <NO: "no">
+|   <NONE: "none">
 |   <NOT: "not">
 |   <NULL: "null">
+|   <OF: "of">
+|   <OLD: "old">
 |   <ON: "on">
+|   <ONLY: "only">
 |   <OJ: "oj">
+|   <OPEN: "open">
 |   <OPTION: "option">
 |   <OR: "or">
 |   <ORDER: "order">
 |   <OUTER: "outer">
+|   <OUTPUT: "output">
+|   <OVER: "over">
+|   <OVERLAPS: "OVERLAPS">
+|   <PARAMETER: "parameter">
+|   <PARTITION: "partition">
 |   <PLANONLY: "planonly">
+|   <PRECISION: "precision">
+|   <PREPARE: "prepare">
+|   <PRIMARY: "primary">
 |   <PROCEDURE: "procedure">
+|   <RANGE: "range">
+|   <READS: "reads">
+|   <RECURSIVE: "recursive">
+|   <REFERENCES: "REFERENCES">
+|   <REFERENCING: "REFERENCING">
+|   <RETURN: "return">
+|   <RETURNS: "returns">
+|   <REVOKE: "REVOKE">
 |   <RIGHT: "right">
+|   <ROLLBACK: "ROLLBACK">
+|   <ROLLUP: "ROLLUP">
+|   <ROW: "row">
+|   <ROWS: "rows">
+|   <SAVEPOINT: "savepoint">
+|   <SCROLL: "scroll">
+|   <SEARCH: "search">
+|   <SECOND: "second">
 |   <SELECT: "select">
+|   <SENSITIVE: "sensitive">
+|   <SESSION_USER: "session_user">
 |   <SET: "set">
 |   <SHOWPLAN: "showplan">
+|   <SIMILAR: "similar">
+|   <SPECIFIC: "specific">
 |   <SOME: "some">
+|   <SQL: "sql">
+|   <SQLEXCEPTION: "sqlexception">
+|   <SQLSTATE: "sqlstate">
+|   <SQLWARNING: "sqlwarning">
+|   <START: "start">
+|   <STATIC: "static">
+|   <SYSTEM: "system">
+|   <SYSTEM_USER: "system_user">
 |   <TABLE: "table">
 |   <TEMPORARY: "temporary">
 |   <THEN: "then">
+|   <TIMEZONE_HOUR: "timezone_hour">
+|   <TIMEZONE_MINUTE: "timezone_minute">
+|   <TO: "to">
+|   <TRAILING: "trailing">
 |   <TRANSLATE: "translate">
+|   <TRIGGER: "trigger">
 |   <TRUE: "true">
 |   <UNION: "union">
+|   <UNIQUE: "unique">
 |   <UNKNOWN: "unknown">
+|   <USER: "user">
 |   <UPDATE: "update">
 |   <USING: "using">
+|   <VALUE: "value">
 |   <VALUES: "values">
 |   <VIRTUAL: "virtual">
 |   <WHEN: "when">
+|   <WHENEVER: "whenever">
 |   <WHERE: "where">
 |   <WITH: "with">
 |   <WHILE: "while">
+|   <WINDOW: "window">
+|   <WITHIN: "within">
+|   <WITHOUT: "without">
+|   <YEAR: "year">
+}
+
+TOKEN : /* SQL/XML Reserved words */
+{
+    <XMLAGG: "xmlagg">
+|   <XMLATTRIBUTES: "xmlattributes">
+|   <XMLBINARY: "xmlbinary">
+|   <XMLCONCAT: "xmlconcat">
+|   <XMLCOMMENT: "xmlcomment">
+|   <XMLELEMENT: "xmlelement">
+|   <XMLFOREST: "xmlforest">
+|   <XMLNAMESPACES: "xmlnamespaces">
+|   <XMLPARSE: "xmlparse">
+|   <XMLPI: "xmlpi">
+|   <XMLROOT: "xmlroot">
+|   <XMLSERIALIZE: "xmlserialize">
+}
+
+TOKEN : /* SQL/MED Reserved words */
+{
+    <DATALINK: "datalink">
+|   <DLNEWCOPY: "dlnewcopy">
+|   <DLPREVIOUSCOPY: "dlpreviouscopy">
+|   <DLURLCOMPLETE: "dlurlcomplete">
+|   <DLURLCOMPLETEWRITE: "dlurlcompletewrite">
+|   <DLURLCOMPLETEONLY: "dlurlcompleteonly">
+|   <DLURLPATH: "dlurlpath">
+|   <DLURLPATHWRITE: "dlurlpathwrite">
+|   <DLURLPATHONLY: "dlurlpathonly">
+|   <DLURLSCHEME: "dlurlscheme">
+|   <DLURLSERVER: "dlurlserver">
+|   <DLVALUE: "dlvalue">
+|   <IMPORT: "import">
 }
 
 TOKEN : /* Special function words */
@@ -957,13 +1111,7 @@ StoredProcedure callableStatement(ParseInfo info) :
 	   storedProcedure.setParameter(parameter);
 	 }
 	]
-	call = <ID>
-	{
-		if (!"call".equalsIgnoreCase(call.image)) { //$NON-NLS-1$
-		   throw new ParseException(QueryPlugin.Util.getString("SQLParser.call_expected")); //$NON-NLS-1$
-		}
-	}
-	procName = id()
+	<CALL> procName = id()
 	{
 		storedProcedure.setProcedureName(procName);
 	}
@@ -1007,6 +1155,8 @@ StoredProcedure storedProcedure(ParseInfo info) :
 		 (execToken = <EXEC> { setQueryCacheOption(execToken, info); }) 
 		 |
 		 (execToken = <EXECUTE> { setQueryCacheOption(execToken, info); })
+		 |
+		 (execToken = <CALL> { setQueryCacheOption(execToken, info); })
 		)
 		procName = id()
 		{
@@ -2765,7 +2915,9 @@ Function function(ParseInfo info) :
 	)		
 	|
 	(
-		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR>)
+		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
+		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
+		                    | funcToken = <MINUTE> | funcToken = <SECOND>)
 		<LPAREN>
 		[
 			expression = expression(info)
@@ -2869,17 +3021,23 @@ Constant dataType() :
 }
 {
 	(
-		typeToken = <STRING> | 
+		typeToken = <STRING> |
+		typeToken = <VARCHAR> | 
 		typeToken = <BOOLEAN> | 
 		typeToken = <BYTE> | 
+		typeToken = <TINYINT> |
 		typeToken = <SHORT> | 
+		typeToken = <SMALLINT> |
 		typeToken = <CHAR> | 
 		typeToken = <INTEGER> | 
 		typeToken = <LONG> | 
+		typeToken = <BIGINT> |
 		typeToken = <BIGINTEGER> | 
-		typeToken = <FLOAT> | 
+		typeToken = <FLOAT> |
+		typeToken = <REAL> | 
 		typeToken = <DOUBLE> | 
-		typeToken = <BIGDECIMAL> | 
+		typeToken = <BIGDECIMAL> |
+		typeToken = <DECIMAL> | 
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
 		typeToken = <TIMESTAMP> |

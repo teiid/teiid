@@ -38,7 +38,8 @@ import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
+import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -68,7 +69,7 @@ public class TestSelectNode extends TestCase {
     
     public void helpTestSelect(List elements, Criteria criteria, List childElements, ProcessorDataManager dataMgr, List[] expected, RelationalNode child) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         child.setElements(childElements);
         child.initialize(context, mgr, dataMgr);    
@@ -203,7 +204,7 @@ public class TestSelectNode extends TestCase {
         elements.add(es1);
 
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         CompareCriteria crit = new CompareCriteria(func, CompareCriteria.EQ, new Constant(new Integer(1))); 

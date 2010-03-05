@@ -22,14 +22,14 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.dqp.internal.datamgr.language.CompareCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
-
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.symbol.Constant;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.Comparison.Operator;
+
+import com.metamatrix.query.sql.lang.AbstractCompareCriteria;
+import com.metamatrix.query.sql.symbol.Constant;
 
 public class TestCompareCriteriaImpl extends TestCase {
 
@@ -41,36 +41,37 @@ public class TestCompareCriteriaImpl extends TestCase {
         super(name);
     }
 
-    public static CompareCriteria helpExample(int operator, int leftVal, int rightVal) {
+    public static com.metamatrix.query.sql.lang.CompareCriteria helpExample(int operator, int leftVal, int rightVal) {
         Constant left = new Constant(new Integer(leftVal));
         Constant right = new Constant(new Integer(rightVal));
-        return new CompareCriteria(left, operator, right);
+        return new com.metamatrix.query.sql.lang.CompareCriteria(left, operator, right);
     }
-    public static CompareCriteriaImpl example(int operator, int leftVal, int rightVal) throws Exception {
-        return (CompareCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample(operator, leftVal, rightVal));
+    
+    public static Comparison example(int operator, int leftVal, int rightVal) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(operator, leftVal, rightVal));
     }
 
     public void testGetLeftExpression() throws Exception {
-        CompareCriteriaImpl impl = example(CompareCriteria.GE, 200, 100);
+        Comparison impl = example(AbstractCompareCriteria.GE, 200, 100);
         assertNotNull(impl.getLeftExpression());
-        assertTrue(impl.getLeftExpression() instanceof LiteralImpl);
-        assertEquals(new Integer(200), ((LiteralImpl)impl.getLeftExpression()).getValue());
+        assertTrue(impl.getLeftExpression() instanceof Literal);
+        assertEquals(new Integer(200), ((Literal)impl.getLeftExpression()).getValue());
     }
 
     public void testGetRightExpression() throws Exception {
-        CompareCriteriaImpl impl = example(CompareCriteria.GE, 200, 100);
+        Comparison impl = example(AbstractCompareCriteria.GE, 200, 100);
         assertNotNull(impl.getRightExpression());
-        assertTrue(impl.getRightExpression() instanceof LiteralImpl);
-        assertEquals(new Integer(100), ((LiteralImpl)impl.getRightExpression()).getValue());
+        assertTrue(impl.getRightExpression() instanceof Literal);
+        assertEquals(new Integer(100), ((Literal)impl.getRightExpression()).getValue());
     }
 
     public void testGetOperator() throws Exception {
-        assertEquals(Operator.EQ, example(CompareCriteria.EQ, 200, 100).getOperator());
-        assertEquals(Operator.GE, example(CompareCriteria.GE, 200, 100).getOperator());
-        assertEquals(Operator.GT, example(CompareCriteria.GT, 200, 100).getOperator());
-        assertEquals(Operator.LE, example(CompareCriteria.LE, 200, 100).getOperator());
-        assertEquals(Operator.LT, example(CompareCriteria.LT, 200, 100).getOperator());
-        assertEquals(Operator.NE, example(CompareCriteria.NE, 200, 100).getOperator());
+        assertEquals(Operator.EQ, example(AbstractCompareCriteria.EQ, 200, 100).getOperator());
+        assertEquals(Operator.GE, example(AbstractCompareCriteria.GE, 200, 100).getOperator());
+        assertEquals(Operator.GT, example(AbstractCompareCriteria.GT, 200, 100).getOperator());
+        assertEquals(Operator.LE, example(AbstractCompareCriteria.LE, 200, 100).getOperator());
+        assertEquals(Operator.LT, example(AbstractCompareCriteria.LT, 200, 100).getOperator());
+        assertEquals(Operator.NE, example(AbstractCompareCriteria.NE, 200, 100).getOperator());
     }
 
 }

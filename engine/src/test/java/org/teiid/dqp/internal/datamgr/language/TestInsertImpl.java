@@ -25,15 +25,16 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IInsertExpressionValueSource;
-import org.teiid.dqp.internal.datamgr.language.InsertImpl;
-
-import com.metamatrix.query.sql.lang.Insert;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.Insert;
+
+import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 public class TestInsertImpl extends TestCase {
 
@@ -45,26 +46,26 @@ public class TestInsertImpl extends TestCase {
         super(name);
     }
 
-    public static Insert helpExample(String groupName) {
+    public static com.metamatrix.query.sql.lang.Insert helpExample(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
-        ArrayList elements = new ArrayList();
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
         elements.add(TestElementImpl.helpExample(groupName, "e2")); //$NON-NLS-1$
         elements.add(TestElementImpl.helpExample(groupName, "e3")); //$NON-NLS-1$
         elements.add(TestElementImpl.helpExample(groupName, "e4")); //$NON-NLS-1$
         
-        ArrayList values = new ArrayList();
+        ArrayList<Constant> values = new ArrayList<Constant>();
         values.add(TestLiteralImpl.helpExample(1));
         values.add(TestLiteralImpl.helpExample(2));
         values.add(TestLiteralImpl.helpExample(3));
         values.add(TestLiteralImpl.helpExample(4));
         
-        return new Insert(group,
+        return new com.metamatrix.query.sql.lang.Insert(group,
                           elements,
                           values);
     }
     
-    public static Insert helpExample2(String groupName) {
+    public static com.metamatrix.query.sql.lang.Insert helpExample2(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
         ArrayList elements = new ArrayList();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
@@ -72,56 +73,56 @@ public class TestInsertImpl extends TestCase {
         ArrayList values = new ArrayList();
         values.add(TestSearchedCaseExpressionImpl.helpExample());
         
-        return new Insert(group,
+        return new com.metamatrix.query.sql.lang.Insert(group,
                           elements,
                           values);
     }
   
-    public static InsertImpl example(String groupName) throws Exception {
-        return (InsertImpl)TstLanguageBridgeFactory.factory.translate(helpExample(groupName));
+    public static Insert example(String groupName) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(groupName));
         
     }
-    public static InsertImpl example2(String groupName) throws Exception {
-        return (InsertImpl)TstLanguageBridgeFactory.factory.translate(helpExample2(groupName));
+    public static Insert example2(String groupName) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample2(groupName));
         
     }
     public void testGetGroup() throws Exception {
-        assertNotNull(example("a.b").getGroup()); //$NON-NLS-1$
+        assertNotNull(example("a.b").getTable()); //$NON-NLS-1$
     }
 
     public void testGetElements() throws Exception {
-        InsertImpl insert = example("a.b"); //$NON-NLS-1$
-        assertNotNull(insert.getElements());
-        assertEquals(4, insert.getElements().size());
-        for (Iterator i = insert.getElements().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IElement);
+        Insert insert = example("a.b"); //$NON-NLS-1$
+        assertNotNull(insert.getColumns());
+        assertEquals(4, insert.getColumns().size());
+        for (Iterator i = insert.getColumns().iterator(); i.hasNext();) {
+            assertTrue(i.next() instanceof ColumnReference);
         }
 
         // verify that elements are not qualified by group
         String sInsertSQL = insert.toString();
-        assertTrue(sInsertSQL.indexOf( '.') == -1 );                        
+        assertTrue(sInsertSQL.substring(sInsertSQL.indexOf('(')).indexOf( '.') == -1 );                        
     }
 
     public void testGetValues() throws Exception {
-        InsertImpl insert = example("a.b"); //$NON-NLS-1$
+        Insert insert = example("a.b"); //$NON-NLS-1$
         assertNotNull(insert.getValueSource());
-        assertEquals(4, ((IInsertExpressionValueSource)insert.getValueSource()).getValues().size());
-        for (Iterator i = ((IInsertExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IExpression);
+        assertEquals(4, ((ExpressionValueSource)insert.getValueSource()).getValues().size());
+        for (Iterator i = ((ExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
+            assertTrue(i.next() instanceof Expression);
         }
     }
     
     public void testExpressionsInInsert() throws Exception {
-        InsertImpl insert = example2("a.b"); //$NON-NLS-1$
-        assertNotNull(insert.getElements());
-        assertEquals(1, insert.getElements().size());
-        for (Iterator i = insert.getElements().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IElement);
+        Insert insert = example2("a.b"); //$NON-NLS-1$
+        assertNotNull(insert.getColumns());
+        assertEquals(1, insert.getColumns().size());
+        for (Iterator i = insert.getColumns().iterator(); i.hasNext();) {
+            assertTrue(i.next() instanceof ColumnReference);
         }
         assertNotNull(insert.getValueSource());
-        assertEquals(1, ((IInsertExpressionValueSource)insert.getValueSource()).getValues().size());
-        for (Iterator i = ((IInsertExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IExpression);
+        assertEquals(1, ((ExpressionValueSource)insert.getValueSource()).getValues().size());
+        for (Iterator i = ((ExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
+            assertTrue(i.next() instanceof Expression);
         }
     }
 

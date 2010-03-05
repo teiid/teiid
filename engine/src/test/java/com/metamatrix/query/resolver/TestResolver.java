@@ -49,7 +49,7 @@ import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -1396,7 +1396,7 @@ public class TestResolver {
         String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
         Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();                          
+		FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                         
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1432,7 +1432,7 @@ public class TestResolver {
 		String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
 		Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();                          
+		FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                        
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1882,7 +1882,7 @@ public class TestResolver {
         //String sql = "select intkey from SmallA where user() = 'bqt2'";
 
         // Expected left expression
-        FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();                          
+        FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                          
         FunctionDescriptor fd = library.findFunction(FunctionLibrary.USER, new Class[] { });
         Function user = new Function(fd.getName(), new Expression[] {});
         user.setFunctionDescriptor(fd);
@@ -1938,7 +1938,7 @@ public class TestResolver {
  
     @Test public void testDefect10809(){
         String sql = "select * from LOB_TESTING_ONE where CLOB_COLUMN LIKE '%fff%'"; //$NON-NLS-1$
-        helpResolve(helpParse(sql), FakeMetadataFactory.exampleLOB(), AnalysisRecord.createNonRecordingRecord());
+        helpResolve(helpParse(sql), FakeMetadataFactory.exampleBQTCached(), AnalysisRecord.createNonRecordingRecord());
     }
     
     @Test public void testNonAutoConversionOfLiteralIntegerToShort() throws Exception {       
@@ -2270,23 +2270,10 @@ public class TestResolver {
     }
     
     
-    @Test public void testUnionInSubquery() {
+    @Test public void testUnionInSubquery() throws Exception {
         String sql = "SELECT StringKey FROM (SELECT BQT2.SmallB.StringKey FROM BQT2.SmallB union SELECT convert(BQT2.SmallB.FloatNum, string) FROM BQT2.SmallB) x";  //$NON-NLS-1$
-
-        // parse
-        Command command = null;
-        try {
-            command = QueryParser.getQueryParser().parseCommand(sql);
-        } catch(MetaMatrixException e) {
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        // resolve
-        try {
-            QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQT());
-        } catch(MetaMatrixException e) {
-            fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+        QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testCommandUpdatingCount1() throws Exception{

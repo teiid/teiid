@@ -25,6 +25,8 @@ package com.metamatrix.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -34,7 +36,6 @@ import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -190,7 +191,7 @@ public class TestCapabilitiesUtil extends TestCase {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -202,7 +203,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -214,7 +215,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -226,7 +227,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -238,7 +239,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -250,7 +251,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -261,7 +262,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -272,7 +273,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -283,7 +284,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -294,7 +295,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -305,7 +306,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -316,7 +317,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -327,7 +328,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -338,7 +339,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -350,7 +351,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -362,7 +363,7 @@ public class TestCapabilitiesUtil extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", ReservedWords.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol("expr", SQLReservedWords.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    

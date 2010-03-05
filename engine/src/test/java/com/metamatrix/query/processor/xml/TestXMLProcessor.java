@@ -2962,7 +2962,7 @@ public class TestXMLProcessor {
             // Process twice, to test reset and clone methods
             for (int i=1; i<=2; i++) {
                 BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();                
-                CommandContext context = new CommandContext("pID", "TestConn", "testUser", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                CommandContext context = new CommandContext("pID", "TestConn", "testUser", null, 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 context.setProcessDebug(DEBUG);
                 QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
                 processor.setNonBlocking(true);
@@ -2999,7 +2999,7 @@ public class TestXMLProcessor {
             XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
     
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("pID", null, null, null, null);                                                                 //$NON-NLS-1$
+            CommandContext context = new CommandContext("pID", null, null, null, 1);                                                                 //$NON-NLS-1$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
             processor.setNonBlocking(true);
             BatchCollector collector = processor.createBatchCollector();
@@ -3045,7 +3045,7 @@ public class TestXMLProcessor {
         }
         
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, null, null, 1);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
         processor.setNonBlocking(true);
         BatchCollector collector = processor.createBatchCollector();
@@ -6053,7 +6053,7 @@ public class TestXMLProcessor {
         XMLPlan plan = TestXMLPlanner.preparePlan(command, metadata, new DefaultCapabilitiesFinder(), null);
 
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, null, null, 1);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
         processor.setNonBlocking(true);
         BatchCollector collector = processor.createBatchCollector();

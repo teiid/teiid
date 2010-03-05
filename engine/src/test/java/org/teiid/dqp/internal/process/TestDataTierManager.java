@@ -22,35 +22,27 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
+
+import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
+import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.ConnectorStatus;
-import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.dqp.service.FakeMetadataService;
-import com.metamatrix.dqp.service.FakeVDBService;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -71,7 +63,7 @@ public class TestDataTierManager extends TestCase {
     private Command command;
     private DataTierTupleSource info;
     private int executeRequestFailOnCall = 10000;
-    private FakeDataService dataService;
+    private FakeConnectorManager connectorManager;
     private RequestWorkItem workItem;
     
     public TestDataTierManager(String name) {
@@ -90,21 +82,22 @@ public class TestDataTierManager extends TestCase {
     
     private void helpSetup(String sql, int nodeId) throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.exampleBQTVDB());
         
-        dataService = new FakeDataService(executeRequestFailOnCall);
-//      dataService.addResults("SELECT StringKey, IntKey FROM BQT1.SmallA", helpCreateFakeCodeTableResults(1, 50)); //$NON-NLS-1$
+        connectorManager = new FakeConnectorManager("FakeConnectorID", executeRequestFailOnCall);
         rm = new DQPCore();
-        
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addBinding("MyVDB", "1", "BQT1", "mmuuid:binding", "bindingName"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        rm.setTransactionService(new FakeTransactionService());
         
         FakeBufferService bs = new FakeBufferService();
+
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
+        
         
         dtm = new DataTierManagerImpl(rm,
-                                  dataService,
-                                  vdbService,
+                                  repo,
                                   bs,
-                                  new FakeMetadataService(),
+                                  new FakeWorkManager(),
                                   20,
                                   1000,
                                   1000);
@@ -113,24 +106,20 @@ public class TestDataTierManager extends TestCase {
         RequestMessage original = new RequestMessage();
         original.setExecutionId(1);
         
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("MyVDB"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
         
         context = new CommandContext();
         context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
-        context.setVdbVersion("1"); //$NON-NLS-1$
+        context.setVdbVersion(1); //$NON-NLS-1$
         context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
         request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
-        request.setConnectorID(new ConnectorID("FakeConnectorID")); //$NON-NLS-1$
+        request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
 
-        info = new DataTierTupleSource(command.getProjectedSymbols(), request, dtm, request.getConnectorID(), workItem);
+        info = new DataTierTupleSource(command.getProjectedSymbols(), request, dtm, request.getConnectorName(), workItem);
         workItem.addConnectorRequest(request.getAtomicRequestID(), info);
     }
     
@@ -215,7 +204,7 @@ public class TestDataTierManager extends TestCase {
         
         DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         connRequest.closeSource();
-        assertFalse(this.dataService.closed);
+        assertFalse(this.connectorManager.closed);
         
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
@@ -244,7 +233,7 @@ public class TestDataTierManager extends TestCase {
 
         DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         connRequest.closeSource();
-        assertTrue(this.dataService.closed);
+        assertTrue(this.connectorManager.closed);
         
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
@@ -262,14 +251,14 @@ public class TestDataTierManager extends TestCase {
         results.setSupportsImplicitClose(false);
         
         info.receiveResults(results);
-        assertFalse(this.dataService.closed);
+        assertFalse(this.connectorManager.closed);
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         
         // now implicitly close the request then check to make sure it is not gone 
         connRequest.closeSource();
-        assertFalse(this.dataService.closed);        
+        assertFalse(this.connectorManager.closed);        
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }     
     
@@ -283,7 +272,7 @@ public class TestDataTierManager extends TestCase {
     
     public void testCodeTableResponseException() throws Exception {
     	helpSetup(3);
-    	this.dataService.throwExceptionOnExecute = true;
+    	this.connectorManager.throwExceptionOnExecute = true;
         
         try {
             dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -298,7 +287,7 @@ public class TestDataTierManager extends TestCase {
         
         AtomicResultsMessage results = helpSetup("SELECT * FROM BQT1.SmallA", true, false, -1); //$NON-NLS-1$
         
-        this.dataService.results = results;
+        this.connectorManager.results = results;
         
         try {
             dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -308,22 +297,22 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
-    private static class FakeDataService implements DataService {
+    private static class FakeConnectorManager extends ConnectorManager {
         private int failOnCall = 10000;
         private int calls = 0;
         private boolean closed = false;
         boolean throwExceptionOnExecute;
         AtomicResultsMessage results;
         
-        private FakeDataService(int failOnCallNumber) {
+        private FakeConnectorManager(String name, int failOnCallNumber) {
+        	super(name);
             this.failOnCall = failOnCallNumber;
         }
-		public void executeRequest(AtomicRequestMessage request,
-				ConnectorID connector,
-				ResultsReceiver<AtomicResultsMessage> resultListener)
-				throws MetaMatrixComponentException {
+        @Override
+		public void executeRequest(WorkManager workManager, ResultsReceiver<AtomicResultsMessage> resultListener, AtomicRequestMessage request)
+				throws ConnectorException {
             if (closed) {
-                throw new MetaMatrixComponentException("Already closed"); //$NON-NLS-1$
+                throw new ConnectorException("Already closed"); //$NON-NLS-1$
             }
             if (throwExceptionOnExecute) {
             	resultListener.exceptionOccurred(new RuntimeException("Connector Exception")); //$NON-NLS-1$
@@ -331,50 +320,22 @@ public class TestDataTierManager extends TestCase {
             	resultListener.receiveResults(results);
             }
         }
-        public ConnectorID selectConnector(String connectorBindingID) {
-            if (connectorBindingID.equals("mmuuid:binding")) { //$NON-NLS-1$
-                return new ConnectorID("FakeConnectorID"); //$NON-NLS-1$
-            }
-            return null;
-        }
-        public void initialize(Properties props) throws ApplicationInitializationException {}
-        public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {}
-        public void stop() throws ApplicationLifecycleException {}
-        public void startConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
-        public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
-        public List getConnectorBindings() throws ComponentNotFoundException {return null;}
-        public ConnectorStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
-        public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {return null;}
-        public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {return null;}
-        public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException { return null; }
-        
-        public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {}
-        
-		public void cancelRequest(AtomicRequestID request,
-				ConnectorID connectorId) throws MetaMatrixComponentException {
-		}
-		public void closeRequest(AtomicRequestID request,
-				ConnectorID connectorId) throws MetaMatrixComponentException {
+
+		@Override
+		public void closeRequest(AtomicRequestID request) {
 			closed = true;
 		}
+		
 		@Override
-		public SourceCapabilities getCapabilities(RequestMessage request,
-				DQPWorkContext dqpWorkContext, String modelName)
-				throws MetaMatrixComponentException {
+		public SourceCapabilities getCapabilities() throws ConnectorException{
 			return null;
 		}
-		public void requestBatch(AtomicRequestID request,
-				ConnectorID connectorId) throws MetaMatrixComponentException {
+		@Override
+		public void requstMore(AtomicRequestID requestId) throws ConnectorException {
             calls++;
             if (calls == failOnCall) {
-                throw new MetaMatrixComponentException("Force fail on executeRequest for call # " + calls); //$NON-NLS-1$
+                throw new ConnectorException("Force fail on executeRequest for call # " + calls); //$NON-NLS-1$
             }            
-		}
-		@Override
-		public MetadataStore getConnectorMetadata(String vdbName,
-				String vdbVersion, String modelName, Properties importProperties)
-				throws MetaMatrixComponentException {
-			throw new UnsupportedOperationException();
 		}
     }
 }

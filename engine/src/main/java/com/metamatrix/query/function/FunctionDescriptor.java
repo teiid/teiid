@@ -23,11 +23,21 @@
 package com.metamatrix.query.function;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
+import com.metamatrix.api.exception.query.FunctionExecutionException;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.function.metadata.FunctionMethod;
+import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
  * The FunctionDescriptor describes a particular function instance enough
@@ -35,6 +45,8 @@ import com.metamatrix.core.util.Assertion;
  * descriptor.
  */
 public class FunctionDescriptor implements Serializable, Cloneable {
+	
+	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
 	
 	private String name;
     private int pushdown;
@@ -199,4 +211,68 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.returnType = returnType;
     }
     
+    
+	/**
+	 * Invoke the function described in the function descriptor, using the
+	 * values provided.  Return the result of the function.
+	 * @param fd Function descriptor describing the name and types of the arguments
+	 * @param values Values that should match 1-to-1 with the types described in the
+	 * function descriptor
+	 * @return Result of invoking the function
+	 */
+	public Object invokeFunction(Object[] values) throws FunctionExecutionException {
+
+        if (!isNullDependent()) {
+        	for (int i = 0; i < values.length; i++) {
+				if (values[i] == null) {
+					return null;
+				}
+			}
+        }
+
+        // If descriptor is missing invokable method, find this VM's descriptor
+        // give name and types from fd
+        Method method = getInvocationMethod();
+        if(method == null) {
+        	throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, getName()));
+        }
+        
+        if (getDeterministic() >= FunctionMethod.SESSION_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
+        	CommandContext cc = (CommandContext)values[0];
+        	cc.setSessionFunctionEvaluated(true);
+        }
+        
+        // Invoke the method and return the result
+        try {
+        	if (method.isVarArgs()) {
+        		int i = method.getParameterTypes().length;
+        		Object[] newValues = Arrays.copyOf(values, i);
+        		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
+        		values = newValues;
+        	}
+            Object result = method.invoke(null, values);
+            if (!ALLOW_NAN_INFINITY) {
+        		if (result instanceof Double) {
+	            	Double floatVal = (Double)result;
+	            	if (Double.isInfinite(floatVal) || Double.isNaN(floatVal)) {
+	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName())); //$NON-NLS-1$
+	            	}
+	            } else if (result instanceof Float) {
+	            	Float floatVal = (Float)result;
+	            	if (Float.isInfinite(floatVal) || Float.isNaN(floatVal)) {
+	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName())); //$NON-NLS-1$
+	            	}
+	            }
+        	}
+            result = DataTypeManager.convertToRuntimeType(result);
+            result = DataTypeManager.transformValue(result, getReturnType());
+            return result;
+        } catch(InvocationTargetException e) {
+            throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));
+        } catch(IllegalAccessException e) {
+            throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0004, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0004, method.toString()));
+        } catch (TransformationException e) {
+        	throw new FunctionExecutionException(e, e.getMessage());
+		}
+	}    
 }

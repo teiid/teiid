@@ -47,9 +47,7 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * and user-defined functions.
  */
 public class FunctionLibrary {
-	
-	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
-	
+
 	// Special type conversion functions
 	public static final String CONVERT = "convert"; //$NON-NLS-1$
 	public static final String CAST = "cast"; //$NON-NLS-1$
@@ -98,17 +96,16 @@ public class FunctionLibrary {
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
 
-    // Function tree for user-defined functions (reloadable)
+    // Function tree for user-defined functions
     private FunctionTree userFunctions;
 
 	/**
 	 * Construct the function library.  This should be called only once by the
 	 * FunctionLibraryManager.
 	 */
-	FunctionLibrary() {
-        // Put empty trees here to avoid null checks throughout the class
-        systemFunctions = new FunctionTree(Collections.EMPTY_LIST);
-        userFunctions = new FunctionTree(Collections.EMPTY_LIST);
+	public FunctionLibrary(FunctionTree systemFuncs, FunctionTree userFuncs) {
+        systemFunctions = systemFuncs;
+       	userFunctions = userFuncs;
 	}
 
     /**
@@ -154,33 +151,6 @@ public class FunctionLibrary {
             form = userFunctions.findFunctionForm(name, numArgs);
         }
         return form;
-    }
-
-    /**
-     * Add the system functions to the library.  This should be done
-     * exactly once by the FunctionLibraryManager.
-     * @param source System metadata source
-     */
-    void setSystemFunctions(FunctionMetadataSource source) {
-        this.systemFunctions = new FunctionTree(source);
-    }
-
-    /**
-     * Replace the existing set of reloadable functions with a new set.  This
-     * is called by the FunctionLibraryManager every time it reloads the
-     * reloadable sources.
-     * @param sources Collection of {@link FunctionMetadataSource} objects
-     */
-    void replaceReloadableFunctions(Collection sources) {
-        // Build new function tree
-        FunctionTree reloadedFunctions = new FunctionTree(sources);
-
-        // Switch to new user-defined functions - this is not synchronized
-        // because it is merely an object reference change.  There is no
-        // way for other code to get part of the old tree and part of the new
-        // tree - they will get either one or the other.  The old tree is
-        // dropped.
-        this.userFunctions = reloadedFunctions;
     }
 
 	/**
@@ -342,84 +312,6 @@ public class FunctionLibrary {
         }
         return null;
     }
-
-	/**
-	 * Invoke the function described in the function descriptor, using the
-	 * values provided.  Return the result of the function.
-	 * @param fd Function descriptor describing the name and types of the arguments
-	 * @param values Values that should match 1-to-1 with the types described in the
-	 * function descriptor
-	 * @return Result of invoking the function
-	 */
-	public Object invokeFunction(FunctionDescriptor fd, Object[] values)
-		throws InvalidFunctionException, FunctionExecutionException {
-
-        if(fd == null) {
-            throw new InvalidFunctionException(ErrorMessageKeys.FUNCTION_0001, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0001, fd));
-        }
-        
-        if (!fd.isNullDependent()) {
-        	for (int i = 0; i < values.length; i++) {
-				if (values[i] == null) {
-					return null;
-				}
-			}
-        }
-
-        // If descriptor is missing invokable method, find this VM's descriptor
-        // give name and types from fd
-        Method method = fd.getInvocationMethod();
-        if(method == null) {
-            FunctionDescriptor localDescriptor = findFunction(fd.getName(), fd.getTypes());
-            if(localDescriptor == null) {
-                throw new InvalidFunctionException(ErrorMessageKeys.FUNCTION_0001, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0001, fd));
-            }
-
-            // Get local invocation method, which should never be null
-            method = localDescriptor.getInvocationMethod();
-            if (method == null){
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, localDescriptor.getName()));
-            }
-        }
-        
-        if (fd.getDeterministic() >= FunctionMethod.SESSION_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
-        	CommandContext cc = (CommandContext)values[0];
-        	cc.setSessionFunctionEvaluated(true);
-        }
-        
-        // Invoke the method and return the result
-        try {
-        	if (method.isVarArgs()) {
-        		int i = method.getParameterTypes().length;
-        		Object[] newValues = Arrays.copyOf(values, i);
-        		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
-        		values = newValues;
-        	}
-            Object result = method.invoke(null, values);
-            if (!ALLOW_NAN_INFINITY) {
-        		if (result instanceof Double) {
-	            	Double floatVal = (Double)result;
-	            	if (Double.isInfinite(floatVal) || Double.isNaN(floatVal)) {
-	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName())); //$NON-NLS-1$
-	            	}
-	            } else if (result instanceof Float) {
-	            	Float floatVal = (Float)result;
-	            	if (Float.isInfinite(floatVal) || Float.isNaN(floatVal)) {
-	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName())); //$NON-NLS-1$
-	            	}
-	            }
-        	}
-            result = DataTypeManager.convertToRuntimeType(result);
-            result = DataTypeManager.transformValue(result, fd.getReturnType());
-            return result;
-        } catch(InvocationTargetException e) {
-            throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName()));
-        } catch(IllegalAccessException e) {
-            throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0004, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0004, method.toString()));
-        } catch (TransformationException e) {
-        	throw new FunctionExecutionException(e, e.getMessage());
-		}
-	}
 
 	/**
 	 * Return a copy of the given FunctionDescriptor with the sepcified return type.

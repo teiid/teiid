@@ -22,15 +22,11 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
-import java.util.Collection;
-
-import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementVisitor;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import java.util.HashSet;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -45,13 +41,10 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 public class TestMultiSourceElementReplacementVisitor extends TestCase {
 
     public QueryMetadataInterface getMetadata() throws Exception {
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addModel("MyVDB", "1", "MultiModel", ModelInfo.PUBLIC, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        vdbService.addBinding("MyVDB", "1", "MultiModel", "mmuuid:blahblahblah", "x"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        vdbService.addBinding("MyVDB", "1", "MultiModel", "mmuuid:foofoofoo", "y"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
-        Collection multiSourceModels = vdbService.getMultiSourceModels("MyVDB", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Set<String> multiSourceModels = new HashSet<String>();
+        multiSourceModels.add("MultiModel");
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);  
         
         return wrapper;

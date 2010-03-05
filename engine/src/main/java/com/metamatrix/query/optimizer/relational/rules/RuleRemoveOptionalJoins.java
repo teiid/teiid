@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -42,7 +44,6 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -276,8 +277,8 @@ public class RuleRemoveOptionalJoins implements
 
 	static boolean areAggregatesCardinalityDependent(Set<AggregateSymbol> aggs) {
 		for (AggregateSymbol aggregateSymbol : aggs) {
-			if (aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.COUNT) || 
-					aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.AVG)) {
+			if (aggregateSymbol.getAggregateFunction().equalsIgnoreCase(SQLReservedWords.COUNT) || 
+					aggregateSymbol.getAggregateFunction().equalsIgnoreCase(SQLReservedWords.AVG)) {
 				return true;
 			}
 		}

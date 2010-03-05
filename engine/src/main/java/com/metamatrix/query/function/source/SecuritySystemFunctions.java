@@ -32,8 +32,6 @@ public class SecuritySystemFunctions {
 
     public static boolean hasRole(CommandContext context, Object roleType, Object roleName) throws FunctionExecutionException {
         
-        String connectionId = context.getConnectionID();
-        
         SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
         
         if (eval == null) {
@@ -41,7 +39,7 @@ public class SecuritySystemFunctions {
         }
         
         try {
-            return eval.hasRole(connectionId, (String)roleType, (String)roleName);
+            return eval.hasRole((String)roleType, (String)roleName);
         } catch (MetaMatrixComponentException err) {
             throw new FunctionExecutionException(err, err.getMessage());
         }

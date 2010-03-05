@@ -49,9 +49,9 @@ public class TestPreparedPlanCache {
 	
 	@BeforeClass public static void setUpOnce() {
 		token.setVdbName("foo"); //$NON-NLS-1$
-		token.setVdbVersion("1"); //$NON-NLS-1$
+		token.setVdbVersion(1); //$NON-NLS-1$
 		token2.setVdbName("foo"); //$NON-NLS-1$
-		token2.setVdbVersion("2"); //$NON-NLS-1$
+		token2.setVdbVersion(2); //$NON-NLS-1$
 	}
     
     //====Tests====//

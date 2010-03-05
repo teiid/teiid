@@ -22,13 +22,21 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.QueryImpl;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Select;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Query;
-
-import junit.framework.TestCase;
+import com.metamatrix.query.sql.lang.UnaryFromClause;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 public class TestQueryImpl extends TestCase {
 
@@ -39,10 +47,21 @@ public class TestQueryImpl extends TestCase {
     public TestQueryImpl(String name) {
         super(name);
     }
+    
+    public static com.metamatrix.query.sql.lang.Select helpExampleSelect(boolean distinct) {
+        ArrayList<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
+        symbols.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
+        symbols.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
+        symbols.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
+        symbols.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
+        com.metamatrix.query.sql.lang.Select sel = new com.metamatrix.query.sql.lang.Select(symbols);
+        sel.setDistinct(distinct);
+        return sel;
+    }
 
-    public static Query helpExample() {
-        return new Query(TestSelectImpl.helpExample(true),
-                         TestFromImpl.helpExample(),
+    public static Query helpExample(boolean distinct) {
+        return new Query(helpExampleSelect(distinct),
+                         TestQueryImpl.helpExampleFrom(),
                          TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND),
                          TestGroupByImpl.helpExample(),
                          TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND),
@@ -50,44 +69,67 @@ public class TestQueryImpl extends TestCase {
                          null);
     }
     
-    public static QueryImpl example() throws Exception {
-        return (QueryImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static Select example(boolean distinct) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(distinct));
     }
 
     public void testGetSelect() throws Exception {
-        assertNotNull(example().getSelect());
+        assertNotNull(example(true).getDerivedColumns());
     }
 
     public void testGetFrom() throws Exception {
-        assertNotNull(example().getFrom());
+        assertNotNull(example(true).getFrom());
     }
 
     public void testGetWhere() throws Exception {
-        assertNotNull(example().getWhere());
+        assertNotNull(example(true).getWhere());
     }
 
     public void testGetGroupBy() throws Exception {
-        assertNotNull(example().getGroupBy());
+        assertNotNull(example(true).getGroupBy());
     }
 
     public void testGetHaving() throws Exception {
-        assertNotNull(example().getHaving());
+        assertNotNull(example(true).getHaving());
     }
 
     public void testGetOrderBy() throws Exception {
-        assertNotNull(example().getOrderBy());
+        assertNotNull(example(true).getOrderBy());
     }
     
     public void testGetColumnNames() throws Exception {
-        String[] expected = {"e1", "e2", "e3", "e4"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        String[] names = example().getColumnNames();
+        String[] expected = new String[4]; 
+        String[] names = example(true).getColumnNames();
         assertTrue(EquivalenceUtil.areEquivalent(expected, names));
     }
     
     public void testGetColumnTypes() throws Exception {
         Class[] expected = {String.class, String.class, String.class, String.class};
-        Class[] types = example().getColumnTypes();
+        Class[] types = example(true).getColumnTypes();
         assertTrue(EquivalenceUtil.areEquivalent(expected, types));
+    }
+
+	public static com.metamatrix.query.sql.lang.From helpExampleFrom() {
+	    List<UnaryFromClause> clauses = new ArrayList<UnaryFromClause>();
+	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g1"))); //$NON-NLS-1$
+	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("myAlias", "vm1.g2"))); //$NON-NLS-1$ //$NON-NLS-2$
+	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g3"))); //$NON-NLS-1$
+	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g4"))); //$NON-NLS-1$
+	    return new com.metamatrix.query.sql.lang.From(clauses);
+	}
+	
+    public void testGetSelectSymbols() throws Exception {
+        List symbols = example(false).getDerivedColumns();
+        assertNotNull(symbols);
+        assertEquals(4, symbols.size());
+        for (Iterator i = symbols.iterator(); i.hasNext();) {
+            assertTrue(i.next() instanceof DerivedColumn);
+        }
+    }
+
+    public void testIsDistinct() throws Exception {
+        assertTrue(example(true).isDistinct());
+        assertFalse(example(false).isDistinct());
     }
 
 }

@@ -22,17 +22,14 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import java.util.Collections;
-import java.util.Iterator;
+import junit.framework.TestCase;
 
-import org.teiid.connector.language.IParameter;
-import org.teiid.dqp.internal.datamgr.language.ProcedureImpl;
+import org.teiid.connector.language.Call;
 
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.*;
-
-import junit.framework.TestCase;
+import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.StoredProcedure;
 
 public class TestProcedureImpl extends TestCase {
 
@@ -42,14 +39,13 @@ public class TestProcedureImpl extends TestCase {
      */
     public TestProcedureImpl(String name) {
         super(name);
-        System.setProperty("metamatrix.config.none", "true");
     }
 
-    public static ProcedureImpl example() throws Exception {
+    public static Call example() throws Exception {
         String sql = "EXEC pm1.sq3('x', 1)"; //$NON-NLS-1$
         Command command = new QueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, TstLanguageBridgeFactory.metadata);                
-        return (ProcedureImpl)TstLanguageBridgeFactory.factory.translate((StoredProcedure)command);
+        return TstLanguageBridgeFactory.factory.translate((StoredProcedure)command);
     }
     
     public void testGetProcedureName() throws Exception {
@@ -57,24 +53,9 @@ public class TestProcedureImpl extends TestCase {
     }
 
     public void testGetParameters() throws Exception {
-        ProcedureImpl exec = example();
-        assertNotNull(exec.getParameters());
-        assertEquals(3, exec.getParameters().size());
-        for (Iterator i = exec.getParameters().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IParameter);
-        }
-    }
-    
-    public void testEquals1() {
-        ProcedureImpl proc1 = new ProcedureImpl("proc1", Collections.EMPTY_LIST, null); //$NON-NLS-1$
-        ProcedureImpl proc2 = new ProcedureImpl("proc1", Collections.EMPTY_LIST, null); //$NON-NLS-1$
-        assertEquals(proc1, proc2);        
-    }
-
-    public void testEquals2() {
-        ProcedureImpl proc1 = new ProcedureImpl("proc1", Collections.EMPTY_LIST, null); //$NON-NLS-1$
-        ProcedureImpl proc2 = new ProcedureImpl("proc2", Collections.EMPTY_LIST, null); //$NON-NLS-1$
-        assertTrue(! proc1.equals(proc2));        
+        Call exec = example();
+        assertNotNull(exec.getArguments());
+        assertEquals(2, exec.getArguments().size());
     }
     
 }

@@ -39,7 +39,7 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionDescriptor;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
@@ -198,7 +198,7 @@ public class TestExpressionEvaluator extends TestCase {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e1, e2 }); //$NON-NLS-1$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -220,7 +220,7 @@ public class TestExpressionEvaluator extends TestCase {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e2, e1 }); //$NON-NLS-1$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -241,7 +241,7 @@ public class TestExpressionEvaluator extends TestCase {
         e1.setType(Integer.class);        
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), e1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -313,11 +313,11 @@ public class TestExpressionEvaluator extends TestCase {
 
     public void testUser() throws Exception {
         Function func = new Function("user", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         FakeDataManager dataMgr = new FakeDataManager();
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, 0);
         context.setUserName("logon");  //$NON-NLS-1$
         assertEquals(context.getUserName(), new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()) );       
     } 
@@ -330,7 +330,7 @@ public class TestExpressionEvaluator extends TestCase {
      */
     public void testEnv() throws Exception {
         Function func = new Function("env", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();
@@ -338,7 +338,7 @@ public class TestExpressionEvaluator extends TestCase {
         Properties props = new Properties();
         props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null, null, props, false, false);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, props, false, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
         assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
@@ -356,11 +356,11 @@ public class TestExpressionEvaluator extends TestCase {
         } else {
             parameterSignature = new Class[] { String.class };
         }        
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", "1", null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

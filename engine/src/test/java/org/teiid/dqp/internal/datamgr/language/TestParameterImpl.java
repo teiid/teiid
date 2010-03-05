@@ -22,14 +22,11 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import java.sql.ResultSet;
-
-import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.dqp.internal.datamgr.language.ParameterImpl;
-import org.teiid.dqp.internal.datamgr.language.ProcedureImpl;
-
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.Argument.Direction;
 
 public class TestParameterImpl extends TestCase {
 
@@ -41,48 +38,24 @@ public class TestParameterImpl extends TestCase {
         super(name);
     }
 
-    public static ParameterImpl example(int index) throws Exception {
-        ProcedureImpl procImpl = TestProcedureImpl.example();
-        return (ParameterImpl) procImpl.getParameters().get(index);
-    }
-
-    public void testGetIndex() throws Exception {
-        assertEquals(2, example(1).getIndex());
+    public static Argument example(int index) throws Exception {
+        Call procImpl = TestProcedureImpl.example();
+        return procImpl.getArguments().get(index);
     }
 
     public void testGetDirection() throws Exception {
-        assertEquals(Direction.RESULT_SET, example(0).getDirection());
+        assertEquals(Direction.IN, example(0).getDirection());
         assertEquals(Direction.IN, example(1).getDirection());
-        assertEquals(Direction.IN, example(2).getDirection());
     }
 
     public void testGetType() throws Exception {
-        assertTrue(example(0).getType().equals(ResultSet.class));
-        assertTrue(example(1).getType().equals(String.class));
-        assertTrue(example(2).getType().equals(Integer.class));
+        assertTrue(example(0).getType().equals(String.class));
+        assertTrue(example(1).getType().equals(Integer.class));
     }
 
     public void testGetValue() throws Exception {
-        assertEquals("x", example(1).getValue()); //$NON-NLS-1$
-        assertEquals(new Integer(1), example(2).getValue());
+        assertEquals("x", example(0).getArgumentValue().getValue()); //$NON-NLS-1$
+        assertEquals(new Integer(1), example(1).getArgumentValue().getValue());
     }
     
-    public void testGetValueSpecified() throws Exception {
-        assertEquals(false, example(0).getValueSpecified());
-        
-        ParameterImpl param = new ParameterImpl(1, Direction.IN, null, String.class, null);
-        // Test construction state (null value)
-        assertEquals(false, param.getValueSpecified());
-        // Test value specified not set on null
-        param.setValue(null);
-        assertEquals(false, param.getValueSpecified());        
-        // Test value specified is set on actual value
-        param.setValue("RINGTAIL LEMUR"); //$NON-NLS-1$
-        assertEquals(true, param.getValueSpecified());
-        // Test value specified override
-        param.setValueSpecified(false); 
-        assertEquals(false, param.getValueSpecified());
-    }
-    
-
 }

@@ -25,14 +25,12 @@
 package com.metamatrix.dqp.message;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
@@ -54,18 +52,12 @@ public class AtomicRequestMessage implements Serializable {
 	 * The connectorBindingID that identifies the connector needed for this
 	 * query.
 	 */
-	private String connectorBindingID;
+	private String connectorName;
 
 	/**
 	 * Name of model where the connector is bound to
 	 */
 	private String modelName;
-
-	/**
-	 * For cancel and update operations, the id of the data connector which
-	 * originally handled the request.
-	 */
-	private ConnectorID connectorID;
 
 	// Transaction context for the current request
 	private TransactionContext txnContext;
@@ -76,11 +68,8 @@ public class AtomicRequestMessage implements Serializable {
 	// results fetch size
 	private int fetchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 
-	// The time when the command was created by the client
-	private Date submittedTimestamp;
-
 	// The time when command begins processing on the server.
-	private Date processingTimestamp;
+	private long processingTimestamp = System.currentTimeMillis();
 
 	// whether to use ResultSet cache if there is one
 	private boolean useResultSetCache;
@@ -107,20 +96,12 @@ public class AtomicRequestMessage implements Serializable {
         return this.atomicRequestId;
     }
           
-    public String getConnectorBindingID() {
-        return connectorBindingID;
+    public String getConnectorName() {
+        return connectorName;
     }
 
-    public ConnectorID getConnectorID() {
-        return connectorID;
-    }
-    
-    public void setConnectorID(ConnectorID connectorID) {
-        this.connectorID = connectorID;
-    }    
-
-    public void setConnectorBindingID(String string) {
-        connectorBindingID = string;
+    public void setConnectorName(String string) {
+        connectorName = string;
     }
 
     public String getModelName() {
@@ -140,7 +121,7 @@ public class AtomicRequestMessage implements Serializable {
     }
 
     public boolean isTransactional(){
-        return this.txnContext != null && this.txnContext.isInTransaction();
+        return this.txnContext != null && this.txnContext.getXid() != null;
     }    
 	
 	public Command getCommand() {
@@ -163,54 +144,13 @@ public class AtomicRequestMessage implements Serializable {
 	}   
 
     /**
-     * Get time that the time when the command was created by the client.
-     * @return timestamp in millis
-     */
-    public Date getSubmittedTimestamp() {
-        return submittedTimestamp;
-    }
-    
-    /**
-     * Set time that the time when the command was created by the client.
-     * NOTE: By default, this gets set to the current time by the constructor.
-     * @param submittedTimestamp Time submitted to server.
-     */
-    public void setSubmittedTimestamp(Date submittedTimestamp) {
-        this.submittedTimestamp = submittedTimestamp;
-    }    
-    
-    /**
-     * Start the clock on submission start - this should be called when the request is originally created.
-     */
-    public void markSubmissionStart() {
-        setSubmittedTimestamp(new Date());
-    }
-    
-    
-    /**
      * Get time that the request was assigned a unique ID by the server.
      * @return timestamp in millis
      */
-    public Date getProcessingTimestamp() {
+    public long getProcessingTimestamp() {
         return processingTimestamp;
     }
 
-    /**
-     * Set time that the request is submitted on the server.
-     * @param processingTimestamp Time submitted to server.
-     */
-    public void setProcessingTimestamp(Date processingTimestamp) {
-        this.processingTimestamp = processingTimestamp;
-    }
-
-    /**
-     * Start the clock on processing times - this should be called when the query
-     * hits the QueryService or SubscriptionService.
-     */
-    public void markProcessingStart() {
-        setProcessingTimestamp(new Date());
-    }	
-	
 	public boolean useResultSetCache() {
 		//not use caching when there is a txn 
 		return useResultSetCache 

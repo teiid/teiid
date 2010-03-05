@@ -97,7 +97,7 @@ public class BatchedUpdateNode extends RelationalNode {
             boolean needProcessing = false;
             if(shouldEvaluate != null && shouldEvaluate.get(i)) {
                 updateCommand = (Command) updateCommand.clone();
-                needProcessing = AccessNode.prepareCommand(updateCommand, this, context);
+                needProcessing = AccessNode.prepareCommand(updateCommand, this, context, context.getMetadata());
             } else {
                 needProcessing = RelationalNodeUtil.shouldExecute(updateCommand, true);
             }

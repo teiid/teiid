@@ -21,37 +21,37 @@
  */
 package org.teiid.dqp.internal.cache;
 
-import java.util.Properties;
+import java.io.Serializable;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.util.LogConstants;
 
-@Singleton
-public class DQPContextCache {
+public class DQPContextCache implements Serializable{
+	private static final long serialVersionUID = 6958846566556640186L;
+
 	private static enum Scope {REQUEST,SESSION,SERVICE,VDB,GLOBAL;}
 	
 	private Cache cache;
 	private String processIdentifier;
 	
-	@Inject
-	public DQPContextCache(@Named("DQPProperties") Properties props, CacheFactory cacheFactory) {
+	// called by mc
+	public void setCacheFactory(CacheFactory cacheFactory) {
 		this.cache = cacheFactory.get(Cache.Type.SCOPED_CACHE, new CacheConfiguration(Policy.LRU, 600, 10000));
-		this.processIdentifier = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
+	}
+	//called by mc
+	public void setProcessName(String name) {
+		this.processIdentifier = name;
 	}
 	
 	public Cache getGlobalScopedCache() {
 		return this.cache.addChild(Scope.GLOBAL.name());
 	}
 
-	public void shutdown() {
+	public void stop() {
 		try {
 			this.cache.removeChild(this.processIdentifier);
 		} catch(IllegalStateException e) {
@@ -115,13 +115,13 @@ public class DQPContextCache {
 		}
 	}
 
-	public Cache getVDBScopedCache(String vdbName, String vdbVersion) {
+	public Cache getVDBScopedCache(String vdbName, int vdbVersion) {
 		Cache scopeNode = this.cache.addChild(Scope.VDB.name());
 		String id = vdbName+"-"+vdbVersion; //$NON-NLS-1$
 		return scopeNode.addChild(id.toUpperCase());
 	}
 
-	public void removeVDBScopedCache(String vdbName, String vdbVersion) {
+	public void removeVDBScopedCache(String vdbName, int vdbVersion) {
 		try {
 			Cache scopeNode = this.cache.addChild(Scope.VDB.name());
 			if (scopeNode != null) {

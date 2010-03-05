@@ -22,7 +22,7 @@
 
 package com.metamatrix.query.processor.relational;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +40,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -203,7 +203,7 @@ public class TestJoinNode {
 
             case FUNCTION_CRITERIA :
                 Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class }); //$NON-NLS-1$
+                FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class }); //$NON-NLS-1$
                 func.setFunctionDescriptor(desc);
                 func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
                 CompareCriteria joinCriteria = new CompareCriteria(es2, CompareCriteria.EQ, func);
@@ -232,7 +232,7 @@ public class TestJoinNode {
     
     public void helpTestJoinDirect(List[] expectedResults, int batchSize) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(1, batchSize);
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         join.addChild(leftNode);
         join.addChild(rightNode);

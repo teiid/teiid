@@ -21,16 +21,12 @@
  */
 package org.teiid.dqp.internal.cache;
 
-import java.util.Properties;
-
 import junit.framework.TestCase;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 
@@ -40,17 +36,16 @@ public class TestDQPContextCache extends TestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
-		Properties p = new Properties();
-		p.setProperty(DQPEmbeddedProperties.PROCESSNAME, "host-process"); //$NON-NLS-1$
-		cacheContext = new DQPContextCache(p, new FakeCacheFactory());
-			
+		cacheContext =  new DQPContextCache();
+		cacheContext.setCacheFactory(new FakeCacheFactory());
+		cacheContext.setProcessName("host-process");		
 	}
 	
 	private DQPWorkContext getContext() {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
+        workContext.setVdbVersion(1); //$NON-NLS-1$
+        workContext.setSessionToken(new SessionToken(1, "foo")); //$NON-NLS-1$
         return workContext;
 	}
 
@@ -60,17 +55,17 @@ public class TestDQPContextCache extends TestCase {
 		Cache cache = this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString());
 		cache.put("key", "request-value"); //$NON-NLS-1$ //$NON-NLS-2$
 
-		cache = this.cacheContext.getSessionScopedCache(context.getSessionToken().getSessionIDValue());		
+		cache = this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID()));		
 		cache.put("key", "session-value"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		assertEquals("request-value", this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getSessionToken().getSessionIDValue()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID())).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		// close the request
 		this.cacheContext.removeRequestScopedCache(context.getRequestID(12L).toString());
 		
 		assertNull(this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ 
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getSessionToken().getSessionIDValue()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID())).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 		
 	
@@ -97,7 +92,7 @@ public class TestDQPContextCache extends TestCase {
 		assertEquals("request-value", this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertEquals("global-value", this.cacheContext.getGlobalScopedCache().get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		this.cacheContext.shutdown();
+		this.cacheContext.stop();
 		
 		assertNull(this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$
 		// global only dies when the engine is shutdown

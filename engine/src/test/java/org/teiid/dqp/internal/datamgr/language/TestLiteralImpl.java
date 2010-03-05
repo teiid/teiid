@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
+
+import org.teiid.connector.language.Literal;
 
 import com.metamatrix.query.sql.symbol.Constant;
 
@@ -46,14 +47,14 @@ public class TestLiteralImpl extends TestCase {
         return new Constant(val);
     }
     
-    public static LiteralImpl example(int val) {
+    public static Literal example(int val) {
         Constant c = helpExample(val);
-        return new LiteralImpl(c.getValue(), c.getType());
+        return new Literal(c.getValue(), c.getType());
     }
 
-    public static LiteralImpl example(Object val) {
+    public static Literal example(Object val) {
         Constant c = helpExample(val);
-        return new LiteralImpl(c.getValue(), c.getType());
+        return new Literal(c.getValue(), c.getType());
     }
 
     public void testGetValue() {

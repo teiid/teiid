@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
@@ -34,7 +36,6 @@ import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -1051,37 +1052,37 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 	
 	public void testAggregateSymbol1() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol2() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT(DISTINCT 'abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol3() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
 		helpTest(agg, "COUNT(*)"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol4() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "AVG('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol5() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "SUM('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol6() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MIN('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol7() {
-		AggregateSymbol agg = new AggregateSymbol("abc", ReservedWords.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MAX('abc')"); //$NON-NLS-1$
 	}
 	

@@ -22,20 +22,23 @@
 
 package org.teiid.dqp.internal.transaction;
 
+import javax.resource.spi.XATerminator;
 import javax.transaction.xa.XAResource;
-
-import org.teiid.adminapi.Transaction;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+import org.teiid.adminapi.Transaction;
+
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.util.SimpleMock;
+import com.metamatrix.dqp.service.TransactionContext;
 
 public class TestTransactionServer extends TestCase {
 
     private TransactionServerImpl server;
-
+    private XATerminator xaTerminator;
+    
     private static final String THREAD1 = "1"; //$NON-NLS-1$
     private static final String THREAD2 = "2"; //$NON-NLS-1$
 
@@ -51,7 +54,11 @@ public class TestTransactionServer extends TestCase {
      */
     protected void setUp() throws Exception {
         server = new TransactionServerImpl();
-        server.setTransactionProvider(SimpleMock.createSimpleMock(TransactionProvider.class)); 
+        TransactionProvider provider = Mockito.mock(TransactionProvider.class);
+        xaTerminator = Mockito.mock(XATerminator.class);
+        Mockito.stub(provider.getXATerminator()).toReturn(xaTerminator);
+        server.setTransactionProvider(provider); 
+        server.setXidFactory(new XidFactory());
     }
 
     /**
@@ -61,7 +68,7 @@ public class TestTransactionServer extends TestCase {
         server.begin(THREAD1);
 
         try {
-            server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+            server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100, false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
             assertEquals("Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
@@ -73,7 +80,7 @@ public class TestTransactionServer extends TestCase {
      * once in a global, cannot start a local
      */
     public void testTransactionExclusion1() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100, false);
 
         try {
             server.begin(THREAD1);
@@ -88,13 +95,13 @@ public class TestTransactionServer extends TestCase {
      * global can only be started once
      */
     public void testTransactionExclusion2() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
 
         try {
-            server.start(THREAD2, XID1, XAResource.TMNOFLAGS, 100);
+            server.start(THREAD2, XID1, XAResource.TMNOFLAGS, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Global transaction MMXid global:1 branch:null format:0 already exists.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Global transaction Teiid-Xid global:1 branch:null format:0 already exists.", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -102,10 +109,10 @@ public class TestTransactionServer extends TestCase {
      * global cannot be nested
      */
     public void testTransactionExclusion3() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
 
         try {
-            server.start(THREAD1, XID2, XAResource.TMNOFLAGS, 100);
+            server.start(THREAD1, XID2, XAResource.TMNOFLAGS, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
             assertEquals("Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
@@ -132,12 +139,12 @@ public class TestTransactionServer extends TestCase {
      * global cannot be nested
      */
     public void testTransactionExclusion5() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
-        server.start(THREAD2, XID2, XAResource.TMNOFLAGS, 100);
-        server.end(THREAD2, XID2, XAResource.TMSUCCESS);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.start(THREAD2, XID2, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD2, XID2, XAResource.TMSUCCESS,false);
 
         try {
-            server.start(THREAD1, XID2, XAResource.TMJOIN, 100);
+            server.start(THREAD1, XID2, XAResource.TMJOIN, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
             assertEquals("Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
@@ -156,10 +163,49 @@ public class TestTransactionServer extends TestCase {
         }
     }
 
+    public void testLocalSetRollback() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("s1");
+        tc.setRollbackOnly();
+        
+        server.commit(THREAD1);
+        
+        Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }    
+    
+    public void testSinglePhaseCommit() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("S1");
+        
+        server.commit(THREAD1);
+        
+        Mockito.verify(xaTerminator).commit(tc.getXid(), true);
+        
+        tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("S1");
+        tc.incrementPartcipatingSourceCount("S1");
+        
+        server.commit(THREAD1);
+        
+        Mockito.verify(xaTerminator).commit(tc.getXid(), true);        
+    }      
+    
+    public void testTwoPhaseCommit() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("S1");
+        tc.incrementPartcipatingSourceCount("S2");
+        
+        server.commit(THREAD1);
+        
+        Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+    }     
+    
     public void testLocalRollback() throws Exception {
-        server.begin(THREAD1);
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("s1");
         server.rollback(THREAD1);
-
+        Mockito.verify(xaTerminator).rollback(tc.getXid());
+        
         try {
             server.rollback(THREAD1);
         } catch (XATransactionException e) {
@@ -168,46 +214,46 @@ public class TestTransactionServer extends TestCase {
     }
 
     public void testConcurrentEnlistment() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
 
         try {
-            server.start(THREAD1, XID1, XAResource.TMJOIN, 100);
+            server.start(THREAD1, XID1, XAResource.TMJOIN, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Concurrent enlistment in global transaction MMXid global:1 branch:null format:0 is not supported.", //$NON-NLS-1$
+            assertEquals("Concurrent enlistment in global transaction Teiid-Xid global:1 branch:null format:0 is not supported.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
 
     public void testSuspend() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
-        server.end(THREAD1, XID1, XAResource.TMSUSPEND);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
 
         try {
-            server.end(THREAD1, XID1, XAResource.TMSUSPEND);
+            server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Client is not currently enlisted in transaction MMXid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Client is not currently enlisted in transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     
     public void testSuspendResume() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
-        server.end(THREAD1, XID1, XAResource.TMSUSPEND);
-        server.start(THREAD1, XID1, XAResource.TMRESUME, 100);
-        server.end(THREAD1, XID1, XAResource.TMSUSPEND);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
+        server.start(THREAD1, XID1, XAResource.TMRESUME, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
 
         try {
-            server.start(THREAD2, XID1, XAResource.TMRESUME, 100);
+            server.start(THREAD2, XID1, XAResource.TMRESUME, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Cannot resume, transaction MMXid global:1 branch:null format:0 was not suspended by client 2.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Cannot resume, transaction Teiid-Xid global:1 branch:null format:0 was not suspended by client 2.", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
     public void testUnknownFlags() throws Exception {
         try {
-            server.start(THREAD1, XID1, Integer.MAX_VALUE, 100);
+            server.start(THREAD1, XID1, Integer.MAX_VALUE, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
             assertEquals("Unknown flags", ex.getMessage()); //$NON-NLS-1$
@@ -216,22 +262,22 @@ public class TestTransactionServer extends TestCase {
 
     public void testUnknownGlobalTransaction() throws Exception {
         try {
-            server.end(THREAD1, XID1, XAResource.TMSUCCESS);
+            server.end(THREAD1, XID1, XAResource.TMSUCCESS,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("No global transaction found for MMXid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("No global transaction found for Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     
     public void testPrepareWithSuspended() throws Exception {
-        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
-        server.end(THREAD1, XID1, XAResource.TMSUSPEND);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
 
         try {
-            server.prepare(THREAD1, XID1);
+            server.prepare(THREAD1, XID1,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Suspended work still exists on transaction MMXid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Suspended work still exists on transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -240,7 +286,7 @@ public class TestTransactionServer extends TestCase {
     }
     
     public void testGetTransactions() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         server.begin(THREAD2);
         
         assertEquals(2, server.getTransactions().size());
@@ -249,7 +295,184 @@ public class TestTransactionServer extends TestCase {
         assertEquals(1, server.getTransactions().size());
         
         Transaction t = server.getTransactions().iterator().next();
-        assertEquals(THREAD1, t.getAssociatedSession());
+        assertEquals(Long.parseLong(THREAD1), t.getAssociatedSession());
         assertNotNull(t.getXid());
     }
+    
+    public void testGlobalPrepare() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+    	server.prepare(THREAD1, XID1, false);
+    	
+    	Mockito.verify(xaTerminator).prepare(tc.getXid());
+    	
+    	server.commit(THREAD1, XID1, true, false);
+    }
+    
+    public void testGlobalPrepareFail() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMFAIL, false);
+        
+    	try {
+			server.prepare(THREAD1, XID1, false);
+			fail("should have failed to prepare as end resulted in TMFAIL");
+		} catch (Exception e) {
+		}
+		
+		server.forget(THREAD1, XID1, false);
+    }    
+    
+    public void testGlobalOnePhaseCommit() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	
+    	tc.incrementPartcipatingSourceCount("S1");
+    	
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+        server.prepare(THREAD1, XID1, false);
+
+		
+		server.commit(THREAD1, XID1, true, false);
+		
+		// since there are two sources the commit is not single phase
+		Mockito.verify(xaTerminator).commit(tc.getXid(), true);
+    }  
+    
+    public void testGlobalOnePhaseCommit_force_prepare_through() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	
+    	tc.incrementPartcipatingSourceCount("S1");
+    	
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+		
+		server.commit(THREAD1, XID1, true, false);
+		
+		// since there are two sources the commit is not single phase
+		Mockito.verify(xaTerminator, Mockito.times(0)).prepare(tc.getXid());
+		Mockito.verify(xaTerminator).commit(tc.getXid(), true);
+    }  
+    
+    public void testGlobalOnePhaseCommit_force_prepare() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	
+    	tc.incrementPartcipatingSourceCount("S1");
+    	tc.incrementPartcipatingSourceCount("S2");
+    	
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+		
+		server.commit(THREAD1, XID1, true, false);
+		
+		// since there are two sources the commit is not single phase
+		Mockito.verify(xaTerminator).prepare(tc.getXid());
+		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+    }  
+    
+    
+    public void testGlobalOnePhase_teiid_multiple() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	
+    	tc.incrementPartcipatingSourceCount("S1");
+    	tc.incrementPartcipatingSourceCount("S2");
+    	
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+        server.prepare(THREAD1, XID1, false);
+
+		
+		server.commit(THREAD1, XID1, true, false);
+		
+		// since there are two sources the commit is not single phase
+		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+    }    
+    
+    public void testGlobalOnePhaseRoolback() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	
+    	tc.incrementPartcipatingSourceCount("S1");
+    	
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        
+        server.prepare(THREAD1, XID1, false);
+
+		
+		server.rollback(THREAD1, XID1, false);
+		
+		// since there are two sources the commit is not single phase
+		Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }     
+    
+    public void testLocalCommit_rollback() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("s1");
+        tc.setRollbackOnly();
+        server.commit(THREAD1);
+
+        Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }    
+    
+    public void testLocalCommit_not_in_Tx() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        server.commit(THREAD1);
+
+        Mockito.verify(xaTerminator,Mockito.times(0)).commit(tc.getXid(), true);
+    }       
+    
+    public void testRequestCommit() throws Exception{
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	server.start(tc);
+    	tc.incrementPartcipatingSourceCount("s1");
+    	server.commit(tc);
+    	Mockito.verify(xaTerminator,Mockito.times(0)).prepare(tc.getXid());
+    	Mockito.verify(xaTerminator).commit(tc.getXid(), true);
+    }
+    
+    public void testRequestCommit2() throws Exception{
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	server.start(tc);
+    	tc.incrementPartcipatingSourceCount("s1");
+    	tc.incrementPartcipatingSourceCount("s2");
+    	server.commit(tc);
+    	
+    	Mockito.verify(xaTerminator).prepare(tc.getXid());
+    	Mockito.verify(xaTerminator).commit(tc.getXid(), false);
+    }    
+    
+    public void testRequestRollback() throws Exception{
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	server.start(tc);
+    	tc.incrementPartcipatingSourceCount("s1");
+    	tc.incrementPartcipatingSourceCount("s2");
+    	
+    	server.rollback(tc);
+    	Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }     
+    
+    public void testLocalCancel() throws Exception {
+        TransactionContext tc = server.begin(THREAD1);
+        tc.incrementPartcipatingSourceCount("S1");
+        tc.incrementPartcipatingSourceCount("S2");
+        
+        server.cancelTransactions(THREAD1, false);
+        
+        Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }  
+    
+    public void testRequestCancel() throws Exception{
+    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+    	server.start(tc);
+    	tc.incrementPartcipatingSourceCount("s1");
+    	tc.incrementPartcipatingSourceCount("s2");
+    	
+    	 server.cancelTransactions(THREAD1, true);
+    	Mockito.verify(xaTerminator).rollback(tc.getXid());
+    }      
 }

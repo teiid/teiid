@@ -75,8 +75,7 @@ public class DeleteResolver extends ProcedureContainerResolver {
     
     @Override
     public GroupContext findChildCommandMetadata(ProcedureContainer container,
-    		Command subCommand, TempMetadataStore discoveredMetadata,
-    		QueryMetadataInterface metadata) throws QueryMetadataException,
+    		TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata) throws QueryMetadataException,
     		QueryResolverException, MetaMatrixComponentException {
     	//defect 16451: don't expose input and changing variables to delete procedures
     	return null;

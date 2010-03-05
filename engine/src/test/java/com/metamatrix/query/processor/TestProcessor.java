@@ -45,7 +45,6 @@ import org.junit.Test;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBuffer;
@@ -57,6 +56,10 @@ import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.FunctionTree;
+import com.metamatrix.query.function.SystemFunctionManager;
+import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.FakeFunctionMetadataSource;
@@ -131,14 +134,14 @@ public class TestProcessor {
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata) {
         return helpGetPlan(command, metadata, new DefaultCapabilitiesFinder());
     }
-
+    
 	static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
         CommandContext context = new CommandContext();
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 	    return helpGetPlan(command, metadata, capFinder, context);
     }
-    
+	
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
 		AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
@@ -205,7 +208,7 @@ public class TestProcessor {
     	BufferManager bufferMgr = null;
         try {   
             bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("0", "test", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+            CommandContext context = new CommandContext("0", "test", null, null, 1); //$NON-NLS-1$ //$NON-NLS-2$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
             processor.setNonBlocking(true);
             BatchCollector collector = processor.createBatchCollector();
@@ -295,7 +298,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, DEBUG, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 		return context;
@@ -538,13 +541,10 @@ public class TestProcessor {
     }     
     
     private void sampleDataBQT1(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
         try { 
             // Group bqt1.smalla
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
         
             List[] tuples = new List[20];
             for(int i=0; i<tuples.length; i++) {
@@ -555,13 +555,9 @@ public class TestProcessor {
                 }    
             }
         
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
+            dataMgr.registerTuples(metadata, "bqt1.smalla", tuples); //$NON-NLS-1$
 
             // Group bqt2.mediumb
-            groupID = (FakeMetadataObject) metadata.getGroupID("bqt2.mediumb"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             tuples = new List[20];
             for(int i=0; i<tuples.length; i++) {
                 tuples[i] = new ArrayList(17);
@@ -571,16 +567,14 @@ public class TestProcessor {
                 }    
             }
         
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
+            dataMgr.registerTuples(metadata, "bqt2.mediumb", tuples); //$NON-NLS-1$
         } catch(MetaMatrixException e) { 
         	throw new RuntimeException(e);
         }
     }
 
-
-    private void sampleDataBQT2(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+	private void sampleDataBQT2(FakeDataManager dataMgr) {
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
         String[] groups = new String[] {"bqt1.smalla", "bqt2.smalla", "bqt3.smalla" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
@@ -588,10 +582,6 @@ public class TestProcessor {
             for(int i=0; i<groups.length; i++) {
                 String groupName = groups[i];
     
-                FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID(groupName);
-                List elementIDs = metadata.getElementIDsInGroupID(groupID);
-                List elementSymbols = FakeDataStore.createElements(elementIDs);
-            
                 List[] tuples = new List[30];
                 for(int row=0; row<tuples.length; row++) {
                     tuples[row] = new ArrayList(17);
@@ -601,7 +591,7 @@ public class TestProcessor {
                     }    
                 }
         
-                dataMgr.registerTuples(groupID, elementSymbols, tuples);
+                dataMgr.registerTuples(metadata, groupName, tuples);
             }
 
         } catch(MetaMatrixException e) { 
@@ -615,14 +605,9 @@ public class TestProcessor {
      * @since 4.2
      */
     private void sampleDataBQT_defect11682(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
         try { 
-            // Group bqt1.smalla
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             List[] tuples = new List[2];
             for(int i=1; i<=tuples.length; i++) {
                 int index=i-1;
@@ -645,23 +630,18 @@ public class TestProcessor {
                 tuples[index].add(new BigDecimal(i+".0")); //$NON-NLS-1$
                 tuples[index].add(null);
             }
-        
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
+            
+            dataMgr.registerTuples(metadata, "bqt1.smalla", tuples); //$NON-NLS-1$ 
+            
         } catch(MetaMatrixException e) { 
         	throw new RuntimeException(e);
         }
     }    
 
     private void sampleDataBQTSmall(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
         try { 
-            // Group bqt1.smalla
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             List[] tuples = new List[1];
             for(int i=0; i<tuples.length; i++) {
                 tuples[i] = new ArrayList(17);
@@ -671,7 +651,7 @@ public class TestProcessor {
                 }    
             }
         
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
+            dataMgr.registerTuples(metadata, "bqt1.smalla", tuples); //$NON-NLS-1$ 
 
         } catch(MetaMatrixException e) { 
         	throw new RuntimeException(e);
@@ -687,17 +667,9 @@ public class TestProcessor {
     }
             
     private void sampleDataBQT_case1566(FakeDataManager dataMgr) throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
-        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-        List elementIDs = metadata.getElementIDsInGroupID(groupID);
-        List elementSymbols = FakeDataStore.createElements(elementIDs);
-    
-        dataMgr.registerTuples(
-            groupID,
-            elementSymbols,
-            
-            new List[] { 
+        dataMgr.registerTuples(metadata, "bqt1.smalla", new List[] { //$NON-NLS-1$ 
                 createRowWithTimestamp("2002-01-01 10:00:00"), //$NON-NLS-1$
                 createRowWithTimestamp("2002-01-01 14:00:00"), //$NON-NLS-1$
                 createRowWithTimestamp("2002-01-02 10:00:00"), //$NON-NLS-1$
@@ -1198,6 +1170,7 @@ public class TestProcessor {
         CommandContext context = createCommandContext();
         context.setProcessorBatchSize(2);
         context.setConnectorBatchSize(2);
+        context.setMetadata(FakeMetadataFactory.example1Cached());
         
         // Plan query
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
@@ -2342,113 +2315,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }    
 
-    private static FakeMetadataFacade virtualBQT() {
-        // Create models
-        FakeMetadataObject bqt1 = FakeMetadataFactory.createPhysicalModel("BQT1"); //$NON-NLS-1$
-        FakeMetadataObject bqt2 = FakeMetadataFactory.createPhysicalModel("BQT2"); //$NON-NLS-1$
-        FakeMetadataObject bqt3 = FakeMetadataFactory.createPhysicalModel("BQT3"); //$NON-NLS-1$
-        FakeMetadataObject vqt = FakeMetadataFactory.createVirtualModel("BQT_V"); //$NON-NLS-1$
-        FakeMetadataObject vqt2 = FakeMetadataFactory.createVirtualModel("BQT2_V"); //$NON-NLS-1$
-        
-        // Create physical groups
-        FakeMetadataObject bqt1SmallA = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallA", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1SmallB = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallB", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1MediumA = FakeMetadataFactory.createPhysicalGroup("BQT1.MediumA", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1MediumB = FakeMetadataFactory.createPhysicalGroup("BQT1.MediumB", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt2SmallA = FakeMetadataFactory.createPhysicalGroup("BQT2.SmallA", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2SmallB = FakeMetadataFactory.createPhysicalGroup("BQT2.SmallB", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2MediumA = FakeMetadataFactory.createPhysicalGroup("BQT2.MediumA", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2MediumB = FakeMetadataFactory.createPhysicalGroup("BQT2.MediumB", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt3SmallA = FakeMetadataFactory.createPhysicalGroup("BQT3.SmallA", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3SmallB = FakeMetadataFactory.createPhysicalGroup("BQT3.SmallB", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3MediumA = FakeMetadataFactory.createPhysicalGroup("BQT3.MediumA", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3MediumB = FakeMetadataFactory.createPhysicalGroup("BQT3.MediumB", bqt3); //$NON-NLS-1$
-
-        // Create virtual groups
-        QueryNode vqtn1 = new QueryNode("BQT_V.BQT_V", "SELECT a.* FROM BQT1.SMALLA AS a WHERE a.INTNUM = (SELECT MIN(b.INTNUM) FROM BQT1.SMALLA AS b WHERE b.INTKEY = a.IntKey ) OPTION MAKEDEP a"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg1 = FakeMetadataFactory.createUpdatableVirtualGroup("BQT_V.BQT_V", vqt, vqtn1); //$NON-NLS-1$
-        QueryNode vqt2n1 = new QueryNode("BQT2_V.BQT2_V", "SELECT BQT2.SmallA.* FROM BQT2.SmallA, BQT_V.BQT_V WHERE BQT2.SmallA.IntKey = BQT_V.BQT_V.IntKey"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqt2g1 = FakeMetadataFactory.createUpdatableVirtualGroup("BQT2_V.BQT2_V", vqt2, vqt2n1); //$NON-NLS-1$
-
-                
-        // Create physical elements
-        String[] elemNames = new String[] { 
-             "IntKey", "StringKey",  //$NON-NLS-1$ //$NON-NLS-2$
-             "IntNum", "StringNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "FloatNum", "LongNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DoubleNum", "ByteNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DateValue", "TimeValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "TimestampValue", "BooleanValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "CharValue", "ShortValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "BigIntegerValue", "BigDecimalValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "ObjectValue" }; //$NON-NLS-1$
-         String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.LONG, 
-                             DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.BYTE, 
-                             DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, 
-                             DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BOOLEAN, 
-                             DataTypeManager.DefaultDataTypes.CHAR, DataTypeManager.DefaultDataTypes.SHORT, 
-                             DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
-                             DataTypeManager.DefaultDataTypes.OBJECT };
-        
-        List bqt1SmallAe = FakeMetadataFactory.createElements(bqt1SmallA, elemNames, elemTypes);
-        List bqt1SmallBe = FakeMetadataFactory.createElements(bqt1SmallB, elemNames, elemTypes);
-        List bqt1MediumAe = FakeMetadataFactory.createElements(bqt1MediumA, elemNames, elemTypes);
-        List bqt1MediumBe = FakeMetadataFactory.createElements(bqt1MediumB, elemNames, elemTypes);
-        List bqt2SmallAe = FakeMetadataFactory.createElements(bqt2SmallA, elemNames, elemTypes);
-        List bqt2SmallBe = FakeMetadataFactory.createElements(bqt2SmallB, elemNames, elemTypes);
-        List bqt2MediumAe = FakeMetadataFactory.createElements(bqt2MediumA, elemNames, elemTypes);
-        List bqt2MediumBe = FakeMetadataFactory.createElements(bqt2MediumB, elemNames, elemTypes);                
-        List bqt3SmallAe = FakeMetadataFactory.createElements(bqt3SmallA, elemNames, elemTypes);
-        List bqt3SmallBe = FakeMetadataFactory.createElements(bqt3SmallB, elemNames, elemTypes);
-        List bqt3MediumAe = FakeMetadataFactory.createElements(bqt3MediumA, elemNames, elemTypes);
-        List bqt3MediumBe = FakeMetadataFactory.createElements(bqt3MediumB, elemNames, elemTypes);                
-        // Create virtual elements
-        List vqtg1e = FakeMetadataFactory.createElements(vqtg1, elemNames, elemTypes);        
-        List vqt2g1e = FakeMetadataFactory.createElements(vqt2g1, elemNames, elemTypes);        
-
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(bqt1);
-        store.addObject(bqt1SmallA);     
-        store.addObjects(bqt1SmallAe);
-        store.addObject(bqt1SmallB);     
-        store.addObjects(bqt1SmallBe);
-        store.addObject(bqt1MediumA);     
-        store.addObjects(bqt1MediumAe);
-        store.addObject(bqt1MediumB);     
-        store.addObjects(bqt1MediumBe);
-
-        store.addObject(bqt2);
-        store.addObject(bqt2SmallA);     
-        store.addObjects(bqt2SmallAe);
-        store.addObject(bqt2SmallB);     
-        store.addObjects(bqt2SmallBe);
-        store.addObject(bqt2MediumA);     
-        store.addObjects(bqt2MediumAe);
-        store.addObject(bqt2MediumB);     
-        store.addObjects(bqt2MediumBe);
-
-        store.addObject(bqt3);
-        store.addObject(bqt3SmallA);     
-        store.addObjects(bqt3SmallAe);
-        store.addObject(bqt3SmallB);     
-        store.addObjects(bqt3SmallBe);
-        store.addObject(bqt3MediumA);     
-        store.addObjects(bqt3MediumAe);
-        store.addObject(bqt3MediumB);     
-        store.addObjects(bqt3MediumBe);
-
-        store.addObject(vqtg1);     
-        store.addObjects(vqtg1e);
-        store.addObject(vqt2g1);     
-        store.addObjects(vqt2g1e);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-
-    }
     @Test public void testCorrelatedSubquery_CASE2022() {
         String sql = "select * from BQT2_V WHERE BQT2_V.IntKey < 50"; //$NON-NLS-1$
 
@@ -2476,8 +2342,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         // Plan query
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), virtualBQT(), capFinder);
-        //ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.exampleBQTCached(), capFinder);
 
         // Run query
         helpProcess(plan, dataManager, expected);
@@ -5200,7 +5065,9 @@ public class TestProcessor {
         g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
+        CommandContext context = createCommandContext();
+        context.setMetadata(metadata);
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder,context);
         
         //Verify a dependent join (not merge join) was used
         assertTrue(plan instanceof RelationalPlan);
@@ -5210,7 +5077,7 @@ public class TestProcessor {
         assertTrue("Expected instance of JoinNode (for dep join) but got " + join.getClass(), join instanceof JoinNode); //$NON-NLS-1$
 
         // Run query
-        helpProcess(plan, dataManager, expected);        
+        helpProcess(plan, context, dataManager, expected);        
     }     
 
     /** RLM Case 2077 */
@@ -5244,7 +5111,9 @@ public class TestProcessor {
         g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
+        CommandContext context = createCommandContext();
+        context.setMetadata(metadata);
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         //Verify a dependent join (not merge join) was used
         assertTrue(plan instanceof RelationalPlan);
@@ -5254,7 +5123,7 @@ public class TestProcessor {
         assertTrue("Expected instance of JoinNode (for dep join) but got " + join.getClass(), join instanceof JoinNode); //$NON-NLS-1$
 
         // Run query
-        helpProcess(plan, dataManager, expected);        
+        helpProcess(plan, context, dataManager, expected);        
     }      
     
     @Test public void testPushingCriteriaUnderJoinButNotToSource() {
@@ -5312,7 +5181,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5348,7 +5217,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5359,7 +5228,6 @@ public class TestProcessor {
     
     /** defect 15348*/
     @Test public void testPreparedStatementDefect15348(){
-        FakeFunctionMetadataSource.setupFunctionLibrary();
         String sql = "SELECT e1 from pm1.g1 where myrtrim(?)=e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -5378,16 +5246,19 @@ public class TestProcessor {
         caps.setFunctionSupport("myrtrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        
         
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
+        CommandContext context = createCommandContext();
+        context.setMetadata(metadata);        
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
         vc.setGlobalValue(ref.getContextSymbol(),  "a    "); //$NON-NLS-1$
-        CommandContext context = createCommandContext();
         context.setVariableContext(vc);
         // Run query
         helpProcess(plan, context, dataManager, expected);        
@@ -5396,8 +5267,6 @@ public class TestProcessor {
 
     /** defect 15348*/
     @Test public void testPreparedStatementDefect15348b(){
-        FakeFunctionMetadataSource.setupFunctionLibrary();  
-        
         String sql = "SELECT e1 from pm4.g1 where myrtrim(concat(?, 'a  '))=e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -5417,16 +5286,19 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+        
         
         Command command = helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
+        CommandContext context = createCommandContext();
+        context.setMetadata(metadata);        
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
         vc.setGlobalValue(ref.getContextSymbol(), "a"); //$NON-NLS-1$
-        CommandContext context = createCommandContext();
         context.setVariableContext(vc);
         
         // Run query
@@ -5446,7 +5318,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5477,7 +5349,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5525,7 +5397,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5572,7 +5444,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5608,7 +5480,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5646,7 +5518,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5685,7 +5557,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5718,7 +5590,7 @@ public class TestProcessor {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5757,7 +5629,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
 
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -5854,7 +5726,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                                       metadata,
@@ -5916,9 +5788,8 @@ public class TestProcessor {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
-       
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                           metadata,
                           null, capFinder,
@@ -6453,18 +6324,14 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);  
     }
         
-    private void sampleDataBQT2a(FakeDataManager dataMgr) throws QueryMetadataException, MetaMatrixComponentException {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+    private void sampleDataBQT2a(FakeDataManager dataMgr) throws Exception {
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     
         String[] groups = new String[] {"bqt1.smalla", "bqt2.smalla", "bqt3.smalla" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
         for(int groupIndex=0; groupIndex<groups.length; groupIndex++) {
             String groupName = groups[groupIndex];
 
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID(groupName);
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
             List[] tuples = new List[3];
             for(int row=0; row<tuples.length; row++) {
                 tuples[row] = new ArrayList(17);
@@ -6479,7 +6346,7 @@ public class TestProcessor {
                 tuples[row].add(new BigDecimal(row)); //BigDecimalValue
                 tuples[row].add(null);    //ObjectValue
             }
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
+            dataMgr.registerTuples(metadata, groupName, tuples);
         }
     }    
     
@@ -6549,7 +6416,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6579,7 +6446,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6609,7 +6476,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6639,7 +6506,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6669,7 +6536,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6699,7 +6566,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6729,7 +6596,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6759,7 +6626,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6789,7 +6656,7 @@ public class TestProcessor {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT3", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -6842,8 +6709,11 @@ public class TestProcessor {
 
         // Plan query
         String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 1) = e1";//$NON-NLS-1$
+        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Command command = TestProcessor.helpParse(sql);   
-        ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
+        CommandContext context = createCommandContext();
+        context.setMetadata(metadata);
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Run query
         List[] expected = new List[] {
@@ -6857,7 +6727,7 @@ public class TestProcessor {
         dataManager.defineCodeTable("pm1.g1", "e2", "e1", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         dataManager.setThrowBlocked(true);
         
-        helpProcess(plan, dataManager, expected);
+        helpProcess(plan, context, dataManager, expected);
     } 
     
     @Test public void testRaiseNullWithSelectInto() {

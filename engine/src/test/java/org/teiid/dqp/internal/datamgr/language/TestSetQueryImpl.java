@@ -25,27 +25,17 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.dqp.internal.datamgr.language.ElementImpl;
-import org.teiid.dqp.internal.datamgr.language.FromImpl;
-import org.teiid.dqp.internal.datamgr.language.GroupImpl;
-import org.teiid.dqp.internal.datamgr.language.OrderByImpl;
-import org.teiid.dqp.internal.datamgr.language.OrderByItemImpl;
-import org.teiid.dqp.internal.datamgr.language.QueryImpl;
-import org.teiid.dqp.internal.datamgr.language.SelectImpl;
-import org.teiid.dqp.internal.datamgr.language.SelectSymbolImpl;
-import org.teiid.dqp.internal.datamgr.language.SetQueryImpl;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SetQuery;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.OrderBy;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SetQuery;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.SortSpecification.Ordering;
+
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 
 
@@ -54,57 +44,43 @@ import com.metamatrix.query.sql.lang.SetQuery.Operation;
  */
 public class TestSetQueryImpl extends TestCase {
 
-    public static Query helpExampleQuery() {
-        return new Query(TestSelectImpl.helpExample(true),
-                         TestFromImpl.helpExample(),
-                         TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND),
-                         TestGroupByImpl.helpExample(),
-                         TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND),
-                         TestOrderByImpl.helpExample(),
-                         null);
-    }
-    
-    public static SetQuery helpExampleSetQuery() {
-        SetQuery setQuery = new SetQuery(Operation.UNION);
+    public static com.metamatrix.query.sql.lang.SetQuery helpExampleSetQuery() {
+        com.metamatrix.query.sql.lang.SetQuery setQuery = new com.metamatrix.query.sql.lang.SetQuery(Operation.UNION);
         setQuery.setAll(false);
-        setQuery.setLeftQuery(helpExampleQuery());
-        setQuery.setRightQuery(helpExampleQuery());
+        setQuery.setLeftQuery(TestQueryImpl.helpExample(true));
+        setQuery.setRightQuery(TestQueryImpl.helpExample(true));
         setQuery.setOrderBy(TestOrderByImpl.helpExample());
         return setQuery;
     }
         
-    public static SetQueryImpl example() throws Exception {
-        return (SetQueryImpl)TstLanguageBridgeFactory.factory.translate(helpExampleSetQuery());
+    public static SetQuery example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExampleSetQuery());
     }
     
-    public static ISetQuery example2() throws Exception {
-        IGroup group = new GroupImpl("ted", null, null); //$NON-NLS-1$
-        IElement element = new ElementImpl(group, "nugent", null, String.class); //$NON-NLS-1$
-        ISelectSymbol symbol = new SelectSymbolImpl("nugent",element); //$NON-NLS-1$
+    public static SetQuery example2() throws Exception {
+        NamedTable group = new NamedTable("ted", null, null); //$NON-NLS-1$
+        ColumnReference element = new ColumnReference(group, "nugent", null, String.class); //$NON-NLS-1$
+        DerivedColumn symbol = new DerivedColumn("nugent",element); //$NON-NLS-1$
         List symbols = new ArrayList();
         symbols.add(symbol);
-        SelectImpl select = new SelectImpl(symbols, false);        
         List items = new ArrayList();
         items.add(group);
-        FromImpl from = new FromImpl(items);
         
-        IGroup group2 = new GroupImpl("dave", null, null); //$NON-NLS-1$
-        IElement element2 = new ElementImpl(group2, "barry", null, String.class); //$NON-NLS-1$
-        ISelectSymbol symbol2 = new SelectSymbolImpl("barry", element2); //$NON-NLS-1$
+        NamedTable group2 = new NamedTable("dave", null, null); //$NON-NLS-1$
+        ColumnReference element2 = new ColumnReference(group2, "barry", null, String.class); //$NON-NLS-1$
+        DerivedColumn symbol2 = new DerivedColumn("barry", element2); //$NON-NLS-1$
         List symbols2 = new ArrayList();
         symbols2.add(symbol2);
-        SelectImpl select2 = new SelectImpl(symbols2, false);
         
         List items2 = new ArrayList();
         items2.add(group2);
-        FromImpl from2 = new FromImpl(items2);
         
-        IQuery secondQuery = new QueryImpl(select2, from2, null, null, null, null);
+        Select secondQuery = new Select(symbols2, false, items2, null, null, null, null);
         
-        IQuery query = new QueryImpl(select, from, null, null, null, null);
+        Select query = new Select(symbols, false, items, null, null, null, null);
         
-        ISetQuery setQuery = new SetQueryImpl();
-        setQuery.setOperation(ISetQuery.Operation.UNION);
+        SetQuery setQuery = new SetQuery();
+        setQuery.setOperation(SetQuery.Operation.UNION);
         setQuery.setAll(true);
         setQuery.setLeftQuery(query);
         setQuery.setRightQuery(secondQuery);
@@ -112,27 +88,28 @@ public class TestSetQueryImpl extends TestCase {
         return setQuery;
     }
     
-    public static ISetQuery example3() throws Exception {
-        ISetQuery union = example2();
+    public static SetQuery example3() throws Exception {
+        SetQuery union = example2();
         
-        List items = new ArrayList();
-        IElement element = (IElement) ((ISelectSymbol) union.getProjectedQuery().getSelect().getSelectSymbols().get(0)).getExpression();
-        items.add(new OrderByItemImpl("ted.nugent", IOrderByItem.ASC, element)); //$NON-NLS-1$
-        OrderByImpl orderBy = new OrderByImpl(items);
+        List<SortSpecification> items = new ArrayList<SortSpecification>();
+        ColumnReference element = (ColumnReference) (union.getProjectedQuery().getDerivedColumns().get(0)).getExpression();
+        items.add(new SortSpecification(Ordering.ASC, element));
+        OrderBy orderBy = new OrderBy(items);
         
         union.setOrderBy(orderBy);
         return union;
     }
     
     public void testNestedSetQuery() throws Exception {
-        SetQuery query = new SetQuery(SetQuery.Operation.EXCEPT, true, helpExampleQuery(), helpExampleQuery());
+        com.metamatrix.query.sql.lang.SetQuery query = new com.metamatrix.query.sql.lang.SetQuery(com.metamatrix.query.sql.lang.SetQuery.Operation.EXCEPT, true, helpExampleSetQuery(), helpExampleSetQuery());
         
-        ISetQuery setQuery = TstLanguageBridgeFactory.factory.translate(query);
-        
+        SetQuery setQuery = TstLanguageBridgeFactory.factory.translate(query);
+        assertTrue(setQuery.getLeftQuery() instanceof SetQuery);
+        assertTrue(setQuery.getRightQuery() instanceof SetQuery);
     }
     
     public void testGetSelect() throws Exception {
-        assertNotNull(example().getProjectedQuery().getSelect());
+        assertNotNull(example().getProjectedQuery().getDerivedColumns());
     }
 
     public void testGetFrom() throws Exception {

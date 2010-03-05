@@ -300,7 +300,7 @@ public class TestOptionsAndHints {
         ElementSymbol x = new ElementSymbol("a.x", true); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("b.y", true); //$NON-NLS-1$
         
-        Criteria criteria = new CompareCriteria(x, CompareCriteria.EQ, new Function("function", new Expression[] {y})); //$NON-NLS-1$
+        Criteria criteria = new CompareCriteria(x, CompareCriteria.EQ, new Function("func", new Expression[] {y})); //$NON-NLS-1$
         JoinPredicate predicate = new JoinPredicate(new UnaryFromClause(a), new UnaryFromClause(b), JoinType.JOIN_INNER, Arrays.asList(new Object[] {criteria}));
         From from = new From(Arrays.asList(new Object[] {predicate}));
         predicate.getLeftClause().setMakeNotDep(true);
@@ -308,8 +308,8 @@ public class TestOptionsAndHints {
         Select select = new Select(Arrays.asList(new Object[] {x, y}));
         
         Query query = new Query(select, from, null, null, null, null, null);
-        TestParser.helpTest("Select a.x, b.y From a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = function(b.y)",  //$NON-NLS-1$
-                 "SELECT a.x, b.y FROM a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = function(b.y)",  //$NON-NLS-1$
+        TestParser.helpTest("Select a.x, b.y From a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = func(b.y)",  //$NON-NLS-1$
+                 "SELECT a.x, b.y FROM a MAKENOTDEP INNER JOIN b MAKEDEP ON a.x = func(b.y)",  //$NON-NLS-1$
                  query);
     }
 

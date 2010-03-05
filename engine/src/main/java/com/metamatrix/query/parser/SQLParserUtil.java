@@ -27,10 +27,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.JoinType;
@@ -201,17 +202,17 @@ public class SQLParserUtil {
             return JoinType.JOIN_INNER;
         }   
         String joinType = joinTypeToken.image;
-        if(joinType.equalsIgnoreCase(ReservedWords.INNER)) {
+        if(joinType.equalsIgnoreCase(SQLReservedWords.INNER)) {
             return JoinType.JOIN_INNER;
-        } else if(joinType.equalsIgnoreCase(ReservedWords.CROSS)) {
+        } else if(joinType.equalsIgnoreCase(SQLReservedWords.CROSS)) {
             return JoinType.JOIN_CROSS;         
-        } else if(joinType.equalsIgnoreCase(ReservedWords.LEFT)) {
+        } else if(joinType.equalsIgnoreCase(SQLReservedWords.LEFT)) {
             return JoinType.JOIN_LEFT_OUTER;
-        } else if(joinType.equalsIgnoreCase(ReservedWords.RIGHT)) {
+        } else if(joinType.equalsIgnoreCase(SQLReservedWords.RIGHT)) {
             return JoinType.JOIN_RIGHT_OUTER;
-        } else if(joinType.equalsIgnoreCase(ReservedWords.FULL)) {
+        } else if(joinType.equalsIgnoreCase(SQLReservedWords.FULL)) {
             return JoinType.JOIN_FULL_OUTER;
-        } else if(joinType.equalsIgnoreCase(ReservedWords.UNION)) {
+        } else if(joinType.equalsIgnoreCase(SQLReservedWords.UNION)) {
             return JoinType.JOIN_UNION;
         } else {
             Object[] params = new Object[] { joinType };
@@ -230,23 +231,23 @@ public class SQLParserUtil {
             int num = info.anonExprCount++;
             return "expr" + (num == 0 ? "" : ""+num); //$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(ReservedWords.COUNT)) { 
+        } else if(functionType.equals(SQLReservedWords.COUNT)) { 
             int num = info.anonCountCount++;
             return "count" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(ReservedWords.SUM)) { 
+        } else if(functionType.equals(SQLReservedWords.SUM)) { 
             int num = info.anonSumCount++;
             return "sum" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(ReservedWords.AVG)) { 
+        } else if(functionType.equals(SQLReservedWords.AVG)) { 
             int num = info.anonAvgCount++;
             return "avg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(ReservedWords.MIN)) { 
+        } else if(functionType.equals(SQLReservedWords.MIN)) { 
             int num = info.anonMinCount++;
             return "min" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(ReservedWords.MAX)) { 
+        } else if(functionType.equals(SQLReservedWords.MAX)) { 
             int num = info.anonMaxCount++;
             return "max" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
         } else {

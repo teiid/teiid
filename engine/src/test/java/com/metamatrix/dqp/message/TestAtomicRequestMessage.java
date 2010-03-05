@@ -22,16 +22,12 @@
 
 package com.metamatrix.dqp.message;
 
-import java.util.Date;
+import junit.framework.TestCase;
 
 import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestAtomicRequestMessage extends TestCase {
@@ -47,32 +43,30 @@ public class TestAtomicRequestMessage extends TestCase {
     public static AtomicRequestMessage example() {
         RequestMessage rm = new RequestMessage();
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(2), "foo")); //$NON-NLS-1$
+        workContext.setSessionToken(new SessionToken(2, "foo")); //$NON-NLS-1$
         AtomicRequestMessage message = new AtomicRequestMessage(rm, workContext, 1000);
-        message.setCommand(TestQueryImpl.helpExample());
+        message.setCommand(TestQueryImpl.helpExample(true));
         message.setFetchSize(100);
         message.setPartialResults(true);
-        message.setProcessingTimestamp(new Date(12345678L));
         message.setRequestID(new RequestID(5000L));
         
         //AtomicRequestMessage-specific stuff
-        message.setConnectorBindingID("connectorBindingID"); //$NON-NLS-1$
-        message.setConnectorID(new ConnectorID("10000")); //$NON-NLS-1$
+        message.setConnectorName("connectorBindingID"); //$NON-NLS-1$
         return message;
     }
 
     public void testSerialize() throws Exception {
-    	AtomicRequestMessage copy = UnitTestUtil.helpSerialize(example());
+    	AtomicRequestMessage example = example();
+    	AtomicRequestMessage copy = UnitTestUtil.helpSerialize(example);
 
-        assertEquals(TestQueryImpl.helpExample(), copy.getCommand());
+        assertEquals(TestQueryImpl.helpExample(true), copy.getCommand());
         assertEquals(100, copy.getFetchSize());
 
-        assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
+        assertEquals(example.getProcessingTimestamp(), copy.getProcessingTimestamp());
         assertEquals(new RequestID(5000L), copy.getRequestID());
         assertEquals("2", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
         //AtomicRequestMessage-specific stuff
-        assertEquals("connectorBindingID", copy.getConnectorBindingID()); //$NON-NLS-1$
-        assertEquals(new ConnectorID("10000"), copy.getConnectorID()); //$NON-NLS-1$
+        assertEquals("connectorBindingID", copy.getConnectorName()); //$NON-NLS-1$
         assertEquals(1000, copy.getAtomicRequestID().getNodeID());
     }
 }

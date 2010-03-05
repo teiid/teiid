@@ -22,43 +22,11 @@
 
 package org.teiid.dqp.internal.transaction;
 
-import java.sql.SQLException;
-import java.util.Properties;
-
 import javax.resource.spi.XATerminator;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.xa.XAException;
-import javax.transaction.xa.XAResource;
-
-import com.metamatrix.common.xa.MMXid;
-import com.metamatrix.common.xa.XATransactionException;
 
 
 public interface TransactionProvider {
 	
-	public interface XAConnectionSource {
-		
-		XAResource getXAResource() throws SQLException;
-		
-		void close();
-		
-	}
-    
-    void init(Properties props) throws XATransactionException;
-
     XATerminator getXATerminator();
 
-    TransactionManager getTransactionManager();
-
-    Transaction importTransaction(MMXid xid, int timeout) throws XAException, SystemException;
-    
-    String getTransactionID(Transaction tx);
-    
-    void shutdown();
-    
-    void registerRecoverySource(String name, XAConnectionSource resource);
-    
-    void removeRecoverySource(String name);    
 }

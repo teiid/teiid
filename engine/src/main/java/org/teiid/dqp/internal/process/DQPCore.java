@@ -23,77 +23,115 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.SystemException;
+import javax.resource.spi.work.Work;
+import javax.resource.spi.work.WorkEvent;
+import javax.resource.spi.work.WorkException;
+import javax.resource.spi.work.WorkListener;
+import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.Xid;
 
-import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.SecurityHelper;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.common.application.DQPConfigSource;
-import com.metamatrix.common.application.ServiceLoader;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.WorkerPool;
-import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.queue.StatsCapturingWorkManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.CommandLogMessage;
-import com.metamatrix.dqp.service.ConfigurationService;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.MetadataService;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.platform.security.api.service.SessionService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
-import com.metamatrix.server.serverapi.RequestInfo;
 
 /**
  * Implements the core DQP processing.
  */
-@Singleton
 public class DQPCore implements ClientSideDQP {
+	
+	private final static class FutureWork<T> implements Work, WorkListener {
+		private final ResultsReceiver<T> receiver;
+		private final Callable<T> toCall;
+
+		private FutureWork(ResultsReceiver<T> receiver,
+				Callable<T> processor) {
+			this.receiver = receiver;
+			this.toCall = processor;
+		}
+
+		@Override
+		public void run() {
+			try {
+				receiver.receiveResults(toCall.call());
+			} catch (Throwable t) {
+				receiver.exceptionOccurred(t);
+			}
+		}
+
+		@Override
+		public void release() {
+			
+		}
+		
+		@Override
+		public void workAccepted(WorkEvent arg0) {
+			
+		}
+		
+		@Override
+		public void workCompleted(WorkEvent arg0) {
+			
+		}
+		
+		@Override
+		public void workRejected(WorkEvent arg0) {
+			receiver.exceptionOccurred(arg0.getException());
+		}
+		
+		@Override
+		public void workStarted(WorkEvent arg0) {
+			
+		}
+	}	
 	
 	static class ClientState {
 		List<RequestID> requests;
@@ -125,22 +163,15 @@ public class DQPCore implements ClientSideDQP {
 		
 	}
 	
-    //Constants
-    private static final int DEFAULT_MAX_CODE_TABLE_RECORDS = 10000;
-    private static final int DEFAULT_MAX_CODE_TABLES = 200;
-    private static final int DEFAULT_MAX_CODE_RECORDS = 200000;
-    private static final int DEFAULT_MAX_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE * 10;
-    private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
-    private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
-    private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
-    private static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
-
-    // System properties for Code Table
-    private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
-    private int maxCodeTables = DEFAULT_MAX_CODE_TABLES;
-    private int maxCodeRecords = DEFAULT_MAX_CODE_RECORDS;
+    private WorkManager workManager;
+    private StatsCapturingWorkManager processWorkerPool;
     
-    private int maxFetchSize = DEFAULT_MAX_FETCH_SIZE;
+    // System properties for Code Table
+    private int maxCodeTableRecords = DQPConfiguration.DEFAULT_MAX_CODE_TABLE_RECORDS;
+    private int maxCodeTables = DQPConfiguration.DEFAULT_MAX_CODE_TABLES;
+    private int maxCodeRecords = DQPConfiguration.DEFAULT_MAX_CODE_RECORDS;
+    
+    private int maxFetchSize = DQPConfiguration.DEFAULT_FETCH_SIZE;
     
     // Resources
     private BufferManager bufferManager;
@@ -148,11 +179,13 @@ public class DQPCore implements ClientSideDQP {
     private SessionAwareCache<PreparedPlan> prepPlanCache;
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
-    private MetadataService metadataService;
+    private AuthorizationService authorizationService;
+    private BufferService bufferService;
+    private SessionService sessionService;
+    private ConnectorManagerRepository connectorManagerRepository;
     
     // Query worker pool for processing plans
-    private WorkerPool processWorkerPool;
-    private int processorTimeslice = DEFAULT_PROCESSOR_TIMESLICE;
+    private int processorTimeslice = DQPConfiguration.DEFAULT_PROCESSOR_TIMESLICE;
     private boolean processorDebugAllowed;
     
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
@@ -160,35 +193,26 @@ public class DQPCore implements ClientSideDQP {
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
 	private DQPContextCache contextCache;
-    private ServiceLoader loader = new ServiceLoader();
-    private CacheFactory cacheFactory;
+	private SecurityHelper securityHelper;
     
-    private ApplicationEnvironment environment = new ApplicationEnvironment();
-
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
-     * @throws ApplicationLifecycleException 
      */
-    public void stop() throws ApplicationLifecycleException {
-		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
+    public void stop() {
     	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 		}
-    	contextCache.shutdown();
-    	this.environment.stop();
-    	
-    	if (cacheFactory != null) {
-    		cacheFactory.destroy();
-    	}
+    	// TODO: Should we be doing more cleanup here??
+		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
     }
     
     /**
-     * Return a list of {@link RequestInfo} for the given session
+     * Return a list of {@link RequestMetadata} for the given session
      */
-    public List<RequestInfo> getRequestsByClient(String clientConnection) {
-    	ClientState state = getClientState(clientConnection, false);
+    public List<RequestMetadata> getRequestsForSession(long sessionId) {
+    	ClientState state = getClientState(String.valueOf(sessionId), false);
     	if (state == null) {
     		return Collections.emptyList();
     	}
@@ -207,38 +231,48 @@ public class DQPCore implements ClientSideDQP {
     }
 
     /**
-     * Return a list of all {@link RequestInfo} 
+     * Return a list of all {@link RequestMetadata} 
      */
-    public List<RequestInfo> getRequests() {
+    public List<RequestMetadata> getRequests() {
 		return buildRequestInfos(requests.keySet());
     } 
 
-    private List<RequestInfo> buildRequestInfos(Collection<RequestID> ids) {
-		List<RequestInfo> results = new ArrayList<RequestInfo>();
-    	for (RequestID requestID : ids) {
+    private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids) {
+		List<RequestMetadata> results = new ArrayList<RequestMetadata>();
+    	
+		for (RequestID requestID : ids) {
             RequestWorkItem holder = requests.get(requestID);
             
             if(holder != null && !holder.isCanceled()) {
-            	RequestInfo req = new RequestInfo(holder.requestID, holder.requestMsg.getCommandString(), holder.requestMsg.getSubmittedTimestamp(), holder.requestMsg.getProcessingTimestamp());
-            	req.setSessionToken(holder.getDqpWorkContext().getSessionToken());
-            	if (holder.getTransactionContext() != null && holder.getTransactionContext().isInTransaction()) {
-            		req.setTransactionId(holder.getTransactionContext().getTxnID());
+            	RequestMetadata req = new RequestMetadata();
+            	
+            	req.setExecutionId(holder.requestID.getExecutionID());
+            	req.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
+            	req.setCommand(holder.requestMsg.getCommandString());
+            	req.setProcessingTime(holder.getProcessingTimestamp());
+            	
+            	if (holder.getTransactionContext() != null && holder.getTransactionContext().getXid() != null) {
+            		req.setTransactionId(holder.getTransactionContext().getXid().toString());
             	}
 
                 for (DataTierTupleSource conInfo : holder.getConnectorRequests()) {
-                    ConnectorID connectorID = conInfo.getConnectorId();
+                    String connectorName = conInfo.getConnectorName();
 
-                    if (connectorID == null) {
+                    if (connectorName == null) {
                     	continue;
                     }
                     // If the request has not yet completed processing, then
                     // add all the subrequest messages
                 	AtomicRequestMessage arm = conInfo.getAtomicRequestMessage();
-                	RequestInfo info = new RequestInfo(arm.getRequestID(), arm.getCommand().toString(), arm.getSubmittedTimestamp(), arm.getProcessingTimestamp());
-                	info.setSessionToken(holder.getDqpWorkContext().getSessionToken());
-                	info.setConnectorBindingUUID(arm.getConnectorBindingID());
-        			info.setNodeID(arm.getAtomicRequestID().getNodeID());
-        			info.setExecutionID(arm.getAtomicRequestID().getExecutionId());
+                	RequestMetadata info = new RequestMetadata();
+                	
+                	info.setExecutionId(arm.getRequestID().getExecutionID());
+                	info.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
+                	info.setCommand(arm.getCommand().toString());
+                	info.setProcessingTime(arm.getProcessingTimestamp());
+                	info.setSourceRequest(true);
+                	info.setNodeId(arm.getAtomicRequestID().getNodeID());
+                	
         			results.add(info);
                 }
                 results.add(req);
@@ -247,11 +281,9 @@ public class DQPCore implements ClientSideDQP {
     	return results;
 	}    
 
-	public ResultsFuture<ResultsMessage> executeRequest(long reqID,
-			RequestMessage requestMsg) {
+	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		RequestID requestID = workContext.getRequestID(reqID);
-		requestMsg.markProcessingStart();
 		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), maxFetchSize));
 		Request request = null;
 	    if ( requestMsg.isPreparedStatement() || requestMsg.isCallableStatement()) {
@@ -260,16 +292,14 @@ public class DQPCore implements ClientSideDQP {
 	    	request = new Request();
 	    }
 	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
-	    request.initialize(requestMsg, environment, bufferManager,
-				dataTierMgr, transactionService, processorDebugAllowed,
+	    request.initialize(requestMsg, bufferManager,
+				dataTierMgr, transactionService, authorizationService, processorDebugAllowed,
 				state.tempTableStoreImpl, workContext,
-				chunkSize);
+				chunkSize, connectorManagerRepository);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
-
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
-
-    	logMMCommand(workItem, true, false, 0); //TODO: there is no transaction at this point 
+    	logMMCommand(workItem, true, false, 0); 
         addRequest(requestID, workItem, state);
         
         this.addWork(workItem);      
@@ -302,9 +332,26 @@ public class DQPCore implements ClientSideDQP {
     	contextCache.removeRequestScopedCache(workItem.requestID.toString());
     }
            
-    void addWork(Runnable r) {
-    	this.processWorkerPool.execute(r);
+    void addWork(Work work) {
+    	try {
+			this.processWorkerPool.scheduleWork(this.workManager, work);
+		} catch (WorkException e) {
+			//TODO: cancel? close?
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
+    
+    public void setWorkManager(WorkManager mgr) {
+    	this.workManager = mgr;
+    }
+    
+    SecurityHelper getSecurityHelper() {
+    	return this.securityHelper;
+    }
+    
+    public void setSecurityHelper(SecurityHelper securityHelper) {
+		this.securityHelper = securityHelper;
+	}
     
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,
 			long requestId, String streamId)
@@ -317,7 +364,7 @@ public class DQPCore implements ClientSideDQP {
         if (workItem != null) {
 	        workItem.removeLobStream(lobRequestId);
         }
-        return null;
+        return ResultsFuture.NULL_FUTURE;
     }
 	    
 	public ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId,
@@ -332,20 +379,20 @@ public class DQPCore implements ClientSideDQP {
         return resultsFuture;
     }
     
-    /**
-     * Cancels a node in the request. (This request is called by the 
-     * client directly using the admin API), so if this does not support
-     * partial results then remove the original request.
-     * @throws MetaMatrixComponentException 
-     */
-    public void cancelAtomicRequest(AtomicRequestID requestID) throws MetaMatrixComponentException {                    
-        RequestWorkItem workItem = safeGetWorkItem(requestID.getRequestID());
-        if (workItem == null) {
-    		LogManager.logDetail(LogConstants.CTX_DQP, "Could not cancel", requestID, "parent request does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
-        	return;
-        }
-        workItem.requestAtomicRequestCancel(requestID);
-    }
+//    /**
+//     * Cancels a node in the request. (This request is called by the 
+//     * client directly using the admin API), so if this does not support
+//     * partial results then remove the original request.
+//     * @throws MetaMatrixComponentException 
+//     */
+//    public void cancelAtomicRequest(AtomicRequestID requestID) throws MetaMatrixComponentException {                    
+//        RequestWorkItem workItem = safeGetWorkItem(requestID.getRequestID());
+//        if (workItem == null) {
+//    		LogManager.logDetail(LogConstants.CTX_DQP, "Could not cancel", requestID, "parent request does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
+//        	return;
+//        }
+//        workItem.requestAtomicRequestCancel(requestID);
+//    }
     
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws MetaMatrixProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
@@ -358,42 +405,19 @@ public class DQPCore implements ClientSideDQP {
 	RequestWorkItem safeGetWorkItem(Object processorID) {
     	return this.requests.get(processorID);
 	}
-
+	
     /**
      * Returns a list of QueueStats objects that represent the queues in
      * this service.
      * If there are no queues, an empty Collection is returned.
      */
-    public Collection getQueueStatistics() {
-        if ( this.processWorkerPool == null ) {
-            return Collections.EMPTY_LIST;
-        }
-
-        return Arrays.asList(processWorkerPool.getStats());
+    public WorkerPoolStatisticsMetadata getWorkManagerStatistics() {
+        return processWorkerPool.getStats();
     }
-
-    /**
-     * Returns a QueueStats object that represent the queue in
-     * this service.
-     * If there is no queue with the given name, an empty Collection is returned.
-     */
-    public Collection getQueueStatistics(String name) {
-        if ( !name.equalsIgnoreCase(PROCESS_PLAN_QUEUE_NAME)) {
-            return Collections.EMPTY_LIST;
-        }
-        return getQueueStatistics();
-    }
-            
-    /**
-     * Cancel and close all requests associated with the clientConnection/session. Also runs a final cleanup any caches within
-     * the session's scope.
-     * @param clientConnection
-     * @param sendCancellationsToClient Notify the client that each request has been closed.
-     * @throws MetaMatrixComponentException
-     * @since 4.2
-     */
-    public void terminateConnection(String sessionId) throws MetaMatrixComponentException {
-    	        
+           
+    public void terminateSession(long terminateeId) {
+    	String sessionId = String.valueOf(terminateeId);
+    	
         // sometimes there will not be any atomic requests pending, in that
         // situation we still need to clear the master request from our map
         ClientState state = getClientState(sessionId, false);
@@ -410,18 +434,19 @@ public class DQPCore implements ClientSideDQP {
         if (transactionService != null) {
             try {
                 transactionService.cancelTransactions(sessionId, false);
-            } catch (InvalidTransactionException err) {
+            } catch (XATransactionException err) {
                 LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
-            } catch (SystemException err) {
-                throw new MetaMatrixComponentException(err);
-            }
+            } 
         }
         contextCache.removeSessionScopedCache(sessionId);
     }
 
-    public boolean cancelRequest(RequestID requestID)
-        throws MetaMatrixComponentException {
-        
+    public boolean cancelRequest(long sessionId, long requestId) throws MetaMatrixComponentException {
+    	RequestID requestID = new RequestID(String.valueOf(sessionId), requestId);
+    	return cancelRequest(requestID);
+    }
+    
+    private boolean cancelRequest(RequestID requestID) throws MetaMatrixComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
         }
@@ -443,7 +468,7 @@ public class DQPCore implements ClientSideDQP {
 	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException, MetaMatrixComponentException {
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         closeRequest(workContext.getRequestID(requestId));
-        return null;
+        return ResultsFuture.NULL_FUTURE;
 	}
     
     /**
@@ -464,23 +489,78 @@ public class DQPCore implements ClientSideDQP {
         }
     }
     
-    public void clearPlanCache(){
+    private void clearPlanCache(){
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
         this.prepPlanCache.clearAll();
     }
 
-    public void clearCodeTableCache(){
+    private void clearCodeTableCache(){
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_code_table_cache")); //$NON-NLS-1$
         this.dataTierMgr.clearCodeTables();
     }
-
-	public void clearResultSetCache() {
+    
+	private void clearResultSetCache() {
 		//clear cache in server
 		if(rsCache != null){
 			rsCache.clearAll();
 		}
 	}
+	
+	
+    public Collection<String> getCacheTypes(){
+    	ArrayList<String> caches = new ArrayList<String>();
+    	caches.add(Admin.Cache.CODE_TABLE_CACHE.toString());
+    	caches.add(Admin.Cache.PREPARED_PLAN_CACHE.toString());
+    	caches.add(Admin.Cache.CONNECTOR_RESULT_SET_CACHE.toString());
+    	caches.add(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
+    	return caches;
+    }	
+	
+	public void clearCache(String cacheType) {
+		Admin.Cache cache = Admin.Cache.valueOf(cacheType);
+		switch (cache) {
+		case CODE_TABLE_CACHE:
+			clearCodeTableCache();
+			break;
+		case PREPARED_PLAN_CACHE:
+			clearPlanCache();
+			break;
+		case CONNECTOR_RESULT_SET_CACHE:
+			clearResultSetCache();
+			break;
+		case QUERY_SERVICE_RESULT_SET_CACHE:
+			break;
+		}
+	}
     
+	public Collection<SessionMetadata> getActiveSessions() throws SessionServiceException {
+		if (this.sessionService == null) {
+			return Collections.emptyList();
+		}
+		return this.sessionService.getActiveSessions();
+	}
+	
+	public int getActiveSessionsCount() throws SessionServiceException{
+		if (this.sessionService == null) {
+			return 0;
+		}
+		return this.sessionService.getActiveSessionsCount();
+	}	
+	
+	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
+		if (this.transactionService == null) {
+			return Collections.emptyList();
+		}
+		return this.transactionService.getTransactions();
+	}
+	
+	public void terminateTransaction(String xid) throws AdminException {
+		if (this.transactionService == null) {
+			return;
+		}
+		this.transactionService.terminateTransaction(xid);
+	}	
+	
     void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
     		return;
@@ -495,8 +575,8 @@ public class DQPCore implements ClientSideDQP {
     	}
     	String txnID = null;
 		TransactionContext tc = workItem.getTransactionContext();
-		if (tc != null) {
-			txnID = tc.getTxnID();
+		if (tc != null && tc.getXid() != null) {
+			txnID = tc.getXid().toString();
 		}
     	String appName = workContext.getAppName();
         // Log to request log
@@ -523,7 +603,7 @@ public class DQPCore implements ClientSideDQP {
             }
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, isCancelled, errorOccurred);
         }
-        LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     ProcessorDataManager getDataTierManager() {
@@ -544,10 +624,6 @@ public class DQPCore implements ClientSideDQP {
 		}
 		return transactionService;
 	}
-	
-	public TransactionService getTransactionServiceDirect() {
-		return transactionService;
-	}
 
 	SessionAwareCache<CachedResults> getRsCache() {
 		return rsCache;
@@ -560,173 +636,188 @@ public class DQPCore implements ClientSideDQP {
 	int getChunkSize() {
 		return chunkSize;
 	}
-
-    /* 
-     * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
-     */
-    public void start(DQPConfigSource configSource) throws ApplicationInitializationException {
-        
-        // Load services into DQP
-        for(int i=0; i<DQPServiceNames.ALL_SERVICES.length; i++) {
-            
-        	final String serviceName = DQPServiceNames.ALL_SERVICES[i];
-            final Class<? extends ApplicationService> type = DQPServiceNames.ALL_SERVICE_CLASSES[i];
-
-            ApplicationService appService = configSource.getServiceInstance(type);
-        	if (appService == null) {
-        		LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
-        		continue;
-        	}
-        	
-        	appService = loader.loadService(serviceName, appService);
-        	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];
-			if (loggingContext != null) {
-				appService = (ApplicationService)LogManager.createLoggingProxy(loggingContext, appService, new Class[] {type}, MessageLevel.DETAIL);
-			}
-            
-			appService.initialize(configSource.getProperties());
-        	this.environment.installService(serviceName, appService);
-            LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceInstalled", serviceName)); //$NON-NLS-1$
-        }
-        
-		ConfigurationService cs = (ConfigurationService)this.environment.findService(DQPServiceNames.CONFIGURATION_SERVICE);
-		Properties p = configSource.getProperties();
-		if (cs != null) {
-			p = cs.getSystemProperties();
-		}
-		start(p);
-    }
-    
 	
-	public void start(Properties props) {
-		PropertiesUtils.setBeanProperties(this, props, null);
+	public void start(DQPConfiguration config) {
 		
-        this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
-        this.maxFetchSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_FETCH_SIZE, DEFAULT_MAX_FETCH_SIZE);
-        this.processorDebugAllowed = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.PROCESSOR_DEBUG_ALLOWED, true);
-        this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS_PER_TABLE, DEFAULT_MAX_CODE_TABLE_RECORDS);
-        this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);
-        this.maxCodeRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_RECORDS);
+		Assertion.isNotNull(this.workManager);
+
+		this.processorTimeslice = config.getTimeSliceInMilli();
+        this.maxFetchSize = config.getMaxRowsFetchSize();
+        this.processorDebugAllowed = config.isProcessDebugAllowed();
+        this.maxCodeTableRecords = config.getCodeTablesMaxRowsPerTable();
+        this.maxCodeTables = config.getCodeTablesMaxCount();
+        this.maxCodeRecords = config.getCodeTablesMaxRows();
         
-        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 100) * 1024;
+        this.chunkSize = config.getLobChunkSizeInKB() * 1024;
         
         //result set cache
-        if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, true)){ 
-			this.rsCache = new SessionAwareCache<CachedResults>(PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_RESULTSET_CACHE_ENTRIES, DEFAULT_MAX_RESULTSET_CACHE_ENTRIES));
+        if (config.isResultSetCacheEnabled()) {
+			this.rsCache = new SessionAwareCache<CachedResults>(config.getResultSetCacheMaxEntries());
         }
 
         //prepared plan cache
-        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_PLAN_CACHE_SIZE, SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL);
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(maxSizeTotal);
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount());
 		
         // Processor debug flag
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
                         
         //get buffer manager
-        BufferService bufferService = (BufferService) this.environment.findService(DQPServiceNames.BUFFER_SERVICE);
-        bufferManager = bufferService.getBufferManager();
-        contextCache = bufferService.getContextCache();
+        this.bufferManager = bufferService.getBufferManager();
+        this.contextCache = bufferService.getContextCache();
 
-        transactionService = (TransactionService )this.environment.findService(DQPServiceNames.TRANSACTION_SERVICE);
-        metadataService = (MetadataService) this.environment.findService(DQPServiceNames.METADATA_SERVICE);
-
-        // Create the worker pools to tie the queues together
-        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
- 
+        this.processWorkerPool = new StatsCapturingWorkManager(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
+        
         dataTierMgr = new DataTierManagerImpl(this,
-                                            (DataService) this.environment.findService(DQPServiceNames.DATA_SERVICE),
-                                            (VDBService) this.environment.findService(DQPServiceNames.VDB_SERVICE),
-                                            (BufferService) this.environment.findService(DQPServiceNames.BUFFER_SERVICE),
-                                            metadataService,
+                                            this.connectorManagerRepository,
+                                            this.bufferService,
+                                            this.workManager,
                                             this.maxCodeTables,
                                             this.maxCodeRecords,
-                                            this.maxCodeTableRecords);        
+                                            this.maxCodeTableRecords);    
+
 	}
 	
-	public List getXmlSchemas(String docName) throws MetaMatrixComponentException,
-			QueryMetadataException {
+	public void setBufferService(BufferService service) {
+		this.bufferService = service;
+		setContextCache(service.getContextCache());
+	}
+	
+	public void setAuthorizationService(AuthorizationService service) {
+		this.authorizationService = service;
+	}
+
+	public void setContextCache(DQPContextCache cache) {
+		this.contextCache = cache;
+	}
+
+	public void setTransactionService(TransactionService service) {
+		this.transactionService = service;
+	}
+	
+	public List<String> getXmlSchemas(String docName) throws MetaMatrixComponentException, QueryMetadataException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        QueryMetadataInterface metadata = metadataService.lookupMetadata(workContext.getVdbName(), workContext.getVdbVersion());
+        QueryMetadataInterface metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
 
         Object groupID = metadata.getGroupID(docName);
         return metadata.getXMLSchemas(groupID);
 	}
 
-	public void cancelRequest(long requestID)
+	@Override
+	public boolean cancelRequest(long requestID)
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		this.cancelRequest(workContext.getRequestID(requestID));
+		return this.cancelRequest(workContext.getRequestID(requestID));
 	}
 	
-	public void begin() throws XATransactionException {
+	// local txn
+	public ResultsFuture<?> begin() throws XATransactionException {
     	String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-        try {
-			this.getTransactionService().begin(threadId);
-		} catch (SystemException e) {
-			throw new XATransactionException(e);
-		}
+    	this.getTransactionService().begin(threadId);
+    	return ResultsFuture.NULL_FUTURE;
 	}
 	
-	public void commit() throws XATransactionException {
+	// local txn
+	public ResultsFuture<?> commit() throws XATransactionException {
+		final String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		Callable<Void> processor = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getTransactionService().commit(threadId);
+				return null;
+			}
+		};
+		return addWork(processor);
+	}
+	
+	// local txn
+	public ResultsFuture<?> rollback() throws XATransactionException {
+		final String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		Callable<Void> processor = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getTransactionService().rollback(threadId);
+				return null;
+			}
+		};
+		return addWork(processor);
+	}
+
+	// global txn
+	public ResultsFuture<?> commit(final MMXid xid, final boolean onePhase) throws XATransactionException {
+		final String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		Callable<Void> processor = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getTransactionService().commit(threadId, xid, onePhase, false);
+				return null;
+			}
+		};
+		return addWork(processor);
+	}
+	// global txn
+	public ResultsFuture<?> end(MMXid xid, int flags) throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-        try {
-			this.getTransactionService().commit(threadId);
-		} catch (SystemException e) {
-			throw new XATransactionException(e);
-		}
+		this.getTransactionService().end(threadId, xid, flags, false);
+		return ResultsFuture.NULL_FUTURE;
 	}
-	
-	public void rollback() throws XATransactionException {
+	// global txn
+	public ResultsFuture<?> forget(MMXid xid) throws XATransactionException {
+		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		this.getTransactionService().forget(threadId, xid, false);
+		return ResultsFuture.NULL_FUTURE;
+	}
+		
+	// global txn
+	public ResultsFuture<Integer> prepare(final MMXid xid) throws XATransactionException {
+		Callable<Integer> processor = new Callable<Integer>() {
+			@Override
+			public Integer call() throws Exception {
+				return getTransactionService().prepare(DQPWorkContext.getWorkContext().getConnectionID(),xid, false);
+			}
+		};
+		return addWork(processor);
+	}
+
+	private <T> ResultsFuture<T> addWork(Callable<T> processor) {
+		ResultsFuture<T> result = new ResultsFuture<T>();
+		ResultsReceiver<T> receiver = result.getResultsReceiver();
 		try {
-			this.getTransactionService().rollback(
-					DQPWorkContext.getWorkContext().getConnectionID());
-		} catch (SystemException e) {
-			throw new XATransactionException(e);
+			this.workManager.scheduleWork(new FutureWork<T>(receiver, processor));
+		} catch (WorkException e) {
+			throw new MetaMatrixRuntimeException(e);
 		}
-	}
-
-	public void commit(MMXid xid, boolean onePhase)
-			throws XATransactionException {
-		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.getTransactionService().commit(threadId, xid, onePhase);
-	}
-
-	public void end(MMXid xid, int flags) throws XATransactionException {
-		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.getTransactionService().end(threadId, xid, flags);
-	}
-
-	public void forget(MMXid xid) throws XATransactionException {
-		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.getTransactionService().forget(threadId, xid);
+		return result;
 	}
 	
-	public int prepare(MMXid xid) throws XATransactionException {
-		return this.getTransactionService().prepare(
-				DQPWorkContext.getWorkContext().getConnectionID(),
-				xid);
+	// global txn
+	public ResultsFuture<Xid[]> recover(int flag) throws XATransactionException {
+		ResultsFuture<Xid[]> result = new ResultsFuture<Xid[]>();
+		result.getResultsReceiver().receiveResults(this.getTransactionService().recover(flag, false));
+		return result;
 	}
-	
-	public Xid[] recover(int flag) throws XATransactionException {
-		return this.getTransactionService().recover(flag);
+	// global txn
+	public ResultsFuture<?> rollback(final MMXid xid) throws XATransactionException {
+		Callable<Void> processor = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getTransactionService().rollback(DQPWorkContext.getWorkContext().getConnectionID(),xid, false);
+				return null;
+			}
+		};
+		return addWork(processor);
 	}
-
-	public void rollback(MMXid xid) throws XATransactionException {
-		this.getTransactionService().rollback(
-				DQPWorkContext.getWorkContext().getConnectionID(),
-				xid);
-	}
-
-	public void start(MMXid xid, int flags, int timeout)
+	// global txn
+	public ResultsFuture<?> start(MMXid xid, int flags, int timeout)
 			throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.getTransactionService().start(threadId, xid, flags, timeout);
+		this.getTransactionService().start(threadId, xid, flags, timeout, false);
+		return ResultsFuture.NULL_FUTURE;
 	}
 
 	public MetadataResult getMetadata(long requestID)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment, workContext.getVdbName(), workContext.getVdbVersion());
+		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache,  workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, null, true);
 	}
 
@@ -734,21 +825,28 @@ public class DQPCore implements ClientSideDQP {
 			boolean allowDoubleQuotedVariable)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment, workContext.getVdbName(), workContext.getVdbVersion());
+		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
 	}
 	
-	public ApplicationEnvironment getEnvironment() {
-		return environment;
+	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
+		this.connectorManagerRepository = repo;
 	}
 	
-	@Inject
-	public void setCacheFactory(CacheFactory cacheFactory) {
-		this.cacheFactory = cacheFactory;
-		this.environment.setCacheFactory(cacheFactory);
+	public ConnectorManagerRepository getConnectorManagerRepository() {
+		return this.connectorManagerRepository;
 	}
 	
-	public void setEnvironment(ApplicationEnvironment environment) {
-		this.environment = environment;
+	public void setSessionService(SessionService service) {
+		this.sessionService = service;
+		service.setDqp(this);
+	}
+	
+	public SessionService getSessionService() {
+		return this.sessionService;
+	}
+	
+	public AuthorizationService getAuthorizationService() {
+		return this.authorizationService;
 	}
 }

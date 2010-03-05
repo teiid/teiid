@@ -28,14 +28,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.Table.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.metadata.runtime.api.MetadataSource;
 
 /**
  * Aggregates the metadata from multiple stores.  
@@ -43,14 +42,20 @@ import com.metamatrix.metadata.runtime.api.MetadataSource;
  */
 public class CompositeMetadataStore extends MetadataStore {
 
-	private MetadataSource metadataSource;
 	
-	public CompositeMetadataStore(List<MetadataStore> metadataStores, MetadataSource metadataSource) {
-		this.metadataSource = metadataSource;
+	public CompositeMetadataStore(MetadataStore metadataStore) {
+		addMetadataStore(metadataStore);
+	}
+	
+	public CompositeMetadataStore(List<MetadataStore> metadataStores) {
 		for (MetadataStore metadataStore : metadataStores) {
-			this.schemas.putAll(metadataStore.getSchemas());
-			this.datatypes.addAll(metadataStore.getDatatypes());
+			addMetadataStore(metadataStore);
 		}
+	}
+	
+	public void addMetadataStore(MetadataStore metadataStore) {
+		this.schemas.putAll(metadataStore.getSchemas());
+		this.datatypes.addAll(metadataStore.getDatatypes());
 	}
 	
 	public Schema getSchema(String fullName)
@@ -94,13 +99,13 @@ public class CompositeMetadataStore extends MetadataStore {
 		return result;
 	}
 	
-	public Collection<ProcedureRecordImpl> getStoredProcedure(String name)
+	public Collection<Procedure> getStoredProcedure(String name)
 			throws MetaMatrixComponentException, QueryMetadataException {
-		List<ProcedureRecordImpl> result = new LinkedList<ProcedureRecordImpl>();
+		List<Procedure> result = new LinkedList<Procedure>();
 		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index > -1) {
 			String schema = name.substring(0, index);
-			ProcedureRecordImpl proc = getSchema(schema).getProcedures().get(name.substring(index + 1));
+			Procedure proc = getSchema(schema).getProcedures().get(name.substring(index + 1));
 			if (proc != null) {
 				result.add(proc);
 		        return result;
@@ -109,7 +114,7 @@ public class CompositeMetadataStore extends MetadataStore {
 		//assume it's a partial name
 		name = TransformationMetadata.DELIMITER_STRING + name;
 		for (Schema schema : getSchemas().values()) {
-			for (ProcedureRecordImpl p : schema.getProcedures().values()) {
+			for (Procedure p : schema.getProcedures().values()) {
 				String fullName = p.getFullName();
 				if (fullName.regionMatches(true, fullName.length() - name.length(), name, 0, name.length())) {
 					result.add(p);	
@@ -122,10 +127,6 @@ public class CompositeMetadataStore extends MetadataStore {
 		return result;
 	}
 
-	public MetadataSource getMetadataSource() {
-		return metadataSource;
-	}
-	
 	/*
 	 * The next method is a hold over from XML/UUID resolving and will perform poorly
 	 */
@@ -133,7 +134,7 @@ public class CompositeMetadataStore extends MetadataStore {
 	public Collection<Table> getXMLTempGroups(Table tableRecord) {
 		ArrayList<Table> results = new ArrayList<Table>();
 		String namePrefix = tableRecord.getFullName() + TransformationMetadata.DELIMITER_STRING;
-		for (Table table : tableRecord.getSchema().getTables().values()) {
+		for (Table table : tableRecord.getParent().getTables().values()) {
 			if (table.getTableType() == Type.XmlStagingTable && table.getName().startsWith(namePrefix)) {
 				results.add(table);
 			}

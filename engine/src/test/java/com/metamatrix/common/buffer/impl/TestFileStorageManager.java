@@ -22,13 +22,13 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 
 import org.junit.Test;
@@ -40,7 +40,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 public class TestFileStorageManager {
 		
 	public FileStorageManager getStorageManager(Integer maxFileSize, Integer openFiles, String dir) throws MetaMatrixComponentException {
-        Properties resourceProps = new Properties();
         FileStorageManager sm = new FileStorageManager();
         sm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + (dir != null ? File.separator + dir : "")); //$NON-NLS-1$
         if (maxFileSize != null) {
@@ -49,7 +48,7 @@ public class TestFileStorageManager {
         if (openFiles != null) {
         	sm.setMaxOpenFiles(openFiles);
         }
-        sm.initialize(resourceProps);
+        sm.initialize();
         return sm;
 	}
     

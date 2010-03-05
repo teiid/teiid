@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.ExistsCriteriaImpl;
+
+import org.teiid.connector.language.Exists;
 
 import com.metamatrix.query.sql.lang.ExistsCriteria;
 
@@ -41,16 +42,16 @@ public class TestExistsCriteriaImpl extends TestCase {
     }
 
     public static ExistsCriteria helpExample() {
-        ExistsCriteria crit = new ExistsCriteria(TestQueryImpl.helpExample());
+        ExistsCriteria crit = new ExistsCriteria(TestQueryImpl.helpExample(true));
         return crit;
     }
     
-    public static ExistsCriteriaImpl example() throws Exception {
-        return (ExistsCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static Exists example() throws Exception {
+        return (Exists)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetQuery() throws Exception {
-        assertNotNull(example().getQuery());    
+        assertNotNull(example().getSubquery());    
     }
     
 }

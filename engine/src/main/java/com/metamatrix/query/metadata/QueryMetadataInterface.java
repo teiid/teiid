@@ -22,12 +22,13 @@
 
 package com.metamatrix.query.metadata;
 
-import java.util.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingNode;
 
@@ -675,4 +676,5 @@ public interface QueryMetadataInterface {
     boolean isScalarGroup(Object groupID) 
     	throws MetaMatrixComponentException, QueryMetadataException;
 
+    FunctionLibrary getFunctionLibrary();
 }

@@ -78,7 +78,7 @@ public class FrameUtil {
         while(current != endNode) { 
             
             // Make translations as defined in node in each current node
-            convertNode(current, oldGroup, newGroups, symbolMap);
+            convertNode(current, oldGroup, newGroups, symbolMap, metadata);
             
             PlanNode parent = current.getParent(); 
             
@@ -159,7 +159,7 @@ public class FrameUtil {
     // symbols.  In that case, some additional work can be done because we can assume 
     // that an oldElement isn't being replaced by an expression using elements from 
     // multiple new groups.  
-    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap)
+    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata)
         throws QueryPlannerException {
 
         // Update groups for current node   
@@ -202,7 +202,7 @@ public class FrameUtil {
         
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            crit = convertCriteria(crit, symbolMap);
+            crit = convertCriteria(crit, symbolMap, metadata);
             node.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
             
             if (!singleMapping) {
@@ -222,7 +222,7 @@ public class FrameUtil {
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             if(joinCrits != null && !joinCrits.isEmpty()) {
             	Criteria crit = new CompoundCriteria(joinCrits);
-            	crit = convertCriteria(crit, symbolMap);
+            	crit = convertCriteria(crit, symbolMap, metadata);
             	if (crit instanceof CompoundCriteria) {
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
             	} else {
@@ -274,14 +274,14 @@ public class FrameUtil {
         return expression;
     }   
         
-    static Criteria convertCriteria(Criteria criteria, final Map symbolMap)
+    static Criteria convertCriteria(Criteria criteria, final Map symbolMap, QueryMetadataInterface metadata)
         throws QueryPlannerException {
 
         ExpressionMappingVisitor.mapExpressions(criteria, symbolMap);
         
         // Simplify criteria if possible
         try {
-            return QueryRewriter.rewriteCriteria(criteria, null, null, null);
+            return QueryRewriter.rewriteCriteria(criteria, null, null, metadata);
         } catch(QueryValidatorException e) {
             throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0023, criteria));
         }

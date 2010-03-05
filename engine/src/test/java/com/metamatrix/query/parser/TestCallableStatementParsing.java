@@ -22,10 +22,14 @@
 
 package com.metamatrix.query.parser;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 
-public class TestCallableStatementParsing extends junit.framework.TestCase {
+public class TestCallableStatementParsing {
     
     private void helpTestIllegalCall(String call) {
         try {
@@ -44,14 +48,14 @@ public class TestCallableStatementParsing extends junit.framework.TestCase {
         assertEquals("EXEC procedure_name(?, ?, ?)", sp.toString()); //$NON-NLS-1$
     }
             
-    public void testCallNoParams() throws QueryParserException {
+    @Test public void testCallNoParams() throws QueryParserException {
         StoredProcedure sp = (StoredProcedure)QueryParser.getQueryParser().parseCommand("{call procedure_name}"); //$NON-NLS-1$
         assertFalse(sp.returnsScalarValue());
         assertEquals("procedure_name", sp.getProcedureName()); //$NON-NLS-1$
         assertEquals(0, sp.getParameters().size());
     }
     
-    public void testCallWithReturnParam() throws QueryParserException {
+    @Test public void testCallWithReturnParam() throws QueryParserException {
         helpTestGetExec("{?=call procedure_name(?, ?, ?)}", true); //$NON-NLS-1$
         helpTestGetExec(" {?=call procedure_name(?, ?, ?)}", true); //$NON-NLS-1$
         helpTestGetExec("{ ?=call procedure_name(?, ?, ?)}", true); //$NON-NLS-1$
@@ -60,7 +64,7 @@ public class TestCallableStatementParsing extends junit.framework.TestCase {
         helpTestGetExec("{?=\ncall procedure_name(?, ?, ?)}", true); //$NON-NLS-1$
     }
     
-    public void testIllegalCalls() {
+    @Test public void testIllegalCalls() {
         helpTestIllegalCall("{call procedure_name"); //$NON-NLS-1$
         helpTestIllegalCall("call procedure_name}"); //$NON-NLS-1$
         helpTestIllegalCall("{call procedure_name(}"); //$NON-NLS-1$
@@ -73,7 +77,7 @@ public class TestCallableStatementParsing extends junit.framework.TestCase {
         helpTestIllegalCall("{?=cal procedure_name}"); //$NON-NLS-1$
     }
     
-    public void testGetExec() throws QueryParserException {
+    @Test public void testGetExec() throws QueryParserException {
         helpTestGetExec("{call procedure_name(?, ?, ?)}", false); //$NON-NLS-1$
         helpTestGetExec(" {call procedure_name(?, ?, ?)}", false); //$NON-NLS-1$
         helpTestGetExec("{ call procedure_name(?, ?, ?)}", false); //$NON-NLS-1$
@@ -83,13 +87,8 @@ public class TestCallableStatementParsing extends junit.framework.TestCase {
         helpTestGetExec("{CALL procedure_name(?, ?, ?)} ", false); //$NON-NLS-1$
     }
     
-    public void testBadCallKeyword() {
-        try {
-            QueryParser.getQueryParser().parseCommand("{calli procedure_name}"); //$NON-NLS-1$
-            fail("expected exception"); //$NON-NLS-1$
-        } catch (QueryParserException qpe) {
-            assertEquals("Parsing error: Call keyword expected in callable statement", qpe.getMessage()); //$NON-NLS-1$
-        }
+    @Test(expected=QueryParserException.class) public void testBadCallKeyword() throws Exception {
+        QueryParser.getQueryParser().parseCommand("{calli procedure_name}"); //$NON-NLS-1$
     }
 
 }

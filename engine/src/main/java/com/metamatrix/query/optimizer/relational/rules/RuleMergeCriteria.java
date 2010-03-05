@@ -58,7 +58,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         // Merge chains
         for (PlanNode critNode : criteriaChains) {
-            mergeChain(critNode);
+            mergeChain(critNode, metadata);
         }
 
         return plan;
@@ -93,7 +93,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
         }
     }
 
-    static void mergeChain(PlanNode chainRoot) {
+    static void mergeChain(PlanNode chainRoot, QueryMetadataInterface metadata) {
 
         // Remove all of chain except root, collect crit from each
         CompoundCriteria critParts = new CompoundCriteria();
@@ -115,7 +115,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         }
         
-        Criteria combinedCrit = QueryRewriter.optimizeCriteria(critParts);
+        Criteria combinedCrit = QueryRewriter.optimizeCriteria(critParts, metadata);
 
         if (isDependentSet) {
             chainRoot.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);

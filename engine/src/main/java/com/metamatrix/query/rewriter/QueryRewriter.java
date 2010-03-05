@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -49,7 +50,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
-import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
@@ -61,7 +61,6 @@ import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -73,7 +72,6 @@ import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ProcedureReservedWords;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.LanguageObject.Util;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
@@ -190,8 +188,8 @@ public class QueryRewriter {
 		this.procCommand = procCommand;
 	}
     
-    public static Command evaluateAndRewrite(Command command, ProcessorDataManager dataMgr, CommandContext context) throws MetaMatrixProcessingException, MetaMatrixComponentException {
-    	QueryRewriter queryRewriter = new QueryRewriter(null, context, null);
+    public static Command evaluateAndRewrite(Command command, ProcessorDataManager dataMgr, CommandContext context, QueryMetadataInterface metadata) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+    	QueryRewriter queryRewriter = new QueryRewriter(metadata, context, null);
     	queryRewriter.dataMgr = dataMgr;
     	queryRewriter.rewriteSubcommands = true;
     	try {
@@ -917,7 +915,7 @@ public class QueryRewriter {
         
         List symbols = query.getSelect().getProjectedSymbols();
         
-        List newSymbols = SetQuery.getTypedProjectedSymbols(symbols, actualSymbolTypes);
+        List newSymbols = SetQuery.getTypedProjectedSymbols(symbols, actualSymbolTypes, this.metadata);
         
         query.getSelect().setSymbols(newSymbols);
     } 
@@ -932,7 +930,7 @@ public class QueryRewriter {
                 }
                 correctProjectedTypes(setQuery.getProjectedTypes(), (Query)command);
             }
-            setQuery.setProjectedTypes(null);
+            setQuery.setProjectedTypes(null, null);
         }
         
         setQuery.setLeftQuery((QueryCommand)rewriteCommand(setQuery.getLeftQuery(), true));
@@ -1075,9 +1073,9 @@ public class QueryRewriter {
      * @param criteria
      * @return
      */
-    public static Criteria optimizeCriteria(CompoundCriteria criteria) {
+    public static Criteria optimizeCriteria(CompoundCriteria criteria, QueryMetadataInterface metadata) {
         try {
-            return new QueryRewriter(null, null, null).rewriteCriteria(criteria, false);
+            return new QueryRewriter(metadata, null, null).rewriteCriteria(criteria, false);
         } catch (QueryValidatorException err) {
             //shouldn't happen
             return criteria;
@@ -1362,7 +1360,7 @@ public class QueryRewriter {
 
         // Create a function of the two constants and evaluate it
         Expression combinedConst = null;
-        FunctionLibrary funcLib = FunctionLibraryManager.getFunctionLibrary();
+        FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
         FunctionDescriptor descriptor = funcLib.findFunction(oppFunc, new Class[] { rightExpr.getType(), const1.getType() });
         if (descriptor == null){
             //See defect 9380 - this can be caused by const2 being a null Constant, for example (? + 1) < null
@@ -1373,12 +1371,9 @@ public class QueryRewriter {
         if (rightExpr instanceof Constant) {
             Constant const2 = (Constant)rightExpr;
             try {
-                Object result = funcLib.invokeFunction(
-                    descriptor, new Object[] { const2.getValue(), const1.getValue() } );
+                Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() } );
                 combinedConst = new Constant(result, descriptor.getReturnType());
-            } catch(InvalidFunctionException e) {
-            	throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0003, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0003, e.getMessage()));
-        	} catch(FunctionExecutionException e) {
+            } catch(FunctionExecutionException e) {
             	throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0003, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0003, e.getMessage()));
         	}
         } else {
@@ -1601,21 +1596,18 @@ public class QueryRewriter {
             return crit;
         }
         String format = (String)((Constant)formatExpr).getValue();
-        FunctionLibrary funcLib = FunctionLibraryManager.getFunctionLibrary();
+        FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
         FunctionDescriptor descriptor = funcLib.findFunction(inverseFunction, new Class[] { rightExpr.getType(), formatExpr.getType() });
         if(descriptor == null){
             return crit;
         }
     	Object value = ((Constant)rightExpr).getValue();
     	try {
-    		Object result = funcLib.invokeFunction(descriptor, new Object[] {((Constant)rightExpr).getValue(), format});
-    		result = funcLib.invokeFunction(leftFunction.getFunctionDescriptor(), new Object[] { result, format } );
+    		Object result = descriptor.invokeFunction(new Object[] {((Constant)rightExpr).getValue(), format});
+    		result = leftFunction.getFunctionDescriptor().invokeFunction(new Object[] { result, format } );
     		if (((Comparable)value).compareTo(result) != 0) {
     			return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
     		}
-    	} catch(InvalidFunctionException e) {
-            String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
-            throw new QueryValidatorException(e, errorMsg);
     	} catch(FunctionExecutionException e) {
             //Not all numeric formats are invertable, so just return the criteria as it may still be valid
             return crit;
@@ -1900,7 +1892,7 @@ public class QueryRewriter {
                 Expression value = (Expression)variables.get(es.getCanonicalName());
 
                 if (value == null) {
-	                if (grpName.equals(ProcedureReservedWords.INPUT)) {
+	                if ((grpName.equals(ProcedureReservedWords.INPUT) || grpName.equals(ProcedureReservedWords.INPUTS))) {
 	                	return new Constant(null, es.getType());
 	                } 
 	                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
@@ -1952,12 +1944,12 @@ public class QueryRewriter {
 	}
     
     private Expression rewriteExpression(AggregateSymbol expression) {
-    	if (!expression.getAggregateFunction().equals(ReservedWords.COUNT)
-				&& !expression.getAggregateFunction().equals(ReservedWords.SUM)
+    	if (!expression.getAggregateFunction().equals(SQLReservedWords.COUNT)
+				&& !expression.getAggregateFunction().equals(SQLReservedWords.SUM)
 				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
 			try {
 				return new ExpressionSymbol(expression.getName(), ResolverUtil
-						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType())));
+						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType()), metadata));
 			} catch (QueryResolverException e) {
 				//should not happen, so throw as a runtime
 				throw new MetaMatrixRuntimeException(e);
@@ -1989,6 +1981,7 @@ public class QueryRewriter {
 			function.setName(actualName);
 		}
 		
+		FunctionLibrary funcLibrary = this.metadata.getFunctionLibrary();
 		Integer code = FUNCTION_MAP.get(functionLowerName);
 		if (code != null) {
 			switch (code) {
@@ -1997,7 +1990,7 @@ public class QueryRewriter {
 						new Expression[] {new Constant(" "), function.getArg(0)}); //$NON-NLS-1$
 				//resolve the function
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
+					funcLibrary.findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
 				result.setFunctionDescriptor(descriptor);
 				result.setType(DataTypeManager.DefaultDataClasses.STRING);
 				function = result;
@@ -2005,10 +1998,10 @@ public class QueryRewriter {
 			}
 			case 1: {//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
 				Function result = new Function(FunctionLibrary.TIMESTAMPADD,
-						new Expression[] {new Constant(ReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
+						new Expression[] {new Constant(SQLReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
 				//resolve the function
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+					funcLibrary.findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
 				result.setFunctionDescriptor(descriptor);
 				result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
 				function = result;
@@ -2030,7 +2023,7 @@ public class QueryRewriter {
 							new Expression[] {function.getArg(0), function.getArg(1) });
 					//resolve the function
 					FunctionDescriptor descriptor = 
-			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
+						funcLibrary.findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
 					result.setFunctionDescriptor(descriptor);
 					result.setType(function.getType());
 					function = result;
@@ -2046,14 +2039,14 @@ public class QueryRewriter {
 					newArgs[i].setType(args[i].getType());
 					Assertion.assertTrue(args[i].getType() == DataTypeManager.DefaultDataClasses.STRING);
 			        FunctionDescriptor descriptor = 
-			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
+			        	funcLibrary.findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
 			        newArgs[i].setFunctionDescriptor(descriptor);
 				}
 				
 				Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
 				concat.setType(DataTypeManager.DefaultDataClasses.STRING);
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+					funcLibrary.findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
 				concat.setFunctionDescriptor(descriptor);
 				
 				List when = Arrays.asList(new Criteria[] {new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1]))});
@@ -2067,33 +2060,33 @@ public class QueryRewriter {
 			case 5: {
 				if (function.getType() != DataTypeManager.DefaultDataClasses.TIMESTAMP) {
 					FunctionDescriptor descriptor = 
-			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+						funcLibrary.findFunction(SourceSystemFunctions.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
 					function.setFunctionDescriptor(descriptor);
 					Class<?> type = function.getType();
 					function.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
-					function.getArgs()[2] = ResolverUtil.getConversion(function.getArg(2), DataTypeManager.getDataTypeName(type), DataTypeManager.DefaultDataTypes.TIMESTAMP, false);
-					function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false);
+					function.getArgs()[2] = ResolverUtil.getConversion(function.getArg(2), DataTypeManager.getDataTypeName(type), DataTypeManager.DefaultDataTypes.TIMESTAMP, false, funcLibrary);
+					function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false, funcLibrary);
 				}
 				break;
 			}
 			case 6:
 			case 7: {
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.PARSETIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+					funcLibrary.findFunction(SourceSystemFunctions.PARSETIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
 				function.setName(SourceSystemFunctions.PARSETIMESTAMP);
 				function.setFunctionDescriptor(descriptor);
 				Class<?> type = function.getType();
 				function.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
-				function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false);
+				function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false, funcLibrary);
 				break;
 			}
 			case 8:
 			case 9: {
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.FORMATTIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.TIMESTAMP, DataTypeManager.DefaultDataClasses.STRING });
+					funcLibrary.findFunction(SourceSystemFunctions.FORMATTIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.TIMESTAMP, DataTypeManager.DefaultDataClasses.STRING });
 				function.setName(SourceSystemFunctions.FORMATTIMESTAMP);
 				function.setFunctionDescriptor(descriptor);
-				function.getArgs()[0] = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.TIMESTAMP, false);
+				function.getArgs()[0] = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.TIMESTAMP, false, funcLibrary);
 				break;
 			}
 			}
@@ -2366,7 +2359,7 @@ public class QueryRewriter {
         for (SingleElementSymbol ses : actualSymbols) {
             actualTypes.add(ses.getType());
         }
-        List<SingleElementSymbol> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes);
+        List<SingleElementSymbol> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes, tma);
         Iterator<SingleElementSymbol> iter = actualSymbols.iterator();
         for (SingleElementSymbol ses : selectSymbols) {
         	ses = (SingleElementSymbol)ses.clone();
@@ -2471,7 +2464,7 @@ public class QueryRewriter {
         Boolean result = null;
         for (ElementSymbol var : ElementCollectorVisitor.getElements(expr, false)) {
             String grpName = var.getGroupSymbol().getName();
-            if (var.isExternalReference() && grpName.equals(ProcedureReservedWords.INPUT)) {
+            if (var.isExternalReference() && (grpName.equalsIgnoreCase(ProcedureReservedWords.INPUT) || grpName.equalsIgnoreCase(ProcedureReservedWords.INPUTS))) {
                 
                 String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + var.getShortCanonicalName();
                 

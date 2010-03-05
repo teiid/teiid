@@ -35,6 +35,8 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.message.ParameterInfo;
+import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingBaseNode;
 import com.metamatrix.query.mapping.xml.MappingDocument;
@@ -51,9 +53,16 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 public class FakeMetadataFacade extends BasicQueryMetadata {
 
 	private FakeMetadataStore store;
+	private FunctionLibrary functionLibrary;
 
 	public FakeMetadataFacade(FakeMetadataStore store) {
 		this.store = store;
+		this.functionLibrary = SystemFunctionManager.getSystemFunctionLibrary();
+	}
+	
+	public FakeMetadataFacade(FakeMetadataStore store, FunctionLibrary funcLibrary) {
+		this.store = store;
+		this.functionLibrary = funcLibrary;
 	}
 
 	public FakeMetadataStore getStore() {
@@ -758,5 +767,10 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
     	synchronized (object) {
         	return object.getProperty(key);
 		}
+    }
+    
+    @Override
+    public FunctionLibrary getFunctionLibrary() {
+    	return this.functionLibrary;
     }
 }

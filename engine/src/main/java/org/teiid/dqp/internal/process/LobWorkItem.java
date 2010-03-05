@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
+import javax.resource.spi.work.Work;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.ByteLobChunkStream;
@@ -40,7 +42,7 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 
-public class LobWorkItem implements Runnable {
+public class LobWorkItem implements Work {
 	
 	private RequestWorkItem parent;
 	private int chunkSize; 
@@ -133,4 +135,9 @@ public class LobWorkItem implements Runnable {
     	Assertion.isNull(this.resultsReceiver, "Cannot request results with a pending request"); //$NON-NLS-1$
     	this.resultsReceiver = resultsReceiver;
     }
+
+	@Override
+	public void release() {
+		
+	}
 }

@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.NotCriteriaImpl;
+
+import org.teiid.connector.language.Not;
 
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
@@ -43,8 +44,8 @@ public class TestNotCriteriaImpl extends TestCase {
         return new NotCriteria(TestCompareCriteriaImpl.helpExample(CompareCriteria.GE, 100, 200));
     }
     
-    public static NotCriteriaImpl example() throws Exception {
-        return (NotCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static Not example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetCriteria() throws Exception {

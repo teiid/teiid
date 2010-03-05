@@ -22,15 +22,21 @@
 
 package com.metamatrix.query.sql;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.teiid.connector.language.SQLReservedWords;
 
 /**
  * Special variable names in stored procedure language.
  */
 public class ProcedureReservedWords {
 
-    public static final String INPUT = "INPUT"; //$NON-NLS-1$
+	@Deprecated
+    public static final String INPUT = SQLReservedWords.INPUT;
+    
+    public static final String INPUTS = "INPUTS"; //$NON-NLS-1$
 
     public static final String ROWS_UPDATED = "ROWS_UPDATED"; //$NON-NLS-1$
 
@@ -38,29 +44,25 @@ public class ProcedureReservedWords {
 
     public static final String VARIABLES = "VARIABLES"; //$NON-NLS-1$
     
-    public static final String USING = "USING"; //$NON-NLS-1$
-
-    public static final String[] ALL_WORDS = new String[] {
-        INPUT,
-        ROWS_UPDATED,
-        CHANGING,
-        VARIABLES,
-        USING
-    };        
-
+    public static final String DVARS = "DVARS"; //$NON-NLS-1$
+    
     /**
-     * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
-     */
-    private static final Set PROCEDURE_RESERVED_WORDS = new HashSet();
+ 	 * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
+ 	 */
+    private static final Set<String> RESERVED_WORDS = new HashSet<String>();
 
-    // Initialize PROCEDURE_RESERVED_WORDS set
-    static {
-        // Iterate through the reserved words and capitalize all of them
-        for ( int i=0; i!=ProcedureReservedWords.ALL_WORDS.length; ++i ) {
-            String reservedWord = ProcedureReservedWords.ALL_WORDS[i];
-            ProcedureReservedWords.PROCEDURE_RESERVED_WORDS.add( reservedWord.toUpperCase() );    
-        } 
-    }
+    // Initialize RESERVED_WORDS set - This is a poor man's enum.  To much legacy code expects the constants to be Strings.
+ 	static {
+ 		Field[] fields = SQLReservedWords.class.getDeclaredFields();
+ 		for (Field field : fields) {
+ 			if (field.getType() == String.class) {
+ 				try {
+					RESERVED_WORDS.add((String)field.get(null));
+				} catch (Exception e) {
+				}
+ 			}
+ 		}
+ 	}
 
     /** Can't construct */
     private ProcedureReservedWords() {}
@@ -74,6 +76,6 @@ public class ProcedureReservedWords {
         if (str == null) { 
             return false;    
         }
-        return PROCEDURE_RESERVED_WORDS.contains(str.toUpperCase());    
+        return RESERVED_WORDS.contains(str.toUpperCase());    
     }
 }

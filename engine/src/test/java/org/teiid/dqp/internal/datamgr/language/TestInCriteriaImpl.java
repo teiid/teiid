@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.dqp.internal.datamgr.language.InCriteriaImpl;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.In;
 
 import com.metamatrix.query.sql.lang.SetCriteria;
 
@@ -55,15 +55,15 @@ public class TestInCriteriaImpl extends TestCase {
         return crit;
     }
     
-    public static InCriteriaImpl example(boolean negated) throws Exception {
-        return (InCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample(negated));
+    public static In example(boolean negated) throws Exception {
+        return (In)TstLanguageBridgeFactory.factory.translate(helpExample(negated));
     }
 
     public void testGetLeftExpression() throws Exception {
-        InCriteriaImpl inCriteria = example(false);
+        In inCriteria = example(false);
         assertNotNull(inCriteria.getLeftExpression());
-        assertTrue(inCriteria.getLeftExpression() instanceof ILiteral);
-        assertEquals(new Integer(300), ((ILiteral)inCriteria.getLeftExpression()).getValue());
+        assertTrue(inCriteria.getLeftExpression() instanceof Literal);
+        assertEquals(new Integer(300), ((Literal)inCriteria.getLeftExpression()).getValue());
     }
 
     public void testGetRightExpressions() throws Exception {
@@ -71,7 +71,7 @@ public class TestInCriteriaImpl extends TestCase {
         assertNotNull(values);
         assertEquals(4, values.size());
         for (Iterator i = values.iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IExpression);
+            assertTrue(i.next() instanceof Expression);
         }
         
     }

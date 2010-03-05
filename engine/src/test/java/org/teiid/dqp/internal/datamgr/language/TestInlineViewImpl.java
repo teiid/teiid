@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.InlineViewImpl;
+
+import org.teiid.connector.language.DerivedTable;
 
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
 
@@ -35,19 +36,19 @@ public class TestInlineViewImpl extends TestCase {
     }
 
     public static SubqueryFromClause helpExample() {
-        return new SubqueryFromClause("xyz", TestQueryImpl.helpExample()); //$NON-NLS-1$
+        return new SubqueryFromClause("xyz", TestQueryImpl.helpExample(true)); //$NON-NLS-1$
     }
     
-    public static InlineViewImpl example() throws Exception {
-        return (InlineViewImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static DerivedTable example() throws Exception {
+        return (DerivedTable)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetName() throws Exception {
-        assertEquals("xyz", example().getName()); //$NON-NLS-1$
+        assertEquals("xyz", example().getCorrelationName()); //$NON-NLS-1$
     }
 
     public void testGetQuery() throws Exception {
-        assertEquals("SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC", example().getQuery().toString()); //$NON-NLS-1$
+        assertEquals("SELECT DISTINCT vm1.g1.e1, vm1.g1.e2, vm1.g1.e3, vm1.g1.e4 FROM vm1.g1, vm1.g2 AS myAlias, vm1.g3, vm1.g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY vm1.g1.e1, vm1.g1.e2, vm1.g1.e3, vm1.g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC", example().getQuery().toString()); //$NON-NLS-1$
     }
 
 }

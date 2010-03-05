@@ -22,12 +22,12 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.IExpression;
-import org.teiid.dqp.internal.datamgr.language.SelectSymbolImpl;
-
-import com.metamatrix.query.sql.symbol.*;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+
+import com.metamatrix.common.types.DataTypeManager;
 
 public class TestSelectSymbolImpl extends TestCase {
 
@@ -39,39 +39,18 @@ public class TestSelectSymbolImpl extends TestCase {
         super(name);
     }
 
-    public static Expression helpExample(String name, String alias) {
-        SingleElementSymbol symbol = TestElementImpl.helpExample("vm1.g1", name); //$NON-NLS-1$
-
-        if (alias != null) {
-            return new AliasSymbol(alias, symbol);
-        }
-        return symbol;
-    }
-    
-    public static SelectSymbolImpl example(String symbolName, String alias) throws Exception {
-        Expression expr = helpExample(symbolName, alias);
-        IExpression iExp = TstLanguageBridgeFactory.factory.translate(expr);
-        String name = null;
-        if (expr instanceof Function) {
-            name = ((Function)expr).getName();
-        }else if (expr instanceof SingleElementSymbol) {
-            name = ((SingleElementSymbol)expr).getName();
-        }
-        SelectSymbolImpl selectSymbol = new SelectSymbolImpl(name, iExp);
-        if(expr instanceof AliasSymbol){
-            selectSymbol.setAlias(true);
-        }
+    public static DerivedColumn example(String symbolName, String alias) throws Exception {
+        DerivedColumn selectSymbol = new DerivedColumn(alias, new ColumnReference(null, symbolName, null, DataTypeManager.DefaultDataClasses.INTEGER));
         return selectSymbol;
     }
 
     public void testHasAlias() throws Exception {
-        assertTrue(example("testName", "testAlias").hasAlias()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertFalse(example("testName", null).hasAlias()); //$NON-NLS-1$
+        assertNotNull(example("testName", "testAlias").getAlias()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertNull(example("testName", null).getAlias()); //$NON-NLS-1$
     }
 
     public void testGetOutputName() throws Exception {
-        assertEquals("testName", example("testName", null).getOutputName()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("testAlias", example("testName", "testAlias").getOutputName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("testAlias", example("testName", "testAlias").getAlias()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testGetExpression() throws Exception {

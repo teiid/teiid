@@ -22,13 +22,14 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
@@ -38,16 +39,12 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 import com.metamatrix.dqp.metadata.ResultsMetadataDefaults;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
@@ -56,7 +53,6 @@ import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.ParseInfo;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.XQuery;
@@ -75,22 +71,17 @@ import com.metamatrix.query.tempdata.TempTableStore;
 public class MetaDataProcessor {
 
     // Resources
-    private MetadataService metadataService;
     private DQPCore requestManager;
     private QueryMetadataInterface metadata;
     private SessionAwareCache<PreparedPlan> planCache;
-    private ApplicationEnvironment env;
         
     private String vdbName;
-    private String vdbVersion;
+    private int vdbVersion;
     private RequestID requestID;
     
-    
-    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, ApplicationEnvironment env, String vdbName, String vdbVersion) {
-        this.metadataService = metadataService;    
+    public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, int vdbVersion) {
         this.requestManager = requestManager;
         this.planCache = planCache;
-        this.env = env;
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
     }
@@ -105,13 +96,12 @@ public class MetaDataProcessor {
      * @throws MetaMatrixProcessingException 
      */
     MetadataResult processMessage(RequestID requestId, DQPWorkContext workContext, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        final VDBService vdbService = (VDBService)env.findService(DQPServiceNames.VDB_SERVICE);
         this.requestID = requestId;
         
-        this.metadata = metadataService.lookupMetadata(vdbName, vdbVersion);
+        this.metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
         
         // If multi-source, use the multi-source wrapper as well
-        Collection multiModels = vdbService.getMultiSourceModels(vdbName, vdbVersion);
+        Set<String> multiModels = workContext.getVDB().getMultiSourceModelNames();
         if(multiModels != null && multiModels.size() > 0) { 
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, multiModels);
         }
@@ -325,7 +315,7 @@ public class MetaDataProcessor {
         
         Expression expression = symbol.getExpression();
         String function = symbol.getAggregateFunction();
-        if(function.equals(ReservedWords.MIN) || function.equals(ReservedWords.MAX)){
+        if(function.equals(SQLReservedWords.MIN) || function.equals(SQLReservedWords.MAX)){
             if(expression instanceof ElementSymbol) {
                 return createColumnMetadata(shortColumnName, (ElementSymbol)expression);
             }

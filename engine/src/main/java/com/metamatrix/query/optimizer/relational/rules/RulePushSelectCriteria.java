@@ -112,7 +112,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 switch (sourceNode.getType()) {
                     case NodeConstants.Types.SOURCE:
                     {
-                        moved = pushAcrossFrame(sourceNode, critNode);
+                        moved = pushAcrossFrame(sourceNode, critNode, metadata);
                         break;
                     }
                     case NodeConstants.Types.JOIN:
@@ -255,7 +255,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
         if (groupSelects && destination == sourceNode) {
-        	RuleMergeCriteria.mergeChain(critNode);
+        	RuleMergeCriteria.mergeChain(critNode, metadata);
         }
 	}
 
@@ -331,7 +331,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		return sourceNode;
 	}
 
-	boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode)
+	boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata)
 		throws QueryPlannerException {
         
         //ensure that the criteria can be pushed further
@@ -347,7 +347,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             	//only allow criteria without subqueires - node cloning doesn't allow for the proper creation of 
             	//multiple nodes with the same subqueries
                 if (child == sourceNode.getFirstChild() && critNode.getSubqueryContainers().isEmpty()) {
-                    return pushAcrossSetOp(critNode, child);
+                    return pushAcrossSetOp(critNode, child, metadata);
                 } 
                 //this could be an access node in the middle of the source and set op,
                 //it is an odd case that is not supported for now
@@ -356,7 +356,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
         
 		// See if we can move it towards the SOURCE node
-        return moveNodeAcrossFrame(critNode, sourceNode);
+        return moveNodeAcrossFrame(critNode, sourceNode, metadata);
 	}
 
 	/**
@@ -376,7 +376,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		return true;
 	}
 
-	boolean moveNodeAcrossFrame(PlanNode critNode, PlanNode sourceNode)
+	boolean moveNodeAcrossFrame(PlanNode critNode, PlanNode sourceNode, QueryMetadataInterface metadata)
 		throws QueryPlannerException {
 
 		Assertion.isNotNull(critNode.getParent());
@@ -393,7 +393,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         
         SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
         
-        if (!createConvertedSelectNode(critNode, sourceNode.getGroups().iterator().next(), projectNode, symbolMap)) {
+        if (!createConvertedSelectNode(critNode, sourceNode.getGroups().iterator().next(), projectNode, symbolMap, metadata)) {
             return false;
         }
 		
@@ -479,7 +479,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	    return copyNode;
 	}
 
-	boolean pushAcrossSetOp(PlanNode critNode, PlanNode setOp)
+	boolean pushAcrossSetOp(PlanNode critNode, PlanNode setOp, QueryMetadataInterface metadata)
 		throws QueryPlannerException {
         
         // Find source node above union and grab the symbol map
@@ -505,7 +505,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	        }
 		    
 			// Move the node
-			if(createConvertedSelectNode(critNode, virtualGroup, projectNode, childMap)) {
+			if(createConvertedSelectNode(critNode, virtualGroup, projectNode, childMap, metadata)) {
                 movedCount++;
             }
 			
@@ -535,7 +535,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     private boolean createConvertedSelectNode(PlanNode critNode,
     							   GroupSymbol sourceGroup,
                                    PlanNode projectNode,
-                                   SymbolMap symbolMap) throws QueryPlannerException {
+                                   SymbolMap symbolMap,
+                                   QueryMetadataInterface metadata) throws QueryPlannerException {
         // If projectNode has children, then it is from a SELECT without a FROM and the criteria should not be pushed
         if(projectNode.getChildCount() == 0) {
             return false;
@@ -560,7 +561,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             copyNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
         }
 
-        FrameUtil.convertNode(copyNode, sourceGroup, null, symbolMap.asMap());  
+        FrameUtil.convertNode(copyNode, sourceGroup, null, symbolMap.asMap(), metadata);  
         PlanNode intermediateParent = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
         if (intermediateParent != null) {
             intermediateParent.addAsParent(copyNode);

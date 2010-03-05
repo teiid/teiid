@@ -26,6 +26,7 @@ import static com.metamatrix.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
 
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -354,7 +355,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select count(*), a.intnum from bqt1.smalla as a, bqt2.smallb as b where a.intkey = b.intkey group by a.intnum",  //$NON-NLS-1$
@@ -394,7 +395,7 @@ public class TestAggregatePushdown {
         
         String sql = "select a11.intkey ITEM_ID, sum(a11.intnum) WJXBFS1 from bqt1.smalla a11 join bqt2.smalla a12 on (a11.stringkey = a12.stringkey) join bqt2.smallb a13 on (a11.intkey = a13.intkey) where a13.intnum in (10) group by a11.intkey"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQT(), null, capFinder, 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT g_0.stringkey FROM bqt2.smalla AS g_0", "SELECT g_0.stringkey, g_0.intkey, SUM(g_0.intnum) FROM bqt1.smalla AS g_0 GROUP BY g_0.stringkey, g_0.intkey", "SELECT g_0.intkey FROM bqt2.smallb AS g_0 WHERE g_0.intnum = 10"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -423,7 +424,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select count(*) from bqt1.smalla",  //$NON-NLS-1$
@@ -442,7 +443,7 @@ public class TestAggregatePushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(
               "select stringkey, max(intkey) from bqt1.smalla group by stringkey having count(intkey) = 1",  //$NON-NLS-1$
@@ -514,14 +515,14 @@ public class TestAggregatePushdown {
         String sql = "SELECT Q1.S, Q2.C, Q1.PRODUCT, Q1.REGION AS Q1R, Q2.REGION AS Q2R FROM " + //$NON-NLS-1$
             "(SELECT SUM(SALES) AS S, REGION, PRODUCT FROM DB2_TABLE WHERE PRODUCT IN ('GUNS', 'TOYS', 'VIDEOTAPES') GROUP BY REGION, PRODUCT) Q1 " + //$NON-NLS-1$
             "FULL OUTER JOIN " +  //$NON-NLS-1$
-            "(SELECT SUM(COSTS) AS C, REGION FROM ORACLE_TABLE WHERE YEAR = '1999' GROUP BY REGION) Q2 " + //$NON-NLS-1$
+            "(SELECT SUM(COSTS) AS C, REGION FROM ORACLE_TABLE WHERE \"YEAR\" = '1999' GROUP BY REGION) Q2 " + //$NON-NLS-1$
             "ON Q1.REGION = Q2.REGION"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
                                       new String[] {"SELECT REGION, SUM(SALES), PRODUCT FROM db2model.DB2_TABLE WHERE PRODUCT IN ('GUNS', 'TOYS', 'VIDEOTAPES') GROUP BY REGION, PRODUCT", //$NON-NLS-1$
-                                                    "SELECT REGION, SUM(COSTS) FROM oraclemodel.Oracle_table WHERE YEAR = '1999' GROUP BY REGION"},  //$NON-NLS-1$
+                                                    "SELECT REGION, SUM(COSTS) FROM oraclemodel.Oracle_table WHERE \"YEAR\" = '1999' GROUP BY REGION"},  //$NON-NLS-1$
                                       SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
@@ -567,8 +568,8 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH, g_0.YEAR FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999'", //$NON-NLS-1$
-                                                    "SELECT DISTINCT g_0.MONTH AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.MONTH IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.MONTH, g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.\"MONTH\", g_0.\"YEAR\" FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999'", //$NON-NLS-1$
+                                                    "SELECT DISTINCT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
                                                     "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
@@ -615,8 +616,8 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH, g_0.YEAR FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999'", //$NON-NLS-1$
-                                          "SELECT DISTINCT g_0.MONTH AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.MONTH IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.MONTH, g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.\"MONTH\", g_0.\"YEAR\" FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999'", //$NON-NLS-1$
+                                          "SELECT DISTINCT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
                                           "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
@@ -663,8 +664,8 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT DISTINCT g_0.MONTH AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.MONTH IN (<dependent values>)) GROUP BY g_0.MONTH, g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.MONTH AS c_0, g_0.YEAR AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999' ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT DISTINCT g_0.\"MONTH\" AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.\"MONTH\" IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
+                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
                                                     ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {

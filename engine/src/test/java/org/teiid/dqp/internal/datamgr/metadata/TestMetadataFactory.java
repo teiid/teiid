@@ -37,7 +37,6 @@ import com.metamatrix.query.unittest.FakeMetadataStore;
 public class TestMetadataFactory  extends TestCase {
     private RuntimeMetadataImpl metadataFactory;
     private FakeMetadataObject pm1g1;
-    private FakeMetadataObject pm1g1e1;
     
     public TestMetadataFactory(String name) {
         super(name);
@@ -49,36 +48,9 @@ public class TestMetadataFactory  extends TestCase {
         List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        pm1g1e1 = (FakeMetadataObject)pm1g1e.get(0);
         store.addObject(pm1g1);
         store.addObjects(pm1g1e);
         metadataFactory = new RuntimeMetadataImpl(new FakeMetadataFacade(store));
-    }
-    
-    //tests
-    
-    public void testCreateMetadataID() throws Exception {        
-        //test create MetadataID for Group
-        GroupImpl gID = metadataFactory.getGroup(pm1g1);
-        assertEquals(gID.getActualID(), pm1g1);
-        assertEquals(((ElementImpl)gID.getChildren().get(0)).getActualID(), pm1g1e1);
-        
-        //test create MetadataID for Element
-        ElementImpl eID = metadataFactory.getElement(pm1g1e1);
-        assertEquals(eID.getActualID(), pm1g1e1);
-        assertEquals(((GroupImpl)eID.getParent()).getActualID(), pm1g1);
-    }
-    
-    public void testRuntimeMetadata() throws Exception {
-        GroupImpl group = metadataFactory.getGroup(pm1g1);
-        assertEquals(group.getNameInSource(), "g1"); //$NON-NLS-1$
-        assertEquals(group.getActualID(), pm1g1);
-
-        ElementImpl element = metadataFactory.getElement(pm1g1e1);
-        assertEquals(element.getLength(), 100);
-        assertEquals(element.getJavaType(), DataTypeManager.DefaultDataClasses.STRING);
-        assertEquals("e1", element.getNameInSource()); //$NON-NLS-1$
-        assertEquals(element.getActualID(), pm1g1e1);
     }
     
     public void testGetVDBResourcePaths() throws Exception {

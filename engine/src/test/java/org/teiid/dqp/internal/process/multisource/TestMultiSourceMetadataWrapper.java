@@ -22,18 +22,13 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-
-import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 
@@ -43,12 +38,8 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 public class TestMultiSourceMetadataWrapper extends TestCase {
 
     public void testMultiSourcePseudoElement() throws Exception {
-        String vdbName = "My Cool VDB"; //$NON-NLS-1$
-        String vdbVersion = "1"; //$NON-NLS-1$
-        
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addModel(vdbName, vdbVersion, "BQT1", ModelInfo.PUBLIC, true); //$NON-NLS-1$
-        Collection multiSourceModels = vdbService.getMultiSourceModels(vdbName, vdbVersion);
+        HashSet<String> multiSourceModels = new HashSet<String>();
+        multiSourceModels.add("BQT1");
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(FakeMetadataFactory.exampleBQTCached(), multiSourceModels);
         
         Object groupID = wrapper.getGroupID("BQT1.SmallA"); //$NON-NLS-1$

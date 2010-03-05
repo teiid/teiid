@@ -119,7 +119,7 @@ public class TestGroupRecontext extends TestCase {
         SubqueryCompareCriteria crit = new SubqueryCompareCriteria(e1, query, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         SubqueryCompareCriteria expected = new SubqueryCompareCriteria(x1, query, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
 
-        FrameUtil.convertCriteria(crit, symbolMap);  
+        FrameUtil.convertCriteria(crit, symbolMap, null);  
         
         assertEquals(crit, expected);
     }

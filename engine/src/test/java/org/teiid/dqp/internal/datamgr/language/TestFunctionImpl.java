@@ -24,14 +24,12 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import org.teiid.connector.language.IExpression;
-import org.teiid.dqp.internal.datamgr.language.FunctionImpl;
+import junit.framework.TestCase;
+
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
 
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.Function;
-
-import junit.framework.TestCase;
 
 public class TestFunctionImpl extends TestCase {
 
@@ -43,16 +41,16 @@ public class TestFunctionImpl extends TestCase {
         super(name);
     }
 
-    public static Function helpExample(String name) {
+    public static com.metamatrix.query.sql.symbol.Function helpExample(String name) {
         Constant c1 = new Constant(new Integer(100));
         Constant c2 = new Constant(new Integer(200));
-        Function f = new Function(name, new Expression [] {c1, c2});
+        com.metamatrix.query.sql.symbol.Function f = new com.metamatrix.query.sql.symbol.Function(name, new com.metamatrix.query.sql.symbol.Expression[] {c1, c2});
         f.setType(Integer.class);
         return f;
     }
     
-    public static FunctionImpl example(String name) throws Exception {
-        return (FunctionImpl)TstLanguageBridgeFactory.factory.translate(helpExample(name));
+    public static Function example(String name) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(name));
     }
 
     public void testGetName() throws Exception {
@@ -60,7 +58,7 @@ public class TestFunctionImpl extends TestCase {
     }
 
     public void testGetParameters() throws Exception {
-        List<IExpression> params = example("testFunction").getParameters(); //$NON-NLS-1$
+        List<Expression> params = example("testFunction").getParameters(); //$NON-NLS-1$
         assertNotNull(params);
         assertEquals(2, params.size());
         for (int i = 0; i < params.size(); i++) {

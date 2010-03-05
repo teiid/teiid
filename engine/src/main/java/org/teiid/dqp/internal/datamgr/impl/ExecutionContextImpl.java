@@ -23,17 +23,22 @@
 package org.teiid.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorIdentity;
+import javax.security.auth.Subject;
+
+import org.teiid.connector.api.CacheScope;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.dqp.DQPPlugin;
 
 /**
  */
@@ -44,15 +49,13 @@ public class ExecutionContextImpl implements ExecutionContext {
     //  Access Node ID
     private String partID;
     // currentConnector ID
-    private String connectorID;    
+    private String connectorName;    
     // current VDB 
     private String vdbName;
     // Current VDB's version
-    private String vdbVersion;
+    private int vdbVersion;
     // User Name
-    private String userName;
-    // Payload setup on the Connection Object
-    private Serializable trustedPayload;
+    private Subject user;
     // Payload setup on the Statement object
     private Serializable executionPayload;
     // ID of the parent JDBC Connection which is executing the statement
@@ -63,24 +66,18 @@ public class ExecutionContextImpl implements ExecutionContext {
     private boolean keepAlive = false;
     
     private boolean isTransactional;
-    
-    private ConnectorIdentity connectorIdentity;
-    
     private DQPContextCache contextCache;
     
     private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
     
-    public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
-                                Serializable trustedPayload, Serializable executionPayload, 
-                                String originalConnectionID, String connectorId, String requestId, String partId, String execCount) {
+    public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
+                                String originalConnectionID, String connectorName, String requestId, String partId, String execCount) {
         
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
-        this.userName = userName;
-        this.trustedPayload = trustedPayload;
         this.executionPayload = executionPayload;
-        this.connectorID = connectorId;
+        this.connectorName = connectorName;
         this.requestID = requestId;
         this.partID = partId;        
         this.requestConnectionID = originalConnectionID;
@@ -88,43 +85,50 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
     
     public String getConnectorIdentifier() {
-        return this.connectorID;
+        return this.connectorName;
     }
     
+    @Override
     public String getRequestIdentifier() {
         return this.requestID;
     }
 
+    @Override
     public String getPartIdentifier() {
         return this.partID;
     }
+    
+    @Override
     public String getExecutionCountIdentifier() {
         return this.executeCount;
     }
+    @Override
     public String getVirtualDatabaseName() {
         return this.vdbName;
     }
-
-    public String getVirtualDatabaseVersion() {
+    @Override
+    public int getVirtualDatabaseVersion() {
         return this.vdbVersion;
     }
-
-    public String getUser() {
-        return this.userName;
+    @Override
+    public Subject getSubject() {
+        return this.user;
+    }
+    
+    public void setUser(Subject user) {
+        this.user = user;
     }
 
-    public Serializable getTrustedPayload() {
-        return this.trustedPayload;
-    }
-
+    @Override
     public Serializable getExecutionPayload() {
         return executionPayload;
     }
     
+    @Override
 	public String getConnectionIdentifier() {
 		return requestConnectionID;
 	}
-
+    @Override
     public void keepExecutionAlive(boolean alive) {
         this.keepAlive = alive;
     }    
@@ -163,9 +167,16 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     public String toString() {
-        return "ExecutionContext<vdb=" + this.vdbName + ", version=" + this.vdbVersion + ", user=" + this.userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    	String userName = null;
+    	if (this.user != null) {
+	    	for(Principal p:this.user.getPrincipals()) {
+	    		userName = p.getName();
+	    	}
+    	}
+        return "ExecutionContext<vdb=" + this.vdbName + ", version=" + this.vdbVersion + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-
+	
+    @Override
 	public boolean isTransactional() {
 		return isTransactional;
 	}
@@ -173,16 +184,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	void setTransactional(boolean isTransactional) {
 		this.isTransactional = isTransactional;
 	}
-
-	@Override
-	public ConnectorIdentity getConnectorIdentity() {
-		return this.connectorIdentity;
-	}
-	
-	public void setConnectorIdentity(ConnectorIdentity connectorIdentity) {
-		this.connectorIdentity = connectorIdentity;
-	}
-	
+		
 	@Override
 	public int getBatchSize() {
 		return batchSize;
@@ -227,6 +229,60 @@ public class ExecutionContextImpl implements ExecutionContext {
 		if (this.contextCache != null) {
 			Cache cache = contextCache.getRequestScopedCache(getRequestIdentifier());
 			cache.put(key, value);
+		}
+	}	
+	
+	
+	@Override
+	public Object getFromCache(CacheScope scope, Object key) {
+		DQPWorkContext context = DQPWorkContext.getWorkContext();
+		checkScopeValidity(scope, context);
+
+		Cache cache = getScopedCache(scope, context);
+		if (cache != null) {
+			return cache.get(key);
+		}
+		return null;
+	}
+	
+	@Override
+	public void storeInCache(CacheScope scope, Object key, Object value) {
+		DQPWorkContext context = DQPWorkContext.getWorkContext();
+		checkScopeValidity(scope, context);
+		Cache cache = getScopedCache(scope, context);
+		if (cache != null) {
+			cache.put(key, value);
+		}
+	}
+	
+	private Cache getScopedCache(CacheScope scope, DQPWorkContext context) {
+		switch (scope) {
+			case SERVICE:
+				return contextCache.getServiceScopedCache(getConnectorIdentifier());
+			case SESSION:
+				return contextCache.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID()));
+			case VDB:
+				return contextCache.getVDBScopedCache(context.getVdbName(), context.getVdbVersion());
+			case GLOBAL:
+				return contextCache.getGlobalScopedCache();
+		}
+		return null;
+	}
+	
+	private void checkScopeValidity(CacheScope scope, DQPWorkContext context) {
+		if (scope == CacheScope.REQUEST) {
+			throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.request_scope_error")); //$NON-NLS-1$
+		}
+		
+		if (scope == CacheScope.SESSION) {
+			if (context == null || context.getSessionToken() == null) {
+				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.session_scope_error")); //$NON-NLS-1$
+			}
+		}
+		else if (scope == CacheScope.VDB) {
+			if (context == null || context.getVdbName() == null || context.getVdbVersion() == 0) {
+				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.vdb_scope_error")); //$NON-NLS-1$
+			}
 		}
 	}	
 }

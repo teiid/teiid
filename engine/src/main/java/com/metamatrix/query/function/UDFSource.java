@@ -22,63 +22,24 @@
 
 package com.metamatrix.query.function;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collection;
 
-import com.metamatrix.common.classloader.PostDelegatingClassLoader;
-import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 
 
 public class UDFSource implements FunctionMetadataSource {
 	
-    private URL[] classpath = null;
-    private ClassLoader classLoader = null;
     private Collection <FunctionMethod> methods = null;
     
-    public UDFSource(URL url) throws IOException {
-    	loadFunctions(url.openStream());
+    public UDFSource(Collection <FunctionMethod> methods) {
+    	this.methods = methods;
     }    
-    
-    public UDFSource(URL url, URL[] classpath) throws IOException{
-        this.classpath = classpath;
-        loadFunctions(url.openStream());
-    }
-    
-    public UDFSource(InputStream udfStream, URL[] classpath) throws IOException {
-        this.classpath = classpath;
-        loadFunctions(udfStream);
-    }
-    
-    public UDFSource(InputStream udfStream, ClassLoader classloader) throws IOException {
-        this.classLoader = classloader;
-        loadFunctions(udfStream);
-    }    
-    
     
     public Collection getFunctionMethods() {
         return this.methods;
     }
 
     public Class getInvocationClass(String className) throws ClassNotFoundException {
-        // If no classpath is specified then use the default classpath
-        if (this.classLoader == null && (classpath == null || classpath.length == 0)) {
-            return Class.forName(className);
-        }
-        
-        // If the class loader is not created for the UDF functions then create 
-        // one and cache it.
-        if (classLoader == null) {
-            classLoader = new PostDelegatingClassLoader(this.classpath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());                        
-        }
-        
-        return classLoader.loadClass(className);
+        return Class.forName(className);
     }
-
-    public void loadFunctions(InputStream in) throws IOException{
-        methods = FunctionMetadataReader.loadFunctionMethods(in);
-    }  
 }

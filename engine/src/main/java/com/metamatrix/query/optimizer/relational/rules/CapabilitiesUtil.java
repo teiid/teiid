@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -38,7 +39,6 @@ import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -145,7 +145,7 @@ public class CapabilitiesUtil {
 
         // Check particular function
         String func = aggregate.getAggregateFunction();
-        if(func.equals(ReservedWords.COUNT)) {
+        if(func.equals(SQLReservedWords.COUNT)) {
             if(aggregate.getExpression() == null) {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_STAR)) {
                     return false;
@@ -155,19 +155,19 @@ public class CapabilitiesUtil {
                     return false;
                 }                
             }
-        } else if(func.equals(ReservedWords.SUM)) {
+        } else if(func.equals(SQLReservedWords.SUM)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_SUM)) {
                 return false;
             }
-        } else if(func.equals(ReservedWords.AVG)) {
+        } else if(func.equals(SQLReservedWords.AVG)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_AVG)) {
                 return false;
             }
-        } else if(func.equals(ReservedWords.MIN)) {
+        } else if(func.equals(SQLReservedWords.MIN)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MIN)) {
                 return false;
             }
-        } else if(func.equals(ReservedWords.MAX)) {
+        } else if(func.equals(SQLReservedWords.MAX)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MAX)) {
                 return false;
             }

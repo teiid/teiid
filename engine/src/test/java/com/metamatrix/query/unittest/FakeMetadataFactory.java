@@ -29,13 +29,22 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.metadata.TransformationMetadata;
+
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.dqp.message.ParameterInfo;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
 import com.metamatrix.query.mapping.xml.MappingDocument;
 import com.metamatrix.query.mapping.xml.MappingElement;
-import com.metamatrix.query.mapping.xml.MappingRecursiveElement;
 import com.metamatrix.query.mapping.xml.MappingSequenceNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -43,7 +52,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 public class FakeMetadataFactory {
 
     private static FakeMetadataFacade CACHED_EXAMPLE1 = example1();
-    private static FakeMetadataFacade CACHED_BQT = exampleBQT();
     private static FakeMetadataFacade CACHED_AGGREGATES = exampleAggregates();
         
 	private FakeMetadataFactory() { }
@@ -52,14 +60,38 @@ public class FakeMetadataFactory {
         return CACHED_EXAMPLE1;
     }
 
-    public static FakeMetadataFacade exampleBQTCached() {
-        return CACHED_BQT;
+    public static TransformationMetadata exampleBQTCached() {
+        return RealMetadataFactory.exampleBQTCached();
+    }
+    
+    public static void setCardinality(String group, int cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+    	if (metadata instanceof TransformationMetadata) {
+    		Table t = (Table)metadata.getGroupID(group);
+    		t.setCardinality(cardinality);
+    	} else if (metadata instanceof FakeMetadataFacade) {
+    		FakeMetadataObject fmo = (FakeMetadataObject)metadata.getGroupID(group);
+    		fmo.putProperty(FakeMetadataObject.Props.CARDINALITY, cardinality);
+    	} else {
+    		throw new RuntimeException("unknown metadata"); //$NON-NLS-1$
+    	}
+    	
     }
     
     public static FakeMetadataFacade exampleAggregatesCached() {
         return CACHED_AGGREGATES;
     }       
-
+    
+	public static DQPWorkContext buildWorkContext(QueryMetadataInterface metadata, VDBMetaData vdb) {
+		DQPWorkContext workContext = new DQPWorkContext();
+        workContext.setVdbName(vdb.getName()); 
+        workContext.setVdbVersion(vdb.getVersion()); 
+        workContext.setSessionToken(new SessionToken(5, "foo")); //$NON-NLS-1$
+        workContext.setVdb(vdb);
+        workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
+        DQPWorkContext.setWorkContext(workContext);
+		return workContext;
+	}
+    
     public static FakeMetadataFacade exampleBitwise() { 
         FakeMetadataObject phys = createPhysicalModel("phys"); //$NON-NLS-1$
         FakeMetadataObject t = createPhysicalGroup("phys.t", phys); //$NON-NLS-1$
@@ -97,6 +129,39 @@ public class FakeMetadataFactory {
         
         return new FakeMetadataFacade(store);
         
+    }
+    
+    public static VDBMetaData example1VDB() {
+    	VDBMetaData vdb = new VDBMetaData();
+    	vdb.setName("example1");
+    	vdb.setVersion(1);
+    	vdb.addModel(createModel("pm1", true));
+    	vdb.addModel(createModel("pm2", true));
+    	vdb.addModel(createModel("pm3", true));
+    	vdb.addModel(createModel("pm4", true));
+    	vdb.addModel(createModel("pm5", true));
+    	vdb.addModel(createModel("pm6", true));
+    	vdb.addModel(createModel("vm1", false));
+    	vdb.addModel(createModel("vm2", false));
+    	vdb.addModel(createModel("tm1", false));
+    	
+    	return vdb;
+    }
+    
+    public static ModelMetaData createModel(String name, boolean source) {
+    	ModelMetaData model = new ModelMetaData();
+    	model.setName(name);
+    	if (source) {
+    		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+    	}
+    	else {
+    		model.setModelType(ModelType.getString(ModelType.VIRTUAL));
+    	}
+    	model.setVisible(true);
+    	model.setSupportsMultiSourceBindings(false);
+    	model.addSourceMapping(name, null);
+    	
+    	return model;
     }
     
 	public static FakeMetadataFacade example1() { 
@@ -2049,671 +2114,25 @@ public class FakeMetadataFactory {
         return new FakeMetadataFacade(store);
     }
     
-    public static FakeMetadataFacade exampleBQT() { 
-        // Create models
-        FakeMetadataObject bqt1 = createPhysicalModel("BQT1"); //$NON-NLS-1$
-        FakeMetadataObject bqt2 = createPhysicalModel("BQT2"); //$NON-NLS-1$
-        FakeMetadataObject bqt3 = createPhysicalModel("BQT3"); //$NON-NLS-1$
-        FakeMetadataObject lob = createPhysicalModel("LOB"); //$NON-NLS-1$
-        FakeMetadataObject vqt = createVirtualModel("VQT"); //$NON-NLS-1$
-        
-        // Create physical groups
-        FakeMetadataObject bqt1SmallA = createPhysicalGroup("BQT1.SmallA", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1SmallB = createPhysicalGroup("BQT1.SmallB", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1MediumA = createPhysicalGroup("BQT1.MediumA", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt1MediumB = createPhysicalGroup("BQT1.MediumB", bqt1); //$NON-NLS-1$
-        FakeMetadataObject bqt2SmallA = createPhysicalGroup("BQT2.SmallA", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2SmallB = createPhysicalGroup("BQT2.SmallB", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2MediumA = createPhysicalGroup("BQT2.MediumA", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt2MediumB = createPhysicalGroup("BQT2.MediumB", bqt2); //$NON-NLS-1$
-        FakeMetadataObject bqt3SmallA = createPhysicalGroup("BQT3.SmallA", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3SmallB = createPhysicalGroup("BQT3.SmallB", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3MediumA = createPhysicalGroup("BQT3.MediumA", bqt3); //$NON-NLS-1$
-        FakeMetadataObject bqt3MediumB = createPhysicalGroup("BQT3.MediumB", bqt3); //$NON-NLS-1$
-        FakeMetadataObject lobTable = createPhysicalGroup("LOB.LobTbl", lob); //$NON-NLS-1$
-
-        // Create virtual groups
-        QueryNode vqtn1 = new QueryNode("VQT.SmallA", "SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg1 = createUpdatableVirtualGroup("VQT.SmallA", vqt, vqtn1); //$NON-NLS-1$
-        
-        QueryNode vqtn2 = new QueryNode("VQT.SmallB", "SELECT Concat(stringKey, stringNum) as a12345 FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2 = createUpdatableVirtualGroup("VQT.SmallB", vqt, vqtn2); //$NON-NLS-1$        
-
-        // Case 2589
-        QueryNode vqtn2589 = new QueryNode("VQT.SmallA_2589", "SELECT * FROM BQT1.SmallA WHERE StringNum = '10'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589 = createVirtualGroup("VQT.SmallA_2589", vqt, vqtn2589); //$NON-NLS-1$
-
-        QueryNode vqtn2589a = new QueryNode("VQT.SmallA_2589a", "SELECT BQT1.SmallA.* FROM BQT1.SmallA INNER JOIN BQT1.SmallB ON SmallA.IntKey = SmallB.IntKey WHERE SmallA.StringNum = '10'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589a = createVirtualGroup("VQT.SmallA_2589a", vqt, vqtn2589a); //$NON-NLS-1$
-
-        QueryNode vqtn2589b = new QueryNode("VQT.SmallA_2589b", "SELECT BQT1.SmallA.* FROM BQT1.SmallA INNER JOIN BQT1.SmallB ON SmallA.StringKey = SmallB.StringKey WHERE SmallA.StringNum = '10'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589b = createVirtualGroup("VQT.SmallA_2589b", vqt, vqtn2589b); //$NON-NLS-1$
-
-        QueryNode vqtn2589c = new QueryNode("VQT.SmallA_2589c", "SELECT BQT1.SmallA.* FROM BQT1.SmallA INNER JOIN BQT1.SmallB ON SmallA.StringKey = SmallB.StringKey WHERE concat(SmallA.StringNum, SmallB.StringNum) = '1010'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589c = createVirtualGroup("VQT.SmallA_2589c", vqt, vqtn2589c); //$NON-NLS-1$
-        
-        QueryNode vqtn2589d = new QueryNode("VQT.SmallA_2589d", "SELECT BQT1.SmallA.* FROM BQT1.SmallA INNER JOIN BQT1.SmallB ON SmallA.StringKey = SmallB.StringKey WHERE SmallA.StringNum = '10' AND SmallA.IntNum = 10"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589d = createVirtualGroup("VQT.SmallA_2589d", vqt, vqtn2589d); //$NON-NLS-1$
-
-        QueryNode vqtn2589f = new QueryNode("VQT.SmallA_2589f", "SELECT * FROM VQT.SmallA_2589"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589f = createVirtualGroup("VQT.SmallA_2589f", vqt, vqtn2589f); //$NON-NLS-1$
-
-        QueryNode vqtn2589g = new QueryNode("VQT.SmallA_2589g", "SELECT * FROM VQT.SmallA_2589b"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589g = createVirtualGroup("VQT.SmallA_2589g", vqt, vqtn2589g); //$NON-NLS-1$
-
-        QueryNode vqtn2589h = new QueryNode("VQT.SmallA_2589h", "SELECT VQT.SmallA_2589.* FROM VQT.SmallA_2589 INNER JOIN BQT1.SmallB ON VQT.SmallA_2589.StringKey = SmallB.StringKey"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589h = createVirtualGroup("VQT.SmallA_2589h", vqt, vqtn2589h); //$NON-NLS-1$
-        
-        QueryNode vqtn2589i = new QueryNode("VQT.SmallA_2589i", "SELECT BQT1.SmallA.* FROM BQT1.SmallA INNER JOIN BQT1.SmallB ON SmallA.StringKey = SmallB.StringKey WHERE SmallA.StringNum = '10' AND SmallB.StringNum = '10'"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg2589i = createVirtualGroup("VQT.SmallA_2589i", vqt, vqtn2589i); //$NON-NLS-1$
-
-        // defect 15355
-        QueryNode vqtn15355  = new QueryNode("VQT.Defect15355", "SELECT convert(IntKey, string) as StringKey, BigIntegerValue FROM BQT1.SmallA UNION SELECT StringKey, (SELECT BigIntegerValue FROM BQT3.SmallA WHERE BQT3.SmallA.BigIntegerValue = BQT2.SmallA.StringNum) FROM BQT2.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg15355  = createVirtualGroup("VQT.Defect15355", vqt, vqtn15355); //$NON-NLS-1$
-        QueryNode vqtn15355a  = new QueryNode("VQT.Defect15355a", "SELECT StringKey, StringNum, BigIntegerValue FROM BQT1.SmallA UNION SELECT StringKey, StringNum, (SELECT BigIntegerValue FROM BQT3.SmallA WHERE BQT3.SmallA.BigIntegerValue = BQT2.SmallA.StringNum) FROM BQT2.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg15355a  = createVirtualGroup("VQT.Defect15355a", vqt, vqtn15355a); //$NON-NLS-1$
-        QueryNode vqtn15355b  = new QueryNode("VQT.Defect15355b", "SELECT convert(IntKey, string) as IntKey, BigIntegerValue FROM BQT1.SmallA UNION SELECT StringKey, (SELECT BigIntegerValue FROM BQT3.SmallA WHERE BQT3.SmallA.BigIntegerValue = BQT2.SmallA.StringNum) FROM BQT2.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vqtg15355b  = createVirtualGroup("VQT.Defect15355b", vqt, vqtn15355b); //$NON-NLS-1$
-        
-        // Create physical elements
-        String[] elemNames = new String[] { 
-             "IntKey", "StringKey",  //$NON-NLS-1$ //$NON-NLS-2$
-             "IntNum", "StringNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "FloatNum", "LongNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DoubleNum", "ByteNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DateValue", "TimeValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "TimestampValue", "BooleanValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "CharValue", "ShortValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "BigIntegerValue", "BigDecimalValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "ObjectValue" }; //$NON-NLS-1$
-         String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.LONG, 
-                             DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.BYTE, 
-                             DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, 
-                             DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BOOLEAN, 
-                             DataTypeManager.DefaultDataTypes.CHAR, DataTypeManager.DefaultDataTypes.SHORT, 
-                             DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
-                             DataTypeManager.DefaultDataTypes.OBJECT };
-        
-        List<FakeMetadataObject> bqt1SmallAe = createElements(bqt1SmallA, elemNames, elemTypes);
-        bqt1SmallAe.get(1).putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "char"); //$NON-NLS-1$
-        List bqt1SmallBe = createElements(bqt1SmallB, elemNames, elemTypes);
-        List bqt1MediumAe = createElements(bqt1MediumA, elemNames, elemTypes);
-        List bqt1MediumBe = createElements(bqt1MediumB, elemNames, elemTypes);
-        List bqt2SmallAe = createElements(bqt2SmallA, elemNames, elemTypes);
-        List bqt2SmallBe = createElements(bqt2SmallB, elemNames, elemTypes);
-        List bqt2MediumAe = createElements(bqt2MediumA, elemNames, elemTypes);
-        List bqt2MediumBe = createElements(bqt2MediumB, elemNames, elemTypes);                
-        List bqt3SmallAe = createElements(bqt3SmallA, elemNames, elemTypes);
-        List bqt3SmallBe = createElements(bqt3SmallB, elemNames, elemTypes);
-        List bqt3MediumAe = createElements(bqt3MediumA, elemNames, elemTypes);
-        List bqt3MediumBe = createElements(bqt3MediumB, elemNames, elemTypes);
-        List lobTable_elem = createElements(lobTable, new String[] {"ClobValue"}, new String[] {DataTypeManager.DefaultDataTypes.CLOB}); //$NON-NLS-1$
-        
-        // Create virtual elements
-        List vqtg1e = createElements(vqtg1, elemNames, elemTypes);        
-        List vqtg2e = createElements(vqtg2, new String[] {"a12345"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});  //$NON-NLS-1$
-        List vqtg15355e = createElements(vqtg15355, new String[] {"StringKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
-        List vqtg15355ae = createElements(vqtg15355a, new String[] {"StringKey", "StringNum", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        List vqtg15355be = createElements(vqtg15355b, new String[] {"IntKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
-        List vqtg2589e = createElements(vqtg2589, elemNames, elemTypes);        
-        List vqtg2589ae = createElements(vqtg2589a, elemNames, elemTypes);        
-        List vqtg2589be = createElements(vqtg2589b, elemNames, elemTypes);        
-        List vqtg2589ce = createElements(vqtg2589c, elemNames, elemTypes);        
-        List vqtg2589de = createElements(vqtg2589d, elemNames, elemTypes);        
-        List vqtg2589fe = createElements(vqtg2589f, elemNames, elemTypes);        
-        List vqtg2589ge = createElements(vqtg2589g, elemNames, elemTypes);        
-        List vqtg2589he = createElements(vqtg2589h, elemNames, elemTypes);        
-        List vqtg2589ie = createElements(vqtg2589i, elemNames, elemTypes);        
-
-        // Add stored procedure
-        FakeMetadataObject pm1 = createPhysicalModel("pm1"); //$NON-NLS-1$
-        FakeMetadataObject rs1p1 = createParameter("intkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);         //$NON-NLS-1$
-        FakeMetadataObject rs1 = createResultSet("pm1.rs1", pm1, new String[] { "IntKey", "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs1p2 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        FakeMetadataObject spTest5 = createStoredProcedure("spTest5", pm1, Arrays.asList(new FakeMetadataObject[] { rs1p1, rs1p2}), "spTest5"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        FakeMetadataObject pm2 = createPhysicalModel("pm2"); //$NON-NLS-1$
-        FakeMetadataObject rs2p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        FakeMetadataObject rs2p2 = createParameter("outkey", 3, ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER, null);                 //$NON-NLS-1$
-        FakeMetadataObject rs2 = createResultSet("pm2.rs2", pm2, new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs2p3 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
-        FakeMetadataObject spTest8 = createStoredProcedure("pm2.spTest8", pm2, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2, rs2p3}), "spTest8"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        FakeMetadataObject spTest8a = createStoredProcedure("pm2.spTest8a", pm2, Arrays.asList(new FakeMetadataObject[] { rs2p2, rs2p3}), "spTest8a"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        FakeMetadataObject pm4 = createPhysicalModel("pm4"); //$NON-NLS-1$
-        FakeMetadataObject rs4p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        FakeMetadataObject rs4p2 = createParameter("ret", 1, ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        FakeMetadataObject spTest9 = createStoredProcedure("pm4.spTest9", pm4, Arrays.asList(new FakeMetadataObject[] { rs4p1, rs4p2}), "spTest9"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        FakeMetadataObject pm3 = createPhysicalModel("pm3"); //$NON-NLS-1$
-        FakeMetadataObject rs3p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        FakeMetadataObject rs3p2 = createParameter("outkey", 3, ParameterInfo.INOUT, DataTypeManager.DefaultDataTypes.INTEGER, null);                 //$NON-NLS-1$
-        FakeMetadataObject rs3 = createResultSet("pm3.rs3", pm3, new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FakeMetadataObject rs3p3 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs3);  //$NON-NLS-1$
-        FakeMetadataObject spTest11 = createStoredProcedure("spTest11", pm3, Arrays.asList(new FakeMetadataObject[] { rs3p1, rs3p2, rs3p3}), "spTest11"); //$NON-NLS-1$ //$NON-NLS-2$
-                   
-        //add virtual stored procedures 
-        FakeMetadataObject mmspTest1 = createVirtualModel("mmspTest1"); //$NON-NLS-1$
-        FakeMetadataObject vsprs1 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vspp1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsprs1); //$NON-NLS-1$
-        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor BEGIN x= intKeyCursor.intkey - 1; END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp1 = createVirtualProcedure("mmspTest1.MMSP1", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn1); //$NON-NLS-1$
-
-        QueryNode vspqn2 = new QueryNode("vsp2", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor1 BEGIN LOOP ON (SELECT intkey FROM bqt1.smallB) AS intKeyCursor2 BEGIN x= intKeyCursor1.intkey - intKeyCursor2.intkey; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp2 = createVirtualProcedure("mmspTest1.MMSP2", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn2); //$NON-NLS-1$
-
-        QueryNode vspqn3 = new QueryNode("vsp3", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor BEGIN x= intKeyCursor.intkey - 1; if(x = 25) BEGIN BREAK; END ELSE BEGIN CONTINUE; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp3 = createVirtualProcedure("mmspTest1.MMSP3", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn3); //$NON-NLS-1$
-
-        QueryNode vspqn4 = new QueryNode("vsp4", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE(x < 50) BEGIN x= x + 1; if(x = 25) BEGIN BREAK; END ELSE BEGIN CONTINUE; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp4 = createVirtualProcedure("mmspTest1.MMSP4", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn4); //$NON-NLS-1$
-
-        FakeMetadataObject vsp5p1 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
-        QueryNode vspqn5 = new QueryNode("vsp5", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 0; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp5 = createVirtualProcedure("mmspTest1.MMSP5", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1, vsp5p1 }), vspqn5); //$NON-NLS-1$
-
-        FakeMetadataObject vsp6p1 = createParameter("p1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
-        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 1; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vsp6 = createVirtualProcedure("mmspTest1.MMSP6", mmspTest1, Arrays.asList(new FakeMetadataObject[] { vspp1, vsp6p1 }), vspqn6); //$NON-NLS-1$
-
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(bqt1);
-        store.addObject(bqt1SmallA);     
-        store.addObjects(bqt1SmallAe);
-        store.addObject(bqt1SmallB);     
-        store.addObjects(bqt1SmallBe);
-        store.addObject(bqt1MediumA);     
-        store.addObjects(bqt1MediumAe);
-        store.addObject(bqt1MediumB);     
-        store.addObjects(bqt1MediumBe);
-
-        store.addObject(bqt2);
-        store.addObject(bqt2SmallA);     
-        store.addObjects(bqt2SmallAe);
-        store.addObject(bqt2SmallB);     
-        store.addObjects(bqt2SmallBe);
-        store.addObject(bqt2MediumA);     
-        store.addObjects(bqt2MediumAe);
-        store.addObject(bqt2MediumB);     
-        store.addObjects(bqt2MediumBe);
-
-        store.addObject(bqt3);
-        store.addObject(bqt3SmallA);     
-        store.addObjects(bqt3SmallAe);
-        store.addObject(bqt3SmallB);     
-        store.addObjects(bqt3SmallBe);
-        store.addObject(bqt3MediumA);     
-        store.addObjects(bqt3MediumAe);
-        store.addObject(bqt3MediumB);     
-        store.addObjects(bqt3MediumBe);
-
-        store.addObject(lob);
-        store.addObject(lobTable);     
-        store.addObjects(lobTable_elem);
-        
-        store.addObject(vqtg1);     
-        store.addObjects(vqtg1e);
-        
-        store.addObject(vqtg2);     
-        store.addObjects(vqtg2e);
-        
-        store.addObject(vqtg15355);     
-        store.addObjects(vqtg15355e);
-        store.addObject(vqtg15355a);     
-        store.addObjects(vqtg15355ae);
-        store.addObject(vqtg15355b);     
-        store.addObjects(vqtg15355be);
-
-        store.addObject(vqtg2589);     
-        store.addObjects(vqtg2589e);
-        store.addObject(vqtg2589a);     
-        store.addObjects(vqtg2589ae);
-        store.addObject(vqtg2589b);     
-        store.addObjects(vqtg2589be);
-        store.addObject(vqtg2589c);     
-        store.addObjects(vqtg2589ce);
-        store.addObject(vqtg2589d);     
-        store.addObjects(vqtg2589de);
-        store.addObject(vqtg2589f);     
-        store.addObjects(vqtg2589fe);
-        store.addObject(vqtg2589g);     
-        store.addObjects(vqtg2589ge);
-        store.addObject(vqtg2589h);     
-        store.addObjects(vqtg2589he);
-        store.addObject(vqtg2589i);     
-        store.addObjects(vqtg2589ie);
-
-        store.addObject(vqtg2);     
-        store.addObjects(vqtg2e);
-
-        store.addObject(pm1);
-        store.addObject(spTest5);
-        store.addObject(rs1);
-        
-        store.addObject(pm2);
-        store.addObject(spTest8);
-        store.addObject(spTest8a);
-        store.addObject(rs2);
-        
-        store.addObject(pm4);
-        store.addObject(spTest9);
-        
-        store.addObject(pm3);
-        store.addObject(spTest11);
-        store.addObject(rs3);
-        
-        store.addObject(vsp1);
-        store.addObject(vsp2);
-        store.addObject(vsp3);
-        store.addObject(vsp4);
-        store.addObject(vsp5);
-        store.addObject(vsp6);
-        
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-
-    public static FakeMetadataFacade exampleUQT() { 
-        // Create models
-        FakeMetadataObject uqt2 = createPhysicalModel("UQT2"); //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject uqt2UpdateA = createPhysicalGroup("UQT2.UpdateA", uqt2); //$NON-NLS-1$
-        FakeMetadataObject uqt2UpdateB = createPhysicalGroup("UQT2.UpdateB", uqt2); //$NON-NLS-1$
-        FakeMetadataObject uqt2BlobTable = createPhysicalGroup("UQT2.BlobTable", uqt2); //$NON-NLS-1$
-
-        // Create physical elements
-        String[] elemNames = new String[] { 
-             "IntKey", "StringKey",  //$NON-NLS-1$ //$NON-NLS-2$
-             "IntNum", "StringNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "FloatNum", "LongNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DoubleNum", "ByteNum",  //$NON-NLS-1$ //$NON-NLS-2$
-             "DateValue", "TimeValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "TimestampValue", "BooleanValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "CharValue", "ShortValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "BigIntegerValue", "BigDecimalValue",  //$NON-NLS-1$ //$NON-NLS-2$
-             "ObjectValue" }; //$NON-NLS-1$
-         String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.LONG, 
-                             DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.BYTE, 
-                             DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, 
-                             DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BOOLEAN, 
-                             DataTypeManager.DefaultDataTypes.CHAR, DataTypeManager.DefaultDataTypes.SHORT, 
-                             DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
-                             DataTypeManager.DefaultDataTypes.OBJECT };
-        
-        String[] blobElemNames = new String[] {
-            "id", "BlobValue"     //$NON-NLS-1$ //$NON-NLS-2$
-        };
-        String[] blobElemTypes = new String[] {DataTypeManager.DefaultDataTypes.STRING, 
-                             DataTypeManager.DefaultDataTypes.BLOB
-        };
-        
-        List uqt2UpdateAe = createElements(uqt2UpdateA, elemNames, elemTypes);
-        List uqt2UpdateBe = createElements(uqt2UpdateB, elemNames, elemTypes);        
-        List uqt2BlobTablee = createElements(uqt2BlobTable, blobElemNames, blobElemTypes);         
-
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(uqt2);
-        store.addObject(uqt2UpdateA);     
-        store.addObjects(uqt2UpdateAe);
-        store.addObject(uqt2UpdateB);     
-        store.addObjects(uqt2UpdateBe);
-        store.addObject(uqt2BlobTable);
-        store.addObjects(uqt2BlobTablee);
-        
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-
-    public static FakeMetadataFacade exampleLOB() { 
-        // Create models
-        FakeMetadataObject lib = createPhysicalModel("Blob"); //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject library = createPhysicalGroup("LOB_TESTING_ONE", lib, true); //$NON-NLS-1$
-        
-        // Create physical elements
-        String[] elemNames = new String[] { 
-             "CLOB_COLUMN", "BLOB_COLUMN", "KEY_EMULATOR" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-             
-        String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, 
-            DataTypeManager.DefaultDataTypes.INTEGER };
-               
-        List libe1 = createElements( library, elemNames, elemTypes, true);
-              
-       // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(lib);
-        store.addObject(library);     
-        store.addObjects(libe1);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-
-    public static FakeMetadataFacade exampleStream(boolean isStream) { 
-        // Create models
-        FakeMetadataObject lib = createPhysicalModel("Blob");  //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject library = null;
-        if (isStream) {
-            library = createPhysicalGroup("STREAMEXAMPLE", lib, true); //$NON-NLS-1$
-        } else {
-            library = createPhysicalGroup("READEREAMPLE", lib, true); //$NON-NLS-1$
-        }
-        // Create physical elements
-        String[] elemNames = new String[] { 
-            "KEY_EMULATOR", "DATA"};  //$NON-NLS-1$ //$NON-NLS-2$
-             
-        String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
-               
-        List libe1 = createElements( library, elemNames, elemTypes, true);
-              
-       // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(lib);
-        store.addObject(library);     
-        store.addObjects(libe1);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-
-    public static FakeMetadataFacade exampleBytes() { 
-        // Create models
-        FakeMetadataObject lib = createPhysicalModel("Blob");  //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject library = createPhysicalGroup("BYTE_EXAMPLE", lib, true); //$NON-NLS-1$
- 
-        // Create physical elements
-        String[] elemNames = new String[] { 
-            "KEY_EMULATOR", "DATA"};  //$NON-NLS-1$ //$NON-NLS-2$
-             
-        String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
-               
-        List libe1 = createElements( library, elemNames, elemTypes, true);
-              
-       // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(lib);
-        store.addObject(library);     
-        store.addObjects(libe1);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-               
-    public static FakeMetadataFacade exampleText() { 
-        // Create models
-        FakeMetadataObject lib = createPhysicalModel("Text"); //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject library = createPhysicalGroup("Text.Library", lib, true); //$NON-NLS-1$
-        
-        // Create physical elements
-        String[] elemNames = new String[] { 
-             "ID", "PDate", "Author" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-             
-        String[] elemTypes = new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.DATE, 
-            DataTypeManager.DefaultDataTypes.STRING };
-               
-        List libe1 = createElements( library, elemNames, elemTypes, false);
-              
-       // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(lib);
-        store.addObject(library);     
-        store.addObjects(libe1);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
+    public static VDBMetaData exampleBQTVDB() {
+    	VDBMetaData vdb = new VDBMetaData();
+    	vdb.setName("example1");
+    	vdb.setVersion(1);
+    	vdb.addModel(createModel("BQT1", true));
+    	vdb.addModel(createModel("BQT2", true));
+    	vdb.addModel(createModel("BQT3", true));
+    	vdb.addModel(createModel("LOB", true));
+    	vdb.addModel(createModel("VQT", false));
+    	vdb.addModel(createModel("pm1", true));
+    	vdb.addModel(createModel("pm2", true));
+    	vdb.addModel(createModel("pm3", true));
+    	vdb.addModel(createModel("pm4", true));
+    	
+    	return vdb;
     }
     
-    public static FakeMetadataFacade exampleXQT() {
-        FakeMetadataStore store = new FakeMetadataStore();
-        FakeMetadataFacade facade = new FakeMetadataFacade(store);
-        
-        // Create models
-        FakeMetadataObject xqt = FakeMetadataFactory.createPhysicalModel("XQT"); //$NON-NLS-1$
-        FakeMetadataObject xqttest = FakeMetadataFactory.createVirtualModel("xqttest");     //$NON-NLS-1$
-
-        // Create physical groups
-        //FakeMetadataObject xqtGroup = FakeMetadataFactory.createPhysicalGroup("xqt.data", xqt);
-        FakeMetadataObject xqtGroup = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallA", xqt); //$NON-NLS-1$
-        
-                
-        // Create physical elements
-        List xqtData = FakeMetadataFactory.createElements(xqtGroup, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        // Create virtual groups
-        QueryNode rsQuery = new QueryNode("xqttest.data", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey=13"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xqttest.data", xqttest, rsQuery); //$NON-NLS-1$
-
-        QueryNode rsQuery2 = new QueryNode("xqttest.data2", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery2.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xqttest.data2", xqttest, rsQuery2); //$NON-NLS-1$
-
-        QueryNode rsQuery3 = new QueryNode("xqttest.data3", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery3.addBinding("xqttest.data2.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs3 = FakeMetadataFactory.createVirtualGroup("xqttest.data3", xqttest, rsQuery3); //$NON-NLS-1$
-
-        QueryNode rsQuery4 = new QueryNode("xqttest.data4", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery4.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs4 = FakeMetadataFactory.createVirtualGroup("xqttest.data4", xqttest, rsQuery4); //$NON-NLS-1$
-
-        QueryNode rsQuery5 = new QueryNode("xqttest.data5", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery5.addBinding("xqttest.data4.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs5 = FakeMetadataFactory.createVirtualGroup("xqttest.data5", xqttest, rsQuery5); //$NON-NLS-1$
-
-        QueryNode rsQuery6 = new QueryNode("xqttest.data6", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery6.addBinding("xqttest.data5.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs6 = FakeMetadataFactory.createVirtualGroup("xqttest.data6", xqttest, rsQuery6); //$NON-NLS-1$
-
-        
-        QueryNode rsQuery7 = new QueryNode("xqttest.data7", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs7 = FakeMetadataFactory.createVirtualGroup("xqttest.data7", xqttest, rsQuery7); //$NON-NLS-1$
-
-        QueryNode rsQuery8 = new QueryNode("xqttest.data8", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey < ?"); //$NON-NLS-1$ //$NON-NLS-2$
-        rsQuery8.addBinding("xqttest.data7.intNum"); //$NON-NLS-1$
-        FakeMetadataObject rs8 = FakeMetadataFactory.createVirtualGroup("xqttest.data8", xqttest, rsQuery8); //$NON-NLS-1$
-
-        // Create virtual elements
-        List rsElements = FakeMetadataFactory.createElements(rs, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements2 = FakeMetadataFactory.createElements(rs2, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements3 = FakeMetadataFactory.createElements(rs3, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements4 = FakeMetadataFactory.createElements(rs4, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements5 = FakeMetadataFactory.createElements(rs5, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements6 = FakeMetadataFactory.createElements(rs6, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements7 = FakeMetadataFactory.createElements(rs7, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        List rsElements8 = FakeMetadataFactory.createElements(rs8, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-
-        FakeMetadataObject doc1 = FakeMetadataFactory.createVirtualGroup("xqttest.doc1", xqttest,   createXQTPlanRecursive_5988()); //$NON-NLS-1$
-        FakeMetadataObject doc1a = FakeMetadataFactory.createVirtualGroup("xqttest.doc1a", xqttest, createXQTPlanRecursive1a_5988()); //$NON-NLS-1$
-//        FakeMetadataObject doc2 = FakeMetadataFactory.createVirtualGroup("xqttest.doc2", xqttest,   createXQTPlanRecursiveSiblings());
-//        FakeMetadataObject doc3 = FakeMetadataFactory.createVirtualGroup("xqttest.doc3", xqttest,   createXQTPlanRecursive3_5988());
-//        FakeMetadataObject doc4 = FakeMetadataFactory.createVirtualGroup("xqttest.doc4", xqttest,   createXQTPlanChoice_6796());
-
-        store.addObject(xqt);
-        store.addObject(xqtGroup);
-        store.addObjects(xqtData);
-
-        store.addObject(xqttest);
-        store.addObject(rs);
-        store.addObject(rs2);
-        store.addObject(rs3);
-        store.addObject(rs4);
-        store.addObject(rs5);
-        store.addObject(rs6);
-        store.addObject(rs7);
-        store.addObject(rs8);
-        store.addObjects(rsElements);
-        store.addObjects(rsElements2);
-        store.addObjects(rsElements3);
-        store.addObjects(rsElements4);
-        store.addObjects(rsElements5);
-        store.addObjects(rsElements6);
-        store.addObjects(rsElements7);
-        store.addObjects(rsElements8);
-
-        store.addObject(doc1);
-        store.addObject(doc1a);
-//        store.addObject(doc2);
-//        store.addObject(doc3);
-//        store.addObject(doc4);
-
-        return facade;                
-    }
-
-    public static FakeMetadataFacade exampleXQT1() {
-        FakeMetadataStore store = new FakeMetadataStore();
-        FakeMetadataFacade facade = new FakeMetadataFacade(store);
-        
-        // Create models
-        FakeMetadataObject xqt = FakeMetadataFactory.createPhysicalModel("XQT"); //$NON-NLS-1$
-        FakeMetadataObject xqttest = FakeMetadataFactory.createVirtualModel("xqttest");     //$NON-NLS-1$
-
-        // Create physical groups
-        //FakeMetadataObject xqtGroup = FakeMetadataFactory.createPhysicalGroup("xqt.data", xqt);
-        FakeMetadataObject xqtGroup = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallA", xqt); //$NON-NLS-1$
-                      
-        // Create physical elements
-        List xqtData = FakeMetadataFactory.createElements(xqtGroup, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        // Create virtual groups
-        QueryNode rsQuery = new QueryNode("xqttest.data", "SELECT intKey, intNum, stringNum FROM BQT1.SmallA WHERE intKey=13"); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xqttest.data", xqttest, rsQuery); //$NON-NLS-1$
-
-        // Create virtual elements
-        List rsElements = FakeMetadataFactory.createElements(rs, 
-            new String[] { "intKey", "intNum", "stringNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
-
-        FakeMetadataObject doc1 = FakeMetadataFactory.createVirtualGroup("xqttest.doc1", xqttest,   createBQTDocTest_Plan()); //$NON-NLS-1$
-
-        store.addObject(xqt);
-        store.addObject(xqtGroup);
-        store.addObjects(xqtData);
-
-        store.addObject(xqttest);
-        store.addObject(rs);
-        store.addObjects(rsElements);
-        store.addObject(doc1);
-
-        return facade;                
-    }
-    
-    /**
-     * Method createXQTPlanRecursive.
-     * @return Object
-     */
-    private static MappingDocument createXQTPlanRecursive_5988() {
-        MappingDocument doc = new MappingDocument(true);
-        MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
-
-        MappingElement src1 = root.addChildElement(new MappingElement("src")); //$NON-NLS-1$
-        src1.setSource("xqttest.data");//$NON-NLS-1$
-
-        MappingSequenceNode seq1 = src1.addSequenceNode(new MappingSequenceNode());
-        seq1.addChildElement(new MappingElement("key", "xqttest.data.intKey")); //$NON-NLS-1$ //$NON-NLS-2$
-        seq1.addChildElement(new MappingElement("data", "xqttest.data.intNum")); //$NON-NLS-1$ //$NON-NLS-2$
-
-        MappingElement src2 = seq1.addChildElement(new MappingElement("srcNested")); //$NON-NLS-1$
-        src2.setSource("xqttest.data2");//$NON-NLS-1$
-
-        MappingSequenceNode seq2 = src2.addSequenceNode(new MappingSequenceNode());
-        seq2.addChildElement(new MappingElement("key", "xqttest.data2.intKey")); //$NON-NLS-1$ //$NON-NLS-2$
-        seq2.addChildElement(new MappingElement("data", "xqttest.data2.intNum")); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        MappingElement recursive = seq2.addChildElement(new MappingRecursiveElement("srcNestedRecursive", "xqttest.data2")); //$NON-NLS-1$ //$NON-NLS-2$
-        recursive.setSource("xqttest.data3");//$NON-NLS-1$
-                
-        return doc;
-    }
-        
-    /**
-     * Method createXQTPlanRecursive.
-     * @return Object
-     */
-    private static MappingDocument createXQTPlanRecursive1a_5988() {
-        
-        MappingDocument doc = new MappingDocument(true);
-        MappingElement root = doc.addChildElement(new MappingElement("recursiveTest")); //$NON-NLS-1$
-
-        MappingElement src1 = root.addChildElement(new MappingElement("src")); //$NON-NLS-1$
-        src1.setSource("xqttest.data");//$NON-NLS-1$
-
-        MappingSequenceNode seq1 = src1.addSequenceNode(new MappingSequenceNode());
-        seq1.addChildElement(new MappingElement("key", "xqttest.data.intKey")); //$NON-NLS-1$ //$NON-NLS-2$
-        seq1.addChildElement(new MappingElement("data", "xqttest.data.intNum")); //$NON-NLS-1$ //$NON-NLS-2$
-
-        MappingElement src2 = seq1.addChildElement(new MappingElement("srcNested")); //$NON-NLS-1$
-        src2.setSource("xqttest.data2");//$NON-NLS-1$
-
-        MappingSequenceNode seq2 = src2.addSequenceNode(new MappingSequenceNode());
-        seq2.addChildElement(new MappingElement("key", "xqttest.data2.intKey")); //$NON-NLS-1$ //$NON-NLS-2$
-        seq2.addChildElement(new MappingElement("data", "xqttest.data2.intNum")); //$NON-NLS-1$ //$NON-NLS-2$
-
-        MappingElement recursive = seq2.addChildElement(new MappingRecursiveElement("srcRecursive", "xqttest.data2")); //$NON-NLS-1$ //$NON-NLS-2$
-        recursive.setSource("xqttest.data3");//$NON-NLS-1$  
-
-        //          was not being used
-//        MappingRecursiveElement src4 = new MappingRecursiveElement("srcRecursive", "xqttest.data"); //$NON-NLS-1$ //$NON-NLS-2$
-//        src4.setSource("xqttest.data4"); //$NON-NLS-1$
-        return doc;
-    }
-
-    /**
-     * Method createXQTPlanRecursive.
-     * @return Object
-     */
-    private static MappingDocument createBQTDocTest_Plan() {
-        MappingDocument doc = new MappingDocument(false);
-        MappingElement root = doc.addChildElement(new MappingElement("BQTDocTest")); //$NON-NLS-1$
-        
-        MappingElement src1 = root.addChildElement(new MappingElement("src")); //$NON-NLS-1$
-        src1.setSource("xqttest.data");//$NON-NLS-1$ 
-
-        MappingSequenceNode seq1 = src1.addSequenceNode(new MappingSequenceNode());
-        seq1.addChildElement(new MappingElement("key", "xqttest.data.intKey")); //$NON-NLS-1$ //$NON-NLS-2$
-        seq1.addChildElement(new MappingElement("data", "xqttest.data.intNum")); //$NON-NLS-1$ //$NON-NLS-2$
-        return doc;
+    public static TransformationMetadata exampleBQT() { 
+    	return RealMetadataFactory.exampleBQT();
     }
 
     public static FakeMetadataFacade exampleSymphony() { 
@@ -2750,489 +2169,6 @@ public class FakeMetadataFactory {
         return new FakeMetadataFacade(store);
     }       
 
-    public static FakeMetadataFacade exampleSystemPhysical() { 
-        // Create models
-        FakeMetadataObject systemPhysical = createPhysicalModel("SystemPhysical"); //$NON-NLS-1$
-        
-        // Create physical groups
-        FakeMetadataObject rtVirtualDbs = createPhysicalGroup("SystemPhysical.RT_VIRTUAL_DBS", systemPhysical); //$NON-NLS-1$
-        List rtVirtualDbsEl = createElements(rtVirtualDbs, 
-            new String[] { 
-                "VDB_UID", //$NON-NLS-1$
-                "VDB_VERSION", //$NON-NLS-1$
-                "VDB_NM", //$NON-NLS-1$
-                "DESCRIPTION", //$NON-NLS-1$
-                "PROJECT_GUID", //$NON-NLS-1$
-                "VDB_STATUS", //$NON-NLS-1$
-                "VERSION_BY", //$NON-NLS-1$
-                "VERSION_DATE", //$NON-NLS-1$
-                "CREATED_BY", //$NON-NLS-1$
-                "CREATED_DATE" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING });
-                
-        FakeMetadataObject rtVdbMdls = createPhysicalGroup("SystemPhysical.RT_VDB_MDLS", systemPhysical); //$NON-NLS-1$
-        List rtVdbMdlsEl = createElements(rtVdbMdls, 
-            new String[] { 
-                "VDB_UID", //$NON-NLS-1$
-                "MDL_UID", //$NON-NLS-1$
-                "CNCTR_BNDNG_NM", //$NON-NLS-1$
-                "VISIBILITY" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-                
-        FakeMetadataObject rtMdls = createPhysicalGroup("SystemPhysical.RT_MDLS", systemPhysical); //$NON-NLS-1$
-        List rtMdlsEl = createElements(rtMdls, 
-            new String[] { 
-                "MDL_UID", //$NON-NLS-1$
-                "MDL_NM", //$NON-NLS-1$
-                "MDL_VERSION", //$NON-NLS-1$
-                "DESCRIPTION", //$NON-NLS-1$
-                "IS_PHYSICAL", //$NON-NLS-1$
-                "SUP_AND", //$NON-NLS-1$
-                "SUP_OR", //$NON-NLS-1$
-                "SUP_SET", //$NON-NLS-1$
-                "SUP_AGGREGATE", //$NON-NLS-1$
-                "SUP_WHERE_ALL", //$NON-NLS-1$
-                "SUP_SELECT_ALL", //$NON-NLS-1$
-                "SUP_ORDER_BY", //$NON-NLS-1$
-                "SUP_GRP_BY", //$NON-NLS-1$
-                "SUP_JOIN", //$NON-NLS-1$
-                "SUP_DISTINCT", //$NON-NLS-1$
-                "SUP_OUTER_JOIN", //$NON-NLS-1$
-                "SUP_TRANSACTION", //$NON-NLS-1$
-                "SUP_SUBSCRIPTION", //$NON-NLS-1$
-                "MAX_SET_SIZE", //$NON-NLS-1$
-                "MAX_RESULT_SIZE", //$NON-NLS-1$
-                "MDL_UUID" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING });
-
-        FakeMetadataObject rtGrps = createPhysicalGroup("SystemPhysical.RT_GRPS", systemPhysical); //$NON-NLS-1$
-        List rtGrpsEl = createElements(rtGrps, 
-            new String[] { 
-                "GRP_UID", //$NON-NLS-1$
-                "GRP_NM", //$NON-NLS-1$
-                "GRP_UPPR_NM", //$NON-NLS-1$
-                "MDL_UID", //$NON-NLS-1$
-                "DESCRIPTION", //$NON-NLS-1$
-                "ALIAS", //$NON-NLS-1$
-                "PATH_1", //$NON-NLS-1$
-                "TABLE_TYPE", //$NON-NLS-1$
-                "IS_PHYSICAL", //$NON-NLS-1$
-                "HAS_QUERY_PLAN", //$NON-NLS-1$
-                "SUP_UPDATE" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN });
-
-        FakeMetadataObject rtTableTypes = createPhysicalGroup("SystemPhysical.RT_TABLE_TYPES", systemPhysical); //$NON-NLS-1$
-        List rtTableTypesEl = createElements(rtTableTypes, 
-            new String[] { 
-                "TABLE_TYPE_CODE", //$NON-NLS-1$
-                "TABLE_TYPE_NM", //$NON-NLS-1$
-                "DESCRIPTION" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING });
-
-        FakeMetadataObject rtKyIdxes = createPhysicalGroup("SystemPhysical.RT_KY_IDXES", systemPhysical); //$NON-NLS-1$
-        List rtKyIdxesEl = createElements(rtKyIdxes, 
-            new String[] { 
-                "KEY_UID", //$NON-NLS-1$
-                "GRP_UID", //$NON-NLS-1$
-                "KEY_NM", //$NON-NLS-1$
-                "DESCRIPTION", //$NON-NLS-1$
-                "ALIAS", //$NON-NLS-1$
-                "KEY_TYPE", //$NON-NLS-1$
-                "IS_INDEXED", //$NON-NLS-1$
-                "REF_KEY_UID", //$NON-NLS-1$
-                "MATCH_TYPE" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-
-        FakeMetadataObject rtKeyTypes = createPhysicalGroup("SystemPhysical.RT_KEY_TYPES", systemPhysical); //$NON-NLS-1$
-        List rtKeyTypesEl = createElements(rtKeyTypes, 
-            new String[] { 
-                "KEY_TYPE_CODE", //$NON-NLS-1$
-                "KEY_TYPE_NM", //$NON-NLS-1$
-                "DESCRIPTION" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING });
-
-        FakeMetadataObject rtKyIdxElmnts = createPhysicalGroup("SystemPhysical.RT_KY_IDX_ELMNTS", systemPhysical); //$NON-NLS-1$
-        List rtKyIdxElmntsEl = createElements(rtKyIdxElmnts, 
-            new String[] { 
-                "ELMNT_UID", //$NON-NLS-1$
-                "KEY_UID", //$NON-NLS-1$
-                "POSITION" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-
-        FakeMetadataObject rtElmnts = createPhysicalGroup("SystemPhysical.RT_ELMNTS", systemPhysical); //$NON-NLS-1$
-        List rtElmntsEl = createElements(rtElmnts, 
-            new String[] { 
-                "ELMNT_UID", //$NON-NLS-1$
-                "ELMNT_NM", //$NON-NLS-1$
-                "ELMNT_UPPR_NM", //$NON-NLS-1$
-                "POSITION", //$NON-NLS-1$
-                "GRP_UID", //$NON-NLS-1$
-                "DESCRIPTION", //$NON-NLS-1$
-                "ALIAS", //$NON-NLS-1$
-                "LABEL", //$NON-NLS-1$
-                "DT_UID", //$NON-NLS-1$
-                "SCALE", //$NON-NLS-1$
-                "LNGTH", //$NON-NLS-1$
-                "PRCSN_LNGTH", //$NON-NLS-1$
-                "RADIX", //$NON-NLS-1$
-                "CHR_OCTCT_LNGTH", //$NON-NLS-1$
-                "IS_PHYSICAL", //$NON-NLS-1$
-                "IS_LENGTH_FIXED", //$NON-NLS-1$
-                "NULL_TYPE", //$NON-NLS-1$
-                "SUP_SELECT", //$NON-NLS-1$
-                "SUP_SET", //$NON-NLS-1$
-                "SUP_SUBSCRIPTION", //$NON-NLS-1$
-                "SUP_UPDATE", //$NON-NLS-1$
-                "IS_CASE_SENSITIVE", //$NON-NLS-1$
-                "IS_SIGNED", //$NON-NLS-1$
-                "IS_CURRENCY", //$NON-NLS-1$
-                "IS_AUTOINCREMENT", //$NON-NLS-1$
-                "MIN_RANGE", //$NON-NLS-1$
-                "MAX_RANGE", //$NON-NLS-1$
-                "SEARCH_TYPE", //$NON-NLS-1$
-                "FORMAT", //$NON-NLS-1$
-                "MULTIPLICITY", //$NON-NLS-1$
-                "DEFAULT_VL" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING });
-
-        // Create virtual groups
-        FakeMetadataObject system = createVirtualModel("System");        //$NON-NLS-1$
-        QueryNode node = new QueryNode("System.Models",  //$NON-NLS-1$
-            "SELECT RT_VIRTUAL_DBS.VDB_NM AS VDBName, RT_VIRTUAL_DBS.VDB_VERSION AS VDBVersion, RT_MDLS.MDL_NM AS Name, RT_MDLS.MDL_VERSION AS Version, RT_MDLS.DESCRIPTION, RT_MDLS.IS_PHYSICAL AS IsPhysical, RT_MDLS.SUP_AND AS SupportsAnd, RT_MDLS.SUP_OR AS SupportsOr, RT_MDLS.SUP_SET AS SupportsSetCriteria, RT_MDLS.SUP_AGGREGATE AS SupportsAggregates, RT_MDLS.SUP_WHERE_ALL AS SupportsWhereAll, RT_MDLS.SUP_SELECT_ALL AS SupportsSelectAll, RT_MDLS.SUP_ORDER_BY AS SupportsOrderBy, RT_MDLS.SUP_GRP_BY AS SupportsGroupBy, RT_MDLS.SUP_JOIN AS SupportsJoin, RT_MDLS.SUP_DISTINCT AS SupportsDistinct, RT_MDLS.SUP_OUTER_JOIN AS SupportsOuterJoin, RT_MDLS.SUP_TRANSACTION AS SupportsTransactions, RT_MDLS.SUP_SUBSCRIPTION AS SupportsSubscriptions, RT_MDLS.MAX_SET_SIZE AS MaxSetSize, RT_MDLS.MAX_RESULT_SIZE AS MaxResultSize, RT_MDLS.MDL_UID AS UID, RT_VIRTUAL_DBS.VDB_UID AS VDBUID " + //$NON-NLS-1$
-            "FROM SystemPhysical.RT_VIRTUAL_DBS AS RT_VIRTUAL_DBS, SystemPhysical.RT_VDB_MDLS AS RT_VDB_MDLS, SystemPhysical.RT_MDLS AS RT_MDLS " +           //$NON-NLS-1$
-            "WHERE (RT_VIRTUAL_DBS.VDB_UID = RT_VDB_MDLS.VDB_UID) AND (RT_VDB_MDLS.MDL_UID = RT_MDLS.MDL_UID) AND (RT_VDB_MDLS.VISIBILITY = 0)"); //$NON-NLS-1$
-        FakeMetadataObject models = createVirtualGroup("System.Models", system, node); //$NON-NLS-1$
-        List modelsEl = createElements(models, 
-            new String[] { 
-                "VDBName", //$NON-NLS-1$
-                "VDBVersion", //$NON-NLS-1$
-                "Name",  //$NON-NLS-1$
-                "Version", //$NON-NLS-1$
-                "Description", //$NON-NLS-1$
-                "IsPhysical", //$NON-NLS-1$
-                "SupportsAnd", //$NON-NLS-1$
-                "SupportsOr", //$NON-NLS-1$
-                "SupportsSetCriteria", //$NON-NLS-1$
-                "SupportsAggregates", //$NON-NLS-1$
-                "SupportsWhereAll", //$NON-NLS-1$
-                "SupportsSelectAll", //$NON-NLS-1$
-                "SupportsOrderBy", //$NON-NLS-1$
-                "SupportsGroupBy", //$NON-NLS-1$
-                "SupportsJoin", //$NON-NLS-1$
-                "SupportsDistinct", //$NON-NLS-1$
-                "SupportsOuterJoin", //$NON-NLS-1$
-                "SupportsTransactions", //$NON-NLS-1$
-                "SupportsSubscriptions", //$NON-NLS-1$
-                "MaxSetSize", //$NON-NLS-1$
-                "MaxResultSize", //$NON-NLS-1$
-                "UID", //$NON-NLS-1$
-                "VDBUID" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-        
-        node = new QueryNode("System.Groups",  //$NON-NLS-1$
-            "SELECT Models.VDBName, Models.VDBVersion, Models.Name AS ModelName, RT_GRPS.PATH_1 AS FullName, RT_GRPS.GRP_NM AS Name, RT_GRPS.DESCRIPTION, RT_TABLE_TYPES.TABLE_TYPE_NM AS Type, RT_GRPS.ALIAS AS NameInSource, RT_GRPS.IS_PHYSICAL AS IsPhysical, RT_GRPS.HAS_QUERY_PLAN AS HasQueryPlan, RT_GRPS.GRP_UPPR_NM AS UpperName, RT_GRPS.SUP_UPDATE AS SupportsUpdates, RT_GRPS.GRP_UID AS UID " + //$NON-NLS-1$
-            "FROM SystemPhysical.RT_GRPS AS RT_GRPS, System.Models AS Models, SystemPhysical.RT_TABLE_TYPES AS RT_TABLE_TYPES " + //$NON-NLS-1$
-            "WHERE (RT_GRPS.MDL_UID = Models.UID) AND (RT_GRPS.TABLE_TYPE = RT_TABLE_TYPES.TABLE_TYPE_CODE) AND (RT_GRPS.TABLE_TYPE <> 5)"); //$NON-NLS-1$
-        FakeMetadataObject groups = createVirtualGroup("System.Groups", system, node); //$NON-NLS-1$
-        List groupsEl = createElements(groups, 
-            new String[] { 
-                "VDBName", //$NON-NLS-1$
-                "VDBVersion", //$NON-NLS-1$
-                "ModelName",  //$NON-NLS-1$
-                "FullName", //$NON-NLS-1$
-                "Name", //$NON-NLS-1$
-                "Description", //$NON-NLS-1$
-                "Type", //$NON-NLS-1$
-                "NameInSource", //$NON-NLS-1$
-                "IsPhysical", //$NON-NLS-1$
-                "HasQueryPlan", //$NON-NLS-1$
-                "UpperName", //$NON-NLS-1$
-                "SupportsUpdates", //$NON-NLS-1$
-                "UID" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-
-        node = new QueryNode("System.Keys",  //$NON-NLS-1$
-            "SELECT GROUPS.VDBName, GROUPS.VDBVersion, GROUPS.ModelName, GROUPS.FullName AS GroupFullName, RT_KY_IDXES.KEY_NM AS Name, RT_KY_IDXES.DESCRIPTION, RT_KY_IDXES.ALIAS AS NameInSource, RT_KEY_TYPES.KEY_TYPE_NM AS Type, RT_KY_IDXES.IS_INDEXED AS IsIndexed, RT_KY_IDXES.MATCH_TYPE AS MatchType, GROUPS.Name AS GroupName, GROUPS.UpperName AS GroupUpperName, RT_KY_IDXES.REF_KEY_UID AS RefKeyUID, RT_KY_IDXES.KEY_UID AS UID " + //$NON-NLS-1$
-            "FROM SystemPhysical.RT_KY_IDXES AS RT_KY_IDXES, System.Groups AS GROUPS, SystemPhysical.RT_KEY_TYPES AS RT_KEY_TYPES " + //$NON-NLS-1$
-            "WHERE (RT_KY_IDXES.GRP_UID = GROUPS.UID) AND (RT_KY_IDXES.KEY_TYPE = RT_KEY_TYPES.KEY_TYPE_CODE)"); //$NON-NLS-1$
-        FakeMetadataObject keys = createVirtualGroup("System.Keys", system, node); //$NON-NLS-1$
-        List keysEl = createElements(keys, 
-            new String[] { 
-                "VDBName", //$NON-NLS-1$
-                "VDBVersion", //$NON-NLS-1$
-                "ModelName",  //$NON-NLS-1$
-                "GroupFullName", //$NON-NLS-1$
-                "Name", //$NON-NLS-1$
-                "Description", //$NON-NLS-1$
-                "NameInSource", //$NON-NLS-1$
-                "Type", //$NON-NLS-1$
-                "IsIndexed", //$NON-NLS-1$
-                "MatchType", //$NON-NLS-1$
-                "GroupName", //$NON-NLS-1$
-                "GroupUpperName", //$NON-NLS-1$
-                "RefKeyUID", //$NON-NLS-1$
-                "UID" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.BOOLEAN,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-
-        node = new QueryNode("System.KeyElements",  //$NON-NLS-1$
-            "SELECT KEYS.VDBName, KEYS.VDBVersion, KEYS.ModelName, KEYS.GroupFullName, RT_ELMNTS.ELMNT_NM AS Name, RT_KY_IDX_ELMNTS.POSITION, KEYS.Name AS KeyName, KEYS.Type AS KeyType, KEYS.GroupName, KEYS.GroupUpperName, KEYS.RefKeyUID, KEYS.UID " + //$NON-NLS-1$
-            "FROM System.Keys AS KEYS LEFT OUTER JOIN SystemPhysical.RT_KY_IDX_ELMNTS AS RT_KY_IDX_ELMNTS ON RT_KY_IDX_ELMNTS.KEY_UID = KEYS.UID, SystemPhysical.RT_ELMNTS AS RT_ELMNTS " + //$NON-NLS-1$
-            "WHERE RT_KY_IDX_ELMNTS.ELMNT_UID = RT_ELMNTS.ELMNT_UID"); //$NON-NLS-1$
-        FakeMetadataObject keyElements = createVirtualGroup("System.KeyElements", system, node); //$NON-NLS-1$
-        List keyElementsEl = createElements(keyElements, 
-            new String[] { 
-                "VDBName", //$NON-NLS-1$
-                "VDBVersion", //$NON-NLS-1$
-                "ModelName",  //$NON-NLS-1$
-                "GroupFullName", //$NON-NLS-1$
-                "Name", //$NON-NLS-1$
-                "Position", //$NON-NLS-1$
-                "KeyName", //$NON-NLS-1$
-                "KeyType", //$NON-NLS-1$
-                "GroupName", //$NON-NLS-1$
-                "GroupUpperName", //$NON-NLS-1$
-                "RefKeyUID", //$NON-NLS-1$
-                "UID" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.INTEGER });
-
-        node = new QueryNode("System.ReferenceKeyElements",  //$NON-NLS-1$
-            "SELECT PK.VDBName, PK.VDBVersion, PK.ModelName, PK.GroupName AS PKGroupName, PK.GroupFullName AS PKGroupFullName, PK.Name AS PKElementName, FK.ModelName AS FKModelName, FK.GroupName AS FKGroupName, FK.GroupFullName AS FKGroupFullName, FK.Name AS FKElementName, FK.Position AS FKPosition, PK.KeyName AS PKKeyName, FK.KeyName AS FKKeyName, PK.KeyType AS PKKeyType, FK.KeyType AS FKKeyType, PK.GroupUpperName AS PKGroupUpperName, FK.GroupUpperName AS FKGroupUpperName " + //$NON-NLS-1$
-            "FROM System.KeyElements AS PK, System.KeyElements AS FK " + //$NON-NLS-1$
-            "WHERE (PK.UID = FK.RefKeyUID) AND (PK.Position = FK.Position)"); //$NON-NLS-1$
-        FakeMetadataObject refKeyElements = createVirtualGroup("System.ReferenceKeyElements", system, node); //$NON-NLS-1$
-        List refKeyElementsEl = createElements(refKeyElements, 
-            new String[] { 
-                "VDBName", //$NON-NLS-1$
-                "VDBVersion", //$NON-NLS-1$
-                "ModelName",  //$NON-NLS-1$
-                "PKGroupName", //$NON-NLS-1$
-                "PKGroupFullName", //$NON-NLS-1$
-                "PKElementName", //$NON-NLS-1$
-                "FKModelName",  //$NON-NLS-1$
-                "FKGroupName", //$NON-NLS-1$
-                "FKGroupFullName", //$NON-NLS-1$
-                "FKElementName", //$NON-NLS-1$
-                "FKPosition", //$NON-NLS-1$
-                "PKKeyName", //$NON-NLS-1$
-                "FKKeyName", //$NON-NLS-1$
-                "PKKeyType", //$NON-NLS-1$
-                "FKKeyType", //$NON-NLS-1$
-                "PKGroupUpperName", //$NON-NLS-1$
-                "FKGroupUpperName" }, //$NON-NLS-1$
-            new String[] { 
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.INTEGER,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING,
-                DataTypeManager.DefaultDataTypes.STRING });
-                
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(systemPhysical);
-        store.addObject(rtVirtualDbs);     
-        store.addObjects(rtVirtualDbsEl);
-        store.addObject(rtVdbMdls);
-        store.addObjects(rtVdbMdlsEl);
-        store.addObject(rtMdls);     
-        store.addObjects(rtMdlsEl);
-        store.addObject(rtGrps);
-        store.addObjects(rtGrpsEl);
-        store.addObject(rtTableTypes);     
-        store.addObjects(rtTableTypesEl);
-        store.addObject(rtKyIdxes);
-        store.addObjects(rtKyIdxesEl);
-        store.addObject(rtKeyTypes);
-        store.addObjects(rtKeyTypesEl);
-        store.addObject(rtKyIdxElmnts);
-        store.addObjects(rtKyIdxElmntsEl);
-        store.addObject(rtElmnts);
-        store.addObjects(rtElmntsEl);
-
-        store.addObject(system);
-        store.addObject(models);
-        store.addObjects(modelsEl);
-        store.addObject(groups);
-        store.addObjects(groupsEl);
-        store.addObject(keys);
-        store.addObjects(keysEl);
-        store.addObject(keyElements);
-        store.addObjects(keyElementsEl);
-        store.addObject(refKeyElements);
-        store.addObjects(refKeyElementsEl);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }    
-        
     public static FakeMetadataFacade exampleYahoo() { 
         // Create models
         FakeMetadataObject yahoo = createPhysicalModel("Yahoo"); //$NON-NLS-1$
@@ -3366,6 +2302,19 @@ public class FakeMetadataFactory {
         store.addObjects(virtElements1);
         return new FakeMetadataFacade(store);
     }
+    
+    
+    public static VDBMetaData examplePrivatePhysicalModelVDB() {
+    	VDBMetaData vdb = new VDBMetaData();
+    	vdb.setName("example1");
+    	vdb.setVersion(1);
+    	ModelMetaData m = createModel("pm1", true);
+    	m.setVisible(false);
+    	vdb.addModel(m);
+    	vdb.addModel(createModel("vm1", false));
+    	
+    	return vdb;
+    }    
     
     public static FakeMetadataFacade examplePrivatePhysicalModel() { 
         // Create models
@@ -3575,6 +2524,24 @@ public class FakeMetadataFactory {
         store.addObjects(divisionsElements);
         store.addObject(dealers);     
         store.addObjects(dealersElements);
+    }
+    
+    
+    public static VDBMetaData exampleMultiBindingVDB() {
+    	VDBMetaData vdb = new VDBMetaData();
+    	vdb.setName("exampleMultiBinding");
+    	vdb.setVersion(1);
+    	
+    	ModelMetaData model = new ModelMetaData();
+    	model.setName("MultiModel");
+   		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+    	model.setVisible(true);
+    	
+    	model.setSupportsMultiSourceBindings(true);
+    	vdb.addModel(model);
+    	vdb.addModel(createModel("Virt", false));
+    	
+    	return vdb;
     }
     
     /** 
@@ -3930,6 +2897,14 @@ public class FakeMetadataFactory {
         store.addObjects(playersDocElements);
         return facade;
     }    
+    
+    public static VDBMetaData exampleXQueryTransformationsVDB() {
+    	VDBMetaData vdb = new VDBMetaData();
+    	vdb.setName("exampleXQueryTransformations");
+    	vdb.setVersion(1);
+    	vdb.addModel(createModel("m", true));
+    	return vdb;
+    }
     
     public static FakeMetadataFacade exampleXQueryTransformations() {
         FakeMetadataObject model = FakeMetadataFactory.createPhysicalModel("m");//$NON-NLS-1$ 

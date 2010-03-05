@@ -25,7 +25,8 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.dqp.internal.datamgr.language.SearchedCaseExpressionImpl;
+import org.teiid.connector.language.SearchedCase;
+
 
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -60,8 +61,8 @@ public class TestSearchedCaseExpressionImpl extends TestCase {
         return caseExpr;
     }
     
-    public static SearchedCaseExpressionImpl example() throws Exception {
-        return (SearchedCaseExpressionImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static SearchedCase example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetElseExpression() throws Exception {
@@ -72,19 +73,19 @@ public class TestSearchedCaseExpressionImpl extends TestCase {
     }
 
     public void testGetThenExpression() throws Exception {
-        assertNotNull(example().getThenExpression(0));
-        assertNotNull(example().getThenExpression(1));
-        assertNotNull(example().getThenExpression(2));
+        assertNotNull(example().getCases().get(0));
+        assertNotNull(example().getCases().get(1));
+        assertNotNull(example().getCases().get(2));
     }
 
     public void testGetWhenCount() throws Exception {
-        assertEquals(3, example().getWhenCount());
+        assertEquals(3, example().getCases().size());
     }
 
     public void testGetWhenCriteria() throws Exception {
-        assertNotNull(example().getWhenCriteria(0));
-        assertNotNull(example().getWhenCriteria(1));
-        assertNotNull(example().getWhenCriteria(2));
+        assertNotNull(example().getCases().get(0));
+        assertNotNull(example().getCases().get(1));
+        assertNotNull(example().getCases().get(2));
     }
 
 }

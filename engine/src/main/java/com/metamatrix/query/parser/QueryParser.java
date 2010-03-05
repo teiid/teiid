@@ -24,10 +24,11 @@ package com.metamatrix.query.parser;
 
 import java.io.StringReader;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Option;
@@ -126,7 +127,7 @@ public class QueryParser {
             // Check for OPTION
             Option option = null;
             int closeBracket = sql.lastIndexOf(XML_CLOSE_BRACKET);
-            int optionIndex = sql.toUpperCase().lastIndexOf(ReservedWords.OPTION);
+            int optionIndex = sql.toUpperCase().lastIndexOf(SQLReservedWords.OPTION);
             if (optionIndex != -1 && optionIndex > closeBracket){
                 String optionSQL = sql.substring(optionIndex);
                 option = getOption(optionSQL, parseInfo);

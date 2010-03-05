@@ -22,13 +22,10 @@
 
 package com.metamatrix.query.optimizer;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.FunctionMetadataSource;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
@@ -54,9 +51,6 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         return Class.forName(className); 
     }
     
- 	public void loadFunctions(InputStream source) throws IOException{
- 	}
-    
     // dummy function
     public static Object xyz() {
         return null;
@@ -67,9 +61,4 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         String string = (String)astring;
         return string.trim();
     }
-    
-    public static void setupFunctionLibrary() {
-        FunctionLibraryManager.registerSource(new FakeFunctionMetadataSource());        
-    }
-    
 }

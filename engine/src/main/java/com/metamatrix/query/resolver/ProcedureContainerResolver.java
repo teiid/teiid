@@ -106,7 +106,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         TempMetadataStore childMetadata = new TempMetadataStore();
         QueryMetadataInterface resolveMetadata = new TempMetadataAdapter(metadata, childMetadata);
 
-        GroupContext externalGroups = findChildCommandMetadata(procCommand, subCommand, childMetadata, resolveMetadata);
+        GroupContext externalGroups = findChildCommandMetadata(procCommand, childMetadata, resolveMetadata);
         
         QueryResolver.setChildMetadata(subCommand, childMetadata.getData(), externalGroups);
         
@@ -132,20 +132,27 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
      * Find all metadata defined by this command for it's children.  This metadata should be collected 
      * in the childMetadata object.  Typical uses of this are for stored queries that define parameter
      * variables valid in subcommands. only used for inserts, updates, and deletes
-     * @param command The command to find metadata on
      * @param metadata Metadata access
+     * @param command The command to find metadata on
      * @param childMetadata The store to collect child metadata in 
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
      * @throws MetaMatrixComponentException If there is an internal error    
      */ 
-    public GroupContext findChildCommandMetadata(ProcedureContainer container, Command subCommand, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
+    public GroupContext findChildCommandMetadata(ProcedureContainer container, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
         // get the group on the delete statement
         GroupSymbol group = container.getGroup();
         // proceed further if it is a virtual group
             
-        GroupContext externalGroups = new GroupContext();
+        return createChildMetadata(discoveredMetadata, metadata, group);
+    }
+
+	static GroupContext createChildMetadata(
+			TempMetadataStore discoveredMetadata,
+			QueryMetadataInterface metadata, GroupSymbol group)
+			throws QueryMetadataException, MetaMatrixComponentException {
+		GroupContext externalGroups = new GroupContext();
         
         //Look up elements for the virtual group
         List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
@@ -159,6 +166,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         }
 
         addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments);
+        addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments);
 
         // Switch type to be boolean for all CHANGING variables
         List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
@@ -170,9 +178,8 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         }
 
         addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements);
-        
-        return externalGroups;
-    }
+		return externalGroups;
+	}
         
     /** 
      * @see com.metamatrix.query.resolver.CommandResolver#resolveCommand(com.metamatrix.query.sql.lang.Command, com.metamatrix.query.metadata.TempMetadataAdapter, com.metamatrix.query.analysis.AnalysisRecord, boolean)

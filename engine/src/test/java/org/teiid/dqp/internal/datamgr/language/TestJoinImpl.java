@@ -23,18 +23,17 @@
 package org.teiid.dqp.internal.datamgr.language;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
-import org.teiid.connector.language.ICriteria;
-import org.teiid.dqp.internal.datamgr.language.JoinImpl;
+import junit.framework.TestCase;
+
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.Join;
 
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.JoinPredicate;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-
-import junit.framework.TestCase;
 
 public class TestJoinImpl extends TestCase {
 
@@ -57,8 +56,8 @@ public class TestJoinImpl extends TestCase {
                                  criteria);
     }
     
-    public static JoinImpl example(JoinType type) throws Exception {
-        return (JoinImpl)TstLanguageBridgeFactory.factory.translate(helpExample(type));
+    public static Join example(JoinType type) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(type));
     }
 
     public void testGetLeftItem() throws Exception {
@@ -70,20 +69,16 @@ public class TestJoinImpl extends TestCase {
     }
 
     public void testGetJoinType() throws Exception {
-        assertEquals(org.teiid.connector.language.IJoin.JoinType.CROSS_JOIN, example(JoinType.JOIN_CROSS).getJoinType());
-        assertEquals(org.teiid.connector.language.IJoin.JoinType.FULL_OUTER_JOIN, example(JoinType.JOIN_FULL_OUTER).getJoinType());
-        assertEquals(org.teiid.connector.language.IJoin.JoinType.INNER_JOIN, example(JoinType.JOIN_INNER).getJoinType());
-        assertEquals(org.teiid.connector.language.IJoin.JoinType.LEFT_OUTER_JOIN, example(JoinType.JOIN_LEFT_OUTER).getJoinType());
-        assertEquals(org.teiid.connector.language.IJoin.JoinType.RIGHT_OUTER_JOIN, example(JoinType.JOIN_RIGHT_OUTER).getJoinType());
+        assertEquals(Join.JoinType.CROSS_JOIN, example(JoinType.JOIN_CROSS).getJoinType());
+        assertEquals(Join.JoinType.FULL_OUTER_JOIN, example(JoinType.JOIN_FULL_OUTER).getJoinType());
+        assertEquals(Join.JoinType.INNER_JOIN, example(JoinType.JOIN_INNER).getJoinType());
+        assertEquals(Join.JoinType.LEFT_OUTER_JOIN, example(JoinType.JOIN_LEFT_OUTER).getJoinType());
+        assertEquals(Join.JoinType.RIGHT_OUTER_JOIN, example(JoinType.JOIN_RIGHT_OUTER).getJoinType());
     }
 
     public void testGetCriteria() throws Exception {
-        JoinImpl join = example(JoinType.JOIN_INNER);
-        assertNotNull(join.getCriteria());
-        assertEquals(1, join.getCriteria().size());
-        for (Iterator i = join.getCriteria().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof ICriteria);
-        }
+        Join join = example(JoinType.JOIN_INNER);
+        assertTrue(join.getCondition() instanceof Comparison);
     }
 
 }

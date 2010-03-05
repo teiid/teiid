@@ -23,16 +23,18 @@
 package org.teiid.dqp.internal.process.multisource;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -51,19 +53,15 @@ import com.metamatrix.query.util.CommandContext;
 public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	
 	private Set<String> multiSourceModels;
-	private String vdbName;
-	private String vdbVersion;
-	private VDBService vdbService;
+	private DQPWorkContext workContext;
 	
 	public MultiSourcePlanToProcessConverter(QueryMetadataInterface metadata,
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
 			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
-			String vdbName, VDBService vdbService, String vdbVersion, CommandContext context) {
+			DQPWorkContext workContext, CommandContext context) {
 		super(metadata, idGenerator, analysisRecord, capFinder);
 		this.multiSourceModels = multiSourceModels;
-		this.vdbName = vdbName;
-		this.vdbService = vdbService;
-		this.vdbVersion = vdbVersion;
+		this.workContext = workContext;
 	}
 
 	protected RelationalNode convertNode(PlanNode planNode) throws QueryPlannerException, MetaMatrixComponentException {
@@ -86,24 +84,23 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		if(!this.multiSourceModels.contains(modelName)) {
             return accessNode;
         }
-        List bindings = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
-        List<AccessNode> accessNodes = new ArrayList<AccessNode>(bindings.size());
-        Iterator bindingIter = bindings.iterator();
         
-        while(bindingIter.hasNext()) {
-            String bindingUUID = (String) bindingIter.next();
-            String bindingName = vdbService.getConnectorName(bindingUUID);
+		VDBMetaData vdb = workContext.getVDB();
+        ModelMetaData model = vdb.getModel(modelName);
+        List<AccessNode> accessNodes = new ArrayList<AccessNode>();
+        
+        for(String sourceName:model.getSourceNames()) {
             
             // Create a new cloned version of the access node and set it's model name to be the bindingUUID
             AccessNode instanceNode = (AccessNode) accessNode.clone();
             instanceNode.setID(getID());
-            instanceNode.setConnectorBindingId(bindingUUID);
+            instanceNode.setConnectorBindingId(model.getSourceJndiName(sourceName));
             
             // Modify the command to pull the instance column and evaluate the criteria
             Command command = (Command)instanceNode.getCommand().clone();
             
             // Replace all multi-source elements with the source name
-            DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(bindingName));
+            DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName));
 
             // Rewrite the command now that criteria may have been simplified
             try {

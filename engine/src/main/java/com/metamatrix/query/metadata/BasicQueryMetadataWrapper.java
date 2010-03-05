@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingNode;
 
@@ -360,6 +361,11 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public boolean isScalarGroup(Object groupID)
 			throws MetaMatrixComponentException, QueryMetadataException {
 		return actualMetadata.isScalarGroup(groupID);
+	}
+
+	@Override
+	public FunctionLibrary getFunctionLibrary() {
+		return actualMetadata.getFunctionLibrary();
 	}
 
 }

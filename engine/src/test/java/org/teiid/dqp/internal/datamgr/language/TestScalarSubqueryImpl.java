@@ -22,14 +22,12 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelectSymbol;
-import org.teiid.dqp.internal.datamgr.language.ScalarSubqueryImpl;
-
 import junit.framework.TestCase;
 
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.ScalarSubquery;
+
 import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 /**
@@ -44,24 +42,23 @@ public class TestScalarSubqueryImpl extends TestCase {
         super(name);
     }
 
-    public static ScalarSubquery helpExample() {
-        Query query = TestQueryImpl.helpExample();
-        ScalarSubquery ss = new ScalarSubquery(query);
+    public static com.metamatrix.query.sql.symbol.ScalarSubquery helpExample() {
+        Query query = TestQueryImpl.helpExample(true);
+        com.metamatrix.query.sql.symbol.ScalarSubquery ss = new com.metamatrix.query.sql.symbol.ScalarSubquery(query);
         ss.setType(((SingleElementSymbol)query.getProjectedSymbols().get(0)).getType());
         return ss;
     }
     
-    public static ScalarSubqueryImpl example() throws Exception {
-        return (ScalarSubqueryImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static ScalarSubquery example() throws Exception {
+        return (ScalarSubquery)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetQuery() throws Exception {
-        assertNotNull(example().getQuery());    }
+        assertNotNull(example().getSubquery());    }
     
     public void testGetType() throws Exception {
-        IQuery query = TstLanguageBridgeFactory.factory.translate(TestQueryImpl.helpExample());
-        Class firstSymbolType = ((ISelectSymbol) query.getSelect().getSelectSymbols().get(0)).getExpression().getType();
-                
+        Select query = TstLanguageBridgeFactory.factory.translate(TestQueryImpl.helpExample(true));
+        Class<?> firstSymbolType = query.getDerivedColumns().get(0).getExpression().getType();
         assertEquals("Got incorrect type", firstSymbolType, example().getType()); //$NON-NLS-1$
     }
     

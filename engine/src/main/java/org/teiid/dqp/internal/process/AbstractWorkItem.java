@@ -22,6 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import javax.resource.spi.work.Work;
+import javax.resource.spi.work.WorkEvent;
+import javax.resource.spi.work.WorkListener;
+
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.util.LogConstants;
 
@@ -30,20 +34,23 @@ import com.metamatrix.dqp.util.LogConstants;
  * Represents a task that performs work that may take more than one processing pass to complete.
  * During processing the WorkItem may receive events asynchronously through the moreWork method.
  */
-public abstract class AbstractWorkItem implements Runnable {
+public abstract class AbstractWorkItem implements Work, WorkListener {
 	
     enum ThreadState {
     	MORE_WORK, WORKING, IDLE, DONE
     }
     
     private ThreadState threadState = ThreadState.MORE_WORK;
+    private volatile boolean release = false;
     
     public void run() {
     	try {
+    		assosiateSecurityContext();
     		startProcessing();
     		process();
     	} finally {
     		endProcessing();
+   			clearSecurityContext();
     	}
     }
     
@@ -125,5 +132,34 @@ public abstract class AbstractWorkItem implements Runnable {
 	
     protected abstract boolean isDoneProcessing();
     
+    protected abstract boolean assosiateSecurityContext();
+    
+    protected abstract void clearSecurityContext();
+    
     public abstract String toString();
+    
+	@Override
+	public void release() {
+		this.release = true;
+	}
+	
+	public boolean shouldAbortProcessing() {
+		return this.release;
+	}
+	
+	@Override
+	public void workAccepted(WorkEvent arg0) {
+	}
+
+	@Override
+	public void workCompleted(WorkEvent arg0) {
+	}
+
+	@Override
+	public void workRejected(WorkEvent event) {
+	}
+
+	@Override
+	public void workStarted(WorkEvent arg0) {
+	}		
 }

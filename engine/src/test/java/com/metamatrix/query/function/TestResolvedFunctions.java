@@ -34,6 +34,7 @@ import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestResolvedFunctions extends TestCase {
 
@@ -88,7 +89,7 @@ public class TestResolvedFunctions extends TestCase {
                                               BlockedException,
                                               MetaMatrixComponentException, QueryResolverException {
         Expression expr = QueryParser.getQueryParser().parseExpression(sql);
-        ResolverVisitor.resolveLanguageObject(expr, null);
+        ResolverVisitor.resolveLanguageObject(expr, FakeMetadataFactory.example1());
         return Evaluator.evaluate(expr);
     }
     

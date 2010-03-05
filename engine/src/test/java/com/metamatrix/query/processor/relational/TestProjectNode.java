@@ -39,7 +39,7 @@ import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
-import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -63,7 +63,7 @@ public class TestProjectNode extends TestCase {
     
     public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) throws MetaMatrixComponentException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
         dataNode.setElements(childElements);
@@ -211,7 +211,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("concat", new Expression[] { es1, new Constant("abc")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = FunctionLibraryManager.getFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -235,7 +235,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("convert", new Expression[] { es1, new Constant("integer")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = FunctionLibraryManager.getFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = SystemFunctionManager.getSystemFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -258,7 +258,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
 
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         

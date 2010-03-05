@@ -25,6 +25,8 @@ package com.metamatrix.server.serverapi;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.transaction.xa.Xid;
+
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 
@@ -35,6 +37,8 @@ import com.metamatrix.platform.security.api.SessionToken;
 
 public class RequestInfo implements Serializable {
 
+	private static final long serialVersionUID = -2779106368517784259L;
+	
 	private RequestID requestID;
     private String command;
     private SessionToken token;
@@ -43,7 +47,7 @@ public class RequestInfo implements Serializable {
     private boolean isSubscription;
     private int nodeID = Integer.MIN_VALUE;
     private String connectorBindingUUID;
-    private String transactionId;
+    private Xid xid;
     private int executionID;
     
     public RequestInfo(RequestID requestId, String originalCommand, Date submittedTime, Date processingTime) {
@@ -152,13 +156,13 @@ public class RequestInfo implements Serializable {
     }
 
 
-	public String getTransactionId() {
-		return transactionId;
+	public Xid getXid() {
+		return this.xid;
 	}
 
 
-	public void setTransactionId(String transactionId) {
-		this.transactionId = transactionId;
+	public void setXid(Xid id) {
+		this.xid = id;
 	}
 	
     @Override

@@ -31,11 +31,14 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
+import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Delete;
@@ -385,6 +388,13 @@ public class FakeDataManager implements ProcessorDataManager {
 	 */
 	public void setRecordingCommands(boolean shouldRecord) {
 		this.recordingCommands = shouldRecord;
+	}
+
+	public void registerTuples(QueryMetadataInterface metadata, String groupName, List[] tuples) throws QueryResolverException, MetaMatrixComponentException {
+	    GroupSymbol group = new GroupSymbol(groupName);
+	    ResolverUtil.resolveGroup(group, metadata);
+	    List<ElementSymbol> elementSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
+		this.registerTuples(group.getMetadataID(), elementSymbols, tuples);
 	}
 
 

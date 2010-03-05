@@ -27,49 +27,39 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ICompoundCriteria;
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IElement;
-import org.teiid.connector.language.IExistsCriteria;
-import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IFromItem;
-import org.teiid.connector.language.IFunction;
-import org.teiid.connector.language.IGroup;
-import org.teiid.connector.language.IGroupBy;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IInsertValueSource;
-import org.teiid.connector.language.IIsNullCriteria;
-import org.teiid.connector.language.IJoin;
-import org.teiid.connector.language.ILikeCriteria;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.INotCriteria;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IOrderByItem;
-import org.teiid.connector.language.IParameter;
-import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.ISearchedCaseExpression;
-import org.teiid.connector.language.ISelect;
-import org.teiid.connector.language.ISetClause;
-import org.teiid.connector.language.ISetClauseList;
-import org.teiid.connector.language.ISetQuery;
-import org.teiid.connector.language.ISubqueryCompareCriteria;
-import org.teiid.connector.language.ISubqueryInCriteria;
-import org.teiid.connector.language.IUpdate;
-import org.teiid.connector.language.ICompareCriteria.Operator;
-import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.language.ISubqueryCompareCriteria.Quantifier;
-import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.Argument;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Condition;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.DerivedTable;
+import org.teiid.connector.language.Exists;
+import org.teiid.connector.language.ExpressionValueSource;
+import org.teiid.connector.language.In;
+import org.teiid.connector.language.InsertValueSource;
+import org.teiid.connector.language.IsNull;
+import org.teiid.connector.language.Join;
+import org.teiid.connector.language.Like;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Not;
+import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.SearchedWhenClause;
+import org.teiid.connector.language.Select;
+import org.teiid.connector.language.SearchedCase;
+import org.teiid.connector.language.SortSpecification;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryIn;
+import org.teiid.connector.language.TableReference;
+import org.teiid.connector.language.Argument.Direction;
+import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.connector.language.SortSpecification.Ordering;
+import org.teiid.connector.language.SubqueryComparison.Quantifier;
 import org.teiid.connector.metadata.runtime.Procedure;
+import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -86,7 +76,6 @@ import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
-import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.GroupBy;
 import com.metamatrix.query.sql.lang.Insert;
@@ -101,7 +90,6 @@ import com.metamatrix.query.sql.lang.OrderByItem;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetClause;
 import com.metamatrix.query.sql.lang.SetClauseList;
 import com.metamatrix.query.sql.lang.SetCriteria;
@@ -133,7 +121,7 @@ public class LanguageBridgeFactory {
         }
     }
 
-    public ICommand translate(Command command) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.Command translate(Command command) throws MetaMatrixComponentException {
         if (command == null) return null;
         if (command instanceof Query) {
             return translate((Query)command);
@@ -153,25 +141,25 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
     
-    IQueryCommand translate(QueryCommand command) throws MetaMatrixComponentException {
+    QueryExpression translate(QueryCommand command) throws MetaMatrixComponentException {
     	if (command instanceof Query) {
             return translate((Query)command);
         } 
     	return translate((SetQuery)command);
     }
 
-    ISetQuery translate(SetQuery union) throws MetaMatrixComponentException {
-        SetQueryImpl result = new SetQueryImpl();
+    org.teiid.connector.language.SetQuery translate(SetQuery union) throws MetaMatrixComponentException {
+        org.teiid.connector.language.SetQuery result = new org.teiid.connector.language.SetQuery();
         result.setAll(union.isAll());
         switch (union.getOperation()) {
             case UNION:
-                result.setOperation(ISetQuery.Operation.UNION);
+                result.setOperation(org.teiid.connector.language.SetQuery.Operation.UNION);
                 break;
             case INTERSECT:
-                result.setOperation(ISetQuery.Operation.INTERSECT);
+                result.setOperation(org.teiid.connector.language.SetQuery.Operation.INTERSECT);
                 break;
             case EXCEPT:
-                result.setOperation(ISetQuery.Operation.EXCEPT);
+                result.setOperation(org.teiid.connector.language.SetQuery.Operation.EXCEPT);
                 break;
         }
         result.setLeftQuery(translate(union.getLeftQuery()));
@@ -182,30 +170,18 @@ public class LanguageBridgeFactory {
     }
 
     /* Query */
-    IQuery translate(Query query) throws MetaMatrixComponentException {
-        QueryImpl q = new QueryImpl(translate(query.getSelect()),
-                             translate(query.getFrom()),
-                             translate(query.getCriteria()),
-                             translate(query.getGroupBy()),
-                             translate(query.getHaving()),
-                             translate(query.getOrderBy()));
-        q.setLimit(translate(query.getLimit()));
-        return q;
-    }
-
-    public ISelect translate(Select select) throws MetaMatrixComponentException {
-        List symbols = select.getSymbols();
-        List translatedSymbols = new ArrayList(symbols.size());
+    Select translate(Query query) throws MetaMatrixComponentException {
+        List symbols = query.getSelect().getSymbols();
+        List<DerivedColumn> translatedSymbols = new ArrayList<DerivedColumn>(symbols.size());
         for (Iterator i = symbols.iterator(); i.hasNext();) {
             SingleElementSymbol symbol = (SingleElementSymbol)i.next();
-            boolean isAlias = false;
-            String alias = symbol.getOutputName();
+            String alias = null;
             if(symbol instanceof AliasSymbol) {
+                alias = symbol.getOutputName();
                 symbol = ((AliasSymbol)symbol).getSymbol();
-                isAlias = true;
             }
 
-            IExpression iExp = null;
+            org.teiid.connector.language.Expression iExp = null;
             if(symbol instanceof ElementSymbol) {
                 iExp = translate((ElementSymbol)symbol);
             } else if(symbol instanceof AggregateSymbol) {
@@ -214,26 +190,26 @@ public class LanguageBridgeFactory {
                 iExp = translate(((ExpressionSymbol)symbol).getExpression());
             }
 
-            SelectSymbolImpl selectSymbol = new SelectSymbolImpl(alias, iExp);
-            if(isAlias){
-                selectSymbol.setOutputName(alias);
-                selectSymbol.setAlias(true);
-            }
+            DerivedColumn selectSymbol = new DerivedColumn(alias, iExp);
             translatedSymbols.add(selectSymbol);
         }
-        return new SelectImpl(translatedSymbols, select.isDistinct());
-    }
-    
-    public IFrom translate(From from) throws MetaMatrixComponentException {
-        List clauses = from.getClauses();
-        List items = new ArrayList();
-        for (Iterator i = clauses.iterator(); i.hasNext();) {
-            items.add(translate((FromClause)i.next()));
-        }
-        return new FromImpl(items);
+    	List<TableReference> items = null;
+    	if (query.getFrom() != null) {
+	    	List clauses = query.getFrom().getClauses();
+	        items = new ArrayList<TableReference>(clauses.size());
+	        for (Iterator i = clauses.iterator(); i.hasNext();) {
+	            items.add(translate((FromClause)i.next()));
+	        }
+    	}
+		Select q = new Select(translatedSymbols, query
+				.getSelect().isDistinct(), items,
+				translate(query.getCriteria()), translate(query.getGroupBy()),
+				translate(query.getHaving()), translate(query.getOrderBy()));
+        q.setLimit(translate(query.getLimit()));
+        return q;
     }
 
-    public IFromItem translate(FromClause clause) throws MetaMatrixComponentException {
+    public TableReference translate(FromClause clause) throws MetaMatrixComponentException {
         if (clause == null) return null;
         if (clause instanceof JoinPredicate) {
             return translate((JoinPredicate)clause);
@@ -245,41 +221,43 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    IJoin translate(JoinPredicate join) throws MetaMatrixComponentException {
+    Join translate(JoinPredicate join) throws MetaMatrixComponentException {
         List crits = join.getJoinCriteria();
-        List criteria = new ArrayList();
-        for (Iterator i = crits.iterator(); i.hasNext();) {
-            criteria.add(translate((Criteria)i.next()));
+        Criteria crit = null;
+        if (crits.size() == 1) {
+        	crit = (Criteria)crits.get(0);
+        } else if (crits.size() > 1) {
+        	crit = new CompoundCriteria(crits);        	
         }
         
-        IJoin.JoinType joinType = IJoin.JoinType.INNER_JOIN;
+        Join.JoinType joinType = Join.JoinType.INNER_JOIN;
         if(join.getJoinType().equals(JoinType.JOIN_INNER)) {
-            joinType = IJoin.JoinType.INNER_JOIN;
+            joinType = Join.JoinType.INNER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_LEFT_OUTER)) {
-            joinType = IJoin.JoinType.LEFT_OUTER_JOIN;
+            joinType = Join.JoinType.LEFT_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_RIGHT_OUTER)) {
-            joinType = IJoin.JoinType.RIGHT_OUTER_JOIN;
+            joinType = Join.JoinType.RIGHT_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_FULL_OUTER)) {
-            joinType = IJoin.JoinType.FULL_OUTER_JOIN;
+            joinType = Join.JoinType.FULL_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_CROSS)) {
-            joinType = IJoin.JoinType.CROSS_JOIN;
+            joinType = Join.JoinType.CROSS_JOIN;
         }
         
-        return new JoinImpl(translate(join.getLeftClause()),
+        return new Join(translate(join.getLeftClause()),
                             translate(join.getRightClause()),
                             joinType,
-                            criteria);
+                            translate(crit));
     }
 
-    IFromItem translate(SubqueryFromClause clause) throws MetaMatrixComponentException {        
-        return new InlineViewImpl(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
+    TableReference translate(SubqueryFromClause clause) throws MetaMatrixComponentException {        
+        return new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
     }
 
-    IGroup translate(UnaryFromClause clause) throws MetaMatrixComponentException {
+    NamedTable translate(UnaryFromClause clause) throws MetaMatrixComponentException {
         return translate(clause.getGroup());
     }
 
-    public ICriteria translate(Criteria criteria) throws MetaMatrixComponentException {
+    public Condition translate(Criteria criteria) throws MetaMatrixComponentException {
         if (criteria == null) return null;
         if (criteria instanceof CompareCriteria) {
             return translate((CompareCriteria)criteria);
@@ -303,8 +281,8 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    ICompareCriteria translate(CompareCriteria criteria) throws MetaMatrixComponentException {
-        ICompareCriteria.Operator operator = Operator.EQ;
+    org.teiid.connector.language.Comparison translate(CompareCriteria criteria) throws MetaMatrixComponentException {
+        Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
             case CompareCriteria.EQ:    
                 operator = Operator.EQ;
@@ -327,51 +305,52 @@ public class LanguageBridgeFactory {
             
         }
         
-        return new CompareCriteriaImpl(translate(criteria.getLeftExpression()),
+        return new org.teiid.connector.language.Comparison(translate(criteria.getLeftExpression()),
                                         translate(criteria.getRightExpression()), operator);
     }
 
-    ICompoundCriteria translate(CompoundCriteria criteria) throws MetaMatrixComponentException {
+    AndOr translate(CompoundCriteria criteria) throws MetaMatrixComponentException {
         List nestedCriteria = criteria.getCriteria();
-        List translatedCriteria = new ArrayList();
-        for (Iterator i = nestedCriteria.iterator(); i.hasNext();) {
-            translatedCriteria.add(translate((Criteria)i.next()));
+        int size = nestedCriteria.size();
+        AndOr.Operator op = criteria.getOperator() == CompoundCriteria.AND?AndOr.Operator.AND:AndOr.Operator.OR;
+        AndOr result = new AndOr(translate((Criteria)nestedCriteria.get(size - 2)), translate((Criteria)nestedCriteria.get(size - 1)), op);
+        for (int i = nestedCriteria.size() - 3; i >= 0; i--) {
+        	result = new AndOr(translate((Criteria)nestedCriteria.get(i)), result, op);
         }
-        
-        return new CompoundCriteriaImpl(translatedCriteria, criteria.getOperator() == CompoundCriteria.AND?ICompoundCriteria.Operator.AND:ICompoundCriteria.Operator.OR);
+        return result;
     }
 
-    IExistsCriteria translate(ExistsCriteria criteria) throws MetaMatrixComponentException {
-        return new ExistsCriteriaImpl(translate((Query)criteria.getCommand()));
+    Exists translate(ExistsCriteria criteria) throws MetaMatrixComponentException {
+        return new Exists(translate((QueryCommand)criteria.getCommand()));
     }
 
-    IIsNullCriteria translate(IsNullCriteria criteria) throws MetaMatrixComponentException {
-        return new IsNullCriteriaImpl(translate(criteria.getExpression()), criteria.isNegated());
+    IsNull translate(IsNullCriteria criteria) throws MetaMatrixComponentException {
+        return new IsNull(translate(criteria.getExpression()), criteria.isNegated());
     }
 
-    ILikeCriteria translate(MatchCriteria criteria) throws MetaMatrixComponentException {
+    Like translate(MatchCriteria criteria) throws MetaMatrixComponentException {
         Character escapeChar = null;
         if(criteria.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             escapeChar = new Character(criteria.getEscapeChar());
         }
-        return new LikeCriteriaImpl(translate(criteria.getLeftExpression()),
+        return new Like(translate(criteria.getLeftExpression()),
                                     translate(criteria.getRightExpression()), 
                                     escapeChar, 
                                     criteria.isNegated());
     }
 
-    IInCriteria translate(SetCriteria criteria) throws MetaMatrixComponentException {
+    In translate(SetCriteria criteria) throws MetaMatrixComponentException {
         List expressions = criteria.getValues();
         List translatedExpressions = new ArrayList();
         for (Iterator i = expressions.iterator(); i.hasNext();) {
             translatedExpressions.add(translate((Expression)i.next()));
         }
-        return new InCriteriaImpl(translate(criteria.getExpression()),
+        return new In(translate(criteria.getExpression()),
                                   translatedExpressions, 
                                   criteria.isNegated());
     }
 
-    ISubqueryCompareCriteria translate(SubqueryCompareCriteria criteria) throws MetaMatrixComponentException {
+    SubqueryComparison translate(SubqueryCompareCriteria criteria) throws MetaMatrixComponentException {
         Quantifier quantifier = Quantifier.ALL;
         switch(criteria.getPredicateQuantifier()) {
             case SubqueryCompareCriteria.ALL:   
@@ -385,84 +364,80 @@ public class LanguageBridgeFactory {
                 break;
         }
         
-        ICompareCriteria.Operator operator = ICompareCriteria.Operator.EQ;
+        Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
             case SubqueryCompareCriteria.EQ:
-                operator = ICompareCriteria.Operator.EQ;
+                operator = Operator.EQ;
                 break;
             case SubqueryCompareCriteria.NE:
-                operator = ICompareCriteria.Operator.NE;
+                operator = Operator.NE;
                 break;
             case SubqueryCompareCriteria.LT:
-                operator = ICompareCriteria.Operator.LT;
+                operator = Operator.LT;
                 break;
             case SubqueryCompareCriteria.LE:
-                operator = ICompareCriteria.Operator.LE;
+                operator = Operator.LE;
                 break;
             case SubqueryCompareCriteria.GT:
-                operator = ICompareCriteria.Operator.GT;
+                operator = Operator.GT;
                 break;
             case SubqueryCompareCriteria.GE:
-                operator = ICompareCriteria.Operator.GE;
+                operator = Operator.GE;
                 break;                    
         }
                 
-        return new SubqueryCompareCriteriaImpl(translate(criteria.getLeftExpression()),
+        return new SubqueryComparison(translate(criteria.getLeftExpression()),
                                   operator,
                                   quantifier,
-                                  translate((Query)criteria.getCommand()));
+                                  translate((QueryCommand)criteria.getCommand()));
     }
 
-    ISubqueryInCriteria translate(SubquerySetCriteria criteria) throws MetaMatrixComponentException {
-        return new SubqueryInCriteriaImpl(translate(criteria.getExpression()),
+    SubqueryIn translate(SubquerySetCriteria criteria) throws MetaMatrixComponentException {
+        return new SubqueryIn(translate(criteria.getExpression()),
                                   criteria.isNegated(),
-                                  translate((Query)criteria.getCommand()));
+                                  translate((QueryCommand)criteria.getCommand()));
     }
 
-    INotCriteria translate(NotCriteria criteria) throws MetaMatrixComponentException {
-        return new NotCriteriaImpl(translate(criteria.getCriteria()));
+    Not translate(NotCriteria criteria) throws MetaMatrixComponentException {
+        return new Not(translate(criteria.getCriteria()));
     }
 
-    public IGroupBy translate(GroupBy groupBy) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.GroupBy translate(GroupBy groupBy) throws MetaMatrixComponentException {
         if(groupBy == null){
             return null;
         }
         List items = groupBy.getSymbols();
-        List translatedItems = new ArrayList();
+        List<org.teiid.connector.language.Expression> translatedItems = new ArrayList<org.teiid.connector.language.Expression>();
         for (Iterator i = items.iterator(); i.hasNext();) {
             translatedItems.add(translate((Expression)i.next()));
         }
-        return new GroupByImpl(translatedItems);
+        return new org.teiid.connector.language.GroupBy(translatedItems);
     }
 
-    public IOrderBy translate(OrderBy orderBy) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.OrderBy translate(OrderBy orderBy) throws MetaMatrixComponentException {
         if(orderBy == null){
             return null;
         }
-        List<OrderByItemImpl> translatedItems = new ArrayList<OrderByItemImpl>();
-        for (OrderByItem item : orderBy.getOrderByItems()) {
-            SingleElementSymbol symbol = item.getSymbol();
-            boolean direction = item.isAscending()?IOrderByItem.ASC:IOrderByItem.DESC;
-                                
-            OrderByItemImpl orderByItem = null;                                
-            if(symbol instanceof ElementSymbol){
-                IElement innerElement = translate((ElementSymbol)symbol);
-                if (item.isUnrelated() || (symbol.getOutputName() != null && symbol.getOutputName().indexOf(ElementSymbol.SEPARATOR) != -1)) {
-                	orderByItem = new OrderByItemImpl(null, direction, innerElement);
-                } else {
-                	orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, innerElement);
-                }
+        List<OrderByItem> items = orderBy.getOrderByItems();
+        List<SortSpecification> translatedItems = new ArrayList<SortSpecification>();
+        for (int i = 0; i < items.size(); i++) {
+            SingleElementSymbol symbol = items.get(i).getSymbol();
+            Ordering direction = items.get(i).isAscending() ? Ordering.ASC: Ordering.DESC;
+            
+            SortSpecification orderByItem = null;                                
+            if(symbol instanceof AliasSymbol || !items.get(i).isUnrelated()){
+            	orderByItem = new SortSpecification(direction, new ColumnReference(null, symbol.getOutputName(), null, symbol.getType()));
             } else {
-                orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, null);                
+            	orderByItem = new SortSpecification(direction, translate(symbol));                                
             }
             translatedItems.add(orderByItem);
         }
-        return new OrderByImpl(translatedItems);
+        return new org.teiid.connector.language.OrderBy(translatedItems);
     }
 
 
     /* Expressions */
-    public IExpression translate(Expression expr) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.Expression translate(Expression expr) throws MetaMatrixComponentException {
         if (expr == null) return null;
         if (expr instanceof Constant) {
             return translate((Constant)expr);
@@ -478,46 +453,42 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    ILiteral translate(Constant constant) {
-        LiteralImpl result = new LiteralImpl(constant.getValue(), constant.getType());
+    Literal translate(Constant constant) {
+        Literal result = new Literal(constant.getValue(), constant.getType());
         result.setBindValue(constant.isMultiValued());
         result.setMultiValued(constant.isMultiValued());
         return result;
     }
 
-    IFunction translate(Function function) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Function translate(Function function) throws MetaMatrixComponentException {
         Expression [] args = function.getArgs();
-        List<IExpression> params = new ArrayList<IExpression>(args.length);
+        List<org.teiid.connector.language.Expression> params = new ArrayList<org.teiid.connector.language.Expression>(args.length);
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 params.add(translate(args[i]));
             }
         }
-        return new FunctionImpl(function.getName(), params, function.getType());
+        return new org.teiid.connector.language.Function(function.getName(), params, function.getType());
     }
 
-    ISearchedCaseExpression translate(SearchedCaseExpression expr) throws MetaMatrixComponentException {
-        ArrayList whens = new ArrayList(), thens = new ArrayList();
+    SearchedCase translate(SearchedCaseExpression expr) throws MetaMatrixComponentException {
+        ArrayList<SearchedWhenClause> whens = new ArrayList<SearchedWhenClause>();
         for (int i = 0; i < expr.getWhenCount(); i++) {
-            whens.add(translate(expr.getWhenCriteria(i)));
-            thens.add(translate(expr.getThenExpression(i)));
+        	whens.add(new SearchedWhenClause(translate(expr.getWhenCriteria(i)), translate(expr.getThenExpression(i))));
         }
-        return new SearchedCaseExpressionImpl(whens,
-                                      thens,
+        return new SearchedCase(whens,
                                       translate(expr.getElseExpression()),
                                       expr.getType());
     }
 
 
-    IExpression translate(ScalarSubquery ss) throws MetaMatrixComponentException {
-        return new ScalarSubqueryImpl(translate((Query)ss.getCommand()));
+    org.teiid.connector.language.Expression translate(ScalarSubquery ss) throws MetaMatrixComponentException {
+        return new org.teiid.connector.language.ScalarSubquery(translate((QueryCommand)ss.getCommand()));
     }
 
-    IExpression translate(SingleElementSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(SingleElementSymbol symbol) throws MetaMatrixComponentException {
         if (symbol == null) return null;
-        if (symbol instanceof AliasSymbol) {
-            return translate((AliasSymbol)symbol);
-        } else if (symbol instanceof ElementSymbol) {
+        if (symbol instanceof ElementSymbol) {
             return translate((ElementSymbol)symbol);
         } else if (symbol instanceof AggregateSymbol) {
             return translate((AggregateSymbol)symbol);
@@ -527,14 +498,14 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    IExpression translate(AliasSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(AliasSymbol symbol) throws MetaMatrixComponentException {
         return translate(symbol.getSymbol());
     }
 
-    IElement translate(ElementSymbol symbol) throws MetaMatrixComponentException {
-        ElementImpl element = new ElementImpl(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
-        
-        if (element.getGroup().getMetadataObject() == null) {
+    ColumnReference translate(ElementSymbol symbol) throws MetaMatrixComponentException {
+        ColumnReference element = null;
+        element = new ColumnReference(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
+        if (element.getTable().getMetadataObject() == null) {
             return element;
         }
 
@@ -546,74 +517,72 @@ public class LanguageBridgeFactory {
         return element;
     }
 
-    IAggregate translate(AggregateSymbol symbol) throws MetaMatrixComponentException {
-        return new AggregateImpl(symbol.getAggregateFunction(), 
+    AggregateFunction translate(AggregateSymbol symbol) throws MetaMatrixComponentException {
+        return new AggregateFunction(symbol.getAggregateFunction(), 
                                 symbol.isDistinct(), 
                                 translate(symbol.getExpression()),
                                 symbol.getType());
     }
 
-    IExpression translate(ExpressionSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(ExpressionSymbol symbol) throws MetaMatrixComponentException {
         return translate(symbol.getExpression());
     }
 
 
     /* Insert */
-    IInsert translate(Insert insert) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Insert translate(Insert insert) throws MetaMatrixComponentException {
         List elements = insert.getVariables();
-        List translatedElements = new ArrayList();
+        List<ColumnReference> translatedElements = new ArrayList<ColumnReference>();
         for (Iterator i = elements.iterator(); i.hasNext();) {
             translatedElements.add(translate((ElementSymbol)i.next()));
         }
         
-        IInsertValueSource valueSource = null;
+        InsertValueSource valueSource = null;
         if (insert.getQueryExpression() != null) {
         	valueSource = translate(insert.getQueryExpression());
         } else {
             // This is for the simple one row insert.
             List values = insert.getValues();
-            List translatedValues = new ArrayList();
+            List<org.teiid.connector.language.Expression> translatedValues = new ArrayList<org.teiid.connector.language.Expression>();
             for (Iterator i = values.iterator(); i.hasNext();) {
                 translatedValues.add(translate((Expression)i.next()));
             }
-            valueSource = new InsertValueExpressionsImpl(translatedValues);
+            valueSource = new ExpressionValueSource(translatedValues);
         }
         
-        InsertImpl result = new InsertImpl(translate(insert.getGroup()),
+        return new org.teiid.connector.language.Insert(translate(insert.getGroup()),
                               translatedElements,
                               valueSource);
-        return result;
     }
 
     /* Update */
-    IUpdate translate(Update update) throws MetaMatrixComponentException {
-        UpdateImpl updateImpl =  new UpdateImpl(translate(update.getGroup()),
+    org.teiid.connector.language.Update translate(Update update) throws MetaMatrixComponentException {
+        return new org.teiid.connector.language.Update(translate(update.getGroup()),
                               translate(update.getChangeList()),
                               translate(update.getCriteria()));
-        return updateImpl;
     }
     
-    ISetClauseList translate(SetClauseList setClauseList) throws MetaMatrixComponentException {
-    	List<ISetClause> clauses = new ArrayList<ISetClause>(setClauseList.getClauses().size());
+    List<org.teiid.connector.language.SetClause> translate(SetClauseList setClauseList) throws MetaMatrixComponentException {
+    	List<org.teiid.connector.language.SetClause> clauses = new ArrayList<org.teiid.connector.language.SetClause>(setClauseList.getClauses().size());
     	for (SetClause setClause : setClauseList.getClauses()) {
     		clauses.add(translate(setClause));
     	}
-    	return new SetClauseListImpl(clauses);
+    	return clauses;
     }
     
-    ISetClause translate(SetClause setClause) throws MetaMatrixComponentException {
-    	return new SetClauseImpl(translate(setClause.getSymbol()), translate(setClause.getValue()));
+    org.teiid.connector.language.SetClause translate(SetClause setClause) throws MetaMatrixComponentException {
+    	return new org.teiid.connector.language.SetClause(translate(setClause.getSymbol()), translate(setClause.getValue()));
     }
 
     /* Delete */
-    IDelete translate(Delete delete) throws MetaMatrixComponentException {
-        DeleteImpl deleteImpl = new DeleteImpl(translate(delete.getGroup()),
+    org.teiid.connector.language.Delete translate(Delete delete) throws MetaMatrixComponentException {
+        org.teiid.connector.language.Delete deleteImpl = new org.teiid.connector.language.Delete(translate(delete.getGroup()),
                               translate(delete.getCriteria()));
         return deleteImpl;
     }
 
     /* Execute */
-    IProcedure translate(StoredProcedure sp) throws MetaMatrixComponentException {
+    Call translate(StoredProcedure sp) throws MetaMatrixComponentException {
         Procedure proc = null;
         if(sp.getProcedureID() != null) {
             try {
@@ -622,42 +591,50 @@ public class LanguageBridgeFactory {
                 throw new MetaMatrixComponentException(e);
             }
         }
-
+        Class<?> returnType = null;
         List parameters = sp.getParameters();
-        List<IParameter> translatedParameters = new ArrayList<IParameter>();
+        List<Argument> translatedParameters = new ArrayList<Argument>();
         for (Iterator i = parameters.iterator(); i.hasNext();) {
-            translatedParameters.add(translate((SPParameter)i.next(), proc));
+        	SPParameter param = (SPParameter)i.next();
+        	Direction direction = Direction.IN;
+            switch(param.getParameterType()) {
+                case ParameterInfo.IN:    
+                    direction = Direction.IN;
+                    break;
+                case ParameterInfo.INOUT: 
+                    direction = Direction.INOUT;
+                    break;
+                case ParameterInfo.OUT: 
+                    direction = Direction.OUT;
+                    break;
+                case ParameterInfo.RESULT_SET: 
+                    continue; //already part of the metadata
+                case ParameterInfo.RETURN_VALUE: 
+                	returnType = param.getClassType();
+                	break;
+                    
+            }
+            
+            ProcedureParameter metadataParam = metadataFactory.getParameter(param);
+            //we can assume for now that all arguments will be literals, which may be multivalued
+            Literal value = (Literal)translate(param.getExpression());
+            Argument arg = new Argument(direction, value, param.getClassType(), metadataParam);
+            translatedParameters.add(arg);
         }
                         
-        return new ProcedureImpl(sp.getProcedureName(), translatedParameters, proc);
+        Call call = new Call(sp.getProcedureName(), translatedParameters, proc);
+        call.setReturnType(returnType);
+        return call;
     }
 
-    IParameter translate(SPParameter param, Procedure parent) {
-        Direction direction = Direction.IN;
-        switch(param.getParameterType()) {
-            case ParameterInfo.IN:    
-                direction = Direction.IN;
-                break;
-            case ParameterInfo.INOUT: 
-                direction = Direction.INOUT;
-                break;
-            case ParameterInfo.OUT: 
-                direction = Direction.OUT;
-                break;
-            case ParameterInfo.RESULT_SET: 
-                direction = Direction.RESULT_SET;
-                break;
-            case ParameterInfo.RETURN_VALUE: 
-                direction = Direction.RETURN;
-                break;
+    public NamedTable translate(GroupSymbol symbol) throws MetaMatrixComponentException {
+    	String alias = null;
+        String fullGroup = symbol.getOutputName();
+        if(symbol.getOutputDefinition() != null) {
+            alias = symbol.getOutputName();
+            fullGroup = symbol.getOutputDefinition();
         }
-        
-        Parameter metadataParam = metadataFactory.getParameter(param, parent);
-        return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataParam);                
-    }
-
-    public IGroup translate(GroupSymbol symbol) throws MetaMatrixComponentException {
-        GroupImpl group = new GroupImpl(symbol.getOutputName(), symbol.getOutputDefinition(), null);
+        NamedTable group = new NamedTable(fullGroup, alias, null);
 		if (symbol.getMetadataID() instanceof TempMetadataID) {
 			return group;
 		}
@@ -671,26 +648,26 @@ public class LanguageBridgeFactory {
     }
     
     /* Batched Updates */
-    IBatchedUpdates translate(BatchedUpdateCommand command) throws MetaMatrixComponentException {
+    BatchedUpdates translate(BatchedUpdateCommand command) throws MetaMatrixComponentException {
         List updates = command.getUpdateCommands();
-        List translatedUpdates = new ArrayList(updates.size());
+        List<org.teiid.connector.language.Command> translatedUpdates = new ArrayList<org.teiid.connector.language.Command>(updates.size());
         for (Iterator i = updates.iterator(); i.hasNext();) {
             translatedUpdates.add(translate((Command)i.next()));
         }
-        return new BatchedUpdatesImpl(translatedUpdates);
+        return new BatchedUpdates(translatedUpdates);
     }
 
-    ILimit translate(Limit limit) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Limit translate(Limit limit) throws MetaMatrixComponentException {
         if (limit == null) {
             return null;
         }
         int rowOffset = 0;
         if (limit.getOffset() != null) {
-            ILiteral c1 = (ILiteral)translate(limit.getOffset());
+            Literal c1 = (Literal)translate(limit.getOffset());
             rowOffset = ((Integer)c1.getValue()).intValue();
         }
-        ILiteral c2 = (ILiteral)translate(limit.getRowLimit());
+        Literal c2 = (Literal)translate(limit.getRowLimit());
         int rowLimit = ((Integer)c2.getValue()).intValue();
-        return new LimitImpl(rowOffset, rowLimit);
+        return new org.teiid.connector.language.Limit(rowOffset, rowLimit);
     }
 }

@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.SystemException;
-
-import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -60,6 +56,7 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.CommandLogMessage;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -85,7 +82,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	/*
 	 * Obtained at construction time 
 	 */
-    private final DQPCore dqpCore;
+	protected final DQPCore dqpCore;
     final RequestMessage requestMsg;    
     final RequestID requestID;
     private Request request; //provides the processing plan, held on a temporary basis
@@ -123,11 +120,14 @@ public class RequestWorkItem extends AbstractWorkItem {
     private TupleBatch savedBatch;
     private Map<Integer, LobWorkItem> lobStreams = Collections.synchronizedMap(new HashMap<Integer, LobWorkItem>(4));
     
+    /**The time when command begins processing on the server.*/
+    private long processingTimestamp = System.currentTimeMillis();
+    
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
-        this.transactionService = dqpCore.getTransactionServiceDirect();
+        this.transactionService = dqpCore.getTransactionService();
         this.dqpCore = dqpCore;
         this.request = request;
         this.dqpWorkContext = workContext;
@@ -221,11 +221,12 @@ public class RequestWorkItem extends AbstractWorkItem {
         			this.processingException = new IllegalStateException("Request is already closed"); //$NON-NLS-1$
         		}
         		sendError();
-        	}        	    		        	
+        	}        
+        	DQPWorkContext.releaseWorkContext();
         }
     }
 
-	protected void processMore() throws SystemException, BlockedException, MetaMatrixCoreException {
+	protected void processMore() throws BlockedException, MetaMatrixCoreException {
 		if (this.processor != null) {
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 		}
@@ -315,9 +316,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         		this.transactionService.rollback(transactionContext);
             } catch (XATransactionException e1) {
                 LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
-            } catch (SystemException err) {
-                LogManager.logWarning(LogConstants.CTX_DQP, err, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$
-            }
+            } 
 		}
 		
 		isClosed = true;
@@ -361,7 +360,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		resultsBuffer.setForwardOnly(isForwardOnly());
 		analysisRecord = request.analysisRecord;
 		transactionContext = request.transactionContext;
-		if (this.transactionContext != null && this.transactionContext.isInTransaction()) {
+		if (this.transactionContext != null && this.transactionContext.getXid() != null) {
 			this.transactionState = TransactionState.ACTIVE;
 		}
 	    if (analysisRecord.recordQueryPlan()) {
@@ -570,9 +569,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 	            if (transactionService != null) {
 	                try {
 	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
-	                } catch (InvalidTransactionException err) {
+	                } catch (XATransactionException err) {
 	                    LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + requestID.getConnectionID()); //$NON-NLS-1$
-	                } catch (SystemException err) {
 	                    throw new MetaMatrixComponentException(err);
 	                }
 	            }
@@ -643,8 +641,8 @@ public class RequestWorkItem extends AbstractWorkItem {
      */
     private void logCommandError() {
         String transactionID = null;
-        if (this.transactionContext != null && this.transactionContext.isInTransaction()) {
-            transactionID = this.transactionContext.getTxnID();
+        if (this.transactionContext != null && this.transactionContext.getXid() != null) {
+            transactionID = this.transactionContext.getXid().toString();
         }
         CommandLogMessage message = new CommandLogMessage(System.currentTimeMillis(), requestID.toString(), transactionID == null ? null : transactionID, requestID.getConnectionID(), dqpWorkContext.getUserName(), dqpWorkContext.getVdbName(), dqpWorkContext.getVdbVersion(), -1, false, true);
         LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
@@ -672,9 +670,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 		return transactionContext;
 	}
 	
-	void setTransactionContext(TransactionContext transactionContext) {
-		this.transactionContext = transactionContext;
-	}
 	
 	Collection<DataTierTupleSource> getConnectorRequests() {
 		return new LinkedList<DataTierTupleSource>(this.connectorInfo.values());
@@ -696,5 +691,23 @@ public class RequestWorkItem extends AbstractWorkItem {
 	public DQPWorkContext getDqpWorkContext() {
 		return dqpWorkContext;
 	}
-
+	
+	public long getProcessingTimestamp() {
+		return processingTimestamp;
+	}
+	
+	@Override
+    protected boolean assosiateSecurityContext() {
+		if (dqpWorkContext.getSubject() != null) {
+        	return dqpCore.getSecurityHelper().assosiateSecurityContext(dqpWorkContext.getSecurityDomain(),dqpWorkContext.getSecurityContext());			
+		}
+		return false;
+	}
+    
+	@Override
+    protected void clearSecurityContext() {
+		if (dqpWorkContext.getSubject() != null) {
+        	dqpCore.getSecurityHelper().clearSecurityContext(dqpWorkContext.getSecurityDomain());			
+		}
+	}
 }

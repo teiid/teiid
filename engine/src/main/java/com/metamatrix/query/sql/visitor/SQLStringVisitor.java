@@ -29,11 +29,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.connector.language.SQLReservedWords.Tokens;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -177,43 +179,43 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(SPACE);
         
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.BETWEEN);
+        parts.add(SQLReservedWords.BETWEEN);
         parts.add(SPACE);
         parts.add(registerNode(obj.getLowerExpression()));
 
         parts.add(SPACE);
-        parts.add(ReservedWords.AND);
+        parts.add(SQLReservedWords.AND);
         parts.add(SPACE);
         parts.add(registerNode(obj.getUpperExpression()));
     }
 
     public void visit(CaseExpression obj) {
-        parts.add(ReservedWords.CASE);
+        parts.add(SQLReservedWords.CASE);
         parts.add(SPACE);
         parts.add(registerNode(obj.getExpression()) ); 
         parts.add(SPACE);
 
         for (int i = 0; i < obj.getWhenCount(); i++) {
-            parts.add(ReservedWords.WHEN);
+            parts.add(SQLReservedWords.WHEN);
             parts.add(SPACE);
             parts.add(registerNode(obj.getWhenExpression(i)) );
             parts.add(SPACE);
-            parts.add(ReservedWords.THEN);
+            parts.add(SQLReservedWords.THEN);
             parts.add(SPACE);
             parts.add(registerNode(obj.getThenExpression(i)));
             parts.add(SPACE);
         }
 
         if (obj.getElseExpression() != null) {
-            parts.add(ReservedWords.ELSE);
+            parts.add(SQLReservedWords.ELSE);
             parts.add(SPACE);
             parts.add(registerNode(obj.getElseExpression()));
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.END);
+        parts.add(SQLReservedWords.END);
     }
 
     public void visit(CompareCriteria obj) {
@@ -233,9 +235,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         int operator = obj.getOperator();
         String operatorStr = ""; //$NON-NLS-1$
         if(operator == CompoundCriteria.AND) {
-            operatorStr = ReservedWords.AND;
+            operatorStr = SQLReservedWords.AND;
         } else if(operator == CompoundCriteria.OR) {
-            operatorStr = ReservedWords.OR;
+            operatorStr = SQLReservedWords.OR;
         }
 
         // Get criteria
@@ -283,17 +285,17 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit(Delete obj) {
 		//add delete clause
-		parts.add(ReservedWords.DELETE);
+		parts.add(SQLReservedWords.DELETE);
 		parts.add(SPACE);
 		//add from clause
-		parts.add(ReservedWords.FROM);
+		parts.add(SQLReservedWords.FROM);
 		parts.add(SPACE);
 		parts.add(registerNode(obj.getGroup()));
 
 		//add where clause
 		if(obj.getCriteria() != null) {
 			parts.add(SPACE);
-			parts.add(ReservedWords.WHERE);
+			parts.add(SQLReservedWords.WHERE);
 			parts.add(SPACE);
 			parts.add(registerNode(obj.getCriteria()));
 		}
@@ -311,10 +313,10 @@ public class SQLStringVisitor extends LanguageVisitor {
         // operator and beginning of list
         parts.add(SPACE);
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.IN);
+        parts.add(SQLReservedWords.IN);
         parts.add(" (<dependent values>)"); //$NON-NLS-1$
     }
 
@@ -323,13 +325,13 @@ public class SQLStringVisitor extends LanguageVisitor {
         List clauses = obj.getClauses();
         if(clauses.size() == 1) {
             replaceStringParts(new Object[] {
-                ReservedWords.FROM, SPACE,
+                SQLReservedWords.FROM, SPACE,
                 registerNode( (FromClause) clauses.get(0) ) });
         } else if(clauses.size() > 1) {
             parts = new Object[2 + clauses.size() + (clauses.size()-1)];
 
             // Add first clause
-            parts[0] = ReservedWords.FROM;
+            parts[0] = SQLReservedWords.FROM;
             parts[1] = SPACE;
             Iterator clauseIter = clauses.iterator();
             parts[2] = registerNode((FromClause) clauseIter.next());
@@ -343,7 +345,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             replaceStringParts(parts);
         } else {
             // Shouldn't happen, but being tolerant
-            replaceStringParts(new Object[] { ReservedWords.FROM });
+            replaceStringParts(new Object[] { SQLReservedWords.FROM });
         }
     }
 
@@ -352,15 +354,15 @@ public class SQLStringVisitor extends LanguageVisitor {
         List symbols = obj.getSymbols();
         if(symbols.size() == 1) {
             replaceStringParts(new Object[] {
-                ReservedWords.GROUP, SPACE, ReservedWords.BY, SPACE,
+                SQLReservedWords.GROUP, SPACE, SQLReservedWords.BY, SPACE,
                 registerNode( (Expression) symbols.get(0) ) });
         } else if(symbols.size() > 1) {
             parts = new Object[4 + symbols.size() + (symbols.size()-1)];
 
             // Add first clause
-            parts[0] = ReservedWords.GROUP;
+            parts[0] = SQLReservedWords.GROUP;
             parts[1] = SPACE;
-            parts[2] = ReservedWords.BY;
+            parts[2] = SQLReservedWords.BY;
             parts[3] = SPACE;
             Iterator symbolIter = symbols.iterator();
             parts[4] = registerNode((Expression) symbolIter.next());
@@ -374,7 +376,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             replaceStringParts(parts);
         } else {
             // Shouldn't happen, but being tolerant
-            replaceStringParts(new Object[] { ReservedWords.GROUP, SPACE, ReservedWords.BY });
+            replaceStringParts(new Object[] { SQLReservedWords.GROUP, SPACE, SQLReservedWords.BY });
         }
     }
 
@@ -384,7 +386,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         if ( obj.getQueryExpression() != null ) {
             parts.add(registerNode(obj.getQueryExpression()));
         } else {
-            parts.add(ReservedWords.VALUES);
+            parts.add(SQLReservedWords.VALUES);
             parts.add(" ("); //$NON-NLS-1$
             Iterator valueIter = obj.getValues().iterator();
             while(valueIter.hasNext()) {
@@ -405,13 +407,13 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(Create obj) {
-        parts.add(ReservedWords.CREATE);
+        parts.add(SQLReservedWords.CREATE);
         parts.add(SPACE);
-        parts.add(ReservedWords.LOCAL);
+        parts.add(SQLReservedWords.LOCAL);
         parts.add(SPACE);
-        parts.add(ReservedWords.TEMPORARY);
+        parts.add(SQLReservedWords.TEMPORARY);
         parts.add(SPACE);
-        parts.add(ReservedWords.TABLE);
+        parts.add(SQLReservedWords.TABLE);
         parts.add(SPACE);
         parts.add(registerNode(obj.getTable()));
         parts.add(SPACE);
@@ -434,17 +436,17 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
     
     public void visit(Drop obj) {
-        parts.add(ReservedWords.DROP);
+        parts.add(SQLReservedWords.DROP);
         parts.add(SPACE);
-        parts.add(ReservedWords.TABLE);
+        parts.add(SQLReservedWords.TABLE);
         parts.add(SPACE);
         parts.add(registerNode(obj.getTable()));
     }
     
     private void formatBasicInsert(Insert obj) {
-        parts.add(ReservedWords.INSERT);
+        parts.add(SQLReservedWords.INSERT);
         parts.add(SPACE);
-        parts.add(ReservedWords.INTO);
+        parts.add(SQLReservedWords.INTO);
         parts.add(SPACE);
         parts.add(registerNode(obj.getGroup()));
         parts.add(SPACE);
@@ -473,13 +475,13 @@ public class SQLStringVisitor extends LanguageVisitor {
         Object exprPart = registerNode(expr);
         parts.add(exprPart);
         parts.add(SPACE);
-        parts.add(ReservedWords.IS);
+        parts.add(SQLReservedWords.IS);
         parts.add(SPACE);
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.NULL);
+        parts.add(SQLReservedWords.NULL);
     }
 
     public void visit(JoinPredicate obj) {
@@ -518,7 +520,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         List joinCriteria = obj.getJoinCriteria();
 		if(joinCriteria != null && joinCriteria.size() > 0) {
             parts.add(SPACE);
-			parts.add(ReservedWords.ON);
+			parts.add(SQLReservedWords.ON);
             parts.add(SPACE);
 			Iterator critIter = joinCriteria.iterator();
 			while(critIter.hasNext()) {
@@ -533,7 +535,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
 				if(critIter.hasNext()) {
 					parts.add(SPACE);
-					parts.add(ReservedWords.AND);
+					parts.add(SQLReservedWords.AND);
 					parts.add(SPACE);
 				}
 			}
@@ -570,21 +572,21 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(JoinType obj) {
         Object[] parts = null;
         if(obj.equals(JoinType.JOIN_INNER)) {
-            parts = new Object[] { ReservedWords.INNER, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.INNER, SPACE, SQLReservedWords.JOIN };
         } else if(obj.equals(JoinType.JOIN_CROSS)) {
-            parts = new Object[] { ReservedWords.CROSS, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.CROSS, SPACE, SQLReservedWords.JOIN };
         } else if(obj.equals(JoinType.JOIN_LEFT_OUTER)) {
-            parts = new Object[] { ReservedWords.LEFT, SPACE, ReservedWords.OUTER, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.LEFT, SPACE, SQLReservedWords.OUTER, SPACE, SQLReservedWords.JOIN };
         } else if(obj.equals(JoinType.JOIN_RIGHT_OUTER)) {
-            parts = new Object[] { ReservedWords.RIGHT, SPACE, ReservedWords.OUTER, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.RIGHT, SPACE, SQLReservedWords.OUTER, SPACE, SQLReservedWords.JOIN };
         } else if(obj.equals(JoinType.JOIN_FULL_OUTER)) {
-            parts = new Object[] { ReservedWords.FULL, SPACE, ReservedWords.OUTER, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.FULL, SPACE, SQLReservedWords.OUTER, SPACE, SQLReservedWords.JOIN };
         } else if(obj.equals(JoinType.JOIN_UNION)) {
-            parts = new Object[] { ReservedWords.UNION, SPACE, ReservedWords.JOIN };
+            parts = new Object[] { SQLReservedWords.UNION, SPACE, SQLReservedWords.JOIN };
         } else if (obj.equals(JoinType.JOIN_SEMI)) {
-            parts = new Object[] { "SEMI", SPACE, ReservedWords.JOIN }; //$NON-NLS-1$
+            parts = new Object[] { "SEMI", SPACE, SQLReservedWords.JOIN }; //$NON-NLS-1$
         } else if (obj.equals(JoinType.JOIN_ANTI_SEMI)) {
-            parts = new Object[] { "ANTI SEMI", SPACE, ReservedWords.JOIN }; //$NON-NLS-1$
+            parts = new Object[] { "ANTI SEMI", SPACE, SQLReservedWords.JOIN }; //$NON-NLS-1$
         }
 
         replaceStringParts(parts);
@@ -595,17 +597,17 @@ public class SQLStringVisitor extends LanguageVisitor {
 
         parts.add(SPACE);
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.LIKE);
+        parts.add(SQLReservedWords.LIKE);
         parts.add(SPACE);
 
         parts.add(registerNode(obj.getRightExpression()));
 
         if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             parts.add(SPACE);
-            parts.add(ReservedWords.ESCAPE);
+            parts.add(SQLReservedWords.ESCAPE);
             parts.add(" '"); //$NON-NLS-1$
             parts.add("" + obj.getEscapeChar()); //$NON-NLS-1$
             parts.add("'"); //$NON-NLS-1$
@@ -613,34 +615,34 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(NotCriteria obj) {
-        parts.add(ReservedWords.NOT);
+        parts.add(SQLReservedWords.NOT);
         parts.add(" ("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCriteria()));
         parts.add(")"); //$NON-NLS-1$
     }
 
     public void visit(Option obj) {
-        parts.add(ReservedWords.OPTION);
+        parts.add(SQLReservedWords.OPTION);
 
 		if(obj.getShowPlan()) {
 			parts.add(" "); //$NON-NLS-1$
-			parts.add(ReservedWords.SHOWPLAN);
+			parts.add(SQLReservedWords.SHOWPLAN);
 		}
 
         if(obj.getPlanOnly()) {
             parts.add(" "); //$NON-NLS-1$
-            parts.add(ReservedWords.PLANONLY);
+            parts.add(SQLReservedWords.PLANONLY);
         }
 
 		if(obj.getDebug()) {
 			parts.add(" "); //$NON-NLS-1$
-			parts.add(ReservedWords.DEBUG);
+			parts.add(SQLReservedWords.DEBUG);
 		}
         
         Collection groups = obj.getDependentGroups();
         if(groups != null && groups.size() > 0) {
             parts.add(" "); //$NON-NLS-1$
-            parts.add(ReservedWords.MAKEDEP);
+            parts.add(SQLReservedWords.MAKEDEP);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
@@ -657,7 +659,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         groups = obj.getNotDependentGroups();
         if(groups != null && groups.size() > 0) {
             parts.add(" "); //$NON-NLS-1$
-            parts.add(ReservedWords.MAKENOTDEP);
+            parts.add(SQLReservedWords.MAKENOTDEP);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
@@ -674,7 +676,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         groups = obj.getNoCacheGroups();
         if(groups != null && groups.size() > 0) {
             parts.add(" "); //$NON-NLS-1$
-            parts.add(ReservedWords.NOCACHE);
+            parts.add(SQLReservedWords.NOCACHE);
             parts.add(" "); //$NON-NLS-1$
 
             Iterator iter = groups.iterator();
@@ -688,15 +690,15 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
         }else if(obj.isNoCache()){
             parts.add(" "); //$NON-NLS-1$
-            parts.add(ReservedWords.NOCACHE);
+            parts.add(SQLReservedWords.NOCACHE);
         }
 
     }
 
     public void visit(OrderBy obj) {
-        parts.add(ReservedWords.ORDER);
+        parts.add(SQLReservedWords.ORDER);
         parts.add(SPACE);
-        parts.add(ReservedWords.BY);
+        parts.add(SQLReservedWords.BY);
 		parts.add(SPACE);
 		for (Iterator<OrderByItem> iterator = obj.getOrderByItems().iterator(); iterator.hasNext();) {
 			OrderByItem item = iterator.next();
@@ -718,20 +720,20 @@ public class SQLStringVisitor extends LanguageVisitor {
 	    }
         if(!obj.isAscending()) {
             parts.add(SPACE);
-            parts.add(ReservedWords.DESC);
+            parts.add(SQLReservedWords.DESC);
         } // Don't print default "ASC"
     }
     
     public void visit(DynamicCommand obj) {
-        parts.add(ReservedWords.EXECUTE);
+        parts.add(SQLReservedWords.EXECUTE);
         parts.add(SPACE);
-        parts.add(ReservedWords.STRING);
+        parts.add(SQLReservedWords.STRING);
         parts.add(SPACE);
         parts.add(registerNode(obj.getSql()));
 
         if(obj.isAsClauseSet()){
             parts.add(SPACE);
-            parts.add(ReservedWords.AS);
+            parts.add(SQLReservedWords.AS);
             parts.add(SPACE);
             for (int i = 0; i < obj.getAsColumns().size(); i++) {
                 ElementSymbol symbol = (ElementSymbol)obj.getAsColumns().get(i);
@@ -747,21 +749,21 @@ public class SQLStringVisitor extends LanguageVisitor {
 
         if(obj.getIntoGroup() != null){
             parts.add(SPACE);
-            parts.add(ReservedWords.INTO);
+            parts.add(SQLReservedWords.INTO);
             parts.add(SPACE);
             parts.add(registerNode(obj.getIntoGroup()));
         }
 
         if(obj.getUsing() != null && !obj.getUsing().isEmpty()) {
             parts.add(SPACE);
-            parts.add(ReservedWords.USING);
+            parts.add(SQLReservedWords.USING);
             parts.add(SPACE);
             parts.add(registerNode(obj.getUsing()));
         }
 
         if (obj.getUpdatingModelCount() > 0) {
             parts.add(SPACE);
-            parts.add(ReservedWords.UPDATE);
+            parts.add(SQLReservedWords.UPDATE);
             parts.add(SPACE);
             if (obj.getUpdatingModelCount() > 1) {
                 parts.add("*"); //$NON-NLS-1$
@@ -795,7 +797,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
         if(obj.getInto() != null){
             parts.add(SPACE);
-            parts.add(ReservedWords.INTO);
+            parts.add(SQLReservedWords.INTO);
             parts.add(SPACE);
             parts.add(registerNode(obj.getInto()));
         }
@@ -808,7 +810,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         // Where clause
         if(obj.getCriteria() != null) {
             parts.add(SPACE);
-            parts.add(ReservedWords.WHERE);
+            parts.add(SQLReservedWords.WHERE);
             parts.add(SPACE);
             parts.add(registerNode(obj.getCriteria()));
         }
@@ -822,7 +824,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		// Having clause
 		if(obj.getHaving() != null) {
             parts.add(SPACE);
-            parts.add(ReservedWords.HAVING);
+            parts.add(SQLReservedWords.HAVING);
             parts.add(SPACE);
             parts.add(registerNode(obj.getHaving()));
 		}
@@ -846,33 +848,33 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(SearchedCaseExpression obj) {
-        parts.add(ReservedWords.CASE);
+        parts.add(SQLReservedWords.CASE);
         for (int i = 0; i < obj.getWhenCount(); i++) {
             parts.add(SPACE);
-            parts.add(ReservedWords.WHEN);
+            parts.add(SQLReservedWords.WHEN);
             parts.add(SPACE);
             parts.add(registerNode(obj.getWhenCriteria(i)));
             parts.add(SPACE);
-            parts.add(ReservedWords.THEN);
+            parts.add(SQLReservedWords.THEN);
             parts.add(SPACE);
             parts.add(registerNode(obj.getThenExpression(i)));
         }
         parts.add(SPACE);
         if (obj.getElseExpression() != null) {
-            parts.add(ReservedWords.ELSE);
+            parts.add(SQLReservedWords.ELSE);
             parts.add(SPACE);
             parts.add(registerNode(obj.getElseExpression()));
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.END);
+        parts.add(SQLReservedWords.END);
     }
 
     public void visit(Select obj) {
-        parts.add(ReservedWords.SELECT);
+        parts.add(SQLReservedWords.SELECT);
         parts.add(SPACE);
 
 		if(obj.isDistinct()) {
-			parts.add(ReservedWords.DISTINCT);
+			parts.add(SQLReservedWords.DISTINCT);
 			parts.add(SPACE);
 		}
 
@@ -893,10 +895,10 @@ public class SQLStringVisitor extends LanguageVisitor {
 		// operator and beginning of list
 		parts.add(SPACE);
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-		parts.add(ReservedWords.IN);
+		parts.add(SQLReservedWords.IN);
 		parts.add(" ("); //$NON-NLS-1$
 
 		// value list
@@ -935,7 +937,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(SPACE);
 
         if(obj.isAll()) {
-            parts.add(ReservedWords.ALL);
+            parts.add(SQLReservedWords.ALL);
             parts.add(SPACE);
         }
 
@@ -978,7 +980,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(StoredProcedure obj) {
     	addCacheHint(obj);
         //exec clause
-        parts.add(ReservedWords.EXEC);
+        parts.add(SQLReservedWords.EXEC);
 		parts.add(SPACE);
 		parts.add(obj.getProcedureName());
 		parts.add("("); //$NON-NLS-1$
@@ -1046,10 +1048,10 @@ public class SQLStringVisitor extends LanguageVisitor {
         // operator and beginning of list
         parts.add(SPACE);
         if (obj.isNegated()) {
-            parts.add(ReservedWords.NOT);
+            parts.add(SQLReservedWords.NOT);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.IN);
+        parts.add(SQLReservedWords.IN);
         parts.add(" ("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCommand()));
         parts.add(")"); //$NON-NLS-1$
@@ -1064,13 +1066,13 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit(Update obj) {
         // Update clause
-        parts.add(ReservedWords.UPDATE);
+        parts.add(SQLReservedWords.UPDATE);
 		parts.add(SPACE);
         parts.add(registerNode(obj.getGroup()));
 		parts.add(SPACE);
 
         // Set clause
-        parts.add(ReservedWords.SET);
+        parts.add(SQLReservedWords.SET);
         parts.add(SPACE);
 
         parts.add(registerNode(obj.getChangeList()));
@@ -1078,7 +1080,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		// Where clause
 		if(obj.getCriteria() != null) {
 			parts.add(SPACE);
-			parts.add(ReservedWords.WHERE);
+			parts.add(SQLReservedWords.WHERE);
 			parts.add(SPACE);
 			parts.add(registerNode(obj.getCriteria()));
 		}
@@ -1101,12 +1103,12 @@ public class SQLStringVisitor extends LanguageVisitor {
 		parts.add("("); //$NON-NLS-1$
 
 		if(obj.isDistinct()) {
-			parts.add(ReservedWords.DISTINCT);
+			parts.add(SQLReservedWords.DISTINCT);
 			parts.add(" "); //$NON-NLS-1$
 		}
 
 		if(obj.getExpression() == null) {
-			parts.add(ReservedWords.ALL_COLS);
+			parts.add(Tokens.ALL_COLS);
 		} else {
 			parts.add(registerNode(obj.getExpression()));
 		}
@@ -1116,7 +1118,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(AliasSymbol obj) {
         parts.add(registerNode(obj.getSymbol()));
         parts.add(SPACE);
-        parts.add(ReservedWords.AS);
+        parts.add(SQLReservedWords.AS);
         parts.add(SPACE);
         parts.add(escapeSinglePart(obj.getOutputName()));
     }
@@ -1136,7 +1138,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         	constantParts = new Object[] {"?"}; //$NON-NLS-1$
         } else if(obj.isNull()) {
         	if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-    			constantParts = new Object[] {ReservedWords.UNKNOWN};
+    			constantParts = new Object[] {SQLReservedWords.UNKNOWN};
         	} else {
     			constantParts = new Object[] {"null"}; //$NON-NLS-1$
         	}
@@ -1144,7 +1146,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             if(Number.class.isAssignableFrom(type)) {
                 constantParts = new Object[] { obj.getValue().toString() };
             } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                constantParts = new Object[] { obj.getValue().equals(Boolean.TRUE) ? ReservedWords.TRUE : ReservedWords.FALSE}; 
+                constantParts = new Object[] { obj.getValue().equals(Boolean.TRUE) ? SQLReservedWords.TRUE : SQLReservedWords.FALSE}; 
 		    } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
                 constantParts = new Object[] { "{ts'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
@@ -1206,18 +1208,18 @@ public class SQLStringVisitor extends LanguageVisitor {
 			// Hide this function, which is implicit
             parts.add(registerNode(args[0]));
 
-		} else if(name.equalsIgnoreCase(ReservedWords.CONVERT) || name.equalsIgnoreCase(ReservedWords.CAST)) {
+		} else if(name.equalsIgnoreCase(SQLReservedWords.CONVERT) || name.equalsIgnoreCase(SQLReservedWords.CAST)) {
 			parts.add(name);
 			parts.add("("); //$NON-NLS-1$
 
 			if(args != null && args.length > 0) {
 				parts.add(registerNode(args[0]));
 
-				if(name.equalsIgnoreCase(ReservedWords.CONVERT)) {
+				if(name.equalsIgnoreCase(SQLReservedWords.CONVERT)) {
 					parts.add(", "); //$NON-NLS-1$
 				} else {
 					parts.add(" "); //$NON-NLS-1$
-					parts.add(ReservedWords.AS);
+					parts.add(SQLReservedWords.AS);
 					parts.add(" "); //$NON-NLS-1$
 				}
 
@@ -1244,7 +1246,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 			}
 			parts.add(")"); //$NON-NLS-1$
 
-        } else if(name.equalsIgnoreCase(ReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(ReservedWords.TIMESTAMPDIFF)) {
+        } else if(name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPDIFF)) {
             parts.add(name);
             parts.add("("); //$NON-NLS-1$
 
@@ -1287,7 +1289,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
         if(alias != null) {
             parts.add(SPACE);
-            parts.add(ReservedWords.AS);
+            parts.add(SQLReservedWords.AS);
             parts.add(SPACE);
             parts.add(escapeSinglePart(alias));
         }
@@ -1306,12 +1308,12 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(Block obj) {
     	List statements = obj.getStatements();
     	if(statements.size() == 1) {
-    		replaceStringParts(new Object[] { ReservedWords.BEGIN, "\n", //$NON-NLS-1$
-			registerNode((Statement)obj.getStatements().get(0)), "\n", ReservedWords.END}); //$NON-NLS-1$
+    		replaceStringParts(new Object[] { SQLReservedWords.BEGIN, "\n", //$NON-NLS-1$
+			registerNode((Statement)obj.getStatements().get(0)), "\n", SQLReservedWords.END}); //$NON-NLS-1$
     	} else if(statements.size() > 1) {
 	        List parts = new ArrayList();
             // Add first clause
-            parts.add(ReservedWords.BEGIN);
+            parts.add(SQLReservedWords.BEGIN);
             parts.add("\n"); //$NON-NLS-1$
             Iterator stmtIter = statements.iterator();
             while(stmtIter.hasNext()) {
@@ -1319,12 +1321,12 @@ public class SQLStringVisitor extends LanguageVisitor {
 	            parts.add(registerNode((Statement) stmtIter.next()));
                 parts.add("\n"); //$NON-NLS-1$
             }
-            parts.add(ReservedWords.END);
+            parts.add(SQLReservedWords.END);
             replaceStringParts(parts.toArray());
         } else {
             // Shouldn't happen, but being tolerant
-            replaceStringParts(new Object[] { ReservedWords.BEGIN, "\n", //$NON-NLS-1$
-            							ReservedWords.END });
+            replaceStringParts(new Object[] { SQLReservedWords.BEGIN, "\n", //$NON-NLS-1$
+            							SQLReservedWords.END });
         }
     }
 
@@ -1334,19 +1336,19 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(CreateUpdateProcedureCommand obj) {
-        parts.add(ReservedWords.CREATE);
+        parts.add(SQLReservedWords.CREATE);
         parts.add(SPACE);
         if(!obj.isUpdateProcedure()){
-            parts.add(ReservedWords.VIRTUAL);
+            parts.add(SQLReservedWords.VIRTUAL);
             parts.add(SPACE);
         }
-        parts.add(ReservedWords.PROCEDURE);
+        parts.add(SQLReservedWords.PROCEDURE);
         parts.add("\n"); //$NON-NLS-1$
         parts.add(registerNode(obj.getBlock()));
     }
 
     public void visit(DeclareStatement obj) {
-		parts.add(ReservedWords.DECLARE);
+		parts.add(SQLReservedWords.DECLARE);
 		parts.add(SPACE);
         parts.add(obj.getVariableType());
         parts.add(SPACE);
@@ -1367,14 +1369,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(IfStatement obj) {
-        parts.add(ReservedWords.IF);
+        parts.add(SQLReservedWords.IF);
         parts.add("("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCondition()));
         parts.add(")\n"); //$NON-NLS-1$
         parts.add(registerNode(obj.getIfBlock()));
         if(obj.hasElseBlock()) {
         	parts.add("\n"); //$NON-NLS-1$
-	        parts.add(ReservedWords.ELSE);
+	        parts.add(SQLReservedWords.ELSE);
 	        parts.add("\n"); //$NON-NLS-1$
 	        parts.add(registerNode(obj.getElseBlock()));
         }
@@ -1385,19 +1387,19 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(HasCriteria obj) {
-        parts.add( ReservedWords.HAS);
+        parts.add( SQLReservedWords.HAS);
         parts.add(SPACE);
         parts.add(registerNode(obj.getSelector()));
     }
 
     public void visit(TranslateCriteria obj) {
-        parts.add(ReservedWords.TRANSLATE);
+        parts.add(SQLReservedWords.TRANSLATE);
         parts.add(SPACE);
         parts.add(registerNode(obj.getSelector()));
 
         if(obj.hasTranslations()) {
 	        parts.add(SPACE);
-	        parts.add(ReservedWords.WITH);
+	        parts.add(SQLReservedWords.WITH);
 	        parts.add(SPACE);
         	parts.add("("); //$NON-NLS-1$
 	        Iterator critIter = obj.getTranslations().iterator();
@@ -1437,29 +1439,29 @@ public class SQLStringVisitor extends LanguageVisitor {
         		parts.add("<> "); //$NON-NLS-1$
         		break;
         	case CriteriaSelector.IN:
-        		parts.add(ReservedWords.IN);
+        		parts.add(SQLReservedWords.IN);
         		parts.add(SPACE);
         		break;
         	case CriteriaSelector.IS_NULL:
-        		parts.add(ReservedWords.IS);
+        		parts.add(SQLReservedWords.IS);
         		parts.add(SPACE);
-        		parts.add(ReservedWords.NULL);
+        		parts.add(SQLReservedWords.NULL);
         		parts.add(SPACE);
         		break;
             case CriteriaSelector.LIKE:
-                parts.add(ReservedWords.LIKE);
+                parts.add(SQLReservedWords.LIKE);
                 parts.add(SPACE);
                 break;
             case CriteriaSelector.BETWEEN:
-                parts.add(ReservedWords.BETWEEN);
+                parts.add(SQLReservedWords.BETWEEN);
                 parts.add(SPACE);
                 break;
         }
 
-        parts.add(ReservedWords.CRITERIA);
+        parts.add(SQLReservedWords.CRITERIA);
 		if(obj.hasElements()) {
 	        parts.add(SPACE);
-	        parts.add(ReservedWords.ON);
+	        parts.add(SQLReservedWords.ON);
 	        parts.add(SPACE);
 	        parts.add("("); //$NON-NLS-1$
 
@@ -1477,7 +1479,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(RaiseErrorStatement obj) {
         Object parts[] = new Object[4];
 
-        parts[0] = ReservedWords.ERROR;
+        parts[0] = SQLReservedWords.ERROR;
         parts[1] = SPACE;
         parts[2] = registerNode(obj.getExpression());
         parts[3] = ";"; //$NON-NLS-1$
@@ -1485,23 +1487,23 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(BreakStatement obj) {
-        parts.add(ReservedWords.BREAK);
+        parts.add(SQLReservedWords.BREAK);
         parts.add(";"); //$NON-NLS-1$
     }
 
     public void visit(ContinueStatement obj) {
-        parts.add(ReservedWords.CONTINUE);
+        parts.add(SQLReservedWords.CONTINUE);
         parts.add(";"); //$NON-NLS-1$
     }
 
     public void visit(LoopStatement obj) {
-        parts.add(ReservedWords.LOOP);
+        parts.add(SQLReservedWords.LOOP);
         parts.add(" "); //$NON-NLS-1$
-        parts.add(ReservedWords.ON);
+        parts.add(SQLReservedWords.ON);
         parts.add(" ("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCommand()));
         parts.add(") "); //$NON-NLS-1$
-        parts.add(ReservedWords.AS);
+        parts.add(SQLReservedWords.AS);
         parts.add(" "); //$NON-NLS-1$
         parts.add(obj.getCursorName());
         parts.add("\n"); //$NON-NLS-1$
@@ -1509,7 +1511,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(WhileStatement obj) {
-        parts.add(ReservedWords.WHILE);
+        parts.add(SQLReservedWords.WHILE);
         parts.add("("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCondition()));
         parts.add(")\n"); //$NON-NLS-1$
@@ -1518,7 +1520,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit(ExistsCriteria obj) {
         // operator and beginning of list
-        parts.add(ReservedWords.EXISTS);
+        parts.add(SQLReservedWords.EXISTS);
         parts.add(" ("); //$NON-NLS-1$
         parts.add(registerNode(obj.getCommand()));
         parts.add(")"); //$NON-NLS-1$
@@ -1550,7 +1552,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     
     public void visit(Limit obj) {
-        parts.add(ReservedWords.LIMIT);
+        parts.add(SQLReservedWords.LIMIT);
         if (obj.getOffset() != null) {
             parts.add(SPACE);
             parts.add(registerNode(obj.getOffset()));
@@ -1589,7 +1591,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	if(string == null) {
     	    return false;
     	}
-   		return ReservedWords.isReservedWord(string);
+   		return SQLReservedWords.isReservedWord(string);
     }
 
 }

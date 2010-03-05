@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -57,7 +59,6 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.LanguageObject.Util;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -235,7 +236,7 @@ public class RulePushAggregates implements
 		for (Expression expr : aggMap.values()) {
 			ExpressionMappingVisitor.mapExpressions(expr, projectedMap);
 		}
-		mapExpressions(groupNode.getParent(), aggMap);
+		mapExpressions(groupNode.getParent(), aggMap, metadata);
 	}
 
 	private boolean canPushGroupByToUnionChild(QueryMetadataInterface metadata,
@@ -350,14 +351,14 @@ public class RulePushAggregates implements
         	if (pushdown) {
         		projectedViewSymbols.add(agg);
         	} else {
-        		if (agg.getAggregateFunction().equals(ReservedWords.COUNT)) {
+        		if (agg.getAggregateFunction().equals(SQLReservedWords.COUNT)) {
         			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
         			count.setElseExpression(new Constant(Integer.valueOf(1)));
         			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
     				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
         		} else { //min, max, sum
         			Expression ex = agg.getExpression();
-        			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()));
+        			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()), metadata);
         			projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", ex)); //$NON-NLS-1$
         		}
         	}
@@ -500,7 +501,7 @@ public class RulePushAggregates implements
 		} else {
 		    // if the source has no rows we need to insert a select node with criteria count(*)>0
 		    PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		    AggregateSymbol count = new AggregateSymbol("stagedAgg", ReservedWords.COUNT, false, null); //$NON-NLS-1$
+		    AggregateSymbol count = new AggregateSymbol("stagedAgg", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
 		    aggregates.add(count); //consider the count aggregate for the push down call below
 		    selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
 		                                                                                   new Constant(new Integer(0))));
@@ -536,7 +537,7 @@ public class RulePushAggregates implements
             try {
                 Set<AggregateSymbol> newAggs = new HashSet<AggregateSymbol>();
                 Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(aggregates, metadata, newAggs);
-                mapExpressions(groupNode.getParent(), aggMap);
+                mapExpressions(groupNode.getParent(), aggMap, metadata);
                 aggregates.clear();
                 aggregates.addAll(newAggs);
             } catch (QueryResolverException err) {
@@ -668,27 +669,25 @@ public class RulePushAggregates implements
             Expression newExpression = null;
 
             String aggFunction = partitionAgg.getAggregateFunction();
-            if (aggFunction.equals(ReservedWords.COUNT)) {
+            if (aggFunction.equals(SQLReservedWords.COUNT)) {
                 //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
-                AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", ReservedWords.SUM, false, partitionAgg); //$NON-NLS-1$
+                AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, partitionAgg); //$NON-NLS-1$
 
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Constant convertTargetType = new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()),
                                                           DataTypeManager.DefaultDataClasses.STRING);
-                Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {
-                    newAgg, convertTargetType
-                });
+                Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, convertTargetType});
                 ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
 
                 newExpression = convertFunc;  
                 nestedAggregates.add(partitionAgg);
-            } else if (aggFunction.equals(ReservedWords.AVG)) {
+            } else if (aggFunction.equals(SQLReservedWords.AVG)) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
-                AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", ReservedWords.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", ReservedWords.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", ReservedWords.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", ReservedWords.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, sumAgg); //$NON-NLS-1$
+                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, countAgg); //$NON-NLS-1$
 
                 Function divideFunc = new Function("/", new Expression[] {sumSumAgg, sumCountAgg}); //$NON-NLS-1$
                 ResolverVisitor.resolveLanguageObject(divideFunc, metadata);
@@ -707,11 +706,11 @@ public class RulePushAggregates implements
         return aggMap;
     }
     
-    static void mapExpressions(PlanNode node, Map<? extends Expression, ? extends Expression> exprMap) 
+    static void mapExpressions(PlanNode node, Map<? extends Expression, ? extends Expression> exprMap, QueryMetadataInterface metadata) 
     throws QueryPlannerException {
         
         while (node != null) {
-            FrameUtil.convertNode(node, null, null, exprMap);
+            FrameUtil.convertNode(node, null, null, exprMap, metadata);
             
             switch (node.getType()) {
                 case NodeConstants.Types.SOURCE:

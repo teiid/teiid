@@ -24,15 +24,12 @@ package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.transaction.SystemException;
-
-import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
@@ -45,7 +42,6 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
@@ -56,16 +52,13 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 import com.metamatrix.dqp.service.AuthorizationService;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.MetadataService;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -110,12 +103,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
-    private String vdbVersion;
-    private ApplicationEnvironment env;
-    private VDBService vdbService;
+    private int vdbVersion;
     private BufferManager bufferManager;
     private ProcessorDataManager processorDataManager;
     private TransactionService transactionService;
+    private AuthorizationService authService;
     private TempTableStore tempTableStore;
     protected IDGenerator idGenerator = new IDGenerator();
     private boolean procDebugAllowed = false;
@@ -125,7 +117,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     // acquired state
     protected CapabilitiesFinder capabilitiesFinder;
     protected QueryMetadataInterface metadata;
-    private Set multiSourceModels;
+    private Set<String> multiSourceModels;
 
     // internal results
     protected boolean addedLimit;
@@ -137,36 +129,37 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected List schemas;
     
     protected TransactionContext transactionContext;
-    
+    protected ConnectorManagerRepository connectorManagerRepo; 
     private int chunkSize;
     
     protected Command userCommand;
     protected boolean returnsUpdateCount;
 
     void initialize(RequestMessage requestMsg,
-                              ApplicationEnvironment env,
                               BufferManager bufferManager,
                               ProcessorDataManager processorDataManager,
                               TransactionService transactionService,
+                              AuthorizationService authService,
                               boolean procDebugAllowed,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              int chunckSize) {
+                              int chunckSize,
+                              ConnectorManagerRepository repo) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
         this.vdbVersion = workContext.getVdbVersion();
-        this.env = env;
-        this.vdbService = (VDBService) env.findService(DQPServiceNames.VDB_SERVICE);
         this.bufferManager = bufferManager;
         this.processorDataManager = processorDataManager;
         this.transactionService = transactionService;
+        this.authService = authService;
         this.procDebugAllowed = procDebugAllowed;
         this.tempTableStore = tempTableStore;
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.chunkSize = chunckSize;
+        this.connectorManagerRepo = repo;
     }
     
 	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
@@ -185,24 +178,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	return;
         }
     	// Prepare dependencies for running the optimizer        
-        this.capabilitiesFinder =
-            new CachedFinder(
-                (DataService) this.env.findService(DQPServiceNames.DATA_SERVICE),
-                requestMsg,
-                workContext);        
+        this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());        
         
-        MetadataService metadataService = (MetadataService) this.env.findService(DQPServiceNames.METADATA_SERVICE);
-        if(metadataService == null){
-        	//should not come here. Per defect 15087, 
-        	//in a rare situation it might be null
-        	//try to get it again
-        	metadataService = (MetadataService) this.env.findService(DQPServiceNames.METADATA_SERVICE);
-        	if(metadataService == null){
-	        	String msg = DQPPlugin.Util.getString("Request.MetadataServiceIsNull"); //$NON-NLS-1$
-                throw new MetaMatrixComponentException(msg);
-        	}
-        }
-        metadata = metadataService.lookupMetadata(vdbName, vdbVersion);            
+
+        metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
 
         if (metadata == null) {
             throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
@@ -211,9 +190,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
     
         // Check for multi-source models and further wrap the metadata interface
-        List multiSourceModelList = vdbService.getMultiSourceModels(this.vdbName, this.vdbVersion);
+        Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
-        	this.multiSourceModels = new HashSet(multiSourceModelList);
+        	this.multiSourceModels = multiSourceModelList;
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
         }
     }
@@ -236,8 +215,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	StoredProcedure proc = (StoredProcedure)userCommand;
         	returnsResultSet = proc.returnsResultSet();
         }
-    	if (this.requestMsg.getRequireResultSet() != null && this.requestMsg.getRequireResultSet() != returnsResultSet) {
-        	throw new QueryValidatorException(DQPPlugin.Util.getString(this.requestMsg.getRequireResultSet()?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
+    			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
+        	throw new QueryValidatorException(DQPPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
 
     	// Create command context, used in rewriting, planning, and processing
@@ -268,13 +248,14 @@ public class Request implements QueryProcessor.ProcessorFactory {
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
 					metadata, idGenerator, analysisRecord, capabilitiesFinder,
-					multiSourceModels, vdbName, vdbService, vdbVersion, context);
+					multiSourceModels, workContext, context);
             context.setPlanToProcessConverter(modifier);
         }
 
-        context.setSecurityFunctionEvaluator((SecurityFunctionEvaluator)this.env.findService(DQPServiceNames.AUTHORIZATION_SERVICE));
+        context.setSecurityFunctionEvaluator(this.authService);
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(this);
+        context.setMetadata(this.metadata);
     }
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
@@ -309,7 +290,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     private Command parseCommand() throws QueryParserException {
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg);
-        if (!requestMsg.isBatchedUpdate()) {
+        if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
         	String commandStr = commands[0];
             return QueryParser.getQueryParser().parseCommand(commandStr, parseInfo);
         } 
@@ -352,9 +333,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         if (tc != null){ 
             Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
         }
-        
-        if (tc == null || !tc.isInTransaction()) {
-            //if not under a transaction
+
+        // If local or global transaction is not started.
+        if (tc == null || tc.getXid() == null) {
             
             boolean startAutoWrapTxn = false;
             
@@ -375,8 +356,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 try {
                     tc = transactionService.start(tc);
                 } catch (XATransactionException err) {
-                    throw new MetaMatrixComponentException(err);
-                } catch (SystemException err) {
                     throw new MetaMatrixComponentException(err);
                 }
             }
@@ -592,13 +571,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}
 
-	protected void validateAccess(Command command)
-			throws QueryValidatorException, MetaMatrixComponentException {
-		// Validate the query (may only want to validate entitlement)
-		AuthorizationService authSvc = (AuthorizationService) this.env.findService(DQPServiceNames.AUTHORIZATION_SERVICE);
-
+	protected void validateAccess(Command command) throws QueryValidatorException, MetaMatrixComponentException {
 		// See if entitlement checking is turned on
-		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getConnectionID(), authSvc, this.vdbService, this.vdbName, this.vdbVersion);
+		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.authService, this.workContext.getVDB());
 		validateWithVisitor(visitor, this.metadata, command);
 	}
 }

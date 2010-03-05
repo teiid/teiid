@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
@@ -157,9 +159,13 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             
             if (dynamicCommand.getUsing() != null
                             && !dynamicCommand.getUsing().isEmpty()) {
-                metadataStore.addTempGroup(ProcedureReservedWords.USING, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
-                GroupSymbol using = new GroupSymbol(ProcedureReservedWords.USING);
-                using.setMetadataID(metadataStore.getTempGroupID(ProcedureReservedWords.USING));
+                metadataStore.addTempGroup(SQLReservedWords.USING, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
+                GroupSymbol using = new GroupSymbol(SQLReservedWords.USING);
+                using.setMetadataID(metadataStore.getTempGroupID(SQLReservedWords.USING));
+                command.addExternalGroupToContext(using);
+                metadataStore.addTempGroup(ProcedureReservedWords.DVARS, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
+                using = new GroupSymbol(ProcedureReservedWords.DVARS);
+                using.setMetadataID(metadataStore.getTempGroupID(ProcedureReservedWords.DVARS));
                 command.addExternalGroupToContext(using);
             }
 
@@ -233,8 +239,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				LogManager.logTrace(LogConstants.CTX_DQP,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
-				localContext.setValue(setClause.getSymbol(),
-						assignment);
+				localContext.setValue(setClause.getSymbol(), assignment);
+				localContext.setValue(new ElementSymbol(SQLReservedWords.USING + ElementSymbol.SEPARATOR + setClause.getSymbol().getShortName()), assignment);
 			}
 		}
 	}

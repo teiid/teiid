@@ -31,15 +31,16 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.core.vdb.ModelType;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestTransformationMetadata {
 
@@ -50,14 +51,32 @@ public class TestTransformationMetadata {
 		mf.addProcedure("y"); //$NON-NLS-1$
 		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
 		mf1.addProcedure("y"); //$NON-NLS-1$
-		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()), Mockito.mock(MetadataSource.class));
-		TransformationMetadata tm = new TransformationMetadata(cms);
+		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
+		
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("vdb");
+		vdb.setVersion(1);
+		
+		vdb.addModel(buildModel("x"));
+		vdb.addModel(buildModel("x1"));
+		
+		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, null);
+		DQPWorkContext context = FakeMetadataFactory.buildWorkContext(tm, vdb);
+
 		try {
 			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (QueryMetadataException e) {
 			assertEquals("Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
 		}
+	}
+	
+	ModelMetaData buildModel(String name) {
+		ModelMetaData model = new ModelMetaData();
+		model.setName(name);
+		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+		model.setVisible(true);
+		return model;
 	}
 	
 	@Test public void testAmbiguousTableWithPrivateModel() throws Exception {
@@ -67,20 +86,32 @@ public class TestTransformationMetadata {
 		mf.addTable("y"); //$NON-NLS-1$
 		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
 		mf1.addTable("y"); //$NON-NLS-1$
-		MetadataSource ms = Mockito.mock(MetadataSource.class);
-		Mockito.stub(ms.getName()).toReturn("foo"); //$NON-NLS-1$
-		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()), ms);
-		TransformationMetadata tm = new TransformationMetadata(cms);
+		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
+		
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("foo");
+		vdb.setVersion(1);
+		
+		ModelMetaData model = new ModelMetaData();
+		model.setName("x1");
+		vdb.addModel(model);
+		
+		ModelMetaData model2 = new ModelMetaData();
+		model2.setName("x");
+		model2.setVisible(true);
+		vdb.addModel(model2);		
+
+		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, null);
 		Collection result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(2, result.size());
-		
-		VDBService vdbService = Mockito.mock(VDBService.class);
-		Mockito.stub(vdbService.getModelVisibility("foo", "1", "x1")).toReturn((int)ModelInfo.PRIVATE); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Mockito.stub(vdbService.getModelVisibility("foo", "1", "x")).toReturn((int)ModelInfo.PUBLIC); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		tm = new TransformationMetadata(cms, vdbService, "1"); //$NON-NLS-1$
+
+		FakeMetadataFactory.buildWorkContext(tm, vdb);
+
+		model.setVisible(false);
+
+		tm = new TransformationMetadata(vdb, cms, null, null);
 		result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(1, result.size());
-		
 	}
 	
 }

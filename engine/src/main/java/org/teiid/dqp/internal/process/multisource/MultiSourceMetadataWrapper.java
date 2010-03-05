@@ -23,10 +23,10 @@
 package org.teiid.dqp.internal.process.multisource;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -41,9 +41,9 @@ import com.metamatrix.query.metadata.SupportConstants;
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
-    private Collection multiSourceModels;
+    private Set<String> multiSourceModels;
     
-    public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Collection multiSourceModels){
+    public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels){
     	super(actualMetadata);
         this.multiSourceModels = multiSourceModels;
     }	

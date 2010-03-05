@@ -44,11 +44,11 @@ import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionForm;
 import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.metadata.GroupInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.GroupContext;
@@ -206,6 +206,13 @@ public class ResolverVisitor extends LanguageVisitor {
         
         //copy the match information
         ElementSymbol resolvedSymbol = match.element;
+        if (isExternal //convert input to inputs
+        		&& metadata.isScalarGroup(resolvedSymbol.getGroupSymbol().getMetadataID())
+        		&& ProcedureReservedWords.INPUT.equals(groupContext)) {
+        	resolvedSymbol = new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + elementShortName);
+        	resolveElementSymbol(resolvedSymbol);
+        	elementSymbol.setOutputName(resolvedSymbol.getOutputName());
+        } 
         elementSymbol.setIsExternalReference(isExternal);
         elementSymbol.setType(resolvedSymbol.getType());
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
@@ -264,7 +271,7 @@ public class ResolverVisitor extends LanguageVisitor {
 
     public void visit(SubqueryCompareCriteria obj) {
         try {
-            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj));
+            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj, metadata));
         } catch(QueryResolverException e) {
             handleException(e);
         }
@@ -273,7 +280,7 @@ public class ResolverVisitor extends LanguageVisitor {
 
     public void visit(SubquerySetCriteria obj) {
         try {
-            obj.setExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj));
+            obj.setExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj, metadata));
         } catch(QueryResolverException e) {
             handleException(e);
         }
@@ -289,7 +296,7 @@ public class ResolverVisitor extends LanguageVisitor {
     
     public void visit(Function obj) {
         try {
-            resolveFunction(obj);
+            resolveFunction(obj, this.metadata.getFunctionLibrary());
         } catch(QueryResolverException e) {
         	if (unresolvedFunctions == null) {
         		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
@@ -320,7 +327,7 @@ public class ResolverVisitor extends LanguageVisitor {
     	String type = DataTypeManager.getDataTypeName(obj.getSymbol().getType());
     	try {
     		setDesiredType(obj.getValue(), obj.getSymbol().getType(), obj);
-            obj.setValue(ResolverUtil.convertExpression(obj.getValue(), type));                    
+            obj.setValue(ResolverUtil.convertExpression(obj.getValue(), type, metadata));                    
         } catch(QueryResolverException e) {
             handleException(new QueryResolverException(e, QueryPlugin.Util.getString("SetClause.resolvingError", new Object[] {obj.getValue(), obj.getSymbol(), type}))); //$NON-NLS-1$
         } 
@@ -367,7 +374,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	/**
 	 * Resolve function such that all functions are resolved and type-safe.
 	 */
-	void resolveFunction(Function function)
+	void resolveFunction(Function function, FunctionLibrary library)
 	    throws QueryResolverException, MetaMatrixComponentException {
 	
 	    // Check whether this function is already resolved
@@ -388,8 +395,6 @@ public class ResolverVisitor extends LanguageVisitor {
 	            hasArgWithoutType = true;
 	        }
 	    }
-	        
-	    FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
 	
 	    //special case handling for convert of an untyped reference
 	    if (FunctionLibrary.isConvert(function) && hasArgWithoutType) {
@@ -543,9 +548,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    String commonType = ResolverUtil.getCommonType(new String[] {expTypeName, lowerTypeName, upperTypeName});
 	    if (commonType != null) {
-	        criteria.setExpression(ResolverUtil.convertExpression(exp, expTypeName, commonType));
-	        criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, commonType));
-	        criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, commonType));
+	        criteria.setExpression(ResolverUtil.convertExpression(exp, expTypeName, commonType, metadata));
+	        criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, commonType, metadata));
+	        criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, commonType, metadata));
 	    } else {
 	        // Couldn't find a common type to implicitly convert to
 	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, expTypeName, lowerTypeName, criteria));
@@ -575,7 +580,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    if(rightExpression instanceof Constant) {
 	        // Auto-convert constant string on right to expected type on left
 	        try {
-	            ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName));
+	            ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName, metadata));
 	            return;
 	        } catch (QueryResolverException qre) {
 	            //ignore
@@ -586,7 +591,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    if(leftExpression instanceof Constant) {
 	        // Auto-convert constant string on left to expected type on right
 	        try {
-	            ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName));
+	            ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata));
 	            return;                                           
 	        } catch (QueryResolverException qre) {
 	            //ignore
@@ -596,12 +601,12 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Try to apply a conversion generically
 		
 	    if(ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
-			ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName) );
+			ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata) );
 			return;
 		}
 	
 		if(ResolverUtil.canImplicitlyConvert(rightTypeName, leftTypeName)) {
-			ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName) );
+			ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName, metadata) );
 			return;
 	    }
 	
@@ -611,8 +616,8 @@ public class ResolverVisitor extends LanguageVisitor {
 	        // Neither are aggs, but types can't be reconciled
 	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, new Object[] { leftTypeName, rightTypeName, ccrit }));
 		}
-		ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType) );
-		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType) );
+		ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType, metadata) );
+		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType, metadata) );
 	}
 
 	void resolveMatchCriteria(MatchCriteria mcrit)
@@ -644,12 +649,12 @@ public class ResolverVisitor extends LanguageVisitor {
 	            if(!(expr instanceof AggregateSymbol) &&
 	                ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.STRING)) {
 	
-	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.STRING);
+	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.STRING, metadata);
 	                
 	            } else if (!(expr instanceof AggregateSymbol) &&
 	                ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.CLOB)){
 	                    
-	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.CLOB);
+	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.CLOB, metadata);
 	
 	            } else {
 	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0029, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0029, mcrit));
@@ -687,7 +692,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            String valTypeName = DataTypeManager.getDataTypeName(value.getType());
 	            if(ResolverUtil.canImplicitlyConvert(valTypeName, exprTypeName)) {
 	                // Apply cast and replace current value
-	                newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName) );
+	                newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName, metadata) );
 	                changed = true;
 	            } else {
 	                convertLeft = true;
@@ -716,7 +721,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            }
 	
 	            // Convert left expression to type of values in the set
-	            scrit.setExpression(ResolverUtil.convertExpression(scrit.getExpression(), exprTypeName, setTypeName ));
+	            scrit.setExpression(ResolverUtil.convertExpression(scrit.getExpression(), exprTypeName, setTypeName, metadata));
 	
 	        } else {
 	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0031, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0031, scrit));
@@ -799,16 +804,16 @@ public class ResolverVisitor extends LanguageVisitor {
 	    if (thenTypeName == null) {
 	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0068, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0068, "THEN/ELSE", obj)); //$NON-NLS-1$
 	    }
-	    obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), whenTypeName));
+	    obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), whenTypeName, metadata));
 	    ArrayList whens = new ArrayList(whenCount);
 	    ArrayList thens = new ArrayList(whenCount);
 	    for (int i = 0; i < whenCount; i++) {
-	        whens.add(ResolverUtil.convertExpression(obj.getWhenExpression(i), whenTypeName));
-	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName));
+	        whens.add(ResolverUtil.convertExpression(obj.getWhenExpression(i), whenTypeName, metadata));
+	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName, metadata));
 	    }
 	    obj.setWhen(whens, thens);
 	    if (elseExpr != null) {
-	        obj.setElseExpression(ResolverUtil.convertExpression(elseExpr, thenTypeName));
+	        obj.setElseExpression(ResolverUtil.convertExpression(elseExpr, thenTypeName, metadata));
 	    }
 	    // Set this CASE expression's type to the common THEN type, and we're done.
 	    obj.setType(DataTypeManager.getDataTypeClass(thenTypeName));
@@ -887,11 +892,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	    ArrayList thens = new ArrayList(whenCount);
 	    for (int i = 0; i < whenCount; i++) {
-	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName));
+	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName, metadata));
 	    }
 	    obj.setWhen(obj.getWhen(), thens);
 	    if (elseExpr != null) {
-	        obj.setElseExpression(ResolverUtil.convertExpression(elseExpr, thenTypeName));
+	        obj.setElseExpression(ResolverUtil.convertExpression(elseExpr, thenTypeName, metadata));
 	    }
 	    // Set this CASE expression's type to the common THEN type, and we're done.
 	    obj.setType(DataTypeManager.getDataTypeClass(thenTypeName));

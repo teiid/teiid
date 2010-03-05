@@ -24,7 +24,6 @@ package com.metamatrix.query.resolver;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,12 +41,12 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.GroupContext;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
@@ -104,39 +103,21 @@ public class TestProcedureResolving {
     public static Map getProcedureExternalMetadata(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
     throws QueryMetadataException, MetaMatrixComponentException {
         Map externalMetadata = new HashMap();
-
-        // Look up elements for the virtual group
-        List elements = ResolverUtil.resolveElementsInGroup(virtualGroup, metadata);
-        // virtual group metadata info
+        
+        //TODO: it doesn't seem like these should be in the 
+        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(virtualGroup, metadata);
         externalMetadata.put(virtualGroup, elements);
+        
+        TempMetadataStore tms = new TempMetadataStore();
 
-        // INPUT group metadata info
-        GroupSymbol inputGroup = new GroupSymbol(ProcedureReservedWords.INPUT);
-        List inputElments = new ArrayList(elements.size());
-        List elementIds = new ArrayList();
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol virtualElmnt = (ElementSymbol)elements.get(i);
-            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
-            inputElments.add(inputElement);
-            elementIds.add(new TempMetadataID(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + virtualElmnt.getShortName(), virtualElmnt.getType()));
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, tms);
+        
+        GroupContext gc = ProcedureContainerResolver.createChildMetadata(tms, metadata, virtualGroup);
+        
+        for (GroupSymbol symbol : gc.getAllGroups()) {
+        	externalMetadata.put(symbol, ResolverUtil.resolveElementsInGroup(symbol, tma));
         }
-        inputGroup.setMetadataID(new TempMetadataID(ProcedureReservedWords.INPUT, elementIds));
-        externalMetadata.put(inputGroup, inputElments);
-
-        // CHANGING group metadata info
-        // Switch type to be boolean for all CHANGING variables
-        GroupSymbol changeGroup = new GroupSymbol(ProcedureReservedWords.CHANGING);
-        List changingElments = new ArrayList(elements.size());
-        elementIds = new ArrayList();
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol changeElement = (ElementSymbol)((ElementSymbol)elements.get(i)).clone();
-            changeElement.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-            changingElments.add(changeElement);
-            elementIds.add(new TempMetadataID(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + changeElement.getShortName(), changeElement.getType()));
-        }
-        changeGroup.setMetadataID(new TempMetadataID(ProcedureReservedWords.CHANGING, elementIds));
-        externalMetadata.put(changeGroup, changingElments);
-
+        
         return externalMetadata;
     }
 	
@@ -218,7 +199,7 @@ public class TestProcedureResolving {
     @Test public void testProcedureScoping() throws Exception {
         StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
-        //note that this declare takes presedense over the proc INPUT.e1 and CHANGING.e1 variables
+        //note that this declare takes presedense over the proc INPUTS.e1 and CHANGING.e1 variables
         .append("\n  declare integer e1 = 1;") //$NON-NLS-1$
         .append("\n  e1 = e1;") //$NON-NLS-1$
         .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
@@ -363,7 +344,7 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
 		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
@@ -379,7 +360,7 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = var1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -393,8 +374,8 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -410,8 +391,8 @@ public class TestProcedureResolving {
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(CHANGING.e1 = 'true')\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -426,10 +407,10 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e1='false' and INPUT.e1=1)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(CHANGING.e1='false' and INPUTS.e1=1)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -444,10 +425,10 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "if(CHANGING.e4 ='true' and INPUT.e2=1 or var1 < 30)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(CHANGING.e4 ='true' and INPUTS.e2=1 or var1 < 30)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -463,7 +444,7 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "if(CHANGING.e4 = {d'2000-01-01'})\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -527,7 +508,7 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -543,7 +524,7 @@ public class TestProcedureResolving {
 //        procedure = procedure + "DECLARE integer var1;\n";
         procedure = procedure + "var3 = var2+var1;\n";         //$NON-NLS-1$
         procedure = procedure + "var2 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -558,7 +539,7 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE struct var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, vm1.g1.e1 = 2);\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUT.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = 'x', pm1.g1.e2 = INPUTS.e2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -852,8 +833,8 @@ public class TestProcedureResolving {
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA ON (e1) WITH (g1.e1 = 1);\n";         //$NON-NLS-1$
-//        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n";
-//        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e2;\n";
+//        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n";
+//        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e2;\n";
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
@@ -869,9 +850,9 @@ public class TestProcedureResolving {
     @Test public void testCreateUpdateProcedure44() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -885,9 +866,9 @@ public class TestProcedureResolving {
     @Test public void testCreateUpdateProcedure45() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -906,7 +887,7 @@ public class TestProcedureResolving {
     @Test public void testCreateUpdateProcedure46() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1;\n"; //$NON-NLS-1$
+        procedure = procedure + "UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
@@ -942,7 +923,7 @@ public class TestProcedureResolving {
 		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, INPUT.e2 = 2);\n";         //$NON-NLS-1$
+		procedure = procedure + "Select pm1.g1.e1 from pm1.g1 where Translate CRITERIA WITH (vm1.g1.e1 = 1, INPUTS.e2 = 2);\n";         //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 
 		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -969,7 +950,7 @@ public class TestProcedureResolving {
 		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.E1, vm1.g1.e1, INPUT.e1))\n";                 //$NON-NLS-1$
+		procedure = procedure + "if(HAS CRITERIA ON (vm1.g1.E1, vm1.g1.e1, INPUTS.e1))\n";                 //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
@@ -1019,7 +1000,7 @@ public class TestProcedureResolving {
 		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUT.e4;"; //$NON-NLS-1$
+		procedure = procedure + "var1 = INPUTS.e4;"; //$NON-NLS-1$
 		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
 		procedure = procedure + "END\n"; //$NON-NLS-1$
 
@@ -1281,8 +1262,8 @@ public class TestProcedureResolving {
     /*@Test public void testCommandUpdating3() throws Exception{
         StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
         .append("BEGIN\n") //$NON-NLS-1$
-        .append("INSERT INTO pm1.g1 (e1) VALUES (input.e1);\n") //$NON-NLS-1$
-        .append("ROWS_UPDATED = INSERT INTO pm1.g2 (e1) VALUES (input.e1);\n") //$NON-NLS-1$
+        .append("INSERT INTO pm1.g1 (e1) VALUES (INPUTS.e1);\n") //$NON-NLS-1$
+        .append("ROWS_UPDATED = INSERT INTO pm1.g2 (e1) VALUES (INPUTS.e1);\n") //$NON-NLS-1$
         .append("END\n"); //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
@@ -1295,9 +1276,9 @@ public class TestProcedureResolving {
     /*@Test public void testCommandUpdatingCount6() throws Exception{
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "if(INPUT.e1 = 10)\n";         //$NON-NLS-1$
+        procedure = procedure + "if(INPUTS.e1 = 10)\n";         //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "INSERT INTO pm1.g1 (e2) VALUES (Input.e2);\n"; //$NON-NLS-1$
+        procedure = procedure + "INSERT INTO pm1.g1 (e2) VALUES (INPUTS.e2);\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
@@ -1327,14 +1308,14 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "INPUT.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "INPUTS.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"INPUT.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
+                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"INPUTS.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
     }
     
     // validating CHANGING element assigned
@@ -1372,14 +1353,14 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, INPUT.x) values (1, 2);\n"; //$NON-NLS-1$
+        procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, INPUTS.x) values (1, 2);\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUT.x': Symbol INPUT.x is specified with an unknown group context]"); //$NON-NLS-1$
+                FakeMetadataObject.Props.UPDATE_PROCEDURE, "Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
     }
     
     //should resolve first to the table's column
@@ -1539,14 +1520,14 @@ public class TestProcedureResolving {
 	@Test public void testDefect16451() {
 		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure += "BEGIN\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = input.e1;\n"; //$NON-NLS-1$
+        procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = INPUTS.e1;\n"; //$NON-NLS-1$
         procedure += "ROWS_UPDATED = 0;"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
         String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.DELETE_PROCEDURE, "Symbol input.e1 is specified with an unknown group context"); //$NON-NLS-1$
+									 FakeMetadataObject.Props.DELETE_PROCEDURE, "Symbol INPUTS.e1 is specified with an unknown group context"); //$NON-NLS-1$
 	}
 	
     @Test public void testInvalidVirtualProcedure3() throws Exception {
@@ -1573,14 +1554,14 @@ public class TestProcedureResolving {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure += "BEGIN\n"; //$NON-NLS-1$
         procedure += "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure += "Select pm1.g1.e2, Input.e2 from pm1.g1;\n"; //$NON-NLS-1$
-        procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e1, pm1.g1.e2 = INPUT.e1;\n"; //$NON-NLS-1$
+        procedure += "Select pm1.g1.e2, INPUTS.e2 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e1 = INPUTS.e1, pm1.g1.e2 = INPUTS.e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUT.e1'"); //$NON-NLS-1$
+				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUTS.e1'"); //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedure() throws Exception {

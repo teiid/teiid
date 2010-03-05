@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -33,56 +32,38 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.dqp.service.FakeMetadataService;
-import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.jdbc.api.ExecutionProperties;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-
 
 public class TestDQPCore {
 
     private DQPCore core;
 
     @Before public void setUp() throws Exception {
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("bqt"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
-        DQPWorkContext.setWorkContext(workContext);
-        
-        String vdbName = "bqt"; //$NON-NLS-1$
-		String vdbVersion = "1"; //$NON-NLS-1$
-    	
-    	final ApplicationEnvironment env = new ApplicationEnvironment();
-        env.bindService(DQPServiceNames.BUFFER_SERVICE, new FakeBufferService());
-        FakeMetadataService mdSvc = new FakeMetadataService();
-		mdSvc.addVdb(vdbName, vdbVersion, FakeMetadataFactory.exampleBQTCached()); 
-        env.bindService(DQPServiceNames.METADATA_SERVICE, mdSvc);
-        env.bindService(DQPServiceNames.DATA_SERVICE, new AutoGenDataService());
-        env.bindService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.setDefaultPrivate(true);
-        vdbService.addBinding(vdbName, vdbVersion, "BQT1", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-        vdbService.addBinding(vdbName, vdbVersion, "BQT3", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-        vdbService.addModel(vdbName, vdbVersion, "BQT3", ModelInfo.PRIVATE, false); //$NON-NLS-1$
-        env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
+        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(FakeMetadataFactory.exampleBQTCached(), FakeMetadataFactory.exampleBQTVDB());
+        context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
 
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
+        
         core = new DQPCore();
-        core.setEnvironment(env);
-        core.start(new Properties());
+        core.setWorkManager(new FakeWorkManager());
+        core.setBufferService(new FakeBufferService());
+        core.setConnectorManagerRepository(repo);
+        core.setTransactionService(new FakeTransactionService());
+        
+        core.start(new DQPConfiguration());
     }
     
     @After public void tearDown() throws Exception {
@@ -92,7 +73,6 @@ public class TestDQPCore {
 
     public RequestMessage exampleRequestMessage(String sql) {
         RequestMessage msg = new RequestMessage(sql);
-        msg.setCallableStatement(false);
         msg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
         msg.setFetchSize(10);
         msg.setPartialResults(false);
@@ -204,14 +184,14 @@ public class TestDQPCore {
 	}
 	
 	@Test public void testCancel() throws Exception {
-		assertFalse(this.core.cancelRequest(new RequestID(1)));
+		assertFalse(this.core.cancelRequest(1L));
 	}
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_OFF);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        ResultsMessage results = message.get(50000, TimeUnit.MILLISECONDS);
+        ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
         assertEquals("[QueryValidatorException]Group does not exist: BQT3.SmallA", results.getException().toString()); //$NON-NLS-1$
 	}
 
@@ -233,13 +213,13 @@ public class TestDQPCore {
 
     private ResultsMessage helpExecute(String sql, String userName, int sessionid, boolean txnAutoWrap) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql);
-        DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(sessionid), userName));
+        DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(sessionid, userName));
         if (txnAutoWrap) {
         	reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_ON);
         }
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        ResultsMessage results = message.get(50000, TimeUnit.MILLISECONDS);
+        ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
         if (results.getException() != null) {
         	throw results.getException();
         }

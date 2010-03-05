@@ -29,20 +29,14 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
-import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.FakeVDBService;
-import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -58,92 +52,75 @@ public class TestMetaDataProcessor extends TestCase {
         super(name);
     }
     
-    public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata) throws Exception {
+    public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
         // Prepare sql 
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
         
         // Create components
-        MetadataService mdSvc = Mockito.mock(MetadataService.class);
-        Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
         SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
         DQPCore requestMgr = new DQPCore();
+        requestMgr.setTransactionService(new FakeTransactionService());
 
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("MyVDB"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
 
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
         RequestMessage requestMsg = new RequestMessage(sql);
         TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null); 
         
-        ApplicationEnvironment env = new ApplicationEnvironment();
-        FakeVDBService vdbService = new FakeVDBService();
-        env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
-        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, requestMgr, prepPlanCache, env, "MyVDB", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        MetaDataProcessor mdProc = new MetaDataProcessor(requestMgr, prepPlanCache, "MyVDB", 1);
                      
         return mdProc.processMessage(requestID, workContext, null, true).getColumnMetadata();    
     }
     
     public void testSimpleQuery() throws Exception {
-        Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
     }
 
     public void testSimpleUpdate() throws Exception {
-        Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("DELETE FROM pm1.g1 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        metadata = helpGetMetadata("DELETE FROM pm1.g1 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("UPDATE pm1.g1 SET e1='y' WHERE e1 = 'x'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        metadata = helpGetMetadata("UPDATE pm1.g1 SET e1='y' WHERE e1 = 'x'", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
-        metadata = helpGetMetadata("SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm1.g1", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        metadata = helpGetMetadata("SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm1.g1", FakeMetadataFactory.example1Cached(),FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
     }
     
     public void testElementLabel() throws Exception {
-    	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
         assertEquals("E2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
     }
     
     public void testSimpleExec() throws Exception {
-        Map[] metadata = helpGetMetadata("EXEC pm1.sq1()", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("EXEC pm1.sq1()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(2, metadata.length);        
     }
     
     public void testExecNoResultColumns() throws Exception {
-        Map[] metadata = helpGetMetadata("EXEC pm1.sp5()", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("EXEC pm1.sp5()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(0, metadata.length);                
     }
     
-    private MetadataResult helpTestQuery(QueryMetadataInterface metadata, String sql) throws Exception {
-        FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addModel("MyVDB", "1", "pm1", ModelInfo.PRIVATE, false);  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-        
+    private MetadataResult helpTestQuery(QueryMetadataInterface metadata, String sql, VDBMetaData vdb) throws Exception {
         // Create components
-        MetadataService mdSvc = Mockito.mock(MetadataService.class);
-        Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
         SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
         
         // Initialize components
-        ApplicationEnvironment env = new ApplicationEnvironment();
-        env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
-        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, new DQPCore(), prepPlanCache, env, "MyVDB", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        MetaDataProcessor mdProc = new MetaDataProcessor(new DQPCore(), prepPlanCache, "MyVDB", 1);
                      
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("MyVDB"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
         return mdProc.processMessage(workContext.getRequestID(1), workContext, sql, true);    
     }
 
@@ -159,7 +136,7 @@ public class TestMetaDataProcessor extends TestCase {
         QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT e1 FROM pm1.g2"; //$NON-NLS-1$
         
-        MetadataResult response = helpTestQuery(metadata, sql);
+        MetadataResult response = helpTestQuery(metadata, sql, FakeMetadataFactory.examplePrivatePhysicalModelVDB());
         
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
     }
@@ -168,7 +145,7 @@ public class TestMetaDataProcessor extends TestCase {
         QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT min(e1), max(e1), sum(e1), avg(e1) FROM pm1.g2"; //$NON-NLS-1$
         
-        MetadataResult response = helpTestQuery(metadata, sql);
+        MetadataResult response = helpTestQuery(metadata, sql, FakeMetadataFactory.examplePrivatePhysicalModelVDB());
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
         helpCheckNumericAttributes(response, 1, 21, 19, 4);
         helpCheckNumericAttributes(response, 2, 22, 20, 0);
@@ -182,7 +159,7 @@ public class TestMetaDataProcessor extends TestCase {
         while(iter.hasNext()) {
             String type = (String) iter.next();
             Class typeClass = DataTypeManager.getDataTypeClass(type);
-            MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null, "vdb", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+            MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1);
             Map columnMetadata = processor.getDefaultColumn("t", "c", typeClass); //$NON-NLS-1$ //$NON-NLS-2$
             verifyColumn(columnMetadata, type);            
         }               
@@ -214,7 +191,7 @@ public class TestMetaDataProcessor extends TestCase {
         verifyAttribute(column, ResultsMetadataConstants.SIGNED, false, Boolean.class, dataType);
 
         verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, false, String.class, dataType);
-        verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, false, String.class, dataType);
+        verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, false, Integer.class, dataType);
         verifyAttribute(column, ResultsMetadataConstants.WRITABLE, false, Boolean.class, dataType);
     }
     

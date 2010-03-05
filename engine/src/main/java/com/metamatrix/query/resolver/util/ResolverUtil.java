@@ -43,7 +43,6 @@ import com.metamatrix.common.types.DataTypeManager.DefaultDataTypes;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.metadata.GroupInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
@@ -187,10 +186,10 @@ public class ResolverUtil {
      * @return
      * @throws QueryResolverException 
      */
-    public static Expression convertExpression(Expression sourceExpression, String targetTypeName) throws QueryResolverException {
+    public static Expression convertExpression(Expression sourceExpression, String targetTypeName, QueryMetadataInterface metadata) throws QueryResolverException {
         return convertExpression(sourceExpression,
                                  DataTypeManager.getDataTypeName(sourceExpression.getType()),
-                                 targetTypeName);
+                                 targetTypeName, metadata);
     }
 
     /**
@@ -203,14 +202,14 @@ public class ResolverUtil {
      * @return
      * @throws QueryResolverException 
      */
-    public static Expression convertExpression(Expression sourceExpression, String sourceTypeName, String targetTypeName) throws QueryResolverException {
+    public static Expression convertExpression(Expression sourceExpression, String sourceTypeName, String targetTypeName, QueryMetadataInterface metadata) throws QueryResolverException {
         if (sourceTypeName.equals(targetTypeName)) {
             return sourceExpression;
         }
         
         if(canImplicitlyConvert(sourceTypeName, targetTypeName) 
                         || (sourceExpression instanceof Constant && convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression) != null)) {
-            return getConversion(sourceExpression, sourceTypeName, targetTypeName, true);
+            return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
         }
 
         //Expression is wrong type and can't convert
@@ -258,10 +257,9 @@ public class ResolverUtil {
     public static Function getConversion(Expression sourceExpression,
                                             String sourceTypeName,
                                             String targetTypeName,
-                                            boolean implicit) {
+                                            boolean implicit, FunctionLibrary library) {
         Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
 
-        FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
         FunctionDescriptor fd = library.findTypedConversionFunction(srcType, DataTypeManager.getDataTypeClass(targetTypeName));
 
         Function conversion = new Function(fd.getName(), new Expression[] { sourceExpression, new Constant(targetTypeName) });
@@ -777,7 +775,7 @@ public class ResolverUtil {
 	 * @throws QueryResolverException if a conversion is necessary but none can
 	 * be found
 	 */
-	static Expression resolveSubqueryPredicateCriteria(Expression expression, SubqueryContainer crit)
+	static Expression resolveSubqueryPredicateCriteria(Expression expression, SubqueryContainer crit, QueryMetadataInterface metadata)
 		throws QueryResolverException {
 	
 		// Check that type of the expression is same as the type of the
@@ -796,7 +794,7 @@ public class ResolverUtil {
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
 		Expression result = null;
 	    try {
-	        result = convertExpression(expression, exprTypeName, subqueryTypeName);
+	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata);
 	    } catch (QueryResolverException qre) {
 	        throw new QueryResolverException(qre, ErrorMessageKeys.RESOLVER_0033, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0033, crit));
 	    }
@@ -841,7 +839,7 @@ public class ResolverUtil {
             throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
         }
 		result.setKeyElement(keyElement);
-		args[3] = convertExpression(args[3], DataTypeManager.getDataTypeName(keyElement.getType()));
+		args[3] = convertExpression(args[3], DataTypeManager.getDataTypeName(keyElement.getType()), metadata);
 		return result;
 	}
 

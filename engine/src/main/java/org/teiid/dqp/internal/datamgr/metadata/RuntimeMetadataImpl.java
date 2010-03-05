@@ -45,10 +45,10 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     @Override
-    public Element getElement(String fullName) throws ConnectorException {
+    public Column getElement(String fullName) throws ConnectorException {
 		try {
-			Object elementId = metadata.getElementID(fullName);
-	    	return new ElementImpl(elementId, this);
+			Object metadataId = metadata.getElementID(fullName);
+			return getElement(metadataId);
 		} catch (QueryMetadataException e) {
 			throw new ConnectorException(e);
 		} catch (MetaMatrixComponentException e) {
@@ -56,12 +56,15 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 		}
     }
     
-    public ElementImpl getElement(Object elementId) {
-    	return new ElementImpl(elementId, this);
+    public Column getElement(Object elementId) {
+    	if (elementId instanceof Column) {
+    		return (Column)elementId;
+    	}
+    	return null;
     }
     
     @Override
-    public Group getGroup(String fullName) throws ConnectorException {
+    public Table getGroup(String fullName) throws ConnectorException {
 		try {
 			Object groupId = metadata.getGroupID(fullName);
 	    	return getGroup(groupId);
@@ -72,9 +75,9 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 		}
     }
 
-	public GroupImpl getGroup(Object groupId) throws QueryMetadataException, MetaMatrixComponentException {
-		if (!metadata.isVirtualGroup(groupId)) {
-			return new GroupImpl(groupId, this);
+	public Table getGroup(Object groupId) throws QueryMetadataException, MetaMatrixComponentException {
+		if (!metadata.isVirtualGroup(groupId) && groupId instanceof Table) {
+			return (Table)groupId;
 		}
 		return null;
 	}    
@@ -92,11 +95,17 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
 
 	public Procedure getProcedure(StoredProcedureInfo sp) {
-		return new ProcedureImpl(this, sp);
+		if (sp.getProcedureID() instanceof Procedure) {
+			return (Procedure)sp.getProcedureID();
+		}
+		return null;
 	}
 	
-	public Parameter getParameter(SPParameter param, Procedure parent) {
-		return new ParameterImpl(this, param, parent);
+	public ProcedureParameter getParameter(SPParameter param) {
+		if (param.getMetadataID() instanceof ProcedureParameter) {
+			return (ProcedureParameter)param.getMetadataID();
+		}
+		return null;
 	}
     
     public byte[] getBinaryVDBResource(String resourcePath) throws ConnectorException {

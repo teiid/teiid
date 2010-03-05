@@ -36,13 +36,14 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -449,7 +450,7 @@ public final class FunctionMethods {
 		cal.setTime(timestamp);
 
 		// case of interval = 1, fractional seconds (nanos), don't go to branches of addField()
-		if (intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
+		if (intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
 			int countValue = count.intValue();
 			nanos += countValue;
 
@@ -487,23 +488,23 @@ public final class FunctionMethods {
 	private static void addField(String interval, Integer count, Calendar cal) {
 		int countValue = count.intValue();
 
-        if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
+        if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
             //nano seconds - should never get into this branch
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_SECOND)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_SECOND)) {
             cal.add(Calendar.SECOND, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_MINUTE)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_MINUTE)) {
             cal.add(Calendar.MINUTE, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_HOUR)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_HOUR)) {
             cal.add(Calendar.HOUR_OF_DAY, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_DAY)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_DAY)) {
             cal.add(Calendar.DAY_OF_YEAR, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_WEEK)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_WEEK)) {
             cal.add(Calendar.WEEK_OF_YEAR, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_MONTH)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_MONTH)) {
             cal.add(Calendar.MONTH, countValue);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_QUARTER)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_QUARTER)) {
             cal.add(Calendar.MONTH, countValue*3);
-        } else if(interval.equalsIgnoreCase(ReservedWords.SQL_TSI_YEAR)) {
+        } else if(interval.equalsIgnoreCase(SQLReservedWords.SQL_TSI_YEAR)) {
             cal.add(Calendar.YEAR, countValue);
         }
 	}
@@ -525,25 +526,25 @@ public final class FunctionMethods {
         long tsDiff = ts2 - ts1;
 
         long count = 0;
-        if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
+        if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
             count = tsDiff;
         } else { 
         	tsDiff = tsDiff / 1000000; //convert to milliseconds
-            if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_SECOND)) {
+            if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_SECOND)) {
                 count = tsDiff / 1000;
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MINUTE)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_MINUTE)) {
                 count = (tsDiff / 1000) / 60;
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_HOUR)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_HOUR)) {
                 count = (tsDiff / 1000) / (60*60);
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_DAY)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_DAY)) {
                 count = (tsDiff / 1000) / (60*60*24);
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_WEEK)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_WEEK)) {
                 count = (tsDiff / 1000) / (60*60*24*7);
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MONTH)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_MONTH)) {
                 count = (tsDiff / 1000) / (60*60*24*30);
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_QUARTER)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_QUARTER)) {
                 count = (tsDiff / 1000) / (60*60*24*91);
-            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_YEAR)) {
+            } else if(intervalType.equalsIgnoreCase(SQLReservedWords.SQL_TSI_YEAR)) {
                 count = (tsDiff / 1000) / (60*60*24*365);
             }    
         }

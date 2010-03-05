@@ -57,7 +57,7 @@ import com.metamatrix.query.util.LogConstants;
  * are concerned with function metadata EXCEPT {@link #getFunction} which is used to find a function
  * for execution.
  */
-class FunctionTree {
+public class FunctionTree {
 
     // Constant used to look up the special descriptor key in a node map
     private static final Integer DESCRIPTOR_KEY = new Integer(-1);
@@ -83,7 +83,7 @@ class FunctionTree {
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
      */
-    FunctionTree(FunctionMetadataSource source) {
+    public FunctionTree(FunctionMetadataSource source) {
         // Load data structures
         addSource(source);
     }

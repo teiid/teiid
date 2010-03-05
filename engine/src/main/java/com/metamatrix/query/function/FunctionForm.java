@@ -24,9 +24,11 @@ package com.metamatrix.query.function;
 
 import java.io.Serializable;
 import java.util.*;
+
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.function.metadata.*;
 
 /**
@@ -169,7 +171,7 @@ public class FunctionForm implements Serializable, Comparable {
 				str.append(", "); //$NON-NLS-1$
 			} else {
 				str.append(" "); //$NON-NLS-1$
-				str.append(ReservedWords.AS);
+				str.append(SQLReservedWords.AS);
 				str.append(" "); //$NON-NLS-1$
 			}	
 			str.append(inputParamNames.get(1));

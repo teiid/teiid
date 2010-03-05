@@ -34,6 +34,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -146,7 +147,7 @@ public class TestJoinOptimization {
         capFinder.addCapabilities(BQT1, caps); 
         capFinder.addCapabilities(BQT2, caps); 
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
 
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
@@ -510,7 +511,7 @@ public class TestJoinOptimization {
     }
     
     @Test public void testRulePushNonJoinCriteriaPreservesOuterJoin() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select b.intkey from (select intkey from bqt1.smalla) a left outer join (select intkey from bqt1.smallb) b on (1 = 1)"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
@@ -520,7 +521,7 @@ public class TestJoinOptimization {
     }
     
     @Test public void testOuterToInnerJoinConversion() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smallb.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smalla, bqt1.smallb WHERE (bqt1.smalla.intkey = bqt1.smallb.intkey) AND (bqt1.smallb.intnum = 1)"}); //$NON-NLS-1$
@@ -528,21 +529,21 @@ public class TestJoinOptimization {
     
     //same as above, but with a right outer join
     @Test public void testOuterToInnerJoinConversion1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla right outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smallb, bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smallb.intkey) AND (bqt1.smalla.intnum = 1)"}); //$NON-NLS-1$
     }
     
     @Test public void testOuterToInnerJoinConversion2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smallb.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smallb LEFT OUTER JOIN bqt1.smalla ON bqt1.smalla.intkey = bqt1.smallb.intkey WHERE bqt1.smallb.intnum = 1"}); //$NON-NLS-1$
     }    
     
     @Test public void testOuterToInnerJoinConversion3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smalla LEFT OUTER JOIN bqt1.smallb ON bqt1.smalla.intkey = bqt1.smallb.intkey WHERE bqt1.smalla.intnum = 1"}); //$NON-NLS-1$
@@ -552,7 +553,7 @@ public class TestJoinOptimization {
      * non-depenent criteria on each side of a full outer creates an inner join  
      */
     @Test public void testOuterToInnerJoinConversion4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = bqt1.smallb.intnum"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smalla, bqt1.smallb WHERE (bqt1.smalla.intkey = bqt1.smallb.intkey) AND (bqt1.smalla.intnum = bqt1.smallb.intnum)"}); //$NON-NLS-1$
@@ -571,7 +572,7 @@ public class TestJoinOptimization {
         caps.setFunctionSupport("concat2", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where concat2(bqt1.smallb.intnum, '1') = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, null, capFinder, new String[]{"SELECT bqt1.smallb.intnum, bqt1.smalla.intkey FROM bqt1.smalla LEFT OUTER JOIN bqt1.smallb ON bqt1.smalla.intkey = bqt1.smallb.intkey"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$

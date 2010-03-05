@@ -31,22 +31,29 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import javax.resource.spi.work.WorkManager;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.ForeignKey;
 import org.teiid.connector.metadata.runtime.KeyRecord;
+import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
-import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -54,33 +61,24 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
 import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.util.CommandContext;
 
@@ -108,29 +106,28 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	// Resources
 	private DQPCore requestMgr;
-    private DataService dataService;
-    private VDBService vdbService;
     private BufferService bufferService;
-    private MetadataService metadataService;
+    private ConnectorManagerRepository connectorManagerRepository;
+    private WorkManager workManager;
 
 	// Processor state
     private CodeTableCache codeTableCache;
     
-    public DataTierManagerImpl(DQPCore requestMgr,
-        DataService dataService, VDBService vdbService, BufferService bufferService, MetadataService metadataService, 
-        int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
+    public DataTierManagerImpl(DQPCore requestMgr, ConnectorManagerRepository connectorRepo, BufferService bufferService, WorkManager wm, int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
 
 		this.requestMgr = requestMgr;
-        this.dataService = dataService;
-        this.vdbService = vdbService;
+        this.connectorManagerRepository = connectorRepo;
         this.bufferService = bufferService;
-        this.metadataService = metadataService;
+        this.workManager = wm;
 
         this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
+    
+    private ConnectorManager getCM(String connectorName) {
+    	return this.connectorManagerRepository.getConnectorManager(connectorName);
+    }
 
-	public TupleSource registerRequest(Object processorId, Command command,
-			String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+	public TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
@@ -138,7 +135,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
-        DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorID(), workItem);
+        DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorName(), workItem);
         tupleSource.open();
         return tupleSource;
 	}
@@ -154,8 +151,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private TupleSource processSystemQuery(Command command,
 			RequestWorkItem workItem) throws MetaMatrixComponentException {
 		String vdbName = workItem.getDqpWorkContext().getVdbName();
-		String vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
-		CompositeMetadataStore metadata = this.metadataService.getMetadataObjectSource(vdbName, vdbVersion);
+		int vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
+		VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
+		CompositeMetadataStore metadata = vdb.getAttachment(CompositeMetadataStore.class);
 		Collection rows = new ArrayList();
 		if (command instanceof Query) {
 			Query query = (Query)command;
@@ -175,27 +173,27 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				rows.add(Arrays.asList(vdbName, vdbVersion));
 				break;
 			case SCHEMAS:
-				for (Schema model : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+				for (Schema model : getVisibleSchemas(vdb, metadata)) {
 					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
 				}
 				break;
 			case PROCEDURES:
-				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
-					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
-						rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation()));
+				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
+					for (Procedure proc : schema.getProcedures().values()) {
+						rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation()));
 					}
 				}
 				break;
 			case PROCEDUREPARAMS:
-				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
-					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
+					for (Procedure proc : schema.getProcedures().values()) {
 						for (ProcedureParameter param : proc.getParameters()) {
-							rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
+							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
 									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
-								rows.add(Arrays.asList(vdbName, proc.getSchema().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
+								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
 										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
 							}
 						}
@@ -205,7 +203,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			case PROPERTIES: //TODO: consider storing separately in the metadatastore 
 				Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
 				records.addAll(metadata.getDatatypes());
-				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
 					records.add(schema);
 					records.addAll(schema.getTables().values());
 					for (Table table : schema.getTables().values()) {
@@ -213,7 +211,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						records.addAll(table.getColumns());
 						records.addAll(table.getAllKeys());
 					}
-					for (ProcedureRecordImpl proc : schema.getProcedures().values()) {
+					for (Procedure proc : schema.getProcedures().values()) {
 						records.add(proc);
 						records.addAll(proc.getParameters());
 						if (proc.getResultSet() != null) {
@@ -228,7 +226,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				break;
 			default:
-				for (Schema schema : getVisibleSchemas(vdbName, vdbVersion, metadata)) {
+				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
 					for (Table table : schema.getTables().values()) {
 						switch (sysTable) {
 						case TABLES:
@@ -242,14 +240,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								}
 								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), column.getPosition(), column.getNameInSource(), 
 										column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
-										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
-										column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
+										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncremented(), column.getNullType().toString(), column.getMinimumValue(), 
+										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
 										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation()));
 							}
 							break;
 						case KEYS:
 							for (KeyRecord key : table.getAllKeys()) {
-								rows.add(Arrays.asList(vdbName, table.getSchema().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
+								rows.add(Arrays.asList(vdbName, table.getParent().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
 										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID()));
 							}
 							break;
@@ -266,8 +264,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							for (ForeignKey key : table.getForeignKeys()) {
 								short postition = 0;
 								for (Column column : key.getColumns()) {
-									Table pkTable = key.getPrimaryKey().getTable();
-									rows.add(Arrays.asList(vdbName, pkTable.getSchema().getName(), pkTable.getName(), key.getPrimaryKey().getColumns().get(postition).getName(), vdbName, schema.getName(), table.getName(), column.getName(),
+									Table pkTable = key.getPrimaryKey().getParent();
+									rows.add(Arrays.asList(vdbName, pkTable.getParent().getName(), pkTable.getName(), key.getPrimaryKey().getColumns().get(postition).getName(), vdbName, schema.getName(), table.getName(), column.getName(),
 											++postition, DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyNoAction, key.getName(), key.getPrimaryKey().getName(), DatabaseMetaData.importedKeyInitiallyDeferred));
 								}
 							}
@@ -278,36 +276,36 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			}
 		} else {					
-			StoredProcedure proc = (StoredProcedure)command;
+			TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
+			StoredProcedure proc = (StoredProcedure)command;			
 			final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
 			case GETVDBRESOURCEPATHS:
-		        Set<String> filePaths = metadata.getMetadataSource().getEntries();
+		        String[] filePaths = indexMetadata.getVDBResourcePaths();
 		        for (String filePath : filePaths) {
-		        	if (vdbService.getFileVisibility(vdbName, vdbVersion, filePath) != ModelInfo.PUBLIC) {
-		        		continue;
-		        	}
 		        	rows.add(Arrays.asList(filePath, filePath.endsWith(".INDEX"))); //$NON-NLS-1$
 		        }
 				break;
 			case GETBINARYVDBRESOURCE:
-				String filePath = (String)proc.getParameter(0).getValue();
-				if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+				String filePath = (String)((Constant)proc.getParameter(0).getExpression()).getValue();
+				byte[] contents = indexMetadata.getBinaryVDBResource(filePath);
+				if (contents != null) {
 					try {
-						rows.add(Arrays.asList(new SerialBlob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).getBytes())));
+						rows.add(Arrays.asList(new SerialBlob(contents)));
 					} catch (SQLException e) {
 						throw new MetaMatrixComponentException(e);
-					}
+					}					
 				}
 				break;
 			case GETCHARACTERVDBRESOURCE:
-				filePath = (String)proc.getParameter(0).getValue();
-				if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+				filePath = (String)((Constant)proc.getParameter(0).getExpression()).getValue();
+				String filecontents = indexMetadata.getCharacterVDBResource(filePath);
+				if (filecontents != null) {
 					try {
-						rows.add(Arrays.asList(new SerialClob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).toCharArray())));
+						rows.add(Arrays.asList(new SerialClob(filecontents.toCharArray())));
 					} catch (SQLException e) {
 						throw new MetaMatrixComponentException(e);
-					}
+					}					
 				}
 				break;
 			}
@@ -315,10 +313,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return new CollectionTupleSource(rows.iterator(), command.getProjectedSymbols());
 	}
 	
-	private List<Schema> getVisibleSchemas(String vdbName, String vdbVersion, CompositeMetadataStore metadata) throws MetaMatrixComponentException {
+	private List<Schema> getVisibleSchemas(VDBMetaData vdb, CompositeMetadataStore metadata) {
 		ArrayList<Schema> result = new ArrayList<Schema>(); 
 		for (Schema schema : metadata.getSchemas().values()) {
-			if(vdbService.getModelVisibility(vdbName, vdbVersion, schema.getName()) == ModelInfo.PUBLIC) {
+			ModelMetaData model = vdb.getModel(schema.getName());
+			if(model.isVisible()) {
 				result.add(schema);
 			}
 		}
@@ -333,7 +332,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	    RequestMessage request = workItem.requestMsg;
 		// build the atomic request based on original request + context info
         AtomicRequestMessage aqr = new AtomicRequestMessage(request, workItem.getDqpWorkContext(), nodeID);
-        aqr.markSubmissionStart();
         aqr.setCommand(command);
         aqr.setModelName(modelName);
         aqr.setUseResultSetCache(request.useResultSetCache());
@@ -343,55 +341,42 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         }
         aqr.setFetchSize(this.bufferService.getBufferManager().getConnectorBatchSize());
         if (connectorBindingId == null) {
-        	List bindings = vdbService.getConnectorBindingNames(workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion(), modelName);
+        	VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
+        	ModelMetaData model = vdb.getModel(modelName);
+        	List<String> bindings = model.getSourceNames();
 	        if (bindings == null || bindings.size() != 1) {
 	            // this should not happen, but it did occur when setting up the SystemAdmin models
 	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
 	        }
-	        connectorBindingId = (String)bindings.get(0); 
+	        connectorBindingId = model.getSourceJndiName(bindings.get(0)); 
 	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$
         }
-        aqr.setConnectorBindingID(connectorBindingId);
-        // Select any connector instance for this connector binding
-        ConnectorID connectorID = this.dataService.selectConnector(connectorBindingId);
-        // if we had this as null before
-        aqr.setConnectorID(connectorID);
+        aqr.setConnectorName(connectorBindingId);
 		return aqr;
 	}
 	
-	String getConnectorName(String connectorBindingID) {
-        try {
-            return vdbService.getConnectorName(connectorBindingID);
-        } catch (MetaMatrixComponentException t) {
-            // OK
-        }
-        return connectorBindingID;
-	}
-	
-	void executeRequest(AtomicRequestMessage aqr, ConnectorID connectorId,
-			ResultsReceiver<AtomicResultsMessage> receiver)
-			throws MetaMatrixComponentException {
-		this.dataService.executeRequest(aqr, connectorId, receiver);
-	}
-
-	public void closeRequest(AtomicRequestID request, ConnectorID connectorId) {
+	void executeRequest(AtomicRequestMessage aqr, String connectorName,ResultsReceiver<AtomicResultsMessage> receiver) throws MetaMatrixComponentException {
 		try {
-			this.dataService.closeRequest(request, connectorId);
-		} catch (MetaMatrixComponentException e) {
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, e, e.getMessage());
-			}
+			getCM(connectorName).executeRequest(this.workManager, receiver, aqr);
+		} catch (ConnectorException e) {
+			throw new MetaMatrixComponentException(e);
 		}
 	}
+
+	public void closeRequest(AtomicRequestID request, String connectorName) {
+		getCM(connectorName).closeRequest(request);
+	}
 	
-	public void cancelRequest(AtomicRequestID request, ConnectorID connectorId)
-		throws MetaMatrixComponentException {
-		this.dataService.cancelRequest(request, connectorId);
+	public void cancelRequest(AtomicRequestID request, String connectorName) {
+		getCM(connectorName).cancelRequest(request);
 	}
 
-	void requestBatch(AtomicRequestID request, ConnectorID connectorId)
-			throws MetaMatrixComponentException {
-		this.dataService.requestBatch(request, connectorId);
+	void requestBatch(AtomicRequestID request, String connectorName) throws MetaMatrixComponentException {
+		try {
+			getCM(connectorName).requstMore(request);
+		} catch (ConnectorException e) {
+			throw new MetaMatrixComponentException(e);
+		}
 	}
 
     /** 
@@ -437,7 +422,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         String keyElementName)
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        String query = ReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + ReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+        String query = SQLReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + SQLReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
         
         final CacheKey codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
 
@@ -465,5 +450,5 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     public void clearCodeTables() {
         this.codeTableCache.clearAll();
     }
-
+    
 }

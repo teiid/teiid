@@ -78,9 +78,7 @@ public class TestSecurityFunctions extends TestCase {
         
         CommandContext context = new CommandContext();
         context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
-
-            public boolean hasRole(String connectionID,
-                                   String roleType,
+            public boolean hasRole(String roleType,
                                    String roleName) throws MetaMatrixComponentException {
                 return false;
             }});

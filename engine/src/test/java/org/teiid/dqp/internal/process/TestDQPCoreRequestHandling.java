@@ -28,33 +28,32 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.dqp.exception.SourceWarning;
-import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.server.serverapi.RequestInfo;
 
 /**
  */
 public class TestDQPCoreRequestHandling extends TestCase {
 
-	private static final String SESSION_STRING = new MetaMatrixSessionID(2).toString();
+	private static final String SESSION_STRING = "2";
 	
     public TestDQPCoreRequestHandling(String name) {
         super(name);
     }
 
-    private void compareReqInfos(Collection<RequestID> reqs1, Collection<RequestInfo> reqs2) {
+    private void compareReqInfos(Collection<RequestID> reqs1, Collection<RequestMetadata> reqs2) {
         Set reqIDs2 = new HashSet();
-        for (RequestInfo requestInfo : reqs2) {
-            reqIDs2.add(requestInfo.getRequestID());
+        for (RequestMetadata requestInfo : reqs2) {
+            reqIDs2.add(new RequestID(requestInfo.getSessionId(), requestInfo.getExecutionId()));
         }
         
         assertEquals("Collections of request infos are not the same: ", new HashSet(reqs1), reqIDs2); //$NON-NLS-1$
@@ -66,7 +65,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken1() {
         DQPCore rm = new DQPCore();
         Set reqs = new HashSet();                
-        Collection actualReqs = rm.getRequestsByClient("foo");
+        Collection actualReqs = rm.getRequestsForSession(2);
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -75,11 +74,12 @@ public class TestDQPCoreRequestHandling extends TestCase {
      */
     public void testGetRequestsSessionToken2() {
     	DQPCore rm = new DQPCore();
+    	rm.setTransactionService(new FakeTransactionService());
     	Set reqs = new HashSet();
         RequestID id = addRequest(rm, SESSION_STRING, 1);
         reqs.add(id);
 
-        Collection<RequestInfo> actualReqs = rm.getRequestsByClient(SESSION_STRING);
+        Collection<RequestMetadata> actualReqs = rm.getRequestsForSession(2);
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -95,13 +95,14 @@ public class TestDQPCoreRequestHandling extends TestCase {
      */
     public void testGetRequestsSessionToken3() {
         DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
         Set reqs = new HashSet();
          
         reqs.add(addRequest(rm, SESSION_STRING, 0));
         reqs.add(addRequest(rm, SESSION_STRING, 1));
         reqs.add(addRequest(rm, SESSION_STRING, 2));
                 
-        Collection actualReqs = rm.getRequestsByClient(SESSION_STRING);
+        Collection actualReqs = rm.getRequestsForSession(2);
         compareReqInfos(reqs, actualReqs);
     }
     
@@ -111,6 +112,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         
     public void testAddRequest() {
         DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
         addRequest(rm, r0, requestID, null, null);  
@@ -118,6 +120,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     
     public void testWarnings1() {
         DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
 
@@ -138,7 +141,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
      
     	if (workContext == null) {
 	    	workContext = new DQPWorkContext();
-	    	workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(Long.valueOf(id.getConnectionID())), "foo")); //$NON-NLS-1$
+	    	workContext.setSessionToken(new SessionToken(Long.valueOf(id.getConnectionID()), "foo")); //$NON-NLS-1$
     	}
         RequestWorkItem workItem = new RequestWorkItem(rm, requestMsg, null, null, id, workContext);
         workItem.setOriginalCommand(originalCommand);
@@ -149,12 +152,13 @@ public class TestDQPCoreRequestHandling extends TestCase {
     
     public void testGetConnectorInfo() {
         DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
-        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
+        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, "connID", workItem); //$NON-NLS-1$
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);
         
         DataTierTupleSource arInfo = workItem.getConnectorRequest(atomicReq.getAtomicRequestID());
@@ -163,12 +167,13 @@ public class TestDQPCoreRequestHandling extends TestCase {
     
     public void testRemoveConnectorInfo() {
         DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
-        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
+        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null,"connID", workItem); //$NON-NLS-1$
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);
         
         workItem.closeAtomicRequest(atomicReq.getAtomicRequestID());

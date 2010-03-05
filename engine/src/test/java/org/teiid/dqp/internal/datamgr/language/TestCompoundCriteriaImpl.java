@@ -22,16 +22,13 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import java.util.Iterator;
+import junit.framework.TestCase;
 
-import org.teiid.connector.language.ICriteria;
-import org.teiid.connector.language.ICompoundCriteria.Operator;
-import org.teiid.dqp.internal.datamgr.language.CompoundCriteriaImpl;
+import org.teiid.connector.language.AndOr;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.AndOr.Operator;
 
 import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-
-import junit.framework.TestCase;
 
 public class TestCompoundCriteriaImpl extends TestCase {
 
@@ -43,28 +40,25 @@ public class TestCompoundCriteriaImpl extends TestCase {
         super(name);
     }
 
-    public static CompoundCriteria helpExample(int operator) {
+    public static com.metamatrix.query.sql.lang.CompoundCriteria helpExample(int operator) {
         CompareCriteria c1 = TestCompareCriteriaImpl.helpExample(CompareCriteria.GE, 100, 200);
         CompareCriteria c2 = TestCompareCriteriaImpl.helpExample(CompareCriteria.LT, 500, 600);
-        return new CompoundCriteria(operator, c1, c2);
+        return new com.metamatrix.query.sql.lang.CompoundCriteria(operator, c1, c2);
     }
     
-    public static CompoundCriteriaImpl example(int operator) throws Exception {
-        return (CompoundCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample(operator));
+    public static AndOr example(int operator) throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample(operator));
     }
 
     public void testGetOperator() throws Exception {
-        assertEquals(Operator.AND, example(CompoundCriteria.AND).getOperator());
-        assertEquals(Operator.OR, example(CompoundCriteria.OR).getOperator());
+        assertEquals(Operator.AND, example(com.metamatrix.query.sql.lang.CompoundCriteria.AND).getOperator());
+        assertEquals(Operator.OR, example(com.metamatrix.query.sql.lang.CompoundCriteria.OR).getOperator());
     }
 
     public void testGetCriteria() throws Exception {
-        CompoundCriteriaImpl cc = example(CompoundCriteria.AND);
-        assertNotNull(cc.getCriteria());
-        assertEquals(2, cc.getCriteria().size());
-        for (Iterator i = cc.getCriteria().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof ICriteria);
-        }
+        AndOr cc = example(com.metamatrix.query.sql.lang.CompoundCriteria.AND);
+        assertTrue(cc.getLeftCondition() instanceof Comparison);
+        assertTrue(cc.getRightCondition() instanceof Comparison);
     }
 
 }

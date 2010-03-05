@@ -26,15 +26,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.IElement;
-import org.teiid.dqp.internal.datamgr.language.GroupByImpl;
+import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.lang.GroupBy;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.GroupBy;
+
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
-
-import junit.framework.TestCase;
 
 public class TestGroupByImpl extends TestCase {
 
@@ -46,37 +45,37 @@ public class TestGroupByImpl extends TestCase {
         super(name);
     }
 
-    public static GroupBy helpExample() {
-        List symbols = new ArrayList();
+    public static com.metamatrix.query.sql.lang.GroupBy helpExample() {
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
-        return new GroupBy(symbols);
+        return new com.metamatrix.query.sql.lang.GroupBy(symbols);
     }
 
-    public static GroupBy helpExampleWithFunctions() {
-        List symbols = new ArrayList();
+    public static com.metamatrix.query.sql.lang.GroupBy helpExampleWithFunctions() {
+        List<Expression> symbols = new ArrayList<Expression>();
         
         ElementSymbol e1 = TestElementImpl.helpExample("vm1.g1", "e1");//$NON-NLS-1$ //$NON-NLS-2$
         Function f = new Function("length", new Expression[] { e1 } );//$NON-NLS-1$ 
         
         symbols.add(e1); 
         symbols.add(f);
-        return new GroupBy(symbols);
+        return new com.metamatrix.query.sql.lang.GroupBy(symbols);
     }
     
 
-    public static GroupByImpl example() throws Exception {
-        return (GroupByImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static GroupBy example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetElements() throws Exception {
-        GroupByImpl gb = example();
+        GroupBy gb = example();
         assertNotNull(gb.getElements());
         assertEquals(4, gb.getElements().size());
         for (Iterator i = gb.getElements().iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof IElement);
+            assertTrue(i.next() instanceof ColumnReference);
         }
     }
     

@@ -26,10 +26,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
+import javax.resource.spi.work.WorkEvent;
+import javax.transaction.xa.Xid;
+
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
+import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class SynchConnectorWorkItem extends ConnectorWorkItem {
@@ -39,39 +45,35 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 		int pendingCount;
 	}
 
-	private static Map<String, TransactionLock> TRANSACTION_LOCKS = new HashMap<String, TransactionLock>();
+	private static Map<Xid, TransactionLock> TRANSACTION_LOCKS = new HashMap<Xid, TransactionLock>();
 
 	private TransactionLock lock;
 
-	SynchConnectorWorkItem(AtomicRequestMessage message,
-			ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+	SynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) throws ConnectorException  {
 		super(message, manager, resultsReceiver);
+		
+		// since container makes sure that there is no current work registered under current transaction it is
+		// required that lock must be acquired before we schedule the work.
+		try {
+			acquireTransactionLock();
+		} catch (InterruptedException e) {
+			interrupted(e);
+		} 			
 	}
 	
 	@Override
 	public void run() {
 		while (!this.isDoneProcessing()) { //process until closed
-			try {
-				acquireTransactionLock();
-			} catch (InterruptedException e) {
-				interrupted(e);
-			} 
-			try {
-				super.run();
-			} finally {
-				releaseTxnLock();
-			}
+			super.run();
 		}
 	}
 
 	@Override
 	protected void pauseProcessing() {
-		releaseTxnLock();
 		try {
 			while (isIdle()) {
 				this.wait();
 			}
-			acquireTransactionLock();
 		} catch (InterruptedException e) {
 			interrupted(e);
 		}
@@ -87,11 +89,12 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 		this.notify();
 	}
 	
-	private void acquireTransactionLock() throws InterruptedException {
-		if (!this.isTransactional) {
+	private void acquireTransactionLock() throws InterruptedException {		
+		if (!this.requestMsg.isTransactional()) {
 			return;
 		}
-		String key = requestMsg.getTransactionContext().getTxnID();
+		TransactionContext tc = this.requestMsg.getTransactionContext();		
+		Xid key = tc.getXid();
 
 		TransactionLock existing = null;
 		synchronized (TRANSACTION_LOCKS) {
@@ -101,20 +104,24 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 				TRANSACTION_LOCKS.put(key, existing);
 			}
 			existing.pendingCount++;
+			tc.incrementPartcipatingSourceCount(requestMsg.getConnectorName());
 		}
 		existing.lock.acquire();
 		this.lock = existing;
+		LogManager.logTrace("got the connector lock on =", key);
 	}
 
 	private void releaseTxnLock() {
-		if (!this.isTransactional || this.lock == null) {
+		if (!this.requestMsg.isTransactional() || this.lock == null) {
 			return;
 		}
+		TransactionContext tc = this.requestMsg.getTransactionContext();
 		synchronized (TRANSACTION_LOCKS) {
 			lock.pendingCount--;
 			if (lock.pendingCount == 0) {
-				String key = requestMsg.getTransactionContext().getTxnID();
+				Xid key = tc.getXid();
 				TRANSACTION_LOCKS.remove(key);
+				LogManager.logTrace("released the connector lock on =", key);
 			}
 		}
 		lock.lock.release();
@@ -128,4 +135,22 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
     	return true;
     }
 
+    
+	@Override
+	public void workCompleted(WorkEvent event) {
+		try {
+			super.workCompleted(event);
+		} finally {
+			releaseTxnLock();
+		}
+	}
+
+	@Override
+	public void workRejected(WorkEvent event) {
+		try {
+			super.workRejected(event);
+		} finally {
+			releaseTxnLock();
+		}
+	}
 }

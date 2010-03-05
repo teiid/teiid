@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+import org.teiid.dqp.internal.transaction.XidFactory;
 
 import com.metamatrix.core.util.SimpleMock;
 
@@ -31,6 +32,7 @@ public class FakeTransactionService extends TransactionServerImpl {
 
 	public FakeTransactionService() {
 		this.setTransactionProvider(SimpleMock.createSimpleMock(TransactionProvider.class));
+		this.setXidFactory(new XidFactory());
 	}
 	
 }

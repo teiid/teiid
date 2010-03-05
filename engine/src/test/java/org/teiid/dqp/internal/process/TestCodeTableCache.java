@@ -39,8 +39,8 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class TestCodeTableCache extends TestCase {
 
-	private static CommandContext TEST_CONTEXT = new CommandContext("pid", "1", null, "test",  "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
-	private static CommandContext TEST_CONTEXT_1 = new CommandContext("pid", "1", null, "test",  "2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	private static CommandContext TEST_CONTEXT = new CommandContext("pid", "1", null, "test",  1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+	private static CommandContext TEST_CONTEXT_1 = new CommandContext("pid", "1", null, "test", 2); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	
 	public TestCodeTableCache(String name) {
 		super(name);

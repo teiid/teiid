@@ -22,12 +22,12 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.IAggregate;
-import org.teiid.dqp.internal.datamgr.language.AggregateImpl;
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.AggregateFunction;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 
@@ -43,33 +43,33 @@ public class TestAggregateImpl extends TestCase {
         super(name);
     }
 
-    public static AggregateImpl example(String name, String functionName, boolean distinct, int value) throws Exception {
+    public static AggregateFunction example(String name, String functionName, boolean distinct, int value) throws Exception {
         AggregateSymbol symbol = new AggregateSymbol(name,
                                                      functionName,
                                                      distinct,
                                                       new Constant(new Integer(value)));
-        return (AggregateImpl)TstLanguageBridgeFactory.factory.translate(symbol);
+        return (AggregateFunction)TstLanguageBridgeFactory.factory.translate(symbol);
         
     }
 
     public void testGetName() throws Exception {
-        assertEquals(IAggregate.COUNT, example("testName", ReservedWords.COUNT, true, 42).getName()); //$NON-NLS-1$ 
+        assertEquals(AggregateFunction.COUNT, example("testName", SQLReservedWords.COUNT, true, 42).getName()); //$NON-NLS-1$ 
     }
 
     public void testIsDistinct() throws Exception {
-        assertTrue(example("testName", ReservedWords.COUNT, true, 42).isDistinct()); //$NON-NLS-1$
-        assertFalse(example("testName", ReservedWords.COUNT, false, 42).isDistinct()); //$NON-NLS-1$
+        assertTrue(example("testName", SQLReservedWords.COUNT, true, 42).isDistinct()); //$NON-NLS-1$
+        assertFalse(example("testName", SQLReservedWords.COUNT, false, 42).isDistinct()); //$NON-NLS-1$
     }
 
     public void testGetExpression() throws Exception {
-        AggregateImpl agg = example("testName", ReservedWords.COUNT, true, 42); //$NON-NLS-1$
+        AggregateFunction agg = example("testName", SQLReservedWords.COUNT, true, 42); //$NON-NLS-1$
         assertNotNull(agg.getExpression());
-        assertTrue(agg.getExpression() instanceof LiteralImpl);
-        assertEquals(new Integer(42), ((LiteralImpl)agg.getExpression()).getValue());
+        assertTrue(agg.getExpression() instanceof Literal);
+        assertEquals(new Integer(42), ((Literal)agg.getExpression()).getValue());
     }
 
     public void testGetType() throws Exception {
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example("x", ReservedWords.COUNT, true, 42).getType()); //$NON-NLS-1$
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example("x", SQLReservedWords.COUNT, true, 42).getType()); //$NON-NLS-1$
     }
 
 }

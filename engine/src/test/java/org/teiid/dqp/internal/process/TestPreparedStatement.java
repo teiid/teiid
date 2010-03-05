@@ -22,14 +22,18 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.dqp.internal.process.TestRequest.FakeApplicationEnvironment;
+import org.mockito.Mockito;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -38,7 +42,8 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.dqp.message.RequestMessage.StatementType;
+import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
@@ -60,15 +65,16 @@ public class TestPreparedStatement {
 	
 	private static boolean DEBUG = false;
 	
-    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
-    	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
+
+    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
+    	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false, vdb);
     }
 
-    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific) throws Exception { 
-        helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, null, callableStatement, isSessionSpecific, /* isAlreadyCached */false); 
+    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific, VDBMetaData vdb) throws Exception { 
+        helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, null, callableStatement, isSessionSpecific, /* isAlreadyCached */false, vdb); 
     }
     
-    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached) throws Exception { 
+    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached, VDBMetaData vdb) throws Exception { 
         if ( dataManager == null ) {
             // Construct data manager with data
         	dataManager = new FakeDataManager();
@@ -98,13 +104,13 @@ public class TestPreparedStatement {
         }
         
         //Create plan or used cache plan if isPlanCached
-        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false);
+        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false, vdb);
 
         // Run query
         TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         
         //test cached plan
-    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false);
+    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, SESSION_ID, callableStatement, false,vdb);
     	
         //make sure the plan is only created once
         assertEquals("should reuse the plan", exHitCount, prepPlanCache.getCacheHitCount()); //$NON-NLS-1$
@@ -126,7 +132,7 @@ public class TestPreparedStatement {
         }
         
         //get the plan again with a new connection
-        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, 7, callableStatement, false));
+        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, capFinder, metadata, prepPlanCache, 7, callableStatement, false, vdb));
 
         /*
          * If the command is not specific to a session we expect
@@ -152,7 +158,7 @@ public class TestPreparedStatement {
 		values.add(new Short((short)0));
 		FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, FakeMetadataFactory.example1VDB());
 	}
     
     @Test public void testSessionSpecificFunction() throws Exception { 
@@ -169,7 +175,7 @@ public class TestPreparedStatement {
 		values.add(new Short((short)0));
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true, FakeMetadataFactory.example1VDB());
 	}
     
     @Test public void testFunctionWithReferencePushDown() throws Exception { 
@@ -197,7 +203,7 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList(0);
 
-        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false);
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false,FakeMetadataFactory.example1VDB());
         
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
@@ -206,7 +212,7 @@ public class TestPreparedStatement {
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {    	
-		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false);
+		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, FakeMetadataFactory.example1VDB());
     }
 	
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
@@ -216,31 +222,33 @@ public class TestPreparedStatement {
 			QueryPlannerException {
 		return helpGetProcessorPlan(preparedSql, values,
 				new DefaultCapabilitiesFinder(), FakeMetadataFactory
-						.example1Cached(), prepPlanCache, conn, false, false);
+						.example1Cached(), prepPlanCache, conn, false, false, FakeMetadataFactory.example1VDB());
 	}
 
 	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
-			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults)
+			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults, VDBMetaData vdb)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
         
         //Create Request
         RequestMessage request = new RequestMessage(preparedSql);
-        request.setPreparedStatement(true);
-        request.setCallableStatement(callableStatement);
+        if (callableStatement) {
+        	request.setStatementType(StatementType.CALLABLE);
+        } else {
+        	request.setStatementType(StatementType.PREPARED);
+        }
         request.setParameterValues(values);
 		if (values != null && values.size() > 0 && values.get(0) instanceof List) {
-			request.setPreparedBatchUpdate(true);
+			request.setBatchedUpdate(true);
 		}
         if (limitResults) {
         	request.setRowLimit(1);
         }
-
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("example1"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(conn), "foo")); //$NON-NLS-1$        
+       
+        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
+        workContext.setSessionToken(new SessionToken(conn, "foo")); //$NON-NLS-1$ 
+        
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache) {
         	@Override
         	protected void createProcessor(Command processingCommand)
@@ -248,8 +256,12 @@ public class TestPreparedStatement {
         		
         	}
         };
-        FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, null, DEBUG, null, workContext, 101024);
+        
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
+        
+        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null,  null, null, DEBUG, null, workContext, 101024,repo);
+
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();
         
@@ -367,9 +379,9 @@ public class TestPreparedStatement {
         
         SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
         
-		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true);
+		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, FakeMetadataFactory.example1VDB());
 
-		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true);
+		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, FakeMetadataFactory.example1VDB());
 		//make sure the plan wasn't reused
 		assertEquals(0, planCache.getCacheHitCount());
     }
@@ -384,7 +396,7 @@ public class TestPreparedStatement {
 		List<String> values = Arrays.asList("aa "); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData2b(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
     }
     
     @Test(expected=QueryValidatorException.class) public void testLimitValidation() throws Exception {
@@ -392,7 +404,7 @@ public class TestPreparedStatement {
         
 		List values = Arrays.asList(-1);
         FakeDataManager dataManager = new FakeDataManager();
-		helpTestProcessing(preparedSql, values, null, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+		helpTestProcessing(preparedSql, values, null, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
     }
     
     @Test public void testExecParam() throws Exception {
@@ -405,7 +417,7 @@ public class TestPreparedStatement {
         
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
     }
     
     @Test public void testLimitParam() throws Exception {
@@ -418,7 +430,7 @@ public class TestPreparedStatement {
         
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false,FakeMetadataFactory.example1VDB());
     }
     
     @Test public void testXQueryParam() throws Exception {
@@ -431,7 +443,7 @@ public class TestPreparedStatement {
         
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.exampleXQueryTransformations(), false, false);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.exampleXQueryTransformations(), false, false, FakeMetadataFactory.exampleXQueryTransformationsVDB());
     }
 
 }

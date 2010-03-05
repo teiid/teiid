@@ -26,13 +26,13 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 
@@ -67,7 +67,7 @@ public class TestRuleRaiseNull extends TestCase {
 
         String sql = "select * from ( select intkey as cola, null as colb, intnum as colc from bqt1.smalla union all select null, intkey, intnum from bqt2.smalla) as X where X.cola = 1";  //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQT(),
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),
                                       new String[] {"SELECT intkey, null, intnum FROM bqt1.smalla WHERE intkey = 1"} ); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);          
@@ -263,7 +263,7 @@ public class TestRuleRaiseNull extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 

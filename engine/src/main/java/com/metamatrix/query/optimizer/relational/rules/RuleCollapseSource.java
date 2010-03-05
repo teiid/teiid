@@ -194,7 +194,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             PlanNode limit = NodeEditor.findNodePreOrder(node, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP);
             if (limit != null) {
-                processLimit(limit, unionCommand);
+                processLimit(limit, unionCommand, metadata);
             }
             int count = 0;
             for (PlanNode child : setOpNode.getChildren()) {
@@ -219,7 +219,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		query.setFrom(new From());
 		buildQuery(accessRoot, node, query, metadata, capFinder);
 		if (query.getCriteria() instanceof CompoundCriteria) {
-            query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria()));
+            query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria(), metadata));
         }
 		if (!CapabilitiesUtil.useAnsiJoin(RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
 			simplifyFromClause(query);
@@ -334,7 +334,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.TUPLE_LIMIT:
             {
-                processLimit(node, query);
+                processLimit(node, query, metadata);
                 break;
             }
         }        
@@ -371,7 +371,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 	}
 
     private void processLimit(PlanNode node,
-                              QueryCommand query) {
+                              QueryCommand query, QueryMetadataInterface metadata) {
         Expression limit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
         if (limit != null) {
             if (query.getLimit() != null) {
@@ -385,7 +385,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         if (offset != null) {
             if (query.getLimit() != null) {
                 Expression oldoffset = query.getLimit().getOffset();
-                query.getLimit().setOffset(RulePushLimit.getSum(offset, oldoffset)); 
+                query.getLimit().setOffset(RulePushLimit.getSum(offset, oldoffset, metadata.getFunctionLibrary())); 
             } else {
                 query.setLimit(new Limit(offset, null));
             }

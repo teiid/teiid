@@ -25,10 +25,14 @@ package org.teiid.dqp.internal.process;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -39,20 +43,18 @@ public class CachedFinder implements CapabilitiesFinder {
 
 	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
 	
-    private DataService dataService;
-    private RequestMessage requestMessage;
-    private DQPWorkContext workContext;
-
+    private ConnectorManagerRepository connectorRepo;
+    private VDBMetaData vdb;
+    
     private Map<String, SourceCapabilities> userCache = new HashMap<String, SourceCapabilities>();
     
     /**
      * Construct a CacheFinder that wraps another finder
      * @param internalFinder Finder to wrap
      */
-    public CachedFinder(DataService dataService, RequestMessage requestMessage, DQPWorkContext workContext) {
-        this.dataService = dataService;
-        this.requestMessage = requestMessage;
-        this.workContext = workContext;
+    public CachedFinder(ConnectorManagerRepository repo, VDBMetaData vdb) {
+        this.connectorRepo = repo;
+        this.vdb = vdb;
     	userCache.put(CoreConstants.SYSTEM_MODEL, SYSTEM_CAPS);
     }
 
@@ -64,9 +66,26 @@ public class CachedFinder implements CapabilitiesFinder {
         if(caps != null) {
             return caps;
         }
-        caps = dataService.getCapabilities(requestMessage, workContext, modelName);
+        ConnectorException exception = null;
+        ModelMetaData model = vdb.getModel(modelName);
+        for (String sourceName:model.getSourceNames()) {
+        	try {
+        		ConnectorManager mgr = this.connectorRepo.getConnectorManager(model.getSourceJndiName(sourceName));
+        		caps = mgr.getCapabilities();
+        		break;
+            } catch(ConnectorException e) {
+            	if (exception == null) {
+            		exception = e;
+            	}
+            }        	
+        }
+
+        if (exception != null) {
+        	throw new MetaMatrixComponentException(exception);
+        }
+        
         userCache.put(modelName, caps);
         return caps;
     }
-    
+        
 }

@@ -41,21 +41,19 @@ public class NodeTestUtil {
     	bufferManager.setProcessorBatchSize(procBatchSize);
     	bufferManager.setConnectorBatchSize(connectorBatchSize);
         // Get the properties for BufferManager
-        Properties bmProps = new Properties();                        
-        return createBufferManager(bufferManager, bmProps);
+        return createBufferManager(bufferManager);
     }
     
     static BufferManager getTestBufferManager(long bytesAvailable, int procBatchSize) {
     	BufferManagerImpl bufferManager = new BufferManagerImpl();
     	bufferManager.setProcessorBatchSize(procBatchSize);
         // Get the properties for BufferManager
-        Properties bmProps = new Properties();                        
-        return createBufferManager(bufferManager, bmProps);
+        return createBufferManager(bufferManager);
     }
     
-    static BufferManager createBufferManager(BufferManagerImpl bufferManager, Properties bmProps) {
+    static BufferManager createBufferManager(BufferManagerImpl bufferManager) {
         try {
-			bufferManager.initialize(bmProps);
+			bufferManager.initialize();
 		} catch (MetaMatrixComponentException e) {
 			throw new RuntimeException(e);
 		}

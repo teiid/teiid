@@ -42,6 +42,7 @@ import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -724,7 +725,7 @@ public class TestProcedureRelational {
         			StoredProcedure proc = (StoredProcedure)command;
         			List<SPParameter> params = proc.getInputParameters();
         			assertEquals(1, params.size());
-        			int value = (Integer)params.get(0).getValue();
+        			int value = (Integer)((Constant)params.get(0).getExpression()).getValue();
         			return new FakeTupleSource(command.getProjectedSymbols(), new List[] {
         				Arrays.asList(value+2), Arrays.asList(value+5)
         			});

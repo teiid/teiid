@@ -45,10 +45,10 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.StringUtilities;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -110,13 +110,17 @@ public class TestProcedureProcessor {
         }
     }
     
-    static void helpTestProcess(ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, ProcessorDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
+    static void helpTestProcess(ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, ProcessorDataManager dataMgr, QueryMetadataInterface metadata) throws SQLException, MetaMatrixCoreException {
         // Process twice, testing reset and clone method of Processor plan
         for (int i=1; i<=2; i++) {
-	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("pID", null, null, null, null); //$NON-NLS-1$
+        	
+            CommandContext context = new CommandContext("pID", null, null, null, 1); //$NON-NLS-1$
             context.getNextRand(0);
             context.setProcessDebug(DEBUG);
+            context.setMetadata(metadata);        	
+        	
+	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+
             QueryProcessor processor = new QueryProcessor(procPlan, context, bufferMgr, dataMgr);
             processor.setNonBlocking(true);
             BatchCollector collector = processor.createBatchCollector();  
@@ -173,7 +177,7 @@ public class TestProcedureProcessor {
             //reset and clone after 1st run
             if (i==1) {
                 procPlan.reset();
-                procPlan = (ProcessorPlan)procPlan.clone();
+                procPlan = procPlan.clone();
             }
         }
     }
@@ -192,12 +196,12 @@ public class TestProcedureProcessor {
     }
     
     private void helpTestProcess(ProcessorPlan procPlan, int expectedRows, FakeDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
-        helpTestProcess(procPlan, expectedRows, null, false, dataMgr);
+        helpTestProcess(procPlan, expectedRows, null, false, dataMgr, null);
     }
     
     static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, List[] expectedResults, 
     		ProcessorDataManager dataMgr, boolean shouldFail) throws SQLException, MetaMatrixCoreException {
-        helpTestProcess(procPlan, 0, expectedResults, shouldFail, dataMgr);
+        helpTestProcess(procPlan, 0, expectedResults, shouldFail, dataMgr, null);
     }
 
     // Helper to create a list of elements - used in creating sample data
@@ -2257,9 +2261,10 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcess(plan, new List[] {
+        
+        helpTestProcess(plan, 0, new List[] {
             Arrays.asList(new Object[] {new Integer(240)}),
-            Arrays.asList(new Object[] {new Integer(637)})}, dataMgr);
+            Arrays.asList(new Object[] {new Integer(637)})}, false, dataMgr, metadata);
     }
 
     private FakeMetadataFacade createProcedureMetadata(String procedure) {
@@ -2326,7 +2331,7 @@ public class TestProcedureProcessor {
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("xqttest.proc", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; END"); //$NON-NLS-1$ 
+                                        + "declare integer VARIABLES.x = xqttest.proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; END"); //$NON-NLS-1$ 
         FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xqttest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
         metadata.getStore().addObject(rs2);
@@ -2348,14 +2353,14 @@ public class TestProcedureProcessor {
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
         String expectedDoc = TestXMLProcessor.readFile(resultFile);
-        expectedDoc = StringUtilities.removeChars(expectedDoc, new char[] {'\r'});        
+        expectedDoc = expectedDoc.replaceAll("\\r", ""); //$NON-NLS-1$ //$NON-NLS-2$        
         FakeMetadataObject pm1 = metadata.getStore().findObject("xqttest",FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("xqttest.proc", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select convert(y, string); END"); //$NON-NLS-1$ 
+                                        + "declare integer VARIABLES.x = xqttest.proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select convert(y, string); END"); //$NON-NLS-1$ 
         FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xqttest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
         metadata.getStore().addObject(rs2);
@@ -2422,7 +2427,7 @@ public class TestProcedureProcessor {
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("input", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("xmltest.proc", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)=x; END"); //$NON-NLS-1$ 
+                                        + "declare integer VARIABLES.x = xmltest.proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)=x; END"); //$NON-NLS-1$ 
         FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("xmltest.proc", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
         metadata.getStore().addObject(rs2);

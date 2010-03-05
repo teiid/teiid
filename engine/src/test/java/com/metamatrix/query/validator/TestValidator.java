@@ -1060,34 +1060,6 @@ public class TestValidator {
         helpValidate("EXEC pm1.sq1()", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
-	// variable declared is of special type INPUT
-    @Test public void testCreateUpdateProcedure1() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer INPUT;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-	// variable declared is of special type CHANGING
-    @Test public void testCreateUpdateProcedure3() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer CHANGING;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-        
-		helpFailProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-
 	// valid variable declared
     @Test public void testCreateUpdateProcedure4() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
@@ -1744,7 +1716,7 @@ public class TestValidator {
         // Validate
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
         assertEquals(1, report.getItems().size());
-        assertEquals("Elements cannot appear more than once in a SET or USING clause.  The following elements are duplicated: [\"USING\".id]", report.toString()); //$NON-NLS-1$
+        assertEquals("Elements cannot appear more than once in a SET or USING clause.  The following elements are duplicated: [DVARS.id]", report.toString()); //$NON-NLS-1$
     }    
     
     @Test public void testValidateAssignmentWithFunctionOnParameter_InModeler() throws Exception{

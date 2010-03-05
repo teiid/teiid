@@ -23,6 +23,11 @@
 package org.teiid.dqp.internal.datamgr.impl;
 
 
+
+import javax.resource.spi.work.WorkManager;
+
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -37,11 +42,11 @@ public class ConnectorWorkItemFactory {
 		this.synchWorkers = synchWorkers;
 	}
 	
-	public ConnectorWorkItem createWorkItem(AtomicRequestMessage message, ResultsReceiver<AtomicResultsMessage> receiver) {
+	public ConnectorWorkItem createWorkItem(AtomicRequestMessage message, ResultsReceiver<AtomicResultsMessage> receiver, WorkManager wm) throws ConnectorException {
     	if (synchWorkers) {
     		return new SynchConnectorWorkItem(message, manager, receiver);
     	} 
-    	return new AsynchConnectorWorkItem(message, manager, receiver);
+    	return new AsynchConnectorWorkItem(message, manager, receiver, wm);
 	}
 	
 }

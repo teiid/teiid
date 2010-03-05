@@ -267,7 +267,9 @@ public class Update extends TranslatableProcedureContainer {
             ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
             symbol.setName(ProcedureReservedWords.INPUT + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
             map.put( symbol, setClause.getValue() );
-            
+            symbol = (ElementSymbol)(setClause.getSymbol()).clone();
+            symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
+            map.put( symbol, setClause.getValue() );
         } // for
         
         return map;

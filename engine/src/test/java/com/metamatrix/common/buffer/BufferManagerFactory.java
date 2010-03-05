@@ -22,8 +22,6 @@
 
 package com.metamatrix.common.buffer;
 
-import java.util.Properties;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
@@ -51,8 +49,7 @@ public class BufferManagerFactory {
     public static BufferManager getStandaloneBufferManager() throws MetaMatrixComponentException {
     	if (INSTANCE == null) {
 	        BufferManagerImpl bufferMgr = new BufferManagerImpl();
-	        Properties props = new Properties();
-	        bufferMgr.initialize(props);
+	        bufferMgr.initialize();
 	
 	        // Add unmanaged memory storage manager
 	        bufferMgr.setStorageManager(new MemoryStorageManager());

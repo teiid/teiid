@@ -24,15 +24,17 @@ package com.metamatrix.dqp.service;
 
 import org.teiid.dqp.internal.cache.DQPContextCache;
 
-import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.common.buffer.BufferManager;
 
 /**
  */
-public interface BufferService extends ApplicationService {
+public interface BufferService {
 
     BufferManager getBufferManager();
 
     DQPContextCache getContextCache();
+    
+    CacheFactory getCacheFactory();
  }
 

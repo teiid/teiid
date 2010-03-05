@@ -38,9 +38,7 @@ public class FakeExecutionContextImpl extends ExecutionContextImpl {
 
 	public FakeExecutionContextImpl(int unique) {
 		super("VDB" + unique, //$NON-NLS-1$
-				"Version" + unique, //$NON-NLS-1$
-				"User" + unique, //$NON-NLS-1$ 
-				"Payload" + unique, //$NON-NLS-1$
+				unique, 
 				"ExecutionPayload" + unique, //$NON-NLS-1$            
 				"ConnectionID" + unique, //$NON-NLS-1$
 				"ConnectorID" + unique, //$NON-NLS-1$
@@ -50,8 +48,7 @@ public class FakeExecutionContextImpl extends ExecutionContextImpl {
 	}
 
 	public FakeExecutionContextImpl(ExecutionContext c) {
-		super(c.getVirtualDatabaseName(), c.getVirtualDatabaseVersion(), c
-				.getUser(), c.getTrustedPayload(), c.getExecutionPayload(), c
+		super(c.getVirtualDatabaseName(), c.getVirtualDatabaseVersion(), c.getExecutionPayload(), c
 				.getConnectionIdentifier(), c.getConnectorIdentifier(), c
 				.getRequestIdentifier(), c.getPartIdentifier(), c
 				.getExecutionCountIdentifier());

@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.function;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -99,13 +97,9 @@ public class TestFunctionTree extends TestCase {
     	 	public Class getInvocationClass(String className) throws ClassNotFoundException { 
     	 	    throw new ClassNotFoundException("Could not find class " + className); //$NON-NLS-1$
     	 	}
-    	 	
-    	 	public void loadFunctions(InputStream source) throws IOException{
-    	 	}
     	};	 
     	
-    	FunctionLibraryManager.registerSource(dummySource);
-    	FunctionLibraryManager.reloadSources();
+    	new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(dummySource.getFunctionMethods())));
     }
     
     public void testNullCategory() {

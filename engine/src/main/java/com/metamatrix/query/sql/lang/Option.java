@@ -24,6 +24,8 @@ package com.metamatrix.query.sql.lang;
 
 import java.util.*;
 
+import org.teiid.connector.language.SQLReservedWords;
+
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.*;
 import com.metamatrix.core.util.EquivalenceUtil;
@@ -36,8 +38,8 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  */
 public class Option implements LanguageObject {
     
-    public final static String MAKEDEP = ReservedWords.MAKEDEP; 
-    public final static String MAKENOTDEP = ReservedWords.MAKENOTDEP; 
+    public final static String MAKEDEP = SQLReservedWords.MAKEDEP; 
+    public final static String MAKENOTDEP = SQLReservedWords.MAKENOTDEP; 
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
 	private boolean showPlan = false;

@@ -22,12 +22,12 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.DeleteImpl;
-
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-import com.metamatrix.query.sql.lang.Delete;
 
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.Delete;
+
+import com.metamatrix.query.sql.lang.CompoundCriteria;
 
 public class TestDeleteImpl extends TestCase {
 
@@ -39,21 +39,21 @@ public class TestDeleteImpl extends TestCase {
         super(name);
     }
 
-    public static Delete helpExample() {
-        return new Delete(TestGroupImpl.helpExample("vm1.g1"), //$NON-NLS-1$
+    public static com.metamatrix.query.sql.lang.Delete helpExample() {
+        return new com.metamatrix.query.sql.lang.Delete(TestGroupImpl.helpExample("vm1.g1"), //$NON-NLS-1$
                           TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND));
     }
     
-    public static DeleteImpl example() throws Exception {
-        return (DeleteImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static Delete example() throws Exception {
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetGroup() throws Exception {
-        assertNotNull(example().getGroup());
+        assertNotNull(example().getTable());
     }
 
     public void testGetCriteria() throws Exception {
-        assertNotNull(example().getCriteria());
+        assertNotNull(example().getWhere());
     }
 
 }

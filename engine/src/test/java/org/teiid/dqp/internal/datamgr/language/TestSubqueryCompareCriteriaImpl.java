@@ -22,13 +22,13 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.ICompareCriteria;
-import org.teiid.connector.language.ISubqueryCompareCriteria.Quantifier;
-import org.teiid.dqp.internal.datamgr.language.SubqueryCompareCriteriaImpl;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.lang.CompareCriteria;
+import org.teiid.connector.language.Comparison;
+import org.teiid.connector.language.SubqueryComparison;
+import org.teiid.connector.language.SubqueryComparison.Quantifier;
+
+import com.metamatrix.query.sql.lang.AbstractCompareCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -47,13 +47,13 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
 
     public static SubqueryCompareCriteria helpExample() {
         ElementSymbol element = TestElementImpl.helpExample("g1", "e1"); //$NON-NLS-1$ //$NON-NLS-2$
-        Query query = TestQueryImpl.helpExample();
-        SubqueryCompareCriteria scc = new SubqueryCompareCriteria(element, query, CompareCriteria.GT, SubqueryCompareCriteria.ANY);
+        Query query = TestQueryImpl.helpExample(true);
+        SubqueryCompareCriteria scc = new SubqueryCompareCriteria(element, query, AbstractCompareCriteria.GT, SubqueryCompareCriteria.ANY);
         return scc;
     }
     
-    public static SubqueryCompareCriteriaImpl example() throws Exception {
-        return (SubqueryCompareCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static SubqueryComparison example() throws Exception {
+        return (SubqueryComparison)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetExpression() throws Exception {
@@ -61,11 +61,11 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
     }
 
     public void testGetQuery() throws Exception {
-        assertNotNull(example().getQuery());
+        assertNotNull(example().getSubquery());
     }
     
     public void testOperator() throws Exception {
-        assertEquals("Wrong operator", ICompareCriteria.Operator.GT, example().getOperator()); //$NON-NLS-1$
+        assertEquals("Wrong operator", Comparison.Operator.GT, example().getOperator()); //$NON-NLS-1$
     }
 
     public void testQuantifier() throws Exception {

@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.dqp.internal.datamgr.language.SubqueryInCriteriaImpl;
+
+import org.teiid.connector.language.SubqueryIn;
 
 import junit.framework.TestCase;
 
@@ -44,14 +45,14 @@ public class TestSubqueryInCriteriaImpl extends TestCase {
 
     public static SubquerySetCriteria helpExample() {
         ElementSymbol element = TestElementImpl.helpExample("g1", "e1"); //$NON-NLS-1$ //$NON-NLS-2$
-        Query query = TestQueryImpl.helpExample();
+        Query query = TestQueryImpl.helpExample(true);
         SubquerySetCriteria ssc = new SubquerySetCriteria(element, query);
         ssc.setNegated(true);
         return ssc;
     }
     
-    public static SubqueryInCriteriaImpl example() throws Exception {
-        return (SubqueryInCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static SubqueryIn example() throws Exception {
+        return (SubqueryIn)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetExpression() throws Exception {
@@ -59,7 +60,7 @@ public class TestSubqueryInCriteriaImpl extends TestCase {
     }
 
     public void testGetQuery() throws Exception {
-        assertNotNull(example().getQuery());
+        assertNotNull(example().getSubquery());
     }
     
     public void testIsNegated() throws Exception {

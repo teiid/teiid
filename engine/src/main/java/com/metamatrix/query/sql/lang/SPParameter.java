@@ -179,23 +179,6 @@ public class SPParameter implements Serializable, Cloneable {
     }
 
     /**
-     * This is a helper method to get the value of this parameter when the expression
-     * is a constant.  It may throw IllegalStateException if used when the expression
-     * is not a Constant.
-     * @return Value of this parameter
-     */
-    public Object getValue() {
-        if(this.expression == null) {
-            return null;
-        }
-        try {
-            return Evaluator.evaluate(this.expression);
-        } catch (MetaMatrixException err) {
-            throw new MetaMatrixRuntimeException(err);
-        }
-    }
-
-    /**
      * Set the positional index of this parameter
      * @param index The positional index of this parameter
      */

@@ -61,7 +61,7 @@ public class CommandLogMessage {
     String applicationName;
     String principal;
     String vdbName;
-    String vdbVersion;
+    int vdbVersion;
     
     // RequestInfo
     String requestID;
@@ -82,7 +82,7 @@ public class CommandLogMessage {
                                 String applicationName,
                                 String principal,
                                 String vdbName,
-                                String vdbVersion,
+                                int vdbVersion,
                                 String sql) {
         // userCommandStart
         this.type = USER_COMMAND_START;
@@ -102,7 +102,7 @@ public class CommandLogMessage {
                                 String sessionID,
                                 String principal,
                                 String vdbName,
-                                String vdbVersion, 
+                                int vdbVersion, 
                                 int finalRowCount,
                                 boolean isCancelled,
                                 boolean errorOccurred) {

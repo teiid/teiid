@@ -25,10 +25,10 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.IDelete;
-import org.teiid.connector.language.IInsert;
-import org.teiid.connector.language.IUpdate;
-import org.teiid.dqp.internal.datamgr.language.BatchedUpdatesImpl;
+import org.teiid.connector.language.BatchedUpdates;
+import org.teiid.connector.language.Delete;
+import org.teiid.connector.language.Insert;
+import org.teiid.connector.language.Update;
 
 import junit.framework.TestCase;
 
@@ -52,16 +52,16 @@ public class TestBatchedUpdatesImpl extends TestCase {
         return new BatchedUpdateCommand(updates);
     }
     
-    public static BatchedUpdatesImpl example() throws Exception {
-        return (BatchedUpdatesImpl)TstLanguageBridgeFactory.factory.translate(helpExample());
+    public static BatchedUpdates example() throws Exception {
+        return (BatchedUpdates)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetUpdateCommands() throws Exception {
         List updates = example().getUpdateCommands();
         assertEquals(3, updates.size());
-        assertTrue(updates.get(0) instanceof IInsert);
-        assertTrue(updates.get(1) instanceof IUpdate);
-        assertTrue(updates.get(2) instanceof IDelete);
+        assertTrue(updates.get(0) instanceof Insert);
+        assertTrue(updates.get(1) instanceof Update);
+        assertTrue(updates.get(2) instanceof Delete);
     }
 
 }
