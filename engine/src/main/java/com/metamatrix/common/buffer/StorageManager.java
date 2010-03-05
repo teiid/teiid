@@ -22,13 +22,11 @@
 
 package com.metamatrix.common.buffer;
 
-import java.util.Properties;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 
 public interface StorageManager {
 
-	void initialize(Properties props) throws MetaMatrixComponentException;
+	void initialize() throws MetaMatrixComponentException;
 
 	FileStore createFileStore(String name);
 

@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,7 +58,6 @@ import com.metamatrix.common.types.SourceTransform;
 import com.metamatrix.common.types.StandardXMLTranslator;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
@@ -367,8 +365,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     }
     
 	@Override
-	public void initialize(Properties props) throws MetaMatrixComponentException {
-		PropertiesUtils.setBeanProperties(this, props, "org.teiid.buffer"); //$NON-NLS-1$
+	public void initialize() throws MetaMatrixComponentException {
 		DataTypeManager.addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
 			@Override
 			public XMLType transform(Source value) {
