@@ -20,23 +20,29 @@
     <!-- Teiid Services -->
     <bean name="AuthorizationService" class="org.teiid.services.AuthorizationServiceImpl">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <!-- Turn on checking the entitlements on resources based on the roles defined in VDB -->
         <property name="useEntitlements" class="java.lang.Boolean">false</property>
     </bean>
     
     <bean name="SessionService" class="org.teiid.services.SessionServiceImpl">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
-        <!-- Comma separated list of domains to be used -->
+        <!-- Comma separated list of domains to be used to login into Teiid using JDBC connection-->
         <property name="securityDomains">teiid-security</property>
+        <!-- security domain to be used with Admin API (please do not change this, as this should be same as profile service) -->
         <property name="adminSecurityDomain">jmx-console</property>
+        <!-- Maximum number of sessions allowed by the system (default 5000) -->
         <property name="sessionMaxLimit">5000</property>
+        <!-- Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0) -->
         <property name="sessionExpirationTimeLimit">0</property>
     </bean>
     
     <bean name="BufferService" class="org.teiid.services.BufferServiceImpl">
         <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="cacheFactory"><inject bean="TeiidCache"/></property>
+        <!-- Use disk for buffer management -->
         <property name="useDisk">true</property>
+        <!-- Directory location for the buffer files -->
         <property name="diskDirectory">${jboss.server.temp.dir}/teiid</property>
         <!-- The max row count of a batch sent internally within the query processor. Should be <= the connectorBatchSize. (default 512) -->
         <property name="processorBatchSize">512</property>
@@ -54,8 +60,9 @@
             grouping, etc. (default 124)        
          -->
         <property name="maxProcessingBatchesColumns">128</property>
-        <!--  Max File size in MB -->
+        <!--  Max File size in MB (default 2GB)-->
         <property name="maxFileSize">2024</property> 
+        <!-- Max open buffer files (default 128) -->
         <property name="maxOpenFiles">256</property>
     </bean>
     
@@ -95,12 +102,12 @@
         <property name="resultSetCacheEnabled">true</property>
     </bean>
 
-    
+    <!-- JDBC Socket connection properties (SSL see below) -->
     <bean name="JdbcSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
         <property name="bindAddress">localhost</property>
         <property name="portNumber">31000</property>
-        <!-- Max number of threads dedicated to Admin and initial request processing (default 15) -->
+        <!-- Max number of threads dedicated to initial request processing (default 15) -->
         <property name="maxSocketThreads">15</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>
@@ -123,11 +130,12 @@
         <property name="clientEncryptionEnabled">true</property>
     </bean>
     
+    <!-- Admin Socket connection settings (SSL see below) -->
     <bean name="AdminSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
         <property name="bindAddress">localhost</property>
         <property name="portNumber">31443</property>
-        <!-- Max number of threads dedicated to Admin and initial request processing (default 15) -->
+        <!-- Max number of threads dedicated to Admin and initial request processing (default 4) -->
         <property name="maxSocketThreads">4</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>

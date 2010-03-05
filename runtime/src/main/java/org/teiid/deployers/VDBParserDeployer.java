@@ -27,8 +27,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
@@ -38,6 +42,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.xml.sax.SAXException;
 
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
@@ -45,7 +50,7 @@ import com.metamatrix.core.vdb.VdbConstants;
 import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 
 /**
- * This file loads the ".def" file and "manifest" file inside a VDB file.
+ * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
 public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaData> {
 	protected Logger log = Logger.getLogger(getClass());
@@ -58,7 +63,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 
 	private static Map<String, Class<?>> getCustomMappings() {
 		Map<String, Class<?>> mappings = new HashMap<String, Class<?>>();
-		mappings.put(VdbConstants.DEF_FILE_NAME, VDBMetaData.class);
+		mappings.put(VdbConstants.DEPLOYMENT_FILE, VDBMetaData.class);
 		mappings.put(VdbConstants.UDF_FILE_NAME, UDFMetaData.class);
 		return mappings;
 	}
@@ -66,8 +71,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 	@Override
 	protected <U> U parse(VFSDeploymentUnit unit, Class<U> expectedType, VirtualFile file, Object root) throws Exception {
 		if (expectedType.equals(VDBMetaData.class)) {
-			JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
-			Unmarshaller un = jc.createUnmarshaller();
+			Unmarshaller un = getUnMarsheller();
 			VDBMetaData def = (VDBMetaData)un.unmarshal(file.openStream());
 			
 			return expectedType.cast(def);
@@ -91,6 +95,15 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		else {
 			throw new IllegalArgumentException("Cannot match arguments: expectedClass=" + expectedType );
 		}		
+	}
+
+	static Unmarshaller getUnMarsheller() throws JAXBException, SAXException {
+		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
+		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		
+		Unmarshaller un = jc.createUnmarshaller();
+		un.setSchema(schema);
+		return un;
 	}
 	
 	@Override
@@ -129,7 +142,6 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				}
 				else {
 					store = new CompositeMetadataStore(imf.getMetadataStore());
-					this.serializer.saveAttachment(cacheFileName,store);
 				}
 				unit.addAttachment(CompositeMetadataStore.class, store);				
 			}
@@ -170,20 +182,11 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			return false;
 		}
 
-		// manifest file should not be visible
-        if(entry.equalsIgnoreCase(VdbConstants.MANIFEST_MODEL_NAME)) {
+		// deployment file should not be visible
+        if(entry.equalsIgnoreCase(VdbConstants.DEPLOYMENT_FILE)) {
             return false;
         }
         
-        // materialization models should not be visible
-        if(entry.startsWith(VdbConstants.MATERIALIZATION_MODEL_NAME) && entry.endsWith(VdbConstants.MODEL_EXT)) {
-            return false;
-        }
-              
-        // wldl file should be visible
-        if(entry.equalsIgnoreCase(VdbConstants.WSDL_FILENAME)) {
-            return false;
-        }     
         // any other file should be visible
         return true;		
 	}	

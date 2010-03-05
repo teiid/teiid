@@ -83,6 +83,7 @@ public class TestVDBMetaData {
 
 		// UnMarshell
 		Unmarshaller un = jc.createUnmarshaller();
+		un.setSchema(schema);
 		vdb = (VDBMetaData)un.unmarshal(new StringReader(sw.toString()));
 		
 		assertEquals("myVDB", vdb.getName());

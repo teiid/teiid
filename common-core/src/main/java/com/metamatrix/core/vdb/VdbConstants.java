@@ -29,20 +29,10 @@ package com.metamatrix.core.vdb;
  */
 public interface VdbConstants {
 
-    public static final String DEF_FILE_NAME = "ConfigurationInfo.def"; // !!! DO NOT CHANGE VALUE as this would cause problems with existing VDBs having DEF files !!! //$NON-NLS-1$
-    public static final String DATA_ROLES_FILE = "dataroles.xml"; //$NON-NLS-1$
-    public static final String VDB_DEF_FILE_EXTENSION = ".def"; //$NON-NLS-1$
+    public static final String DEPLOYMENT_FILE = "vdb.xml"; // !!! DO NOT CHANGE VALUE as this would cause problems with existing VDBs having DEF files !!! //$NON-NLS-1$
     public static final String VDB_ARCHIVE_EXTENSION = ".vdb"; //$NON-NLS-1$
-    public static final String MATERIALIZATION_MODEL_NAME = "MaterializationModel"; //$NON-NLS-1$
-    public static final String MATERIALIZATION_MODEL_FILE_SUFFIX = ".xmi"; //$NON-NLS-1$
-    public static final String MANIFEST_MODEL_NAME = "MetaMatrix-VdbManifestModel.xmi"; //$NON-NLS-1$
-    public static final String WSDL_FILENAME = "MetaMatrixDataServices.wsdl"; //$NON-NLS-1$
     public final static String INDEX_EXT        = ".INDEX";     //$NON-NLS-1$
     public final static String SEARCH_INDEX_EXT = ".SEARCH_INDEX";     //$NON-NLS-1$
     public final static String MODEL_EXT = ".xmi";     //$NON-NLS-1$
     public final static String UDF_FILE_NAME = "FunctionDefinitions.xmi";     //$NON-NLS-1$
-    
-	public static final String VDB = ".vdb"; //$NON-NLS-1$
-	public static final String DEF = ".def"; //$NON-NLS-1$    
-    
 }

@@ -27,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.URISyntaxException;
 
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
@@ -79,12 +78,12 @@ public class ObjectSerializer {
 		}
 	}
 	
-	public void removeAttachments(VFSDeploymentUnit vf) throws IOException {
+	public void removeAttachments(VFSDeploymentUnit vf) {
 		String dirName = baseDirectory(vf);
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
 	}
 
-	public File getAttachmentPath(VFSDeploymentUnit vf, String baseName) throws IOException {
+	public File getAttachmentPath(VFSDeploymentUnit vf, String baseName) {
 		
 		String dirName = baseDirectory(vf);
 
@@ -96,9 +95,9 @@ public class ObjectSerializer {
 		return f;
 	}
 
-	private String baseDirectory(VFSDeploymentUnit vf) throws IOException {
+	private String baseDirectory(VFSDeploymentUnit vf) {
 		String fileName = vf.getRoot().getName();
-		String dirName = this.storagePath + File.separator + fileName + "-"+ vf.getRoot().getLastModified()+ File.separator;
+		String dirName = this.storagePath + File.separator + fileName + File.separator;
 		return dirName;
 	}
 }

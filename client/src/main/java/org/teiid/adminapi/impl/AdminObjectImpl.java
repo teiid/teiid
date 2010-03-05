@@ -80,7 +80,11 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	
 	@Override
 	public String getPropertyValue(String name) {
-		return this.properties.getMap().get(name).getValue();
+		PropertyMetadata prop = this.properties.getMap().get(name);
+		if (prop == null) {
+			return null;
+		}
+		return prop.getValue();
 	}
 
 	public void addProperty(String key, String value) {

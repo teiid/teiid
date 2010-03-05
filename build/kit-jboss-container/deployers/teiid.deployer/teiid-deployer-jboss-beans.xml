@@ -14,9 +14,6 @@
     
     
     <bean name="DynamicVDBDeployer" class="org.teiid.deployers.DynamicVDBDeployer">
-        <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
-        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
     </bean>
     
     
@@ -42,6 +39,7 @@
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>        
         <depends>SystemVDBDeployer</depends>
     </bean>       
     

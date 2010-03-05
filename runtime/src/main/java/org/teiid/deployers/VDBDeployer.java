@@ -23,6 +23,7 @@ package org.teiid.deployers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +44,17 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.IndexMetadataFactory;
 
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
@@ -57,6 +62,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 	protected Logger log = Logger.getLogger(getClass());
 	private ManagedObjectFactory mof;
 	private VDBRepository vdbRepository;
+	private ConnectorManagerRepository connectorManagerRepository;
 	private DQPContextCache contextCache;
 	private ObjectSerializer serializer;
 	
@@ -84,7 +90,19 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		
 		// get the metadata store of the VDB (this is build in parse stage)
 		CompositeMetadataStore store = unit.getAttachment(CompositeMetadataStore.class);
-		this.vdbRepository.addMetadataStore(deployment, store);
+		
+		// if store is null and vdb dynamic vdb then try to get the metadata
+		if (store == null && deployment.isDynamic()) {
+			ArrayList<MetadataStore> stores = new ArrayList<MetadataStore>();
+			for (ModelMetaData model:deployment.getModels()) {
+				if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+					continue;
+				}
+				stores.add(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, model));
+			}
+			store = new CompositeMetadataStore(stores);
+			unit.addAttachment(CompositeMetadataStore.class, store);			
+		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);
@@ -106,7 +124,24 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		
 		// add transformation metadata to the repository.
 		this.vdbRepository.addMetadata(deployment, metadata);
+		this.vdbRepository.addMetadataStore(deployment, store);
+		
+		try {
+			saveMetadataStore((VFSDeploymentUnit)unit, deployment, metadata.getMetadataStore());
+		} catch (IOException e1) {
+			log.warn("failed to save metadata for VDB "+deployment.getName()+"."+deployment.getVersion(), e1);
+		}
 				
+		boolean valid = validateSources(deployment);
+		
+		// Check if the VDB is fully configured.
+		if (valid) {
+			deployment.setStatus(VDB.Status.ACTIVE);
+		}
+		log.info("VDB = "+deployment + " deployed");
+	}
+
+	private boolean validateSources(VDBMetaData deployment) {
 		boolean valid = true;
 		for(ModelMetaData model:deployment.getModels()) {
 			for (String sourceName:model.getSourceNames()) {
@@ -122,12 +157,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 				}
 			}
 		}
-		
-		// Check if the VDB is fully configured.
-		if (valid) {
-			deployment.setStatus(VDB.Status.ACTIVE);
-		}
-		log.info("VDB = "+deployment + " deployed");
+		return valid;
 	}
 
 
@@ -196,12 +226,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		}
 
 		try {
-			if (((VFSDeploymentUnit)unit).getRoot().exists()) {
-				File cacheFileName = this.serializer.getAttachmentPath((VFSDeploymentUnit)unit, deployment.getName()+"_"+deployment.getVersion());
-				if (cacheFileName.exists()) {
-					cacheFileName.delete();
-				}
-			}
+			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
 		} catch (IOException e) {
 			log.warn("failed to delete the cached metadata files due to:" + e.getMessage());
 		}
@@ -217,4 +242,73 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		this.serializer = serializer;
 	}		
 	
+	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
+		this.connectorManagerRepository = repo;
+	}  
+	
+	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, CompositeMetadataStore store) throws IOException {
+		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion());
+		if (!cacheFileName.exists()) {
+			this.serializer.saveAttachment(cacheFileName,store);
+		}
+	}
+	
+	private void deleteMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb) throws IOException {
+		if (!unit.getRoot().exists()) {
+			File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion());
+			if (cacheFileName.exists()) {
+				FileUtils.removeDirectoryAndChildren(cacheFileName.getParentFile());
+			}
+		}
+	}
+	
+    private MetadataStore buildDynamicMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, ModelMetaData model) throws DeploymentException{
+    	if (model.getSourceNames().isEmpty()) {
+    		throw new DeploymentException(vdb.getName()+"-"+vdb.getVersion()+" Can not be deployed because model {"+model.getName()+"} is not fully configured.");
+    	}
+    	
+    	boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata"));
+    	File cacheFile = null;
+    	if (cache) {
+    		 try {
+    			cacheFile = buildCachedFileName(unit, vdb,model.getName());
+    			if (cacheFile.exists()) {
+    				return this.serializer.loadAttachment(cacheFile, MetadataStore.class);
+    			}
+			} catch (IOException e) {
+				log.warn("invalid metadata in file = "+cacheFile.getAbsolutePath());
+			} catch (ClassNotFoundException e) {
+				log.warn("invalid metadata in file = "+cacheFile.getAbsolutePath());
+			} 
+    	}
+    	
+    	
+    	Exception exception = null;
+    	for (String sourceName: model.getSourceNames()) {
+    		ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(model.getSourceJndiName(sourceName));
+    		if (cm == null) {
+    			continue;
+    		}
+    		try {
+    			MetadataStore store = cm.getMetadata(model.getName(), this.vdbRepository.getBuiltinDatatypes(), model.getProperties());
+    			if (cache) {
+    				this.serializer.saveAttachment(cacheFile, store);
+    			}
+    			return store;
+			} catch (ConnectorException e) {
+				if (exception != null) {
+					exception = e;
+				}
+			} catch (IOException e) {
+				if (exception != null) {
+					exception = e;
+				}				
+			}
+    	}
+    	throw new DeploymentException(vdb.getName()+"-"+vdb.getVersion()+" Can not be deployed because model {"+model.getName()+"} can not retrive metadata", exception);
+	}	
+    
+	private File buildCachedFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
+		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName);
+	}    
 }

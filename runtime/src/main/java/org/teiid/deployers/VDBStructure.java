@@ -45,10 +45,16 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 		try {
 			if (isLeaf(file) == false) {
 				if (file.getName().endsWith(".vdb")) {
-					if (file.getChild(VdbConstants.DEF_FILE_NAME) == null) {
+					
+					VirtualFile metainf = file.getChild("META-INF");
+					if (metainf == null) {
 						return false;
 					}
-					createContext(structureContext, new String[] {"/", "runtime-inf"});	
+					
+					if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
+						return false;
+					}
+					createContext(structureContext, new String[] {"/", "META-INF", "runtime-inf"});	
 					return true;
 				}
 			}

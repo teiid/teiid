@@ -37,6 +37,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.jboss.managed.api.annotation.ManagementComponent;
+import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementProperties;
+import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.SecurityHelper;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -59,6 +63,7 @@ import com.metamatrix.platform.security.api.service.SessionService;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SessionServiceImpl implements SessionService {
 	public static final String SECURITY_DOMAINS = "securitydomains"; //$NON-NLS-1$
 	
@@ -67,6 +72,7 @@ public class SessionServiceImpl implements SessionService {
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
+	
 	/*
 	 * Injected state
 	 */
@@ -279,12 +285,22 @@ public class SessionServiceImpl implements SessionService {
 		return info;
 	}
 	
-	public void setSessionMaxLimit(Long limit) {
-		this.sessionMaxLimit = limit.longValue();
+	@ManagementProperty (description="Maximum number of sessions allowed by the system (default 5000)")
+	public long getSessionMaxLimit() {
+		return this.sessionMaxLimit;
 	}
 	
-	public void setsessionExpirationTimeLimit(Long limit) {
-		this.sessionExpirationTimeLimit = limit.longValue();
+	public void setSessionMaxLimit(long limit) {
+		this.sessionMaxLimit = limit;
+	}
+	
+	@ManagementProperty(description="Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)")
+	public long getSessionExpirationTimeLimit() {
+		return this.sessionExpirationTimeLimit;
+	}
+	
+	public void setSessionExpirationTimeLimit(long limit) {
+		this.sessionExpirationTimeLimit = limit;
 	}	
 	
 	public void setSecurityDomains(String domainNameOrder) {

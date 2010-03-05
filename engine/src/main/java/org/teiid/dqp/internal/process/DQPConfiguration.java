@@ -21,6 +21,8 @@
  */
 package org.teiid.dqp.internal.process;
 
+import org.jboss.managed.api.annotation.ManagementProperty;
+
 import com.metamatrix.dqp.message.RequestMessage;
 
 public class DQPConfiguration{
@@ -46,11 +48,10 @@ public class DQPConfiguration{
 	private int codeTablesMaxCount = DEFAULT_MAX_CODE_TABLES;
 	private int codeTablesMaxRowsPerTable = DEFAULT_MAX_CODE_TABLE_RECORDS;
 	private int codeTablesMaxRows = DEFAULT_MAX_CODE_RECORDS;
-	private String bindAddress = "localhost";
-	private int portNumber = 31000;
-	private boolean resultSetCacheEnabled = false;
+	private boolean resultSetCacheEnabled = true;
 	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
 	
+	@ManagementProperty (description="Name of the process that uniquely identifies this process")
 	public String getProcessName() {
 		return processName;
 	}
@@ -59,6 +60,7 @@ public class DQPConfiguration{
 		this.processName = processName;
 	}
 
+	@ManagementProperty(description="Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8")
 	public int getMaxThreads() {
 		return maxThreads;
 	}
@@ -67,6 +69,7 @@ public class DQPConfiguration{
 		this.maxThreads = maxThreads;
 	}
 
+	@ManagementProperty(description="Query processor time slice, in milliseconds. (default 2000)")
 	public int getTimeSliceInMilli() {
 		return timeSliceInMilli;
 	}
@@ -75,6 +78,7 @@ public class DQPConfiguration{
 		this.timeSliceInMilli = timeSliceInMilli;
 	}
 	
+	@ManagementProperty(description="Process debug allowed")
 	public boolean isProcessDebugAllowed() {
 		return processDebugAllowed;
 	}
@@ -83,6 +87,7 @@ public class DQPConfiguration{
 		this.processDebugAllowed = processDebugAllowed;
 	}
 
+	@ManagementProperty(description="Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)")
 	public int getMaxRowsFetchSize() {
 		return maxRowsFetchSize;
 	}
@@ -91,30 +96,34 @@ public class DQPConfiguration{
 		this.maxRowsFetchSize = maxRowsFetchSize;
 	}
 
+	@ManagementProperty(description="The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default)")
 	public int getLobChunkSizeInKB() {
-		return lobChunkSizeInKB;
+		return this.lobChunkSizeInKB;
 	}
 
 	public void setLobChunkSizeInKB(int lobChunkSizeInKB) {
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
 	}
 
+	@ManagementProperty(description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)")
 	public int getPreparedPlanCacheMaxCount() {
-		return preparedPlanCacheMaxCount;
+		return this.preparedPlanCacheMaxCount;
 	}
 
 	public void setPreparedPlanCacheMaxCount(int preparedPlanCacheMaxCount) {
 		this.preparedPlanCacheMaxCount = preparedPlanCacheMaxCount;
 	}
 
+	@ManagementProperty(description="Maximum number of cached lookup tables. Note: this is a memory based cache. (default 200)")
 	public int getCodeTablesMaxCount() {
-		return codeTablesMaxCount;
+		return this.codeTablesMaxCount;
 	}
 
 	public void setCodeTablesMaxCount(int codeTablesMaxCount) {
 		this.codeTablesMaxCount = codeTablesMaxCount;
 	}
 
+	@ManagementProperty(description="Maximum number of records in a single lookup table (default 10000)")
 	public int getCodeTablesMaxRowsPerTable() {
 		return codeTablesMaxRowsPerTable;
 	}
@@ -123,30 +132,16 @@ public class DQPConfiguration{
 		this.codeTablesMaxRowsPerTable = codeTablesMaxRowsPerTable;
 	}
 
+	@ManagementProperty(description="Maximum number of records in all lookup tables (default 200000)")
 	public int getCodeTablesMaxRows() {
-		return codeTablesMaxRows;
+		return this.codeTablesMaxRows;
 	}
 
 	public void setCodeTablesMaxRows(int codeTablesMaxRows) {
 		this.codeTablesMaxRows = codeTablesMaxRows;
 	}
 
-	public String getBindAddress() {
-		return bindAddress;
-	}
-
-	public void setBindAddress(String bindAddress) {
-		this.bindAddress = bindAddress;
-	}
-
-	public int getPortNumber() {
-		return portNumber;
-	}
-
-	public void setPortNumber(int portNumber) {
-		this.portNumber = portNumber;
-	}
-
+	@ManagementProperty(description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)")
 	public int getResultSetCacheMaxEntries() {
 		return this.maxResultSetCacheEntries;
 	}
@@ -155,6 +150,7 @@ public class DQPConfiguration{
 		this.maxResultSetCacheEntries = value;
 	}
 
+	@ManagementProperty(description="Denotes whether or not result set caching is enabled. (default true)")
 	public boolean isResultSetCacheEnabled() {
 		return this.resultSetCacheEnabled;
 	}

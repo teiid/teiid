@@ -46,7 +46,7 @@ import com.metamatrix.core.vdb.ModelType;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
     "JAXBProperties",
-    "JAXBSources",
+    "sources",
     "errors"
 })
 @ManagementObject(properties=ManagementProperties.EXPLICIT)
@@ -55,7 +55,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
-	private ListOverMap<SourceMapping> sources = new ListOverMap(new KeyBuilder<SourceMapping>() {
+	@XmlElement(name = "source")
+	protected ListOverMap<SourceMapping> sources = new ListOverMap(new KeyBuilder<SourceMapping>() {
 		@Override
 		public String getKey(SourceMapping entry) {
 			return entry.getName();
@@ -66,7 +67,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	protected String modelType = Type.PHYSICAL.name(); //$NON-NLS-1$
     
     @XmlAttribute(name = "visible")
-    private Boolean visible = true;
+    protected Boolean visible = true;
     
     @XmlElement(name = "validation-error")
     protected List<ValidationError> errors;    
@@ -144,12 +145,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return new ArrayList<SourceMapping>(this.sources.getMap().values());
 	}
     
-	@XmlElement(name = "source")
-	protected List<SourceMapping> getJAXBSources(){
-		// do not wrap this in another List object; we need direct access for jaxb
-		return this.sources;
-	}	
-	
     @Override
     public List<String> getSourceNames() {
     	return new ArrayList<String>(this.sources.getMap().keySet());
@@ -157,6 +152,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
     public String getSourceJndiName(String sourceName) {
     	SourceMapping s = this.sources.getMap().get(sourceName);
+    	if (s == null) {
+    		return null;
+    	}
     	return s.getJndiName();
 	}
     

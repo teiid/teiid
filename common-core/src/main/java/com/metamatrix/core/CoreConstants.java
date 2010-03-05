@@ -22,7 +22,6 @@
 
 package com.metamatrix.core;
 
-import com.metamatrix.core.vdb.VdbConstants;
 
 /**
  * @since 4.0
@@ -55,10 +54,6 @@ public interface CoreConstants {
     
     public static final String SYSTEM_VDB = "System.vdb"; //$NON-NLS-1$
 
-    public static final String EXPORTED_VDB_FILE_EXTENSION = VdbConstants.VDB_DEF_FILE_EXTENSION; 
-    
-    public static final String VDB_ARCHIVE_EXTENSION = VdbConstants.VDB_ARCHIVE_EXTENSION; 
-    
     public static final String PRODUCT_OWNER_NAME_PROPERTY = "ownerName"; //$NON-NLS-1$
     
     /**

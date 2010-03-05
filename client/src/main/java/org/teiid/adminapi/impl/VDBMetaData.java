@@ -45,12 +45,13 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 
 import com.metamatrix.core.CoreConstants;
 
+
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"))
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
     "description",
     "JAXBProperties",
-    "JAXBModels",
+    "models",
     "securityRoleMappings"
 })
 @XmlRootElement(name = "vdb")
@@ -59,7 +60,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 
 	private static final long serialVersionUID = -4723595252013356436L;
 	
-	private ListOverMap<ModelMetaData> models = new ListOverMap<ModelMetaData>(new KeyBuilder<ModelMetaData>() {
+	/**
+	 * This simulating a list over a map. JAXB requires a list and performance recommends
+	 * map and we would like to keep one variable to represent both. 
+	 */
+	@XmlElement(name = "model", required = true, type = ModelMetaData.class)
+	protected ListOverMap<ModelMetaData> models = new ListOverMap<ModelMetaData>(new KeyBuilder<ModelMetaData>() {
 		@Override
 		public String getKey(ModelMetaData entry) {
 			return entry.getName();
@@ -70,7 +76,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private int version = 1;
 	
 	@XmlElement(name = "description")
-	private String description;
+	protected String description;
 	
     @XmlElement(name = "role-mapping")
     protected ListOverMap<ReferenceMappingMetadata> securityRoleMappings = new ListOverMap<ReferenceMappingMetadata>(new KeyBuilder<ReferenceMappingMetadata>() {
@@ -81,6 +87,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	});
     
 	private String fileUrl = null;
+	private boolean dynamic = false;
 	
 	public VDBMetaData() {
 		// auto add sytem model.
@@ -145,16 +152,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return new ArrayList<ModelMetaData>(this.models.getMap().values());
 	}
 	
-	/**
-	 * This simulating a list over a map. JAXB requires a list and performance recommends
-	 * map and we would like to keep one variable to represent both. 
-	 * @return
-	 */
-	@XmlElement(name = "model", required = true, type = ModelMetaData.class)
-	protected List<ModelMetaData> getJAXBModels(){
-		return models;
-	}	
-	
 	public void addModel(ModelMetaData m) {
 		this.models.getMap().put(m.getName(), m);
 	}	
@@ -202,6 +199,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     			if (resourceNames.isEmpty()) {
     				return false;
     			}
+    			for (String sourceName:resourceNames) {
+    				if (m.getSourceJndiName(sourceName) == null) {
+    					return false;
+    				}
+    			}
     		}
     	}
         return true;
@@ -248,4 +250,13 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	protected List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
+	
+	@ManagementProperty(description="Is this a Dynamic VDB")
+	public boolean isDynamic() {
+		return dynamic;
+	}
+
+	public void setDynamic(boolean dynamic) {
+		this.dynamic = dynamic;
+	}	
 }

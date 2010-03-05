@@ -34,6 +34,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.managed.api.annotation.ManagementComponent;
+import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementProperties;
+import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.AdminRoles;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
@@ -75,6 +79,7 @@ import com.metamatrix.vdb.runtime.VDBKey;
  * have the proper administrative role.
  * </p>
  */
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class AuthorizationServiceImpl implements AuthorizationService, Serializable {
 
 	private static final long serialVersionUID = 5399603007837606243L;
@@ -396,10 +401,12 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
      * @return <code>true</code> iff server-side entitlements checking is enabled.
      */
     @Override
+    @ManagementProperty(description="Turn on checking the entitlements on resources based on the roles defined in VDB", readOnly=true)
     public boolean checkingEntitlements() {
         return useEntitlements;
     }
 
+    
     /**
      * Create realm based on token
      * @param token Used to find info about this session

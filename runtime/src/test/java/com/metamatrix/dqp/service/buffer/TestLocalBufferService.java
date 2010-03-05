@@ -41,7 +41,6 @@ public class TestLocalBufferService extends TestCase {
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid");
 
         // These are defaults if none of the properties are set.
-        assertTrue(64 == svc.getBufferMemorySizeInMB()); //$NON-NLS-1$
         assertTrue(svc.getBufferDirectory().isDirectory() && svc.getBufferDirectory().exists());
         assertTrue(svc.isUseDisk());
     }
@@ -49,12 +48,10 @@ public class TestLocalBufferService extends TestCase {
     public void testCheckMemPropertyGotSet() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
-        svc.setBufferMemorySizeInMB(96);
         svc.setUseDisk(true);
         
         svc.start();
         // all the properties are set
-        assertEquals(96 , svc.getBufferMemorySizeInMB());     //$NON-NLS-1$
         assertTrue("Not Directory", svc.getBufferDirectory().isDirectory()); //$NON-NLS-1$
         assertTrue("does not exist", svc.getBufferDirectory().exists()); //$NON-NLS-1$
         assertTrue("does not end with one", svc.getBufferDirectory().getParent().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -67,7 +64,6 @@ public class TestLocalBufferService extends TestCase {
     public void testCheckMemPropertyGotSet2() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
-        svc.setBufferMemorySizeInMB(96);
         svc.setUseDisk(false);
         svc.start();
         

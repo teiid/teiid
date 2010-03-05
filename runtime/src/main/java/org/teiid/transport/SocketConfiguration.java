@@ -24,9 +24,15 @@ package org.teiid.transport;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.jboss.managed.api.annotation.ManagementComponent;
+import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementProperties;
+import org.jboss.managed.api.annotation.ManagementProperty;
+
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SocketConfiguration {
 	private int outputBufferSize;
 	private int inputBufferSize;
@@ -35,9 +41,11 @@ public class SocketConfiguration {
 	private InetAddress hostAddress;
 	private SSLConfiguration sslConfiguration;
 	private boolean enabled;
+	private String hostName; 
 	
 	
 	public void setBindAddress(String addr) {
+		this.hostName = addr;
 		this.hostAddress = resolveHostAddress(addr);
 	}
 	
@@ -72,6 +80,7 @@ public class SocketConfiguration {
 		}
 	}
 
+ 	@ManagementProperty(description="SSL enabled", readOnly=true)
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -80,24 +89,33 @@ public class SocketConfiguration {
 		this.enabled = enabled;
 	}
 
+	@ManagementProperty(description="SO_SNDBUF size, 0 indicates that system default should be used (default 0)",readOnly=true)
 	public int getOutputBufferSize() {
 		return outputBufferSize;
 	}
 
+	@ManagementProperty(description="SO_RCVBUF size, 0 indicates that system default should be used (default 0)",readOnly=true)
 	public int getInputBufferSize() {
 		return inputBufferSize;
 	}
 
+	@ManagementProperty(description="Max NIO threads",readOnly=true)
 	public int getMaxSocketThreads() {
 		return maxSocketThreads;
 	}
 
+	@ManagementProperty(description="Port Number",readOnly=true)
 	public int getPortNumber() {
 		return portNumber;
 	}
 
 	public InetAddress getHostAddress() {
 		return hostAddress;
+	}
+	
+	@ManagementProperty(description="Host Name",readOnly=true)
+	public String getHostName() {
+		return this.hostName;
 	}
 
 	public SSLConfiguration getSSLConfiguration() {
