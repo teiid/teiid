@@ -38,7 +38,7 @@ import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
- * This is the parent node for a MetaMatrix system
+ * This is the parent node for a Teiid system
  */
 public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
@@ -58,8 +58,8 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
 
 		ManagedComponent mc = ProfileServiceUtil.getManagedComponent(
-				new ComponentType(PluginConstants.ComponentType.Platform.TYPE,
-						PluginConstants.ComponentType.Platform.SUBTYPE),
+				new ComponentType("teiid",
+						"dqp"),
 				PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
 
 		Configuration c = new Configuration(); 

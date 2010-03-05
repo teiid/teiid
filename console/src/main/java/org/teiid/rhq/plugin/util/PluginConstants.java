@@ -37,12 +37,11 @@ public interface PluginConstants {
 	// In embedded, its a predefined value
 	// In enterprise, its the installation directory
 	//        public final static String INSTALL_DIR = "install.dir"; //$NON-NLS-1$
-
 	/**
 	 * These are global properties used by all components
 	 */
 	public final static String PROFILE_SERVICE = "ProfileService"; //$NON-NLS-1$
-	
+
 	/**
 	 * These properties are exposed via the #getProperty method call.
 	 */
@@ -56,26 +55,28 @@ public interface PluginConstants {
 	 * @since 1.0
 	 */
 	public interface ComponentType {
-		
+
 		public interface Platform {
 
 			public final static String NAME = "Platform"; //$NON-NLS-1$
+			public final static String TEIID_TYPE = "teiid"; //$NON-NLS-1$
+			public final static String TEIID_SUB_TYPE = "dqp"; //$NON-NLS-1$
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
 			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
-			public final static String TEIID_RUNTIME_ENGINE = "teiid/runtime-engine"; //$NON-NLS-1$
+			public final static String TEIID_RUNTIME_ENGINE = "org.teiid.jboss.deployers.RuntimeEngineDeployer"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_NAME = "Data Service Runtime Engine"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_DESCRIPTION = "JBoss Enterprise Data Service Runtime Engine"; //$NON-NLS-1$
-
 
 			public static interface Operations {
 
 				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$					
 				public final static String GET_LONGRUNNINGQUERIES = "listLongRunningQueries"; //$NON-NLS-1$
-				public final static String KILL_REQUEST = "killRequest"; //$NON-NLS-1$
+				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
+				public final static String KILL_SESSION = "terminateSession"; //$NON-NLS-1$
 				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
 				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
-				public final static String GET_SESSIONS = "getActiveSessions"; //$NON-NLS-1$
-				
+				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
+
 			}
 
 			public static interface Metrics {
@@ -94,8 +95,20 @@ public interface PluginConstants {
 			public final static String NAME = "Enterprise Virtual Database"; //$NON-NLS-1$
 			public final static String DESCRIPTION = "JBoss Enterprise Virtual Database (VDB)"; //$NON-NLS-1$
 
+			public static interface Operations {
+
+				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$					
+				public final static String GET_LONGRUNNINGQUERIES = "listLongRunningQueries"; //$NON-NLS-1$
+				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
+				public final static String KILL_SESSION = "terminateSession"; //$NON-NLS-1$
+				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
+				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
+				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
+
+			}
+
 		}
-		
+
 		public interface Model {
 
 			public final static String TYPE = "teiid"; //$NON-NLS-1$
@@ -105,7 +118,6 @@ public interface PluginConstants {
 
 		}
 
-
 		public interface Connector {
 
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
@@ -113,7 +125,7 @@ public interface PluginConstants {
 			public final static String SUBTYPE_TX = "Tx"; //$NON-NLS-1$
 			public final static String NAME = "Enterprise Connector"; //$NON-NLS-1$
 			public final static String DESCRIPTION = "JBoss Enterprise Connector Binding"; //$NON-NLS-1$
-			
+
 			public static interface Operations {
 
 				public final static String RESTART_CONNECTOR = "restart"; //$NON-NLS-1$            
@@ -143,20 +155,6 @@ public interface PluginConstants {
 			}
 		}
 
-		public interface Service {
-
-			public final static String TYPE = "Resource.Service"; //$NON-NLS-1$
-
-			public static interface Operations {
-
-			}
-
-			public static interface Query {
-
-			}
-
-		}
-
 	}
 
 	/**
@@ -182,7 +180,7 @@ public interface PluginConstants {
 		public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
 		public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
 		public final static String GET_SESSIONS = "getActiveSessions"; //$NON-NLS-1$
-		
+
 		/**
 		 * Use these value names when calling executeOperation() on the
 		 * connection interface. These will correlate with parameters used in
@@ -201,6 +199,7 @@ public interface PluginConstants {
 			public final static String FIELD_LIST = "fieldList"; //$NON-NLS-1$
 
 			public final static String REQUEST_ID = "requestID"; //$NON-NLS-1$
+			public final static String SESSION_ID = "sessionID"; //$NON-NLS-1$
 
 			public final static String NAME = "Name"; //$NON-NLS-1$
 			public final static String VALUE = "Value"; //$NON-NLS-1$

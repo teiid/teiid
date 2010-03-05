@@ -239,6 +239,12 @@
 			<artifactId>rhq-jmx-plugin</artifactId>
 			<version>${org.rhq.version}</version>
 		</dependency>
+        
+        <dependency>
+            <groupId>org.rhq</groupId>
+            <artifactId>rhq-core-util</artifactId>
+            <version>${org.rhq.version}</version>
+        </dependency>        
 
 		<dependency>
 			<groupId>mc4j</groupId>

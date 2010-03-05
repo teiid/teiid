@@ -16,14 +16,20 @@ import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedDeployment;
+import org.jboss.managed.api.ManagedProperty;
+import org.jboss.metatype.api.types.MetaType;
+import org.jboss.metatype.api.types.SimpleMetaType;
+import org.jboss.metatype.api.values.EnumValue;
+import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.profileservice.spi.ProfileService;
+
 
 public class ProfileServiceUtil {
 
 	protected final Log LOG = LogFactory.getLog(ProfileServiceUtil.class);
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");
-	private static String DQPNAME = "org.teiid.dqp.internal.process.DQPManagementView";
-
+	private static String DQPNAME = "org.teiid.jboss.deployers.RuntimeEngineDeployer";
 
 	/**
 	 * Get the passed in {@link ManagedComponent}
@@ -39,6 +45,7 @@ public class ProfileServiceUtil {
 		ManagementView mv = getManagementView(ps, true);
 
 		ManagedComponent mc = mv.getComponent(componentName, componentType);
+		
 		return mc;
 	}
 
@@ -139,5 +146,34 @@ public class ProfileServiceUtil {
 		
 		return getManagedComponent(DQPTYPE, DQPNAME);
 	}
+	
+	public static String stringValue(MetaValue v1) throws Exception {
+		if (v1 != null) {
+			MetaType type = v1.getMetaType();
+			if (type instanceof SimpleMetaType) {
+				SimpleValue simple = (SimpleValue)v1;
+				return simple.getValue().toString();
+			}
+			throw new Exception("Failed to convert value to string value");
+		}
+		return null;
+	}	
+	
+	public static <T> T getSimpleValue(ManagedComponent mc, String prop, Class<T> expectedType) {
+		 ManagedProperty mp = mc.getProperty(prop);
+		 if (mp != null) {
+			 MetaType metaType = mp.getMetaType();
+			 if (metaType.isSimple()) {
+		            SimpleValue simpleValue = (SimpleValue)mp.getValue();
+		            return expectedType.cast((simpleValue != null) ? simpleValue.getValue() : null);
+			 }
+			 else if (metaType.isEnum()) {
+				 EnumValue enumValue = (EnumValue)mp.getValue();
+				 return expectedType.cast((enumValue != null) ? enumValue.getValue() : null);
+			 }
+			 throw new IllegalStateException(prop+ " is not a simple type");
+		 }
+		 return null;
+	}	
 
 }

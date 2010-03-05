@@ -58,6 +58,7 @@ import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
 import org.rhq.core.pluginapi.operation.OperationFacet;
 import org.rhq.core.pluginapi.operation.OperationResult;
+import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ExecutedResult;
 import org.teiid.rhq.plugin.objects.ExecutedOperationResultImpl;
 import org.teiid.rhq.plugin.util.DeploymentUtils;
@@ -180,9 +181,9 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	}
 
 	protected void execute(final ExecutedResult result, final Map valueMap) {
-//		DQPManagementView dqp = new DQPManagementView();
-//			
-//		dqp.executeOperation(result, valueMap);
+		DQPManagementView dqp = new DQPManagementView();
+			
+		dqp.executeOperation(result, valueMap);
 		
 	}
 	
@@ -288,6 +289,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
 	}
 
+	@Override
 	public void deleteResource() throws Exception {
 		
 		DeploymentManager deploymentManager = ProfileServiceUtil.getDeploymentManager();
@@ -311,31 +313,36 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 	}
 
-	//@Override
+	@Override
 	public DeployPackagesResponse deployPackages(
 			Set<ResourcePackageDetails> packages,
 			ContentServices contentServices) {
 		return null;
 	}
 
+	@Override
 	public Set<ResourcePackageDetails> discoverDeployedPackages(PackageType arg0) {
 		return null;
 	}
 
+	@Override
 	public List<DeployPackageStep> generateInstallationSteps(
 			ResourcePackageDetails arg0) {
 		return null;
 	}
 
+	@Override
 	public RemovePackagesResponse removePackages(
 			Set<ResourcePackageDetails> arg0) {
 		return null;
 	}
 
+	@Override
 	public InputStream retrievePackageBits(ResourcePackageDetails packageDetails) {
 		return null;
 	}
 
+	@Override
 	public CreateResourceReport createResource(CreateResourceReport createResourceReport) {
 		ResourcePackageDetails details = createResourceReport
 				.getPackageDetails();

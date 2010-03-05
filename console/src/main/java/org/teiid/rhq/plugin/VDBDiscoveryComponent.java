@@ -26,10 +26,8 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jboss.deployers.spi.management.ManagementView;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
-import org.jboss.managed.api.ManagedDeployment;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.values.CollectionValueSupport;
@@ -68,14 +66,11 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		for (ManagedComponent mcVdb : vdbs) {
 
 			String vdbKey = mcVdb.getDeployment().getName();
-			String vdbName = ((SimpleValueSupport) mcVdb.getProperty("name")
-					.getValue()).getValue().toString();
-			String vdbVersion = ((SimpleValueSupport) mcVdb.getProperty(
-					"version").getValue()).getValue().toString();
-			// TODO: Correct this after deploying proper VDB/Metadata
-			String vdbDescription = "description"; // mcVdb.getProperty("description");
-			String vdbStatus = "active"; // mcVdb.getProperty("status");
-			String vdbURL = "url"; // mcVdb.getProperty("url");
+			String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name", String.class);
+			Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb, "version", Integer.class);
+			String vdbDescription = ProfileServiceUtil.getSimpleValue(mcVdb, "description", String.class);
+			String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb, "status", String.class);
+			String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url", String.class); 
 
 			/**
 			 * 
@@ -86,7 +81,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					discoveryContext.getResourceType(), // ResourceType
 					vdbKey, // Resource Key
 					vdbName, // Resource Name
-					vdbVersion, // Version
+					vdbVersion.toString(), // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
 					discoveryContext.getDefaultPluginConfiguration(), // Plugin
 																		// Config

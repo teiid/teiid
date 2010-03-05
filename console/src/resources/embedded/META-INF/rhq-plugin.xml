@@ -27,23 +27,143 @@
 	<depends plugin="JBossAS5" useClasses="true" />
 
 	<server name="Data Services" description="JBoss Enterprise Data Services"
-		class="PlatformComponent" discovery="PlatformDiscoveryComponent">
+		class="PlatformComponent" discovery="PlatformDiscoveryComponent"
+		singleton="true">
 
 		<runs-inside>
 			<parent-resource-type name="JBossAS Server"
 				plugin="JBossAS5" />
 		</runs-inside>
 
-	<!--	<metric displayName="Query Count" defaultOn="true" displayType="summary"
+		<operation name="listLongRunningQueries" displayName="View current long running queries"
+			description="List current queries executing against the Teiid System that have surpassed the long running query threshhold">
+			<results>
+				<c:list-property name="list">
+					<c:map-property name="map">
+						<c:simple-property displayName="Session ID"
+							name="getSessionId" type="string"
+							description="The name of the resource whose availability is being reported" />
+						<c:simple-property displayName="Request ID"
+							name="getRequestId" type="string" description="The id for the request" />
+						<c:simple-property displayName="SQL String"
+							name="getCommand" type="string" description="The SQL string for this query" />
+						<c:simple-property displayName="Source Request"
+							name="sourceRequest" type="string"
+							description="If false,this is the top level query. If true, this a physical source query." />
+						<c:simple-property displayName="Execution ID"
+							name="getExecutionId" type="string"
+							description="The execution id for this request (if this is a physical source query)" />
+						<c:simple-property displayName="Start Time"
+							name="getCreatedTime" type="string" description="The time this query began" />
+						<c:simple-property displayName="Start Time"
+							name="getProcessingTime" type="string" description="Processing time for this request" />
+						<c:simple-property displayName="Transaction ID"
+							name="getTransactionId" type="string"
+							description="The transaction XID if there is a transaction involved" />
+						<c:simple-property displayName="Node ID" name="getNodeId"
+							type="string" description="The node ID of this query" />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+
+		<operation name="getSessions" displayName="View current sessions"
+			description="Get current sessions connected to the Teiid instance">
+			<results>
+
+				<c:list-property name="list" displayName="Current Sessions"
+					description="Sessions currently connected to the Teiid system"
+					required="false">
+					<c:map-property name="map">
+						<c:simple-property displayName="Session ID"
+							name="getSessionId" type="string" description="The identifier for this session" />
+						<c:simple-property displayName="Application Name"
+							name="getApplicationName" type="string"
+							description="The application associated with Session" />
+						<c:simple-property displayName="Created Time"
+							name="getCreatedTime" type="string" description="When the session was created" />
+						<c:simple-property displayName="Client Host"
+							name="getClientHostName" type="string"
+							description="Host name from where the session created" />
+						<c:simple-property displayName="IP Address"
+							name="getIPAddress" type="string"
+							description="IP address from where this session was created" />
+						<c:simple-property displayName="Last ping time"
+							name="getLastPingTime" type="string" description="Last ping time" />
+						<c:simple-property displayName="User Name" name="getUserName"
+							type="string" description="User associated with this session" />
+						<c:simple-property displayName="VDB Name" name="getVDBName"
+							type="string" description="VDB associated with this session" />
+						<c:simple-property displayName="Security Domain"
+							name="getSecurityDomain" type="string"
+							description="Security Domain that session logged into" />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+
+		<operation name="getRequests" displayName="View current requests"
+			description="Get current requests executing against this Teiid instance">
+			<results>
+
+				<c:list-property name="list" displayName="Current Request"
+					description="Requests currently executing against the Teiid system"
+					required="false">
+					<c:map-property name="map">
+						<c:simple-property displayName="Request ID"
+							name="getRequestId" type="string" description="The request identifier" />
+						<c:simple-property displayName="Session ID"
+							name="getSessionId" type="string" description="Session identifier" />
+						<c:simple-property displayName="Execution ID"
+							name="getExecutionId" type="string" description="Unique Identifier for Request" />
+						<c:simple-property displayName="Created Time"
+							name="getCreatedTime" type="string" description="Time when request submitted" />
+						<c:simple-property displayName="Processing Time"
+							name="getProcessingTime" type="string" description="Processing time for the request" />
+						<c:simple-property displayName="Last ping time"
+							name="getCommand" type="string" description="SQL Command" />
+						<c:simple-property displayName="Connector level request?"
+							name="sourceRequest" type="string"
+							description="True if this is a connector level request" />
+						<c:simple-property displayName="Node ID" name="getNodeId"
+							type="string" description="The node identifier" />
+						<c:simple-property displayName="Tansaction identifier"
+							name="getTransactionId" type="string"
+							description="Transaction XID if a transaction is involved" />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+
+		<operation name="cancelRequest" displayName="Terminate request"
+			description="Terminate the processing of a query and its source queries">
+			<parameters>
+				<c:simple-property displayName="Session ID" name="sessionID"
+					type="long" required="true"
+					description="The ID of the session that the request to cancel is associated with" />
+				<c:simple-property displayName="Request ID" name="requestID"
+					type="long" required="true" description="The ID of the request to cancel" />
+			</parameters>
+		</operation>
+
+		<operation name="terminateSession" displayName="Terminate Session"
+			description="Terminate a specified session">
+			<parameters>
+				<c:simple-property displayName="SessionID" name="sessionID"
+					type="long" required="true" description="The ID of the session to terminate" />
+			</parameters>
+		</operation>
+
+		<metric displayName="Query Count" defaultOn="true" displayType="detail"
 			category="throughput" property="queryCount"
 			description="The number of queries for a given point in time" />
 
 		<metric displayName="Long Running Queries" defaultOn="true"
-			displayType="summary" category="performance" property="longRunningQueries"
+			displayType="detail" category="performance" property="longRunningQueries"
 			description="The number of queries that have been running longer than the limit set for queries." />
 
 		<metric displayName="Session Count" defaultOn="true"
-			displayType="summary" category="throughput" property="sessionCount"
+			displayType="detail" category="throughput" property="sessionCount"
 			description="The number of user connections for a given point in time" />
 
 		<resource-configuration>
@@ -52,7 +172,7 @@
 				<c:description>Query Configuration</c:description>
 				<c:simple-property name="longRunningQueryLimit"
 					type="integer" activationPolicy="immediate" units="seconds"
-					default="600" displayName="Long Running Query limit"
+					default="600" required="true" displayName="Long Running Query limit"
 					description="The value (in seconds) to use to determine if a query is to be considered 'long running'.">
 					<c:constraint>
 						<c:integer-constraint minimum="0" maximum="999999" />
@@ -60,17 +180,80 @@
 				</c:simple-property>
 			</c:group>
 		</resource-configuration>
-       -->
+
 		<service name="Virtual Database (VDB)s"
 			description="JBoss Enterprise Data Services Virtual Databases" class="VDBComponent"
 			discovery="VDBDiscoveryComponent" createDeletePolicy="both"
 			creationDataType="content">
 
+			<operation name="getSessions" displayName="View VDB Sessions"
+				description="Get current sessions currently connected to this VDB">
+				<results>
+
+					<c:list-property name="list" displayName="Current VDB Sessions"
+						description="Sessions currently connected to this VDB" required="false">
+						<c:map-property name="map">
+							<c:simple-property displayName="Session ID"
+								name="getSessionId" type="string" description="The identifier for this session" />
+							<c:simple-property displayName="Application Name"
+								name="getApplicationName" type="string"
+								description="The application associated with Session" />
+							<c:simple-property displayName="Created Time"
+								name="getCreatedTime" type="string" description="When the session was created" />
+							<c:simple-property displayName="Client Host"
+								name="getClientHostName" type="string"
+								description="Host name from where the session created" />
+							<c:simple-property displayName="IP Address"
+								name="getIPAddress" type="string"
+								description="IP address from where this session was created" />
+							<c:simple-property displayName="Last ping time"
+								name="getLastPingTime" type="string" description="Last ping time" />
+							<c:simple-property displayName="User Name"
+								name="getUserName" type="string" description="User associated with this session" />
+							<c:simple-property displayName="Security Domain"
+								name="getSecurityDomain" type="string"
+								description="Security Domain that session logged into" />
+						</c:map-property>
+					</c:list-property>
+				</results>
+			</operation>
+
+			<operation name="getRequests" displayName="View VDB requests"
+				description="Get current requests executing against this VDB">
+				<results>
+
+					<c:list-property name="list" displayName="Current Request"
+						description="Requests currently executing against the Teiid system"
+						required="false">
+						<c:map-property name="map">
+							<c:simple-property displayName="Request ID"
+								name="getRequestId" type="string" description="The request identifier" />
+							<c:simple-property displayName="Session ID"
+								name="getSessionId" type="string" description="Session identifier" />
+							<c:simple-property displayName="Execution ID"
+								name="getExecutionId" type="string" description="Unique Identifier for Request" />
+							<c:simple-property displayName="Created Time"
+								name="getCreatedTime" type="string" description="Time when request submitted" />
+							<c:simple-property displayName="Processing Time"
+								name="getProcessingTime" type="string" description="Processing time for the request" />
+							<c:simple-property displayName="Last ping time"
+								name="getCommand" type="string" description="SQL Command" />
+							<c:simple-property displayName="Connector level request?"
+								name="sourceRequest" type="string"
+								description="True if this is a connector level request" />
+							<c:simple-property displayName="Node ID" name="getNodeId"
+								type="string" description="The node identifier" />
+							<c:simple-property displayName="Tansaction identifier"
+								name="getTransactionId" type="string"
+								description="Transaction XID if a transaction is involved" />
+						</c:map-property>
+					</c:list-property>
+				</results>
+			</operation>
+
 			<content name="vdb" displayName="VDB Archive" category="deployable"
 				isCreationType="true">
-
 			</content>
-
 
 			<resource-configuration>
 				<c:group name="general" displayName="General"
@@ -103,6 +286,15 @@
 				</c:group>
 			</resource-configuration>
 
+			<!--
+				<operation name="getProperties" displayName="View VDB properties"
+				description="List the properties of this VDB"> <results>
+				<c:list-property name="list"> <c:map-property name="map">
+				<c:simple-property name="Name" type="string" description="The name
+				of this property" /> <c:simple-property name="Value" type="string"
+				description="The value of this property" /> </c:map-property>
+				</c:list-property> </results> </operation>
+			-->
 
 			<service name="Models" description="Models that map to a datasource"
 				class="ModelComponent" discovery="ModelDiscoveryComponent"

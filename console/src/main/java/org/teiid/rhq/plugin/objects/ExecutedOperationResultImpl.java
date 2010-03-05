@@ -21,12 +21,15 @@
  */
 package org.teiid.rhq.plugin.objects;
 
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.Transient;
 
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
@@ -51,8 +54,6 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 	final static String LISTNAME = "list"; //$NON-NLS-1$
 	
 	final static String MAPNAME = "map"; //$NON-NLS-1$
-
-//	String mapName;
 
 	Object result;
 	
@@ -131,6 +132,8 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 			OperationDefinition opDef = (OperationDefinition) operationsIter
 					.next();
 			if (opDef.getName().equals(operationName)) {
+				if (opDef.getResultsConfigurationDefinition()==null) break;
+					
 				Map propDefs = opDef.getResultsConfigurationDefinition()
 						.getPropertyDefinitions();
 				PropertyDefinition listPropDefinition = (PropertyDefinition) propDefs
@@ -142,7 +145,7 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 						.getPropertyDefinitions();
 				Iterator simplePropertiesIter = simpleProperties.values()
 						.iterator();
-
+				
 				while (simplePropertiesIter.hasNext()) {
 					PropertyDefinition simpleProp = (PropertyDefinition) simplePropertiesIter
 							.next();
@@ -154,5 +157,5 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 				break;
 			}
 		}
-	}	
+	}
 }

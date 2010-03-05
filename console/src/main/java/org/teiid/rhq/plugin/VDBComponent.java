@@ -21,18 +21,24 @@
  */
 package org.teiid.rhq.plugin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hyperic.sigar.test.GetPass;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
+import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.plugin.util.PluginConstants;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
+import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
+import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
 
 
 /**
@@ -51,53 +57,79 @@ public class VDBComponent extends Facet {
 	public String getComponentName() {
 		return PluginConstants.ComponentType.VDB.NAME;
 	}
+	
+	@Override
+	protected void setOperationArguments(String name,
+			Configuration configuration, Map<String, Object> valueMap) {
+		// Parameter logic for VDB Operations
+		if (name.equals(VDB.Operations.KILL_REQUEST)) {
+			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(
+					Operation.Value.REQUEST_ID).getLongValue());
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
+					Operation.Value.SESSION_ID).getLongValue());
+		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
+					Operation.Value.SESSION_ID).getLongValue());
+		} else if (name.equals(Platform.Operations.GET_PROPERTIES)) {
+			String key = ConnectionConstants.IDENTIFIER;
+			valueMap.put(key, getComponentIdentifier());
+		}
 
-	/**
-	 * The plugin container will call this method when your resource component
-	 * has been scheduled to collect some measurements now. It is within this
-	 * method that you actually talk to the managed resource and collect the
-	 * measurement data that is has emitted.
-	 * 
-	 * @see MeasurementFacet#getValues(MeasurementReport, Set)
-	 */
+	}
+
+	@Override
 	public void getValues(MeasurementReport report,
-			Set<MeasurementScheduleRequest> requests) {
+			Set<MeasurementScheduleRequest> requests) throws Exception {
+
+		DQPManagementView view = new DQPManagementView();
+
+		Map<String, Object> valueMap = new HashMap<String, Object>();
+
 		for (MeasurementScheduleRequest request : requests) {
 			String name = request.getName();
+			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
 
-			// TODO: based on the request information, you must collect the
-			// requested measurement(s)
-			// you can use the name of the measurement to determine what you
-			// actually need to collect
+			Object metricReturnObject = view.getMetric(getComponentType(), this
+					.getComponentIdentifier(), name, valueMap);
+
 			try {
-				Number value = new Integer(1); // dummy measurement value -
-												// this should come from the
-												// managed resource
-				report.addData(new MeasurementDataNumeric(request, value
-						.doubleValue()));
+				if (request
+						.getName()
+						.equals(
+								PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
+					report.addData(new MeasurementDataNumeric(request,
+							(Double) metricReturnObject));
+				} else {
+					if (request
+							.getName()
+							.equals(
+									PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
+						report.addData(new MeasurementDataNumeric(request,
+								(Double) metricReturnObject));
+					} else {
+						if (request
+								.getName()
+								.equals(
+										PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+							report.addData(new MeasurementDataNumeric(request,
+									(Double) metricReturnObject));
+						}
+
+					}
+				}
+
 			} catch (Exception e) {
 				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
 						+ "]. Cause: " + e); //$NON-NLS-1$
+				// throw(e);
 			}
 		}
 
-		return;
-	}
-	
-	protected void setOperationArguments(String name, Configuration configuration,
-			Map argumentMap) {
-
-		if (name.equals(ConnectionConstants.ComponentType.Operation.GET_PROPERTIES)){
-			String key = ConnectionConstants.IDENTIFIER;
-			//argumentMap.put(key, getComponentIdentifier());
-		}
- 		
 	}
 
 	@Override
 	String getComponentType() {
-		// TODO Auto-generated method stub
-		return null;
+		return PluginConstants.ComponentType.VDB.NAME;
 	} 
 	
 }
