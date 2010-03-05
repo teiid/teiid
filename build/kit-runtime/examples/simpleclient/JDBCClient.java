@@ -30,37 +30,34 @@ import org.teiid.jdbc.TeiidDataSource;
 
 public class JDBCClient {
 	public static void main(String[] args) throws Exception {
-		if (args.length < 2) {
-			System.out.println("usage: JDBCClient <vdb> <sql-command>");
+		if (args.length < 4) {
+			System.out.println("usage: JDBCClient <host> <port> <vdb> <sql-command>");
 			System.exit(-1);
 		}
 
 		System.out.println("Executing using the TeiidDriver");
-		execute(getDriverConnection(args[0]), args[1]);
+		execute(getDriverConnection(args[0], args[1], args[2]), args[3]);
 
 		System.out.println("");
 		System.out.println("Executing using the TeiidDataSource");
 		// this is showing how to make a Data Source connection. 
-		execute(getDataSourceConnection(args[0]), args[1]);
+		execute(getDataSourceConnection(args[0], args[1], args[2]), args[3]);
 	}
 	
-	static Connection getDriverConnection(String vdb) throws Exception {
-		String url = "jdbc:metamatrix:"+vdb+"@../../deploy.properties";
+	static Connection getDriverConnection(String vdb, String host, String port) throws Exception {
+		String url = "jdbc:metamatrix:"+vdb+"@mm://"+host+":"+port;
 		Class.forName("org.teiid.jdbc.TeiidDriver");
 		
 		return DriverManager.getConnection(url,"admin", "teiid");		
 	}
 	
-	static Connection getDataSourceConnection(String vdb) throws Exception {
+	static Connection getDataSourceConnection(String vdb, String host, String port) throws Exception {
 		TeiidDataSource ds = new TeiidDataSource();
 		ds.setDatabaseName(vdb);
 		ds.setUser("admin");
 		ds.setPassword("teiid");
-		ds.setEmbeddedBootstrapFile("../../deploy.properties");
-		/* Alternatively server mode would be		
-		 * ds.setServerName("localhost");
-		 * ds.setPortNumber(31000);
-		 */
+		ds.setServerName(host);
+		ds.setPortNumber(Integer.valueOf(port));
 		return ds.getConnection();
 	}
 	
