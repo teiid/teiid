@@ -79,22 +79,12 @@
 						<version>2.2-beta-2</version>
 						<configuration>
 							<descriptors>
-                                <!--  
 								<descriptor>build/assembly/src.xml</descriptor>
-                                -->
 								<descriptor>build/assembly/client-jar.xml</descriptor>
                                 <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
-                                
-                                <!--
-								<descriptor>build/assembly/runtime/dependencies.xml</descriptor>
-								<descriptor>build/assembly/runtime/dist.xml</descriptor>
-								<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
-								<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
-                                 
 								<descriptor>documentation/assembly/docs.xml</descriptor>
-                                -->
 							</descriptors>
 							<outputDirectory>target/distribution</outputDirectory>
 							<workDirectory>target/assembly/work</workDirectory>
@@ -493,9 +483,6 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
-        <!-- 
-        <module>txn-jbossts</module>
-        -->
 		<module>test-integration</module>
 		<module>common-core</module>
 		<module>common-internal</module>
@@ -511,7 +498,6 @@
 		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
         <module>jboss-integration</module>
-        <module>jboss-embedded</module>
         
 	</modules>
 	<distributionManagement>
