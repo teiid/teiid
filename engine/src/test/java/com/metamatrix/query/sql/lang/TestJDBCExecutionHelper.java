@@ -22,7 +22,7 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.util;
+package com.metamatrix.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.List;

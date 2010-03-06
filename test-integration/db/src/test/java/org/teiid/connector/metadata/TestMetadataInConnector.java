@@ -1,4 +1,4 @@
-package org.teiid.connector.metadata.runtime;
+package org.teiid.connector.metadata;
 
 import org.junit.Test;
 

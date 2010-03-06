@@ -115,7 +115,7 @@ public class TestStatsCapturingWorkManager {
 				
 			}
 		}, null, 5);
-    	Thread.sleep(10);
+    	Thread.sleep(100);
     	pool.shutdown();
     	pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     	assertEquals(1, result.size());

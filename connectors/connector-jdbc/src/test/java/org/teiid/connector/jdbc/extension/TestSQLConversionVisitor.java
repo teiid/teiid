@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.extension;
+package org.teiid.connector.jdbc.extension;
 
 import static org.junit.Assert.*;
 
@@ -332,7 +332,7 @@ public class TestSQLConversionVisitor {
     @Test public void testPreparedStatementCreationWithSelect() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_id not in ('x', 'y') and part_weight < 6", //$NON-NLS-1$
-                        "SELECT PARTS.PART_NAME FROM PARTS WHERE (PARTS.PART_ID NOT IN (?, ?)) AND (PARTS.PART_WEIGHT < ?)", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID NOT IN (?, ?) AND PARTS.PART_WEIGHT < ?", //$NON-NLS-1$
                         true); 
     }
     

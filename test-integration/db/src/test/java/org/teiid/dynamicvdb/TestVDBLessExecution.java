@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.server.integration;
+package org.teiid.dynamicvdb;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;

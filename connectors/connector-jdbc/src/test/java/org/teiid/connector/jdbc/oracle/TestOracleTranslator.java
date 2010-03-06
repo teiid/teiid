@@ -22,17 +22,15 @@
 
 package org.teiid.connector.jdbc.oracle;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
-import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.jdbc.TranslationHelper;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
@@ -523,11 +521,12 @@ public class TestOracleTranslator {
     
     private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
         OracleSQLTranslator translator = new OracleSQLTranslator();
-        Properties p = new Properties();
+        JDBCManagedConnectionFactory f = new JDBCManagedConnectionFactory();
         if (dbmsTimeZone != null) {
-        	p.setProperty(JDBCPropertyNames.DATABASE_TIME_ZONE, dbmsTimeZone);
+        	f.setDatabaseTimeZone(dbmsTimeZone);
         }
-        translator.initialize(new JDBCManagedConnectionFactory());
+        
+        translator.initialize(f);
         // Convert back to SQL
         TranslatedCommand tc = new TranslatedCommand(context, translator);
         tc.translateCommand(obj);

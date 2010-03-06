@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.systemmodel;
+package org.teiid.systemmodel;
 
 import java.io.File;
 import java.sql.Connection;

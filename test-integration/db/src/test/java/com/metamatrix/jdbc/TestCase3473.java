@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.jdbc.MMDatabaseMetaData;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 import com.metamatrix.jdbc.util.ResultSetUtil;
 

@@ -50,16 +50,15 @@ import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.JDBCCapabilities;
 import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.JDBCPlugin;
-import org.teiid.connector.jdbc.JDBCPropertyNames;
-import org.teiid.connector.language.Command;
+import org.teiid.connector.language.Argument;
 import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Command;
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.LanguageFactory;
 import org.teiid.connector.language.LanguageObject;
 import org.teiid.connector.language.Limit;
 import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.Argument;
 import org.teiid.connector.language.SetQuery;
 import org.teiid.connector.language.Argument.Direction;
 

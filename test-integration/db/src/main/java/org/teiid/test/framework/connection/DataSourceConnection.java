@@ -12,7 +12,6 @@ import javax.sql.DataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
-import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.datasource.DataSourceFactory;
@@ -28,8 +27,8 @@ public class DataSourceConnection extends ConnectionStrategy {
 
     // need both user variables because Teiid uses 'user' and connectors use
     // 'username'
-    public static final String DS_USERNAME = JDBCPropertyNames.USERNAME; //$NON-NLS-1$
-    public static final String DS_PASSWORD = JDBCPropertyNames.PASSWORD; //$NON-NLS-1$
+    public static final String DS_USERNAME = "User"; //$NON-NLS-1$
+    public static final String DS_PASSWORD = "Password"; //$NON-NLS-1$
 
     // the driver is only used for making direct connections to the source, the
     // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE

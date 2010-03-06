@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.server.integration;
+package org.teiid.connector.jdbc.extension;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -50,7 +50,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("sample", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/xmltypes/test.vdb"); //$NON-NLS-1$
+        QueryMetadataInterface metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/test.vdb"); //$NON-NLS-1$
         
         String sql = "select * from testdocument.testDocument";  //$NON-NLS-1$
 

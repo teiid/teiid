@@ -65,46 +65,6 @@
 			<type>test-jar</type>
 		</dependency>
 
-		<!-- internal dependencies that are only used by integration testing -->
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-runtime</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-        </dependency>        
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-loopback</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-text</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-text</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-jdbc</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-jdbc</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
 
 		<!-- external dependencies -->
 		<dependency>
@@ -119,7 +79,19 @@
       		<artifactId>connector-api</artifactId>
       		<scope>provided</scope>
     	</dependency>
-		
+
+        <dependency>
+            <groupId>org.jboss.deployers</groupId>
+            <artifactId>jboss-deployers-vfs-spi</artifactId>
+            <scope>provided</scope>
+        </dependency> 
+        
+        <dependency>    
+            <groupId>org.jboss.deployers</groupId>
+            <artifactId>jboss-deployers-vfs</artifactId>
+            <scope>provided</scope>
+        </dependency>   		
+        
 	</dependencies>
 
   <modules>

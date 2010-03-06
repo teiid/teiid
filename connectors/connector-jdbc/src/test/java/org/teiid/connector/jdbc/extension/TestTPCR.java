@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package com.metamatrix.server.integration;
+package org.teiid.connector.jdbc.extension;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -39,14 +39,11 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 
-/** 
- * @since 4.2
- */
 public class TestTPCR extends BaseQueryTest {
 
     private static final boolean DEBUG = false;
 
-    private static final QueryMetadataInterface METADATA = createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPC_R.vdb");  //$NON-NLS-1$
+    private static final QueryMetadataInterface METADATA = createMetadata(UnitTestUtil.getTestDataPath()+"/TPC_R.vdb");  //$NON-NLS-1$
     
     public TestTPCR(String name) {
         super(name);
@@ -92,7 +89,7 @@ public class TestTPCR extends BaseQueryTest {
         dataMgr.addData("SELECT COUNT(*) FROM TPCR_Ora.CUSTOMER AS g_0 LEFT OUTER JOIN TPCR_Ora.ORDERS AS g_1 ON g_0.C_CUSTKEY = g_1.O_CUSTKEY WHERE (g_1.O_ORDERKEY IS NULL) OR ((g_1.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.C_ACCTBAL > 0))", //$NON-NLS-1$
                        expected);
         
-        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
                 "SELECT count (*)  " + //$NON-NLS-1$
                 "FROM TPCR_Ora.CUSTOMER LEFT OUTER JOIN TPCR_Ora.ORDERS ON C_CUSTKEY = O_CUSTKEY " +  //$NON-NLS-1$
                 "WHERE (O_ORDERKEY IS NULL) OR O_ORDERDATE < '1992-01-02 00:00:00' " +  //$NON-NLS-1$
@@ -138,7 +135,7 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
                 "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
                 "LEFT OUTER JOIN TPCR_SQLS.ORDERS ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
                 "AND O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} " + //$NON-NLS-1$
@@ -178,7 +175,7 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12", new Integer(13) } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50", null } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
+        doProcess(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
                 "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
                 "LEFT OUTER JOIN " + //$NON-NLS-1$
                 "(SELECT O_CUSTKEY, O_ORDERKEY FROM TPCR_SQLS.ORDERS WHERE O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AS X " + //$NON-NLS-1$

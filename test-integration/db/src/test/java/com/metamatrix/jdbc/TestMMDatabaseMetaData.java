@@ -54,6 +54,8 @@ import org.teiid.jdbc.TeiidDriver;
 
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.jdbc.MMConnection;
+import com.metamatrix.jdbc.MMDatabaseMetaData;
 import com.metamatrix.jdbc.util.ResultSetUtil;
 
 /**
