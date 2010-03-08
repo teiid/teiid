@@ -85,9 +85,14 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 			throw new DeploymentException("VDB has validaity errors; failed to deploy");
 		}
 		
-		this.vdbRepository.addVDB(deployment);
-		
-		TransformationMetadata metadata = null;
+		// Add system model to the deployed VDB
+		ModelMetaData system = new ModelMetaData();
+		system.setName(CoreConstants.SYSTEM_MODEL);
+		system.setVisible(true);
+		system.setModelType(Model.Type.PHYSICAL.name());
+		system.addSourceMapping("system", "system");
+		system.setSupportsMultiSourceBindings(false);
+		deployment.addModel(system);
 		
 		// get the metadata store of the VDB (this is build in parse stage)
 		CompositeMetadataStore store = unit.getAttachment(CompositeMetadataStore.class);
@@ -106,6 +111,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
+		TransformationMetadata metadata = null;
 		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);
 		UDFMetaData udf = unit.getAttachment(UDFMetaData.class);
 		if (indexFactory != null) {
@@ -126,6 +132,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 		// add transformation metadata to the repository.
 		this.vdbRepository.addMetadata(deployment, metadata);
 		this.vdbRepository.addMetadataStore(deployment, store);
+		this.vdbRepository.addVDB(deployment);
 		
 		try {
 			saveMetadataStore((VFSDeploymentUnit)unit, deployment, metadata.getMetadataStore());
