@@ -43,8 +43,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 
-import com.metamatrix.core.CoreConstants;
-
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"))
 @XmlAccessorType(XmlAccessType.NONE)
@@ -91,14 +89,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public VDBMetaData() {
 		// auto add sytem model.
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL.name());
-		system.addSourceMapping("system", "system");
-		system.setSupportsMultiSourceBindings(false);
-				
-		addModel(system);
 	}
 
 	@ManagementProperty(description="Name of the VDB", readOnly=true)
