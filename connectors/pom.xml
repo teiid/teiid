@@ -83,8 +83,7 @@
     <module>salesforce-api</module>
     <module>sandbox</module>
     <module>connector-xml</module>
-    <module>connector-xmlsource-file</module>
-    <module>connector-xmlsource-soap</module>
+    <module>connector-xml-file</module>
     <module>connector-xml-soap</module>
     <module>connector-xml-http</module>
   </modules>
