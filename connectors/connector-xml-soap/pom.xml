@@ -7,9 +7,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>connector-xml-soap</artifactId>
-  <name>connector-xmlsource-soap</name>
+  <name>connector-xml-soap</name>
   <version>7.0.0-SNAPSHOT</version>
-  <description>SOAP based XML Source Connector</description>
+  <description>SOAP based XML Connector</description>
   <packaging>rar</packaging>
 
     <dependencies>
@@ -45,6 +45,7 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency> 
+        
         <dependency>
           <groupId>jdom</groupId>
           <artifactId>jdom</artifactId>
@@ -56,6 +57,12 @@
             <artifactId>wsdl4j</artifactId>
             <version>1.6.1</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-metadata</artifactId>
+            <type>test-jar</type>
+        </dependency>        
         
         <dependency>
             <groupId>axis</groupId>
@@ -110,7 +117,7 @@
             <artifactId>xmlsec</artifactId>
             <version>1.3.0</version>
             <scope>test</scope>
-        </dependency>
+        </dependency>          
     </dependencies>
 
     <build>
