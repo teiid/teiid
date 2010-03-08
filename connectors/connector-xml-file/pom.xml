@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid.connectors</groupId>
-  <artifactId>connector-xmlsource-file</artifactId>
+  <artifactId>connector-xml-file</artifactId>
   <name>connector-xmlsource-file</name>
   <version>7.0.0-SNAPSHOT</version>
   <description>File Based XML Source Connector</description>
