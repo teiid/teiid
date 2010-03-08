@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="DynamicPortfolio" version="1">
+
+    <description>A VDB to test transactions</description>
+    
+    <!-- 
+      Setting to use connector supplied metadata. Can be "true" or "cached".  
+      "true" will obtain metadata once for every launch of Teiid. 
+      "cached" will save a file containing the metadata into 
+      the deploy/<vdb name>/<vdb version/META-INF directory
+    -->
+    <property name="UseConnectorMetadata" value="cached" />
+
+
+    <!-- 
+      Each model represents a access to one or more sources.
+      The name of the model will be used as a top level schema name
+      for all of the metadata imported from the connector.
+    
+      NOTE: Multiple model, with different import settings, can be bound to 
+      the same connector binding and will be treated as the same source at
+      runtime. 
+    --> 
+    <model name="MarketData">
+        <!-- 
+            Each of source represents data source that are defined for reading and writing data. 
+            Connectors in Teiid are defined using "xxx-ds.xml" files. The below jndi name refers
+            to one such connector.  Connectors are defined using "connection factory" templates in
+            JBoss. (ex: look at text-connector-ds.xml file)
+        -->
+        <source name="text-connector" jndi-name="java:text-connector"/>
+    </model>
+
+    <model name="Accounts">
+        <!-- 
+          JDBC Import settings 
+          
+          importer.useFullSchemaName directs the importer to drop the source 
+          schema from the Teiid object name, so that the Teiid fully qualified name
+          will be in the form of <model name>.<table name>
+        -->
+        <property name="importer.useFullSchemaName" value="false"/>
+           
+         <!--
+            This connector is defined in the "derby-connector-ds.xml" 
+          -->
+        <source name="derby-connector" jndi-name="java:derby-connector"/>
+    </model>
+
+</vdb>

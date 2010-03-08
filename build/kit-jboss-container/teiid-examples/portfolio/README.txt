@@ -1,0 +1,21 @@
+Install a recent version of Derby - see http://db.apache.org/derby/derby_downloads.html
+
+Create the example dataset in Derby by running <derby home>/bin/ij customer-schema.sql
+
+Put the <derby home>/lib/derbyclient.jar to the "<jboss home>/server/default/lib" directory.
+
+Copy the PortfolioModel/Portolio.vdb file to the "<jboss home>/server/default/deploy" directory.
+
+Copy the Connectors for the example
+	- derby-connector-ds.xml
+	- text-connector-ds.xml
+	- portfolio-ds.xml 
+ 
+Start the JBoss Container
+
+Use the simple client example run script i.e. 
+
+$run.sh portfolio "select * from CustomerAccount"
+
+That will execute the query against the CustomerAccount view in the Portfolio VDB running in Teiid embedded mode. 
+
