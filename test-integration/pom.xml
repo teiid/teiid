@@ -29,11 +29,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-common-internal</artifactId>
-			<type>test-jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
 		</dependency>
 		<dependency>

@@ -29,11 +29,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.security.roles.AuthorizationPolicy;
+import org.teiid.security.roles.AuthorizationRealm;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
-import com.metamatrix.platform.security.api.AuthorizationPolicy;
-import com.metamatrix.platform.security.api.AuthorizationRealm;
 
 /**
  */

@@ -43,9 +43,9 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.NullCryptor;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.service.SessionService;
 
 public class TestCommSockets {
 

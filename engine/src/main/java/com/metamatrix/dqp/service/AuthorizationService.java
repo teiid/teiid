@@ -24,11 +24,12 @@ package com.metamatrix.dqp.service;
 
 import java.util.Collection;
 
+import org.teiid.security.roles.AuthorizationPolicy;
+import org.teiid.security.roles.AuthorizationRealm;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
-import com.metamatrix.platform.security.api.AuthorizationPolicy;
-import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 
 /**

@@ -42,7 +42,6 @@ import org.jboss.managed.api.annotation.ManagementParameter;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.managed.api.annotation.ViewUse;
-import org.teiid.SecurityHelper;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -60,6 +59,7 @@ import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 import org.teiid.dqp.internal.transaction.XidFactory;
 import org.teiid.logging.LogConfigurationProvider;
 import org.teiid.logging.LogListernerProvider;
+import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LogonImpl;
@@ -78,11 +78,11 @@ import com.metamatrix.dqp.client.DQPManagement;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionService;
 
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {

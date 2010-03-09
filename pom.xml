@@ -241,18 +241,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-common-internal</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-common-internal</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-connector-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -485,7 +473,6 @@
 	<modules>
 		<module>test-integration</module>
 		<module>common-core</module>
-		<module>common-internal</module>
 		<module>connector-api</module>
 		<module>client</module>
 		<module>client-jdbc</module>

@@ -38,6 +38,12 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.teiid.security.roles.AuthorizationPolicy;
+import org.teiid.security.roles.AuthorizationPolicyFactory;
+import org.teiid.security.roles.AuthorizationPolicyID;
+import org.teiid.security.roles.AuthorizationRealm;
+import org.teiid.security.roles.BasicAuthorizationPermissionFactory;
+import org.teiid.security.roles.StandardAuthorizationActions;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.core.util.FileUtil;

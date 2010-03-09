@@ -33,7 +33,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.xml.XmlUtil;
 
 
 /** 
@@ -82,7 +81,7 @@ public class TupleInputSource extends InputSource {
                     if (obj != null 
                         && types[i] != DataTypeManager.getDataTypeClass(DataTypeManager.DefaultDataTypes.CLOB) 
                         && types[i] != DataTypeManager.getDataTypeClass(DataTypeManager.DefaultDataTypes.BLOB)) {
-                        value = XmlUtil.escapeCharacterData(obj.toString());                    
+                        value = obj.toString();                    
                     }
                     saxHandler.characters (value.toCharArray(), 0, value.length());
                     saxHandler.endElement(nsURI, element, element);                           

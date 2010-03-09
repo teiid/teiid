@@ -22,6 +22,8 @@
 
 package com.metamatrix.platform.security.api;
 
+import org.teiid.security.roles.AuthorizationRealm;
+
 import junit.framework.TestCase;
 
 public class TestAuthorizationRealm extends TestCase {

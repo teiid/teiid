@@ -32,9 +32,9 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionService;
 
 public class TestLogonImpl extends TestCase {
 

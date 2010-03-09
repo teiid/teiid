@@ -34,10 +34,10 @@ import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentGroup;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentMetaData;
-import org.teiid.SecurityHelper;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.security.SecurityHelper;
 
 public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<ManagedConnectionFactoryDeploymentGroup> implements ManagedObjectCreator {
 	protected Logger log = Logger.getLogger(getClass());

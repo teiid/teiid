@@ -1,2 +1,0 @@
--- DB2 script. Truncate view1 cache table.
-ALTER TABLE materializationStageTableNameInSrc activate not logged initially with empty table;

@@ -22,12 +22,18 @@
 
 package com.metamatrix.platform.security.api;
 
+import org.teiid.security.roles.AuthorizationPermission;
+import org.teiid.security.roles.AuthorizationRealm;
+import org.teiid.security.roles.BasicAuthorizationPermission;
+import org.teiid.security.roles.BasicAuthorizationPermissionFactory;
+import org.teiid.security.roles.RolePermissionFactory;
+import org.teiid.security.roles.StandardAuthorizationActions;
+
 import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import com.metamatrix.platform.security.util.RolePermissionFactory;
 
 /**
  * <p>Test cases for {@link BasicAuthorizationPermission} class. </p>

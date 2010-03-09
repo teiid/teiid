@@ -41,7 +41,6 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.managed.api.annotation.ViewUse;
-import org.teiid.SecurityHelper;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
@@ -55,6 +54,7 @@ import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;

@@ -1,4 +1,0 @@
--- MySQL script. Swap view1 cache tables.
-RENAME TABLE materializationTableNameInSrc TO materializationTableNameInSrc_TEMP;
-RENAME TABLE materializationStageTableNameInSrc TO materializationTableNameInSrc;
-RENAME TABLE materializationTableNameInSrc_TEMP TO materializationStageTableNameInSrc;

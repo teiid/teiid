@@ -32,9 +32,9 @@ import javax.security.auth.login.LoginException;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.security.Credentials;
 import org.teiid.services.TeiidLoginContext;
 
-import com.metamatrix.platform.security.api.Credentials;
 
 public class TestMembershipServiceImpl extends TestCase {
     

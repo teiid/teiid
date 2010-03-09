@@ -38,12 +38,12 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.teiid.SecurityHelper;
+import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.platform.security.api.Credentials;
 
 /**
  * This class serves as the primary implementation of the

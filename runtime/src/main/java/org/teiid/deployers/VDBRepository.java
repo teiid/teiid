@@ -39,7 +39,6 @@ import org.teiid.metadata.TransformationMetadata;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**

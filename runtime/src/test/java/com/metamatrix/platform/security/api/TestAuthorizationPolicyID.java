@@ -22,6 +22,9 @@
 
 package com.metamatrix.platform.security.api;
 
+import org.teiid.security.roles.AuthorizationPolicyID;
+import org.teiid.security.roles.AuthorizationRealm;
+
 import junit.framework.TestCase;
 
 /**

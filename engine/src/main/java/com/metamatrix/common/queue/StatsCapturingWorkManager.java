@@ -44,11 +44,11 @@ import javax.resource.spi.work.WorkRejectedException;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 
-import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
+import com.metamatrix.query.QueryPlugin;
 
 /**
  * StatsCapturingWorkManager acts as a wrapper to the passed in {@link WorkManager} to 
@@ -192,7 +192,7 @@ public class StatsCapturingWorkManager {
 		}
 		if (atMaxThreads) {
 			if (newMaxQueueSize && maximumPoolSize > 1) {
-				LogManager.logWarning(LogConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_POOLING, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
 			}
 			return;
 		}

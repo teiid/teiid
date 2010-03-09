@@ -28,7 +28,7 @@ import java.security.Principal;
 import javax.security.auth.Subject;
 
 import org.jboss.security.SecurityContext;
-import org.teiid.SecurityHelper;
+import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
 

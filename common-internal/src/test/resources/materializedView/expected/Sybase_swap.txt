@@ -1,4 +1,0 @@
--- Sybase script. Swap view1 cache tables.
-EXEC sp_rename 'materializationTableNameInSrc', 'materializationTableNameInSrc_TEMP';
-EXEC sp_rename 'materializationStageTableNameInSrc', 'materializationTableNameInSrc';
-EXEC sp_rename 'materializationTableNameInSrc_TEMP', 'materializationStageTableNameInSrc';

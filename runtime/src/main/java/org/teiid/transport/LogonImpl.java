@@ -30,6 +30,7 @@ import javax.security.auth.login.LoginException;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.security.Credentials;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -42,11 +43,10 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.platform.security.api.Credentials;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionService;
 
 public class LogonImpl implements ILogon {
 	

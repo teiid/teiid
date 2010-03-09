@@ -111,6 +111,20 @@ public class TestSqlEval extends TestCase {
         assertEquals("Wrong Results", expected, actual); //$NON-NLS-1$
     }
     
+    public void testEntityInResults() throws Exception { 
+        // Create query 
+        String sql = "SELECT '&', '<'"; //$NON-NLS-1$
+        
+        String expected ="<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><row><expr>&amp;</expr><expr1>&lt;</expr1></row></results>"; //$NON-NLS-1$
+                
+        // Construct data manager with data
+        FakeDataManager dataMgr = new FakeDataManager();
+        FakeDataStore.sampleData1(dataMgr);
+        
+        String actual = helpProcess(sql, FakeMetadataFactory.example1Cached(), dataMgr);
+        assertEquals("Wrong Results", expected, actual); //$NON-NLS-1$
+    }
+    
     public void testXMLResult() throws Exception {
         String sql = "SELECT * FROM xmltest.doc1"; //$NON-NLS-1$
         

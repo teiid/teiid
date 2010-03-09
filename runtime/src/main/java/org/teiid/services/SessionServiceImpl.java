@@ -41,11 +41,13 @@ import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
-import org.teiid.SecurityHelper;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.SessionServiceException;
@@ -55,10 +57,8 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
-import com.metamatrix.platform.security.api.Credentials;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionService;
 
 /**
  * This class serves as the primary implementation of the Session Service.

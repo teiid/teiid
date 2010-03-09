@@ -40,7 +40,6 @@ import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.Xid;
 
-import org.teiid.SecurityHelper;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -48,6 +47,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -75,10 +75,10 @@ import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.CommandLogMessage;
+import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.platform.security.api.service.SessionService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
