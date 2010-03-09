@@ -193,7 +193,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
-								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameter.Type.ResultSet.toString(), false, 
+								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
 										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
 							}
 						}

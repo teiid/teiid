@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package com.metamatrix.jdbc;
+package org.teiid.logging;
 
 import java.util.HashSet;
 import java.util.Set;

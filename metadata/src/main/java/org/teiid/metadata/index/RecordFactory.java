@@ -805,9 +805,6 @@ public class RecordFactory {
         case MetadataConstants.PARAMETER_TYPES.OUT_PARM:
         	type = ProcedureParameter.Type.Out;
         	break;
-        case MetadataConstants.PARAMETER_TYPES.RESULT_SET:
-        	type = ProcedureParameter.Type.ResultSet;
-        	break;
         case MetadataConstants.PARAMETER_TYPES.RETURN_VALUE:
         	type = ProcedureParameter.Type.ReturnValue;
         	break;

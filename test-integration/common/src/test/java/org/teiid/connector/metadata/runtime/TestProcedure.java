@@ -74,16 +74,9 @@ public class TestProcedure extends TestCase {
         String[] nameInSource = new String[] { "Param name in source", null, null, null }; //$NON-NLS-1$
         ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In, ProcedureParameter.Type.Out, ProcedureParameter.Type.InOut, ProcedureParameter.Type.ReturnValue };
         int[] index = new int[] { 1, 2, 3, 4 };
-        Class[] type = new Class[] { Integer.class, Long.class, Short.class, java.sql.Date.class };        
+        Class<?>[] type = new Class[] { Integer.class, Long.class, Short.class, java.sql.Date.class };        
         
-        List<ProcedureParameter> params = proc.getParameters();        
-        for (int i = 0; i < params.size(); i++) {
-        	ProcedureParameter param = params.get(i);
-            assertEquals(nameInSource[i], param.getNameInSource());
-            assertEquals(direction[i], param.getType());
-            assertEquals(index[i], param.getPosition());
-            assertEquals(type[i], param.getJavaType());
-        }
+        checkParams(proc, nameInSource, direction, index, type);
                 
     }   
     
@@ -91,22 +84,14 @@ public class TestProcedure extends TestCase {
         Procedure proc = getProcedure("ConnectorMetadata.TestProc2", 1, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
         assertEquals(null, proc.getNameInSource());
         
-        String[] nameInSource = new String[] { null, "Result set name in source" }; //$NON-NLS-1$
-        ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In, ProcedureParameter.Type.ResultSet };
-        int[] index = new int[] { 1, 2 };
-        Class[] type = new Class[] { String.class, java.sql.ResultSet.class };        
+        String[] nameInSource = new String[] { null };
+        ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In };
+        int[] index = new int[] { 1 };
+        Class<?>[] type = new Class[] { String.class };        
         
-        List<ProcedureParameter> params = proc.getParameters();        
-        for (int i = 0; i < params.size(); i++) {
-        	ProcedureParameter param = params.get(i);
-            assertEquals(nameInSource[i], param.getNameInSource());
-            assertEquals(direction[i], param.getType());
-            assertEquals(index[i], param.getPosition());
-            assertEquals(type[i], param.getJavaType());
-        }
+        checkParams(proc, nameInSource, direction, index, type);
         
-        ProcedureParameter param = params.get(1);
-        List<Column> rsCols = param.getResultSetColumns();
+        List<Column> rsCols = proc.getResultSet().getColumns();
         // Check first column of result set
         assertEquals(2, rsCols.size());
         Column elemID = rsCols.get(0);
@@ -114,20 +99,35 @@ public class TestProcedure extends TestCase {
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol1", elemID.getFullName());         //$NON-NLS-1$
         assertEquals("Result set column name in source", elemID.getNameInSource());         //$NON-NLS-1$
         assertEquals(java.sql.Timestamp.class, elemID.getJavaType());
-        assertEquals(0, elemID.getPosition());
+        assertEquals(1, elemID.getPosition());
         
         Column elemID2 = rsCols.get(1);        
         assertEquals("RSCol2", elemID2.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol2", elemID2.getFullName());         //$NON-NLS-1$
         assertEquals(null, elemID2.getNameInSource());         
         assertEquals(String.class, elemID2.getJavaType());
-        assertEquals(1, elemID2.getPosition());
+        assertEquals(2, elemID2.getPosition());
         Properties props = new Properties();
         props.put("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
         
         // failing because default extension properties aren't in the VDB file
         //assertEquals(props, e2.getProperties());
 
-    }   
+    }
+
+	private List<ProcedureParameter> checkParams(Procedure proc,
+			String[] nameInSource, ProcedureParameter.Type[] direction,
+			int[] index, Class<?>[] type) {
+		List<ProcedureParameter> params = proc.getParameters();
+		assertEquals(type.length, params.size());
+        for (int i = 0; i < params.size(); i++) {
+        	ProcedureParameter param = params.get(i);
+            assertEquals(nameInSource[i], param.getNameInSource());
+            assertEquals(direction[i], param.getType());
+            assertEquals(index[i], param.getPosition());
+            assertEquals(type[i], param.getJavaType());
+        }
+		return params;
+	}   
     
 }

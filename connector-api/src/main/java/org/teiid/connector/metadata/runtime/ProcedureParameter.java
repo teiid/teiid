@@ -22,10 +22,6 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.util.Collections;
-import java.util.List;
-
-
 /**
  * ProcedureParameterRecordImpl
  */
@@ -35,7 +31,6 @@ public class ProcedureParameter extends BaseColumn {
 		Unknown,
 		In,
 		InOut,
-		ResultSet,
 		Out,
 		ReturnValue
 	}
@@ -69,15 +64,4 @@ public class ProcedureParameter extends BaseColumn {
 		return this.procedure;
 	}
 
-	/**
-	 * Get the result set columns only if this parameter represents a result set.
-	 * @return
-	 */
-	public List<Column> getResultSetColumns() {
-		if (this.type == Type.ResultSet) {
-			return this.procedure.getResultSet().getColumns();
-		}
-		return Collections.emptyList();
-	}
-    
 }

@@ -45,7 +45,8 @@ import com.metamatrix.query.execution.QueryExecPlugin;
  */
 public class FileStorageManager implements StorageManager {
 	
-    private static final int DEFAULT_MAX_OPEN_FILES = 128;
+	public static final int DEFAULT_MAX_OPEN_FILES = 64;
+	public static final long DEFAULT_MAX_FILESIZE = 2L * 1024L;
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
 	private class FileInfo {
@@ -72,10 +73,12 @@ public class FileStorageManager implements StorageManager {
         }
         
         public void delete()  {
-        	RandomAccessFile raf = fileCache.remove(this.file);
-        	if (raf != null) {
+        	if (fileData == null) {
+        		fileData = fileCache.remove(this.file);
+        	}
+        	if (fileData != null) {
         		try {
-					raf.close();
+        			fileData.close();
 				} catch (IOException e) {
 				}
         	}
@@ -95,21 +98,29 @@ public class FileStorageManager implements StorageManager {
 			this.name = name;
 		}
 	    
-	    public synchronized int readDirect(long fileOffset, byte[] b, int offSet, int length) throws MetaMatrixComponentException {
+	    /**
+	     * Concurrent reads are possible, but only after writing is complete.
+	     */
+	    public int readDirect(long fileOffset, byte[] b, int offSet, int length) throws MetaMatrixComponentException {
 	    	Map.Entry<Long, FileInfo> entry = storageFiles.floorEntry(fileOffset);
-			Assertion.isNotNull(entry);
+	    	Assertion.isNotNull(entry);
 			FileInfo fileInfo = entry.getValue();
-			try {
-				RandomAccessFile fileAccess = fileInfo.open();
-		        fileAccess.seek(fileOffset - entry.getKey());
-		        return fileAccess.read(b, offSet, length);
-			} catch (IOException e) {
-				throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
-			} finally {
-				fileInfo.close();
+			synchronized (fileInfo) {
+				try {
+					RandomAccessFile fileAccess = fileInfo.open();
+			        fileAccess.seek(fileOffset - entry.getKey());
+			        return fileAccess.read(b, offSet, length);
+				} catch (IOException e) {
+					throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
+				} finally {
+					fileInfo.close();
+				}
 			}
 	    }
 
+	    /**
+	     * Concurrent writes are prevented by FileStore, but in general should not happen since processing is single threaded.
+	     */
 		public void writeDirect(byte[] bytes, int offset, int length) throws MetaMatrixComponentException {
 			Map.Entry<Long, FileInfo> entry = this.storageFiles.lastEntry();
 			boolean createNew = false;
@@ -153,7 +164,7 @@ public class FileStorageManager implements StorageManager {
 
     // Initialization
     private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
-    private long maxFileSize = 2L * 1024L * 1024L * 1024L; // 2GB
+    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024L * 1024L; // 2GB
     private String directory;
     private File dirFile;
 

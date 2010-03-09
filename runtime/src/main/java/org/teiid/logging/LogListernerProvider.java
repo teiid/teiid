@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.jdbc;
+package org.teiid.logging;
 
 import org.apache.log4j.Logger;
 

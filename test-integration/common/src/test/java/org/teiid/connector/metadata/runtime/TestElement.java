@@ -79,7 +79,7 @@ public class TestElement extends TestCase {
         assertEquals(javaType, element.getJavaType());
         assertEquals(length, element.getLength());
         assertEquals(nullable, element.getNullType());
-        assertEquals(position, element.getPosition());
+        assertEquals(position + 1, element.getPosition());
         assertEquals(searchable, element.getSearchType());
         assertEquals(autoIncrement, element.isAutoIncremented());
         assertEquals(caseSensitive, element.isCaseSensitive());      

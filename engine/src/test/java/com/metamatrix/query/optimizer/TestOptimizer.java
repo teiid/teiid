@@ -6716,7 +6716,7 @@ public class TestOptimizer {
     	"	) AS A" + //$NON-NLS-1$
     	") AS A"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {});
+        helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {});
     }
          
     /**
@@ -6741,7 +6741,7 @@ public class TestOptimizer {
     	"	) AS A" + //$NON-NLS-1$
     	") AS A"; //$NON-NLS-1$
 
-    	helpPlan(sql, FakeMetadataFactory.example1(), new String[] {});
+    	helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {});
     }
 
     /**
@@ -6761,7 +6761,7 @@ public class TestOptimizer {
     	"   SELECT e2 AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
     	") AS A"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
+        helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
     }
          
     /**
@@ -6783,7 +6783,9 @@ public class TestOptimizer {
     	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
     	") AS A"; //$NON-NLS-1$
 
-        helpPlan(sql, FakeMetadataFactory.example1(), new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
+    	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+
+        helpPlan(sql, metadata, new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
 
         // Add convert capability to pm1 and try it again
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -6791,8 +6793,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-
+        
         helpPlan(sql, metadata, null, capFinder,
             new String[] {"SELECT CONVERT(CONVERT(e2, long), biginteger) FROM pm1.g1 AS A"}, //$NON-NLS-1$
             SHOULD_SUCCEED );

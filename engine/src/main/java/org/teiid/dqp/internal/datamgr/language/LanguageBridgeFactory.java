@@ -47,9 +47,9 @@ import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.Not;
 import org.teiid.connector.language.QueryExpression;
+import org.teiid.connector.language.SearchedCase;
 import org.teiid.connector.language.SearchedWhenClause;
 import org.teiid.connector.language.Select;
-import org.teiid.connector.language.SearchedCase;
 import org.teiid.connector.language.SortSpecification;
 import org.teiid.connector.language.SubqueryComparison;
 import org.teiid.connector.language.SubqueryIn;
@@ -503,8 +503,7 @@ public class LanguageBridgeFactory {
     }
 
     ColumnReference translate(ElementSymbol symbol) throws MetaMatrixComponentException {
-        ColumnReference element = null;
-        element = new ColumnReference(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
+        ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
             return element;
         }
@@ -622,7 +621,7 @@ public class LanguageBridgeFactory {
             translatedParameters.add(arg);
         }
                         
-        Call call = new Call(sp.getProcedureName(), translatedParameters, proc);
+        Call call = new Call(removeSchemaName(sp.getProcedureName()), translatedParameters, proc);
         call.setReturnType(returnType);
         return call;
     }
@@ -634,6 +633,7 @@ public class LanguageBridgeFactory {
             alias = symbol.getOutputName();
             fullGroup = symbol.getOutputDefinition();
         }
+        fullGroup = removeSchemaName(fullGroup);
         NamedTable group = new NamedTable(fullGroup, alias, null);
 		if (symbol.getMetadataID() instanceof TempMetadataID) {
 			return group;
@@ -646,6 +646,15 @@ public class LanguageBridgeFactory {
         }
         return group;
     }
+
+	private String removeSchemaName(String fullGroup) {
+		//remove the model name
+        int index = fullGroup.indexOf(ElementSymbol.SEPARATOR);
+        if (index > 0) {
+        	fullGroup = fullGroup.substring(index + 1);
+        }
+		return fullGroup;
+	}
     
     /* Batched Updates */
     BatchedUpdates translate(BatchedUpdateCommand command) throws MetaMatrixComponentException {

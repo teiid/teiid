@@ -80,6 +80,10 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
         return radix;
     }
 
+    /**
+     * 1 based ordinal position
+     * @return
+     */
     public int getPosition() {
         return position;
     }

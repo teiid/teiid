@@ -426,7 +426,14 @@ public class FakeMetadataFactory {
         QueryNode vm1g38n1 = new QueryNode("vm1.g38", "SELECT a.e1, b.e2 from pm1.g1 as a, pm6.g1 as b where a.e1=b.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g38 = createVirtualGroup("vm1.g38", vm1, vm1g38n1); //$NON-NLS-1$
         
+		// Create virtual groups
+		QueryNode vm1g39n1 = new QueryNode("vm1.g39", "SELECT * FROM pm1.g39"); //$NON-NLS-1$ //$NON-NLS-2$
+		FakeMetadataObject vm1g39 = createUpdatableVirtualGroup("vm1.g39", vm1, vm1g39n1, "CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; update pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
+        
 		// Create virtual elements
+		List vm1g39e = createElements(vm1g39, 
+			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 		List vm1g1e = createElements(vm1g1, 
 			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -1495,6 +1502,8 @@ public class FakeMetadataFactory {
         store.addObject(vsp60);
         store.addObject(vsp61);
         store.addObject(vsp62);
+		store.addObject(vm1g39);
+		store.addObjects(vm1g39e);
                 
 		// Create the facade from the store
 		return new FakeMetadataFacade(store);
@@ -1578,138 +1587,7 @@ public class FakeMetadataFactory {
         return doc;
     }    
     
-	public static FakeMetadataFacade example2() { 
-		// Create models
-		FakeMetadataObject pm1 = createPhysicalModel("pm1"); //$NON-NLS-1$
-		FakeMetadataObject pm2 = createPhysicalModel("pm2"); //$NON-NLS-1$
-        FakeMetadataObject pm3 = createPhysicalModel("pm3"); //$NON-NLS-1$
-        FakeMetadataObject pm4 = createPhysicalModel("pm4"); //$NON-NLS-1$
-		FakeMetadataObject vm1 = createVirtualModel("vm1");	 //$NON-NLS-1$
-
-		// Create physical groups
-		FakeMetadataObject pm1g1 = createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
-		FakeMetadataObject pm1g2 = createPhysicalGroup("pm1.g2", pm1); //$NON-NLS-1$
-		FakeMetadataObject pm1g3 = createPhysicalGroup("pm1.g3", pm1); //$NON-NLS-1$
-		FakeMetadataObject pm2g1 = createPhysicalGroup("pm2.g1", pm2); //$NON-NLS-1$
-		FakeMetadataObject pm2g2 = createPhysicalGroup("pm2.g2", pm2); //$NON-NLS-1$
-		FakeMetadataObject pm2g3 = createPhysicalGroup("pm2.g3", pm2); //$NON-NLS-1$
-        FakeMetadataObject pm3g1 = createPhysicalGroup("pm3.g1", pm3); //$NON-NLS-1$
-        FakeMetadataObject pm3g2 = createPhysicalGroup("pm3.g2", pm3); //$NON-NLS-1$
-        FakeMetadataObject pm4g1 = createPhysicalGroup("pm4.g1", pm4); //$NON-NLS-1$
-				
-		// Create physical elements
-		List pm1g1e = createElements(pm1g1, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm1g2e = createElements(pm1g2, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm1g3e = createElements(pm1g3, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm2g1e = createElements(pm2g1, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm2g2e = createElements(pm2g2, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm2g3e = createElements(pm2g3, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List pm3g1e = createElements(pm3g1, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
-		List pm3g2e = createElements(pm3g2, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
-        List pm4g1e = createElements(pm4g1, 
-            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-
-		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1, "CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; update pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
-
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT pm1.g3.e1 AS x, pm1.g3.e2 AS y from pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
-		FakeMetadataObject vm1g3 = createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
-	
-		// Create virtual elements
-		List vm1g1e = createElements(vm1g1, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List vm1g2e = createElements(vm1g2, 
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List vm1g3e = createElements(vm1g3,
-			new String[] { "e1", "e2","x", "y" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-			
-		// Add all objects to the store
-		FakeMetadataStore store = new FakeMetadataStore();
-		store.addObject(pm1);
-		store.addObject(pm1g1);		
-		store.addObjects(pm1g1e);
-		store.addObject(pm1g2);		
-		store.addObjects(pm1g2e);
-		store.addObject(pm1g3);	
-		store.addObjects(pm1g3e);
-        	
-		store.addObject(pm2);
-		store.addObject(pm2g1);		
-		store.addObjects(pm2g1e);
-		store.addObject(pm2g2);		
-		store.addObjects(pm2g2e);
-		store.addObject(pm2g3);		
-		store.addObjects(pm2g3e);
-        
-		store.addObject(pm3);
-        store.addObject(pm3g1);
-        store.addObjects(pm3g1e);
-        store.addObject(pm3g2);
-        store.addObjects(pm3g2e);
-
-        store.addObject(pm4);
-        store.addObject(pm4g1);
-        store.addObjects(pm4g1e);
-        
-		store.addObject(vm1);
-		store.addObject(vm1g1);
-		store.addObjects(vm1g1e);
-		store.addObject(vm1g2);
-		store.addObjects(vm1g2e);
-		store.addObject(vm1g3);
-		store.addObjects(vm1g3e);
-						
-		// Create the facade from the store
-		return new FakeMetadataFacade(store);
-	}
-
-    public static FakeMetadataFacade example6() { 
-        // Create models
-        FakeMetadataObject pm1 = createPhysicalModel("pm1"); //$NON-NLS-1$
-
-        // Create physical groups
-        FakeMetadataObject pm1g1 = createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
-            
-        // Create physical elements
-        List pm1g1e = createElements(pm1g1, 
-            new String[] { "e1"}, //$NON-NLS-1$ 
-            new String[] { DataTypeManager.DefaultDataTypes.SHORT});
- 
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(pm1);
-        store.addObject(pm1g1);     
-        store.addObjects(pm1g1e);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }
-    	
-	public static FakeMetadataFacade example3() {
+    public static FakeMetadataFacade example3() {
 		// Create models
 		FakeMetadataObject pm1 = createPhysicalModel("pm1"); //$NON-NLS-1$
 		FakeMetadataObject pm2 = createPhysicalModel("pm2"); //$NON-NLS-1$
@@ -2134,40 +2012,6 @@ public class FakeMetadataFactory {
     public static TransformationMetadata exampleBQT() { 
     	return RealMetadataFactory.exampleBQT();
     }
-
-    public static FakeMetadataFacade exampleSymphony() { 
-        // Create models
-        FakeMetadataObject model = createPhysicalModel("COMPLEX"); //$NON-NLS-1$
-        
-        // Create physical groups
-        FakeMetadataObject sales_g = createPhysicalGroup("COMPLEX.sales", model); //$NON-NLS-1$
-        FakeMetadataObject cust_g = createPhysicalGroup("COMPLEX.cust", model); //$NON-NLS-1$
-        FakeMetadataObject prodhier_g = createPhysicalGroup("COMPLEX.prodhier", model); //$NON-NLS-1$
-                
-        // Create physical elements
-        List sales_e = createElements(sales_g, 
-            new String[] { "sales_amount", "month_no", "year_no", "prod_num", "cust_num" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-            new String[] { DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
-        List cust_e = createElements(cust_g, 
-            new String[] { "cust_name", "cust_num" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-        List prodhier_e = createElements(prodhier_g, 
-            new String[] { "prod_fam_name", "prod_num" }, //$NON-NLS-1$ //$NON-NLS-2$
-            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(model);
-        store.addObject(sales_g);     
-        store.addObjects(sales_e);
-        store.addObject(cust_g);     
-        store.addObjects(cust_e);
-        store.addObject(prodhier_g);     
-        store.addObjects(prodhier_e);
-
-        // Create the facade from the store
-        return new FakeMetadataFacade(store);
-    }       
 
     public static FakeMetadataFacade exampleYahoo() { 
         // Create models

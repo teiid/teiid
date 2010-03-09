@@ -49,7 +49,7 @@ public class TestProcedureImpl extends TestCase {
     }
     
     public void testGetProcedureName() throws Exception {
-        assertEquals("pm1.sq3", example().getProcedureName()); //$NON-NLS-1$
+        assertEquals("sq3", example().getProcedureName()); //$NON-NLS-1$
     }
 
     public void testGetParameters() throws Exception {

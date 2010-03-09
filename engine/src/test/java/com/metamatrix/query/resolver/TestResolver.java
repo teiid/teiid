@@ -2005,10 +2005,9 @@ public class TestResolver {
      * Test for defect 12087 - Insert with implicit conversion from integer to short
      */
     @Test public void testImplConversionBetweenIntAndShort() throws Exception {       
-        Command command = QueryParser.getQueryParser().parseCommand("Insert into pm1.g1(e1) Values(convert(100, short))"); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example6();
-        
+    	Insert command = (Insert)QueryParser.getQueryParser().parseCommand("Insert into pm5.g3(e2) Values(100)"); //$NON-NLS-1$
         QueryResolver.resolveCommand(command, metadata);
+        assertTrue(((Expression)command.getValues().get(0)).getType() == DataTypeManager.DefaultDataClasses.SHORT);
     }
     
     public static FakeMetadataFacade example_12968() { 

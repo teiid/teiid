@@ -89,7 +89,7 @@ public class TestResolvedFunctions extends TestCase {
                                               BlockedException,
                                               MetaMatrixComponentException, QueryResolverException {
         Expression expr = QueryParser.getQueryParser().parseExpression(sql);
-        ResolverVisitor.resolveLanguageObject(expr, FakeMetadataFactory.example1());
+        ResolverVisitor.resolveLanguageObject(expr, FakeMetadataFactory.example1Cached());
         return Evaluator.evaluate(expr);
     }
     

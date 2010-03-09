@@ -692,7 +692,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(Tokens.SPACE);
         }
         append(obj.getDerivedColumns());
-        if (obj.getFrom() != null) {
+        if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
         	buffer.append(Tokens.SPACE).append(SQLReservedWords.FROM).append(Tokens.SPACE);      
             append(obj.getFrom());
         }

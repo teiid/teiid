@@ -35,7 +35,7 @@ public class DQPConfiguration{
     static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
     static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
-    static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
+    public static final int DEFAULT_MAX_PROCESS_WORKERS = 16;
 	
     
 	private String processName = "localhost";

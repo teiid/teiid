@@ -97,7 +97,7 @@ public class TestParams extends TestCase {
         assertEquals(length, p.getLength());
         assertEquals(precision, p.getPrecision());
         assertEquals(scale, p.getScale());
-        assertEquals(null, param.getArgumentValue());
+        assertEquals(null, param.getArgumentValue().getValue());
 
         //System.out.println("\n" + p.getModeledType() + "\n" + p.getModeledBaseType() + "\n" + p.getModeledPrimitiveType());
         

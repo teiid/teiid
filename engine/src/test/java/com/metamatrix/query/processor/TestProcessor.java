@@ -6209,10 +6209,10 @@ public class TestProcessor {
     }
     
     @Test public void testUpdatesInLoop() { 
-        String sql = "update vm1.g1 set vm1.g1.e2=3"; //$NON-NLS-1$ 
+        String sql = "update vm1.g39 set e2=3"; //$NON-NLS-1$ 
  
         // Plan query 
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example2());        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());        
 
         // Construct data manager with data 
         HardcodedDataManager dataManager = new HardcodedDataManager(); 

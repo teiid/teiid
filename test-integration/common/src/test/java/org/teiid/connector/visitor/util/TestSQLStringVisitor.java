@@ -39,7 +39,6 @@ import org.teiid.connector.language.Function;
 import org.teiid.connector.language.Insert;
 import org.teiid.connector.language.LanguageObject;
 import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
@@ -69,17 +68,10 @@ import org.teiid.dqp.internal.datamgr.language.TestSubqueryCompareCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSubqueryInCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
-import com.metamatrix.query.unittest.FakeMetadataStore;
 
 public class TestSQLStringVisitor  {
 
@@ -89,31 +81,6 @@ public class TestSQLStringVisitor  {
         return SQLStringVisitor.getSQLString(obj);
     }
     
-    private String getString(LanguageObject obj, RuntimeMetadata metadata) {
-        return SQLStringVisitor.getSQLString(obj);
-    }
-        
-    /** create fake BQT metadata to test this case, name in source is important */
-    private RuntimeMetadataImpl exampleRuntimeMetadata(QueryMetadataInterface metadata) {  
-        return new RuntimeMetadataImpl(metadata);
-    }
-    
-    /** create fake BQT metadata to test this case, name in source is important */
-    private FakeMetadataStore exampleMetadataStore() {  
-        // Create models
-        FakeMetadataObject bqt1 = FakeMetadataFactory.createPhysicalModel("BQT1"); //$NON-NLS-1$
-        FakeMetadataObject bqt1SmallA = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallA", bqt1); //$NON-NLS-1$
-        bqt1SmallA.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "SmallishA");//$NON-NLS-1$
-        FakeMetadataObject doubleNum = FakeMetadataFactory.createElement("DoubleNum", bqt1SmallA, DataTypeManager.DefaultDataTypes.DOUBLE, 0); //$NON-NLS-1$
-        doubleNum.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "doublishNum");//$NON-NLS-1$
-
-        FakeMetadataStore store = new FakeMetadataStore();
-        store.addObject(bqt1);
-        store.addObject(bqt1SmallA);
-        store.addObject(doubleNum);
-        return store;
-    }
-
     /*
      * Test for void visit(IAggregate)
      */
@@ -158,7 +125,7 @@ public class TestSQLStringVisitor  {
      * Test for void visit(IDelete)
      */
     @Test public void testVisitIDelete() throws Exception {
-        String expected = "DELETE FROM g1 WHERE (100 >= 200) AND (500 < 600)"; //$NON-NLS-1$
+        String expected = "DELETE FROM g1 WHERE 100 >= 200 AND 500 < 600"; //$NON-NLS-1$
         assertEquals(expected, getString(TestDeleteImpl.example()));
     }
     
@@ -182,7 +149,7 @@ public class TestSQLStringVisitor  {
      * Test for void visit(IExistsCriteria)
      */
     @Test public void testVisitIExistsCriteria() throws Exception {
-        String expected = "EXISTS (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
+        String expected = "EXISTS (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestExistsCriteriaImpl.example()));
     }
 
@@ -193,21 +160,6 @@ public class TestSQLStringVisitor  {
         // TODO more thorough testing needed for built-in operators
         String expected = "testName(100, 200)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestFunctionImpl.example("testName"))); //$NON-NLS-1$
-    }
-    
-    @Test public void testVisitConvertFunctionOracleStyleWithNIS() throws Exception {
-        
-        FakeMetadataFacade facade = new FakeMetadataFacade(exampleMetadataStore());
-        RuntimeMetadataImpl metadata = exampleRuntimeMetadata(facade);
-
-        NamedTable g = new NamedTable("SmallA", null, metadata.getGroup("BQT1.SmallA")); //$NON-NLS-1$
-        ColumnReference e = new ColumnReference(g, "DoubleNum", metadata.getElement("DoubleNum"), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
-        List<? extends Expression> params = Arrays.asList(e, new Literal("integer", String.class)); //$NON-NLS-1$
-        
-        final String expected = "convert(SmallishA.doublishNum, integer)"; //$NON-NLS-1$
-        Function test = new Function("convert", params, Integer.class); //$NON-NLS-1$
-        
-        assertEquals(expected, getString(test, metadata  )); 
     }
     
     @Test public void testVisitConvertFunctionOracleStyle() throws Exception {
@@ -341,7 +293,7 @@ public class TestSQLStringVisitor  {
      * Test for void visit(IQuery)
      */
     @Test public void testVisitIQuery() throws Exception {
-        String expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC"; //$NON-NLS-1$
+        String expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getString(TestQueryImpl.example(true)));
     }
 
@@ -349,7 +301,7 @@ public class TestSQLStringVisitor  {
      * Test for void visit(IScalarSubquery)
      */
     @Test public void testVisitIScalarSubquery() throws Exception {
-        String expected = "(SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
+        String expected = "(SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestScalarSubqueryImpl.example()));
     }
 
@@ -365,9 +317,9 @@ public class TestSQLStringVisitor  {
      * Test for void visit(ISelect)
      */
     @Test public void testVisitISelect() throws Exception {
-        String expected = "SELECT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
+        String expected = "SELECT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getString(TestQueryImpl.example(false)));
-        expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4"; //$NON-NLS-1$
+        expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getString(TestQueryImpl.example(true)));
     }
 
@@ -376,9 +328,9 @@ public class TestSQLStringVisitor  {
      * Test for void visit(ISelectSymbol)
      */
     @Test public void testVisitISelectSymbol() throws Exception {
-        String expected = "g1.e1"; //$NON-NLS-1$
+        String expected = "e1"; //$NON-NLS-1$
         assertEquals(expected, getString(TestSelectSymbolImpl.example("e1", null))); //$NON-NLS-1$
-        expected = "g1.e1 AS alias"; //$NON-NLS-1$
+        expected = "e1 AS alias"; //$NON-NLS-1$
         assertEquals(expected, getString(TestSelectSymbolImpl.example("e1", "alias"))); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -386,7 +338,7 @@ public class TestSQLStringVisitor  {
      * Test for void visit(ISubqueryCompareCriteria)
      */
     @Test public void testVisitISubqueryCompareCriteria() throws Exception {
-        String expected = "g1.e1 > SOME (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
+        String expected = "g1.e1 > SOME (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestSubqueryCompareCriteriaImpl.example())); 
     }
 
@@ -394,12 +346,12 @@ public class TestSQLStringVisitor  {
      * Test for void visit(ISubqueryInCriteria)
      */
     @Test public void testVisitISubqueryInCriteria() throws Exception {
-        String expected = "g1.e1 NOT IN (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
+        String expected = "g1.e1 NOT IN (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestSubqueryInCriteriaImpl.example())); 
     }
 
     @Test public void testVisitIUnion1() throws Exception {
-        String expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC UNION SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC ORDER BY e1, e2 DESC, e3, e4 DESC";//$NON-NLS-1$
+        String expected = "SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC UNION SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC ORDER BY e1, e2 DESC, e3, e4 DESC";//$NON-NLS-1$
         assertEquals(expected, getString(TestSetQueryImpl.example()));
     }
     
@@ -424,7 +376,7 @@ public class TestSQLStringVisitor  {
     }
     
     @Test public void testVisitProcedure() throws Exception {
-        String expected = "EXEC sq3(, x, 1)"; //$NON-NLS-1$
+        String expected = "EXEC sq3('x', 1)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestProcedureImpl.example()));
     }
     

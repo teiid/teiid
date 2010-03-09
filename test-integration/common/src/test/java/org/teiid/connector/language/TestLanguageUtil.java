@@ -22,6 +22,7 @@
 
 package org.teiid.connector.language;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,14 +58,11 @@ public class TestLanguageUtil extends TestCase {
         Condition criteria = convertCriteria(criteriaStr);
 
         // Execute        
-        List crits = LanguageUtil.separateCriteriaByAnd(criteria);
+        List<Condition> crits = LanguageUtil.separateCriteriaByAnd(criteria);
         
         // Build expected and actual sets
-        Set expectedSet = new HashSet();
-        for(int i=0; i<expected.length; i++) {
-            expectedSet.add(expected[i]);
-        }
-        Set actualSet = new HashSet();
+        Set<String> expectedSet = new HashSet<String>(Arrays.asList(expected));
+        Set<String> actualSet = new HashSet<String>();
         for(int i=0; i<crits.size(); i++) {
             actualSet.add(crits.get(i).toString());
         }
@@ -78,7 +76,7 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void testSeparateCrit_ORisConjunct() throws Exception {
-        helpTestSeparateByAnd("intkey = 1 OR intkey = 2", new String[] { "(SmallA.IntKey = 1) OR (SmallA.IntKey = 2)" }); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestSeparateByAnd("intkey = 1 OR intkey = 2", new String[] { "SmallA.IntKey = 1 OR SmallA.IntKey = 2" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testSeparateCrit_nestedAND() throws Exception {
@@ -91,7 +89,7 @@ public class TestLanguageUtil extends TestCase {
 
     public void testSeparateCrit_NOT() throws Exception {
         helpTestSeparateByAnd("((NOT (intkey = 1 AND intkey = 2)) AND (intkey = 3) AND (intkey = 4))",  //$NON-NLS-1$
-            new String[] { "(SmallA.IntKey <> 1) OR (SmallA.IntKey <> 2)", //$NON-NLS-1$
+            new String[] { "SmallA.IntKey <> 1 OR SmallA.IntKey <> 2", //$NON-NLS-1$
                 "SmallA.IntKey = 3", //$NON-NLS-1$
                 "SmallA.IntKey = 4" }); //$NON-NLS-1$        
     }
@@ -121,15 +119,15 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void testCombineCrit_bothPredicates() throws Exception {
-        helpTestCombineCriteria("intkey = 1", "intkey = 2", "(SmallA.IntKey = 1) AND (SmallA.IntKey = 2)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCombineCriteria("intkey = 1", "intkey = 2", "SmallA.IntKey = 1 AND SmallA.IntKey = 2"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testCombineCrit_primaryPredicate() throws Exception {
-        helpTestCombineCriteria("intkey = 1", "intkey = 2 AND intkey = 3", "(SmallA.IntKey = 1) AND ((SmallA.IntKey = 2) AND (SmallA.IntKey = 3))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCombineCriteria("intkey = 1", "intkey = 2 AND intkey = 3", "SmallA.IntKey = 1 AND SmallA.IntKey = 2 AND SmallA.IntKey = 3"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testCombineCrit_additionalPredicate() throws Exception {
-        helpTestCombineCriteria("intkey = 1 AND intkey = 2", "intkey = 3", "(SmallA.IntKey = 1) AND (SmallA.IntKey = 2) AND (SmallA.IntKey = 3)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCombineCriteria("intkey = 1 AND intkey = 2", "intkey = 3", "SmallA.IntKey = 1 AND SmallA.IntKey = 2 AND SmallA.IntKey = 3"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
 }

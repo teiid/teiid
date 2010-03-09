@@ -620,7 +620,7 @@ public class TestJoinOptimization {
      * This tests now passes with RulePlanJoins
      */
     @Test public void testPathologicalAccessPatternCaseCase2976Defect19018() throws Exception{
-        FakeMetadataFacade metadata = FakeMetadataFactory.example2();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         // add single access pattern to pm1.g4 containing elements e1, e2, and e3
         FakeMetadataStore store = metadata.getStore();

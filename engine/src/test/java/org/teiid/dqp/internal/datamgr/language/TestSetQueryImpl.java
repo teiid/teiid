@@ -36,6 +36,7 @@ import org.teiid.connector.language.SetQuery;
 import org.teiid.connector.language.SortSpecification;
 import org.teiid.connector.language.SortSpecification.Ordering;
 
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 
 
@@ -60,7 +61,7 @@ public class TestSetQueryImpl extends TestCase {
     public static SetQuery example2() throws Exception {
         NamedTable group = new NamedTable("ted", null, null); //$NON-NLS-1$
         ColumnReference element = new ColumnReference(group, "nugent", null, String.class); //$NON-NLS-1$
-        DerivedColumn symbol = new DerivedColumn("nugent",element); //$NON-NLS-1$
+        DerivedColumn symbol = new DerivedColumn(null,element); 
         List symbols = new ArrayList();
         symbols.add(symbol);
         List items = new ArrayList();
@@ -68,7 +69,7 @@ public class TestSetQueryImpl extends TestCase {
         
         NamedTable group2 = new NamedTable("dave", null, null); //$NON-NLS-1$
         ColumnReference element2 = new ColumnReference(group2, "barry", null, String.class); //$NON-NLS-1$
-        DerivedColumn symbol2 = new DerivedColumn("barry", element2); //$NON-NLS-1$
+        DerivedColumn symbol2 = new DerivedColumn(null, element2);
         List symbols2 = new ArrayList();
         symbols2.add(symbol2);
         
@@ -92,8 +93,7 @@ public class TestSetQueryImpl extends TestCase {
         SetQuery union = example2();
         
         List<SortSpecification> items = new ArrayList<SortSpecification>();
-        ColumnReference element = (ColumnReference) (union.getProjectedQuery().getDerivedColumns().get(0)).getExpression();
-        items.add(new SortSpecification(Ordering.ASC, element));
+        items.add(new SortSpecification(Ordering.ASC, new ColumnReference(null, "nugent", null, DataTypeManager.DefaultDataClasses.STRING))); //$NON-NLS-1$
         OrderBy orderBy = new OrderBy(items);
         
         union.setOrderBy(orderBy);

@@ -57,13 +57,13 @@
         <!-- 
             The number of batch columns guaranteed to a processing operation.  Set this value lower if the workload typically
             processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, 
-            grouping, etc. (default 124)        
+            grouping, etc. (default 128)        
          -->
         <property name="maxProcessingBatchesColumns">128</property>
         <!--  Max File size in MB (default 2GB)-->
-        <property name="maxFileSize">2024</property> 
-        <!-- Max open buffer files (default 128) -->
-        <property name="maxOpenFiles">256</property>
+        <property name="maxFileSize">2048</property> 
+        <!-- Max open buffer files (default 64) -->
+        <property name="maxOpenFiles">64</property>
     </bean>
     
     <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">

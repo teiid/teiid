@@ -1434,27 +1434,17 @@ public class TestValidator {
     
     @Test public void testValidHaving() {
         helpValidate(
-            "SELECT DISTINCT ProdHier.prod_num " + //$NON-NLS-1$
-            "FROM Sales, ProdHier, Cust " + //$NON-NLS-1$
-            "WHERE ((ProdHier.prod_fam_name <> 'garbage') AND ((Sales.month_no = 1) AND (Sales.year_no = 1996)) AND ((Cust.cust_name <> 'garbage') AND (Cust.cust_num = 1001))) AND (Sales.prod_num = ProdHier.prod_num) AND (Sales.cust_num = Cust.cust_num) " + //$NON-NLS-1$
-            "GROUP BY ProdHier.prod_num " + //$NON-NLS-1$
-            "HAVING SUM(Sales.sales_amount) > 1",  //$NON-NLS-1$
-            new String[] { }, FakeMetadataFactory.exampleSymphony());
+            "SELECT intnum " + //$NON-NLS-1$
+            "FROM bqt1.smalla " + //$NON-NLS-1$
+            "GROUP BY intnum " + //$NON-NLS-1$
+            "HAVING SUM(floatnum) > 1",  //$NON-NLS-1$
+            new String[] { }, FakeMetadataFactory.exampleBQTCached());
     } 
     
     @Test public void testValidHaving2() {
         String sql =  "SELECT intkey FROM bqt1.smalla WHERE intkey = 1 " + //$NON-NLS-1$
             "GROUP BY intkey HAVING intkey = 1";         //$NON-NLS-1$
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();        
-        Command command = helpResolve(sql, metadata);
-
-        try {
-            ValidatorReport report = Validator.validate(command, metadata);
-            assertEquals("Should get no report items", 0, report.getItems().size()); //$NON-NLS-1$
-        } catch(MetaMatrixComponentException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }        
+        helpValidate(sql, new String[] {}, FakeMetadataFactory.exampleBQTCached());
     } 
     
     @Test public void testVirtualProcedure(){

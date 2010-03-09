@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -176,12 +177,22 @@ public class TestCommSockets {
 		Properties p = new Properties();
 		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
 		try {
-			helpEstablishConnection(false, config, p);
+			helpEstablishConnection(true, config, p);
 		} catch (CommunicationException e) {
 			
 		}
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
+	}
+	
+	@Ignore("should be enabled with Netty 3.2")
+	@Test(expected=CommunicationException.class) public void testNonSSLConnectWithSSLServer() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setSslEnabled(true);
+		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+		Properties p = new Properties();
+		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
+		helpEstablishConnection(true, config, p);
 	}
 	
 }

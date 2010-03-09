@@ -24,12 +24,12 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
-import com.metamatrix.query.unittest.FakeMetadataFacade;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TstLanguageBridgeFactory {
     
-    public static final FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    public static final QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
     public static final RuntimeMetadataImpl metadataFactory = new RuntimeMetadataImpl(metadata);
     public static final LanguageBridgeFactory factory = new LanguageBridgeFactory(metadata);
 

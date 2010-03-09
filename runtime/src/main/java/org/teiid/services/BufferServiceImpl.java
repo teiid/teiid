@@ -39,6 +39,7 @@ import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.BufferService;
 
@@ -52,18 +53,16 @@ import com.metamatrix.dqp.service.BufferService;
 public class BufferServiceImpl implements BufferService, Serializable {
 	private static final long serialVersionUID = -6217808623863643531L;
 
-	private static final int DEFAULT_MAX_OPEN_FILES = 256;
-	
     // Instance
     private BufferManagerImpl bufferMgr;
 	private File bufferDir;
 	private boolean useDisk = true;
 	private DQPContextCache contextCache;
-	private int processorBatchSize = 256;
-	private int connectorBatchSize = 512;
+	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private CacheFactory cacheFactory;
-    private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
-    private long maxFileSize = 2048; // 2GB
+    private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
+    private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingBatchesColumns = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
     private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
 	
@@ -73,12 +72,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
      * @since 4.3
      */
     void cleanDirectory(File file) {
-        if (file.exists()) {
-            File[] files = file.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                files[i].delete();                
-            }
-        }
+    	FileUtils.removeChildrenRecursively(file);
     }
 
     public void start(){
@@ -189,10 +183,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxFileSize = maxFileSize;
 	}
     
-    public void setMaxOpenFiles(int maxOpenFiles) {
-		this.maxOpenFiles = maxOpenFiles;
-	}	
-    
     public void setMaxReserveBatchColumns(int value) {
 		this.maxReserveBatchColumns = value;
 	}    
@@ -201,11 +191,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxProcessingBatchesColumns  = value;
     }
 
-    @ManagementProperty(description="Max open buffer files (default 128)")
-	public int getMaxOpenFiles() {
-		return maxOpenFiles;
-	}
-
     @ManagementProperty(description="Max file size for buffer files (default 2GB)")
 	public long getMaxFileSize() {
 		return maxFileSize;
@@ -213,7 +198,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     @ManagementProperty(description="#The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
     		"processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, " + 
-    		"grouping, etc. (default 124)")
+    		"grouping, etc. (default 128)")
 	public int getMaxProcessingBatchesColumns() {
 		return maxProcessingBatchesColumns;
 	}

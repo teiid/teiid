@@ -22,19 +22,15 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.metadata.runtime.Procedure;
 
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.Call;
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.connector.language.Select;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -88,7 +84,7 @@ public class TestMetadataObject extends TestCase {
     }   
 
     public void testGroupID_longName() throws Exception {
-        helpTestGroupID("ConnectorMetadata.TestCatalog.TestSchema.TestTable2", "TestTable2", 1, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
+        helpTestGroupID("ConnectorMetadata.TestCatalog.TestSchema.TestTable2", "TestCatalog.TestSchema.TestTable2", 1, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
     }   
 
     // ################ TEST ELEMENT METADATAID ######################
@@ -134,38 +130,39 @@ public class TestMetadataObject extends TestCase {
         return proc.getMetadataObject();
     }
     
-    public void helpTestProcedureID(String procName, String shortName, int inputParamCount, String[] paramNames, TranslationUtility transUtil) throws Exception {
+    public void helpTestProcedureID(String procName, String shortName, int inputParamCount, String[] paramNames, String rsParamName, TranslationUtility transUtil) throws Exception {
         Procedure procID = getProcedureID(procName, inputParamCount, transUtil);     
         assertEquals(procName, procID.getFullName()); 
         assertEquals(shortName, procID.getName());
         
         // Check children
         List<ProcedureParameter> children = procID.getParameters();
-        assertEquals(paramNames.length, children.size());
-        Set actualParamNames = new HashSet();
+        int i = 0;
         for (ProcedureParameter childID : children) {
             assertEquals(procID, childID.getParent());
             assertTrue(childID.getFullName() + " " + procID.getFullName(), childID.getFullName().startsWith(procID.getFullName())); //$NON-NLS-1$
-            actualParamNames.add(childID.getName());            
+            assertEquals(paramNames[i++], childID.getName());            
         }
         
-        // Compare actual with expected param names
-        Set expectedParamNames = new HashSet(Arrays.asList(paramNames));
-        assertEquals(expectedParamNames, actualParamNames);
+        if (rsParamName != null) {
+        	assertEquals(rsParamName, procID.getResultSet().getName());
+        } else {
+        	assertNull(procID.getResultSet());
+        }
     }
     
     public void testProcedureID() throws Exception {
         String[] paramNames = new String[] { "InParam", "OutParam", "InOutParam", "ReturnParam" };          //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-4$
-        helpTestProcedureID("ConnectorMetadata.TestProc1", "TestProc1", 2, paramNames, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$               
+        helpTestProcedureID("ConnectorMetadata.TestProc1", "TestProc1", 2, paramNames, null, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$               
     }
 
     public void testProcedureID_resultSet() throws Exception {
-        String[] paramNames = new String[] { "Param1", "RSParam" };          //$NON-NLS-1$ //$NON-NLS-2$ 
-        helpTestProcedureID("ConnectorMetadata.TestProc2", "TestProc2", 1, paramNames, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$               
+        String[] paramNames = new String[] { "Param1"};          //$NON-NLS-1$
+        helpTestProcedureID("ConnectorMetadata.TestProc2", "TestProc2", 1, paramNames, "RSParam", CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$               
     }
 
     public void testProcedureID_longName() throws Exception {
-        helpTestProcedureID("ConnectorMetadata.TestCatalog.TestSchema.TestProc", "TestProc", 0, new String[0], CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcedureID("ConnectorMetadata.TestCatalog.TestSchema.TestProc", "TestCatalog.TestSchema.TestProc", 0, new String[0], null, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 

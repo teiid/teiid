@@ -374,7 +374,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             case Out : return SPParameter.OUT;
             case InOut : return SPParameter.INOUT;
             case ReturnValue : return SPParameter.RETURN_VALUE;
-            case ResultSet : return SPParameter.RESULT_SET;
             default : 
                 return -1;
         }

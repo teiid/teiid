@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.configuration;
+package org.teiid.logging;
 
 import org.apache.commons.logging.Log;
 

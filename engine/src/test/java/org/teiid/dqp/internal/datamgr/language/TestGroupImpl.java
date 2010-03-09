@@ -78,7 +78,7 @@ public class TestGroupImpl extends TestCase {
 
     public void testGetDefinition() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-        assertEquals("pm1.g1", example("x", "pm1.g1", metadataID).getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("g1", example("x", "pm1.g1", metadataID).getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
 }
