@@ -94,9 +94,7 @@
 			</build>
 			<modules>
                 <module>build</module>
-                <!-- 
 				<module>documentation</module>
-                 -->
 			</modules>
 		</profile>
 	</profiles>
