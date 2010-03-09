@@ -329,12 +329,6 @@
                 <artifactId>teiid-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>    
-	        <dependency>
-		        <groupId>org.jboss.teiid</groupId>
-		        <artifactId>teiid-jboss-embedded</artifactId>
-                <version>${project.version}</version>
-		        <scope>test</scope>
-	        </dependency>
       
       <!-- External dependencies -->
 			<dependency>
