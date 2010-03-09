@@ -43,6 +43,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.logging.api.AuditMessage;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.roles.AuthorizationActions;
 import org.teiid.security.roles.AuthorizationPermission;
 import org.teiid.security.roles.AuthorizationPoliciesHolder;
@@ -60,7 +61,6 @@ import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -199,14 +199,14 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
             AuthorizationRealm aRealm = aPerm.getRealm();
             if ( theRealm != null ) {
                 if ( ! theRealm.equals(aRealm) ) {
-                    throw new AuthorizationMgmtException(DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.wrong_realms ")); //$NON-NLS-1$
+                    throw new AuthorizationMgmtException(RuntimePlugin.Util.getString("AuthorizationServiceImpl.wrong_realms ")); //$NON-NLS-1$
                 }
             } else {
                 theRealm = aRealm;
             }
         }
         if ( theRealm == null ) {
-            throw new AuthorizationMgmtException(DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.Authorization_Realm_is_null")); //$NON-NLS-1$
+            throw new AuthorizationMgmtException(RuntimePlugin.Util.getString("AuthorizationServiceImpl.Authorization_Realm_is_null")); //$NON-NLS-1$
         }
         return theRealm;
     }

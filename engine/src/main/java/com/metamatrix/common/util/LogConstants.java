@@ -38,6 +38,7 @@ public interface LogConstants {
 	public static final String CTX_COMMANDLOGGING = "COMMAND_LOG"; //$NON-NLS-1$
 	public static final String CTX_AUDITLOGGING = "AUDIT_LOG"; //$NON-NLS-1$
 	public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
+	public static final String CTX_RUNTIME = "RUNTIME"; //$NON-NLS-1$
 	// Query contexts
 	public static final String CTX_FUNCTION_TREE = CTX_QUERY_PLANNER + ".FUNCTION_TREE"; //$NON-NLS-1$
 	public static final String CTX_QUERY_RESOLVER = CTX_QUERY_PLANNER + ".RESOLVER"; //$NON-NLS-1$

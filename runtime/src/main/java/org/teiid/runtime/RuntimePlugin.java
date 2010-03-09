@@ -19,19 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.runtime;
 
-package com.metamatrix.core.vdb;
+import java.util.ResourceBundle;
 
+import com.metamatrix.core.BundleUtil;
 
+public class RuntimePlugin {
+    private static final String PLUGIN_ID = "org.teiid.runtime" ; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
-/**
- * Constants used for VDB processing.
- */
-public interface VdbConstants {
-
-    public static final String DEPLOYMENT_FILE = "vdb.xml"; // !!! DO NOT CHANGE VALUE as this would cause problems with existing VDBs having DEF files !!! //$NON-NLS-1$
-    public static final String VDB_ARCHIVE_EXTENSION = ".vdb"; //$NON-NLS-1$
-    public final static String INDEX_EXT        = ".INDEX";     //$NON-NLS-1$
-    public final static String SEARCH_INDEX_EXT = ".SEARCH_INDEX";     //$NON-NLS-1$
-    public final static String MODEL_EXT = ".xmi";     //$NON-NLS-1$
 }

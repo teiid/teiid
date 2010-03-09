@@ -24,9 +24,10 @@ package org.teiid.transport;
 
 import java.util.HashMap;
 
+import org.teiid.runtime.RuntimePlugin;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 
 public class ClientServiceRegistryImpl {
 
@@ -63,7 +64,7 @@ public class ClientServiceRegistryImpl {
 	public ClientService getClientService(String iface) throws ComponentNotFoundException {
 		ClientService cs = clientServices.get(iface);
 		if (cs == null) {
-			throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("ServerWorkItem.Component_Not_Found", iface)); //$NON-NLS-1$
+			throw new ComponentNotFoundException(RuntimePlugin.Util.getString("ServerWorkItem.Component_Not_Found", iface)); //$NON-NLS-1$
 		}
 		return cs;
 	}

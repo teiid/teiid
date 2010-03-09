@@ -31,6 +31,7 @@ import org.jboss.security.SecurityContext;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
+	private static final long serialVersionUID = 3598997061994110254L;
 
 	@Override
 	public boolean assosiateSecurityContext(String securityDomain, Object newContext) {

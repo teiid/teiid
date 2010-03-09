@@ -37,17 +37,18 @@ import javax.xml.validation.SchemaFactory;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
 import org.jboss.virtual.VirtualFile;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VdbConstants;
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 
 /**
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
@@ -57,14 +58,16 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 	private ObjectSerializer serializer;
 	 
 	public VDBParserDeployer() {
-		super(VDBMetaData.class, getCustomMappings(), IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT, IndexMetadataFactory.class);
+		super(VDBMetaData.class, getCustomMappings(), IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT, IndexMetadataFactory.class, VdbConstants.MODEL_EXT, UDFMetaData.class);
 		setAllowMultipleFiles(true);
 	}
 
 	private static Map<String, Class<?>> getCustomMappings() {
 		Map<String, Class<?>> mappings = new HashMap<String, Class<?>>();
 		mappings.put(VdbConstants.DEPLOYMENT_FILE, VDBMetaData.class);
-		mappings.put(VdbConstants.UDF_FILE_NAME, UDFMetaData.class);
+		// this not required but the to make the framework with extended classes 
+		// this required otherwise different version of parse is invoked.
+		mappings.put("undefined", UDFMetaData.class); //$NON-NLS-1$
 		return mappings;
 	}
 	
@@ -77,7 +80,14 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			return expectedType.cast(def);
 		}
 		else if (expectedType.equals(UDFMetaData.class)) {
-			UDFMetaData udf = new UDFMetaData(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
+			if (root == null) {
+				root = unit.getAttachment(UDFMetaData.class);
+				if (root == null) {
+					root = new UDFMetaData();
+				}
+			}
+			UDFMetaData udf = UDFMetaData.class.cast(root);		
+			udf.addModelFile(file);
 			return expectedType.cast(udf);
 		}		
 		else if (expectedType.equals(IndexMetadataFactory.class)) {
@@ -93,14 +103,14 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			return expectedType.cast(imf);
 		}
 		else {
-			throw new IllegalArgumentException("Cannot match arguments: expectedClass=" + expectedType );
+			throw new IllegalArgumentException("Cannot match arguments: expectedClass=" + expectedType ); //$NON-NLS-1$
 		}		
 	}
 
 	static Unmarshaller getUnMarsheller() throws JAXBException, SAXException {
 		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		
+		Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); //$NON-NLS-1$
 		Unmarshaller un = jc.createUnmarshaller();
 		un.setSchema(schema);
 		return un;
@@ -108,22 +118,22 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 	
 	@Override
 	protected VDBMetaData mergeMetaData(VFSDeploymentUnit unit, Map<Class<?>, List<Object>> metadata) throws Exception {
-		VDBMetaData def = getInstance(metadata, VDBMetaData.class);
+		VDBMetaData vdb = getInstance(metadata, VDBMetaData.class);
 		UDFMetaData udf = getInstance(metadata, UDFMetaData.class);
 		
-		if (def == null) {
-			log.error("Invalid VDB file deployment failed ="+unit.getRoot().getName());
+		if (vdb == null) {
+			log.error(RuntimePlugin.Util.getString("invlaid_vdb_file",unit.getRoot().getName())); //$NON-NLS-1$
 			return null;
 		}
 		
-		def.setUrl(unit.getRoot().toURL().toExternalForm());		
+		vdb.setUrl(unit.getRoot().toURL().toExternalForm());		
 		
 		// add the entries and determine their visibility
 		VirtualFile root = unit.getRoot();
 		List<VirtualFile> children = root.getChildrenRecursively();
 		Map<VirtualFile, Boolean> visibilityMap = new LinkedHashMap<VirtualFile, Boolean>();
 		for(VirtualFile f: children) {
-			visibilityMap.put(f, isFileVisible(f.getPathName(), def));
+			visibilityMap.put(f, isFileVisible(f.getPathName(), vdb));
 		}
 		
 		// build the metadata store
@@ -133,10 +143,10 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			if (imf != null) {
 				imf.addEntriesPlusVisibilities(visibilityMap);
 				unit.addAttachment(IndexMetadataFactory.class, imf);
-				
+								
 				// add the cached store.
 				CompositeMetadataStore store = null;
-				File cacheFileName = this.serializer.getAttachmentPath(unit, def.getName()+"_"+def.getVersion());
+				File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 				if (cacheFileName.exists()) {
 					store = this.serializer.loadAttachment(cacheFileName, CompositeMetadataStore.class);
 				}
@@ -147,13 +157,20 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			}
 		}
 		
-		// If the UDF file is enclosed then attach it to the deployment artifact
 		if (udf != null) {
+			// load the UDF
+			for(Model model:vdb.getModels()) {
+				if (model.getModelType().equals(Model.Type.FUNCTION)) {
+					udf.buildFunctionModelFile(model.getName()+VdbConstants.MODEL_EXT);
+				}
+			}		
+			
+			// If the UDF file is enclosed then attach it to the deployment artifact
 			unit.addAttachment(UDFMetaData.class, udf);
 		}
 		
-		log.debug("VDB "+unit.getRoot().getName()+" has been parsed.");
-		return def;
+		log.debug("VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
+		return vdb;
 	}
 
 	private final static boolean isSystemModelWithSystemTableType(String modelName) {

@@ -60,12 +60,12 @@ public class AdminProvider {
 	 * Connection to profile service from a remote VM or local connection
 	 */
 	static private class ProfileConnection {
-		private static final String PROFILE_SERVICE_JNDI_NAME = "ProfileService";
-		private static final String SECURE_PROFILE_SERVICE_JNDI_NAME = "SecureProfileService/remote";
-	    private static final String NAMING_CONTEXT_FACTORY = "org.jnp.interfaces.NamingContextFactory";
-	    private static final String JNP_TIMEOUT_JNP_INIT_PROP = "jnp.timeout";
-	    private static final String JNP_SOTIMEOUT_JNP_INIT_PROP = "jnp.sotimeout";
-	    private static final String JNP_DISABLE_DISCOVERY_JNP_INIT_PROP = "jnp.disableDiscovery";
+		private static final String PROFILE_SERVICE_JNDI_NAME = "ProfileService"; //$NON-NLS-1$
+		private static final String SECURE_PROFILE_SERVICE_JNDI_NAME = "SecureProfileService/remote"; //$NON-NLS-1$
+	    private static final String NAMING_CONTEXT_FACTORY = "org.jnp.interfaces.NamingContextFactory"; //$NON-NLS-1$
+	    private static final String JNP_TIMEOUT_JNP_INIT_PROP = "jnp.timeout"; //$NON-NLS-1$
+	    private static final String JNP_SOTIMEOUT_JNP_INIT_PROP = "jnp.sotimeout"; //$NON-NLS-1$
+	    private static final String JNP_DISABLE_DISCOVERY_JNP_INIT_PROP = "jnp.disableDiscovery"; //$NON-NLS-1$
 	    
 	    /**
 	     * This is the timeout (in milliseconds) for the initial attempt to establish the remote connection.
@@ -123,12 +123,12 @@ public class AdminProvider {
                 env.setProperty(Context.INITIAL_CONTEXT_FACTORY, NAMING_CONTEXT_FACTORY);
                 env.setProperty(Context.SECURITY_PRINCIPAL, user);
                 env.setProperty(Context.SECURITY_CREDENTIALS, password);         
-                env.put(Context.URL_PKG_PREFIXES, "org.jnp.interfaces");
-                env.setProperty(JNP_DISABLE_DISCOVERY_JNP_INIT_PROP, "true");
+                env.put(Context.URL_PKG_PREFIXES, "org.jnp.interfaces"); //$NON-NLS-1$
+                env.setProperty(JNP_DISABLE_DISCOVERY_JNP_INIT_PROP, "true"); //$NON-NLS-1$
                 env.setProperty(JNP_TIMEOUT_JNP_INIT_PROP, String.valueOf(JNP_TIMEOUT));
                 env.setProperty(JNP_SOTIMEOUT_JNP_INIT_PROP, String.valueOf(JNP_SO_TIMEOUT));
                 env.setProperty(JNP_DISABLE_DISCOVERY_JNP_INIT_PROP, String.valueOf(JNP_DISABLE_DISCOVERY));
-                env.setProperty("java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces");
+                env.setProperty("java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces"); //$NON-NLS-1$ //$NON-NLS-2$
                 InitialContext ic  = new InitialContext(env);
                 
                 try {
@@ -167,7 +167,7 @@ public class AdminProvider {
 				                passwordCallback.setPassword(password.toCharArray());
 				            }
 				            else {
-				                throw new UnsupportedCallbackException(callback, "Unrecognized Callback: " + callback);
+				                throw new UnsupportedCallbackException(callback, "Unrecognized Callback: " + callback); //$NON-NLS-1$
 				            }
 				        }						
 						

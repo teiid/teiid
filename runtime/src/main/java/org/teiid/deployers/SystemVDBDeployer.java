@@ -33,6 +33,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.runtime.RuntimePlugin;
 
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -54,7 +55,7 @@ public class SystemVDBDeployer {
 		try {
 			URL url = Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB);
 			if (url == null) {
-				throw new MetaMatrixRuntimeException("System.vdb not found in classpath");
+				throw new MetaMatrixRuntimeException(RuntimePlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
 			}
 			SystemVDBContext systemVDB = new SystemVDBContext(url);
 			VirtualFile vdb = new VirtualFile(systemVDB.getRoot());
@@ -71,9 +72,9 @@ public class SystemVDBDeployer {
 			}
 			this.vdbRepository.addMetadataStore(deployment, imf.getMetadataStore());
 		} catch (URISyntaxException e) {
-			throw new MetaMatrixRuntimeException(e, "Failed to deploy "+CoreConstants.SYSTEM_VDB);
+			throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
 		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e, "Failed to deploy "+CoreConstants.SYSTEM_VDB);
+			throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
 		}
 	}
 	

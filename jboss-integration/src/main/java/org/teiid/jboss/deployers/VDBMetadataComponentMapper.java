@@ -27,6 +27,9 @@ import org.jboss.system.server.profileservice.persistence.component.AbstractComp
 import org.jboss.system.server.profileservice.persistence.xml.PersistedComponent;
 import org.teiid.adminapi.impl.VDBMetaData;
 
+/**
+ * This class used in the Teiid deployer -jboss-beans.xml file.
+ */
 public class VDBMetadataComponentMapper extends AbstractComponentMapper {
 
 	public VDBMetadataComponentMapper(PersistenceFactory persistenceFactory) {
@@ -36,11 +39,11 @@ public class VDBMetadataComponentMapper extends AbstractComponentMapper {
 	@Override
 	protected ManagedObject getComponent(Object attachment, PersistedComponent component, boolean create) {
 		VDBMetaData metadata = (VDBMetaData)attachment;
-		String vdbName = metadata.getName()+"_"+metadata.getVersion();
+		String vdbName = metadata.getName()+"_"+metadata.getVersion(); //$NON-NLS-1$
 		if (vdbName.equals(component.getOriginalName())) {
 			return getMOF().initManagedObject(metadata, VDBMetaData.class, vdbName, vdbName);
 		}
-		throw new IllegalStateException("could not find deployment " + component.getOriginalName());
+		throw new IllegalStateException("could not find deployment " + component.getOriginalName());//$NON-NLS-1$
 	}
 
 	@Override
@@ -51,7 +54,7 @@ public class VDBMetadataComponentMapper extends AbstractComponentMapper {
 	@Override
 	protected void setComponentName(PersistedComponent component, ManagedObject mo) {
 		VDBMetaData metadata = (VDBMetaData)mo.getAttachment();
-		component.setName(metadata.getName()+"_"+metadata.getVersion());
+		component.setName(metadata.getName()+"_"+metadata.getVersion()); //$NON-NLS-1$
 	}
 
 	@Override

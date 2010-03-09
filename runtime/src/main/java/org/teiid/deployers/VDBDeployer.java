@@ -49,6 +49,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.runtime.RuntimePlugin;
 
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
@@ -72,12 +73,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	public void deploy(DeploymentUnit unit, VDBMetaData deployment) throws DeploymentException {
 		if (this.vdbRepository.getVDB(deployment.getName(), deployment.getVersion()) != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
-			log.info("Re-deploying VDB = "+deployment);
+			log.info(RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
 		}
 		
 		List<String> errors = deployment.getValidityErrors();
 		if (errors != null && !errors.isEmpty()) {
-			throw new DeploymentException("VDB has validaity errors; failed to deploy");
+			throw new DeploymentException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
 		}
 		
 		// Add system model to the deployed VDB
@@ -85,7 +86,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		system.setName(CoreConstants.SYSTEM_MODEL);
 		system.setVisible(true);
 		system.setModelType(Model.Type.PHYSICAL.name());
-		system.addSourceMapping("system", "system");
+		system.addSourceMapping("system", "system"); //$NON-NLS-1$ //$NON-NLS-2$
 		system.setSupportsMultiSourceBindings(false);
 		deployment.addModel(system);
 		
@@ -132,7 +133,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		try {
 			saveMetadataStore((VFSDeploymentUnit)unit, deployment, metadata.getMetadataStore());
 		} catch (IOException e1) {
-			log.warn("failed to save metadata for VDB "+deployment.getName()+"."+deployment.getVersion(), e1);
+			log.warn(RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion()), e1); //$NON-NLS-1$ //$NON-NLS-2$			
 		}
 				
 		boolean valid = validateSources(deployment);
@@ -141,7 +142,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		if (valid) {
 			deployment.setStatus(VDB.Status.ACTIVE);
 		}
-		log.info("VDB = "+deployment + " deployed");
+		log.info(RuntimePlugin.Util.getString("vdb_deployed",deployment)); //$NON-NLS-1$
 	}
 
 	private boolean validateSources(VDBMetaData deployment) {
@@ -149,13 +150,16 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		for(Model m:deployment.getModels()) {
 			ModelMetaData model = (ModelMetaData)m;
 			for (String sourceName:model.getSourceNames()) {
+				if (sourceName.equals(CoreConstants.SYSTEM_MODEL)) {
+					continue;
+				}
 				String jndiName = model.getSourceJndiName(sourceName);
 				try {
 					InitialContext ic = new InitialContext();
 					ic.lookup(jndiName);
 				} catch (NamingException e) {
 					valid = false;
-					String msg = "Jndi resource = "+ jndiName + " not found for Source Name = "+sourceName;
+					String msg = RuntimePlugin.Util.getString("jndi_not_found", jndiName,sourceName); //$NON-NLS-1$
 					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 					log.info(msg);
 				}
@@ -171,14 +175,14 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// get the system VDB metadata store
 		MetadataStore systemStore = this.vdbRepository.getMetadataStore(CoreConstants.SYSTEM_VDB, 1);
 		if (systemStore == null) {
-			throw new DeploymentException("System.vdb needs to be loaded before any other VDBs.");
+			throw new DeploymentException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		}
 		
 		store.addMetadataStore(systemStore);
 		
 		Collection <FunctionMethod> methods = null;
 		if (udf != null) {
-			methods = udf.getMethods();
+			methods = udf.getFunctions();
 		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, store, visibilityMap, methods);
@@ -206,10 +210,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		try {
 			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
 		} catch (IOException e) {
-			log.warn("failed to delete the cached metadata files due to:" + e.getMessage());
+			log.warn(RuntimePlugin.Util.getString("vdb_delete_failed", e.getMessage())); //$NON-NLS-1$
 		}
 
-		log.info("VDB = "+deployment + " undeployed");
+		log.info(RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
 	}
 
 	public void setContextCache(DQPContextCache cache) {
@@ -225,7 +229,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	}  
 	
 	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, CompositeMetadataStore store) throws IOException {
-		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion());
+		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 		if (!cacheFileName.exists()) {
 			this.serializer.saveAttachment(cacheFileName,store);
 		}
@@ -233,7 +237,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	
 	private void deleteMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb) throws IOException {
 		if (!unit.getRoot().exists()) {
-			File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion());
+			File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 			if (cacheFileName.exists()) {
 				FileUtils.removeDirectoryAndChildren(cacheFileName.getParentFile());
 			}
@@ -242,10 +246,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	
     private MetadataStore buildDynamicMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, ModelMetaData model) throws DeploymentException{
     	if (model.getSourceNames().isEmpty()) {
-    		throw new DeploymentException(vdb.getName()+"-"+vdb.getVersion()+" Can not be deployed because model {"+model.getName()+"} is not fully configured.");
+    		throw new DeploymentException(RuntimePlugin.Util.getString("fail_to_deploy", vdb.getName()+"-"+vdb.getVersion(), model.getName())); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
-    	boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata"));
+    	boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
     	File cacheFile = null;
     	if (cache) {
     		 try {
@@ -254,9 +258,9 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     				return this.serializer.loadAttachment(cacheFile, MetadataStore.class);
     			}
 			} catch (IOException e) {
-				log.warn("invalid metadata in file = "+cacheFile.getAbsolutePath());
+				log.warn(RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
 			} catch (ClassNotFoundException e) {
-				log.warn("invalid metadata in file = "+cacheFile.getAbsolutePath());
+				log.warn(RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
 			} 
     	}
     	
@@ -283,10 +287,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				}				
 			}
     	}
-    	throw new DeploymentException(vdb.getName()+"-"+vdb.getVersion()+" Can not be deployed because model {"+model.getName()+"} can not retrive metadata", exception);
+    	throw new DeploymentException(RuntimePlugin.Util.getString("failed_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()), exception); //$NON-NLS-1$ //$NON-NLS-2$
 	}	
     
 	private File buildCachedFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
-		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName);
+		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName); //$NON-NLS-1$ //$NON-NLS-2$
 	}    
 }

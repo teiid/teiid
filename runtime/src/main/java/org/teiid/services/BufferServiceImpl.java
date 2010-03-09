@@ -31,6 +31,7 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.runtime.RuntimePlugin;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.cache.CacheFactory;
@@ -40,7 +41,6 @@ import com.metamatrix.common.buffer.impl.FileStorageManager;
 import com.metamatrix.common.buffer.impl.MemoryStorageManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.BufferService;
 
 /**
@@ -105,9 +105,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
             }
             
         } catch(MetaMatrixComponentException e) { 
-            throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
+            throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
         } catch(IOException e) {
-            throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
+            throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
         }
     }
    

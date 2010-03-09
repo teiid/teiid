@@ -27,9 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.deployer.MultipleVFSParsingDeployer;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.virtual.VirtualFile;
+import org.jboss.virtual.VirtualFileFilter;
 
 /**
  * Overriding the base MultipleVFSParsingDeployer so that the parse method is supplied with VFSDeploymentUnit.
@@ -37,17 +39,27 @@ import org.jboss.virtual.VirtualFile;
  */
 public abstract class BaseMultipleVFSParsingDeployer<T> extends	MultipleVFSParsingDeployer<T> {
 	
-	public BaseMultipleVFSParsingDeployer(Class<T> output,Map<String, Class<?>> mappings, String suffix, Class<?> suffixClass) {
-		super(output, mappings, suffix, suffixClass);
-	}
+	private String suffix2;
+	private Class<?> suffixClass2;
 
-	public BaseMultipleVFSParsingDeployer(Class<T> output,Map<String, Class<?>> mappings) {
-		super(output, mappings);
+	public BaseMultipleVFSParsingDeployer(Class<T> output,Map<String, Class<?>> mappings, String suffix, Class<?> suffixClass, String suffix2, Class<?>suffixClass2) {
+		super(output, mappings, suffix, suffixClass);
+		this.suffix2 = suffix2;
+		this.suffixClass2 = suffixClass2;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	protected T mergeFiles(VFSDeploymentUnit unit, T root,List<VirtualFile> files, Set<String> missingFiles) throws Exception {
+		
+		List<VirtualFile> matched = unit.getMetaDataFiles(new VirtualFileFilter() {
+			@Override
+			public boolean accepts(VirtualFile file) {
+				return file.getName().endsWith(suffix2);
+			}
+		});
+		
+		files.addAll(matched);
 		Map<Class<?>, List<Object>> metadata = new HashMap<Class<?>, List<Object>>();
 		for (VirtualFile file : files) {
 			Class<?> clazz = matchFileToClass(unit, file);
@@ -63,8 +75,16 @@ public abstract class BaseMultipleVFSParsingDeployer<T> extends	MultipleVFSParsi
 	}
 	
 	@Override
+	protected Class<?> matchFileToClass(DeploymentUnit unit, VirtualFile file){
+		if (file.getName().endsWith(this.suffix2)) {
+			return this.suffixClass2;
+		}
+		return super.matchFileToClass(unit, file);
+	}
+	
+	@Override
 	protected <U> U parse(Class<U> expectedType, VirtualFile file, Object root) throws Exception{
-		throw new UnsupportedOperationException("This will be never invoked");
+		throw new UnsupportedOperationException("This will be never invoked"); //$NON-NLS-1$
 	}
 	protected abstract <U> U parse(VFSDeploymentUnit unit, Class<U> expectedType, VirtualFile file, Object root) throws Exception;	
 }

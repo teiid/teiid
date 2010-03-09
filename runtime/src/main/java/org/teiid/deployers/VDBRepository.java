@@ -35,10 +35,12 @@ import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.runtime.RuntimePlugin;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
@@ -54,7 +56,7 @@ public class VDBRepository implements Serializable{
 	
 	public void addVDB(VDBMetaData vdb) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
-			throw new DeploymentException("VDB with given name and version already exists!");
+			throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 		}
 		this.vdbRepo.put(vdbId(vdb), vdb);
 	}
@@ -81,14 +83,14 @@ public class VDBRepository implements Serializable{
             }
         }
         if(latestVersion == 0) {
-            throw new VirtualDatabaseException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
+            throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
         }
 
         VDBMetaData vdb = getVDB(vdbName, latestVersion);
         if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.getStatus() == VDB.Status.ACTIVE_DEFAULT) {
         	return vdb;            
         }
-        throw new VirtualDatabaseException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, latestVersion)); //$NON-NLS-1$
+        throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, latestVersion)); //$NON-NLS-1$
 	}
 	
 	public void changeVDBStatus(String vdbName, int vdbVersion, VDB.Status status) throws VirtualDatabaseException {
@@ -101,7 +103,7 @@ public class VDBRepository implements Serializable{
 			// Change the VDB's status
 			if (status == VDB.Status.ACTIVE || status == VDB.Status.ACTIVE_DEFAULT) {
 				if (!vdb.isValid()) {
-					throw new VirtualDatabaseException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
+					throw new VirtualDatabaseException(RuntimePlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
 				}
 				if (status == VDB.Status.ACTIVE_DEFAULT) {
 					// only 1 can be set as active default
@@ -116,12 +118,12 @@ public class VDBRepository implements Serializable{
 
 			// make sure we got what we asked for
 			if (status != vdb.getStatus()) {
-				throw new VirtualDatabaseException(DQPEmbeddedPlugin.Util.getString("VDBService.vdb_change_status_failed", new Object[] { vdbName, vdbVersion, status })); //$NON-NLS-1$                
+				throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.vdb_change_status_failed", new Object[] { vdbName, vdbVersion, status })); //$NON-NLS-1$                
 			}
 
 			// now save the change in the configuration.
 			saveVDB(vdb);
-			DQPEmbeddedPlugin.logInfo("VDBService.vdb_change_status", new Object[] { vdbName, vdbVersion, status}); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.getString("VDBService.vdb_change_status", new Object[] { vdbName, vdbVersion, status})); //$NON-NLS-1$
 		}
 	}
 	

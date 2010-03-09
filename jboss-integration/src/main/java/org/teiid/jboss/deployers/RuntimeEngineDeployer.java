@@ -33,7 +33,6 @@ import java.util.List;
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 
-import org.jboss.logging.Logger;
 import org.jboss.managed.api.ManagedOperation.Impact;
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
@@ -57,6 +56,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.ContainerTransactionProvider;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 import org.teiid.dqp.internal.transaction.XidFactory;
+import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.LogConfigurationProvider;
 import org.teiid.logging.LogListernerProvider;
 import org.teiid.security.SecurityHelper;
@@ -71,11 +71,11 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.DQPManagement;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
@@ -87,8 +87,6 @@ import com.metamatrix.platform.security.api.SessionToken;
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
 	private static final long serialVersionUID = -4676205340262775388L;
 
-	protected Logger log = Logger.getLogger(getClass());
-	
 	private transient SocketConfiguration jdbcSocketConfiguration;
 	private transient SocketConfiguration adminSocketConfiguration;	
 	private transient SocketTransport jdbcSocket;	
@@ -125,19 +123,19 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	if (this.jdbcSocketConfiguration.isEnabled()) {
 	    	this.jdbcSocket = new SocketTransport(this.jdbcSocketConfiguration, csr);
 	    	this.jdbcSocket.start();
-	    	log.info("Teiid JDBC = " + (this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+this.jdbcSocketConfiguration.getPortNumber()); //$NON-NLS-1$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+this.jdbcSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
-    		log.debug(DQPEmbeddedPlugin.Util.getString("SocketTransport.3")); //$NON-NLS-1$
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
     	if (this.adminSocketConfiguration.isEnabled()) {
 	    	this.adminSocket = new SocketTransport(this.adminSocketConfiguration, csr);
 	    	this.adminSocket.start(); 
-	    	log.info("Teiid Admin = " + (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber()); //$NON-NLS-1$
+	    	LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
-    		log.debug(DQPEmbeddedPlugin.Util.getString("SocketTransport.3")); //$NON-NLS-1$
+    		LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
-    	log.info("Teiid Engine Started = " + new Date(System.currentTimeMillis()).toString()); //$NON-NLS-1$
+    	LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 	}	
     
     public void stop() {
@@ -158,8 +156,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     		this.adminSocket.stop();
     		this.adminSocket = null;
     	}    	
-    	
-    	log.info("Teiid Engine Stopped = " + new Date(System.currentTimeMillis()).toString()); //$NON-NLS-1$
+    	LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     }
     
 	private void createClientServices() {
@@ -235,7 +232,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
     
     public void setXATerminator(XATerminator xaTerminator){
-       this.dqpCore.setTransactionService(getTransactionService("localhost", xaTerminator));
+       this.dqpCore.setTransactionService(getTransactionService("localhost", xaTerminator)); //$NON-NLS-1$
     }    
     
     public void setWorkManager(WorkManager mgr) {
@@ -278,7 +275,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@Override
 	@ManagementOperation(description="Get Runtime workmanager statistics", impact=Impact.ReadOnly,params={@ManagementParameter(name="identifier",description="Use \"runtime\" for engine, or connector name for connector")})
     public WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier) {
-		if ("runtime".equalsIgnoreCase(identifier)) {
+		if ("runtime".equalsIgnoreCase(identifier)) { //$NON-NLS-1$
 			return this.dqpCore.getWorkManagerStatistics();
 		}
 		ConnectorManager cm = this.dqpCore.getConnectorManagerRepository().getConnectorManager(identifier);

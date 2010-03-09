@@ -46,6 +46,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 
@@ -56,7 +57,6 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.platform.security.api.SessionToken;
 
@@ -97,10 +97,10 @@ public class SessionServiceImpl implements SessionService {
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
     			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
     				closeSession(info.getSessionId());
     			}
 			} catch (Exception e) {
@@ -114,7 +114,7 @@ public class SessionServiceImpl implements SessionService {
 		LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		SessionMetadata info = this.sessionCache.remove(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
 		}
 		if (info.getVDBName() != null) {
             try {
@@ -178,12 +178,12 @@ public class SessionServiceImpl implements SessionService {
                 productInfo.put(MMURL.JDBC.VDB_NAME, vdb.getName());
                 productInfo.put(MMURL.JDBC.VDB_VERSION, vdb.getVersion());                
             } catch (VirtualDatabaseException e) {
-            	throw new SessionServiceException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$ 
+            	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$ 
 			}            
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
-            throw new SessionServiceException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
+            throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
         }
         
         long creationTime = System.currentTimeMillis();
@@ -260,12 +260,12 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public boolean terminateSession(long terminatedSessionID, long adminSessionID) {
 		Object[] params = {adminSessionID, terminatedSessionID};
-		LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SESSION,e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_SESSION,e,RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
 			return false;
 		}
 	}
@@ -280,7 +280,7 @@ public class SessionServiceImpl implements SessionService {
 			throws InvalidSessionException {
 		SessionMetadata info = this.sessionCache.get(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
 		}
 		return info;
 	}

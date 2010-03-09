@@ -38,12 +38,12 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 
 /**
  * This class serves as the primary implementation of the
@@ -98,7 +98,7 @@ public class TeiidLoginContext {
 				LogManager.logDetail(LogConstants.CTX_MEMBERSHIP,e, e.getMessage()); 
 			}
         }
-        throw new LoginException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       
+        throw new LoginException(RuntimePlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       
     }
     
     protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {

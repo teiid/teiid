@@ -34,6 +34,7 @@ import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentGroup;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentMetaData;
+import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
@@ -59,12 +60,12 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 		
 		for (ManagedConnectionFactoryDeploymentMetaData data : deployments) {
 			String connectorDefinition = data.getConnectionDefinition();
-			if (connectorDefinition.equals("org.teiid.connector.api.Connector")) {
+			if (connectorDefinition.equals(Connector.class.getName())) {
 				String connectorName = data.getJndiName();
 
 				ConnectorManager cm = null;
 				try {
-					cm = createConnectorManger("java:"+connectorName, data.getMaxSize());
+					cm = createConnectorManger("java:"+connectorName, data.getMaxSize()); //$NON-NLS-1$
 					cm.start();
 					cmGroup.addConnectorManager(cm);
 				} catch (ConnectorException e) {
@@ -72,7 +73,7 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 				}
 
 				// Add the references to the mgr as loaded.
-	            this.connectorManagerRepository.addConnectorManager("java:"+connectorName, cm);            
+	            this.connectorManagerRepository.addConnectorManager("java:"+connectorName, cm);  //$NON-NLS-1$    
 	            
 	            log.info("Teiid Connector Started = " + connectorName); //$NON-NLS-1$
 			}
@@ -100,10 +101,10 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 
 		for (ManagedConnectionFactoryDeploymentMetaData data : deployments) {
 			String connectorDefinition = data.getConnectionDefinition();
-			if (connectorDefinition.equals("org.teiid.connector.api.Connector")) {
+			if (connectorDefinition.equals(Connector.class.getName())) {
 				String connectorName = data.getJndiName();
 				if (this.connectorManagerRepository != null) {
-					ConnectorManager cm = this.connectorManagerRepository.removeConnectorManager("java:"+connectorName);
+					ConnectorManager cm = this.connectorManagerRepository.removeConnectorManager("java:"+connectorName); //$NON-NLS-1$
 					if (cm != null) {
 						cm.stop();
 					}
@@ -122,7 +123,7 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 			for (ConnectorManager mgr:cmGroup.getConnectorManagers()) {
 				ManagedObject mo = this.mof.initManagedObject(mgr, ConnectorManager.class, mgr.getName(), mgr.getName());
 				if (mo == null) {
-					throw new DeploymentException("could not create managed object");
+					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
 				}
 				managedObjects.put(mo.getName(), mo);				
 			}

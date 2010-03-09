@@ -21,21 +21,40 @@
  */
 package org.teiid.deployers;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.virtual.VirtualFile;
+import org.teiid.runtime.RuntimePlugin;
 
+import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 
 @ManagementObject
 public class UDFMetaData {
-	private Collection <FunctionMethod> methods = null;
+	private Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
 	
-	public UDFMetaData(Collection <FunctionMethod> methods) {
-		this.methods = methods;
+	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
+	
+	public void addModelFile(VirtualFile file) {
+		this.files.put(file.getName(), file);
 	}
 	
-	public Collection <FunctionMethod> getMethods(){
+	
+	void buildFunctionModelFile(String name) throws IOException {
+		VirtualFile file = this.files.get(name);
+		if (file != null) {
+			this.methods.addAll(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
+		}
+		else {
+			throw new IOException(RuntimePlugin.Util.getString("udf_model_not_found", name)); //$NON-NLS-1$
+		}
+	}
+	
+	public Collection <FunctionMethod> getFunctions(){
 		return this.methods;
 	}
 }

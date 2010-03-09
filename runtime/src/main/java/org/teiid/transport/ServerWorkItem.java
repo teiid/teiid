@@ -34,6 +34,7 @@ import javax.crypto.SealedObject;
 
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
 import com.metamatrix.api.exception.ExceptionHolder;
@@ -45,7 +46,6 @@ import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.platform.security.api.SessionToken;
 
 public class ServerWorkItem {
@@ -146,7 +146,7 @@ public class ServerWorkItem {
 		} else if (e instanceof AdminProcessingException) {
 			logProcessingException(e, context);
 		} else {
-			LogManager.logError(context, e, DQPEmbeddedPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getConnectionID())); //$NON-NLS-1$
+			LogManager.logError(context, e, RuntimePlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getConnectionID())); //$NON-NLS-1$
 		}
 
 		return new ExceptionHolder(e);
@@ -159,6 +159,6 @@ public class ServerWorkItem {
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];
 		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getConnectionID()); //$NON-NLS-1$ 
-		LogManager.logWarning(context, DQPEmbeddedPlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
+		LogManager.logWarning(context, RuntimePlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
 	}
 }
