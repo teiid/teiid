@@ -5,7 +5,7 @@
   <para>
     To learn the basics of BeanShell (<ulink url="http://beanshell.org/">http://beanshell.org</ulink>) 
     take a look at their documents and tutorials on their website A copy of the BeanShell document is also can
-    be found in the MMAdmin installation directory. Learn how basic scripts can be written and get familiar with
+    be found in the Admin Shell installation directory. Learn how basic scripts can be written and get familiar with
     some commonly used commands.
   </para>
   <para>Note: BeanShell documentation provided is of version 1.3, which is taken as is from their website,
@@ -18,8 +18,8 @@
   </para>
   <para>You can learn about the Teiid administrative API either using “help()” command or find JavaDoc
     for in the installation directory.</para>
-  <para>MMAdmin is a specialized version of BeanShell with lots of pre-built libraries and scripts
-    designed to be  used with the Teiid system. MMAdmin works in two different modes: interactive or script
+  <para>Admin Shell is a specialized version of BeanShell with lots of pre-built libraries and scripts
+    designed to be  used with the Teiid system. Admin Shell works in two different modes: interactive or script
     run mode.</para>
   <para>In interactive mode, user can invoke the tool and connect to a live Teiid system and issue any
     ad-hoc commands to control the system or issue a SQL query against connected virtual database and view the
@@ -31,7 +31,7 @@
   
   <sect1>
     <title>Essential rules to follow in using MMAdmin</title>
-    <para>To use MMAdmin successfully, there are some syntactical rules you should keep in mind.</para>
+    <para>To use Admin Shell successfully, there are some syntactical rules you should keep in mind.</para>
     <orderedlist>
       <listitem>
         <para>All the commands end with semi-colon [;]. Commands without any input parameters end with open
@@ -81,13 +81,13 @@
       script finishes the tool will exit automatically, however you still have to disconnect from Teiid
       system in the script.</para>
     <para>Note: If SSL is turned on the Teiid server, you would need to supply the correct certificates
-      for connection. Edit the command file used to execute the MMAdmin and make sure correct trust store is
+      for connection. Edit the command file used to execute the Admin Shell and make sure correct trust store is
       defined in the path.</para>
   </sect1>
   <sect1>
     <title>Basic commands to get started</title>
-    <para>The list below contains some common commands used in MMAdmin. The best way to learn scripting in the
-      MMAdmin is to read the scripts in "samples" directory in the MMAdmin kit's installation directory, and
+    <para>The list below contains some common commands used in Admin Shell. The best way to learn scripting in the
+      Admin Shell is to read the scripts in "samples" directory in the Admin Shell kit's installation directory, and
       experiment your own scripts using a developer instance of Teiid System.</para>
     <programlisting><![CDATA[   
 print("xxx");   // print something to console
@@ -117,12 +117,12 @@ exit();   // exit the shell
       that none of the BeanShell commands or custom commands will be shown in this list. Documentation is only
       source for reviewing those commands presently.</para>
     <programlisting><![CDATA[ 
-      mmadmin $ help();
+      admin $ help();
     ]]></programlisting>
     <para>To get a specific definition about a command and it's required input parameters , use the below form
       of help. The example shown will show detailed JavaDoc description about "addVDB" method.</para>
     <programlisting><![CDATA[ 
-mmadmin $ help("addVDB");
+admin $ help("addVDB");
 /**
  * Import a {@link VDB} file.
  * <br>A VDB file with internal definitions. This is the default VDB export configuration
@@ -139,7 +139,7 @@ VDB addVDB ( String name , String vdbFile , int option
     <para>If not sure about exact command, and to narrow the list available commands, help can be used in the
       following form, note the “*” at the end</para>
     <programlisting><![CDATA[ 
-mmadmin $   help(“get*”);
+admin $   help(“get*”);
       ]]></programlisting>
     <para>This will list all the commands available that begin with “get”, for example “getconnectorBindings,
       getVDBs” etc.</para>

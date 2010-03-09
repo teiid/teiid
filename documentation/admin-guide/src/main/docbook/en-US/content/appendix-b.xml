@@ -1,6 +1,6 @@
 <appendix id="assertion_list">
   <title>Assert Commands Available</title>
-  <para>The following are the list of assert commands available in the MMAdmin to be used with the scripts.
+  <para>The following are the list of assert commands available in the Admin Shell to be used with the scripts.
   </para>
   <sect1>
     <title>Assertions for SQL results</title>

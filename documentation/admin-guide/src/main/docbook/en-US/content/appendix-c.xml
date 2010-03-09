@@ -1,7 +1,7 @@
 <appendix id="jdbc_commands">
   <title>JDBC Commands</title>
   <para>The following are the list of commands available in the JDBC module, these will aid in executing SQL
-    commands in the MMAdmin shell. These commands can be used in your program once after the initial connection is
+    commands in the Admin Shell. These commands can be used in your program once after the initial connection is
     made</para>
   <programlisting><![CDATA[
 /**

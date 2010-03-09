@@ -5,7 +5,7 @@
   <sect1>
     <title>How to write your own scripts</title>
     <para>Open up a text editor, and enter all the commands in a editor and save the file “.bsh” extension and
-      place it in the distribution where MMAdmin tool can access it. Take  a look at the “samples” directory for
+      place it in the distribution where Admin Shell tool can access it. Take  a look at the “samples” directory for
       example scripts. For example:</para>
     <programlisting><![CDATA[
 // foo.bsh
@@ -33,7 +33,7 @@ load("server");
     <para>To execute a script file "foo.bsh" in a directory "some/directory" in interactive mode, execute as
       following</para>
     <programlisting><![CDATA[
-mmadmin $ source ("some/directory/foo.bsh");
+admin $ source ("some/directory/foo.bsh");
     ]]></programlisting>
     <para>"foo.bsh" is read into current context of the shell as if you typed in the whole document. If
       your script only contained method calls, you can explicitly invoke the call to execute.</para>
@@ -43,15 +43,15 @@ mmadmin $ source ("some/directory/foo.bsh");
     <para>To execute a script file "foo.bsh" in a directory "some/directory" in non-interactive mode, execute as
       following command at the command prompt</para>
     <programlisting><![CDATA[
-mmadmin.sh some/directory/foo.bsh
+admin.sh some/directory/foo.bsh
     ]]></programlisting>
     <para>Note that, in the script mode it is NOT possible to pass in the command line parameters as</para>
     <programlisting><![CDATA[
-mmadmin.sh some/directory/foo.bsh One Two
+admin.sh some/directory/foo.bsh One Two
     ]]></programlisting>
     <para>The parameters can be passed in as Java system properties. For example</para>
     <programlisting><![CDATA[
-mmadmin.sh some/directory/foo.bsh input1=One input2=Two
+admin.sh some/directory/foo.bsh input1=One input2=Two
     ]]></programlisting>
     <para>Inside the script file, you can access these properties using Java system property semantics</para>
     <programlisting><![CDATA[
@@ -68,9 +68,9 @@ value = System.getProperty(“input1”); // will return "One"
       using “startRecording” and “stopRecording” commands. For example,</para>
     <para />
     <programlisting><![CDATA[
-mmadmin $ startRecording (“directory/filename.bsh”);
-mmadmin $ <commands..>
-mmadmin $ stopRecording()    
+admin $ startRecording (“directory/filename.bsh”);
+admin $ <commands..>
+admin $ stopRecording()    
     ]]></programlisting>
     <para>in this case all the commands executed after the “startRecording” and before the “stopRecording” are
       captured in the “directory/filename.bsh” file. This gives the user an option to capture only certain portions

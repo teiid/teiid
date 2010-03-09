@@ -5,10 +5,10 @@
   <sect1>
     <title>Introduction to MMAdmin</title>
     <para>
-      MMAdmin is a script based programing environment that enables user to access, monitor and control Teiid
+      Admin Shell is a script based programming environment that enables user to access, monitor and control Teiid
       Server and MMQuery environments. This tool is built using programming language called BeanShell (
       <ulink url="http://beanshell.org/">http://beanshell.org</ulink>
-      ). MMAdmin can be used in ad-hoc scripting, or to run pre-defined scripts. It is not a graphical tool; it's a
+      ). Admin Shell can be used in ad-hoc scripting, or to run pre-defined scripts. It is not a graphical tool; it's a
       command line driven environment.
     </para>
     <orderedlist>
@@ -41,21 +41,16 @@
       </listitem>
     </orderedlist>
     <sect2>
-      <title>Where can you find MMAdmin?</title>
-      Where can you find MMAdmin
-      <para>MMAdmin is bundled with the Teiid under “tools” package. Download and unzip this
-        file to any directory using WinZip or tar command. Once you have unzipped the file, in root directory
-        you will find “mmadmin” executable script to invoke the tool.</para>
-      <para>Windows: Double click or execute "mmadmin.cmd"</para>
-      <para>*nix: Execute the "mmadmin" script</para>
-      <para>to invoke MMAdmin. This will initialize the shell and present you with a prompt:</para>
+      <title>Where can you find Admin Shell?</title>
+      <para>Admin Shell is available under the “tools” package. Download and unzip this
+        file to any directory. Once you have unzipped the file, in root directory
+        you will find “adminshell” executable script to invoke the tool.</para>
+      <para>Windows: Double click or execute "adminshell.cmd"</para>
+      <para>*nix: Execute the "adminshell.sh" script</para>
+      <para>to invoke Admin Shell. This will initialize the shell and present you with a prompt:</para>
       <programlisting><![CDATA[      
-          mmadmin $
+          admin $
       ]]></programlisting>       
-      <para>Note:  JDBC client API jar files are required on the same machine in order to successfully invoke
-        MMAdmin. Usually these jar files are found in “Server” or “Console” installation directories under “client”
-        directory.</para>
-      <para />
     </sect2>
   </sect1>
 </chapter>

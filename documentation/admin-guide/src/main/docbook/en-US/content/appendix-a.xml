@@ -35,8 +35,8 @@
       <answer>
         <para>At command prompt type</para>
         <programlisting><![CDATA[
-mmadmin $ debug= true;   // to turn it ON
-mmadmin $ debug= false; // to turn it OFF        
+admin $ debug= true;   // to turn it ON
+admin $ debug= false; // to turn it OFF        
         ]]></programlisting>        
       </answer>
     </qandaentry>

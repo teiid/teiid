@@ -11,7 +11,7 @@
         <para>start a method name which begins with "testxxxx()"</para>
       </listitem>
       <listitem>
-        <para>use method body to write actual test. Method body can contain any MMAdmin based script using Admin
+        <para>use method body to write actual test. Method body can contain any Admin Shell based script using Admin
           API and JDBC commands</para>
       </listitem>
       <listitem>

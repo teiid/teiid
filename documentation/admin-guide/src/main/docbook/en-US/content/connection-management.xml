@@ -4,7 +4,7 @@
   <title>Connection Management</title>
   <sect1>
     <title>Default Connection Properties</title>
-    <para>The file "connection.properties" in the installation directory of the MMAdmin defines the default
+    <para>The file "connection.properties" in the installation directory of the AdminShell defines the default
       connection properties with which user can connect to Teiid system. The following  properties can be
       defined using this file</para>
     <programlisting><![CDATA[
@@ -30,7 +30,7 @@ vdb.name = <vdb name>
     <title>Handling Multiple Connections</title>
     <para>Using MMAdmin, user can actively manage more than one connection to a single or multiple Teiid
       systems. For example, two separate connections can be maintained, one to the development server and one to
-      the integration server at the same time. This is possible because MMAdmin supports a feature called named
+      the integration server at the same time. This is possible because Admin Shell supports a feature called named
       connections. </para>
     <para>Every time a connection is made, it assigns a unique name to that connection and manages the
       context  of the connection under that name.  Unless, user makes another connection all the commands executed
