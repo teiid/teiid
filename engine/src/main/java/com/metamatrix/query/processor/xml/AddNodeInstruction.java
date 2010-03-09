@@ -22,7 +22,12 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -30,7 +35,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  */
@@ -91,15 +95,15 @@ public class AddNodeInstruction extends ProcessorInstruction {
             if (defaultValue != null){
                 if(isElement) {
                     success = doc.addElement(descriptor, defaultValue);
-                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                 } else {
                     success = doc.addAttribute(descriptor, defaultValue);    
-                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             } else {
                 if(isElement) {
                     success = doc.addElement(descriptor, nillableDescriptor);
-                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName()}); //$NON-NLS-1$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName()}); //$NON-NLS-1$
                 } //else nothing gets outputted for attribute with no content
             } 
         } else {
@@ -109,24 +113,24 @@ public class AddNodeInstruction extends ProcessorInstruction {
             if (valueStr != null){
                 if(isElement) {
                     success = doc.addElement(descriptor, valueStr);         
-                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
                 } else {
                     success = doc.addAttribute(descriptor, valueStr);    
-                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             } else {
                 if (defaultValue != null){
                     if(isElement) {
                         success = doc.addElement(descriptor, defaultValue);         
-	                    LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+	                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                     } else {
                         success = doc.addAttribute(descriptor, defaultValue);    
-                        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                 } else {
                     if(isElement) {
                         success = doc.addElement(descriptor, nillableDescriptor);
-                        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"no value"}); //$NON-NLS-1$ //$NON-NLS-2$
+                        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"no value"}); //$NON-NLS-1$ //$NON-NLS-2$
                     } //else nothing gets outputted for attribute with no content
                 } 
             }

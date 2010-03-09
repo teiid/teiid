@@ -79,7 +79,6 @@ import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
@@ -206,7 +205,7 @@ public class DQPCore implements ClientSideDQP {
 		} catch (InterruptedException e) {
 		}
     	// TODO: Should we be doing more cleanup here??
-		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
+		LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
     }
     
     /**
@@ -309,8 +308,8 @@ public class DQPCore implements ClientSideDQP {
 	
 	public ResultsFuture<ResultsMessage> processCursorRequest(long reqID,
 			int batchFirst, int fetchSize) throws MetaMatrixProcessingException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst);  //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst);  //$NON-NLS-1$
         }
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
@@ -357,8 +356,8 @@ public class DQPCore implements ClientSideDQP {
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,
 			long requestId, String streamId)
 			throws MetaMatrixProcessingException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }   
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestWorkItem workItem = safeGetWorkItem(workContext.getRequestID(requestId));
@@ -371,8 +370,8 @@ public class DQPCore implements ClientSideDQP {
 	public ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId,
 			long requestId, String streamId)
 			throws MetaMatrixProcessingException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "Request for next Lob chunk with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Request for next Lob chunk with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }  
         RequestWorkItem workItem = getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(requestId));
         ResultsFuture<LobChunk> resultsFuture = new ResultsFuture<LobChunk>();
@@ -427,7 +426,7 @@ public class DQPCore implements ClientSideDQP {
 	            try {
 	                cancelRequest(reqId);
 	            } catch (MetaMatrixComponentException err) {
-	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
+	                LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
 				}
 	        }
         }
@@ -436,7 +435,7 @@ public class DQPCore implements ClientSideDQP {
             try {
                 transactionService.cancelTransactions(sessionId, false);
             } catch (XATransactionException err) {
-                LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
+                LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
             } 
         }
         contextCache.removeSessionScopedCache(sessionId);
@@ -448,8 +447,8 @@ public class DQPCore implements ClientSideDQP {
     }
     
     private boolean cancelRequest(RequestID requestID) throws MetaMatrixComponentException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
         }
         
         boolean markCancelled = false;
@@ -461,7 +460,7 @@ public class DQPCore implements ClientSideDQP {
     	if (markCancelled) {
             logMMCommand(workItem, Event.CANCEL, null);
     	} else {
-    		LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
+    		LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
     	}
         return markCancelled;
     }
@@ -478,25 +477,25 @@ public class DQPCore implements ClientSideDQP {
      * @throws MetaMatrixComponentException 
      */
     void closeRequest(RequestID requestID) throws MetaMatrixComponentException {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
         }
         
         RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
         	workItem.requestClose();
         } else {
-        	LogManager.logDetail(LogConstants.CTX_DQP, requestID + " close call ignored as the request has already been removed."); //$NON-NLS-1$
+        	LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, requestID + " close call ignored as the request has already been removed."); //$NON-NLS-1$
         }
     }
     
     private void clearPlanCache(){
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
+        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
         this.prepPlanCache.clearAll();
     }
 
     private void clearCodeTableCache(){
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_code_table_cache")); //$NON-NLS-1$
+        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_code_table_cache")); //$NON-NLS-1$
         this.dataTierMgr.clearCodeTables();
     }
     
@@ -563,7 +562,7 @@ public class DQPCore implements ClientSideDQP {
 	}	
 	
     void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
-    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
+    	if (!LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
     		return;
     	}
     	
@@ -583,7 +582,7 @@ public class DQPCore implements ClientSideDQP {
         } else {
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status);
         }
-        LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.DETAIL, com.metamatrix.common.util.LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     ProcessorDataManager getDataTierManager() {
@@ -639,7 +638,7 @@ public class DQPCore implements ClientSideDQP {
         prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount());
 		
         // Processor debug flag
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
+        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
                         
         //get buffer manager
         this.bufferManager = bufferService.getBufferManager();

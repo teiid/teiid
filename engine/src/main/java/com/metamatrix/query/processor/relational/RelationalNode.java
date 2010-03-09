@@ -38,7 +38,6 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -389,7 +388,7 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
      * @param batch Batch being sent
      */
     private void recordBatch(TupleBatch batch) {
-        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         	return;
         }
     	// Print summary
@@ -405,7 +404,7 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
         for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
         	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
-        LogManager.logDetail(LogConstants.CTX_DQP, str.toString());
+        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, str.toString());
     }
 
     // =========================================================================

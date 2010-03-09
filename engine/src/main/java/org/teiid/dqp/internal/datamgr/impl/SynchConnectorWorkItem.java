@@ -33,10 +33,10 @@ import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.util.LogConstants;
 
 public class SynchConnectorWorkItem extends ConnectorWorkItem {
 

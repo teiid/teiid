@@ -29,7 +29,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  */
@@ -52,7 +51,7 @@ public class MoveCursorInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"NEXT", resultSetName}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"NEXT", resultSetName}); //$NON-NLS-1$
 
         context.getNextRow(resultSetName);
 

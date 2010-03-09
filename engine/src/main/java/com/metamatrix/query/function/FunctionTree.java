@@ -37,6 +37,7 @@ import java.util.Set;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -46,7 +47,6 @@ import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * Data structure used to store function signature information. There are multiple uses

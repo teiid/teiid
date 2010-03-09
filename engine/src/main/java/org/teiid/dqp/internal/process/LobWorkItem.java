@@ -40,7 +40,6 @@ import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.util.LogConstants;
 
 public class LobWorkItem implements Work {
 	
@@ -76,7 +75,7 @@ public class LobWorkItem implements Work {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
         } catch (MetaMatrixComponentException e) {            
-            LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
         } catch (IOException e) {
 			ex = e;
@@ -98,7 +97,7 @@ public class LobWorkItem implements Work {
         			stream.close();
         		}
 			} catch (IOException e) {
-				LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+				LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
 			}
         	parent.removeLobStream(streamRequestId);
         }

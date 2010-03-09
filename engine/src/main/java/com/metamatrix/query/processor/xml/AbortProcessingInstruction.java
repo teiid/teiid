@@ -31,7 +31,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * This instruction, intended to be reached conditionally (only under certain
@@ -61,7 +60,7 @@ public class AbortProcessingInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
 
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
         throw new MetaMatrixComponentException(DEFAULT_MESSAGE);
     }
 

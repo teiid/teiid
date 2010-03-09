@@ -208,7 +208,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.addAttchment("SecurityContext", securityContext);
         newSession.addAttchment(VDBMetaData.class, vdb);
         newSession.addAttchment(SessionToken.class, new SessionToken(id, userName));
-        
+        LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + id, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}

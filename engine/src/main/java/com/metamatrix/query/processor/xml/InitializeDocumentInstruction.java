@@ -30,7 +30,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
-import com.metamatrix.query.util.LogConstants;
 import com.metamatrix.query.util.XMLFormatConstants;
 
 /**
@@ -78,7 +77,7 @@ public class InitializeDocumentInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
             
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, "DOC begin"); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "DOC begin"); //$NON-NLS-1$
 
         // Only process this instruction if there are no recursive programs in the
         // program stack (don't want to start a new doc in the middle of 

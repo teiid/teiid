@@ -40,6 +40,7 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -98,7 +99,6 @@ import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 import com.metamatrix.query.validator.ValidationVisitor;
 
 /**

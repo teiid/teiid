@@ -85,7 +85,6 @@ import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 import com.metamatrix.query.util.XMLFormatConstants;
 /**
  * 
@@ -148,7 +147,7 @@ public class XMLPlan extends ProcessorPlan {
         
         this.env = (XMLProcessorEnvironment)this.env.clone();
 
-		LogManager.logTrace(LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
+		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
     }
 
     public ProcessorDataManager getDataManager() {
@@ -273,7 +272,7 @@ public class XMLPlan extends ProcessorPlan {
         // do the xml processing.
         ProcessorInstruction inst = env.getCurrentInstruction();
         while (inst != null){
-        	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing instruction", inst); //$NON-NLS-1$
+        	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
             this.context = inst.process(this.env, this.context);
 
             //code to check for end of document, set current doc
@@ -576,7 +575,7 @@ public class XMLPlan extends ProcessorPlan {
             return "XMLPlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
         } catch (Exception e){
             e.printStackTrace();
-            LogManager.logWarning(LogConstants.CTX_XML_PLAN, e,
+            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, e,
                                  QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0001));
         }
         return "XMLPlan"; //$NON-NLS-1$

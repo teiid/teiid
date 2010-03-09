@@ -98,26 +98,18 @@ class Log4JUtil {
 	
 	public static Set<String> getContexts(){
 		HashSet<String> contexts = new HashSet<String>();
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_DQP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_CONNECTOR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_BUFFER_MGR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_STORAGE_MGR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_TXN_LOG);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_EXTENSION_SOURCE);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_COMMANDLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_AUDITLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_QUERY_SERVICE);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_PROCESS_INFO_LOG);
-
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_CONFIG);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_COMMUNICATION);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_POOLING);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_DQP);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_CONNECTOR);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_TXN_LOG);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_COMMANDLOGGING);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SESSION);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_MEMBERSHIP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION_ADMIN_API);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SERVER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_PLANNER);
 		
 		contexts.add("com.arjuna"); //$NON-NLS-1$
 		contexts.add("org.jboss"); //$NON-NLS-1$

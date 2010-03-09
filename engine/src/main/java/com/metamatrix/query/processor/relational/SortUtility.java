@@ -41,7 +41,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
@@ -262,8 +261,8 @@ public class SortUtility {
             bufferManager.releaseBuffers(release);
             reserved -= release;
             try {
-	        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-	            	LogManager.logTrace(LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
+	        	if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
+	            	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	        	// initialize the sublists with the min value
 	            for(int i = 0; i<maxSortIndex; i++) { 

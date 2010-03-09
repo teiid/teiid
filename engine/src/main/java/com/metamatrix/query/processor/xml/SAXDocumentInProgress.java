@@ -39,7 +39,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * This class is used to build XML document and stream the output as
@@ -154,7 +153,7 @@ public class SAXDocumentInProgress implements DocumentInProgress {
                 return true;
             }
         } catch (SAXException e) {
-            LogManager.logError(LogConstants.CTX_XML_PLAN, e, e.getMessage());
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, e, e.getMessage());
             return false;
         }
         showState( "addElement(2) - BOT" );  //$NON-NLS-1$
@@ -344,19 +343,19 @@ public class SAXDocumentInProgress implements DocumentInProgress {
 
     private void showState( String sOccasion ) {
 
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"\n [showState] State Vars at: " + sOccasion} ); //$NON-NLS-1$ 
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent: " + currentParent} ); //$NON-NLS-1$
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject: " + currentObject} ); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"\n [showState] State Vars at: " + sOccasion} ); //$NON-NLS-1$ 
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent: " + currentParent} ); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject: " + currentObject} ); //$NON-NLS-1$
 
             if ( currentObject != null ) { 
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject.getNillableDescriptor(): " + currentObject.getNillableDescriptor()}); //$NON-NLS-1$ 
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] workingElements: " + currentObject.getChildren()}); //$NON-NLS-1$ 
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject.getNillableDescriptor(): " + currentObject.getNillableDescriptor()}); //$NON-NLS-1$ 
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] workingElements: " + currentObject.getChildren()}); //$NON-NLS-1$ 
             }    
             if ( currentParent != null ) { 
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): " + currentParent.getParent()}); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): " + currentParent.getParent()}); //$NON-NLS-1$
             } else {
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): is NULL "}); //$NON-NLS-1$ 
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): is NULL "}); //$NON-NLS-1$ 
             }
         }
     }

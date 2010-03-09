@@ -64,7 +64,6 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -409,7 +408,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	case CACHE_EXISTS:
 	        	return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
 	        case CACHE_OVERLOAD:
-	        	throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", DQPEmbeddedProperties.MAX_CODE_TABLES)); //$NON-NLS-1$ //$NON-NLS-2$
+	        	throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	        default:
 	            throw BlockedException.INSTANCE;
         }

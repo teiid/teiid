@@ -34,8 +34,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.vdb.runtime.VDBKey;
 
@@ -151,11 +149,11 @@ class CodeTableCache {
     	// Depends on size of results and available memory and system parameters
 		int potentialSize = table.codeMap.size() + records.length;
     	if (potentialSize > maxCodeTableRecords) {
-    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS_PER_TABLE)); //$NON-NLS-1$ //$NON-NLS-2$                    
+    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                  
     	}
     	
     	if (potentialSize + rowCount > maxCodeRecords) {
-    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS)); //$NON-NLS-1$ //$NON-NLS-2$
+    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTableRecords")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	}
 		
         // Add data: <List<List<keyValue, returnValue>> from results to the code table cache
@@ -236,7 +234,7 @@ class CodeTableCache {
         // Clear the cacheKeyDone
         this.rowCount = 0;
         // Log status
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
+        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
     }
         
 	/**

@@ -61,7 +61,6 @@ import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.xml.XMLUtil;
 
@@ -113,7 +112,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private int columnCount;
 		
 		public ManagedBatchImpl(String id, FileStore store, TupleBatch batch) {
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", batchAdded.incrementAndGet()); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", batchAdded.incrementAndGet()); //$NON-NLS-1$
 			this.id = id;
 			this.store = store;
 			this.activeBatch = batch;
@@ -150,7 +149,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 		@Override
 		public TupleBatch getBatch(boolean cache, String[] types) throws MetaMatrixComponentException {
-			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readAttempts.incrementAndGet(), "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readAttempts.incrementAndGet(), "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
 			synchronized (activeBatches) {
 				TupleBufferInfo tbi = activeBatches.remove(this.id);
 				if (tbi != null) { 
@@ -186,7 +185,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						return batch;
 					}
 				}
-				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readCount.incrementAndGet()); //$NON-NLS-1$
+				LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Reading batch from disk", readCount.incrementAndGet()); //$NON-NLS-1$
 				try {
 		            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(store.createInputStream(this.offset), IO_BUFFER_SIZE));
 		            batch = new TupleBatch();
@@ -211,7 +210,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				TupleBatch batch = activeBatch;
 				if (batch != null) {
 					if (!persistent) {
-						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Writing batch to disk", writeCount.incrementAndGet()); //$NON-NLS-1$
+						LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Writing batch to disk", writeCount.incrementAndGet()); //$NON-NLS-1$
 						synchronized (store) {
 							offset = store.getLength();
 							FileStoreOutputStream fsos = store.createOutputStream(IO_BUFFER_SIZE);
@@ -350,16 +349,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     		}
     	};
         TupleBuffer tupleBuffer = new TupleBuffer(batchManager, newID, elements, getProcessorBatchSize());
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Creating TupleBuffer:", newID, "of type "+tupleSourceType}); //$NON-NLS-1$ //$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, new Object[]{"Creating TupleBuffer:", newID, "of type "+tupleSourceType}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return tupleBuffer;
     }
     
     @Override
     public FileStore createFileStore(String name) {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
+    	if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
         }
     	return this.diskMgr.createFileStore(name);
     }
@@ -462,7 +461,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			try {
 				mb.persist();
 			} catch (MetaMatrixComponentException e) {
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
+				LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, e, "Error persisting batch, attempts to read that batch later will result in an exception"); //$NON-NLS-1$
 			}
 		}
 	}

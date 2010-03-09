@@ -28,7 +28,6 @@ import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.dqp.util.LogConstants;
 
 public class DQPContextCache implements Serializable{
 	private static final long serialVersionUID = 6958846566556640186L;
@@ -55,7 +54,7 @@ public class DQPContextCache implements Serializable{
 		try {
 			this.cache.removeChild(this.processIdentifier);
 		} catch(IllegalStateException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 	
@@ -75,7 +74,7 @@ public class DQPContextCache implements Serializable{
 				}
 			}
 		} catch(IllegalStateException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 	
@@ -95,7 +94,7 @@ public class DQPContextCache implements Serializable{
 				}
 			}
 		} catch(IllegalStateException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 
@@ -111,7 +110,7 @@ public class DQPContextCache implements Serializable{
 				scopeNode.removeChild(session);
 			}
 		} catch(IllegalStateException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 
@@ -129,7 +128,7 @@ public class DQPContextCache implements Serializable{
 				scopeNode.removeChild(id.toUpperCase());
 			}
 		} catch(IllegalStateException e) {
-			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 }

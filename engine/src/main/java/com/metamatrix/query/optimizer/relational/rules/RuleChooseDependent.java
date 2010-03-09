@@ -32,6 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -47,7 +48,6 @@ import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * Finds nodes that can be turned into dependent joins 

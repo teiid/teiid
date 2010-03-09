@@ -62,7 +62,6 @@ import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -149,7 +148,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
         
         // Audit - request
     	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-    	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
+    	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
         
         if (isEntitled()){
             return Collections.EMPTY_LIST;
@@ -174,10 +173,10 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
 
         if (results.isEmpty()) {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
         } else {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
         }
         return results;
     }

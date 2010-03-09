@@ -32,7 +32,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p>This instruction holds a List of Criteria, and for each Criteria there is a
@@ -196,7 +195,7 @@ public class IfInstruction extends ProcessorInstruction {
             Program thenProgram = condition.getThenProgram();
             
             env.pushProgram(thenProgram, condition.isProgramRecursive());
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"IF: true condition", condition, "- then program:", thenProgram}); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"IF: true condition", condition, "- then program:", thenProgram}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return context;
     }

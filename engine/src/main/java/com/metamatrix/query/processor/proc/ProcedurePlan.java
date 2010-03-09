@@ -43,7 +43,6 @@ import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
@@ -166,7 +165,7 @@ public class ProcedurePlan extends ProcessorPlan {
         originalProgram.resetProgramCounter();
         programs.clear();
     	programs.push(originalProgram);
-		LogManager.logTrace(LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
+		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
     }
 
     public ProcessorDataManager getDataManager() {
@@ -265,23 +264,23 @@ public class ProcedurePlan extends ProcessorPlan {
             Program program = peek();
             inst = program.getCurrentInstruction();
 	        if (inst == null){
-	        	LogManager.logTrace(LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
+	        	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
                 this.pop();
                 continue;
             }
             if (inst instanceof RepeatedInstruction) {
-    	        LogManager.logTrace(LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
+    	        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
                 RepeatedInstruction loop = (RepeatedInstruction)inst;
                 if (loop.testCondition(this)) {
-                    LogManager.logTrace(LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
+                    LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
                     inst.process(this);
                     this.push(loop.getNestedProgram());
                     continue;
                 }
-                LogManager.logTrace(LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
                 loop.postInstruction(this);
             } else {
-            	LogManager.logTrace(LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
+            	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
                 inst.process(this);
             }
             program.incrementProgramCounter();

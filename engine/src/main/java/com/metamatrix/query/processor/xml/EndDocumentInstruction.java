@@ -29,7 +29,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * This instruction marks the current document in progress as
@@ -54,7 +53,7 @@ public class EndDocumentInstruction extends ProcessorInstruction {
         // program stack (don't want to start a new doc in the middle of 
         // recursive processing)
         if (!env.isRecursiveProgramInStack()) {
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, "ending document"); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "ending document"); //$NON-NLS-1$
             env.getDocumentInProgress().markAsFinished();
         }
             

@@ -32,6 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -63,7 +64,6 @@ import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p> This prepares an {@link com.metamatrix.query.processor.xml.XMLPlan XMLPlan} from

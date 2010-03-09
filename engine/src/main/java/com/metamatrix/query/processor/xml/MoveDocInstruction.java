@@ -34,7 +34,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  */
@@ -62,7 +61,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
 
         switch(this.direction) {
             case UP:
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
                 try {
                     doc.moveToParent();
                 } catch (SAXException err) {
@@ -70,7 +69,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
                 }
                 break;
             case DOWN:
-                LogManager.logTrace(LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
                 doc.moveToLastChild();
                 break;
             default:

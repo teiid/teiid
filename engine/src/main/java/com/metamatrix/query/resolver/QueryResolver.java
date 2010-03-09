@@ -61,7 +61,6 @@ import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <P>The QueryResolver is used between Parsing and QueryValidation. The SQL queries,
@@ -132,7 +131,7 @@ public class QueryResolver {
                                       AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryResolverException, MetaMatrixComponentException {
 
-		LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
+		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
         
         TempMetadataAdapter resolverMetadata = null;
         try {

@@ -22,15 +22,25 @@
 
 package com.metamatrix.common.util;
 
+import org.teiid.connector.basic.DefaultConnectorLogger;
+
 public interface LogConstants {
 	// add the new contexts to the Log4JUtil.java class, for configuration purpose
-	public static final String CTX_CONFIG = "CONFIG"; //$NON-NLS-1$
-	public static final String CTX_COMMUNICATION = "COMMUNICATION"; //$NON-NLS-1$
-    public static final String CTX_POOLING = "RESOURCE_POOLING"; //$NON-NLS-1$
 	public static final String CTX_SESSION = "SESSION"; //$NON-NLS-1$
 	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
 	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
-	public static final String CTX_AUTHORIZATION_ADMIN_API = "AUTHORIZATION_ADMIN_API"; //$NON-NLS-1$
-	public static final String CTX_SERVER= "Server"; //$NON-NLS-1$
-	public static final String CTX_ADMIN = "ADMIN"; //$NON-NLS-1$	
+	public static final String CTX_SERVER= "SERVER"; //$NON-NLS-1$
+	public static final String CTX_QUERY_PLANNER = "PLANNER"; //$NON-NLS-1$
+	public static final String CTX_DQP = "PROCESSOR"; //$NON-NLS-1$
+	public static final String CTX_CONNECTOR = DefaultConnectorLogger.CTX_CONNECTOR;
+	public static final String CTX_BUFFER_MGR = "BUFFER_MGR"; //$NON-NLS-1$
+	public static final String CTX_TXN_LOG = "TXN_LOG"; //$NON-NLS-1$
+	public static final String CTX_COMMANDLOGGING = "COMMAND_LOG"; //$NON-NLS-1$
+	public static final String CTX_AUDITLOGGING = "AUDIT_LOG"; //$NON-NLS-1$
+	public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
+	// Query contexts
+	public static final String CTX_FUNCTION_TREE = CTX_QUERY_PLANNER + ".FUNCTION_TREE"; //$NON-NLS-1$
+	public static final String CTX_QUERY_RESOLVER = CTX_QUERY_PLANNER + ".RESOLVER"; //$NON-NLS-1$
+	public static final String CTX_XML_PLANNER = CTX_QUERY_PLANNER + ".XML_PLANNER"; //$NON-NLS-1$
+	public static final String CTX_XML_PLAN = CTX_DQP + ".XML_PLAN"; //$NON-NLS-1$
 }

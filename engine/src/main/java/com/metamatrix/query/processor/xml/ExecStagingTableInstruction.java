@@ -30,7 +30,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
-import com.metamatrix.query.util.LogConstants;
 
 
 /** 
@@ -59,7 +58,7 @@ public class ExecStagingTableInstruction extends ProcessorInstruction {
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
         if (!env.isStagingTableLoaded(this.resultSetName)) {
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
             
             PlanExecutor executor = context.getResultExecutor(resultSetName);
             if (executor == null) {

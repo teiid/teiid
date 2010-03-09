@@ -63,10 +63,7 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.ParameterInfo;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
@@ -641,7 +638,6 @@ public class LanguageBridgeFactory {
         try {
             group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
         } catch(Exception e) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_group_{0}._11", symbol.getName())); //$NON-NLS-1$
             throw new MetaMatrixComponentException(e);
         }
         return group;

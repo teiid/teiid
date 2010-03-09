@@ -39,7 +39,6 @@ import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  */
@@ -122,7 +121,6 @@ public class RelationalPlan extends ProcessorPlan {
         super.reset();
         
         this.root.reset();
-        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "RelationalPlan reset"); //$NON-NLS-1$
     }
 
 	public String toString() {

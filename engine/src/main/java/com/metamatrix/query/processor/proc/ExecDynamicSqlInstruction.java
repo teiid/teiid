@@ -39,7 +39,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -146,7 +145,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
 
-			LogManager.logTrace(LogConstants.CTX_DQP,
+			LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
@@ -236,7 +235,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
 				Object assignment = procEnv.evaluateExpression(setClause.getValue());
 
-				LogManager.logTrace(LogConstants.CTX_DQP,
+				LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(), assignment);

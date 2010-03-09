@@ -32,7 +32,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * Loop instruction on the result set execute before this instruction.
@@ -70,7 +69,7 @@ public class WhileInstruction extends ProcessorInstruction {
             setFirst(context.getVariableContext(), Boolean.TRUE);
         } 
         else {
-            LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"WHILE removed finished result set:",resultSetName}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"WHILE removed finished result set:",resultSetName}); //$NON-NLS-1$
 
             //increment the current program counter, so this 
             //While instruction will not be executed again
@@ -98,7 +97,7 @@ public class WhileInstruction extends ProcessorInstruction {
     protected void pushProgram(XMLProcessorEnvironment env,
                              XMLContext context,
                              List row) throws MetaMatrixComponentException {
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"WHILE repeating for result set:",resultSetName,", block program:", blockProgram}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"WHILE repeating for result set:",resultSetName,", block program:", blockProgram}); //$NON-NLS-1$ //$NON-NLS-2$
 
         context.setVariableValues(resultSetName, row);
         

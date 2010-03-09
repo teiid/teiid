@@ -195,6 +195,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
+    
+    @ManagementProperty(description="Max open buffer files (default 64)")
+    public void setMaxOpenFiles(int maxOpenFiles) {
+		this.maxOpenFiles = maxOpenFiles;
+	}
 
     @ManagementProperty(description="#The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
     		"processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, " + 

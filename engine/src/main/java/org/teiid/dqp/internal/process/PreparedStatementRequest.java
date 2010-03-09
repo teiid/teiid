@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -137,7 +136,7 @@ public class PreparedStatementRequest extends Request {
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
-            LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
         }
 
         ProcessorPlan cachedPlan = prepPlan.getPlan();
@@ -152,7 +151,7 @@ public class PreparedStatementRequest extends Request {
 		        this.prepPlanCache.put(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
         } else {
-        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
+        	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
             processPlan = cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();

@@ -26,7 +26,6 @@ import java.util.ResourceBundle;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.BundleUtil;
-import com.metamatrix.dqp.util.LogConstants;
 
 
 public class DQPEmbeddedPlugin {
@@ -39,35 +38,35 @@ public class DQPEmbeddedPlugin {
     public static void logError(Exception e, String msg, Object[] args) {
         String actualMsg = Util.getString(msg, args);
         if (e != null) {
-            LogManager.logError(LogConstants.CTX_DQP, e, actualMsg);
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_DQP, e, actualMsg);
         }
         else {
-            LogManager.logError(LogConstants.CTX_DQP, actualMsg);
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_DQP, actualMsg);
         }
     }
 
     public static void logError(String msg, Object[] args) {
         String actualMsg = Util.getString(msg,args);
-        LogManager.logError(LogConstants.CTX_DQP, actualMsg);
+        LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_DQP, actualMsg);
     }
     
     public static void logWarning(Exception e, String msg, Object[] args) {
         String actualMsg = Util.getString(msg,args);
         if (e != null) {
-            LogManager.logWarning(LogConstants.CTX_DQP, e, actualMsg);
+            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, actualMsg);
         }
         else {
-            LogManager.logWarning(LogConstants.CTX_DQP, actualMsg);
+            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, actualMsg);
         }        
     }
 
     public static void logWarning(String msg, Object[] args) {
         String actualMsg = Util.getString(msg,args);
-        LogManager.logWarning(LogConstants.CTX_DQP, actualMsg);
+        LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, actualMsg);
     }
     
     public static void logInfo(String msg, Object[] args) {
         String actualMsg = Util.getString(msg,args);
-        LogManager.logInfo(LogConstants.CTX_DQP, actualMsg);
+        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, actualMsg);
     }    
 }

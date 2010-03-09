@@ -73,7 +73,6 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  */
@@ -171,7 +170,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	private void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
                               TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
-        LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
         //create a new variable and metadata context for this block so that discovered metadata is not visible else where
         TempMetadataStore store = new TempMetadataStore(new HashMap(metadata.getMetadataStore().getData()));
@@ -189,7 +188,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 
 	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
-        LogManager.logTrace(LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
         switch(statement.getType()) {
             case Statement.TYPE_IF:

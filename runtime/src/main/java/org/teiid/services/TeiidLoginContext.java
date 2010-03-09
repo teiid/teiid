@@ -59,7 +59,7 @@ public class TeiidLoginContext {
 	
 	public void authenticateUser(String username, Credentials credential, String applicationName, List<String> domains) throws LoginException {
         
-        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
                 
         final String baseUsername = getBaseUsername(username);
         final char[] password = credential.getCredentialsAsCharArray();
@@ -92,10 +92,10 @@ public class TeiidLoginContext {
 				this.loginContext.login();
 				this.userName = baseUsername+AT+domain;
 				this.securitydomain = domain;
-				
+				LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
 				return;
 			} catch (LoginException e) {
-				LogManager.logDetail(LogConstants.CTX_MEMBERSHIP,e.getMessage()); 
+				LogManager.logDetail(LogConstants.CTX_MEMBERSHIP,e, e.getMessage()); 
 			}
         }
         throw new LoginException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       

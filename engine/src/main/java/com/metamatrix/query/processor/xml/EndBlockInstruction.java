@@ -29,7 +29,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p>This instruction closes a result set, which closes and removes the TupleSource
@@ -66,7 +65,7 @@ public class EndBlockInstruction extends ProcessorInstruction {
 
         context.removeResultSet(resultSetName);
 
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{CLOSE_FINISHED,resultSetName});
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{CLOSE_FINISHED,resultSetName});
             
         env.incrementCurrentProgramCounter();
         return context;

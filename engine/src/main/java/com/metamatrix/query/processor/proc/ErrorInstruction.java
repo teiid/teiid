@@ -28,7 +28,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ProcedureErrorInstructionException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.sql.util.VariableContext;
 
 /**
@@ -67,7 +66,7 @@ public class ErrorInstruction extends AbstractAssignmentInstruction {
      */
     protected void processValue(Object value, VariableContext varContext) throws MetaMatrixComponentException,
                                              MetaMatrixProcessingException {
-        LogManager.logTrace(LogConstants.CTX_DQP,
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
                             new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
         throw new ProcedureErrorInstructionException(ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
     }

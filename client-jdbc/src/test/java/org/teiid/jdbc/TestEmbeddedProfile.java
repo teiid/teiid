@@ -21,10 +21,7 @@
  */
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -32,7 +29,6 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 

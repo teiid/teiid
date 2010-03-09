@@ -80,7 +80,6 @@ import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.SessionToken;
 
@@ -119,9 +118,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	// create the necessary services
     	createClientServices();
     	
-    	this.csr.registerClientService(ILogon.class, proxyService(ILogon.class, logon), com.metamatrix.common.util.LogConstants.CTX_SERVER);
-    	this.csr.registerClientService(ClientSideDQP.class, proxyService(ClientSideDQP.class, this.dqpCore), LogConstants.CTX_QUERY_SERVICE);
-    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), LogConstants.CTX_ADMIN_API);
+    	this.csr.registerClientService(ILogon.class, proxyService(ILogon.class, logon), com.metamatrix.common.util.LogConstants.CTX_SESSION);
+    	this.csr.registerClientService(ClientSideDQP.class, proxyService(ClientSideDQP.class, this.dqpCore), com.metamatrix.common.util.LogConstants.CTX_DQP);
+    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
 	    	this.jdbcSocket = new SocketTransport(this.jdbcSocketConfiguration, csr);
@@ -180,7 +179,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		txnService.setTransactionProvider(new ContainerTransactionProvider(terminator));
 		txnService.setProcessName(processName);
 		txnService.setXidFactory(new XidFactory());
-		return (TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, txnService, new Class[] {TransactionService.class}, MessageLevel.DETAIL);
+		return (TransactionService)LogManager.createLoggingProxy(com.metamatrix.common.util.LogConstants.CTX_TXN_LOG, txnService, new Class[] {TransactionService.class}, MessageLevel.DETAIL);
     }	
 	
 	private <T> T proxyService(final Class<T> iface, final T instance) {

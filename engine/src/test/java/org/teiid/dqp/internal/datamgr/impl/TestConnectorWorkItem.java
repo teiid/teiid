@@ -51,7 +51,6 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -381,7 +380,7 @@ public class TestConnectorWorkItem {
 			synchConnectorWorkItem.run();
 			assertNotNull("Connection should not be null when IsImmutable is true", synchConnectorWorkItem.connection);   //$NON-NLS-1$ 
 		} catch ( Exception e ) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());			
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_CONNECTOR, e.getMessage());			
 		}
     }
     
@@ -417,7 +416,7 @@ public class TestConnectorWorkItem {
 			synchConnectorWorkItem.run();
 			assertNull("Connection should be null when IsImmutable is false", synchConnectorWorkItem.connection);  //$NON-NLS-1$ 
 		} catch ( Exception e ) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());			
+			LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_CONNECTOR, e.getMessage());			
 		}
     }
 

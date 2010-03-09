@@ -39,8 +39,6 @@ import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.service.SessionService;
@@ -76,7 +74,6 @@ public class LogonImpl implements ILogon {
 			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection);
 	        
 			long sessionID = updateDQPContext(sessionInfo, adminConnection);
-			LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			if (Boolean.parseBoolean(connProps.getProperty(ServerConnection.LOCAL_CONNECTION))) {
 				service.setLocalSession(sessionID);
 			}

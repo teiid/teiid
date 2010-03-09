@@ -29,7 +29,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * Adds a comment to an element of the document in progress
@@ -57,7 +56,7 @@ public class AddCommentInstruction extends ProcessorInstruction {
         DocumentInProgress doc = env.getDocumentInProgress();
         
         doc.addComment(this.commentText);         
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
         
         env.incrementCurrentProgramCounter();
         return context;

@@ -56,7 +56,6 @@ import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -345,7 +344,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 if (ExecutionProperties.TXN_WRAP_AUTO.equals(requestMsg.getTxnAutoWrapMode())){
                     startAutoWrapTxn = true;
                 } else if (ExecutionProperties.TXN_WRAP_OFF.equals(requestMsg.getTxnAutoWrapMode())) {
-                    LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("Request.potentially_unsafe")); //$NON-NLS-1$ 
+                    LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("Request.potentially_unsafe")); //$NON-NLS-1$ 
                 }
             } 
             
@@ -450,7 +449,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             } finally {
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
-                    LogManager.logInfo(LogConstants.CTX_DQP, debugLog);               
+                    LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, debugLog);               
                 }
             }
             
@@ -458,7 +457,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 analysisRecord.setQueryPlan(processPlan.getDescriptionProperties());
             }
             
-            LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
+            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
             Object[] params = new Object[] { requestId};
             String msg = DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", params); //$NON-NLS-1$
@@ -528,7 +527,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     public void processRequest() 
         throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryPlannerException {
                     
-    	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	
         initMetadata();
         

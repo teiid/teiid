@@ -39,6 +39,7 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
@@ -69,7 +70,6 @@ import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 
 /** 

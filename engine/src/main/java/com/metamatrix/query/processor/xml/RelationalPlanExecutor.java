@@ -40,7 +40,6 @@ import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 
 /** 
@@ -154,7 +153,7 @@ class RelationalPlanExecutor implements PlanExecutor {
      */
     public void close() throws MetaMatrixComponentException {
 		this.internalProcessor.closeProcessing();
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
     }
   
 }
