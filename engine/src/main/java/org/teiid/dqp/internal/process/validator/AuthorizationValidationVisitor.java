@@ -41,6 +41,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
+import com.metamatrix.dqp.service.AuthorizationService.Context;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -123,7 +124,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 					symbols.add(lookup.getGroup());
 					symbols.add(lookup.getKeyElement());
 					symbols.add(lookup.getReturnElement());
-		    		validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
+		    		validateEntitlements(symbols, AuthorizationService.ACTION_READ, Context.QUERY);
 	    		}
 			} catch (MetaMatrixComponentException e) {
 				handleException(e, obj);
@@ -142,7 +143,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(
             obj.getVariables(),
             AuthorizationService.ACTION_CREATE,
-            AuthorizationService.CONTEXT_INSERT);
+            Context.INSERT);
     }
 
     /**
@@ -154,12 +155,12 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             validateEntitlements(
                 ElementCollectorVisitor.getElements(obj.getCriteria(), true),
                 AuthorizationService.ACTION_READ,
-                AuthorizationService.CONTEXT_UPDATE);
+                Context.UPDATE);
         }
 
         // The variables from the changes must be checked for UPDATE entitlement
         // validateEntitlements on all the variables used in the update.
-        validateEntitlements(obj.getChangeList().getClauseMap().keySet(), AuthorizationService.ACTION_UPDATE, AuthorizationService.CONTEXT_UPDATE);
+        validateEntitlements(obj.getChangeList().getClauseMap().keySet(), AuthorizationService.ACTION_UPDATE, Context.UPDATE);
     }
 
     /**
@@ -171,13 +172,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             validateEntitlements(
                 ElementCollectorVisitor.getElements(obj.getCriteria(), true),
                 AuthorizationService.ACTION_READ,
-                AuthorizationService.CONTEXT_DELETE);
+                Context.DELETE);
         }
 
         // Check that all elements of group being deleted have delete permission
         HashSet deleteVars = new HashSet();
         deleteVars.add(obj.getGroup());
-        validateEntitlements(deleteVars, AuthorizationService.ACTION_DELETE, AuthorizationService.CONTEXT_DELETE);
+        validateEntitlements(deleteVars, AuthorizationService.ACTION_DELETE, Context.DELETE);
     }
 
     /**
@@ -198,7 +199,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             }
             validateEntitlements(intoElements,
                                  AuthorizationService.ACTION_CREATE,
-                                 AuthorizationService.CONTEXT_INSERT);
+                                 Context.INSERT);
         }
 
         // Validate this query's entitlements
@@ -211,7 +212,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             return;
         }
         
-        validateEntitlements(entitledObjects, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
+        validateEntitlements(entitledObjects, AuthorizationService.ACTION_READ, Context.QUERY);
     }
 
     /**
@@ -220,7 +221,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     protected void validateEntitlements(StoredProcedure obj) {
         List symbols = new ArrayList(1);
         symbols.add(obj.getGroup());
-        validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_PROCEDURE);
+        validateEntitlements(symbols, AuthorizationService.ACTION_READ, Context.STORED_PROCEDURE);
     }
 
     private String getActionLabel(int actionCode) {
@@ -240,7 +241,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * @param actionCode The actions to validate for
      * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
      */
-    protected void validateEntitlements(Collection symbols, int actionCode, int auditContext) {
+    protected void validateEntitlements(Collection symbols, int actionCode, Context auditContext) {
         Map nameToSymbolMap = new HashMap();
         Iterator symbolIter = symbols.iterator();
         while(symbolIter.hasNext()) {

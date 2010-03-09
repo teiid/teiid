@@ -42,6 +42,7 @@ import org.teiid.adminapi.AdminRoles;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.logging.api.AuditMessage;
 import org.teiid.security.roles.AuthorizationActions;
 import org.teiid.security.roles.AuthorizationPermission;
 import org.teiid.security.roles.AuthorizationPoliciesHolder;
@@ -60,13 +61,11 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.server.util.ServerAuditContexts;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
@@ -99,12 +98,11 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
 	private VDBRepository vdbRepository;
     
 	@Override
-	public Collection getInaccessibleResources(int action, Collection resources, int context)
-        throws MetaMatrixComponentException {
+	public Collection getInaccessibleResources(int action, Collection resources, com.metamatrix.dqp.service.AuthorizationService.Context context) throws MetaMatrixComponentException {
         AuthorizationRealm realm = getRealm(DQPWorkContext.getWorkContext());
         AuthorizationActions actions = getActions(action);
         Collection permissions = createPermissions(realm, resources, actions);
-        String auditContext = getAuditContext(context);
+        String auditContext = context.toString();
         Collection inaccessableResources = Collections.EMPTY_LIST;
         try {
             inaccessableResources = getInaccessibleResources(auditContext, permissions);
@@ -141,7 +139,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
     	
         LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", caller, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
-        List resources = new ArrayList();
+        List<String> resources = new ArrayList<String>();
         if (requests != null && ! requests.isEmpty()) {            
             Iterator permItr = requests.iterator();
             while ( permItr.hasNext() ) {
@@ -150,7 +148,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
         }
         
         // Audit - request
-    	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
+    	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
     	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         
         if (isEntitled()){
@@ -175,10 +173,10 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
         }
 
         if (results.isEmpty()) {
-        	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
+        	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
         	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         } else {
-        	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
+        	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
         	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         }
         return results;
@@ -448,17 +446,6 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
         return permissions;
     }
 
-    private String getAuditContext(int auditCode) {
-        switch(auditCode) {
-            case AuthorizationService.CONTEXT_QUERY:    return ServerAuditContexts.CTX_QUERY;
-            case AuthorizationService.CONTEXT_INSERT:   return ServerAuditContexts.CTX_INSERT;
-            case AuthorizationService.CONTEXT_UPDATE:   return ServerAuditContexts.CTX_UPDATE;
-            case AuthorizationService.CONTEXT_DELETE:   return ServerAuditContexts.CTX_DELETE;
-            case AuthorizationService.CONTEXT_PROCEDURE:    return ServerAuditContexts.CTX_PROCEDURE;
-            default: return ServerAuditContexts.CTX_QUERY;
-        }
-    }
-    
     public void setVDBRepository(VDBRepository repo) {
     	this.vdbRepository = repo;
     }

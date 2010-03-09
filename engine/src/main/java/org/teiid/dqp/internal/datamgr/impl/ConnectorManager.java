@@ -54,6 +54,8 @@ import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
+import org.teiid.logging.api.CommandLogMessage;
+import org.teiid.logging.api.CommandLogMessage.Event;
 import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
@@ -66,8 +68,6 @@ import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.CommandLogMessage;
-import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -80,6 +80,10 @@ import com.metamatrix.query.sql.lang.Command;
  */
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="connectormanager"), properties=ManagementProperties.EXPLICIT)
 public class ConnectorManager  {
+	
+	public enum ConnectorStatus {
+		NOT_INITIALIZED, INIT_FAILED, OPEN, DATA_SOURCE_UNAVAILABLE, CLOSED, UNABLE_TO_CHECK;
+	}
 	
 	public static final int DEFAULT_MAX_THREADS = 20;
 	private String connectorName;
@@ -334,12 +338,12 @@ public class ConnectorManager  {
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, short cmdStatus, int finalRowCnt) {
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
     		return;
     	}
         String sqlStr = null;
-        if(cmdStatus == CommandLogMessage.CMD_STATUS_NEW){
+        if(cmdStatus == Event.NEW){
         	Command cmd = qr.getCommand();
             sqlStr = cmd != null ? cmd.toString() : null;
         }
@@ -352,23 +356,14 @@ public class ConnectorManager  {
         String modelName = qr.getModelName();
         AtomicRequestID id = qr.getAtomicRequestID();
         
-        short cmdPoint = cmdStatus == CommandLogMessage.CMD_STATUS_NEW ? CommandLogMessage.CMD_POINT_BEGIN : CommandLogMessage.CMD_POINT_END;
         String principal = userName == null ? "unknown" : userName; //$NON-NLS-1$
         
         CommandLogMessage message = null;
-        if (cmdPoint == CommandLogMessage.CMD_POINT_BEGIN) {
+        if (cmdStatus == Event.NEW) {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, sqlStr, context);
         } 
         else {
-            boolean isCancelled = false;
-            boolean errorOccurred = false;
-
-            if (cmdStatus == CommandLogMessage.CMD_STATUS_CANCEL) {
-                isCancelled = true;
-            } else if (cmdStatus == CommandLogMessage.CMD_STATUS_ERROR) {
-                errorOccurred = true;
-            }
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, finalRowCnt, isCancelled, errorOccurred, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, finalRowCnt, cmdStatus, context);
         }         
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
@@ -400,7 +395,7 @@ public class ConnectorManager  {
     
     private void checkStatus() throws ConnectorException {
     	if (this.state != ConnectorStatus.OPEN) {
-    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.connectorName));
+    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.connectorName)); //$NON-NLS-1$
     	}
     }
 }

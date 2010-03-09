@@ -27,7 +27,9 @@ import java.util.List;
 
 public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
 	
-    private List<Column> columns;
+	private static final long serialVersionUID = -1185104601468519829L;
+
+	private List<Column> columns;
     private T parent;
     
     public List<Column> getColumns() {

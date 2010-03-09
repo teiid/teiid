@@ -27,7 +27,9 @@ package org.teiid.connector.metadata.runtime;
  */
 public class ForeignKey extends KeyRecord {
 
-    private String uniqueKeyID;
+	private static final long serialVersionUID = -8835750783230001311L;
+	
+	private String uniqueKeyID;
     private KeyRecord primaryKey;
     
     public ForeignKey() {

@@ -28,6 +28,8 @@ package org.teiid.connector.metadata.runtime;
  */
 public class Column extends BaseColumn implements Comparable<Column> {
 
+	private static final long serialVersionUID = -1310120788764453726L;
+
 	public enum SearchType {
 		Unsearchable,
 		Like_Only {

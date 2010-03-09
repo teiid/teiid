@@ -45,7 +45,7 @@
             <format>
               <formatName>pdf</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-              <finalName>membership_domain_guide.pdf</finalName>
+              <finalName>server_extensions_guide.pdf</finalName>
             </format>
             <!-- <format>
               <formatName>html_single</formatName>

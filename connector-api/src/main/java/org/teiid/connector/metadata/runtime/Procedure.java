@@ -31,6 +31,8 @@ import java.util.List;
  */
 public class Procedure extends AbstractMetadataRecord {
     
+	private static final long serialVersionUID = 7714869437683360834L;
+
 	public enum Type {
 		Function,
 		UDF,

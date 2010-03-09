@@ -26,10 +26,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * TableRecordImpl
- */
 public class Table extends ColumnSet<Schema> {
+
+	private static final long serialVersionUID = 4891356771125218672L;
 
 	public enum Type {
 		Table,

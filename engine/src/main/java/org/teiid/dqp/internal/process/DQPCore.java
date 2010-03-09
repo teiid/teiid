@@ -47,6 +47,8 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.logging.api.CommandLogMessage;
+import org.teiid.logging.api.CommandLogMessage.Event;
 import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -74,7 +76,6 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
@@ -299,7 +300,7 @@ public class DQPCore implements ClientSideDQP {
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
-    	logMMCommand(workItem, true, false, 0); 
+    	logMMCommand(workItem, Event.NEW, null); 
         addRequest(requestID, workItem, state);
         
         this.addWork(workItem);      
@@ -458,7 +459,7 @@ public class DQPCore implements ClientSideDQP {
         	markCancelled = workItem.requestCancel();
         }
     	if (markCancelled) {
-            logMMCommand(workItem, false, true, 0);
+            logMMCommand(workItem, Event.CANCEL, null);
     	} else {
     		LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
     	}
@@ -561,7 +562,7 @@ public class DQPCore implements ClientSideDQP {
 		this.transactionService.terminateTransaction(xid);
 	}	
 	
-    void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
+    void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
     		return;
     	}
@@ -569,10 +570,6 @@ public class DQPCore implements ClientSideDQP {
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
-        String command = null;
-    	if(isBegin && !isCancel){
-    		command = msg.getCommandString();
-    	}
     	String txnID = null;
 		TransactionContext tc = workItem.getTransactionContext();
 		if (tc != null && tc.getXid() != null) {
@@ -580,28 +577,11 @@ public class DQPCore implements ClientSideDQP {
 		}
     	String appName = workContext.getAppName();
         // Log to request log
-        short point = isBegin? CommandLogMessage.CMD_POINT_BEGIN:CommandLogMessage.CMD_POINT_END;
-        short status = CommandLogMessage.CMD_STATUS_NEW;
-        if(!isBegin){
-        	if(isCancel){
-        		status = CommandLogMessage.CMD_STATUS_CANCEL;
-        	}else{
-        		status = CommandLogMessage.CMD_STATUS_END;
-        	}
-        }
         CommandLogMessage message = null;
-        if (point == CommandLogMessage.CMD_POINT_BEGIN) {
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), command);
+        if (status == Event.NEW) {
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString());
         } else {
-            boolean isCancelled = false;
-            boolean errorOccurred = false;
-
-            if (status == CommandLogMessage.CMD_STATUS_CANCEL) {
-                isCancelled = true;
-            } else if (status == CommandLogMessage.CMD_STATUS_ERROR) {
-                errorOccurred = true;
-            }
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, isCancelled, errorOccurred);
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status);
         }
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }

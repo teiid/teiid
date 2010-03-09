@@ -35,6 +35,8 @@ import com.metamatrix.core.util.EquivalenceUtil;
  */
 public abstract class AbstractMetadataRecord implements Serializable {
 	
+	private static final long serialVersionUID = 564092984812414058L;
+
 	public final static char NAME_DELIM_CHAR = '.';
 	
 	private static AtomicLong UUID_SEQUENCE = new AtomicLong();

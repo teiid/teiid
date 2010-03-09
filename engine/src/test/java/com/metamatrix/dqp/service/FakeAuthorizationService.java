@@ -52,12 +52,10 @@ public class FakeAuthorizationService implements AuthorizationService {
         knownResources.add(new Resource(action, resource));
     }
 
-    /*
-     * @see com.metamatrix.dqp.service.AuthorizationService#getInaccessibleResources(java.lang.String, int, java.util.Collection, int)
-     */
-    public Collection getInaccessibleResources(int action, Collection resources, int context)
-        throws MetaMatrixComponentException {
-
+    @Override
+    public Collection getInaccessibleResources(int action,
+    		Collection resources, Context context)
+    		throws MetaMatrixComponentException {
         List found = new ArrayList();
         
         if (resources.isEmpty()) {

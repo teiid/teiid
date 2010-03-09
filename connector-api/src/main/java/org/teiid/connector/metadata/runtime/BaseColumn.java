@@ -26,6 +26,8 @@ import org.teiid.connector.api.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
 	
+	private static final long serialVersionUID = 6382258617714856616L;
+
 	public enum NullType {
 		No_Nulls {
 			@Override

@@ -43,11 +43,13 @@ public interface AuthorizationService extends SecurityFunctionEvaluator {
     public static final int ACTION_UPDATE = 2;
     public static final int ACTION_DELETE = 3;
 
-    public static final int CONTEXT_QUERY = 0;
-    public static final int CONTEXT_INSERT = 1;
-    public static final int CONTEXT_UPDATE = 2;
-    public static final int CONTEXT_DELETE = 3;
-    public static final int CONTEXT_PROCEDURE = 4;
+    public enum Context {
+		QUERY,
+		INSERT,
+		UPDATE,
+		DELETE,
+		STORED_PROCEDURE;
+    }
     
     public static final String ENTITELEMENTS_ENABLED = "auth.check_entitlements"; //$NON-NLS-1$
     public static final String ADMIN_ROLES_FILE = "auth.adminRolesFile"; //$NON-NLS-1$
@@ -61,7 +63,7 @@ public interface AuthorizationService extends SecurityFunctionEvaluator {
      * @return Collection Subset of resources
      * @throws MetaMatrixComponentException If an error occurs in the service while checking resources
      */
-    Collection getInaccessibleResources(int action, Collection resources, int context) throws MetaMatrixComponentException;
+    Collection getInaccessibleResources(int action, Collection resources, Context context) throws MetaMatrixComponentException;
 
     /**
      * Determine whether entitlements checking is enabled on the server.

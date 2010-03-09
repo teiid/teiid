@@ -108,11 +108,11 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         FakeAuthorizationService svc = new FakeAuthorizationService(true);
         
         // pm2.g2
-        svc.addResource(AuthorizationService.CONTEXT_INSERT, "pm2.g2.e1"); //$NON-NLS-1$
+        svc.addResource(AuthorizationService.ACTION_CREATE, "pm2.g2.e1"); //$NON-NLS-1$
         
         // pm3.g2
-        svc.addResource(AuthorizationService.CONTEXT_INSERT, "pm3.g2.e1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.CONTEXT_INSERT, "pm3.g2.e2"); //$NON-NLS-1$
+        svc.addResource(AuthorizationService.ACTION_CREATE, "pm3.g2.e1"); //$NON-NLS-1$
+        svc.addResource(AuthorizationService.ACTION_CREATE, "pm3.g2.e2"); //$NON-NLS-1$
         
         return svc;
     }

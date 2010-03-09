@@ -24,6 +24,8 @@ package org.teiid.connector.metadata.runtime;
 
 public class KeyRecord extends ColumnSet<Table> {
 
+	private static final long serialVersionUID = -3526999525526556933L;
+
 	public enum Type {
 		Primary,
 		Foreign,

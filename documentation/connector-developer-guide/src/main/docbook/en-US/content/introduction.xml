@@ -1,8 +1,8 @@
 <chapter id="introduction">
   <title>Connectors in Teiid</title>
-  <para>In Teiid a connector handles all communications with individual enterprise information sources, which can include
-    databases, data feeds, flat files, or any other entity you have modeled.</para>
-  <para>In Teiid, a connector is used to:</para>
+  <para>A connector handles all communications with individual enterprise information sources, which can include
+    databases, data feeds, flat files, etc.</para>
+  <para>A connector is used to:</para>
   <itemizedlist>
     <listitem>
       <para>Translate a Teiid-specific command into a native command.</para>
@@ -11,7 +11,7 @@
       <para>Execute the command.</para>
     </listitem>
     <listitem>
-      <para>Return batches of results to Teiid.</para>
+      <para>Return batches of results.</para>
     </listitem>
   </itemizedlist>
   <para>Teiid is responsible for reassembling the results from one or more connectors into an
@@ -24,7 +24,7 @@
   </para>
   <sect1>
     <title>Do You Need a New Connector?</title>
-    <para>Teiid can provide several connectors for common enterprise information system types. If
+    <para>Teiid provides several connectors for common enterprise information system types. If
       you can use one of these enterprise information systems, you do not need to develop a custom one.
     </para>
     <para>Teiid offers the following connectors:</para>
@@ -33,7 +33,7 @@
         <para>
           <emphasis>JDBC:</emphasis>
           Connects to many relational databases. The JDBC Connector is validated against the following database
-          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, and Sybase. In addition, the JDBC Connector can
+          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, Sybase, H2, and HSQL. In addition, the JDBC Connector can
           often be used with other 3rd-party drivers and provides a wide range of extensibility options to
           specialize behavior against those drivers.
         </para>
@@ -82,13 +82,10 @@
             <para>Expectation for incoming queries/metadata</para>
           </listitem>
           <listitem>
-            <para>The SQL and processing constructs supported by information system.</para>
+            <para>The processing constructs, or capabilities, supported by information system.</para>
           </listitem>
           <listitem>
             <para>Required properties for the connector, such as URL, user name, etc.</para>
-          </listitem>
-          <listitem>
-            <para>The CDK development kit (jars and tools).</para>
           </listitem>
         </itemizedlist>
       </listitem>

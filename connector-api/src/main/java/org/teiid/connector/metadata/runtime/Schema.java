@@ -27,7 +27,9 @@ import java.util.Map;
 
 public class Schema extends AbstractMetadataRecord {
 
-    private boolean physical = true;
+	private static final long serialVersionUID = -5113742472848113008L;
+
+	private boolean physical = true;
     private boolean isVisible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     

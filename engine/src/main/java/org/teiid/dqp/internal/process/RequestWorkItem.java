@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.logging.api.CommandLogMessage.Event;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -55,7 +56,6 @@ import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
@@ -192,7 +192,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
             
             if (!isCanceled()) {
-            	logCommandError();
+            	dqpCore.logMMCommand(this, Event.CANCEL, null);
                 //Case 5558: Differentiate between system level errors and
                 //processing errors.  Only log system level errors as errors, 
                 //log the processing errors as warnings only
@@ -326,7 +326,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (this.processingException != null) {
 			sendError();			
 		} else {
-	        dqpCore.logMMCommand(this, false, false, rowcount);
+	        dqpCore.logMMCommand(this, Event.END, rowcount);
 		}
 	}
 
@@ -636,18 +636,6 @@ public class RequestWorkItem extends AbstractWorkItem {
     	}
 	}
         
-    /**
-     * Log the command to the MM cmd log. 
-     */
-    private void logCommandError() {
-        String transactionID = null;
-        if (this.transactionContext != null && this.transactionContext.getXid() != null) {
-            transactionID = this.transactionContext.getXid().toString();
-        }
-        CommandLogMessage message = new CommandLogMessage(System.currentTimeMillis(), requestID.toString(), transactionID == null ? null : transactionID, requestID.getConnectionID(), dqpWorkContext.getUserName(), dqpWorkContext.getVdbName(), dqpWorkContext.getVdbVersion(), -1, false, true);
-        LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
-    }
-
 	boolean isCanceled() {
 		return isCanceled;
 	}

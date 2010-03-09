@@ -25,13 +25,10 @@ package org.teiid.connector.metadata.runtime;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.Column.SearchType;
 
-
-
-/**
- * ColumnRecordImpl
- */
 public class Datatype extends AbstractMetadataRecord {
 	
+	private static final long serialVersionUID = -7839335802224393230L;
+
 	public enum Type {
 		Basic,
 		UserDefined,

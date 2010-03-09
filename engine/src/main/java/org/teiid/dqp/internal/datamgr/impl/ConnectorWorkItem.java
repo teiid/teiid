@@ -46,6 +46,8 @@ import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.logging.api.CommandLogMessage;
+import org.teiid.logging.api.CommandLogMessage.Event;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -59,7 +61,6 @@ import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -198,7 +199,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     	try {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
             asynchCancel();
-            this.manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_CANCEL, -1);
+            this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
         } catch (ConnectorException e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
         } finally {
@@ -227,7 +228,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}
-        manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_ERROR, -1);
+        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null);
         
         String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
@@ -250,7 +251,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     	this.isClosed = true;
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
     	if (success) {
-            manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_END, this.rowCount);
+            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount);
         }
         try {
 	        if (execution != null) {
@@ -357,7 +358,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
         //Log the Source Command (Must be after obtaining the execution context)
-        manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_NEW, -1); 
+        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
 	}
     
     protected void handleBatch() 
