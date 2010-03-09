@@ -35,7 +35,6 @@
                 <value>org.teiid.adminapi.impl.VDBMetaData</value>
             </parameter>
         </uninstall>
-        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>

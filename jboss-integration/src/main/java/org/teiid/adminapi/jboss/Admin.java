@@ -79,8 +79,6 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.SourceMapping;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 
 public class Admin extends TeiidAdmin {
@@ -470,17 +468,26 @@ public class Admin extends TeiidAdmin {
 		model.setModelType(ManagedUtil.getSimpleValue(mc, "modelType", String.class));
 		model.setProperties(ManagedUtil.getPropertiesValue(mc, "properties"));
 		
-		List<SourceMapping> mappings = (List<SourceMapping>)MetaValueFactory.getInstance().unwrap(mc.getProperty("sourceMappings").getValue());
-		for (SourceMapping s:mappings) {
-			model.addSourceMapping(s.getName(), s.getJndiName());
-		}
 		
-		List<ValidationError> errors = (List<ValidationError>)MetaValueFactory.getInstance().unwrap(mc.getProperty("errors").getValue());
-		if (errors != null) {
-			for (ValidationError error:errors) {
-				model.addError(error.getSeverity(), error.getValue());
-			}
-		}
+        ManagedProperty sourceMappings = mc.getProperty("sourceMappings");
+        if (sourceMappings != null){
+            List<ManagedObject> mappings = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(sourceMappings.getValue());
+            for (ManagedObject mo:mappings) {
+                String name = ManagedUtil.getSimpleValue(mo, "name", String.class);
+                String jndiName = ManagedUtil.getSimpleValue(mo, "jndiName", String.class);
+                model.addSourceMapping(name, jndiName);
+            }
+        }
+        
+        ManagedProperty validationErrors = mc.getProperty("errors");
+        if (validationErrors != null) {
+    		List<ManagedObject> errors = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(validationErrors.getValue());
+    		if (errors != null) {
+    			for (ManagedObject mo:errors) {
+    				model.addError(ManagedUtil.getSimpleValue(mo, "severity", String.class), ManagedUtil.getSimpleValue(mo, "value", String.class));
+    			}
+    		}        	
+        }
 		return model;
 	}
 	
@@ -902,6 +909,7 @@ public class Admin extends TeiidAdmin {
 //		} catch (Exception e) {
 //			throw new AdminComponentException(e.getMessage(), e);
 //		}
+		throw new AdminProcessingException("feature coming soon..");
 	}	
 
 }

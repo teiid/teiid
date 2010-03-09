@@ -27,19 +27,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
-import org.jboss.deployers.spi.deployer.managed.ManagedObjectCreator;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
-import org.jboss.managed.api.ManagedObject;
-import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
@@ -59,9 +55,8 @@ import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
-public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> implements ManagedObjectCreator {
+public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	protected Logger log = Logger.getLogger(getClass());
-	private ManagedObjectFactory mof;
 	private VDBRepository vdbRepository;
 	private ConnectorManagerRepository connectorManagerRepository;
 	private DQPContextCache contextCache;
@@ -190,32 +185,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> impleme
 				
 		return metadata;
 	}	
-	
-	
-
-	@Override
-	public void build(DeploymentUnit unit, Set<String> attachmentNames, Map<String, ManagedObject> managedObjects)
-		throws DeploymentException {
-	          
-		ManagedObject vdbMO = managedObjects.get(VDBMetaData.class.getName());
-		if (vdbMO != null) {
-			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
-			for (Model m : vdb.getModels()) {
-				if (m.getName().equals(CoreConstants.SYSTEM_MODEL)) {
-					continue;
-				}
-				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());
-				if (mo == null) {
-					throw new DeploymentException("could not create managed object");
-				}
-				managedObjects.put(mo.getName(), mo);
-			}
-		}
-	}
-	
-	public void setManagedObjectFactory(ManagedObjectFactory mof) {
-		this.mof = mof;
-	}
 	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;

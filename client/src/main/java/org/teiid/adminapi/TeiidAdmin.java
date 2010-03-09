@@ -31,8 +31,7 @@ public abstract class TeiidAdmin implements Admin, Serializable {
 	@Override
 	public void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String connectorBindingName)
 			throws AdminException {
-		// rameshTODO Auto-generated method stub
-		
+		throw new AdminProcessingException("feature coming soon..");
 	}
 
 
@@ -45,16 +44,16 @@ public abstract class TeiidAdmin implements Admin, Serializable {
 	
 	@Override
 	public void restart() throws AdminException {
-		// rameshTODO Auto-generated method stub
+		throw new AdminProcessingException("feature coming soon..");
 	}
 
 	@Override
 	public void shutdown(int millisToWait) throws AdminException {
-		// rameshTODO Auto-generated method stub
+		throw new AdminProcessingException("feature coming soon..");
 	}
 	
 	@Override
     public void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException {
-		// rameshTODO Auto-generated method stub
+		throw new AdminProcessingException("feature coming soon..");
     }	
 }

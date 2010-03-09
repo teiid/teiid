@@ -56,9 +56,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	private static final long serialVersionUID = 3714234763056162230L;
 		
 	@XmlElement(name = "source")
-	protected ListOverMap<SourceMapping> sources = new ListOverMap(new KeyBuilder<SourceMapping>() {
+	protected ListOverMap<SourceMappingMetadata> sources = new ListOverMap(new KeyBuilder<SourceMappingMetadata>() {
 		@Override
-		public String getKey(SourceMapping entry) {
+		public String getKey(SourceMappingMetadata entry) {
 			return entry.getName();
 		}
 	});
@@ -140,9 +140,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	this.visible = value;
     }    
 
-    @ManagementProperty(description = "Source Mappings (defined by user)")
-	public List<SourceMapping> getSourceMappings(){
-		return new ArrayList<SourceMapping>(this.sources.getMap().values());
+    @ManagementProperty(description = "Source Mappings (defined by user)", managed=true)
+	public List<SourceMappingMetadata> getSourceMappings(){
+		return new ArrayList<SourceMappingMetadata>(this.sources.getMap().values());
 	}
     
     @Override
@@ -151,7 +151,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
     
     public String getSourceJndiName(String sourceName) {
-    	SourceMapping s = this.sources.getMap().get(sourceName);
+    	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
     	if (s == null) {
     		return null;
     	}
@@ -159,10 +159,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
     
 	public void addSourceMapping(String name, String jndiName) {
-		this.sources.getMap().put(name, new SourceMapping(name, jndiName));
+		this.sources.getMap().put(name, new SourceMappingMetadata(name, jndiName));
 	}    
 	
-	@ManagementProperty(description = "Model Validity Errors", readOnly=true)
+	@ManagementProperty(description = "Model Validity Errors", readOnly=true, managed=true)
 	public List<ValidationError> getErrors(){
 		return this.errors;
 	}
@@ -198,6 +198,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         }
     	
         @ManagementProperty (description="Error Message", readOnly = true)
+        @ManagementObjectID(type="error")
         public String getValue() {
 			return value;
 		}
@@ -214,52 +215,5 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		public void setSeverity(String severity) {
 			this.severity = severity;
 		}        
-    }	
-    
-    @XmlAccessorType(XmlAccessType.NONE)
-    @XmlType(name = "")
-    @ManagementObject(properties=ManagementProperties.EXPLICIT)
-    public static class SourceMapping implements Serializable {
-		private static final long serialVersionUID = -4417878417697685794L;
-
-		@XmlAttribute(name = "name", required = true)
-        private String name;
-        
-        @XmlAttribute(name = "jndi-name")
-        private String jndiName;
-        
-        
-        public SourceMapping() {}
-        
-        public SourceMapping(String name, String jndiName) {
-        	this.name = name;
-        	this.jndiName = jndiName;
-        }
-
-        @ManagementProperty (description="Source Name", readOnly = true)
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		@ManagementProperty (description="JNDI Name of the resource to assosiate with Source name")
-		public String getJndiName() {
-			// this default could be controlled if needed.
-			if (this.jndiName == null) {
-				return "java:"+name;
-			}
-			return jndiName;
-		}
-
-		public void setJndiName(String jndiName) {
-			this.jndiName = jndiName;
-		}
-		
-		public String toString() {
-			return getName()+":"+getJndiName();
-		}
     }    
 }
