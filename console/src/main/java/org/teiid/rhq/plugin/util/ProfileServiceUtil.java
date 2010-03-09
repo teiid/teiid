@@ -159,6 +159,18 @@ public class ProfileServiceUtil {
 		return null;
 	}	
 	
+	public static Boolean booleanValue(MetaValue v1) throws Exception {
+		if (v1 != null) {
+			MetaType type = v1.getMetaType();
+			if (type instanceof SimpleMetaType) {
+				SimpleValue simple = (SimpleValue)v1;
+				return Boolean.valueOf(simple.getValue().toString());
+			}
+			throw new Exception("Failed to convert value to boolean value");
+		}
+		return null;
+	}	
+	
 	public static <T> T getSimpleValue(ManagedComponent mc, String prop, Class<T> expectedType) {
 		 ManagedProperty mp = mc.getProperty(prop);
 		 if (mp != null) {

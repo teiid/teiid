@@ -21,7 +21,11 @@
  */
 package org.teiid.rhq.plugin;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -30,9 +34,14 @@ import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
+import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
+import org.jboss.metatype.api.values.CompositeValueSupport;
+import org.jboss.metatype.api.values.EnumValue;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.metatype.api.values.MetaValueFactory;
+import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertyList;
@@ -46,7 +55,7 @@ import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
- * Discovery component for VDs
+ * Discovery component for VDBs
  * 
  */
 public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
@@ -66,11 +75,16 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		for (ManagedComponent mcVdb : vdbs) {
 
 			String vdbKey = mcVdb.getDeployment().getName();
-			String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name", String.class);
-			Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb, "version", Integer.class);
-			String vdbDescription = ProfileServiceUtil.getSimpleValue(mcVdb, "description", String.class);
-			String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb, "status", String.class);
-			String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url", String.class); 
+			String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name",
+					String.class);
+			Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb,
+					"version", Integer.class);
+			String vdbDescription = ProfileServiceUtil.getSimpleValue(mcVdb,
+					"description", String.class);
+			String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb,
+					"status", String.class);
+			String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url",
+					String.class);
 
 			/**
 			 * 
@@ -83,8 +97,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					vdbName, // Resource Name
 					vdbVersion.toString(), // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
-					discoveryContext.getDefaultPluginConfiguration(), // Plugin
-																		// Config
+					discoveryContext.getDefaultPluginConfiguration(), // Plugin Config
 					null // Process info from a process scan
 			);
 
@@ -113,34 +126,100 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 	/**
 	 * @param mcVdb
 	 * @param configuration
+	 * @throws Exception 
 	 */
-	private void getModels(ManagedComponent mcVdb, Configuration configuration) {
+	private void getModels(ManagedComponent mcVdb, Configuration configuration) throws Exception {
 		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("models");
 		CollectionValueSupport valueSupport = (CollectionValueSupport) property
 				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
 
-		PropertyList modelsList = new PropertyList("models");
-		configuration.put(modelsList);
+		PropertyList sourceModelsList = new PropertyList("sourceModels");
+		configuration.put(sourceModelsList);
+
+		PropertyList logicalModelsList = new PropertyList("virtualModels");
+		configuration.put(logicalModelsList);
 
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
 			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
 					.getValue();
+
+			Boolean isSource = Boolean.TRUE;
+			try {
+				isSource = ProfileServiceUtil.booleanValue(managedObject
+						.getProperty("source").getValue());
+			} catch (Exception e) {
+				throw e;
+			}
+			
+			Boolean supportMultiSource = Boolean.TRUE;
+			try {
+				supportMultiSource = ProfileServiceUtil.booleanValue(managedObject
+						.getProperty("supportsMultiSourceBindings").getValue());
+			} catch (Exception e) {
+				throw e;
+			}
+			
 			String modelName = managedObject.getName();
-			String type = ((SimpleValueSupport) managedObject.getProperty(
-					"modelType").getValue()).getValue().toString();
+			ManagedProperty connectorBinding = managedObject
+					.getProperty("sourceMappings");
+			Collection<Map<String, String>> sourceList = new ArrayList<Map<String, String>>();
+			getSourceMappingValue(connectorBinding.getValue(), sourceList);
 			String visibility = ((SimpleValueSupport) managedObject
 					.getProperty("visible").getValue()).getValue().toString();
-			String path = ((SimpleValueSupport) managedObject.getProperty(
-					"path").getValue()).getValue().toString();
 
-			PropertyMap model = new PropertyMap("model", new PropertySimple(
-					"name", modelName), new PropertySimple("type", type),
-					new PropertySimple("path", path), new PropertySimple(
-							"visibility", visibility));
-			modelsList.add(model);
+			for (Map<String, String> sourceMap : sourceList) {
+
+				if (isSource) {
+					String sourceName = (String) sourceMap.get("name");
+					String jndiName = (String) sourceMap.get("jndiName");
+
+					PropertyMap model = new PropertyMap("model",
+							new PropertySimple("name", modelName),
+							new PropertySimple("source", isSource),
+							new PropertySimple("sourceName", sourceName),
+							new PropertySimple("jndiName", jndiName),
+							new PropertySimple("visibility", visibility),
+							new PropertySimple("supportMultiSource", supportMultiSource));
+
+					sourceModelsList.add(model);
+				} else {
+					PropertyMap model = new PropertyMap("model",
+							new PropertySimple("name", modelName),
+							new PropertySimple("visibility", visibility));
+
+					logicalModelsList.add(model);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param <T>
+	 * @param pValue
+	 * @param list
+	 */
+	public static <T> void getSourceMappingValue(MetaValue pValue,
+			Collection<Map<String, String>> list) {
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				Map<String, String> map = new HashMap<String, String>();
+				MetaValueFactory metaValueFactory = MetaValueFactory
+						.getInstance();
+				String sourceName = (String) metaValueFactory
+						.unwrap(((CompositeValueSupport) value).get("name"));
+				String jndi = (String) metaValueFactory
+						.unwrap(((CompositeValueSupport) value).get("jndiName"));
+				map.put("name", sourceName);
+				map.put("jndiName", jndi);
+			}
+		} else {
+			throw new IllegalStateException(pValue
+					+ " is not a Collection type");
 		}
 	}
 
