@@ -53,35 +53,7 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<includes>
-						<include>**/*TestCase.java</include>
-						<include>**/*Test.java</include>
-						<include>**/Test*.java</include>
-					</includes>
-					<excludes>
-						<exclude>**/Abstract*TestCase.java</exclude>
-						<!--
-							hack to prevent anonymous inner classes in Tests from being run
-							as tests
-						-->
-						<include>**/Test*$*.java</include>
-					</excludes>
-					<systemProperties>
-						<property>
-							<name>user.dir</name>
-							<value>${basedir}/target</value>
-						</property>
-						<property>
-							<name>java.io.tmpdir</name>
-							<value>${basedir}/target</value>
-						</property>
-					</systemProperties>
-				</configuration>
-			</plugin>
-
+			
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2-beta-2</version>
@@ -133,40 +105,6 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-dist-wars</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${basedir}/target/</outputDirectory>
-
-							<artifactItems>
-								<!--
-									<artifactItem> <groupId>org.jboss.jopr</groupId>
-									<artifactId>jopr-embedded-jbas4</artifactId>
-									<version>${org.jboss.jopr.as4.version}</version>
-									<type>war</type> <overWrite>true</overWrite> </artifactItem>
-								-->
-								<artifactItem>
-									<groupId>org.jboss.jopr</groupId>
-									<artifactId>jopr-embedded-jbas5</artifactId>
-									<version>${org.jboss.jopr.as5.version}</version>
-									<type>war</type>
-									<overWrite>true</overWrite>
-								</artifactItem>
-							</artifactItems>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<dependencies>
 					<dependency>
@@ -175,30 +113,6 @@
 						<version>${apache.ant.version}</version>
 					</dependency>
 				</dependencies>
-				<executions>
-					<!--
-						<execution> <id>assembly-kit-jboss-as4</id> <phase>package</phase>
-						<configuration> <tasks> <mkdir dir="target/jboss-as4-war"/> <unzip
-						src="target/jopr-embedded-jbas4-${org.jboss.jopr.as4.version}.war"
-						dest="target/jboss-as4-war"/> <mkdir dir="target/plugin-classes"/>
-
-
-						<unzip
-						src="../jbedsp-plugin/target/distribution/jbedsp-plugin-${project.version}-binaries.jar"
-						dest="target/jboss-as4-war/WEB-INF/lib"/> <unzip
-						src="../jbedsp-plugin/target/distribution/jbedsp-embedded-plugin-${project.version}.jar"
-						dest="target/plugin-classes"/> <unzip
-						src="target/${project.name}-${project.version}.jar"
-						dest="target/plugin-classes"/> <jar
-						destfile="target/jboss-as4-war/plugins/jbedsp-jopr-plugin-${project.version}.jar"
-						basedir="target/plugin-classes"/> <zip
-						destfile="target/jopr-teiid-embedded-jbas4.war"
-						basedir="target/jboss-as4-war" /> </tasks> </configuration>
-
-						<goals> <goal>run</goal> </goals> </execution>
-					-->
-
-				</executions>
 			</plugin>
 
 		</plugins>
