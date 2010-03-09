@@ -62,8 +62,6 @@
         <property name="maxProcessingBatchesColumns">128</property>
         <!--  Max File size in MB (default 2GB)-->
         <property name="maxFileSize">2048</property> 
-        <!-- Max open buffer files (default 64) -->
-        <property name="maxOpenFiles">64</property>
     </bean>
     
     <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">
