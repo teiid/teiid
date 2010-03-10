@@ -224,7 +224,7 @@ public class TestCodeTableCache extends TestCase {
 			ctc.loadTable(nodeId, results);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (MetaMatrixProcessingException e) {
-			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - CodeTables.maxRows.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTableRecords.", e.getMessage()); //$NON-NLS-1$
 		}
     }
     
@@ -242,7 +242,7 @@ public class TestCodeTableCache extends TestCase {
 			ctc.loadTable(nodeId, results);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (MetaMatrixProcessingException e) {
-			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - CodeTables.maxRowsPerTable.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTables.", e.getMessage()); //$NON-NLS-1$
 		}
     }
 
