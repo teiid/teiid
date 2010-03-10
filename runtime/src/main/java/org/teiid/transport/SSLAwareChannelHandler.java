@@ -217,7 +217,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
-			LogManager.logDetail(LogConstants.CTX_SERVER, CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT, CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
 		}
 	}
 

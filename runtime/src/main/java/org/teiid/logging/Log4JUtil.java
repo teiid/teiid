@@ -107,7 +107,7 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SESSION);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_MEMBERSHIP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SERVER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_TRANSPORT);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_PLANNER);
 		

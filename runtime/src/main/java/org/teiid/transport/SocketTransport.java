@@ -44,7 +44,7 @@ public class SocketTransport {
     public void start() {
         String bindAddress = this.config.getHostAddress().getHostAddress();
         
-		LogManager.logDetail(LogConstants.CTX_SERVER, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {bindAddress, String.valueOf(this.config.getPortNumber())})); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {bindAddress, String.valueOf(this.config.getPortNumber())})); //$NON-NLS-1$
 		this.listener = new SocketListener(this.config.getPortNumber(), bindAddress, this.config.getInputBufferSize(), this.config.getOutputBufferSize(), this.config.getMaxSocketThreads(), this.config.getSSLConfiguration(), csr);
     }
     

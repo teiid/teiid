@@ -28,7 +28,7 @@
 				are more specific contexts depending on the functional area of the
 				system. Note that logs originating from third-party code, including
 				integrated org.jboss components, will be logged through their
-				respective contexts. See the table below for information on contexts
+				respective contexts and not through org.teiid. See the table below for information on contexts
 				relevant to Teiid. See the container's jboss-log4j.xml for a more
 				complete listing of logging contexts used in the container.</para>
 			<informaltable frame="all">
@@ -99,11 +99,18 @@
 						</row>
 						<row>
 							<entry>
-								<para>org.teiid.SERVER</para>
+								<para>org.teiid.TRANSPORT</para>
 							</entry>
 							<entry>
-								<para>Events related to socket transports, pooling, threading,
-									etc.</para>
+								<para>Events related to the socket transport.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.RUNTIME</para>
+							</entry>
+							<entry>
+								<para>Events related to work management and system start/stop.</para>
 							</entry>
 						</row>
 						<row>

@@ -94,8 +94,8 @@ public class StatsCapturingWorkManager {
 			}
 			String name = t.getName();
 			t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogConstants.CTX_SERVER, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
 			}
 			boolean success = false;
 			try {
@@ -139,8 +139,8 @@ public class StatsCapturingWorkManager {
 	private static void handleException(Work work, WorkException e) {
 		if (work instanceof WorkListener) {
 			((WorkListener)work).workRejected(new WorkEvent(work, WorkEvent.WORK_REJECTED, work, new WorkRejectedException(e)));
-		} else if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_SERVER, e, "Exception adding work to the WorkManager"); //$NON-NLS-1$ 
+		} else if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Exception adding work to the WorkManager"); //$NON-NLS-1$ 
 		}
 	}
 		
@@ -192,7 +192,7 @@ public class StatsCapturingWorkManager {
 		}
 		if (atMaxThreads) {
 			if (newMaxQueueSize && maximumPoolSize > 1) {
-				LogManager.logWarning(LogConstants.CTX_SERVER, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
 			}
 			return;
 		}

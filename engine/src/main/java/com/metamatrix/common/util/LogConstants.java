@@ -29,7 +29,7 @@ public interface LogConstants {
 	public static final String CTX_SESSION = "SESSION"; //$NON-NLS-1$
 	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
 	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
-	public static final String CTX_SERVER= "SERVER"; //$NON-NLS-1$
+	public static final String CTX_TRANSPORT = "TRANSPORT"; //$NON-NLS-1$
 	public static final String CTX_QUERY_PLANNER = "PLANNER"; //$NON-NLS-1$
 	public static final String CTX_DQP = "PROCESSOR"; //$NON-NLS-1$
 	public static final String CTX_CONNECTOR = DefaultConnectorLogger.CTX_CONNECTOR;

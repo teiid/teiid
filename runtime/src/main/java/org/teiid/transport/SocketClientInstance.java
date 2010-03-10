@@ -71,8 +71,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
     
     public void send(Message message, Serializable messageKey) {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_SERVER, " message: " + message + " for request ID:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_TRANSPORT, " message: " + message + " for request ID:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
         }
     	message.setMessageKey(messageKey);
     	objectSocket.write(message);
@@ -86,7 +86,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
 
 	public void exceptionOccurred(Throwable t) {
-		LogManager.logDetail(LogConstants.CTX_SERVER, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 	}
 
 	public void onConnection() throws CommunicationException {
@@ -135,8 +135,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 	}
 
 	private void processMessagePacket(Message packet) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) { 
-			LogManager.logDetail(LogConstants.CTX_SERVER, "processing message:" + packet); //$NON-NLS-1$
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT, "processing message:" + packet); //$NON-NLS-1$
         }
 		ServerWorkItem work = new ServerWorkItem(this, packet.getMessageKey(), packet, this.csr);
 		work.process();

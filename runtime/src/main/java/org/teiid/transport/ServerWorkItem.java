@@ -136,7 +136,7 @@ public class ServerWorkItem {
 
 	private Serializable processException(Throwable e, String context) {
 		if (context == null) {
-			context = LogConstants.CTX_SERVER;
+			context = LogConstants.CTX_TRANSPORT;
 		}
 		// Case 5558: Differentiate between system level errors and
 		// processing errors. Only log system level errors as errors,
