@@ -40,7 +40,7 @@ public class UDFMetaData {
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
 	
 	public void addModelFile(VirtualFile file) {
-		this.files.put(file.getName(), file);
+		this.files.put(file.getPathName(), file);
 	}
 	
 	

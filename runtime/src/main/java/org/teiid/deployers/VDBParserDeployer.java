@@ -161,7 +161,11 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			// load the UDF
 			for(Model model:vdb.getModels()) {
 				if (model.getModelType().equals(Model.Type.FUNCTION)) {
-					udf.buildFunctionModelFile(model.getName()+VdbConstants.MODEL_EXT);
+					String path = ((ModelMetaData)model).getPath();
+					if (path == null) {
+						path = model.getName()+VdbConstants.MODEL_EXT;
+					}
+					udf.buildFunctionModelFile(path);
 				}
 			}		
 			

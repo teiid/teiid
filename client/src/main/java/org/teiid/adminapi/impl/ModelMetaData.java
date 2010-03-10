@@ -64,9 +64,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	});
 	
 	@XmlAttribute(name = "type")
-	protected String modelType = Type.PHYSICAL.name(); //$NON-NLS-1$
+	protected String modelType = Type.PHYSICAL.name();
+	
+	@XmlAttribute(name = "path")
+	protected String path; 
     
-    @XmlAttribute(name = "visible")
+	@XmlAttribute(name = "visible")
     protected Boolean visible = true;
     
     @XmlElement(name = "validation-error")
@@ -87,10 +90,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	@Override
 	@ManagementProperty(description = "Is Model Source model", readOnly=true)
     public boolean isSource() {
-		if (modelType != null) {
-			return ModelType.parseString(modelType.toUpperCase()) == ModelType.PHYSICAL;
-		}
-		throw new IllegalStateException("Model state is not correctly set");
+		return ModelType.parseString(modelType.toUpperCase()) == ModelType.PHYSICAL;
 	}
 
 	@Override
@@ -104,6 +104,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	public Type getModelType() {
 		return Type.valueOf(modelType);
 	}
+	
+	@ManagementProperty(description = "Path to model file inside the archive", readOnly=true)
+    public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}	
 
 	@Override
 	@ManagementProperty(description = "Does Model supports multi-source bindings", readOnly=true)
