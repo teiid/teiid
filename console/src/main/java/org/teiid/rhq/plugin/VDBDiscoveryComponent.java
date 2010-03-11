@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
@@ -97,7 +98,8 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					vdbName, // Resource Name
 					vdbVersion.toString(), // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
-					discoveryContext.getDefaultPluginConfiguration(), // Plugin Config
+					discoveryContext.getDefaultPluginConfiguration(), // Plugin
+																		// Config
 					null // Process info from a process scan
 			);
 
@@ -113,6 +115,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 			getModels(mcVdb, configuration);
 
+			// Get VDB errors/warnings
+			// getErrors(mcVdb, configuration);
+
 			detail.setPluginConfiguration(configuration);
 
 			// Add to return values
@@ -126,9 +131,10 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 	/**
 	 * @param mcVdb
 	 * @param configuration
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	private void getModels(ManagedComponent mcVdb, Configuration configuration) throws Exception {
+	private void getModels(ManagedComponent mcVdb, Configuration configuration)
+			throws Exception {
 		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("models");
 		CollectionValueSupport valueSupport = (CollectionValueSupport) property
@@ -141,6 +147,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		PropertyList logicalModelsList = new PropertyList("virtualModels");
 		configuration.put(logicalModelsList);
 
+		PropertyList errorList = new PropertyList("errorList");
+		configuration.put(errorList);
+	
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
 			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
@@ -153,15 +162,16 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			} catch (Exception e) {
 				throw e;
 			}
-			
+
 			Boolean supportMultiSource = Boolean.TRUE;
 			try {
-				supportMultiSource = ProfileServiceUtil.booleanValue(managedObject
-						.getProperty("supportsMultiSourceBindings").getValue());
+				supportMultiSource = ProfileServiceUtil
+						.booleanValue(managedObject.getProperty(
+								"supportsMultiSourceBindings").getValue());
 			} catch (Exception e) {
 				throw e;
 			}
-			
+
 			String modelName = managedObject.getName();
 			ManagedProperty connectorBinding = managedObject
 					.getProperty("sourceMappings");
@@ -169,6 +179,25 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
 			String visibility = ((SimpleValueSupport) managedObject
 					.getProperty("visible").getValue()).getValue().toString();
+
+			// Get any model errors/warnings
+			MetaValue errors = managedObject.getProperty("errors").getValue();
+			if (errors != null) {
+				CollectionValueSupport errorValueSupport = (CollectionValueSupport) errors;
+				MetaValue[] errorArray = errorValueSupport.getElements();
+				for (MetaValue error : errorArray) {
+					GenericValueSupport errorGenValueSupport = (GenericValueSupport) error;
+					ManagedObject errorMo = (ManagedObject) errorGenValueSupport
+							.getValue();
+					String severity = ((SimpleValue) errorMo.getProperty(
+							"severity").getValue()).getValue().toString();
+					String message = ((SimpleValue) errorMo
+							.getProperty("value").getValue()).getValue()
+							.toString();
+					PropertyMap errorMap = new PropertyMap("errorMap", new PropertySimple("severity", severity), new PropertySimple("message", message));
+					errorList.add(errorMap);
+				}
+			}
 
 			for (Map<String, String> sourceMap : sourceList) {
 
@@ -178,12 +207,13 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 					PropertyMap model = new PropertyMap("model",
 							new PropertySimple("name", modelName),
-							new PropertySimple("source", isSource),
 							new PropertySimple("sourceName", sourceName),
 							new PropertySimple("jndiName", jndiName),
 							new PropertySimple("visibility", visibility),
-							new PropertySimple("supportMultiSource", supportMultiSource));
+							new PropertySimple("supportsMultiSource",
+									supportMultiSource));
 
+					model.getSimple("jndiName").setOverride(false);
 					sourceModelsList.add(model);
 				} else {
 					PropertyMap model = new PropertyMap("model",
@@ -203,17 +233,17 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 	 */
 	public static <T> void getSourceMappingValue(MetaValue pValue,
 			Collection<Map<String, String>> list) {
+		Map<String, String> map = new HashMap<String, String>();
+		list.add(map);
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue)
 					.getElements()) {
-				Map<String, String> map = new HashMap<String, String>();
-				MetaValueFactory metaValueFactory = MetaValueFactory
-						.getInstance();
-				String sourceName = (String) metaValueFactory
-						.unwrap(((CompositeValueSupport) value).get("name"));
-				String jndi = (String) metaValueFactory
-						.unwrap(((CompositeValueSupport) value).get("jndiName"));
+				GenericValueSupport genValue = ((GenericValueSupport) value);
+				ManagedObject mo = (ManagedObject) genValue.getValue();
+				String sourceName = mo.getName();
+				String jndi = ((SimpleValue) mo.getProperty("jndiName")
+						.getValue()).getValue().toString();
 				map.put("name", sourceName);
 				map.put("jndiName", jndi);
 			}
