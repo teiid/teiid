@@ -518,4 +518,13 @@ public class TestPostgreSQLTranslator {
                 TRANSLATOR);
     }
     
+    @Test public void testAggregate() throws Exception {
+        String input = "SELECT count(*), max(booleanvalue), max(intnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT COUNT(*), bool_or(SmallA.BooleanValue), MAX(SmallA.IntNum) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
 }

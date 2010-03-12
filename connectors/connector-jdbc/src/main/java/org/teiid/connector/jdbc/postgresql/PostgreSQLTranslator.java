@@ -195,7 +195,7 @@ public class PostgreSQLTranslator extends Translator {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
-    		if (TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
+    		if (agg.getExpression() != null && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
             	if (agg.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
             		agg.setName("bool_and"); //$NON-NLS-1$
             	} else if (agg.getName().equalsIgnoreCase(SQLReservedWords.MAX)) {
