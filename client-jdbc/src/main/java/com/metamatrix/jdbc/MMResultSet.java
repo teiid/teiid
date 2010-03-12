@@ -63,7 +63,7 @@ import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
+import com.metamatrix.dqp.client.StreamingLobChunckProducer;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.jdbc.BatchResults.Batch;
 

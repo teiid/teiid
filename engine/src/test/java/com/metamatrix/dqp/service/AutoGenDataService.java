@@ -28,13 +28,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.spi.work.WorkManager;
-
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
 
-import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -51,12 +49,12 @@ public class AutoGenDataService extends ConnectorManager{
     // Number of rows that will be generated for each query
     private int rows = 10;
     private SourceCapabilities caps;
+	public boolean throwExceptionOnExecute;
     
     public AutoGenDataService() {
     	super("FakeConnector");
         caps = new BasicSourceCapabilities();
     }
-    
 
     public void setRows(int rows) {
         this.rows = rows;
@@ -67,19 +65,40 @@ public class AutoGenDataService extends ConnectorManager{
     }
 
     @Override
-	public void executeRequest(WorkManager workManager, ResultsReceiver<AtomicResultsMessage> resultListener, AtomicRequestMessage request)
-			throws ConnectorException{
-        List projectedSymbols = (request.getCommand()).getProjectedSymbols();               
+    public ConnectorWork executeRequest(AtomicRequestMessage message)
+    		throws ConnectorException {
+    	if (throwExceptionOnExecute) {
+    		throw new ConnectorException("Connector Exception"); //$NON-NLS-1$
+    	}
+        List projectedSymbols = (message.getCommand()).getProjectedSymbols();               
         List[] results = createResults(projectedSymbols);
                 
-        AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(request, results, projectedSymbols);
+        final AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(results, projectedSymbols);
         msg.setFinalRow(rows);
-        resultListener.receiveResults(msg);
-        AtomicResultsMessage closeMsg = ConnectorWorkItem.createResultsMessage(request, results, projectedSymbols);
-        closeMsg.setRequestClosed(true);
-        resultListener.receiveResults(closeMsg);
+        return new ConnectorWork() {
+			
+			@Override
+			public AtomicResultsMessage more() throws ConnectorException {
+				throw new RuntimeException("Should not be called"); //$NON-NLS-1$
+			}
+			
+			@Override
+			public AtomicResultsMessage execute() throws ConnectorException {
+				return msg;
+			}
+			
+			@Override
+			public void close() {
+				
+			}
+			
+			@Override
+			public void cancel() {
+				
+			}
+		};
     }
-
+    
     private List[] createResults(List symbols) {
         List[] rows = new List[this.rows];
 
@@ -149,7 +168,5 @@ public class AutoGenDataService extends ConnectorManager{
 	public SourceCapabilities getCapabilities(){
         return caps;
     }
-
-
 
 }

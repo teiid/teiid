@@ -38,7 +38,7 @@ import com.metamatrix.common.lob.ReaderInputStream;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
+import com.metamatrix.dqp.client.StreamingLobChunckProducer;
 
 /**
  * This object holds a chunk of char data and implements the JDBC Clob interface.

@@ -34,7 +34,7 @@ import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
+import com.metamatrix.dqp.client.StreamingLobChunckProducer;
 import com.metamatrix.jdbc.LobSearchUtil.StreamProvider;
 
 /**

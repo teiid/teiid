@@ -33,7 +33,6 @@ import java.util.concurrent.ExecutionException;
 import javax.crypto.SealedObject;
 
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
@@ -46,9 +45,8 @@ import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.platform.security.api.SessionToken;
 
-public class ServerWorkItem {
+public class ServerWorkItem implements Runnable {
 	
 	private final ClientInstance socketClientInstance;
 	private final Serializable messageKey;
@@ -65,10 +63,9 @@ public class ServerWorkItem {
 	/**
 	 * main entry point for remote method calls.
 	 */
-	public void process() {
+	public void run() {
 		Message result = null;
 		String loggingContext = null;
-		DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
 		final boolean encrypt = message.getContents() instanceof SealedObject;
         try {
             message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
@@ -78,7 +75,6 @@ public class ServerWorkItem {
 			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
 			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass);			
 			loggingContext = clientService.getLoggingContext();
-			SessionToken.setSession(this.socketClientInstance.getWorkContext().getSessionToken());
 			Method m = clientService.getReflectionHelper().findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 			Object methodResult;
 			try {
@@ -113,9 +109,6 @@ public class ServerWorkItem {
 			Message holder = new Message();
 			holder.setContents(processException(t, loggingContext));
 			result = holder;
-		} finally {
-			DQPWorkContext.releaseWorkContext();
-			SessionToken.setSession(null);
 		}
 		
 		if (result != null) {

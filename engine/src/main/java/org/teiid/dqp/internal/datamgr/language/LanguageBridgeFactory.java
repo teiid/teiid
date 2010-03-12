@@ -63,6 +63,8 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
@@ -118,7 +120,7 @@ public class LanguageBridgeFactory {
         }
     }
 
-    public org.teiid.connector.language.Command translate(Command command) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.Command translate(Command command) {
         if (command == null) return null;
         if (command instanceof Query) {
             return translate((Query)command);
@@ -138,14 +140,14 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
     
-    QueryExpression translate(QueryCommand command) throws MetaMatrixComponentException {
+    QueryExpression translate(QueryCommand command) {
     	if (command instanceof Query) {
             return translate((Query)command);
         } 
     	return translate((SetQuery)command);
     }
 
-    org.teiid.connector.language.SetQuery translate(SetQuery union) throws MetaMatrixComponentException {
+    org.teiid.connector.language.SetQuery translate(SetQuery union) {
         org.teiid.connector.language.SetQuery result = new org.teiid.connector.language.SetQuery();
         result.setAll(union.isAll());
         switch (union.getOperation()) {
@@ -167,7 +169,7 @@ public class LanguageBridgeFactory {
     }
 
     /* Query */
-    Select translate(Query query) throws MetaMatrixComponentException {
+    Select translate(Query query) {
         List symbols = query.getSelect().getSymbols();
         List<DerivedColumn> translatedSymbols = new ArrayList<DerivedColumn>(symbols.size());
         for (Iterator i = symbols.iterator(); i.hasNext();) {
@@ -206,7 +208,7 @@ public class LanguageBridgeFactory {
         return q;
     }
 
-    public TableReference translate(FromClause clause) throws MetaMatrixComponentException {
+    public TableReference translate(FromClause clause) {
         if (clause == null) return null;
         if (clause instanceof JoinPredicate) {
             return translate((JoinPredicate)clause);
@@ -218,7 +220,7 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    Join translate(JoinPredicate join) throws MetaMatrixComponentException {
+    Join translate(JoinPredicate join) {
         List crits = join.getJoinCriteria();
         Criteria crit = null;
         if (crits.size() == 1) {
@@ -246,15 +248,15 @@ public class LanguageBridgeFactory {
                             translate(crit));
     }
 
-    TableReference translate(SubqueryFromClause clause) throws MetaMatrixComponentException {        
+    TableReference translate(SubqueryFromClause clause) {        
         return new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
     }
 
-    NamedTable translate(UnaryFromClause clause) throws MetaMatrixComponentException {
+    NamedTable translate(UnaryFromClause clause) {
         return translate(clause.getGroup());
     }
 
-    public Condition translate(Criteria criteria) throws MetaMatrixComponentException {
+    public Condition translate(Criteria criteria) {
         if (criteria == null) return null;
         if (criteria instanceof CompareCriteria) {
             return translate((CompareCriteria)criteria);
@@ -278,7 +280,7 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    org.teiid.connector.language.Comparison translate(CompareCriteria criteria) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Comparison translate(CompareCriteria criteria) {
         Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
             case CompareCriteria.EQ:    
@@ -306,7 +308,7 @@ public class LanguageBridgeFactory {
                                         translate(criteria.getRightExpression()), operator);
     }
 
-    AndOr translate(CompoundCriteria criteria) throws MetaMatrixComponentException {
+    AndOr translate(CompoundCriteria criteria) {
         List nestedCriteria = criteria.getCriteria();
         int size = nestedCriteria.size();
         AndOr.Operator op = criteria.getOperator() == CompoundCriteria.AND?AndOr.Operator.AND:AndOr.Operator.OR;
@@ -317,15 +319,15 @@ public class LanguageBridgeFactory {
         return result;
     }
 
-    Exists translate(ExistsCriteria criteria) throws MetaMatrixComponentException {
+    Exists translate(ExistsCriteria criteria) {
         return new Exists(translate((QueryCommand)criteria.getCommand()));
     }
 
-    IsNull translate(IsNullCriteria criteria) throws MetaMatrixComponentException {
+    IsNull translate(IsNullCriteria criteria) {
         return new IsNull(translate(criteria.getExpression()), criteria.isNegated());
     }
 
-    Like translate(MatchCriteria criteria) throws MetaMatrixComponentException {
+    Like translate(MatchCriteria criteria) {
         Character escapeChar = null;
         if(criteria.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             escapeChar = new Character(criteria.getEscapeChar());
@@ -336,7 +338,7 @@ public class LanguageBridgeFactory {
                                     criteria.isNegated());
     }
 
-    In translate(SetCriteria criteria) throws MetaMatrixComponentException {
+    In translate(SetCriteria criteria) {
         List expressions = criteria.getValues();
         List translatedExpressions = new ArrayList();
         for (Iterator i = expressions.iterator(); i.hasNext();) {
@@ -347,7 +349,7 @@ public class LanguageBridgeFactory {
                                   criteria.isNegated());
     }
 
-    SubqueryComparison translate(SubqueryCompareCriteria criteria) throws MetaMatrixComponentException {
+    SubqueryComparison translate(SubqueryCompareCriteria criteria) {
         Quantifier quantifier = Quantifier.ALL;
         switch(criteria.getPredicateQuantifier()) {
             case SubqueryCompareCriteria.ALL:   
@@ -389,17 +391,17 @@ public class LanguageBridgeFactory {
                                   translate((QueryCommand)criteria.getCommand()));
     }
 
-    SubqueryIn translate(SubquerySetCriteria criteria) throws MetaMatrixComponentException {
+    SubqueryIn translate(SubquerySetCriteria criteria) {
         return new SubqueryIn(translate(criteria.getExpression()),
                                   criteria.isNegated(),
                                   translate((QueryCommand)criteria.getCommand()));
     }
 
-    Not translate(NotCriteria criteria) throws MetaMatrixComponentException {
+    Not translate(NotCriteria criteria) {
         return new Not(translate(criteria.getCriteria()));
     }
 
-    public org.teiid.connector.language.GroupBy translate(GroupBy groupBy) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.GroupBy translate(GroupBy groupBy) {
         if(groupBy == null){
             return null;
         }
@@ -411,7 +413,7 @@ public class LanguageBridgeFactory {
         return new org.teiid.connector.language.GroupBy(translatedItems);
     }
 
-    public org.teiid.connector.language.OrderBy translate(OrderBy orderBy) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.OrderBy translate(OrderBy orderBy) {
         if(orderBy == null){
             return null;
         }
@@ -434,7 +436,7 @@ public class LanguageBridgeFactory {
 
 
     /* Expressions */
-    public org.teiid.connector.language.Expression translate(Expression expr) throws MetaMatrixComponentException {
+    public org.teiid.connector.language.Expression translate(Expression expr) {
         if (expr == null) return null;
         if (expr instanceof Constant) {
             return translate((Constant)expr);
@@ -457,7 +459,7 @@ public class LanguageBridgeFactory {
         return result;
     }
 
-    org.teiid.connector.language.Function translate(Function function) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Function translate(Function function) {
         Expression [] args = function.getArgs();
         List<org.teiid.connector.language.Expression> params = new ArrayList<org.teiid.connector.language.Expression>(args.length);
         if (args != null) {
@@ -468,7 +470,7 @@ public class LanguageBridgeFactory {
         return new org.teiid.connector.language.Function(function.getName(), params, function.getType());
     }
 
-    SearchedCase translate(SearchedCaseExpression expr) throws MetaMatrixComponentException {
+    SearchedCase translate(SearchedCaseExpression expr) {
         ArrayList<SearchedWhenClause> whens = new ArrayList<SearchedWhenClause>();
         for (int i = 0; i < expr.getWhenCount(); i++) {
         	whens.add(new SearchedWhenClause(translate(expr.getWhenCriteria(i)), translate(expr.getThenExpression(i))));
@@ -479,11 +481,11 @@ public class LanguageBridgeFactory {
     }
 
 
-    org.teiid.connector.language.Expression translate(ScalarSubquery ss) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(ScalarSubquery ss) {
         return new org.teiid.connector.language.ScalarSubquery(translate((QueryCommand)ss.getCommand()));
     }
 
-    org.teiid.connector.language.Expression translate(SingleElementSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(SingleElementSymbol symbol) {
         if (symbol == null) return null;
         if (symbol instanceof ElementSymbol) {
             return translate((ElementSymbol)symbol);
@@ -495,11 +497,11 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    org.teiid.connector.language.Expression translate(AliasSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(AliasSymbol symbol) {
         return translate(symbol.getSymbol());
     }
 
-    ColumnReference translate(ElementSymbol symbol) throws MetaMatrixComponentException {
+    ColumnReference translate(ElementSymbol symbol) {
         ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
             return element;
@@ -513,20 +515,20 @@ public class LanguageBridgeFactory {
         return element;
     }
 
-    AggregateFunction translate(AggregateSymbol symbol) throws MetaMatrixComponentException {
+    AggregateFunction translate(AggregateSymbol symbol) {
         return new AggregateFunction(symbol.getAggregateFunction(), 
                                 symbol.isDistinct(), 
                                 translate(symbol.getExpression()),
                                 symbol.getType());
     }
 
-    org.teiid.connector.language.Expression translate(ExpressionSymbol symbol) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Expression translate(ExpressionSymbol symbol) {
         return translate(symbol.getExpression());
     }
 
 
     /* Insert */
-    org.teiid.connector.language.Insert translate(Insert insert) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Insert translate(Insert insert) {
         List elements = insert.getVariables();
         List<ColumnReference> translatedElements = new ArrayList<ColumnReference>();
         for (Iterator i = elements.iterator(); i.hasNext();) {
@@ -552,13 +554,13 @@ public class LanguageBridgeFactory {
     }
 
     /* Update */
-    org.teiid.connector.language.Update translate(Update update) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Update translate(Update update) {
         return new org.teiid.connector.language.Update(translate(update.getGroup()),
                               translate(update.getChangeList()),
                               translate(update.getCriteria()));
     }
     
-    List<org.teiid.connector.language.SetClause> translate(SetClauseList setClauseList) throws MetaMatrixComponentException {
+    List<org.teiid.connector.language.SetClause> translate(SetClauseList setClauseList) {
     	List<org.teiid.connector.language.SetClause> clauses = new ArrayList<org.teiid.connector.language.SetClause>(setClauseList.getClauses().size());
     	for (SetClause setClause : setClauseList.getClauses()) {
     		clauses.add(translate(setClause));
@@ -566,26 +568,26 @@ public class LanguageBridgeFactory {
     	return clauses;
     }
     
-    org.teiid.connector.language.SetClause translate(SetClause setClause) throws MetaMatrixComponentException {
+    org.teiid.connector.language.SetClause translate(SetClause setClause) {
     	return new org.teiid.connector.language.SetClause(translate(setClause.getSymbol()), translate(setClause.getValue()));
     }
 
     /* Delete */
-    org.teiid.connector.language.Delete translate(Delete delete) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Delete translate(Delete delete) {
         org.teiid.connector.language.Delete deleteImpl = new org.teiid.connector.language.Delete(translate(delete.getGroup()),
                               translate(delete.getCriteria()));
         return deleteImpl;
     }
 
     /* Execute */
-    Call translate(StoredProcedure sp) throws MetaMatrixComponentException {
+    Call translate(StoredProcedure sp) {
         Procedure proc = null;
         if(sp.getProcedureID() != null) {
             try {
-                proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
-            } catch(ConnectorException e) {
-                throw new MetaMatrixComponentException(e);
-            }
+				proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
+			} catch (ConnectorException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
         }
         Class<?> returnType = null;
         List parameters = sp.getParameters();
@@ -623,7 +625,7 @@ public class LanguageBridgeFactory {
         return call;
     }
 
-    public NamedTable translate(GroupSymbol symbol) throws MetaMatrixComponentException {
+    public NamedTable translate(GroupSymbol symbol) {
     	String alias = null;
         String fullGroup = symbol.getOutputName();
         if(symbol.getOutputDefinition() != null) {
@@ -636,10 +638,12 @@ public class LanguageBridgeFactory {
 			return group;
 		}
         try {
-            group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
-        } catch(Exception e) {
-            throw new MetaMatrixComponentException(e);
-        }
+			group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
+		} catch (QueryMetadataException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
         return group;
     }
 
@@ -653,7 +657,7 @@ public class LanguageBridgeFactory {
 	}
     
     /* Batched Updates */
-    BatchedUpdates translate(BatchedUpdateCommand command) throws MetaMatrixComponentException {
+    BatchedUpdates translate(BatchedUpdateCommand command) {
         List updates = command.getUpdateCommands();
         List<org.teiid.connector.language.Command> translatedUpdates = new ArrayList<org.teiid.connector.language.Command>(updates.size());
         for (Iterator i = updates.iterator(); i.hasNext();) {
@@ -662,7 +666,7 @@ public class LanguageBridgeFactory {
         return new BatchedUpdates(translatedUpdates);
     }
 
-    org.teiid.connector.language.Limit translate(Limit limit) throws MetaMatrixComponentException {
+    org.teiid.connector.language.Limit translate(Limit limit) {
         if (limit == null) {
             return null;
         }

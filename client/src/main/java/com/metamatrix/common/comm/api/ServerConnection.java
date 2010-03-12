@@ -28,7 +28,7 @@ import com.metamatrix.platform.security.api.LogonResult;
 public interface ServerConnection {
 	
 	public static final int PING_INTERVAL = 120000;
-	public static final String LOCAL_CONNECTION = "localConnection";
+	public static final String LOCAL_CONNECTION = "localConnection"; //$NON-NLS-1$
 
 	<T> T getService(Class<T> iface);
 	

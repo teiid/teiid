@@ -138,9 +138,6 @@ public interface SessionService {
      */
     public void pingServer(long sessionID) throws InvalidSessionException;
     
-    
-    public void setLocalSession(long sessionID);
-    
     SessionMetadata getActiveSession(long sessionID);
     
 	void setDqp(DQPCore dqp);

@@ -31,7 +31,14 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.resource.NotSupportedException;
+import javax.resource.spi.XATerminator;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -46,6 +53,7 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
+import com.metamatrix.dqp.service.TransactionContext.Scope;
 
 public class TransactionServerImpl implements TransactionService {
 
@@ -54,7 +62,7 @@ public class TransactionServerImpl implements TransactionService {
         // (connection -> transaction for global and local)
         private Map<String, TransactionContext> threadToTransactionContext = new HashMap<String, TransactionContext>();
         // (MMXid -> global transactions keyed) 
-        private Map<Integer, TransactionContext> xidToTransactionContext = new HashMap<Integer, TransactionContext>();
+        private Map<Xid, TransactionContext> xidToTransactionContext = new HashMap<Xid, TransactionContext>();
         
         public synchronized TransactionContext getOrCreateTransactionContext(String threadId) {
             TransactionContext tc = threadToTransactionContext.get(threadId);
@@ -73,11 +81,7 @@ public class TransactionServerImpl implements TransactionService {
         }
 
         public synchronized TransactionContext getTransactionContext(MMXid xid) {
-            return xidToTransactionContext.get(xid.hashCode());
-        }
-        
-        public synchronized TransactionContext getTransactionContext(int hash) {
-            return xidToTransactionContext.get(hash);
+            return xidToTransactionContext.get(xid);
         }
         
         public synchronized TransactionContext removeTransactionContext(String threadId) {
@@ -86,7 +90,7 @@ public class TransactionServerImpl implements TransactionService {
 
         public synchronized void removeTransactionContext(TransactionContext tc) {
             if (tc.getXid() != null) {
-                this.xidToTransactionContext.remove(tc.getXid().hashCode());
+                this.xidToTransactionContext.remove(tc.getXid());
             }
             if (tc.getThreadId() != null) {
                 this.threadToTransactionContext.remove(tc.getThreadId());
@@ -95,7 +99,7 @@ public class TransactionServerImpl implements TransactionService {
         
         public synchronized void addTransactionContext(TransactionContext tc) {
             if (tc.getXid() != null) {
-                this.xidToTransactionContext.put(tc.getXid().hashCode(), tc);
+                this.xidToTransactionContext.put(tc.getXid(), tc);
             }
             if (tc.getThreadId() != null) {
                 this.threadToTransactionContext.put(tc.getThreadId(), tc);
@@ -105,20 +109,16 @@ public class TransactionServerImpl implements TransactionService {
 
     private TransactionMapping transactions = new TransactionMapping();
     
-    private TransactionProvider provider;
-    private String processName = "embedded"; //$NON-NLS-1$
-    private XidFactory xidFactory;
+    private XATerminator xaTerminator;
+    private TransactionManager transactionManager;
 
-    public TransactionServerImpl() {
-    }
-
-    public void setProcessName(String processName) {
-		this.processName = processName;
+    public void setXaTerminator(XATerminator xaTerminator) {
+		this.xaTerminator = xaTerminator;
 	}
     
-    public void setTransactionProvider(TransactionProvider theProvider) {
-        this.provider = theProvider;
-    }
+    public void setTransactionManager(TransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
+	}
 
     /**
      * Global Transaction 
@@ -130,7 +130,7 @@ public class TransactionServerImpl implements TransactionService {
         }		
         
         if (tc.shouldRollback()) {
-        	throw new XATransactionException(XAException.XAER_RMERR, DQPPlugin.Util.getString("TransactionServer.rollback_set", xid));
+        	throw new XATransactionException(XAException.XAER_RMERR, DQPPlugin.Util.getString("TransactionServer.rollback_set", xid)); //$NON-NLS-1$
         }
         
         // In the container this pass though
@@ -139,7 +139,7 @@ public class TransactionServerImpl implements TransactionService {
         }
         
         try {
-        	return this.provider.getXATerminator().prepare(tc.getXid());
+        	return this.xaTerminator.prepare(tc.getXid());
         } catch (XAException e) {
             throw new XATransactionException(e);
         }
@@ -151,16 +151,11 @@ public class TransactionServerImpl implements TransactionService {
     public void commit(final String threadId, MMXid xid, boolean onePhase, boolean singleTM) throws XATransactionException {
     	TransactionContext tc = checkXAState(threadId, xid, true, false);  
     	try {
-    		// In the case of single TM, the container directly commits the sources.
-        	if (!singleTM) {
-        		// In the case of onePhase containers call commit directly. If Teiid is also one phase let it pass through,
-        		// otherwise force the prepare.
-        		boolean singlePhase = tc.isOnePhase();
-        		if (onePhase && !singlePhase) {
-        			prepare(threadId, xid, singleTM);
-        		}
-        		this.provider.getXATerminator().commit(tc.getXid(), singlePhase);
+        	if (singleTM || (onePhase && XAResource.XA_RDONLY == prepare(threadId, xid, singleTM))) {
+        		return; //nothing to do
         	}
+        	//TODO: we have no way of knowing for sure if we can safely use the onephase optimization
+        	this.xaTerminator.commit(tc.getXid(), false); 
     	} catch (XAException e) {
             throw new XATransactionException(e);
         } finally {
@@ -176,7 +171,7 @@ public class TransactionServerImpl implements TransactionService {
     	try {
     		// In the case of single TM, the container directly roll backs the sources.
         	if (!singleTM) {
-        		this.provider.getXATerminator().rollback(tc.getXid());
+        		this.xaTerminator.rollback(tc.getXid());
         	}
     	} catch (XAException e) {
             throw new XATransactionException(e);
@@ -195,7 +190,7 @@ public class TransactionServerImpl implements TransactionService {
     	}
     	
     	try {
-			return this.provider.getXATerminator().recover(flag);
+			return this.xaTerminator.recover(flag);
 		} catch (XAException e) {
 			throw new XATransactionException(e);
 		}
@@ -210,7 +205,7 @@ public class TransactionServerImpl implements TransactionService {
         	if (singleTM) {
         		return;
         	}
-            this.provider.getXATerminator().forget(xid);
+            this.xaTerminator.forget(xid);
         } catch (XAException err) {
             throw new XATransactionException(err);
         } finally {
@@ -237,7 +232,7 @@ public class TransactionServerImpl implements TransactionService {
 					tc.setXid(xid);
 					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
 				} catch (NotSupportedException e) {
-					throw new XATransactionException(XAException.XAER_INVAL, e.getMessage()); //$NON-NLS-1$
+					throw new XATransactionException(XAException.XAER_INVAL, e.getMessage());
 				}
                 break;
             }
@@ -320,61 +315,113 @@ public class TransactionServerImpl implements TransactionService {
     }
 
     private TransactionContext checkLocalTransactionState(String threadId, boolean transactionExpected) 
-    	throws InvalidTransactionException {
+    	throws XATransactionException {
 
         final TransactionContext tc = transactions.getOrCreateTransactionContext(threadId);
 
-        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL) {
-                throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
-            }
-            if (!transactionExpected) {
-                throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
-            }
-        } else if (transactionExpected) {
-            throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
+        try {
+	        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
+	            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL) {
+	                throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+	            }
+	            if (!transactionExpected) {
+	            	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+	            }
+	        } else if (transactionExpected) {
+	        	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
+	        }
+        } catch (InvalidTransactionException e) {
+        	throw new XATransactionException(e);
         }
-
         return tc;
     }
+    
+    private void beginDirect(TransactionContext tc) throws XATransactionException {
+		try {
+			transactionManager.begin();
+			Transaction tx = transactionManager.getTransaction();
+			tc.setTransaction(tx);
+			tc.setCreationTime(System.currentTimeMillis());
+        } catch (javax.transaction.NotSupportedException err) {
+            throw new XATransactionException(err);
+        } catch (SystemException err) {
+            throw new XATransactionException(err);
+        }
+	}
+	
+	private void commitDirect(TransactionContext context)
+			throws XATransactionException {
+		try {
+			transactionManager.commit();
+		} catch (SecurityException e) {
+			throw new XATransactionException(e);
+		} catch (RollbackException e) {
+			throw new XATransactionException(e);
+		} catch (HeuristicMixedException e) {
+			throw new XATransactionException(e);
+		} catch (HeuristicRollbackException e) {
+			throw new XATransactionException(e);
+		} catch (SystemException e) {
+			throw new XATransactionException(e);
+		} finally {
+			transactions.removeTransactionContext(context);
+		}
+	}
+
+	private void rollbackDirect(TransactionContext tc)
+			throws XATransactionException {
+		try {
+			this.transactionManager.resume(tc.getTransaction());
+    		this.transactionManager.rollback();
+		} catch (SecurityException e) {
+			throw new XATransactionException(e);
+		} catch (SystemException e) {
+			throw new XATransactionException(e);
+		} catch (InvalidTransactionException e) {
+			throw new XATransactionException(e);
+		} finally {
+            transactions.removeTransactionContext(tc);
+        }
+	}
+	
+	public void suspend(TransactionContext context) throws XATransactionException {
+		try {
+			this.transactionManager.suspend();
+		} catch (SystemException e) {
+			throw new XATransactionException(e);
+		}
+	}
+	
+	public void resume(TransactionContext context) throws XATransactionException {
+		try {
+			this.transactionManager.resume(context.getTransaction());
+		} catch (InvalidTransactionException e) {
+			throw new XATransactionException(e);
+		} catch (SystemException e) {
+			throw new XATransactionException(e);
+		}
+	}
 
     /**
      * Local Transaction 
      */
     public TransactionContext begin(String threadId) throws XATransactionException {
-        try {
-            TransactionContext tc = checkLocalTransactionState(threadId, false);
-            tc.setXid(this.xidFactory.createXid());
-            tc.setCreationTime(System.currentTimeMillis());
-            tc.setTransactionType(TransactionContext.Scope.LOCAL);
-            return tc;
-        } catch (InvalidTransactionException err) {
-            throw new XATransactionException(err);
-        }
+        TransactionContext tc = checkLocalTransactionState(threadId, false);
+        beginDirect(tc);
+        tc.setTransactionType(TransactionContext.Scope.LOCAL);
+        return tc;
     }
 
     /**
      * Local Transaction 
      */    
     public void commit(String threadId) throws XATransactionException {
-        TransactionContext tc;
-        try {
-            tc = checkLocalTransactionState(threadId, true);
-        } catch (InvalidTransactionException err) {
-            throw new XATransactionException(err);
-        } 
+        TransactionContext tc = checkLocalTransactionState(threadId, true);
 
         if (tc.shouldRollback()) {
         	rollback(threadId);
-        }
-        try {
-        	if (tc.isInTransaction()) {
-            	directCommit(tc);
-        	}
-        } catch (XAException e) {
-            throw new XATransactionException(e);
-        } finally {
-            transactions.removeTransactionContext(tc);
+        } else {
+            commitDirect(tc);
         }
     }
 
@@ -382,24 +429,9 @@ public class TransactionServerImpl implements TransactionService {
      * Local Transaction 
      */    
     public void rollback(String threadId) throws XATransactionException {
-        TransactionContext tc;
-        try {
-            tc = checkLocalTransactionState(threadId, true);
-        } catch (InvalidTransactionException err) {
-            throw new XATransactionException(err);
-        } 
-        
-        try {
-        	if (tc.isInTransaction()) {
-        		this.provider.getXATerminator().rollback(tc.getXid());
-        	}
-        } catch (XAException e) {
-            throw new XATransactionException(e);
-        } finally {
-            transactions.removeTransactionContext(tc);
-        }
+        TransactionContext tc = checkLocalTransactionState(threadId, true);
+        rollbackDirect(tc);
     }
-
 
     public TransactionContext getOrCreateTransactionContext(String threadId) {
         return transactions.getOrCreateTransactionContext(threadId);
@@ -408,12 +440,11 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Request level transaction
      */
-    public TransactionContext start(TransactionContext context) throws XATransactionException{
+    public TransactionContext begin(TransactionContext context) throws XATransactionException{
         if (context.getTransactionType() != TransactionContext.Scope.NONE) {
             throw new XATransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
         }
-        context.setXid(this.xidFactory.createXid());
-        context.setCreationTime(System.currentTimeMillis());
+        beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);
         return context;
     }
@@ -424,8 +455,6 @@ public class TransactionServerImpl implements TransactionService {
     public TransactionContext commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
         
-        //commit may be called multiple times by the processworker, if this is a subsequent call, then the current
-        //context will not be active
         TransactionContext tc = transactions.getTransactionContext(context.getThreadId());
         if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE) {
             return tc;
@@ -433,67 +462,47 @@ public class TransactionServerImpl implements TransactionService {
         
         Assertion.assertTrue(!tc.shouldRollback());
         
-        try {
-        	if (tc.isInTransaction()) {
-            	directCommit(tc);
-        	}
-        } catch (XAException e) {
-            throw new XATransactionException(e);
-        } finally {
-            transactions.removeTransactionContext(context);
-        }
+        commitDirect(context);
         return context;
     }
-
-	private void directCommit(TransactionContext tc) throws XAException {
-		boolean commit = true;
-		boolean onePhase = tc.isOnePhase();
-		if (!onePhase) {
-			int prepare = this.provider.getXATerminator().prepare(tc.getXid());
-			commit = (prepare == XAResource.XA_OK);
-		}
-		
-		if (commit) {
-			this.provider.getXATerminator().commit(tc.getXid(), onePhase);
-		}
-	}
 
     /**
      * Request level transaction
      */    
     public TransactionContext rollback(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        try {
-	        this.provider.getXATerminator().rollback(context.getXid());
-        } catch (XAException e) {
-            throw new XATransactionException(e);
-        } finally {
-            transactions.removeTransactionContext(context);
-        }
+        rollbackDirect(context);
         return context;      
     }
 
-    /**
-     * Request level transaction
-     */
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
         TransactionContext tc = transactions.getTransactionContext(threadId);
         
-        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE) {
+        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE 
+        		|| (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {
             return;
         }
         
-        if (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST) {
+        if (tc.getTransactionType() == TransactionContext.Scope.GLOBAL) {
+        	tc.setRollbackOnly();
             return;
         }
         
-        tc.setRollbackOnly();
-        
-        if (requestOnly) {
-        	rollback(tc);
-        }
-        else {
-        	rollback(threadId);
+        try {
+            try {
+				transactionManager.resume(tc.getTransaction());
+	            transactionManager.setRollbackOnly();
+			} catch (InvalidTransactionException e) {
+				throw new XATransactionException(e);
+			} catch (SystemException e) {
+				throw new XATransactionException(e);
+			}
+        } finally {
+        	try {
+				transactionManager.suspend();
+			} catch (SystemException e) {
+				throw new XATransactionException(e);
+			}
         }
     }
 
@@ -505,46 +514,34 @@ public class TransactionServerImpl implements TransactionService {
 			txnSet.addAll(this.transactions.xidToTransactionContext.values());
 		}
 		Collection<org.teiid.adminapi.Transaction> result = new ArrayList<org.teiid.adminapi.Transaction>(txnSet.size());
-		for (TransactionContext TransactionContext : txnSet) {
-			if (TransactionContext.getXid() == null) {
+		for (TransactionContext transactionContext : txnSet) {
+			if (transactionContext.getTransactionType() == Scope.NONE) {
 				continue;
 			}
 			TransactionMetadata txnImpl = new TransactionMetadata();
-			txnImpl.setAssociatedSession(Long.parseLong(TransactionContext.getThreadId()));
-			txnImpl.setCreatedTime(TransactionContext.getCreationTime());
-			txnImpl.setScope(TransactionContext.getTransactionType().toString());
-			txnImpl.setXid(TransactionContext.getXid().toString());
+			txnImpl.setAssociatedSession(Long.parseLong(transactionContext.getThreadId()));
+			txnImpl.setCreatedTime(transactionContext.getCreationTime());
+			txnImpl.setScope(transactionContext.getTransactionType().toString());
+			if (transactionContext.getXid() != null) {
+				txnImpl.setId(transactionContext.getXid().toString());
+			} else {
+				txnImpl.setId(transactionContext.getTransaction().toString());
+			}
 			result.add(txnImpl);
 		}
 		return result;
 	}
 	
 	@Override
-	public void terminateTransaction(String xid) throws AdminException {
-		if (xid == null) {
+	public void terminateTransaction(String threadId) throws AdminException {
+		if (threadId == null) {
 			return;
 		}
-		TransactionContext context = this.transactions.getTransactionContext(xid.hashCode());
-		context.setRollbackOnly();
-		
 		try {
-			if (context.getTransactionType() == TransactionContext.Scope.REQUEST ) {
-				rollback(context);
-			}
-			
-			if (context.getTransactionType() == TransactionContext.Scope.LOCAL ) {
-				rollback(context.getThreadId());
-			}
-			
-			if (context.getTransactionType() == TransactionContext.Scope.GLOBAL ) {
-				throw new AdminProcessingException("Can not terminate global transactions!");
-			}			
+			cancelTransactions(threadId, false);
 		} catch (XATransactionException e) {
-			throw new AdminProcessingException(e.getMessage());
+			throw new AdminProcessingException(e);
 		}
 	}
 	
-	public void setXidFactory(XidFactory f) {
-		this.xidFactory = f;
-	}
 }

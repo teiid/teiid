@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import junit.framework.TestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestDQPWorkContext extends TestCase {
 
@@ -40,10 +39,11 @@ public class TestDQPWorkContext extends TestCase {
 
 	public static DQPWorkContext example() {
 		DQPWorkContext message = new DQPWorkContext();
-		message.setVdbName("vdbName"); //$NON-NLS-1$
-		message.setVdbVersion(1); //$NON-NLS-1$
-		message.setAppName("querybuilder"); //$NON-NLS-1$
-		message.setSessionToken(new SessionToken(5, "userName")); //$NON-NLS-1$
+		message.getSession().setVDBName("vdbName"); //$NON-NLS-1$
+		message.getSession().setVDBVersion(1); 
+		message.getSession().setApplicationName("querybuilder"); //$NON-NLS-1$
+		message.getSession().setSessionId(5);
+		message.getSession().setUserName("userName"); //$NON-NLS-1$
 		return message;
 	}
 
@@ -53,7 +53,7 @@ public class TestDQPWorkContext extends TestCase {
 		assertEquals("5", copy.getConnectionID()); //$NON-NLS-1$
 		assertEquals("userName", copy.getUserName()); //$NON-NLS-1$
 		assertEquals("vdbName", copy.getVdbName()); //$NON-NLS-1$
-		assertEquals(1, copy.getVdbVersion()); //$NON-NLS-1$
+		assertEquals(1, copy.getVdbVersion());
 		assertEquals("querybuilder", copy.getAppName()); //$NON-NLS-1$
 	}
 

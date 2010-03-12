@@ -76,7 +76,7 @@ public interface Session extends  AdminObject {
     public int getVDBVersion();
     
     /**
-     * Get the IPAddress for this Session
+     * Get the IPAddress for this Session.  Note this value is reported from the client.
      * @return
      */
     public String getIPAddress();
@@ -84,7 +84,7 @@ public interface Session extends  AdminObject {
  
     /**
      * Get the host name of the machine the client is 
-     * accessing from
+     * accessing from.  Note this value is reported from the client.
      * @return 
      */
     public String getClientHostName();

@@ -35,7 +35,7 @@ import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 
-public interface ClientSideDQP {
+public interface DQP {
 	
 	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	

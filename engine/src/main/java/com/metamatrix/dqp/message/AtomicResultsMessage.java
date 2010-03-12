@@ -42,9 +42,6 @@ public class AtomicResultsMessage implements Externalizable {
     // by default we support implicit close.
     private boolean supportsImplicitClose = true;
 
-    // this flag is used to notify the connector state
-    private boolean requestClosed;
-    
     private boolean isTransactional;
     
     private List<Exception> warnings;
@@ -53,13 +50,9 @@ public class AtomicResultsMessage implements Externalizable {
 	public AtomicResultsMessage() {
 	}
 	
-	public AtomicResultsMessage(AtomicRequestMessage msg, List[] results, String[] dataTypes) {
-		this(msg);
+	public AtomicResultsMessage(List[] results, String[] dataTypes) {
 		this.dataTypes = dataTypes;
         this.results = results;
-	}
-	
-	public AtomicResultsMessage(AtomicRequestMessage msg) {
 	}
 	
     public boolean supportsImplicitClose() {
@@ -78,15 +71,7 @@ public class AtomicResultsMessage implements Externalizable {
         finalRow = i;
     }
 
-    public boolean isRequestClosed() {
-        return this.requestClosed;
-    }
-
-    public void setRequestClosed(boolean requestClosed) {
-        this.requestClosed = requestClosed;
-    }     
-    
-	public  List[] getResults() {
+	public List[] getResults() {
 		return results;
 	}
 
@@ -95,7 +80,6 @@ public class AtomicResultsMessage implements Externalizable {
         results = BatchSerializer.readBatch(in, dataTypes);
         finalRow = in.readInt();
         supportsImplicitClose = in.readBoolean();
-        requestClosed = in.readBoolean();
         warnings = (List<Exception>)in.readObject();
 	}
 
@@ -104,7 +88,6 @@ public class AtomicResultsMessage implements Externalizable {
         BatchSerializer.writeBatch(out, dataTypes, results);
         out.writeInt(finalRow);
         out.writeBoolean(supportsImplicitClose);
-        out.writeBoolean(requestClosed);
         out.writeObject(warnings);
 	}
 

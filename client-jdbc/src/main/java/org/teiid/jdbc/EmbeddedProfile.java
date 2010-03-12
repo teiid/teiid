@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -32,15 +33,17 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.teiid.transport.LocalServerConnection;
-
+import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMConnection;
+import com.metamatrix.jdbc.MMSQLException;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 
@@ -88,13 +91,16 @@ final class EmbeddedProfile {
         // and make sure we have all the properties we need.
         validateProperties(info);
         try {
-			return new MMConnection(new LocalServerConnection(info), info, url);
+        	ServerConnection sc = (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+			return new MMConnection(sc, info, url);
 		} catch (MetaMatrixRuntimeException e) {
-			throw new SQLException(e);
+			throw MMSQLException.create(e);
 		} catch (ConnectionException e) {
-			throw new SQLException(e);
+			throw MMSQLException.create(e);
 		} catch (CommunicationException e) {
-			throw new SQLException(e);
+			throw MMSQLException.create(e);
+		} catch (MetaMatrixCoreException e) {
+			throw MMSQLException.create(e);
 		}
     }
     

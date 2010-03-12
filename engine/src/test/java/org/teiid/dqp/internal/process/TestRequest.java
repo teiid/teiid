@@ -59,11 +59,6 @@ import com.metamatrix.query.util.ContextProperties;
 public class TestRequest extends TestCase {
 
     private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
-    private final static String VDB = "VDB";  //$NON-NLS-1$
-    private final static int VDB_VERSION = 1;  //$NON-NLS-1$
-    private final static String MODEL = "pm1";  //$NON-NLS-1$
-    private final static String BINDING_ID = "1";  //$NON-NLS-1$
-    private final static String BINDING_NAME = "BINDING";  //$NON-NLS-1$
     
     /**
      * Constructor for TestRequest.
@@ -146,7 +141,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
         
         Request request = helpProcessMessage(message, null, workContext);
-        assertEquals("5", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
+        assertEquals("1", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
     }
 
     private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws QueryValidatorException,

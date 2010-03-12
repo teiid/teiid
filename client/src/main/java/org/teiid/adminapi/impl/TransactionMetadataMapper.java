@@ -69,7 +69,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			transaction.set("associatedSession", SimpleValueSupport.wrap(object.getAssociatedSession()));
 			transaction.set("createdTime", SimpleValueSupport.wrap(object.getCreatedTime()));
 			transaction.set("scope", SimpleValueSupport.wrap(object.getScope()));
-			transaction.set("xid", SimpleValueSupport.wrap(object.getXid()));
+			transaction.set("id", SimpleValueSupport.wrap(object.getId()));
 			
 			return transaction;
 		}
@@ -88,9 +88,9 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			transaction.setAssociatedSession((Long) metaValueFactory.unwrap(compositeValue.get("associatedSession")));
 			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get("createdTime")));
 			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get("scope")));
-			transaction.setXid((String) metaValueFactory.unwrap(compositeValue.get("xid")));
+			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get("id")));
 			return transaction;
 		}
-		throw new IllegalStateException("Unable to unwrap session " + metaValue);
+		throw new IllegalStateException("Unable to unwrap transaction " + metaValue);
 	}
 }

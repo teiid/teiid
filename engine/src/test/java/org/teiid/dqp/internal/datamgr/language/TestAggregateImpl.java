@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import org.teiid.connector.language.AggregateFunction;
+import junit.framework.TestCase;
+
 import org.teiid.connector.language.AggregateFunction;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.SQLReservedWords;
@@ -30,8 +31,6 @@ import org.teiid.connector.language.SQLReservedWords;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
-
-import junit.framework.TestCase;
 
 public class TestAggregateImpl extends TestCase {
 

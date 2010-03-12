@@ -40,16 +40,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     }
     
     private ThreadState threadState = ThreadState.MORE_WORK;
-    private volatile boolean release = false;
+    private volatile boolean release;
     
     public void run() {
     	try {
-    		assosiateSecurityContext();
     		startProcessing();
     		process();
     	} finally {
     		endProcessing();
-   			clearSecurityContext();
     	}
     }
     
@@ -130,10 +128,6 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     protected abstract void resumeProcessing();
 	
     protected abstract boolean isDoneProcessing();
-    
-    protected abstract boolean assosiateSecurityContext();
-    
-    protected abstract void clearSecurityContext();
     
     public abstract String toString();
     

@@ -24,11 +24,9 @@ package org.teiid.transport;
 
 import java.util.Properties;
 
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.security.Credentials;
 
@@ -72,12 +70,11 @@ public class LogonImpl implements ILogon {
         boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(MMURL.CONNECTION.ADMIN));
 		try {
 			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection);
-	        
-			long sessionID = updateDQPContext(sessionInfo, adminConnection);
+	        updateDQPContext(sessionInfo);
 			if (Boolean.parseBoolean(connProps.getProperty(ServerConnection.LOCAL_CONNECTION))) {
-				service.setLocalSession(sessionID);
+				sessionInfo.setEmbedded(true);
 			}
-			return new LogonResult(sessionInfo.getAttachment(SessionToken.class), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
+			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
 		} catch (LoginException e) {
 			throw new LogonException(e.getMessage());
 		} catch (SessionServiceException e) {
@@ -85,40 +82,16 @@ public class LogonImpl implements ILogon {
 		}
 	}
 
-	private long updateDQPContext(SessionMetadata s, boolean adminConnection) {
+	private long updateDQPContext(SessionMetadata s) {
 		long sessionID = s.getSessionId();
 		
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		if (workContext == null) {
-			workContext = new DQPWorkContext();
-		}
-		workContext.setSessionToken(s.getAttachment(SessionToken.class));
-		workContext.setAppName(s.getApplicationName());
-		
-		LoginContext loginContext = s.getAttachment(LoginContext.class);
-		if (loginContext != null) {
-			workContext.setSubject(loginContext.getSubject());
-			workContext.setSecurityDomain(s.getSecurityDomain());
-			workContext.setSecurityContext(s.getAttachment("SecurityContext"));
-		}
-		
-		VDBMetaData vdb = s.getAttachment(VDBMetaData.class);
-		if (vdb != null) {
-			workContext.setVdbName(vdb.getName());
-			workContext.setVdbVersion(vdb.getVersion());		
-			workContext.setVdb(vdb);
-		}
-		
-		if (adminConnection) {
-			workContext.markAsAdmin();
-		}
-		DQPWorkContext.setWorkContext(workContext);
+		workContext.setSession(s);
 		return sessionID;
 	}
 		
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
-		DQPWorkContext.getWorkContext().reset();
 		return ResultsFuture.NULL_FUTURE;
 	}
 
@@ -145,10 +118,10 @@ public class LogonImpl implements ILogon {
 			throw new InvalidSessionException();
 		}
 		
-		SessionToken st = sessionInfo.getAttachment(SessionToken.class);
+		SessionToken st = sessionInfo.getSessionToken();
 		if (!st.equals(checkSession)) {
 			throw new InvalidSessionException();
 		}
-		this.updateDQPContext(sessionInfo, false);
+		this.updateDQPContext(sessionInfo);
 	}
 }

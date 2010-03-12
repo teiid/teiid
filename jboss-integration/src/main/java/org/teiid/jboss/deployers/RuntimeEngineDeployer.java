@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
+import javax.transaction.TransactionManager;
 
 import org.jboss.managed.api.ManagedOperation.Impact;
 import org.jboss.managed.api.annotation.ManagementComponent;
@@ -48,14 +49,11 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.transaction.ContainerTransactionProvider;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
-import org.teiid.dqp.internal.transaction.XidFactory;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.LogConfigurationProvider;
 import org.teiid.logging.LogListernerProvider;
@@ -74,14 +72,13 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.DQPManagement;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.SessionToken;
 
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
@@ -91,9 +88,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient SocketConfiguration adminSocketConfiguration;	
 	private transient SocketTransport jdbcSocket;	
 	private transient SocketTransport adminSocket;
-	private transient SecurityHelper securityHelper;
+	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 		
 	private transient DQPCore dqpCore = new DQPCore();
+	private transient SessionService sessionService;
 	private transient ILogon logon;
 	private transient Admin admin;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
@@ -104,20 +102,25 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		LogManager.setLogListener(new LogListernerProvider().get());
     }
 	
-	
 	@Override
 	public <T> T getClientService(Class<T> iface)
 			throws ComponentNotFoundException {
 		return this.csr.getClientService(iface);
 	}
 	
+	@Override
+	public SecurityHelper getSecurityHelper() {
+		return this.csr.getSecurityHelper();
+	}
+	
     public void start() {
+		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(com.metamatrix.common.util.LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
 
     	// create the necessary services
     	createClientServices();
     	
-    	this.csr.registerClientService(ILogon.class, proxyService(ILogon.class, logon), com.metamatrix.common.util.LogConstants.CTX_SESSION);
-    	this.csr.registerClientService(ClientSideDQP.class, proxyService(ClientSideDQP.class, this.dqpCore), com.metamatrix.common.util.LogConstants.CTX_DQP);
+    	this.csr.registerClientService(ILogon.class, logon, com.metamatrix.common.util.LogConstants.CTX_SESSION);
+    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore), com.metamatrix.common.util.LogConstants.CTX_DQP);
     	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
@@ -163,7 +166,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		
 		this.dqpCore.start(this);
 		
-		this.logon = new LogonImpl(this.dqpCore.getSessionService(), "teiid-cluster"); //$NON-NLS-1$
+		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
     	try {
     		this.admin = AdminProvider.getLocal();
     	} catch (AdminComponentException e) {
@@ -171,58 +174,28 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	}		        
 	}    
 	
-    private TransactionService getTransactionService(String processName, XATerminator terminator) {
-		TransactionServerImpl txnService = new TransactionServerImpl();
-		txnService.setTransactionProvider(new ContainerTransactionProvider(terminator));
-		txnService.setProcessName(processName);
-		txnService.setXidFactory(new XidFactory());
-		return (TransactionService)LogManager.createLoggingProxy(com.metamatrix.common.util.LogConstants.CTX_TXN_LOG, txnService, new Class[] {TransactionService.class}, MessageLevel.DETAIL);
-    }	
-	
+	/**
+	 * Creates an proxy to validate the incoming session
+	 */
 	private <T> T proxyService(final Class<T> iface, final T instance) {
 
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
 			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
-				
 				Throwable exception = null;
-				ClassLoader current = Thread.currentThread().getContextClassLoader();
 				try {
-					if (!(iface.equals(ILogon.class))) {					
-						logon.assertIdentity(SessionToken.getSession());
-						assosiateSecurityContext();
-					}
-					
+					sessionService.validateSession(DQPWorkContext.getWorkContext().getSessionId());
 					return arg1.invoke(instance, arg2);
 				} catch (InvocationTargetException e) {
 					exception = e.getTargetException();
 				} catch(Throwable t){
 					exception = t;
-				} finally {
-					clearSecurityContext();
-					DQPWorkContext.releaseWorkContext();
-					Thread.currentThread().setContextClassLoader(current);
 				}
 				throw ExceptionUtil.convertException(arg1, exception);
 			}
 		}));
-	}	
-	
-    private boolean assosiateSecurityContext() {
-		DQPWorkContext context = DQPWorkContext.getWorkContext();
-		if (context.getSubject() != null) {
-        	return securityHelper.assosiateSecurityContext(context.getSecurityDomain(), context.getSecurityContext());			
-		}
-		return false;
 	}
-    
-    private void clearSecurityContext() {
-		DQPWorkContext context = DQPWorkContext.getWorkContext();
-		if (context.getSubject() != null) {
-			securityHelper.clearSecurityContext(context.getSecurityDomain());			
-		}
-	}	   
-    
+	
 	public void setJdbcSocketConfiguration(SocketConfiguration socketConfig) {
 		this.jdbcSocketConfiguration = socketConfig;
 	}
@@ -232,8 +205,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
     
     public void setXATerminator(XATerminator xaTerminator){
-       this.dqpCore.setTransactionService(getTransactionService("localhost", xaTerminator)); //$NON-NLS-1$
-    }    
+    	this.transactionServerImpl.setXaTerminator(xaTerminator);
+    }   
+    
+    public void setTransactionManager(TransactionManager transactionManager) {
+    	this.transactionServerImpl.setTransactionManager(transactionManager);
+    }
     
     public void setWorkManager(WorkManager mgr) {
     	this.dqpCore.setWorkManager(mgr);
@@ -244,7 +221,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	public void setSessionService(SessionService service) {
-		this.dqpCore.setSessionService(service);
+		this.sessionService = service;
+		service.setDqp(this.dqpCore);
 	}
 	
 	public void setBufferService(BufferService service) {
@@ -256,8 +234,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	public void setSecurityHelper(SecurityHelper helper) {
-		this.securityHelper = helper;
-		this.dqpCore.setSecurityHelper(helper);
+		this.csr.setSecurityHelper(helper);
 	}
 	
 	@Override
@@ -278,17 +255,17 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if ("runtime".equalsIgnoreCase(identifier)) { //$NON-NLS-1$
 			return this.dqpCore.getWorkManagerStatistics();
 		}
-		ConnectorManager cm = this.dqpCore.getConnectorManagerRepository().getConnectorManager(identifier);
+		/*ConnectorManager cm = this.dqpCore.getConnectorManagerRepository().getConnectorManager(identifier);
 		if (cm != null) {
 			return cm.getWorkManagerStatistics();
-		}
+		}*/
 		return null;
 	}
 	
 	@Override
     @ManagementOperation(description="Terminate a Session",params={@ManagementParameter(name="terminateeId",description="The session to be terminated")})
     public void terminateSession(long terminateeId) {
-		this.dqpCore.getSessionService().terminateSession(terminateeId, SessionToken.getSession().getSessionID());
+		this.sessionService.terminateSession(terminateeId, DQPWorkContext.getWorkContext().getSessionId());
     }
     
 	@Override
@@ -317,7 +294,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@ManagementOperation(description="Active sessions", impact=Impact.ReadOnly)
 	public Collection<SessionMetadata> getActiveSessions() throws AdminException {
 		try {
-			return this.dqpCore.getActiveSessions();
+			return this.sessionService.getActiveSessions();
 		} catch (SessionServiceException e) {
 			throw new AdminComponentException(e);
 		}
@@ -327,7 +304,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@ManagementProperty(description="Active session count", use={ViewUse.STATISTIC}, readOnly=true)
 	public int getActiveSessionsCount() throws AdminException{
 		try {
-			return this.dqpCore.getActiveSessionsCount();
+			return this.sessionService.getActiveSessionsCount();
 		} catch (SessionServiceException e) {
 			throw new AdminComponentException(e);
 		}

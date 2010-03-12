@@ -72,6 +72,7 @@
         <property name="adminSocketConfiguration"><inject bean="AdminSocketConfiguration"/></property>
         <property name="workManager"><inject bean="WorkManager"/></property>
         <property name="XATerminator"><inject bean="TransactionManager" property="XATerminator"/></property>
+        <property name="TransactionManager"><inject bean="TransactionManager"/></property>
         <property name="authorizationService"><inject bean="AuthorizationService"/></property>
         <property name="sessionService"><inject bean="SessionService"/></property>
         <property name="bufferService"><inject bean="BufferService"/></property>
@@ -87,7 +88,7 @@
         <!-- Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480) -->
         <property name="maxRowsFetchSize">20480</property>
         <!-- The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default) -->
-        <property name="lobChunkSizeInKB">10</property>
+        <property name="lobChunkSizeInKB">100</property>
         <!-- The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)  -->
         <property name="preparedPlanCacheMaxCount">250</property>
         <!-- Maximum number of cached lookup tables. Note: this is a memory based cache and should be set to a value of at least 10 to accomidate system usage. (default 200) -->

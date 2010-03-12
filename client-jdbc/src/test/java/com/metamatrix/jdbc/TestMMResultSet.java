@@ -40,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.message.ResultsMessage;
 
 public class TestMMResultSet {
@@ -727,7 +727,7 @@ public class TestMMResultSet {
 
 	static MMStatement createMockStatement(int cursorType) throws SQLException {
 		MMStatement statement = mock(MMStatement.class);
-		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
+		stub(statement.getDQP()).toReturn(mock(DQP.class));
 		stub(statement.getResultSetType()).toReturn(cursorType);
 		TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
 		TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$

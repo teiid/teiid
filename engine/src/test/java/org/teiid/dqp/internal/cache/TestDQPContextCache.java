@@ -27,7 +27,6 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
-import com.metamatrix.platform.security.api.SessionToken;
 
 
 public class TestDQPContextCache extends TestCase {
@@ -43,9 +42,10 @@ public class TestDQPContextCache extends TestCase {
 	
 	private DQPWorkContext getContext() {
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("MyVDB"); //$NON-NLS-1$
-        workContext.setVdbVersion(1); //$NON-NLS-1$
-        workContext.setSessionToken(new SessionToken(1, "foo")); //$NON-NLS-1$
+        workContext.getSession().setVDBName("MyVDB"); //$NON-NLS-1$
+        workContext.getSession().setVDBVersion(1);
+		workContext.getSession().setSessionId(1);
+		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
         return workContext;
 	}
 
@@ -55,17 +55,17 @@ public class TestDQPContextCache extends TestCase {
 		Cache cache = this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString());
 		cache.put("key", "request-value"); //$NON-NLS-1$ //$NON-NLS-2$
 
-		cache = this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID()));		
+		cache = this.cacheContext.getSessionScopedCache(context.getConnectionID());		
 		cache.put("key", "session-value"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		assertEquals("request-value", this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID())).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getConnectionID()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		// close the request
 		this.cacheContext.removeRequestScopedCache(context.getRequestID(12L).toString());
 		
 		assertNull(this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ 
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID())).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getConnectionID()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 		
 	

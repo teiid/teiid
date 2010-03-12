@@ -45,7 +45,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     @Override
-    public Column getElement(String fullName) throws ConnectorException {
+    public Column getColumn(String fullName) throws ConnectorException {
 		try {
 			Object metadataId = metadata.getElementID(fullName);
 			return getElement(metadataId);
@@ -64,7 +64,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     @Override
-    public Table getGroup(String fullName) throws ConnectorException {
+    public Table getTable(String fullName) throws ConnectorException {
 		try {
 			Object groupId = metadata.getGroupID(fullName);
 	    	return getGroup(groupId);

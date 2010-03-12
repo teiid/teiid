@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -83,10 +84,13 @@ public class FakeMetadataFactory {
     
 	public static DQPWorkContext buildWorkContext(QueryMetadataInterface metadata, VDBMetaData vdb) {
 		DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName(vdb.getName()); 
-        workContext.setVdbVersion(vdb.getVersion()); 
-        workContext.setSessionToken(new SessionToken(5, "foo")); //$NON-NLS-1$
-        workContext.setVdb(vdb);
+		SessionMetadata session = new SessionMetadata();
+		workContext.setSession(session);
+		session.setVDBName(vdb.getName()); 
+		session.setVDBVersion(vdb.getVersion()); 
+		session.setSessionId(1);
+		session.setUserName("foo"); //$NON-NLS-1$
+		session.setVdb(vdb);
         workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
         DQPWorkContext.setWorkContext(workContext);
 		return workContext;

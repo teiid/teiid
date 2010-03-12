@@ -59,7 +59,7 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 
 /**
@@ -303,7 +303,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		
 		public RemoteInvocationHandler(Class<?> targetClass) {
 			this.targetClass = targetClass;
-			this.secure = !ClientSideDQP.class.isAssignableFrom(targetClass);
+			this.secure = !DQP.class.isAssignableFrom(targetClass);
 		}
 
 		//## JDBC4.0-begin ##

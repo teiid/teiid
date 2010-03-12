@@ -45,6 +45,7 @@ import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -341,10 +342,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
             if(ExecutionProperties.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
             } else if ( processingCommand.updatingModelCount(metadata) > 1) { 
-                if (ExecutionProperties.TXN_WRAP_AUTO.equals(requestMsg.getTxnAutoWrapMode())){
+                if (ExecutionProperties.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
                     startAutoWrapTxn = true;
-                } else if (ExecutionProperties.TXN_WRAP_OFF.equals(requestMsg.getTxnAutoWrapMode())) {
-                    LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("Request.potentially_unsafe")); //$NON-NLS-1$ 
                 }
             } 
             
@@ -353,7 +352,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                     throw new MetaMatrixComponentException(DQPPlugin.Util.getString("Request.transaction_not_supported")); //$NON-NLS-1$
                 }
                 try {
-                    tc = transactionService.start(tc);
+                    tc = transactionService.begin(tc);
                 } catch (XATransactionException err) {
                     throw new MetaMatrixComponentException(err);
                 }
@@ -449,7 +448,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             } finally {
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
-                    LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, debugLog);               
+                    LogManager.logInfo(LogConstants.CTX_DQP, debugLog);               
                 }
             }
             
@@ -457,7 +456,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 analysisRecord.setQueryPlan(processPlan.getDescriptionProperties());
             }
             
-            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
             Object[] params = new Object[] { requestId};
             String msg = DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", params); //$NON-NLS-1$
@@ -527,7 +526,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     public void processRequest() 
         throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryPlannerException {
                     
-    	LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	
         initMetadata();
         

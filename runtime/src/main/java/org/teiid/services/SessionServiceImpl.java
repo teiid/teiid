@@ -96,7 +96,7 @@ public class SessionServiceImpl implements SessionService {
 		long currentTime = System.currentTimeMillis();
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
-    			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
+    			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
     				LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
@@ -126,7 +126,7 @@ public class SessionServiceImpl implements SessionService {
 
         // try to log out of the context.
         try {
-        	LoginContext context = info.getAttachment(LoginContext.class);
+        	LoginContext context = info.getLoginContext();
         	if (context != null) {
         		context.logout();
         	}
@@ -204,10 +204,10 @@ public class SessionServiceImpl implements SessionService {
         }
         
         // these are local no need for monitoring.
-        newSession.addAttchment(LoginContext.class, loginContext);
-        newSession.addAttchment("SecurityContext", securityContext);
-        newSession.addAttchment(VDBMetaData.class, vdb);
-        newSession.addAttchment(SessionToken.class, new SessionToken(id, userName));
+        newSession.setLoginContext(loginContext);
+        newSession.setSecurityContext(securityContext);
+        newSession.setVdb(vdb);
+        newSession.setSessionToken(new SessionToken(id, userName));
         LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + id, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
@@ -331,14 +331,6 @@ public class SessionServiceImpl implements SessionService {
 	public void stop(){
 		this.sessionMonitor.cancel();
 		this.sessionCache.clear();
-	}
-
-	@Override
-	public void setLocalSession(long sessionID) {
-		SessionMetadata info = this.sessionCache.get(sessionID);
-		if (info != null) {
-			info.setLastPingTime(Long.MAX_VALUE);
-		}
 	}
 
 	public void setVDBRepository(VDBRepository repo) {

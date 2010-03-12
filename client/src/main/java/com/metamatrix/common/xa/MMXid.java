@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import javax.transaction.xa.Xid;
 
@@ -40,6 +41,9 @@ public class MMXid implements Xid, Externalizable {
 	private byte[] globalTransactionId;
 	private byte[] branchQualifier;
 	private String toString;
+	
+	public MMXid() {
+	}
 	
 	public MMXid(Xid xid) {
 	    this.formatID = xid.getFormatId();
@@ -78,35 +82,13 @@ public class MMXid implements Xid, Externalizable {
         if(obj == this) {
             return true;
         } 
-		if(obj == null || !(obj instanceof MMXid)){
+		if(!(obj instanceof MMXid)){
 			return false;
 		}
 		MMXid that = (MMXid)obj;
-		if(this.formatID != that.formatID){
-			return false;
-		}
-		if(!areByteArraysEqual(this.globalTransactionId, that.globalTransactionId)){
-			return false;
-		}
-		if(!areByteArraysEqual(this.branchQualifier, that.branchQualifier)){
-			return false;
-		}
-		return true;
-	}
-
-	private boolean areByteArraysEqual(byte[] firstByteArray, byte[] secondByteArray){
-		if(firstByteArray == null || secondByteArray == null){
-			return false;
-		}
-		if(firstByteArray.length != secondByteArray.length){
-			return false;
-		}
-		for(int i=0; i< firstByteArray.length; i++){
-			if(firstByteArray[i] != secondByteArray[i]){
-				return false;
-			}
-		}
-		return true;
+		return this.formatID == that.formatID
+				&& Arrays.equals(this.globalTransactionId, that.globalTransactionId)
+				&& Arrays.equals(this.branchQualifier, that.branchQualifier);
 	}
 	
 	/** 

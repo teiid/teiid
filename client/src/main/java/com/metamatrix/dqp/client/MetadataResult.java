@@ -35,6 +35,9 @@ public class MetadataResult implements Externalizable {
 	private Map[] columnMetadata;
 	private int parameterCount;
 	
+	public MetadataResult() {
+	}
+	
 	public MetadataResult(Map[] columnMetadata, int parameterCount) {
 		super();
 		this.columnMetadata = columnMetadata;

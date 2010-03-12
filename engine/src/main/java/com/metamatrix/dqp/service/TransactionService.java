@@ -39,13 +39,17 @@ import com.metamatrix.common.xa.XATransactionException;
 public interface TransactionService {
     
     // processor level methods
-    TransactionContext start(TransactionContext context) throws XATransactionException;
+    TransactionContext begin(TransactionContext context) throws XATransactionException;
 
     TransactionContext commit(TransactionContext context) throws XATransactionException;
 
     TransactionContext rollback(TransactionContext context) throws XATransactionException;
 
     TransactionContext getOrCreateTransactionContext(String threadId);
+    
+    void suspend(TransactionContext context) throws XATransactionException;
+    
+    void resume(TransactionContext context) throws XATransactionException;
 
     // local transaction methods
     TransactionContext begin(String threadId) throws XATransactionException;

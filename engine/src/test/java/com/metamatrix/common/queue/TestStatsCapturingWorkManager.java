@@ -34,6 +34,7 @@ import javax.resource.spi.work.WorkRejectedException;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.dqp.internal.process.StatsCapturingWorkManager;
 
 /**
  */
@@ -46,10 +47,10 @@ public class TestStatsCapturingWorkManager {
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
-        final StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", MAX_THREADS); //$NON-NLS-1$
+        final StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", MAX_THREADS, manager); //$NON-NLS-1$
         
         for(int i=0; i<WORK_ITEMS; i++) {
-            pool.scheduleWork(manager, new FakeWorkItem(SINGLE_WAIT));
+            pool.scheduleWork(new FakeWorkItem(SINGLE_WAIT));
         }
         
         pool.shutdown();        
@@ -64,10 +65,10 @@ public class TestStatsCapturingWorkManager {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
-        StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+        StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
         
         for(int i=0; i<NUM_THREADS; i++) {            
-        	pool.scheduleWork(manager, new FakeWorkItem(SINGLE_WAIT));
+        	pool.scheduleWork(new FakeWorkItem(SINGLE_WAIT));
             
             try {
                 Thread.sleep(SINGLE_WAIT*2);
@@ -84,9 +85,9 @@ public class TestStatsCapturingWorkManager {
     }
     
     @Test(expected=WorkRejectedException.class) public void testShutdown() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
         pool.shutdown();
-    	pool.scheduleWork(manager, new FakeWorkItem(1));
+    	pool.scheduleWork(new FakeWorkItem(1));
     }
     
     /*@Test public void testScheduleCancel() throws Exception {
@@ -101,9 +102,9 @@ public class TestStatsCapturingWorkManager {
     }*/
     
     @Test public void testSchedule() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
         final ArrayList<String> result = new ArrayList<String>(); 
-    	pool.scheduleWork(manager, new Work() {
+    	pool.scheduleWork(new Work() {
 			
 			@Override
 			public void run() {
@@ -155,9 +156,9 @@ public class TestStatsCapturingWorkManager {
     }*/
     
     @Test public void testFailingWork() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
     	final AtomicInteger count = new AtomicInteger();
-    	pool.scheduleWork(manager, new Work() {
+    	pool.scheduleWork(new Work() {
     		@Override
     		public void run() {
     			count.getAndIncrement();

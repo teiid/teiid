@@ -33,7 +33,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.platform.security.api.ILogon;
 
 public class TestSocketServiceRegistry extends TestCase {
@@ -62,7 +62,7 @@ public class TestSocketServiceRegistry extends TestCase {
 	
 	public void testComponentExceptionConversion() throws Exception {
 		
-		Method m = ClientSideDQP.class.getMethod("getMetadata", new Class[] {Long.TYPE});
+		Method m = DQP.class.getMethod("getMetadata", new Class[] {Long.TYPE});
 		
 		Throwable t = ExceptionUtil.convertException(m, new NullPointerException());
 		
@@ -71,7 +71,7 @@ public class TestSocketServiceRegistry extends TestCase {
 	
 	public void testXATransactionExceptionConversion() throws Exception {
 		
-		Method m = ClientSideDQP.class.getMethod("recover", new Class[] {Integer.TYPE});
+		Method m = DQP.class.getMethod("recover", new Class[] {Integer.TYPE});
 		
 		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
 		

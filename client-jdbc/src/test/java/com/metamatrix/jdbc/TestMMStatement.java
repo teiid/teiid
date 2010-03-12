@@ -32,7 +32,7 @@ import java.util.Properties;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -46,7 +46,7 @@ public class TestMMStatement {
 	
 	@Test public void testBatchExecution() throws Exception {
 		MMConnection conn = Mockito.mock(MMConnection.class);
-		ClientSideDQP dqp = Mockito.mock(ClientSideDQP.class);
+		DQP dqp = Mockito.mock(DQP.class);
 		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
 		ResultsMessage rm = new ResultsMessage();

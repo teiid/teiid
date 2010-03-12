@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.queue;
+package org.teiid.dqp.internal.process;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -76,14 +76,14 @@ public class StatsCapturingWorkManager {
 	}
 	
 	private final class WorkWrapper implements Work {
-		private final WorkManager delegate;
 		private final Work work;
 		private final WorkContext workContext;
+		private final DQPWorkContext dqpWorkContext;
 
-		private WorkWrapper(WorkManager delegate, Work work, WorkContext workContext) {
-			this.delegate = delegate;
+		private WorkWrapper(Work work, WorkContext workContext, DQPWorkContext dqpWorkContext) {
 			this.work = work;
 			this.workContext = workContext;
+			this.dqpWorkContext = dqpWorkContext;
 		}
 
 		@Override
@@ -99,7 +99,7 @@ public class StatsCapturingWorkManager {
 			}
 			boolean success = false;
 			try {
-				work.run();
+				dqpWorkContext.runInContext(work);
 				success = true;
 			} finally {
 				synchronized (poolLock) {
@@ -152,25 +152,30 @@ public class StatsCapturingWorkManager {
 	private volatile boolean terminated;
 	private volatile int submittedCount;
 	private volatile int completedCount;
+	
 	private Object poolLock = new Object();
 	private AtomicInteger threadCounter = new AtomicInteger();
+	
 	private String poolName;
 	private int maximumPoolSize;
+	private WorkManager delegate;
+	
 	private Queue<WorkWrapper> queue = new LinkedList<WorkWrapper>();
 	private Set<Thread> threads = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<Thread, Boolean>()));
 	private Map<Integer, ScheduledFuture<?>> futures = new HashMap<Integer, ScheduledFuture<?>>();
 	private int idCounter;
 	
-	public StatsCapturingWorkManager(String name, int maximumPoolSize) {
+	public StatsCapturingWorkManager(String name, int maximumPoolSize, WorkManager delegate) {
 		this.maximumPoolSize = maximumPoolSize;
 		this.poolName = name;
+		this.delegate = delegate;
 	}
 	
-	public void scheduleWork(final WorkManager delegate, final Work arg0) throws WorkException {
-		scheduleWork(delegate, arg0, (WorkContext)null);
+	public void scheduleWork(final Work arg0) throws WorkException {
+		scheduleWork(arg0, (WorkContext)null, DQPWorkContext.getWorkContext());
 	}
 
-	private void scheduleWork(final WorkManager delegate, final Work work, WorkContext workContext) 
+	private void scheduleWork(final Work work, WorkContext workContext, DQPWorkContext dqpWorkContext) 
 	throws WorkRejectedException, WorkException {
 		boolean atMaxThreads = false;
 		boolean newMaxQueueSize = false;
@@ -179,7 +184,7 @@ public class StatsCapturingWorkManager {
 			submittedCount++;
 			atMaxThreads = activeCount == maximumPoolSize;
 			if (atMaxThreads) {
-				queue.add(new WorkWrapper(delegate, work, workContext));
+				queue.add(new WorkWrapper(work, workContext, dqpWorkContext));
 				int queueSize = queue.size();
 				if (queueSize > highestQueueSize) {
 					newMaxQueueSize = true;
@@ -197,25 +202,26 @@ public class StatsCapturingWorkManager {
 			return;
 		}
 		if (workContext == null) {
-			delegate.scheduleWork(new WorkWrapper(delegate, work, null));
+			delegate.scheduleWork(new WorkWrapper(work, null, dqpWorkContext));
 		} else {
-			delegate.scheduleWork(new WorkWrapper(delegate, work, null), workContext.getStartTimeout(), workContext.context, work instanceof WorkListener?(WorkListener)work:null);
+			delegate.scheduleWork(new WorkWrapper(work, null, dqpWorkContext), workContext.getStartTimeout(), workContext.context, work instanceof WorkListener?(WorkListener)work:null);
 		}
 	}
 
-	public void scheduleWork(final WorkManager delegate, final Work arg0, final ExecutionContext arg2, long delay) throws WorkException {
+	public void scheduleWork(final Work arg0, final ExecutionContext arg2, long delay) throws WorkException {
 		if (delay < 1) {
-			scheduleWork(delegate, arg0, new WorkContext(arg2, WorkManager.INDEFINITE));
+			scheduleWork(arg0, new WorkContext(arg2, WorkManager.INDEFINITE), DQPWorkContext.getWorkContext());
 		} else {
 			synchronized (futures) {
 				final int id = idCounter++;
+				final DQPWorkContext dqpWorkContext = DQPWorkContext.getWorkContext();
 				ScheduledFuture<?> sf = stpe.schedule(new Runnable() {
 					
 					@Override
 					public void run() {
 						try {
 							futures.remove(id);
-							scheduleWork(delegate, arg0, new WorkContext(arg2, WorkManager.INDEFINITE));
+							scheduleWork(arg0, new WorkContext(arg2, WorkManager.INDEFINITE), dqpWorkContext);
 						} catch (WorkException e) {
 							handleException(arg0, e);
 						}

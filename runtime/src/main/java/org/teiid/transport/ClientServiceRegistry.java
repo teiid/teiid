@@ -22,10 +22,14 @@
 
 package org.teiid.transport;
 
+import org.teiid.security.SecurityHelper;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 
 public interface ClientServiceRegistry {
 	
 	<T> T getClientService(Class<T> iface) throws ComponentNotFoundException;
+	
+	SecurityHelper getSecurityHelper();
 
 }

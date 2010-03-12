@@ -60,7 +60,7 @@ public interface ExecutionProperties {
      * Transaction auto wrap constant - checks if a command
      * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_WRAP_AUTO = "AUTO"; //$NON-NLS-1$
+    public static final String TXN_WRAP_DETECT = "DETECT"; //$NON-NLS-1$
 
     /** 
      * Whether to use result set cache if it is available 

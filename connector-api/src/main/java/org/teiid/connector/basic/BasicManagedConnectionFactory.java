@@ -179,15 +179,6 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	}
 
 	@Override
-	public boolean isSynchWorkers() {
-		return synchWorkers;
-	}
-
-	public void setSynchWorkers(Boolean arg0) {
-		this.synchWorkers = arg0.booleanValue();
-	}
-
-	@Override
 	public Properties getOverrideCapabilities() throws ConnectorException {
 		if (this.overrideCapabilities == null && this.overrideCapabilitiesFile != null) {
 			try {

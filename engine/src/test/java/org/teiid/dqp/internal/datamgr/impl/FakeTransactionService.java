@@ -22,17 +22,18 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
-import org.teiid.dqp.internal.transaction.TransactionProvider;
+import javax.resource.spi.XATerminator;
+import javax.transaction.TransactionManager;
+
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
-import org.teiid.dqp.internal.transaction.XidFactory;
 
 import com.metamatrix.core.util.SimpleMock;
 
 public class FakeTransactionService extends TransactionServerImpl {
 
 	public FakeTransactionService() {
-		this.setTransactionProvider(SimpleMock.createSimpleMock(TransactionProvider.class));
-		this.setXidFactory(new XidFactory());
+		this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
+		this.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
 	}
 	
 }

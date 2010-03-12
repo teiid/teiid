@@ -32,7 +32,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.resource.spi.work.WorkManager;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
@@ -51,6 +50,7 @@ import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
@@ -60,13 +60,10 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.BufferService;
@@ -107,18 +104,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private DQPCore requestMgr;
     private BufferService bufferService;
     private ConnectorManagerRepository connectorManagerRepository;
-    private WorkManager workManager;
 
 	// Processor state
     private CodeTableCache codeTableCache;
     
-    public DataTierManagerImpl(DQPCore requestMgr, ConnectorManagerRepository connectorRepo, BufferService bufferService, WorkManager wm, int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
-
+    public DataTierManagerImpl(DQPCore requestMgr, ConnectorManagerRepository connectorRepo, BufferService bufferService, int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
 		this.requestMgr = requestMgr;
         this.connectorManagerRepository = connectorRepo;
         this.bufferService = bufferService;
-        this.workManager = wm;
-
         this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
     
@@ -134,9 +127,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
-        DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorName(), workItem);
-        tupleSource.open();
-        return tupleSource;
+        return new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorName(), workItem);
 	}
 
 	/**
@@ -354,28 +345,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return aqr;
 	}
 	
-	void executeRequest(AtomicRequestMessage aqr, String connectorName,ResultsReceiver<AtomicResultsMessage> receiver) throws MetaMatrixComponentException {
-		try {
-			getCM(connectorName).executeRequest(this.workManager, receiver, aqr);
-		} catch (ConnectorException e) {
-			throw new MetaMatrixComponentException(e);
-		}
-	}
-
-	public void closeRequest(AtomicRequestID request, String connectorName) {
-		getCM(connectorName).closeRequest(request);
-	}
-	
-	public void cancelRequest(AtomicRequestID request, String connectorName) {
-		getCM(connectorName).cancelRequest(request);
-	}
-
-	void requestBatch(AtomicRequestID request, String connectorName) throws MetaMatrixComponentException {
-		try {
-			getCM(connectorName).requstMore(request);
-		} catch (ConnectorException e) {
-			throw new MetaMatrixComponentException(e);
-		}
+	ConnectorWork executeRequest(AtomicRequestMessage aqr, String connectorName) throws ConnectorException {
+		return getCM(connectorName).executeRequest(aqr);
 	}
 
     /** 

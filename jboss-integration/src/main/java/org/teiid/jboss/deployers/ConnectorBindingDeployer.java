@@ -35,7 +35,6 @@ import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentGroup;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentMetaData;
 import org.teiid.connector.api.Connector;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.security.SecurityHelper;
@@ -63,14 +62,9 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 			if (connectorDefinition.equals(Connector.class.getName())) {
 				String connectorName = data.getJndiName();
 
-				ConnectorManager cm = null;
-				try {
-					cm = createConnectorManger("java:"+connectorName, data.getMaxSize()); //$NON-NLS-1$
-					cm.start();
-					cmGroup.addConnectorManager(cm);
-				} catch (ConnectorException e) {
-					throw new DeploymentException(e);
-				}
+				ConnectorManager cm = createConnectorManger("java:"+connectorName, data.getMaxSize()); //$NON-NLS-1$
+				cm.start();
+				cmGroup.addConnectorManager(cm);
 
 				// Add the references to the mgr as loaded.
 	            this.connectorManagerRepository.addConnectorManager("java:"+connectorName, cm);  //$NON-NLS-1$    

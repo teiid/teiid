@@ -53,7 +53,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -193,7 +193,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         }        
     }
 
-    protected ClientSideDQP getDQP() {
+    protected DQP getDQP() {
     	return this.driverConnection.getDQP();
     }
     

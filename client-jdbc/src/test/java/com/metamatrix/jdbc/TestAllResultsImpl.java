@@ -45,7 +45,7 @@ import org.mockito.Matchers;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -698,7 +698,7 @@ public class TestAllResultsImpl {
 	static MMResultSet helpTestBatching(MMStatement statement, int fetchSize, int batchLength,
 			int totalLength) throws InterruptedException, ExecutionException,
 			MetaMatrixProcessingException, SQLException, TimeoutException {
-		ClientSideDQP dqp = mock(ClientSideDQP.class);
+		DQP dqp = mock(DQP.class);
 		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getFetchSize()).toReturn(fetchSize);
 		for (int i = batchLength; i < totalLength; i += batchLength) {

@@ -61,6 +61,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     public SocketClientInstance(ObjectChannel objectSocket, ClientServiceRegistryImpl csr, boolean isClientEncryptionEnabled) {
         this.objectSocket = objectSocket;
         this.csr = csr;
+        this.workContext.setSecurityHelper(csr.getSecurityHelper());
         this.usingEncryption = isClientEncryptionEnabled;
         SocketAddress address = this.objectSocket.getRemoteAddress();
         if (address instanceof InetSocketAddress) {
@@ -138,8 +139,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
 			LogManager.logDetail(LogConstants.CTX_TRANSPORT, "processing message:" + packet); //$NON-NLS-1$
         }
-		ServerWorkItem work = new ServerWorkItem(this, packet.getMessageKey(), packet, this.csr);
-		work.process();
+		final ServerWorkItem work = new ServerWorkItem(this, packet.getMessageKey(), packet, this.csr);
+		this.workContext.runInContext(work);
 	}
 
 	public void shutdown() throws CommunicationException {

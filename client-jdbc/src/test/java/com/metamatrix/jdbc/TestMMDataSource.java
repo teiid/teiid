@@ -524,7 +524,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure, 
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL3() {
@@ -536,7 +536,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     // Test secure protocol
@@ -549,7 +549,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;serverURL=mms://hostname:7001;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;serverURL=mms://hostname:7001;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -567,7 +567,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -585,7 +585,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -604,7 +604,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=AUTO;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL_AdditionalProperties() {

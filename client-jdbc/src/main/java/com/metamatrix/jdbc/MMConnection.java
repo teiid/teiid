@@ -64,7 +64,7 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
@@ -115,7 +115,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     private boolean readOnly = false;
     
     private boolean disableLocalTransactions = false;
-    private ClientSideDQP dqp;
+    private DQP dqp;
     protected ServerConnection serverConn;
         
     /**
@@ -128,12 +128,12 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     public MMConnection(ServerConnection serverConn, Properties info, String url) {        
     	this.serverConn = serverConn;
         this.url = url;
-        this.dqp = serverConn.getService(ClientSideDQP.class);
+        this.dqp = serverConn.getService(DQP.class);
         
         // set default properties if not overridden
         String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         if ( overrideProp == null || overrideProp.trim().length() == 0 ) {
-            info.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_AUTO);
+            info.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_DETECT);
         }
 
         // Get default fetch size
@@ -180,7 +180,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         return this.propInfo;
     }
     
-    ClientSideDQP getDQP() {
+    DQP getDQP() {
     	return this.dqp;
     }
     

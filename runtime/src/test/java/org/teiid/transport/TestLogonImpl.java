@@ -51,7 +51,7 @@ public class TestLogonImpl extends TestCase {
 		session.setUserName(userName);
 		session.setApplicationName(applicationName);
 		session.setSessionId(1);
-		session.addAttchment(SessionToken.class, new SessionToken(1, userName));
+		session.setSessionToken(new SessionToken(1, userName));
 
 		Mockito.stub(ssi.createSession(userName, null, applicationName,p, false)).toReturn(session);
 

@@ -39,14 +39,14 @@ public interface Transaction extends AdminObject {
 	String getScope();
 	
 	/**
-	 * Return the Xid of the Global transaction.  Will be null for non-Global transactions.
+	 * Returns the Xid string for GLOBAL transactions or the Transaction id string LOCAL/REQUEST.
 	 * @return
 	 */
-	String getXid();
+	String getId();
 	
 	
 	/**
-	 * Get the date the transaction was created.
+	 * Get the local creation time.
 	 * @return
 	 */
 	long getCreatedTime();

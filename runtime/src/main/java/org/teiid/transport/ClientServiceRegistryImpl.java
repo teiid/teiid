@@ -25,11 +25,12 @@ package org.teiid.transport;
 import java.util.HashMap;
 
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.core.util.ReflectionHelper;
 
-public class ClientServiceRegistryImpl {
+public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 
 	public static class ClientService {
 		private Object instance;
@@ -55,6 +56,7 @@ public class ClientServiceRegistryImpl {
 	}
 	
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
+    private SecurityHelper securityHelper;
 
     public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
     	ClientService cs = getClientService(iface.getName());
@@ -72,5 +74,14 @@ public class ClientServiceRegistryImpl {
 	public <T> void registerClientService(Class<T> iface, T instance, String loggingContext) {
 		this.clientServices.put(iface.getName(), new ClientService(instance, loggingContext, new ReflectionHelper(iface)));
 	}	
+	
+	@Override
+	public SecurityHelper getSecurityHelper() {
+		return this.securityHelper;
+	}
+	
+	public void setSecurityHelper(SecurityHelper securityHelper) {
+		this.securityHelper = securityHelper;
+	}
 		
 }

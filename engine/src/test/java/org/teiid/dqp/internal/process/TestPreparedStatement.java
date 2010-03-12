@@ -22,9 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +42,6 @@ import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -247,7 +244,7 @@ public class TestPreparedStatement {
         }
        
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
-        workContext.setSessionToken(new SessionToken(conn, "foo")); //$NON-NLS-1$ 
+        workContext.getSession().setSessionId(conn); 
         
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache) {
         	@Override

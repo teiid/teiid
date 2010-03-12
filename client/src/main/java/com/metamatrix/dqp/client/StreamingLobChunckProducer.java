@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.dqp.client.impl;
+package com.metamatrix.dqp.client;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
@@ -31,17 +31,16 @@ import com.metamatrix.common.comm.CommonCommPlugin;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.lob.LobChunkProducer;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.dqp.client.ClientSideDQP;
 
 public class StreamingLobChunckProducer implements LobChunkProducer {
 	
 	public static class Factory {
-		private final Streamable streamable;
-		private final ClientSideDQP dqp;
+		private final Streamable<?> streamable;
+		private final DQP dqp;
 		private final long requestId;
 		
-		public Factory(ClientSideDQP dqp,
-				long requestId, Streamable streamable) {
+		public Factory(DQP dqp,
+				long requestId, Streamable<?> streamable) {
 			super();
 			this.dqp = dqp;
 			this.requestId = requestId;
@@ -55,13 +54,13 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 	
 	private static AtomicInteger REQUEST_SEQUENCE = new AtomicInteger(0);
 
-	private final Streamable streamable;
-	private final ClientSideDQP dqp;
+	private final Streamable<?> streamable;
+	private final DQP dqp;
 	private final long requestId;
 	private final int streamRequestId = REQUEST_SEQUENCE.getAndIncrement();
 
-	public StreamingLobChunckProducer(ClientSideDQP dqp, long requestId,
-			Streamable streamable) {
+	public StreamingLobChunckProducer(DQP dqp, long requestId,
+			Streamable<?> streamable) {
 		this.dqp = dqp;
 		this.requestId = requestId;
 		this.streamable = streamable;

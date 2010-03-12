@@ -36,7 +36,7 @@ import org.mockito.stubbing.Answer;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -54,7 +54,7 @@ public class TestMMConnection extends TestCase {
     
     public static MMConnection getMMConnection() {
     	ServerConnection mock = mock(ServerConnection.class);
-    	ClientSideDQP dqp = mock(ClientSideDQP.class);
+    	DQP dqp = mock(DQP.class);
     	try {
 			stub(dqp.start((MMXid)Mockito.anyObject(), Mockito.anyInt(), Mockito.anyInt())).toAnswer(new Answer() {
 				@Override
@@ -77,7 +77,7 @@ public class TestMMConnection extends TestCase {
 		} catch (XATransactionException e) {
 			throw new RuntimeException(e);
 		}
-    	stub(mock.getService(ClientSideDQP.class)).toReturn(dqp);
+    	stub(mock.getService(DQP.class)).toReturn(dqp);
     	Properties props = new Properties();
     	props.setProperty(BaseDataSource.VDB_NAME, STD_DATABASE_NAME);
     	props.setProperty(BaseDataSource.VDB_VERSION, String.valueOf(STD_DATABASE_VERSION));

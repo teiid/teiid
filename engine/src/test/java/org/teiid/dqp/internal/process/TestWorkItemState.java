@@ -85,15 +85,6 @@ public class TestWorkItemState extends TestCase {
 	    private void assertDoneState() {
 	        checkState(ThreadState.DONE);
 	    }
-
-		@Override
-		protected boolean assosiateSecurityContext() {
-			return false;
-		}
-
-		@Override
-		protected void clearSecurityContext() {
-		}
 	}
 	
     public TestWorkItemState(String name) {

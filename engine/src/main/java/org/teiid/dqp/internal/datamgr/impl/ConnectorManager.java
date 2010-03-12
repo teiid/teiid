@@ -32,9 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkException;
-import javax.resource.spi.work.WorkManager;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
@@ -45,7 +42,6 @@ import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.WrappedConnection;
@@ -54,20 +50,18 @@ import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
+import org.teiid.dqp.internal.process.StatsCapturingWorkManager;
 import org.teiid.logging.api.CommandLogMessage;
 import org.teiid.logging.api.CommandLogMessage.Event;
 import org.teiid.security.SecurityHelper;
 
-import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.StatsCapturingWorkManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -88,10 +82,7 @@ public class ConnectorManager  {
 	public static final int DEFAULT_MAX_THREADS = 20;
 	private String connectorName;
 	    
-    private StatsCapturingWorkManager workManager;
     private SecurityHelper securityHelper;
-    
-    protected ConnectorWorkItemFactory workItemFactory;
     
     private volatile ConnectorStatus state = ConnectorStatus.NOT_INITIALIZED;
 
@@ -109,13 +100,12 @@ public class ConnectorManager  {
 	
     public ConnectorManager(String name, int maxThreads, SecurityHelper securityHelper) {
     	if (name == null) {
-    		throw new IllegalArgumentException("Connector name can not be null");
+    		throw new IllegalArgumentException("Connector name can not be null"); //$NON-NLS-1$
     	}
     	if (maxThreads <= 0) {
     		maxThreads = DEFAULT_MAX_THREADS;
     	}
     	this.connectorName = name;
-    	this.workManager = new StatsCapturingWorkManager(this.connectorName, maxThreads);
     	this.securityHelper = securityHelper;
     }
     
@@ -176,86 +166,19 @@ public class ConnectorManager  {
         }
     }
     
-    public void executeRequest(WorkManager workManager, ResultsReceiver<AtomicResultsMessage> receiver, AtomicRequestMessage message) throws ConnectorException {
+    public ConnectorWork executeRequest(AtomicRequestMessage message) throws ConnectorException {
         // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
 
-    	ConnectorWorkItem item = workItemFactory.createWorkItem(message, receiver, workManager);
-    	
+    	ConnectorWorkItem item = new ConnectorWorkItem(message, this);
         Assertion.isNull(requestStates.put(atomicRequestId, item), "State already existed"); //$NON-NLS-1$
-		enqueueRequest(workManager, item);
+        return item;
     }
     
-    private void enqueueRequest(WorkManager workManager, ConnectorWorkItem work) throws ConnectorException {
-        try {
-        	// if connector is immutable, then we do not want pass-on the transaction context.
-        	if (work.securityContext.isTransactional()) {
-        		this.workManager.scheduleWork(workManager, work, work.requestMsg.getTransactionContext(), 0);
-        	}
-        	else {
-        		this.workManager.scheduleWork(workManager, work);
-        	}
-		} catch (WorkException e) {
-			throw new ConnectorException(e);
-		}
-    }
-    
-    void reenqueueRequest(WorkManager workManager, AsynchConnectorWorkItem work)  throws ConnectorException {
-    	enqueueRequest(workManager, work);
-    }
-    
-    ConnectorWorkItem getState(AtomicRequestID requestId) {
+    ConnectorWork getState(AtomicRequestID requestId) {
         return requestStates.get(requestId);
-    }
-    
-    @SuppressWarnings("unused")
-	public void requstMore(AtomicRequestID requestId) throws ConnectorException {
-    	ConnectorWorkItem workItem = getState(requestId);
-    	if (workItem == null) {
-    		return; //already closed
-    	}
-	    workItem.requestMore();
-    }
-    
-    public void cancelRequest(AtomicRequestID requestId) {
-    	ConnectorWorkItem workItem = getState(requestId);
-    	if (workItem == null) {
-    		return; //already closed
-    	}
-	    workItem.requestCancel();
-    }
-    
-    public void closeRequest(AtomicRequestID requestId) {
-    	ConnectorWorkItem workItem = getState(requestId);
-    	if (workItem == null) {
-    		return; //already closed
-    	}
-	    workItem.requestClose();
-    }
-    
-    /**
-     * Schedule a task to be executed after the specified delay (in milliseconds) 
-     * @param task The task to execute
-     * @param delay The delay to wait (in ms) before executing the task
-     * @since 4.3.3
-     */
-    public void scheduleTask(WorkManager workManager, final AsynchConnectorWorkItem state, long delay) throws ConnectorException {
-    	try {
-			this.workManager.scheduleWork(workManager, new Work() {
-				@Override
-				public void run() {
-					state.requestMore();
-				}
-				@Override
-				public void release() {
-					
-				}
-			}, null, delay);
-		} catch (WorkException e) {
-			throw new ConnectorException(e);
-		}        
     }
     
     /**
@@ -278,7 +201,7 @@ public class ConnectorManager  {
     /**
      * initialize this <code>ConnectorManager</code>.
      */
-    public synchronized void start() throws ConnectorException {
+    public synchronized void start() {
     	if (this.state != ConnectorStatus.NOT_INITIALIZED) {
     		return;
     	}
@@ -286,15 +209,6 @@ public class ConnectorManager  {
         
         LogManager.logInfo(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
 
-     	ConnectorEnvironment connectorEnv = null;
-		
-		connectorEnv = getConnector().getConnectorEnvironment();
-    	
-    	if (!connectorEnv.isSynchWorkers() && connectorEnv.isXaCapable()) {
-    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.xa_capbility_not_supported", this.connectorName)); //$NON-NLS-1$
-    	}
-
-		this.workItemFactory = new ConnectorWorkItemFactory(this, connectorEnv.isSynchWorkers());
     	this.state = ConnectorStatus.OPEN;
     }
     
@@ -309,19 +223,10 @@ public class ConnectorManager  {
             this.state= ConnectorStatus.CLOSED;
 		}
         
-        if (workManager != null) {
-        	this.workManager.shutdownNow();
-        }
-        
         //ensure that all requests receive a response
-        for (ConnectorWorkItem workItem : this.requestStates.values()) {
-        	try {
-        		workItem.resultsReceiver.exceptionOccurred(new ConnectorException(DQPPlugin.Util.getString("Connector_Shutting_down", new Object[] {workItem.id, this.connectorName}))); //$NON-NLS-1$
-        	} catch (Exception e) {
-        		//ignore
-        	}
+        for (ConnectorWork workItem : this.requestStates.values()) {
+    		workItem.cancel();
 		}
-        
     }
 
     /**
@@ -329,10 +234,10 @@ public class ConnectorManager  {
      * this service.
      * If there are no queues, an empty Collection is returned.
      */
-    @ManagementProperty(description="Get Runtime workmanager statistics", use={ViewUse.STATISTIC}, readOnly=true)
+   /* @ManagementProperty(description="Get Runtime workmanager statistics", use={ViewUse.STATISTIC}, readOnly=true)
     public WorkerPoolStatisticsMetadata getWorkManagerStatistics() {
         return workManager.getStats();
-    }
+    }*/
 
     /**
      * Add begin point to transaction monitoring table.

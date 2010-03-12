@@ -187,7 +187,7 @@ public class RequestMessage implements Externalizable {
      */
     public String getTxnAutoWrapMode() {
     	if (txnAutoWrapMode == null) {
-    		return ExecutionProperties.TXN_WRAP_AUTO;
+    		return ExecutionProperties.TXN_WRAP_DETECT;
     	}
         return txnAutoWrapMode;
     }
@@ -202,7 +202,7 @@ public class RequestMessage implements Externalizable {
     		txnAutoWrapMode = txnAutoWrapMode.toUpperCase();
     		if (!(txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_OFF)
     			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_ON)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_AUTO))) {
+    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_DETECT))) {
     			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 

@@ -26,50 +26,52 @@
  */
 package org.teiid.dqp.internal.datamgr.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 
-import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 
 /**
  * JUnit test for TestConnectorStateManager
  */
-public final class TestConnectorStateManager extends TestCase {
+public final class TestConnectorManager extends TestCase {
     private AtomicRequestMessage request;
     private ConnectorManager csm;
+    
+	static ConnectorManager getConnectorManager(ConnectorEnvironment env) throws Exception {
+		final FakeConnector c = new FakeConnector();
+		c.setConnectorEnvironment(env);		
+		ConnectorManager cm = new ConnectorManager("FakeConnector") { //$NON-NLS-1$
+			Connector getConnector() {
+				return c;
+			}
+		};
+		cm.start();
+		return cm;
+	}
 
     /**
      * Constructor for TestConnectorStateManager.
      * @param name
      */
-    public TestConnectorStateManager(final String name) {
+    public TestConnectorManager(final String name) {
         super(name);
     }
 
     protected void setUp() throws Exception {
         super.setUp();
         request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
-        csm = TestConnectorManagerImpl.getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
-        csm.workItemFactory = new ConnectorWorkItemFactory(csm, true);
+        csm = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
     }
 
     void helpAssureOneState() throws Exception {
-    	QueueResultsReceiver receiver = new QueueResultsReceiver();
-    	csm.executeRequest(new FakeWorkManager(), receiver, request);
-    	ConnectorWorkItem state = csm.getState(request.getAtomicRequestID());
+    	csm.executeRequest(request);
+    	ConnectorWork state = csm.getState(request.getAtomicRequestID());
     	assertEquals(state, csm.getState(request.getAtomicRequestID()));
     }
 
@@ -100,24 +102,5 @@ public final class TestConnectorStateManager extends TestCase {
 
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
     }
-    
-    public void testStop() throws Exception {
-    	List<ResultsFuture<AtomicResultsMessage>> futures = new ArrayList<ResultsFuture<AtomicResultsMessage>>();
-    	for (int i=0; i<20; i++) {
-    		ResultsFuture<AtomicResultsMessage> future = new ResultsFuture<AtomicResultsMessage>();
-        	csm.executeRequest(new FakeWorkManager(),future.getResultsReceiver(), TestConnectorWorkItem.createNewAtomicRequestMessage(i, 1));
-        }
-
-        csm.stop();
         
-        for (ResultsFuture<AtomicResultsMessage> resultsFuture : futures) {
-			assertTrue(resultsFuture.isDone());
-			try {
-				resultsFuture.get(1000, TimeUnit.MILLISECONDS);
-			} catch (ExecutionException e) {
-				
-			}
-		}
-    }
-    
 }

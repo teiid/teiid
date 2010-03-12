@@ -23,10 +23,13 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
+import java.util.concurrent.Callable;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -53,65 +56,52 @@ public class DQPWorkContext implements Serializable {
 		CONTEXTS.set(null);
 	}	
 	
-    private String vdbName;
-    private int vdbVersion;
-    private String appName;
-    private SessionToken sessionToken;
+	private SessionMetadata session = new SessionMetadata();
     private String clientAddress;
     private String clientHostname;
-    private Subject subject;
-	private String securityDomain;
-	private Object securityContext;
-	private VDBMetaData vdb;
-	private boolean admin;
+    private SecurityHelper securityHelper;
     
     public DQPWorkContext() {
+	}
+    
+    public SessionMetadata getSession() {
+		return session;
+	}
+    
+    public void setSession(SessionMetadata session) {
+		this.session = session;
+	}
+    
+    public void setSecurityHelper(SecurityHelper securityHelper) {
+		this.securityHelper = securityHelper;
 	}
 
     /**
      * @return
      */
     public String getUserName() {
-		if (this.sessionToken == null) {
-			return null;
-		}
-        return this.sessionToken.getUsername();
+		return session.getUserName();
     }
     
     public Subject getSubject() {
-        return this.subject;
+    	if (session.getLoginContext() != null) {
+    		return session.getLoginContext().getSubject();
+    	}
+    	return null;
     }
     
-    public void setSubject(Subject subject) {
-        this.subject = subject;
-    }
-
     /**
      * @return
      */
     public String getVdbName() {
-        return vdbName;
+        return session.getVDBName();
     }
 
     /**
      * @return
      */
     public int getVdbVersion() {
-        return vdbVersion;
-    }
-
-    /**
-     * @param string
-     */
-    public void setVdbName(String vdbName) {
-        this.vdbName = vdbName;
-    }
-
-    /**
-     * @param string
-     */
-    public void setVdbVersion(int vdbVersion) {
-        this.vdbVersion = vdbVersion;
+        return session.getVDBVersion();
     }
 
 	public String getConnectionID() {
@@ -119,36 +109,29 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public long getSessionId() {
-		if (this.sessionToken == null) {
-			return -1;
-		}
-		return this.sessionToken.getSessionID();
-	}
-
-	public void setAppName(String appName) {
-		this.appName = appName;
+		return this.session.getSessionId();
 	}
 
 	public String getAppName() {
-		return appName;
+		return session.getApplicationName();
 	}
 	
 	public RequestID getRequestID(long exeuctionId) {
 		return new RequestID(this.getConnectionID(), exeuctionId);
 	}
 	
-	public void setSessionToken(SessionToken sessionToken) {
-		this.sessionToken = sessionToken;
-	}
-
 	public SessionToken getSessionToken() {
-		return sessionToken;
+		return session.getSessionToken();
 	}
 
 	public void setClientAddress(String clientAddress) {
 		this.clientAddress = clientAddress;
 	}
 
+	/**
+	 * Get the client address from the socket transport - not as reported from the client
+	 * @return
+	 */
 	public String getClientAddress() {
 		return clientAddress;
 	}
@@ -157,51 +140,53 @@ public class DQPWorkContext implements Serializable {
 		this.clientHostname = clientHostname;
 	}
 
+	/**
+	 * Get the client hostname from the socket transport - not as reported from the client
+	 * @return
+	 */
 	public String getClientHostname() {
 		return clientHostname;
 	}
 	
-	public void reset() {
-		setSessionToken(null);
-		setAppName(null);
-		setVdbName(null);
-		setVdbVersion(0);
-		setSecurityContext(null);
-		setSecurityDomain(null);
-		setVdb(null);
-		setSubject(null);
-		setSessionToken(null);
-	}
-
-	public void setSecurityDomain(String securityDomain) {
-		this.securityDomain = securityDomain;
-	}
-	
 	public String getSecurityDomain() {
-		return this.securityDomain;
+		return this.session.getSecurityDomain();
 	}
 
 	public Object getSecurityContext() {
-		return this.securityContext;
-	}
-	
-	public void setSecurityContext(Object securityContext) {
-		this.securityContext = securityContext;
-	}
-
-	public void setVdb(VDBMetaData vdb) {
-		this.vdb = vdb;
+		return session.getSecurityContext();
 	}
 	
 	public VDBMetaData getVDB() {
-		return vdb;
-	}
-
-	public void markAsAdmin() {
-		this.admin = true;
+		return session.getVdb();
 	}
 	
-	public boolean isAdmin() {
-		return this.admin;
+	public <V> V runInContext(Callable<V> callable) throws Exception {
+		DQPWorkContext.setWorkContext(this);
+		boolean associated = false;
+		if (securityHelper != null && this.getSubject() != null) {
+			associated = securityHelper.assosiateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
+		}
+		try {
+			return callable.call();
+		} finally {
+			if (associated) {
+				securityHelper.clearSecurityContext(this.getSecurityDomain());			
+			}
+			DQPWorkContext.releaseWorkContext();
+		}
 	}
+	
+	public void runInContext(final Runnable runnable) {
+		try {
+			runInContext(new Callable<Void>() {
+				@Override
+				public Void call() {
+					runnable.run();
+					return null;
+				}
+			});
+		} catch (Exception e) {
+		}
+	}
+
 }

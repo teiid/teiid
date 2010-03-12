@@ -23,10 +23,15 @@ package org.teiid.adminapi.impl;
 
 import java.util.Date;
 
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+
 import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Session;
+
+import com.metamatrix.platform.security.api.SessionToken;
 
 
 /**
@@ -46,6 +51,13 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private int vdbVersion;
     private long sessionId;
     private String securityDomain;
+    
+    //server session state
+    private transient VDBMetaData vdb;
+    private transient SessionToken sessionToken;
+    private transient LoginContext loginContext;
+    private transient Object securityContext;
+    private transient boolean embedded;
 
 	@Override
 	@ManagementProperty(description="Application assosiated with Session", readOnly=true)
@@ -148,7 +160,8 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 		this.securityDomain = domain;
 	}	
 	
-    public String toString() {
+    @SuppressWarnings("nls")
+	public String toString() {
     	StringBuilder str = new StringBuilder();
     	str.append("session: sessionid=").append(sessionId);
     	str.append("; userName=").append(userName);
@@ -161,5 +174,50 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     	str.append("; securityDomain=").append(securityDomain); 
     	str.append("; lastPingTime=").append(new Date(lastPingTime));
     	return str.toString();
-    }	
+    }
+
+	public VDBMetaData getVdb() {
+		return vdb;
+	}
+
+	public void setVdb(VDBMetaData vdb) {
+		this.vdb = vdb;
+	}
+
+	public SessionToken getSessionToken() {
+		return sessionToken;
+	}
+
+	public void setSessionToken(SessionToken sessionToken) {
+		this.sessionToken = sessionToken;
+	}
+
+	public LoginContext getLoginContext() {
+		return loginContext;
+	}
+
+	public void setLoginContext(LoginContext loginContext) {
+		this.loginContext = loginContext;
+	}
+
+	public Object getSecurityContext() {
+		return securityContext;
+	}
+
+	public void setSecurityContext(Object securityContext) {
+		this.securityContext = securityContext;
+	}	
+	
+	public Subject getSubject() {
+		return this.loginContext.getSubject();
+	}
+	
+	public void setEmbedded(boolean embedded) {
+		this.embedded = embedded;
+	}
+
+	public boolean isEmbedded() {
+		return embedded;
+	}
+	
 }

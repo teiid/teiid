@@ -48,10 +48,10 @@ public class TestPreparedPlanCache {
 	private final static ParseInfo pi = new ParseInfo();
 	
 	@BeforeClass public static void setUpOnce() {
-		token.setVdbName("foo"); //$NON-NLS-1$
-		token.setVdbVersion(1); //$NON-NLS-1$
-		token2.setVdbName("foo"); //$NON-NLS-1$
-		token2.setVdbVersion(2); //$NON-NLS-1$
+		token.getSession().setVDBName("foo"); //$NON-NLS-1$
+		token.getSession().setVDBVersion(1); 
+		token2.getSession().setVDBName("foo"); //$NON-NLS-1$
+		token2.getSession().setVDBVersion(2); 
 	}
     
     //====Tests====//

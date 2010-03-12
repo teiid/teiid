@@ -36,20 +36,6 @@ import java.util.UUID;
 public class SessionToken implements Serializable, Cloneable {
 	public final static long serialVersionUID = -2853708320435636107L;
 
-	private static ThreadLocal<SessionToken> CONTEXTS = new ThreadLocal<SessionToken>() {
-		protected SessionToken initialValue() {
-			return null;
-		}
-	};
-
-	public static SessionToken getSession() {
-		return CONTEXTS.get();
-	}
-	
-	public static void setSession(SessionToken context) {
-		CONTEXTS.set(context);
-	}	
-	
 	/** The session ID */
 	private long sessionID;
 	private String userName;

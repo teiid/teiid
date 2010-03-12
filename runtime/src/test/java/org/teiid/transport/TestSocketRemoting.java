@@ -51,7 +51,7 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImp
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -105,7 +105,7 @@ public class TestSocketRemoting {
 				InterruptedException {
 			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, server);
 			this.listener = listener;
-			workItem.process();
+			workItem.run();
 		}
 
 		public void shutdown() {
@@ -192,13 +192,13 @@ public class TestSocketRemoting {
 		} catch (MetaMatrixProcessingException e) {
 			
 		}
-		ClientSideDQP dqp = connection.getService(ClientSideDQP.class);
+		DQP dqp = connection.getService(DQP.class);
 		try {
 			ResultsFuture<?> future = dqp.begin();
 			future.get();
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (Exception e) {
-			assertTrue(e.getMessage().endsWith("Component not found: com.metamatrix.dqp.client.ClientSideDQP")); //$NON-NLS-1$
+			assertTrue(e.getMessage().indexOf("Component not found:") != -1); //$NON-NLS-1$
 		}
 	}
 

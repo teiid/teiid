@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.api.CommandLogMessage.Event;
 
@@ -46,6 +47,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -58,6 +60,7 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
+import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -160,14 +163,15 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void resumeProcessing() {
 		dqpCore.addWork(this);
 	}
-             
+	
 	@Override
 	protected void process() {
-		DQPWorkContext.setWorkContext(this.dqpWorkContext);
-		
-        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "############# PW PROCESSING on", requestID, "with state", state, "###########"); //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$
-        
+        LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "with state", state); //$NON-NLS-1$ //$NON-NLS-2$
         try {
+        	if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
+        		//there's no need to do this for xa transactions, as that is done by the workmanager
+        		this.transactionService.resume(this.transactionContext);
+            }
             if (this.state == ProcessingState.NEW) {
                 state = ProcessingState.PROCESSING;
         		processNew();
@@ -183,12 +187,15 @@ public class RequestWorkItem extends AbstractWorkItem {
             	}
             }                  	            
         } catch (BlockedException e) {
-            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- processor blocked ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (QueryProcessor.ExpiredTimeSliceException e) {
-            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "############# PW reenqueueing ", requestID, "- time slice expired ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
             this.moreWork();
+        } catch (DataNotAvailableException e) { 
+        	LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- data not available"); //$NON-NLS-1$ //$NON-NLS-2$
+            this.dqpCore.scheduleWork(this, e.getRetryDelay());
         } catch (Throwable e) {
-        	LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+        	LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
             
             if (!isCanceled()) {
             	dqpCore.logMMCommand(this, Event.CANCEL, null);
@@ -201,9 +208,9 @@ public class RequestWorkItem extends AbstractWorkItem {
                 		cause = cause.getCause();
                 	}
                 	StackTraceElement elem = cause.getStackTrace()[0];
-                    LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
+                    LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
                 }else {
-                    LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
+                    LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
                 }                                
             }
             
@@ -220,8 +227,14 @@ public class RequestWorkItem extends AbstractWorkItem {
         			this.processingException = new IllegalStateException("Request is already closed"); //$NON-NLS-1$
         		}
         		sendError();
-        	}        
-        	DQPWorkContext.releaseWorkContext();
+        	} 
+        	if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
+        		try {
+					this.transactionService.suspend(this.transactionContext);
+				} catch (XATransactionException e) {
+					LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+				}
+            }
         }
     }
 
@@ -260,8 +273,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 			sendResultsIfNeeded(null);
 		} else {
 			moreWork(false); // If the timeslice expired, then the processor can probably produce more batches.
-			if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "############# PW EXITING on " + requestID + " - reenqueueing for more processing ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on " + requestID + " - reenqueueing for more processing ###########"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}
@@ -277,8 +290,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 				this.processor.closeProcessing();
 			}
 			
-			if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-		        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
 		    }
 			rowcount = resultsBuffer.getRowCount();
 			if (this.processor != null) {
@@ -314,7 +327,7 @@ public class RequestWorkItem extends AbstractWorkItem {
             try {
         		this.transactionService.rollback(transactionContext);
             } catch (XATransactionException e1) {
-                LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
+                LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
             } 
 		}
 		
@@ -359,7 +372,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		resultsBuffer.setForwardOnly(isForwardOnly());
 		analysisRecord = request.analysisRecord;
 		transactionContext = request.transactionContext;
-		if (this.transactionContext != null && this.transactionContext.getXid() != null) {
+		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
 			this.transactionState = TransactionState.ACTIVE;
 		}
 	    if (analysisRecord.recordQueryPlan()) {
@@ -390,8 +403,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 				return result;
 			}
 		
-			if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 	
 			//TODO: support fetching more than 1 batch
@@ -508,11 +521,11 @@ public class RequestWorkItem extends AbstractWorkItem {
     private void sendError() {
     	synchronized (this) {
     		if (this.resultsReceiver == null) {
-    			LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, processingException, "Unable to send error to client as results were already sent.", requestID); //$NON-NLS-1$
+    			LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Unable to send error to client as results were already sent.", requestID); //$NON-NLS-1$
     			return;
     		}
     	}
-		LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
         response.setException(processingException);
         setAnalysisRecords(response, analysisRecord);
@@ -569,7 +582,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	                try {
 	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
 	                } catch (XATransactionException err) {
-	                    LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, "rollback failed for requestID=" + requestID.getConnectionID()); //$NON-NLS-1$
+	                    LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + requestID.getConnectionID()); //$NON-NLS-1$
 	                    throw new MetaMatrixComponentException(err);
 	                }
 	            }
@@ -593,15 +606,15 @@ public class RequestWorkItem extends AbstractWorkItem {
         	return true;
         }
         
-		LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Connector request not found. AtomicRequestID=", ari); //$NON-NLS-1$ 
+		LogManager.logDetail(LogConstants.CTX_DQP, "Connector request not found. AtomicRequestID=", ari); //$NON-NLS-1$ 
         return false;
     }
     
     public void requestClose() throws MetaMatrixComponentException {
     	synchronized (this) {
         	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
-        		if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-        			LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
+        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
         		}
         		return;
         	}
@@ -618,7 +631,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     
     public void closeAtomicRequest(AtomicRequestID atomicRequestId) {
         connectorInfo.remove(atomicRequestId);
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] {"closed atomic-request:", atomicRequestId});  //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_DQP, new Object[] {"closed atomic-request:", atomicRequestId});  //$NON-NLS-1$
     }
     
 	public void addConnectorRequest(AtomicRequestID atomicRequestId, DataTierTupleSource connInfo) {
@@ -683,18 +696,4 @@ public class RequestWorkItem extends AbstractWorkItem {
 		return processingTimestamp;
 	}
 	
-	@Override
-    protected boolean assosiateSecurityContext() {
-		if (dqpWorkContext.getSubject() != null) {
-        	return dqpCore.getSecurityHelper().assosiateSecurityContext(dqpWorkContext.getSecurityDomain(),dqpWorkContext.getSecurityContext());			
-		}
-		return false;
-	}
-    
-	@Override
-    protected void clearSecurityContext() {
-		if (dqpWorkContext.getSubject() != null) {
-        	dqpCore.getSecurityHelper().clearSecurityContext(dqpWorkContext.getSecurityDomain());			
-		}
-	}
 }

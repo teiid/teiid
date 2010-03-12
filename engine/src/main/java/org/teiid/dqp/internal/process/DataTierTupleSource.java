@@ -22,13 +22,16 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Arrays;
 import java.util.List;
+
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -38,7 +41,7 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
  * This tuple source impl can only be used once; once it is closed, it 
  * cannot be reopened and reused.
  */
-public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicResultsMessage> {
+public class DataTierTupleSource implements TupleSource {
 
     // Construction state
     private final List schema;
@@ -48,17 +51,11 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     private final RequestWorkItem workItem;
     
     // Data state
-    private List[] currentBatch;
-    private List[] nextBatch;
-    private int currentBatchCount = 0;
+    private ConnectorWork cwi;
     private int index = 0;
-    private boolean nextBatchIsLast = false;
-    private volatile boolean isLast = false;
     private int rowsProcessed = 0;
-    private boolean waitingForData = false;
-    private Throwable exception;
-    private volatile boolean supportsImplicitClose;
-    private volatile boolean isTransactional;
+    private AtomicResultsMessage arm;
+    private boolean closed;
     
     /**
      * Constructor for DataTierTupleSource.
@@ -79,45 +76,72 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     }
 
     public List nextTuple() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	if (index < currentBatchCount) {
-            return this.currentBatch[index++];
-        } else if (isLast) {
-            return null;
-        } else {
-            // We're past the end of the current batch, so switch to the next
-            switchBatch();
-            // If the new batch is empty
-            if (currentBatchCount == 0) {
-                if (isLast) {
-                    return null;
-                }
-                throw BlockedException.INSTANCE;
-            }
-            return currentBatch[index++];
-        }
-    }
-    
-    public void open() {
-        Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
-        workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
-        synchronized (this) {
-        	this.waitingForData = true;
-	        try {
-	        	this.dataMgr.executeRequest(aqr, this.connectorName, this);
-	        } catch (MetaMatrixComponentException e) {
-	        	exceptionOccurred(e, true);
+    	if (this.arm == null) {
+    		open();
+    	}
+    	while (true) {
+	    	if (index < arm.getResults().length) {
+	            return this.arm.getResults()[index++];
 	        }
+	    	if (this.arm.getFinalRow() > 0) {
+	    		return null;
+	    	}
+	    	try {
+				receiveResults(this.cwi.more());
+			} catch (ConnectorException e) {
+	        	exceptionOccurred(e, true);
+			}
+    	}
+    }
+    
+    void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
+        try {
+	        if (this.cwi == null) {
+	        	this.cwi = this.dataMgr.executeRequest(aqr, this.connectorName);
+		        workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
+	        }
+	        receiveResults(this.cwi.execute());
+        } catch (ConnectorException e) {
+        	exceptionOccurred(e, true);
         }
     }
     
+    public void fullyCloseSource() {
+    	if (!closed) {
+    		if (cwi != null) {
+		    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
+				this.cwi.close();
+    		}
+			closed = true;
+    	}
+    }
+    
+    public void cancelRequest() {
+    	if (this.cwi != null) {
+    		this.cwi.cancel();
+    	}
+    }
+
     /**
-     * Switches to the next batch.
-     * @throws BlockedException if we're still waiting for data from the connector
-     * @throws MetaMatrixComponentException if the request for the next batch failed.
-     * @since 4.3
+     * @see TupleSource#closeSource()
      */
-    private synchronized void switchBatch() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	if (exception != null) {
+    public void closeSource() {
+    	if (this.arm == null || this.arm.supportsImplicitClose()) {
+        	fullyCloseSource();
+    	}
+    }
+
+    void exceptionOccurred(Exception exception, boolean removeState) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	if (removeState) {
+			fullyCloseSource();
+		}
+    	if(workItem.requestMsg.supportsPartialResults()) {
+			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0], null);
+			emptyResults.setWarnings(Arrays.asList(exception));
+			emptyResults.setFinalRow(this.rowsProcessed);
+			receiveResults(arm);
+		} else {
     		if (exception instanceof MetaMatrixComponentException) {
     			throw (MetaMatrixComponentException)exception;
     		}
@@ -125,96 +149,19 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     			throw (MetaMatrixProcessingException)exception;
     		}
     		throw new MetaMatrixComponentException(exception);
-    	}
-    	boolean shouldBlock = true;
-        if (nextBatch != null) {
-            // Switch the current batch
-            this.currentBatch = this.nextBatch;
-            this.isLast = this.nextBatchIsLast;
-            this.currentBatchCount = this.currentBatch.length;
-            this.index = 0;
-            this.nextBatch = null;
-            shouldBlock = false;
-        } 
-        // Request the next batch immediately
-        if (!this.isLast && !waitingForData) {
-            this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), this.connectorName);
-            
-            // update waitingForData
-            this.waitingForData = true;
-        }
-        if (shouldBlock) {
-        	throw BlockedException.INSTANCE;
-        }
-    }
-    
-    public void fullyCloseSource() {
-    	this.dataMgr.closeRequest(aqr.getAtomicRequestID(), this.connectorName);
-    }
-    
-    public void cancelRequest() throws MetaMatrixComponentException {
-    	this.dataMgr.cancelRequest(aqr.getAtomicRequestID(), this.connectorName);
-    }
-
-    /**
-     * @see TupleSource#closeSource()
-     */
-    public void closeSource() {
-    	if (this.supportsImplicitClose) {
-    		this.dataMgr.closeRequest(aqr.getAtomicRequestID(), this.connectorName);
-    	}
-    }
-
-	public void exceptionOccurred(Throwable e) {
-		exceptionOccurred(e, false);
-	}
-    
-    private void exceptionOccurred(Throwable e, boolean removeState) {
-    
-		synchronized (this) {
-			if(workItem.requestMsg.supportsPartialResults()) {
-				nextBatch = new List[0];
-				nextBatchIsLast = true;
-		        SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), e, true);
-		        workItem.addSourceFailureDetails(sourceFailure);
-			} else {
-				this.exception = e;
-			}	
-			waitingForData = false;
-		}
-		if (removeState) {
-			workItem.closeAtomicRequest(aqr.getAtomicRequestID());
-		}
-		this.workItem.moreWork();
+		}	
 	}
 
-	public void receiveResults(AtomicResultsMessage response) {
-		boolean removeRequest = false;
-		synchronized (this) {
-	        // check to see if this is close of the atomic request message.
-	        if (response.isRequestClosed()) {
-	        	removeRequest = true;
-	        } else {
-		        supportsImplicitClose = response.supportsImplicitClose();
-		        isTransactional = response.isTransactional();
-		        
-		        nextBatch = response.getResults();    
-				nextBatchIsLast = response.getFinalRow() >= 0;
-		        rowsProcessed += nextBatch.length;
-	        }
-	        // reset waitingForData flag
-	        waitingForData = false;
-		}
+	void receiveResults(AtomicResultsMessage response) {
+		this.arm = response;
+        rowsProcessed += response.getResults().length;
+        index = 0;
 		if (response.getWarnings() != null) {
 			for (Exception warning : response.getWarnings()) {
 				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), warning, true);
 		        workItem.addSourceFailureDetails(sourceFailure);
 			}
 		}
-		if (removeRequest) {
-        	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
-		}
-		this.workItem.moreWork();
 	}
 	
 	public AtomicRequestMessage getAtomicRequestMessage() {
@@ -226,20 +173,18 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	}
 	
 	public boolean isTransactional() {
-		return this.isTransactional;
+		if (this.arm == null) {
+			return false;
+		}
+		return this.arm.isTransactional();
 	}
 	
 	@Override
 	public int available() {
-		if (index < currentBatchCount) {
-			return currentBatchCount - index;
+		if (this.arm == null) {
+			return 0;
 		}
-		synchronized (this) {
-			if (nextBatch != null) {
-				return nextBatch.length;
-			}
-		}
-		return 0;
+		return this.arm.getResults().length - index;
 	}
 	
 }

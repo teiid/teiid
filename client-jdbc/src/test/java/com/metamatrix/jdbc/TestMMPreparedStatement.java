@@ -37,7 +37,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -73,7 +73,7 @@ public class TestMMPreparedStatement {
 	@Test public void testBatchedUpdateExecution() throws Exception {
 		// Build up a fake connection instance for use with the prepared statement
 		MMConnection conn = Mockito.mock(MMConnection.class);
-		ClientSideDQP dqp = Mockito.mock(ClientSideDQP.class);
+		DQP dqp = Mockito.mock(DQP.class);
 		ServerConnection serverConn = Mockito.mock(ServerConnection.class);
 		LogonResult logonResult = Mockito.mock(LogonResult.class);
 		

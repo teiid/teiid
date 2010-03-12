@@ -219,7 +219,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * Transaction auto wrap constant - checks if a command
      * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_WRAP_AUTO = ExecutionProperties.TXN_WRAP_AUTO;
+    public static final String TXN_WRAP_AUTO = ExecutionProperties.TXN_WRAP_DETECT;
 
     /**
      * String to hold additional properties that are not represented with an explicit getter/setter

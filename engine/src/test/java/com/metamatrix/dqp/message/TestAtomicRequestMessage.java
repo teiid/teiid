@@ -28,7 +28,6 @@ import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestAtomicRequestMessage extends TestCase {
 
@@ -43,7 +42,7 @@ public class TestAtomicRequestMessage extends TestCase {
     public static AtomicRequestMessage example() {
         RequestMessage rm = new RequestMessage();
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setSessionToken(new SessionToken(2, "foo")); //$NON-NLS-1$
+        workContext.getSession().setSessionId(2);
         AtomicRequestMessage message = new AtomicRequestMessage(rm, workContext, 1000);
         message.setCommand(TestQueryImpl.helpExample(true));
         message.setFetchSize(100);

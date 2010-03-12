@@ -36,7 +36,7 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	private static final long serialVersionUID = -8588785315218789068L;
 	private long associatedSession;
 	private String scope;
-	private String xid;
+	private String id;
 	private long createdTime;
 
 	@Override
@@ -60,13 +60,13 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	}
 
 	@Override
-	@ManagementProperty(description="XID", readOnly=true)
-	public String getXid() {
-		return xid;
+	@ManagementProperty(description="ID", readOnly=true)
+	public String getId() {
+		return id;
 	}
 
-	public void setXid(String xid) {
-		this.xid = xid;
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 	@Override
@@ -84,7 +84,7 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
         StringBuffer result = new StringBuffer();
         result.append(AdminPlugin.Util.getString("TransactionImpl.associatedSession")).append(associatedSession); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("TransactionImpl.scope")).append(scope); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("TransactionImpl.xid")).append(xid); //$NON-NLS-1$
+        result.append(AdminPlugin.Util.getString("TransactionImpl.id")).append(id); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("TransactionImpl.createdTime")).append(new Date(createdTime)); //$NON-NLS-1$
         return result.toString();
 	}

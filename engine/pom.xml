@@ -58,7 +58,11 @@
 		<dependency>
 			<groupId>javax.resource</groupId>
 			<artifactId>connector-api</artifactId>
-			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.transaction</groupId>
+                <artifactId>jta</artifactId>
 		</dependency>
 
 		<dependency>

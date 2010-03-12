@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.resource.spi.work.WorkEvent;
-
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
@@ -44,14 +42,11 @@ import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.logging.api.CommandLogMessage.Event;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
@@ -68,50 +63,37 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
-public abstract class ConnectorWorkItem extends AbstractWorkItem {
-	
-	private static class NeedsClosedException extends Exception {}
+public class ConnectorWorkItem implements ConnectorWork {
 	
 	/* Permanent state members */
-    protected AtomicRequestID id;
-    protected ConnectorManager manager;
-    protected AtomicRequestMessage requestMsg;
-    protected Connector connector;
-    QueryMetadataInterface queryMetadata;
+	private AtomicRequestID id;
+    private ConnectorManager manager;
+    private AtomicRequestMessage requestMsg;
+    private Connector connector;
+    private QueryMetadataInterface queryMetadata;
     
     /* Created on new request */
-    protected Connection connection;
-    protected ConnectorEnvironment connectorEnv;
-    protected ExecutionContextImpl securityContext;
-    protected volatile ResultSetExecution execution;
-    protected ProcedureBatchHandler procedureBatchHandler;
+    private Connection connection;
+    private ConnectorEnvironment connectorEnv;
+    private ExecutionContextImpl securityContext;
+    private volatile ResultSetExecution execution;
+    private ProcedureBatchHandler procedureBatchHandler;
     private org.teiid.connector.language.Command translatedCommand;
     private Class<?>[] schema;
     private List<Integer> convertToRuntimeType;
     private boolean[] convertToDesiredRuntimeType;
         
     /* End state information */    
-    protected boolean lastBatch;
-    protected int rowCount;
-    
-    protected enum RequestState {
-    	NEW, MORE, CLOSE
-    }
-        
-    protected RequestState requestState = RequestState.NEW;
+    private boolean lastBatch;
+    private int rowCount;
+    private boolean error;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
-    private volatile boolean moreRequested;
-    private volatile boolean closeRequested;
-    private boolean isClosed;
-
-    protected ResultsReceiver<AtomicResultsMessage> resultsReceiver;
     
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) throws ConnectorException {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws ConnectorException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
-        this.resultsReceiver = resultsReceiver;
         AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
         this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
                 requestMsg.getWorkContext().getVdbVersion(),                
@@ -144,112 +126,38 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         	throw new ConnectorException(e);
         }
     }
-
-    protected void createConnection() throws ConnectorException {
-        LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating connection for atomic-request"});  //$NON-NLS-1$
-    	this.connection = this.connector.getConnection();
-    }
     
-    protected void process() {
-    	DQPWorkContext.setWorkContext(this.requestMsg.getWorkContext());
-    	boolean success = true;
-    	try {
-    		checkForCloseEvent();
-    		switch (this.requestState) {
-	    		case NEW:
-    				createExecution();
-		    		//prior to processing new, mark me as MORE
-		        	if (this.requestState == RequestState.NEW) {
-		        		this.requestState = RequestState.MORE;
-		        		checkForCloseEvent();
-			        	processNewRequest();
-		        	}
-		        	break;
-	    		case MORE:
-	    			processMoreRequest();
-	    			break;
-	    		case CLOSE:
-	    			return;
-    		}
-			if (lastBatch && !this.securityContext.keepExecutionAlive()) {
-				this.requestState = RequestState.CLOSE;
-			}
-		} catch (NeedsClosedException e) {
-    		this.requestState = RequestState.CLOSE;
-    	} catch (Throwable t){
-    		success = false;
-    		this.requestState = RequestState.CLOSE;
-        	handleError(t);
-        } finally {
-        	if (this.requestState == RequestState.CLOSE) {
-    			processClose(success);
-        	} 
-        	DQPWorkContext.releaseWorkContext();
-        }
-    }
-
-	private void checkForCloseEvent() throws NeedsClosedException {
-		if (this.isCancelled.get() || this.closeRequested) {
-			throw new NeedsClosedException();
-		}
+    public AtomicRequestID getId() {
+		return id;
 	}
-    
-    public void requestCancel() {
+
+    public void cancel() {
     	try {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
-            asynchCancel();
-            this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
+            if (this.isCancelled.compareAndSet(false, true)) {
+                this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
+    	        if(execution != null) {
+    	            execution.cancel();
+    	        }            
+    	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+        	}
         } catch (ConnectorException e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
-        } finally {
-    		moreWork();
         }
     }
     
-    public synchronized void requestMore() {
-    	Assertion.assertTrue(!this.moreRequested, "More already requested"); //$NON-NLS-1$
-    	this.moreRequested = true;
-    	Assertion.assertTrue(!this.lastBatch, "More should not be requested after the last batch"); //$NON-NLS-1$
-    	assert this.requestState != RequestState.NEW : "More should not be requested during NEW"; //$NON-NLS-1$
-		moreWork();
-    }
-    
-    public synchronized void requestClose() {
-    	if (this.requestState == RequestState.CLOSE || this.closeRequested) {
-    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Already closing request"}); //$NON-NLS-1$
-    		return;
+    public AtomicResultsMessage more() throws ConnectorException {
+    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
+    	try {
+    		return handleBatch();
+    	} catch (Throwable t) {
+    		throw handleError(t);
     	}
-    	this.closeRequested = true;
-    	moreWork();
     }
     
-    private void handleError(Throwable t) {
-    	if (t instanceof RuntimeException && t.getCause() != null) {
-    		t = t.getCause();
-    	}
-        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null);
-        
-        String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
-        if (isCancelled.get()) {            
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
-        } else if (t instanceof ConnectorException || t instanceof MetaMatrixProcessingException) {
-        	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
-        } else {
-            LogManager.logError(LogConstants.CTX_CONNECTOR, t, msg);
-        }    
-
-        if (!(t instanceof CommunicationException)) {
-            if (t instanceof ConnectorException) {
-                t = new ConnectorException(t, DQPPlugin.Util.getString("ConnectorWorker.error_occurred", this.manager.getName(), t.getMessage())); //$NON-NLS-1$
-            }        	
-            this.resultsReceiver.exceptionOccurred(t);
-        }
-    }
-    
-    protected void processClose(boolean success) {
-    	this.isClosed = true;
+    public void close() {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
-    	if (success) {
+    	if (!error) {
             manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount);
         }
         try {
@@ -262,118 +170,133 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
-        	// Close the underlying connection, but send the close response only upon the notification from
-        	// container in workCompleted call.
+            manager.removeState(this.id);
             if (connection != null) {
                 connection.close();
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
             }
-        }        
+        } 
     }
-
-	protected void sendClose() {
-		AtomicResultsMessage response = new AtomicResultsMessage(this.requestMsg);
-		response.setRequestClosed(true);
-		this.resultsReceiver.receiveResults(response);
-	}
     
-    protected void processNewRequest() throws ConnectorException {
-    	// Execute query
-    	this.execution.execute();
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
-
-        handleBatch();
-    }
-
-	protected void createExecution() throws MetaMatrixComponentException,
-			ConnectorException {
-    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
-		
-        createConnection();
+    private ConnectorException handleError(Throwable t) {
+    	if (t instanceof DataNotAvailableException) {
+    		throw (DataNotAvailableException)t;
+    	}
+    	error = true;
+    	if (t instanceof RuntimeException && t.getCause() != null) {
+    		t = t.getCause();
+    	}
+        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null);
         
-        LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating execution for atomic-request"});  //$NON-NLS-1$
-
-        // Translate the command
-        Command command = this.requestMsg.getCommand();
-		List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();
-		this.schema = new Class[symbols.size()];
-		this.convertToDesiredRuntimeType = new boolean[symbols.size()];
-		this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
-		for (int i = 0; i < schema.length; i++) {
-			SingleElementSymbol symbol = symbols.get(i);
-			this.schema[i] = symbol.getType();
-			this.convertToDesiredRuntimeType[i] = true;
-			this.convertToRuntimeType.add(i);
-		}
-
-        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
-        this.translatedCommand = factory.translate(command);
-
-        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
-        
-        // Create the execution based on mode
-        final Execution exec = connection.createExecution(this.translatedCommand, this.securityContext, rmd);
-        if (this.translatedCommand instanceof Call) {
-        	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "IProcedure Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
-        	this.execution = (ProcedureExecution)exec;
-        	StoredProcedure proc = (StoredProcedure)command;
-        	if (proc.returnParameters()) {
-        		this.procedureBatchHandler = new ProcedureBatchHandler((Call)this.translatedCommand, (ProcedureExecution)this.execution);
-        	}
-        } else if (this.translatedCommand instanceof QueryExpression){
-        	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "IQueryCommand Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
-        	this.execution = (ResultSetExecution)exec;
+        String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
+        if (isCancelled.get()) {            
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
+        } else if (t instanceof ConnectorException || t instanceof MetaMatrixProcessingException) {
+        	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
         } else {
-        	Assertion.isInstanceOf(this.execution, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
-        	this.execution = new ResultSetExecution() {
-        		private int[] results;
-        		private int index;
-        		
-        		@Override
-        		public void cancel() throws ConnectorException {
-        			exec.cancel();
-        		}
-        		@Override
-        		public void close() throws ConnectorException {
-        			exec.close();
-        		}
-        		@Override
-        		public void execute() throws ConnectorException {
-        			exec.execute();
-        		}
-        		@Override
-        		public List<?> next() throws ConnectorException,
-        				DataNotAvailableException {
-        			if (results == null) {
-        				results = ((UpdateExecution)exec).getUpdateCounts();
-        			}
-        			if (index < results.length) {
-        				return Arrays.asList(results[index++]);
-        			}
-        			return null;
-        		}
-        	};
-        }
-        
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
-        //Log the Source Command (Must be after obtaining the execution context)
-        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
+            LogManager.logError(LogConstants.CTX_CONNECTOR, t, msg);
+        } 
+		if (t instanceof ConnectorException) {
+			return (ConnectorException)t;
+		}
+		if (t instanceof RuntimeException) {
+			throw (RuntimeException)t;
+		}
+		return new ConnectorException(t);
+    }
+    
+	public AtomicResultsMessage execute() throws ConnectorException {
+        if(isCancelled()) {
+    		throw new ConnectorException("Request canceled"); //$NON-NLS-1$
+    	}
+
+    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
+    	try {
+	    	this.connection = this.connector.getConnection();
+	        
+	        // Translate the command
+	        Command command = this.requestMsg.getCommand();
+			List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();
+			this.schema = new Class[symbols.size()];
+			this.convertToDesiredRuntimeType = new boolean[symbols.size()];
+			this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
+			for (int i = 0; i < schema.length; i++) {
+				SingleElementSymbol symbol = symbols.get(i);
+				this.schema[i] = symbol.getType();
+				this.convertToDesiredRuntimeType[i] = true;
+				this.convertToRuntimeType.add(i);
+			}
+	
+	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
+	        this.translatedCommand = factory.translate(command);
+	
+	        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
+	        
+	        // Create the execution based on mode
+	        final Execution exec = connection.createExecution(this.translatedCommand, this.securityContext, rmd);
+	        if (this.translatedCommand instanceof Call) {
+	        	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "IProcedure Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
+	        	this.execution = (ProcedureExecution)exec;
+	        	StoredProcedure proc = (StoredProcedure)command;
+	        	if (proc.returnParameters()) {
+	        		this.procedureBatchHandler = new ProcedureBatchHandler((Call)this.translatedCommand, (ProcedureExecution)this.execution);
+	        	}
+	        } else if (this.translatedCommand instanceof QueryExpression){
+	        	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "IQueryCommand Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
+	        	this.execution = (ResultSetExecution)exec;
+	        } else {
+	        	Assertion.isInstanceOf(this.execution, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
+	        	this.execution = new ResultSetExecution() {
+	        		private int[] results;
+	        		private int index;
+	        		
+	        		@Override
+	        		public void cancel() throws ConnectorException {
+	        			exec.cancel();
+	        		}
+	        		@Override
+	        		public void close() throws ConnectorException {
+	        			exec.close();
+	        		}
+	        		@Override
+	        		public void execute() throws ConnectorException {
+	        			exec.execute();
+	        		}
+	        		@Override
+	        		public List<?> next() throws ConnectorException,
+	        				DataNotAvailableException {
+	        			if (results == null) {
+	        				results = ((UpdateExecution)exec).getUpdateCounts();
+	        			}
+	        			if (index < results.length) {
+	        				return Arrays.asList(results[index++]);
+	        			}
+	        			return null;
+	        		}
+	        	};
+	        }
+	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
+	        //Log the Source Command (Must be after obtaining the execution context)
+	        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
+	        
+	        // Execute query
+	    	this.execution.execute();
+	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
+	
+	        return handleBatch();
+    	} catch (Throwable t) {
+    		throw handleError(t);
+    	}
 	}
     
-    protected void handleBatch() 
-        throws ConnectorException {
+    protected AtomicResultsMessage handleBatch() throws ConnectorException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Sending results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
         List<List> rows = new ArrayList<List>(batchSize/4);
-        boolean sendResults = true;
         
         try {
 	        while (batchSize < this.requestMsg.getFetchSize()) {
-	        	
-	        	if (shouldAbortProcessing()) {
-	        		throw new ConnectorException("Container requested to abort the operation!");
-	        	}
 	        	
         		List row = this.execution.next();
             	if (row == null) {
@@ -403,7 +326,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 	        }
     	} catch (DataNotAvailableException e) {
     		if (rows.size() == 0) {
-    			sendResults = dataNotAvailable(e.getRetryDelay());
+    			throw e;
     		}
     	}
                 
@@ -416,26 +339,19 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         			this.rowCount++;
         		}
         	}
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$\
         }   
         
-        if (sendResults) {
-        	sendResults(rows);
-        }
-    }
-
-	protected void sendResults(List<List> rows) {
-		int currentRowCount = rows.size();
+    	int currentRowCount = rows.size();
 		if ( !lastBatch && currentRowCount == 0 ) {
 		    // Defect 13366 - Should send all batches, even if they're zero size.
 		    // Log warning if received a zero-size non-last batch from the connector.
 		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
 		}
 
-		AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
+		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
 		
-		// if we need to keep the execution alive, then we can not support
-		// implicit close.
+		// if we need to keep the execution alive, then we can not support implicit close.
 		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
 		response.setTransactional(this.securityContext.isTransactional());
 		response.setWarnings(this.securityContext.getWarnings());
@@ -443,7 +359,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);
 		} 
-		this.resultsReceiver.receiveResults(response);
+		return response;
 	}
 
 	private void correctTypes(List row) throws ConnectorException {
@@ -484,79 +400,18 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		}
 	}
     
-    protected abstract boolean dataNotAvailable(long delay);
-    
-    private void processMoreRequest() throws ConnectorException {
-    	Assertion.assertTrue(this.moreRequested, "More was not requested"); //$NON-NLS-1$
-    	this.moreRequested = false;
-    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
-
-        handleBatch();
-    }
-            
-    public static AtomicResultsMessage createResultsMessage(AtomicRequestMessage message, List[] batch, List columnSymbols) {
-        String[] dataTypes = new String[columnSymbols.size()];
-
-        for(int i=0; i<columnSymbols.size(); i++) {
-            SingleElementSymbol symbol = (SingleElementSymbol) columnSymbols.get(i);
-            dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
-        }
-        
-        return new AtomicResultsMessage(message, batch, dataTypes);
+    public static AtomicResultsMessage createResultsMessage(List[] batch, List columnSymbols) {
+        String[] dataTypes = TupleBuffer.getTypeNames(columnSymbols);        
+        return new AtomicResultsMessage(batch, dataTypes);
     }    
             
-    void asynchCancel() throws ConnectorException {
-    	if (this.isCancelled.compareAndSet(false, true)) {
-	        if(execution != null) {
-	            execution.cancel();
-	        }            
-	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
-    	}
-    }
-    
     boolean isCancelled() {
     	return this.isCancelled.get();
     }
 
 	@Override
-	protected boolean isDoneProcessing() {
-		return isClosed;
-	}
-	
-	@Override
 	public String toString() {
 		return this.id.toString();
 	}
 
-	@Override
-	public void workCompleted(WorkEvent arg0) {
-        manager.removeState(this.id);
-        sendClose();
-	}
-
-	@Override
-	public void workRejected(WorkEvent event) {
-		try {
-			asynchCancel();
-		} catch (ConnectorException e) {
-			LogManager.logError(LogConstants.CTX_CONNECTOR, event.getException(), this.id.toString()); 
-		}
-	}
-	
-	@Override
-    protected boolean assosiateSecurityContext() {
-		DQPWorkContext context = requestMsg.getWorkContext();
-		if (context.getSubject() != null) {
-        	return manager.getSecurityHelper().assosiateSecurityContext(context.getSecurityDomain(), context.getSecurityContext());			
-		}
-		return false;
-	}
-    
-	@Override
-    protected void clearSecurityContext() {
-		DQPWorkContext context = requestMsg.getWorkContext();
-		if (context.getSubject() != null) {
-			manager.getSecurityHelper().clearSecurityContext(context.getSecurityDomain());			
-		}
-	}
 }

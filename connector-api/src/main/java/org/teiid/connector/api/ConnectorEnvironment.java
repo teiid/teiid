@@ -65,12 +65,6 @@ public interface ConnectorEnvironment {
 	public boolean isXaCapable();
 	
     /**
-     * Indicates whether the connector represents a pooled resource.  If it does, then
-     * synchronous workers will be used.
-     */
-	boolean isSynchWorkers();
-	
-    /**
      * Obtain a reference to the logger that can be used to add messages to the 
      * log files for debugging and error recovery.
      * @return The {@link ConnectorLogger} 

@@ -23,14 +23,18 @@
 package org.teiid.transport;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
@@ -40,17 +44,26 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class LocalServerConnection implements ServerConnection {
 	private static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
 	
 	private final LogonResult result;
 	private boolean shutdown;
+	private ClientServiceRegistry csr;
+    private DQPWorkContext workContext = new DQPWorkContext();
 
 	public LocalServerConnection(Properties connectionProperties) throws CommunicationException, ConnectionException{
+		try {
+			InitialContext ic = new InitialContext();
+			csr = (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME);
+		} catch (NamingException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		workContext.setSecurityHelper(csr.getSecurityHelper());
 		this.result = authenticate(connectionProperties);
 	}
 	
@@ -74,23 +87,21 @@ public class LocalServerConnection implements ServerConnection {
 	public <T> T getService(final Class<T> iface) {
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
-			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
+			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (!isOpen()) {
 					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(CommonCommPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
 				}
 				try {
-					ClientServiceRegistry scf = lookup(TEIID_RUNTIME);
-					T service = scf.getClientService(iface);
-					
-					if (!(iface.equals(ILogon.class))) {					
-						SessionToken.setSession(result.getSessionToken());
-					}
-					
-					return arg1.invoke(service, arg2);
-				} catch(NamingException e){
-					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(CommonCommPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
-				} finally {
-					SessionToken.setSession(null);
+					final T service = csr.getClientService(iface);
+					return workContext.runInContext(new Callable<Object>() {
+						public Object call() throws Exception {
+							return arg1.invoke(service, arg2);						
+						}
+					});
+				} catch (InvocationTargetException e) {
+					throw e.getTargetException();
+				} catch (Throwable e) {
+					throw ExceptionUtil.convertException(arg1, e);
 				}
 			}
 		}));
@@ -130,11 +141,5 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public boolean isSameInstance(ServerConnection conn) throws CommunicationException {
 		return (conn instanceof LocalServerConnection);
-	}
-	
-	@SuppressWarnings("unchecked")
-	protected <T> T lookup(String jndiName) throws NamingException {
-		InitialContext ic = new InitialContext();
-		return (T)ic.lookup(jndiName);
 	}
 }

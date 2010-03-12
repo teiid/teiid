@@ -24,20 +24,17 @@ package com.metamatrix.dqp.service;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.resource.spi.work.ExecutionContext;
+import javax.transaction.Transaction;
 
 public class TransactionContext extends ExecutionContext implements Serializable{
 
 	private static final long serialVersionUID = -8689401273499649058L;
 
 	public enum Scope {
-		BLOCK,
 		GLOBAL,
 		LOCAL,
 		NONE,
@@ -47,14 +44,19 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private String threadId;
     private Scope transactionType = Scope.NONE;
     private long creationTime;
-    private boolean rollback = false;
+    private boolean rollback;
+    private Transaction transaction;
+    private boolean embeddedTransaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-    private Map<String, AtomicInteger> txnSources = Collections.synchronizedMap(new HashMap<String, AtomicInteger>());
     
-    public boolean isInTransaction() {
-        return (getXid() != null && this.txnSources.size() > 0);
-    }
-
+    public boolean isEmbeddedTransaction() {
+		return embeddedTransaction;
+	}
+    
+    public void setEmbeddedTransaction(boolean embeddedTransaction) {
+		this.embeddedTransaction = embeddedTransaction;
+	}
+    
     public long getCreationTime() {
 		return creationTime;
 	}
@@ -78,17 +80,25 @@ public class TransactionContext extends ExecutionContext implements Serializable
     public String getThreadId() {
         return threadId;
     }
+    
+    public Transaction getTransaction() {
+		return transaction;
+	}
+    
+    public void setTransaction(Transaction transaction) {
+		this.transaction = transaction;
+	}
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        this.buildString(sb);
+        if (getXid() != null) {
+        	sb.append("xid: ").append(getXid()); //$NON-NLS-1$
+        } else {
+        	sb.append(transaction);
+        }
         return sb.toString();
     }
 
-    private void buildString(StringBuffer sb) {
-        sb.append("xid: ").append(getXid()); //$NON-NLS-1$
-    }
-    
     public void setRollbackOnly() {
     	this.rollback = true;
     }
@@ -101,17 +111,4 @@ public class TransactionContext extends ExecutionContext implements Serializable
         return this.suspendedBy;
     }
 
-	public void incrementPartcipatingSourceCount(String source) {
-		AtomicInteger count = txnSources.get(source);
-		if (count == null) {
-			txnSources.put(source, new AtomicInteger(1));
-		}
-		else {
-			count.incrementAndGet();
-		}
-	}
-	
-	public boolean isOnePhase() {
-		return this.txnSources.size() == 1;
-	}    
 }
