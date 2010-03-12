@@ -483,6 +483,15 @@ public class TestPostgreSQLTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testLocate5a() throws Exception {
+        String input = "SELECT locate(STRINGNUM, 'chimp', 2) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substr('chimp', 2)) + 1) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
 
     /**
      * Test the translator's ability to rewrite the LOCATE() function in a form 

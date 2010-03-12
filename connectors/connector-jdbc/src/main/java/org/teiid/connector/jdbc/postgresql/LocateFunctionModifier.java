@@ -50,9 +50,7 @@ public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.
 			useSubStr = true;
 			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
 				Integer value = (Integer)((Literal)params.get(2)).getValue();
-				if (value > 1) {
-					((Literal)params.get(2)).setValue(value - 1);
-				} else {
+				if (value <= 1) {
 					useSubStr = false;
 				}
 			}
@@ -63,7 +61,8 @@ public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.
 			parts.add(")"); //$NON-NLS-1$
 			parts.add(" + "); //$NON-NLS-1$
 			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
-				parts.add(params.get(2));
+				Integer value = (Integer)((Literal)params.get(2)).getValue();
+				parts.add(value - 1);
 			} else {
 				parts.add(params.get(2));
 				parts.add(" - 1"); //$NON-NLS-1$
