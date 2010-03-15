@@ -64,7 +64,7 @@ public interface PluginConstants {
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
 			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
 			public final static String TEIID_RUNTIME_ENGINE = "org.teiid.jboss.deployers.RuntimeEngineDeployer"; //$NON-NLS-1$
-			public final static String TEIID_ENGINE_RESOURCE_NAME = "Data Service Runtime Engine"; //$NON-NLS-1$
+			public final static String TEIID_ENGINE_RESOURCE_NAME = "Data Services"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_DESCRIPTION = "JBoss Enterprise Data Service Runtime Engine"; //$NON-NLS-1$
 
 			public static interface Operations {
@@ -104,6 +104,15 @@ public interface PluginConstants {
 				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
 				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
+
+			}
+			
+			public static interface Metrics {
+
+				public final static String STATUS = "status"; //$NON-NLS-1$ 
+				public final static String QUERY_COUNT = "queryCount"; //$NON-NLS-1$            
+				public final static String SESSION_COUNT = "sessionCount"; //$NON-NLS-1$
+				public final static String LONG_RUNNING_QUERIES = "longRunningQueries"; //$NON-NLS-1$     
 
 			}
 

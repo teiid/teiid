@@ -90,9 +90,27 @@ public class DQPManagementView implements PluginConstants {
 
 		Object resultObject = new Object();
 
-		// if (metric.equals(ComponentType.Metric.HIGH_WATER_MARK)) {
-		// resultObject = new Double(getHighWatermark(identifier));
-		// }
+		if (metric
+				.equals(PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
+			//TODO remove version parameter after AdminAPI is changed
+			resultObject = getVDBStatus((String)valueMap.get(VDB.NAME), 1);
+		} else if (metric
+				.equals(PluginConstants.ComponentType.VDB.Metrics.QUERY_COUNT)) {
+			resultObject = new Double(getQueryCount().doubleValue());
+		} else {
+			if (metric
+					.equals(PluginConstants.ComponentType.VDB.Metrics.SESSION_COUNT)) {
+				resultObject = new Double(getSessionCount().doubleValue());
+			} else {
+				if (metric
+						.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
+					Integer longRunningQueryLimit = (Integer) valueMap
+							.get(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT);
+					Collection<RequestMetadata> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
+					resultObject = new Double(longRunningQueries.size());
+				}
+			}
+		}
 
 		return resultObject;
 	}
@@ -102,7 +120,7 @@ public class DQPManagementView implements PluginConstants {
 	 */
 
 	public void executeOperation(ExecutedResult operationResult,
-			final Map valueMap) {
+			final Map<String, Object> valueMap) {
 
 		if (operationResult.getComponentType().equals(
 				PluginConstants.ComponentType.Platform.NAME)) {
@@ -244,6 +262,26 @@ public class DQPManagementView implements PluginConstants {
 		}
 		return sessionCollection;
 
+	}
+	
+	public String getVDBStatus(String vdbName, int version) {
+		
+		ManagedComponent mcVdb = null;
+		try {
+			mcVdb = ProfileServiceUtil
+			.getManagedComponent(new org.jboss.managed.api.ComponentType(
+					PluginConstants.ComponentType.VDB.TYPE,
+					PluginConstants.ComponentType.VDB.SUBTYPE), vdbName);
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return ProfileServiceUtil.getSimpleValue(mcVdb,
+				"status", String.class);
 	}
 
 	public static MetaValue executeManagedOperation(ManagedComponent mc,

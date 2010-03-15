@@ -251,38 +251,42 @@
 				</results>
 			</operation>
 
+			<metric displayName="Status" defaultOn="true" dataType="trait" displayType="summary"
+			category="availability" property="status" 
+			description="The status of this VDB" />
+			
 			<content name="vdb" displayName="VDB Archive" category="deployable"
 				isCreationType="true">
 			</content>
-
+			
 			<resource-configuration>
 				<c:group name="general" displayName="General"
 					hiddenByDefault="false">
 					<c:simple-property name="name" type="string"
-						description="The Virtual Database Name" />
+						description="The Virtual Database Name" required="false"/>
 					<c:simple-property name="version" type="string"
-						description="The Virtual Database Version" />
+						description="The Virtual Database Version" required="false"/>
 					<c:simple-property name="description" type="string"
-						description="The Virtual Database Description" />
+						description="The Virtual Database Description" required="false"/>
 					<c:simple-property name="status" type="string"
-						description="The Virtual Database Status">
+						description="The Virtual Database Status" required="false" summary="true">
 						<c:property-options>
 									<c:option value="ACTIVE" name="ACTIVE" />
 									<c:option value="INACTIVE" name="INACTIVE" default="true"/>
 						</c:property-options>					
 					</c:simple-property>	
 					<c:simple-property name="url" type="string"
-						description="The Virtual Database URL" />
+						description="The Virtual Database URL" required="false"/>
 				</c:group>
-				<c:group name="sourceModels" displayName="Source Models"
+				<c:group name="Models" displayName="Models"
 					hiddenByDefault="false">
 					<c:list-property name="sourceModels" description="The source models for this VDB">
 						<c:map-property name="model">
 							<c:simple-property name="name" displayName="Name"
 								description="Name of the model" required="true" readOnly="true"/>
-							<c:simple-property name="sourceName" displayName="Connector Binding"
-								description="Connector binding for this model" required="false" readOnly="true"/>
-							<c:simple-property name="jndiName" displayName="JNDI Name"
+							<c:simple-property name="sourceName" displayName="Source Name"
+								description="Source name for this model" required="false" readOnly="true"/>
+							<c:simple-property name="jndiName" displayName="Connector Binding JNDI Name"
 								description="JNDI name for this connector binding" required="false"/>	
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visibility of the model"
@@ -304,13 +308,12 @@
 							</c:simple-property>
 						</c:map-property>
 					</c:list-property>
-				</c:group>
-				<c:group name="virtualModels" displayName="Logical Models"
-					hiddenByDefault="false">
-					<c:list-property name="virtualModels" description="The logical models for this VDB">
+					<c:list-property name="logicalModels" description="The logical models for this VDB">
 						<c:map-property name="model">
 							<c:simple-property name="name" displayName="Name"
 								description="Name of the model" required="true" />
+							<c:simple-property name="type" displayName="Type"
+								description="type of logical model" required="true" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visbility of the model"
 								required="true">
@@ -335,7 +338,8 @@
 					</c:list-property>
 				</c:group>
 			</resource-configuration>
-
+			
+		
 			<!--
 				<operation name="getProperties" displayName="View VDB properties"
 				description="List the properties of this VDB"> <results>

@@ -179,6 +179,15 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 						+ " named " + this.getComponentName());
 
 	}
+	
+	protected void setMetricArguments(String name,
+			Configuration configuration, Map<String, Object> argumentMap) {
+		// moved this logic up to the associated implemented class
+		throw new InvalidPluginConfigurationException(
+				"Not implemented on component type " + this.getComponentType()
+						+ " named " + this.getComponentName());
+
+	}
 
 	protected void execute(final ExecutedResult result, final Map valueMap) {
 		DQPManagementView dqp = new DQPManagementView();

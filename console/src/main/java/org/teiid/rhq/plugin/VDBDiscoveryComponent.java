@@ -37,11 +37,9 @@ import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
-import org.jboss.metatype.api.values.CompositeValueSupport;
-import org.jboss.metatype.api.values.EnumValue;
+import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.core.domain.configuration.Configuration;
@@ -144,7 +142,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		PropertyList sourceModelsList = new PropertyList("sourceModels");
 		configuration.put(sourceModelsList);
 
-		PropertyList logicalModelsList = new PropertyList("virtualModels");
+		PropertyList logicalModelsList = new PropertyList("logicalModels");
 		configuration.put(logicalModelsList);
 
 		PropertyList errorList = new PropertyList("errorList");
@@ -179,7 +177,10 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
 			String visibility = ((SimpleValueSupport) managedObject
 					.getProperty("visible").getValue()).getValue().toString();
+			String type = ((EnumValueSupport) managedObject
+					.getProperty("modelType").getValue()).getValue().toString();
 
+			
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
 			if (errors != null) {
@@ -218,6 +219,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 				} else {
 					PropertyMap model = new PropertyMap("model",
 							new PropertySimple("name", modelName),
+							new PropertySimple("type", type),
 							new PropertySimple("visibility", visibility));
 
 					logicalModelsList.add(model);
