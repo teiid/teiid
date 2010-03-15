@@ -57,6 +57,12 @@
         <artifactId>jboss-vfs</artifactId>
         <scope>provided</scope>
     </dependency> 
+    
+    <dependency>
+        <groupId>org.jboss.man</groupId>
+        <artifactId>jboss-managed</artifactId>
+        <scope>test</scope>
+    </dependency>     
   </dependencies>
   
 </project>
