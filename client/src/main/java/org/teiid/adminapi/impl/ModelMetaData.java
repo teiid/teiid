@@ -75,7 +75,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     @XmlElement(name = "validation-error")
     protected List<ValidationError> errors;    
     
-	@ManagementProperty(description="Model Name", readOnly=true)
+	@ManagementProperty(description="Model Name")
 	@ManagementObjectID(type="model")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
@@ -88,24 +88,24 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
 	
 	@Override
-	@ManagementProperty(description = "Is Model Source model", readOnly=true)
+	@ManagementProperty(description = "Is Model Source model")
     public boolean isSource() {
 		return ModelType.parseString(modelType.toUpperCase()) == ModelType.PHYSICAL;
 	}
 
 	@Override
-	@ManagementProperty(description = "Is Model Visible", readOnly=true)
+	@ManagementProperty(description = "Is Model Visible")
 	public boolean isVisible() {
 		return this.visible;
 	}
 
 	@Override
-	@ManagementProperty(description = "Model Type", readOnly=true)
+	@ManagementProperty(description = "Model Type")
 	public Type getModelType() {
 		return Type.valueOf(modelType);
 	}
 	
-	@ManagementProperty(description = "Path to model file inside the archive", readOnly=true)
+	@ManagementProperty(description = "Path to model file inside the archive")
     public String getPath() {
 		return path;
 	}
@@ -115,21 +115,21 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}	
 
 	@Override
-	@ManagementProperty(description = "Does Model supports multi-source bindings", readOnly=true)
+	@ManagementProperty(description = "Does Model supports multi-source bindings")
     public boolean isSupportsMultiSourceBindings() {
 		String supports = getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY);
 		return Boolean.parseBoolean(supports);
     }    
 	
 	@Override
-	@ManagementProperty(description = "Properties", readOnly=true)
     public Properties getProperties() {
         return new Properties(super.getProperties());
     }		
 	
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)
-	protected List<PropertyMetadata> getJAXBProperties(){
+	@ManagementProperty(description = "Model Properties", managed=true)
+	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
 	
@@ -153,6 +153,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	public List<SourceMappingMetadata> getSourceMappings(){
 		return new ArrayList<SourceMappingMetadata>(this.sources.getMap().values());
 	}
+    
+	public void setSourceMappings(List<SourceMappingMetadata> sources){
+		for (SourceMappingMetadata source: sources) {
+			addSourceMapping(source.getName(), source.getJndiName());
+		}
+	}      
     
     @Override
     public List<String> getSourceNames() {
@@ -206,7 +212,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         	this.value = msg;
         }
     	
-        @ManagementProperty (description="Error Message", readOnly = true)
+        @ManagementProperty (description="Error Message")
         @ManagementObjectID(type="error")
         public String getValue() {
 			return value;
@@ -216,7 +222,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			this.value = value;
 		}
 
-		@ManagementProperty (description="Severity", readOnly = true)
+		@ManagementProperty (description="Severity")
 		public String getSeverity() {
 			return severity;
 		}

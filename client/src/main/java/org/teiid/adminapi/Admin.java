@@ -35,27 +35,19 @@ public interface Admin {
     /**
      * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model
      *
-     * @param connectorBindingName
-     *            Name of the ConnectorBinding
-     * @param vdbName
-     *            Name of the VDB
-     * @param vdbVersion
-     *            Version of the VDB
-     * @param modelName
-     *            Name of the Model to map Connector Binding
-     * @throws AdminException
-     *             if there's a system error or if there's a user input error.
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param modelName  Name of the Model to map Connector Binding
+     * @param sourceName sourceName for the model
+     * @param jndiName JNDI names to which the source name needs to map to
+     * @throws AdminException if there's a system error or if there's a user input error.
      */
     void assignBindingToModel(String vdbName,
                               int vdbVersion,
                               String modelName,
-                              String connectorBindingName) throws AdminException;
+                              String sourceName,
+                              String jndiName) throws AdminException;
     
-    void assignBindingsToModel(String vdbName,
-            int vdbVersion,
-            String modelName,
-            String[] connectorBindingName) throws AdminException;    
-
     /**
      * Set/update the property for the Connector Binding identified by the given deployed name.
      * @param deployedName
@@ -336,20 +328,6 @@ public interface Admin {
      * @throws AdminException
      */
     void terminateTransaction(String transactionId) throws AdminException;
-    
-    /**
-     * Stop the Teiid.  If millisToWait is >0, then close to incoming queries, wait the time period
-     * for work to stop, then stop the MM Query.  Otherwise, stop immediately, aborting all running queries.
-     * @param millisToWait Milliseconds to wait (if >0) or <=0 for no wait before stopping
-     * @throws AdminException
-     */
-    void shutdown(int millisToWait) throws AdminException;
-
-    /**
-     * Restart System
-     * @throws AdminException if there's a system error.
-     */
-    void restart() throws AdminException;      
     
     /**
      * Adds JDBC XA Data Source in the container.

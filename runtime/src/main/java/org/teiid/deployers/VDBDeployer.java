@@ -35,11 +35,11 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
-import org.jboss.logging.Logger;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.MetadataStore;
@@ -51,13 +51,14 @@ import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
-	protected Logger log = Logger.getLogger(getClass());
 	private VDBRepository vdbRepository;
 	private ConnectorManagerRepository connectorManagerRepository;
 	private DQPContextCache contextCache;
@@ -73,22 +74,13 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	public void deploy(DeploymentUnit unit, VDBMetaData deployment) throws DeploymentException {
 		if (this.vdbRepository.getVDB(deployment.getName(), deployment.getVersion()) != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
-			log.info(RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
 		}
 		
 		List<String> errors = deployment.getValidityErrors();
 		if (errors != null && !errors.isEmpty()) {
 			throw new DeploymentException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
 		}
-		
-		// Add system model to the deployed VDB
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL.name());
-		system.addSourceMapping("system", "system"); //$NON-NLS-1$ //$NON-NLS-2$
-		system.setSupportsMultiSourceBindings(false);
-		deployment.addModel(system);
 		
 		// get the metadata store of the VDB (this is build in parse stage)
 		CompositeMetadataStore store = unit.getAttachment(CompositeMetadataStore.class);
@@ -104,6 +96,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			}
 			store = new CompositeMetadataStore(stores);
 			unit.addAttachment(CompositeMetadataStore.class, store);			
+		}
+		
+		if (store == null) {
+			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("failed_matadata_load", deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
 		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
@@ -133,7 +129,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		try {
 			saveMetadataStore((VFSDeploymentUnit)unit, deployment, metadata.getMetadataStore());
 		} catch (IOException e1) {
-			log.warn(RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion()), e1); //$NON-NLS-1$ //$NON-NLS-2$			
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
 		}
 				
 		boolean valid = validateSources(deployment);
@@ -142,26 +138,26 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		if (valid) {
 			deployment.setStatus(VDB.Status.ACTIVE);
 		}
-		log.info(RuntimePlugin.Util.getString("vdb_deployed",deployment)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment)); //$NON-NLS-1$
 	}
 
 	private boolean validateSources(VDBMetaData deployment) {
 		boolean valid = true;
 		for(Model m:deployment.getModels()) {
 			ModelMetaData model = (ModelMetaData)m;
-			for (String sourceName:model.getSourceNames()) {
-				if (sourceName.equals(CoreConstants.SYSTEM_MODEL)) {
+			List<SourceMappingMetadata> mappings = model.getSourceMappings();
+			for (SourceMappingMetadata mapping:mappings) {
+				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL)) {
 					continue;
 				}
-				String jndiName = model.getSourceJndiName(sourceName);
 				try {
 					InitialContext ic = new InitialContext();
-					ic.lookup(jndiName);
+					ic.lookup(mapping.getJndiName());
 				} catch (NamingException e) {
 					valid = false;
-					String msg = RuntimePlugin.Util.getString("jndi_not_found", jndiName,sourceName); //$NON-NLS-1$
+					String msg = RuntimePlugin.Util.getString("jndi_not_found", mapping.getJndiName(),mapping.getName()); //$NON-NLS-1$
 					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-					log.info(msg);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 				}
 			}
 		}
@@ -210,10 +206,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		try {
 			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
 		} catch (IOException e) {
-			log.warn(RuntimePlugin.Util.getString("vdb_delete_failed", e.getMessage())); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_delete_failed", e.getMessage())); //$NON-NLS-1$
 		}
 
-		log.info(RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
 	}
 
 	public void setContextCache(DQPContextCache cache) {
@@ -258,9 +254,9 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     				return this.serializer.loadAttachment(cacheFile, MetadataStore.class);
     			}
 			} catch (IOException e) {
-				log.warn(RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
 			} catch (ClassNotFoundException e) {
-				log.warn(RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
+				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
 			} 
     	}
     	

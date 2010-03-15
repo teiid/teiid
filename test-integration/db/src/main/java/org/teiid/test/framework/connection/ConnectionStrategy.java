@@ -206,7 +206,7 @@ public abstract class ConnectionStrategy {
 
 		    api.addConnectorBinding(ds.getName(),ds.getConnectorType(), ds.getProperties());
 
-		    api.assignBindingToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName());
+		    api.assignBindingToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName(), ds.getProperty("jndi-name"));
 
 		    api.startConnectorBinding(api.getConnectorBinding(ds.getName()));
 		} else {

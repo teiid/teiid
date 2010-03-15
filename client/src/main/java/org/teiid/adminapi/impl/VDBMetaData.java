@@ -37,14 +37,14 @@ import javax.xml.bind.annotation.XmlType;
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementObjectID;
-import org.jboss.managed.api.annotation.ManagementOperation;
+import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"))
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"), properties=ManagementProperties.EXPLICIT)
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
     "description",
@@ -91,7 +91,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		// auto add sytem model.
 	}
 
-	@ManagementProperty(description="Name of the VDB", readOnly=true)
+	@ManagementProperty(description="Name of the VDB")
 	@ManagementObjectID(type="vdb")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
@@ -104,7 +104,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	} 
 	
 	@Override
-	@ManagementProperty(description="VDB Status")
+	@ManagementProperty(description="VDB Status", readOnly=true)
 	public Status getStatus() {
 		String status = getPropertyValue(STATUS_KEY);
 		if (status != null) {
@@ -128,7 +128,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 		
 	@Override
-	@ManagementProperty(description = "The VDB file url", readOnly=true)
+	@ManagementProperty(description = "The VDB file url")
 	public String getUrl() {
 		return this.fileUrl;
 	}
@@ -143,12 +143,24 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return new ArrayList<Model>(this.models.getMap().values());
 	}
 	
+	/**
+	 * This method required to make the JNDI assignment on the model work; if not present Management framework
+	 * treating "models" as ReadOnly property.
+	 * @param models
+	 */
+	public void setModels(List<Model> models) {
+		for (Model obj : models) {
+			ModelMetaData model = (ModelMetaData) obj;
+			addModel(model);
+		}
+	}
+	
 	public void addModel(ModelMetaData m) {
 		this.models.getMap().put(m.getName(), m);
 	}	
-
+	
 	@Override
-	@ManagementProperty(description = "Description", readOnly=true)	
+	@ManagementProperty(description = "Description")	
 	public String getDescription() {
 		return this.description;
 	}
@@ -204,7 +216,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return getName()+"."+getVersion()+ models.getMap().values(); //$NON-NLS-1$
 	}
 
-	@ManagementOperation(description = "Get the model with given name")		
 	public ModelMetaData getModel(String modelName) {
 		return this.models.getMap().get(modelName);
 	}
@@ -228,9 +239,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.securityRoleMappings.getMap().put(data.getRefName(), data);
 	}
 	
-	// this one manages the Management API
 	@Override
-	@ManagementProperty(description = "Properties", readOnly=true)
     public Properties getProperties() {
         return super.getProperties();
     }		
@@ -238,7 +247,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	// This one manages the JAXB binding
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)
-	protected List<PropertyMetadata> getJAXBProperties(){
+	@ManagementProperty(description = "VDB Properties", managed=true)
+	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
 	

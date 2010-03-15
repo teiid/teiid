@@ -28,7 +28,6 @@ import org.teiid.adminapi.WorkerPoolStatistics;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
-@Ignore
 public class TestConnectorBindings extends BaseConnection {
 	ServerDatasourceConnection ds;
 	Admin admin;
@@ -302,14 +301,12 @@ public class TestConnectorBindings extends BaseConnection {
 	}	
 	
 	@Test public void testAssignConnectorBinding() throws Exception {
+			
+		admin.assignBindingToModel("TransactionsRevisited", 1, "pm1", "mysql", "jndi:FOO");
+	}
+	
+	@Test public void testVDB() throws Exception {
 		
-		VDB vdb = admin.getVDB("TransactionsRevisited", 1);
-		if (vdb == null) {
-			admin.deleteVDB("TransactionsRevisited", 1);
-			File f = UnitTestUtil.getTestDataFile("TransactionsRevisited.vdb");
-			admin.deployVDB(f.getName(), f.toURI().toURL());
-		}
-		
-		admin.assignBindingsToModel("TransactionsRevisited", 1, "pm1", new String[] {"java:foo", "java:bar"});
+		admin.getVDB("TransactionsRevisited", 1);
 	}
 }

@@ -47,7 +47,10 @@ import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
+import org.jboss.managed.plugins.DefaultFieldsImpl;
+import org.jboss.managed.plugins.WritethroughManagedPropertyImpl;
 import org.jboss.metatype.api.types.MapCompositeMetaType;
+import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
@@ -446,7 +449,11 @@ public class Admin extends TeiidAdmin {
 		}
 		vdb.setVersion(ManagedUtil.getSimpleValue(mc, "version", Integer.class));//$NON-NLS-1$
 		vdb.setUrl(mc.getDeployment().getName());
-		vdb.setProperties(ManagedUtil.getPropertiesValue(mc, "properties"));//$NON-NLS-1$
+		ManagedProperty prop = mc.getProperty("JAXBProperties"); //$NON-NLS-1$
+		List<ManagedObject> properties = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(prop.getValue());
+		for (ManagedObject managedProperty:properties) {
+			vdb.addProperty(ManagedUtil.getSimpleValue(managedProperty, "name", String.class), ManagedUtil.getSimpleValue(managedProperty, "value", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		
 		// models
 		ManagedProperty mp = mc.getProperty("models");//$NON-NLS-1$
@@ -461,15 +468,19 @@ public class Admin extends TeiidAdmin {
 		return vdb;
 	}
 
-	private ModelMetaData buildModel(ManagedObject mc) {
+	private ModelMetaData buildModel(ManagedObject managedModel) {
 		ModelMetaData model = new ModelMetaData();
-		model.setName(ManagedUtil.getSimpleValue(mc, "name", String.class));//$NON-NLS-1$
-		model.setVisible(ManagedUtil.getSimpleValue(mc, "visible", Boolean.class));//$NON-NLS-1$
-		model.setModelType(ManagedUtil.getSimpleValue(mc, "modelType", String.class));//$NON-NLS-1$
-		model.setProperties(ManagedUtil.getPropertiesValue(mc, "properties"));//$NON-NLS-1$
+		model.setName(ManagedUtil.getSimpleValue(managedModel, "name", String.class));//$NON-NLS-1$
+		model.setVisible(ManagedUtil.getSimpleValue(managedModel, "visible", Boolean.class));//$NON-NLS-1$
+		model.setModelType(ManagedUtil.getSimpleValue(managedModel, "modelType", String.class));//$NON-NLS-1$
+
+		ManagedProperty prop = managedModel.getProperty("JAXBProperties"); //$NON-NLS-1$
+		List<ManagedObject> properties = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(prop.getValue());
+		for (ManagedObject managedProperty:properties) {
+			model.addProperty(ManagedUtil.getSimpleValue(managedProperty, "name", String.class), ManagedUtil.getSimpleValue(managedProperty, "value", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		
-		
-        ManagedProperty sourceMappings = mc.getProperty("sourceMappings");//$NON-NLS-1$
+        ManagedProperty sourceMappings = managedModel.getProperty("sourceMappings");//$NON-NLS-1$
         if (sourceMappings != null){
             List<ManagedObject> mappings = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(sourceMappings.getValue());
             for (ManagedObject mo:mappings) {
@@ -479,7 +490,7 @@ public class Admin extends TeiidAdmin {
             }
         }
         
-        ManagedProperty validationErrors = mc.getProperty("errors");//$NON-NLS-1$
+        ManagedProperty validationErrors = managedModel.getProperty("errors");//$NON-NLS-1$
         if (validationErrors != null) {
     		List<ManagedObject> errors = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(validationErrors.getValue());
     		if (errors != null) {
@@ -872,44 +883,52 @@ public class Admin extends TeiidAdmin {
 	
 	
 	@Override
-	public void assignBindingsToModel(String vdbName, int vdbVersion, String modelName, String[] connectorBindingNames) throws AdminException {
+	public void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException {
 
-//		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
-//		if (mc == null) {
-//			throw new AdminProcessingException("VDB with name = "+vdbName + " version = "+ vdbVersion + " not found in configuration");
-//		}
-//		VDBMetaData vdb = buildVDB(mc);
-//		ModelMetaData model = vdb.getModel(modelName);
-//		if (model == null) {
-//			throw new AdminProcessingException("Model name = "+modelName+" not found in the VDB with name = "+vdbName + " version = "+ vdbVersion);
-//		}
-//
-//		String referenceName = model.getConnectorReference();
-//		ArrayList<MetaValue> newBindings = new ArrayList<MetaValue>();
-//		for (String name:connectorBindingNames) {
-//			newBindings.add(new SimpleValueSupport(SimpleMetaType.STRING, name));
-//		}
-//		
-//		ManagedProperty mappings = mc.getProperty("connectorMappings");
-//		MetaValue[] elements = ((CollectionValueSupport)mappings.getValue()).getElements();
-//		ArrayList<MetaValue> modifiedElements = new ArrayList<MetaValue>();
-//		for (MetaValue mv:elements) {
-//			MetaValue value = ((CompositeValueSupport)mv).get("refName");
-//			if (value != null && ManagedUtil.stringValue(value).equals(referenceName)) {
-//				CollectionValueSupport bindings = (CollectionValueSupport)((CompositeValueSupport)mv).get("resourceNames");
-//				bindings.setElements(newBindings.toArray(new MetaValue[newBindings.size()]));
-//			}
-//			else {
-//				modifiedElements.add(mv);
-//			}
-//		}
-//		
-//		try {
-//			getView().updateComponent(mc);
-//		} catch (Exception e) {
-//			throw new AdminComponentException(e.getMessage(), e);
-//		}
-		throw new AdminProcessingException("feature coming soon..");//$NON-NLS-1$
+		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
+		if (mc == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("vdb_not_found", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+		ManagedProperty mp = mc.getProperty("models");//$NON-NLS-1$
+		List<ManagedObject> models = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(mp.getValue());
+		ManagedObject managedModel = null;
+		if (models != null && !models.isEmpty()) {
+			for(ManagedObject mo:models) {
+				String name = ManagedUtil.getSimpleValue(mo, "name", String.class); //$NON-NLS-1$
+				if (modelName.equals(name)) {
+					managedModel = mo;
+				}
+			}		
+		}
+		
+		if (managedModel == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("model_not_found", modelName, vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+        ManagedProperty sourceMappings = managedModel.getProperty("sourceMappings");//$NON-NLS-1$
+        if (sourceMappings != null){
+            List<ManagedObject> mappings = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(sourceMappings.getValue());
+            for (ManagedObject mo:mappings) {
+                String sName = ManagedUtil.getSimpleValue(mo, "name", String.class);//$NON-NLS-1$
+                if (sName.equals(sourceName)) {
+                	ManagedProperty jndiProperty = mo.getProperty("jndiName"); //$NON-NLS-1$
+                	if (jndiProperty == null) {
+                		jndiProperty = new WritethroughManagedPropertyImpl(mo, new DefaultFieldsImpl("jndiName")); //$NON-NLS-1$
+                	}
+                	jndiProperty.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, jndiName));
+                }
+            }
+        } else {
+        	//TODO: this can be in the default situation when no source mappings are specified
+        	throw new AdminProcessingException(IntegrationPlugin.Util.getString("sourcename_not_found", sourceName, vdbName, vdbVersion, modelName)); //$NON-NLS-1$
+        }
+        
+		try {
+			getView().updateComponent(mc);
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		}		        
 	}	
 
 }

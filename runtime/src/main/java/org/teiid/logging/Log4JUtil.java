@@ -110,6 +110,12 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_TRANSPORT);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_PLANNER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_RUNTIME);
+		
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_FUNCTION_TREE);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_XML_PLANNER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_XML_PLAN);
 		
 		contexts.add("com.arjuna"); //$NON-NLS-1$
 		contexts.add("org.jboss"); //$NON-NLS-1$

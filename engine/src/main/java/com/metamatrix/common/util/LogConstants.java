@@ -25,7 +25,10 @@ package com.metamatrix.common.util;
 import org.teiid.connector.basic.DefaultConnectorLogger;
 
 public interface LogConstants {
-	// add the new contexts to the Log4JUtil.java class, for configuration purpose
+	/*
+	 * important:
+	 * Must need to add the new contexts to the Log4JUtil.java class, for configuration purpose 
+	 */
 	public static final String CTX_SESSION = "SESSION"; //$NON-NLS-1$
 	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
 	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$

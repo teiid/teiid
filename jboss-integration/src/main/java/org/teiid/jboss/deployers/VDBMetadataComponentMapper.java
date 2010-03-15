@@ -40,7 +40,7 @@ public class VDBMetadataComponentMapper extends AbstractComponentMapper {
 	protected ManagedObject getComponent(Object attachment, PersistedComponent component, boolean create) {
 		VDBMetaData metadata = (VDBMetaData)attachment;
 		String vdbName = metadata.getName()+"_"+metadata.getVersion(); //$NON-NLS-1$
-		if (vdbName.equals(component.getOriginalName())) {
+		if (vdbName.equals(component.getName())) {
 			return getMOF().initManagedObject(metadata, VDBMetaData.class, vdbName, vdbName);
 		}
 		throw new IllegalStateException("could not find deployment " + component.getOriginalName());//$NON-NLS-1$

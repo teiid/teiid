@@ -69,14 +69,25 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	
 	public void setProperties(Properties props) {
 		this.properties.clear();
-		for (String key:props.stringPropertyNames()) {
-			addProperty(key, props.getProperty(key));
+		if (props != null) {
+			for (String key:props.stringPropertyNames()) {
+				addProperty(key, props.getProperty(key));
+			}
 		}
 	}	
 	
-	protected List<PropertyMetadata> getJAXBProperties(){
+	public List<PropertyMetadata> getJAXBProperties(){
 		return properties;
 	}
+	
+	public void setJAXBProperties(List<PropertyMetadata> props){
+		this.properties.clear();
+		if (props != null) {			
+			for (PropertyMetadata prop:props) {
+				addProperty(prop.getName(), prop.getValue());
+			}
+		}
+	}	
 	
 	@Override
 	public String getPropertyValue(String name) {
@@ -103,7 +114,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	    */	
 		public <T> T addAttchment(Class<T> type, T attachment) {
 	      if (type == null)
-	          throw new IllegalArgumentException("Null type");
+	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 	      Object result = this.attachments.put(type.getName(), attachment);
 	      if (result == null)
 	         return null;
@@ -113,7 +124,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 		
 		public Object addAttchment(String key, Object attachment) {
 		      if (key == null)
-		          throw new IllegalArgumentException("Null type");
+		          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 		      Object result = this.attachments.put(key, attachment);
 		      if (result == null)
 		         return null;
@@ -130,7 +141,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	    */	
 		public <T> T removeAttachment(Class<T> type) {
 			if (type == null)
-				throw new IllegalArgumentException("Null type");
+				throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 			Object result = this.attachments.remove(type.getName());
 			if (result == null)
 				return null;
@@ -139,7 +150,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 		
 		public Object removeAttachment(String key) {
 			if (key == null)
-				throw new IllegalArgumentException("Null type");
+				throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 			Object result = this.attachments.remove(key);
 			if (result == null)
 				return null;
@@ -155,7 +166,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	    */
 	   public <T> T getAttachment(Class<T> type) {
 	      if (type == null)
-	          throw new IllegalArgumentException("Null type");
+	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 	      Object result = this.attachments.get(type.getName());
 	      if (result == null)
 	         return null;
@@ -164,7 +175,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	   
 	   public Object getAttachment(String key) {
 		      if (key == null)
-		          throw new IllegalArgumentException("Null type");
+		          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
 		      Object result = this.attachments.get(key);
 		      if (result == null)
 		         return null;

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -34,8 +35,12 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.jboss.deployers.spi.DeploymentException;
+import org.jboss.deployers.spi.deployer.managed.ManagedObjectCreator;
+import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
-import org.jboss.logging.Logger;
+import org.jboss.managed.api.ManagedObject;
+import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -46,6 +51,8 @@ import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
 
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VdbConstants;
@@ -53,8 +60,7 @@ import com.metamatrix.core.vdb.VdbConstants;
 /**
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
-public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaData> {
-	protected Logger log = Logger.getLogger(getClass());
+public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaData> implements ManagedObjectCreator {
 	private ObjectSerializer serializer;
 	 
 	public VDBParserDeployer() {
@@ -122,7 +128,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		UDFMetaData udf = getInstance(metadata, UDFMetaData.class);
 		
 		if (vdb == null) {
-			log.error(RuntimePlugin.Util.getString("invlaid_vdb_file",unit.getRoot().getName())); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invlaid_vdb_file",unit.getRoot().getName())); //$NON-NLS-1$
 			return null;
 		}
 		
@@ -163,7 +169,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				if (model.getModelType().equals(Model.Type.FUNCTION)) {
 					String path = ((ModelMetaData)model).getPath();
 					if (path == null) {
-						path = model.getName()+VdbConstants.MODEL_EXT;
+						throw new DeploymentException(RuntimePlugin.Util.getString("invalid_udf_file", model.getName())); //$NON-NLS-1$
 					}
 					udf.buildFunctionModelFile(path);
 				}
@@ -173,7 +179,16 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			unit.addAttachment(UDFMetaData.class, udf);
 		}
 		
-		log.debug("VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
+		// Add system model to the deployed VDB
+		ModelMetaData system = new ModelMetaData();
+		system.setName(CoreConstants.SYSTEM_MODEL);
+		system.setVisible(true);
+		system.setModelType(Model.Type.PHYSICAL.name());
+		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
+		system.setSupportsMultiSourceBindings(false);
+		vdb.addModel(system);		
+		
+		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
 	}
 
@@ -215,4 +230,31 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 	public void setObjectSerializer(ObjectSerializer serializer) {
 		this.serializer = serializer;
 	}		
+	
+	private ManagedObjectFactory mof;
+	
+	@Override
+	public void build(DeploymentUnit unit, Set<String> attachmentNames, Map<String, ManagedObject> managedObjects)
+		throws DeploymentException {
+	          
+		ManagedObject vdbMO = managedObjects.get(VDBMetaData.class.getName());
+		if (vdbMO != null) {
+			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
+			for (Model m : vdb.getModels()) {
+				if (m.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+					continue;
+				}
+				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());
+				if (mo == null) {
+					throw new DeploymentException("could not create managed object");
+				}
+				managedObjects.put(mo.getName(), mo);
+			}
+		}
+	}	
+	
+	public void setManagedObjectFactory(ManagedObjectFactory mof) {
+		this.mof = mof;
+	}
+	
 }

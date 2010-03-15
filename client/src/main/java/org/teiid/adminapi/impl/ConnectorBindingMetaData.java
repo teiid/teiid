@@ -42,13 +42,13 @@ public class ConnectorBindingMetaData extends AdminObjectImpl implements Connect
 	@Override
 	@ManagementProperty(description="RAR file name", readOnly=true)	
 	public String getRARFileName() {
-		return getPropertyValue("rar-name");
+		return getPropertyValue("rar-name"); //$NON-NLS-1$
 	}
 
 	@Override
 	@ManagementProperty(description="JNDI name", readOnly=true)	
 	 public String getJNDIName() {
-		return getPropertyValue("jndi-name");
+		return getPropertyValue("jndi-name"); //$NON-NLS-1$
 	 }
 	
 	public void setComponentType(Object type) {

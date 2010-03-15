@@ -55,7 +55,7 @@ public class SourceMappingMetadata implements Serializable {
     	this.jndiName = jndiName;
     }
 
-    @ManagementProperty (description="Source Name", readOnly = true)
+    @ManagementProperty (description="Source Name")
     @ManagementObjectID(type="sourceMapping")
 	public String getName() {
 		return name;
@@ -69,7 +69,7 @@ public class SourceMappingMetadata implements Serializable {
 	public String getJndiName() {
 		// this default could be controlled if needed.
 		if (this.jndiName == null) {
-			return "java:"+name;
+			return "java:"+name; //$NON-NLS-1$
 		}
 		return jndiName;
 	}
@@ -79,6 +79,6 @@ public class SourceMappingMetadata implements Serializable {
 	}
 	
 	public String toString() {
-		return getName()+":"+getJndiName();
+		return getName()+":"+getJndiName(); //$NON-NLS-1$
 	}
 }

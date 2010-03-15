@@ -29,27 +29,10 @@ import java.util.Collection;
 public abstract class TeiidAdmin implements Admin, Serializable {
 
 	@Override
-	public void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String connectorBindingName)
-			throws AdminException {
-		throw new AdminProcessingException("feature coming soon..");
-	}
-
-
-	@Override
 	public Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException {
 		ArrayList<ProcessObject> list = new ArrayList<ProcessObject>();
 		//list.add(manager.getProcess());
 		return list;		
-	}
-	
-	@Override
-	public void restart() throws AdminException {
-		throw new AdminProcessingException("feature coming soon..");
-	}
-
-	@Override
-	public void shutdown(int millisToWait) throws AdminException {
-		throw new AdminProcessingException("feature coming soon..");
 	}
 	
 	@Override

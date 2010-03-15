@@ -10,9 +10,15 @@
         
     <bean name="VDBParserDeployer" class="org.teiid.deployers.VDBParserDeployer">
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
+        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
     </bean>
     
-    
+   <bean name="VDBMetaDataInstanceClassFactory" class="org.teiid.jboss.deployers.VDBMetaDataInstanceClassFactory">
+      <constructor>
+         <parameter><inject bean="ManagedObjectFactory"/></parameter>
+      </constructor>
+   </bean>
+       
     <bean name="DynamicVDBDeployer" class="org.teiid.deployers.DynamicVDBDeployer">
     </bean>
     
