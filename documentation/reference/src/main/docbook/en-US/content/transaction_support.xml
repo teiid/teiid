@@ -3,11 +3,11 @@
 <chapter id="transaction_support">
 	<title>Transaction Support</title>
 	<para>
-		Teiid utilizes XA transactions for both participating in global
-		transactions and for demarcating its own local and command scoped
+		Teiid utilizes XA transactions for participating in global
+		transactions and for demarcating its local and command scoped
 		transactions.
 		<ulink url="http://www.jboss.org/jbosstm/">JBoss Transactions</ulink>
-		is used by Teiid as its internal transaction manager. See
+		is used by Teiid as its transaction manager. See
 		<ulink url="http://www.jboss.org/jbosstm/docs/index.html"> this documentation</ulink>
 		for the advanced features provided by JBoss Transactions.
 	</para>
@@ -44,6 +44,7 @@
 			</tbody>
 		</tgroup>
 	</table>
+	<para>The default transaction isolation level for Teiid is READ_COMMITTED.</para> 
 	<sect1 id="autowrap">
 		<title>AutoCommitTxn Execution Property</title>
 		<para>Since user level commands may execute multiple source
@@ -71,28 +72,39 @@
 					<row>
 						<entry>ON</entry>
 						<entry>Wrap each command in a transaction. This mode is the
-							safest, but may be burdonsome on performance.</entry>
+							safest, but may introduce performance overhead.</entry>
 					</row>
 					<row>
 						<entry>AUTO</entry>
 						<entry>
 						    This is the default setting. Will automatically wrap commands in a transaction, but only if
-							the command seems to be
-							<link linkend="updating_model_count">transactionally unsafe.</link>
+							the command seems to be transactionally unsafe.
 						</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
 		<para>The concept of command safety with respect to a transaction
-			is determined by Teiid based upon command type and available
-			metadata. Whenever any INSERT, UPDATE, DELETE, or EXECUTE (with
-			update count greater than 0) command is detected and the success or
-			failure of that command is not the same as the user level command,
-			then the command is deemed unsafe without a transaction.</para>
-		<para>The update count may be set on dynamic SQL as part of the
-			command and on all other procedures as part of the procedure metadata
-			in the model.</para>
+			is determined by Teiid based upon command type, the transaction isolation level, and available
+			metadata.  A wrapping transaction is not needed if:
+			<itemizedlist>
+				<listitem>
+					<para>If a user command is fully pushed to the source.
+					</para>
+				</listitem>
+				<listitem>
+					<para>If the user command is a SELECT (including XML) or an XQuery and the transaction isolation is not REPEATABLE_READ nor SERIALIABLE.
+					</para>
+				</listitem>
+				<listitem>
+					<para>If the user command is a stored procedure and the transaction isolation is not REPEATABLE_READ nor SERIALIABLE and the 
+					<link linkend="updating_model_count">updating model count</link> is zero.
+					</para>
+				</listitem>
+			</itemizedlist>
+	    </para>
+		<para>The update count may be set on all procedures as part of 
+			the procedure metadata in the model.</para>
 	</sect1>
 	<sect1 id="updating_model_count">
 		<title>Updating Model Count</title>
@@ -110,14 +122,12 @@
 					<row>
 						<entry>Count</entry>
 						<entry>Description</entry>
-						<entry>Default For</entry>
 					</row>
 				</thead>
 				<tbody>
 					<row>
 						<entry>0</entry>
 						<entry>No updates are performed by this command.</entry>
-						<entry>Dynamic SQL instructions</entry>
 					</row>
 					<row>
 						<entry>1</entry>
@@ -127,30 +137,16 @@
 							It should not be possible for the update to succeed while the
 							command fails. Execution is not considered transactionally
 							unsafe.</entry>
-						<entry>Physical procedures, inserts, updates, and deletes
-						</entry>
 					</row>
 					<row>
 						<entry>*</entry>
 						<entry>Any number greater than 1 indicates that exection is
 							transactionally unsafe and an XA transaction will be required.
 						</entry>
-						<entry>XQuery commands</entry>
 					</row>
 				</tbody>
 			</tgroup>
 		</table>
-		<para> By default Teiid will calculate the updating model count for
-			a user query (which may be composed of many subcommands) given the
-			above table. Thus a command with a single update as a subcommand may
-			still require a transaction if the update is not tied to the success
-			of the command.</para>
-		<para>
-			Explicit values for updating model count may be set using Teiid
-			Designer and directly in the
-			<link linkend="dynamic_sql">dynamic SQL command</link>
-			.
-		</para>
 	</sect1>
 	<sect1>
 		<title>JDBC and Transactions</title>
@@ -220,27 +216,21 @@
 		<itemizedlist>
 			<listitem>
 				<para>The client setting of transaction isolation level is not
-					used. The transaction isolation level can be set on each XA
+					propogated to the connectors. The transaction isolation level can be set on each XA
 					connector, however this isolation level is fixed and cannot be
 					changed at runtime for specific connections/commands.</para>
-			</listitem>
-			<listitem>
-				<para>Since the client transaction isolation level is not used,
-					Teiid internally assumes a level of READ_COMMITTED. This implies
-					that explicit transactions are not required for user level commands
-					performing multiple reads.</para>
 			</listitem>
 			<listitem>
 				<para>Temporary tables are not transactional. For example,
 					a global temporary table will retain all inserts performed during a
 					local transaction that was rolled back.</para>
 			</listitem>
-			<listitem>
+			<!-- <listitem>
 				<para>Connectors may be set to immutable to prevent their
 					participation in transactions. This is useful in situations where
 					update commands are being issued against a source that lacks XA
 					transaction capabilities.</para>
-			</listitem>
+			</listitem>-->
 		</itemizedlist>
 	</sect1>
 </chapter>
