@@ -23,11 +23,13 @@
 package org.teiid.adminapi.impl;
 
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.WorkerPoolStatistics;
 
 /**
  * This class is a holder for all the statistics gathered about a worker pool.
  */
+@MetaMapping(WorkerPoolStatisticsMetadataMapper.class)
 public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements WorkerPoolStatistics {
 
 	private static final long serialVersionUID = -4917902925523802295L;

@@ -23,10 +23,10 @@
 package org.teiid.adminapi.jboss;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -81,9 +81,12 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
+
+import com.metamatrix.core.util.FileUtils;
 
 public class Admin extends TeiidAdmin {
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
@@ -171,18 +174,20 @@ public class Admin extends TeiidAdmin {
 	}
 
 	@Override
-	public InputStream exportConnectorBinding(String deployedName) throws AdminException {
+	public char[] exportConnectorBinding(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
-			return exportDeployment(mc.getDeployment().getName());
+			return new String(exportDeployment(mc.getDeployment().getName()).toByteArray()).toCharArray();
 		}
 		return null;
 	}
 
-	private InputStream exportDeployment(String url) throws AdminComponentException {
+	private ByteArrayOutputStream exportDeployment(String url) throws AdminComponentException {
 		try {
 			URL contentURL = new URL(url);
-			return contentURL.openStream();
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			FileUtils.write(contentURL.openStream(), bos, FileUtils.DEFAULT_BUFFER_SIZE);
+			return bos;
 		} catch (MalformedURLException e) {
 			throw new AdminComponentException(e);
 		} catch (IOException e) {
@@ -392,10 +397,10 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException{
+	public byte[] exportVDB(String vdbName, int vdbVersion) throws AdminException{
 		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
 		if (mc != null) {
-			return exportDeployment(mc.getDeployment().getName());
+			return exportDeployment(mc.getDeployment().getName()).toByteArray();
 		}
 		return null;
 	}
@@ -619,22 +624,22 @@ public class Admin extends TeiidAdmin {
 		}
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName != null) {
-			ManagedUtil.removeArchive(getDeploymentManager(), deployerName);
-
 			//also need to delete template for the properties
 			String connectorNameWithoutExt = connectorName.substring(0, connectorName.length()-4);
 			ManagedUtil.removeArchive(getDeploymentManager(), connectorNameWithoutExt+"-template.jar");//$NON-NLS-1$
+			
+			ManagedUtil.removeArchive(getDeploymentManager(), deployerName);
 		}
 	}
 	
 	@Override
-	public InputStream exportConnectorType(String connectorName) throws AdminException {
+	public byte[] exportConnectorType(String connectorName) throws AdminException {
 		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
 			connectorName = connectorName + ".rar";//$NON-NLS-1$
 		}
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName != null) {
-			return exportDeployment(deployerName);			
+			return exportDeployment(deployerName).toByteArray();			
 		}
 		return null;
 	}
@@ -698,7 +703,7 @@ public class Admin extends TeiidAdmin {
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);
 			MetaValue value = ManagedUtil.executeOperation(mc, "getWorkManagerStatistics", SimpleValueSupport.wrap(identifier));//$NON-NLS-1$
-			return (WorkerPoolStatistics)MetaValueFactory.getInstance().unwrap(value, WorkerPoolStatistics.class);	
+			return (WorkerPoolStatistics)MetaValueFactory.getInstance().unwrap(value, WorkerPoolStatisticsMetadata.class);	
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}

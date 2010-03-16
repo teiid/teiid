@@ -100,29 +100,19 @@ void exportConnectorBinding(String bindingName, String fileName){
 /**
  * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model
  *
- * @param vdbName
- *            Name of the VDB
- * @param vdbVersion
- *            Version of the VDB
- * @param modelName
- *            Name of the Model to map Connector Binding
- * @param connectorBindingName
- *            Name of the ConnectorBinding
- * @throws AdminException
- *             if there's a system error or if there's a user input error.
- * @since 4.3
+ * @param vdbName Name of the VDB
+ * @param vdbVersion Version of the VDB
+ * @param modelName  Name of the Model to map Connector Binding
+ * @param sourceName sourceName for the model
+ * @param jndiName JNDI names to which the source name needs to map to
+ * @throws AdminException if there's a system error or if there's a user input error.
  */
-void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String connectorBindingName) {
-    debug("Assigning Connector Binding " + connectorBindingName + " to Model " + modelName + " in VDB " + vdbName + " version " + vdbVersion);
+void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException{
+    debug("Assigning Connector Binding,  source name:" + sourceName +" to JNDI resource: "+jndiName+ " for Model " + modelName + " in VDB " + vdbName + " version " + vdbVersion);
     checkAdmin();
-    internalAdmin.assignBindingToModel(vdbName, vdbVersion, modelName, connectorBindingName);
+    internalAdmin.assignBindingToModel(vdbName, vdbVersion, modelName, sourceName, jndiName);
 }
 
-void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String[] connectorBindingNames) {
-    debug("Assigning Connector Bindings " + connectorBindingNames + " to Model " + modelName + " in VDB " + vdbName + " version " + vdbVersion);
-    checkAdmin();
-    internalAdmin.assignBindingToModel(vdbName, vdbVersion, modelName, connectorBindingNames);
-}
 
 /**
  * Adds JDBC XA Data Source in the container.
@@ -537,29 +527,6 @@ void cancelRequest(long sessionId, long requestId) {
     checkAdmin();
     internalAdmin.cancelRequest(sessionId, requestId);
 }
-
-/**
- * Stop the Teiid.  If millisToWait is >0, then close to incoming queries, wait the time period
- * for work to stop, then stop the MM Query.  Otherwise, stop immediately, aborting all running queries.
- * @param millisToWait Milliseconds to wait (if >0) or <=0 for no wait before stopping
- * @throws AdminException
- */
-void shutdown(int millisToWait) {
-    checkAdmin();
-    internalAdmin.shutdown(millisToWait);	
-    disconnect();
-}
-
-/**
- * Restart System
- * @throws AdminException if there's a system error.
- */
-void restart() {
-    checkAdmin();
-   	internalAdmin.restart();	
-    disconnect();
-}
-
 
 
 //*********************************************************************************************

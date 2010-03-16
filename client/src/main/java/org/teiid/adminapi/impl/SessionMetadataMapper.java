@@ -35,21 +35,31 @@ import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
 import org.jboss.metatype.spi.values.MetaMapper;
 
 public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
+	private static final String SECURITY_DOMAIN = "securityDomain"; //$NON-NLS-1$
+	private static final String VDB_VERSION = "VDBVersion"; //$NON-NLS-1$
+	private static final String VDB_NAME = "VDBName"; //$NON-NLS-1$
+	private static final String USER_NAME = "userName"; //$NON-NLS-1$
+	private static final String SESSION_ID = "sessionId"; //$NON-NLS-1$
+	private static final String LAST_PING_TIME = "lastPingTime"; //$NON-NLS-1$
+	private static final String IP_ADDRESS = "IPAddress"; //$NON-NLS-1$
+	private static final String CLIENT_HOST_NAME = "clientHostName"; //$NON-NLS-1$
+	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
+	private static final String APPLICATION_NAME = "applicationName"; //$NON-NLS-1$
 	private static final MutableCompositeMetaType metaType;
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 	
 	static {
-		metaType = new MutableCompositeMetaType(SessionMetadata.class.getName(), "The Session domain meta data");
-		metaType.addItem("applicationName", "applicationName", SimpleMetaType.STRING);
-		metaType.addItem("createdTime", "createdTime", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("clientHostName", "clientHostName", SimpleMetaType.STRING);
-		metaType.addItem("IPAddress", "IPAddress", SimpleMetaType.STRING);
-		metaType.addItem("lastPingTime", "lastPingTime", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("sessionId", "sessionId", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("userName", "userName", SimpleMetaType.STRING);
-		metaType.addItem("VDBName", "VDBName", SimpleMetaType.STRING);
-		metaType.addItem("VDBVersion", "VDBVersion", SimpleMetaType.INTEGER_PRIMITIVE);
-		metaType.addItem("securityDomain", "SecurityDomain", SimpleMetaType.STRING);
+		metaType = new MutableCompositeMetaType(SessionMetadata.class.getName(), "The Session domain meta data"); //$NON-NLS-1$
+		metaType.addItem(APPLICATION_NAME, APPLICATION_NAME, SimpleMetaType.STRING);
+		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(CLIENT_HOST_NAME, CLIENT_HOST_NAME, SimpleMetaType.STRING);
+		metaType.addItem(IP_ADDRESS, IP_ADDRESS, SimpleMetaType.STRING);
+		metaType.addItem(LAST_PING_TIME, LAST_PING_TIME, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(SESSION_ID, SESSION_ID, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(USER_NAME, USER_NAME, SimpleMetaType.STRING);
+		metaType.addItem(VDB_NAME, VDB_NAME, SimpleMetaType.STRING);
+		metaType.addItem(VDB_VERSION, VDB_VERSION, SimpleMetaType.INTEGER_PRIMITIVE);
+		metaType.addItem(SECURITY_DOMAIN, SECURITY_DOMAIN, SimpleMetaType.STRING);
 		metaType.freeze();
 	}
 	
@@ -71,20 +81,20 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			CompositeMetaType composite = (CompositeMetaType) metaType;
 			CompositeValueSupport session = new CompositeValueSupport(composite);
 			
-			session.set("applicationName", SimpleValueSupport.wrap(object.getName()));
-			session.set("createdTime", SimpleValueSupport.wrap(object.getCreatedTime()));
-			session.set("clientHostName", SimpleValueSupport.wrap(object.getClientHostName()));
-			session.set("IPAddress", SimpleValueSupport.wrap(object.getIPAddress()));
-			session.set("lastPingTime", SimpleValueSupport.wrap(object.getLastPingTime()));
-			session.set("sessionId", SimpleValueSupport.wrap(object.getSessionId()));
-			session.set("userName", SimpleValueSupport.wrap(object.getUserName()));
-			session.set("VDBName",SimpleValueSupport.wrap(object.getVDBName()));
-			session.set("VDBVersion", SimpleValueSupport.wrap(object.getVDBVersion()));
-			session.set("securityDomain", SimpleValueSupport.wrap(object.getSecurityDomain()));
+			session.set(APPLICATION_NAME, SimpleValueSupport.wrap(object.getName()));
+			session.set(CREATED_TIME, SimpleValueSupport.wrap(object.getCreatedTime()));
+			session.set(CLIENT_HOST_NAME, SimpleValueSupport.wrap(object.getClientHostName()));
+			session.set(IP_ADDRESS, SimpleValueSupport.wrap(object.getIPAddress()));
+			session.set(LAST_PING_TIME, SimpleValueSupport.wrap(object.getLastPingTime()));
+			session.set(SESSION_ID, SimpleValueSupport.wrap(object.getSessionId()));
+			session.set(USER_NAME, SimpleValueSupport.wrap(object.getUserName()));
+			session.set(VDB_NAME,SimpleValueSupport.wrap(object.getVDBName()));
+			session.set(VDB_VERSION, SimpleValueSupport.wrap(object.getVDBVersion()));
+			session.set(SECURITY_DOMAIN, SimpleValueSupport.wrap(object.getSecurityDomain()));
 			
 			return session;
 		}
-		throw new IllegalArgumentException("Cannot convert session " + object);
+		throw new IllegalArgumentException("Cannot convert session " + object); //$NON-NLS-1$
 	}
 
 	@Override
@@ -96,19 +106,19 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			CompositeValue compositeValue = (CompositeValue) metaValue;
 			
 			SessionMetadata session = new SessionMetadata();
-			session.setApplicationName((String) metaValueFactory.unwrap(compositeValue.get("applicationName")));
-			session.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get("createdTime")));
-			session.setClientHostName((String) metaValueFactory.unwrap(compositeValue.get("clientHostName")));
-			session.setIPAddress((String) metaValueFactory.unwrap(compositeValue.get("IPAddress")));
-			session.setLastPingTime((Long) metaValueFactory.unwrap(compositeValue.get("lastPingTime")));
-			session.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get("sessionId")));
-			session.setUserName((String) metaValueFactory.unwrap(compositeValue.get("userName")));
-			session.setVDBName((String) metaValueFactory.unwrap(compositeValue.get("VDBName")));
-			session.setVDBVersion((Integer) metaValueFactory.unwrap(compositeValue.get("VDBVersion")));
-			session.setSecurityDomain((String) metaValueFactory.unwrap(compositeValue.get("securityDomain")));
+			session.setApplicationName((String) metaValueFactory.unwrap(compositeValue.get(APPLICATION_NAME)));
+			session.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get(CREATED_TIME)));
+			session.setClientHostName((String) metaValueFactory.unwrap(compositeValue.get(CLIENT_HOST_NAME)));
+			session.setIPAddress((String) metaValueFactory.unwrap(compositeValue.get(IP_ADDRESS)));
+			session.setLastPingTime((Long) metaValueFactory.unwrap(compositeValue.get(LAST_PING_TIME)));
+			session.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get(SESSION_ID)));
+			session.setUserName((String) metaValueFactory.unwrap(compositeValue.get(USER_NAME)));
+			session.setVDBName((String) metaValueFactory.unwrap(compositeValue.get(VDB_NAME)));
+			session.setVDBVersion((Integer) metaValueFactory.unwrap(compositeValue.get(VDB_VERSION)));
+			session.setSecurityDomain((String) metaValueFactory.unwrap(compositeValue.get(SECURITY_DOMAIN)));
 			return session;
 		}
-		throw new IllegalStateException("Unable to unwrap session " + metaValue);
+		throw new IllegalStateException("Unable to unwrap session " + metaValue); //$NON-NLS-1$
 	}
 
 }

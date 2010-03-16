@@ -49,7 +49,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private String userName;
     private String vdbName;
     private int vdbVersion;
-    private long sessionId;
+    private long sessionId = -1; // invalid session
     private String securityDomain;
     
     //server session state

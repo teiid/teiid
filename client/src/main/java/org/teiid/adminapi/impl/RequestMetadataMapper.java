@@ -35,19 +35,27 @@ import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
 import org.jboss.metatype.spi.values.MetaMapper;
 
 public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
+	private static final String TRANSACTION_ID = "transactionId"; //$NON-NLS-1$
+	private static final String NODE_ID = "nodeId"; //$NON-NLS-1$
+	private static final String SOURCE_REQUEST = "sourceRequest"; //$NON-NLS-1$
+	private static final String COMMAND = "command"; //$NON-NLS-1$
+	private static final String PROCESSING_TIME = "processingTime"; //$NON-NLS-1$
+	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
+	private static final String SESSION_ID = "sessionId"; //$NON-NLS-1$
+	private static final String EXECUTION_ID = "executionId"; //$NON-NLS-1$
 	private static final MutableCompositeMetaType metaType;
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 	
 	static {
-		metaType = new MutableCompositeMetaType(RequestMetadata.class.getName(), "The Session domain meta data");
-		metaType.addItem("executionId", "executionId", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("sessionId", "sessionId", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("createdTime", "createdTime", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("processingTime", "processingTime", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("command", "command", SimpleMetaType.STRING);
-		metaType.addItem("sourceRequest", "sourceRequest", SimpleMetaType.BOOLEAN_PRIMITIVE);
-		metaType.addItem("nodeId", "nodeId", SimpleMetaType.INTEGER_PRIMITIVE);
-		metaType.addItem("transactionId", "transactionId", SimpleMetaType.STRING);
+		metaType = new MutableCompositeMetaType(RequestMetadata.class.getName(), "The Request meta data"); //$NON-NLS-1$
+		metaType.addItem(EXECUTION_ID, EXECUTION_ID, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(SESSION_ID, SESSION_ID, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(PROCESSING_TIME, PROCESSING_TIME, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(COMMAND, COMMAND, SimpleMetaType.STRING);
+		metaType.addItem(SOURCE_REQUEST, SOURCE_REQUEST, SimpleMetaType.BOOLEAN_PRIMITIVE);
+		metaType.addItem(NODE_ID, NODE_ID, SimpleMetaType.INTEGER_PRIMITIVE);
+		metaType.addItem(TRANSACTION_ID, TRANSACTION_ID, SimpleMetaType.STRING);
 		metaType.freeze();
 	}
 	
@@ -69,17 +77,17 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			CompositeMetaType composite = (CompositeMetaType) metaType;
 			CompositeValueSupport request = new CompositeValueSupport(composite);
 			
-			request.set("executionId", SimpleValueSupport.wrap(object.getExecutionId()));
-			request.set("sessionId", SimpleValueSupport.wrap(object.getSessionId()));
-			request.set("processingTime", SimpleValueSupport.wrap(object.getProcessingTime()));
-			request.set("command", SimpleValueSupport.wrap(object.getCommand()));
-			request.set("sourceRequest", SimpleValueSupport.wrap(object.sourceRequest()));
-			request.set("nodeId", SimpleValueSupport.wrap(object.getNodeId()));
-			request.set("transactionId",SimpleValueSupport.wrap(object.getTransactionId()));
+			request.set(EXECUTION_ID, SimpleValueSupport.wrap(object.getExecutionId()));
+			request.set(SESSION_ID, SimpleValueSupport.wrap(object.getSessionId()));
+			request.set(PROCESSING_TIME, SimpleValueSupport.wrap(object.getProcessingTime()));
+			request.set(COMMAND, SimpleValueSupport.wrap(object.getCommand()));
+			request.set(SOURCE_REQUEST, SimpleValueSupport.wrap(object.sourceRequest()));
+			request.set(NODE_ID, SimpleValueSupport.wrap(object.getNodeId()));
+			request.set(TRANSACTION_ID,SimpleValueSupport.wrap(object.getTransactionId()));
 			
 			return request;
 		}
-		throw new IllegalArgumentException("Cannot convert request " + object);
+		throw new IllegalArgumentException("Cannot convert RequestMetadata " + object); //$NON-NLS-1$
 	}
 
 	@Override
@@ -91,16 +99,16 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			CompositeValue compositeValue = (CompositeValue) metaValue;
 			
 			RequestMetadata request = new RequestMetadata();
-			request.setExecutionId((Long) metaValueFactory.unwrap(compositeValue.get("executionId")));
-			request.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get("sessionId")));
-			request.setProcessingTime((Long) metaValueFactory.unwrap(compositeValue.get("processingTime")));
-			request.setCommand((String) metaValueFactory.unwrap(compositeValue.get("command")));
-			request.setSourceRequest((Boolean) metaValueFactory.unwrap(compositeValue.get("sourceRequest")));
-			request.setNodeId((Integer) metaValueFactory.unwrap(compositeValue.get("nodeId")));
-			request.setTransactionId((String) metaValueFactory.unwrap(compositeValue.get("transactionId")));
+			request.setExecutionId((Long) metaValueFactory.unwrap(compositeValue.get(EXECUTION_ID)));
+			request.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get(SESSION_ID)));
+			request.setProcessingTime((Long) metaValueFactory.unwrap(compositeValue.get(PROCESSING_TIME)));
+			request.setCommand((String) metaValueFactory.unwrap(compositeValue.get(COMMAND)));
+			request.setSourceRequest((Boolean) metaValueFactory.unwrap(compositeValue.get(SOURCE_REQUEST)));
+			request.setNodeId((Integer) metaValueFactory.unwrap(compositeValue.get(NODE_ID)));
+			request.setTransactionId((String) metaValueFactory.unwrap(compositeValue.get(TRANSACTION_ID)));
 			return request;
 		}
-		throw new IllegalStateException("Unable to unwrap request " + metaValue);
+		throw new IllegalStateException("Unable to unwrap RequestMetadata " + metaValue); //$NON-NLS-1$
 	}
 
 }

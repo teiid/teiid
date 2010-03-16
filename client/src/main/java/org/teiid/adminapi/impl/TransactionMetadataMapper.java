@@ -36,15 +36,19 @@ import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
 import org.jboss.metatype.spi.values.MetaMapper;
 
 public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
+	private static final String XID = "xid"; //$NON-NLS-1$
+	private static final String SCOPE = "scope"; //$NON-NLS-1$
+	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
+	private static final String ASSOCIATED_SESSION = "associatedSession"; //$NON-NLS-1$
 	private static final MutableCompositeMetaType metaType;
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 	
 	static {
-		metaType = new MutableCompositeMetaType(TransactionMetadata.class.getName(), "The Session domain meta data");
-		metaType.addItem("associatedSession", "associatedSession", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("createdTime", "createdTime", SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem("scope", "scope", SimpleMetaType.STRING);
-		metaType.addItem("xid", "xid", SimpleMetaType.STRING);
+		metaType = new MutableCompositeMetaType(TransactionMetadata.class.getName(), "The Transaction domain meta data"); //$NON-NLS-1$
+		metaType.addItem(ASSOCIATED_SESSION, ASSOCIATED_SESSION, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(SCOPE, SCOPE, SimpleMetaType.STRING);
+		metaType.addItem(XID, XID, SimpleMetaType.STRING);
 		metaType.freeze();
 	}
 	
@@ -66,14 +70,14 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			CompositeMetaType composite = (CompositeMetaType) metaType;
 			CompositeValueSupport transaction = new CompositeValueSupport(composite);
 			
-			transaction.set("associatedSession", SimpleValueSupport.wrap(object.getAssociatedSession()));
-			transaction.set("createdTime", SimpleValueSupport.wrap(object.getCreatedTime()));
-			transaction.set("scope", SimpleValueSupport.wrap(object.getScope()));
-			transaction.set("id", SimpleValueSupport.wrap(object.getId()));
+			transaction.set(ASSOCIATED_SESSION, SimpleValueSupport.wrap(object.getAssociatedSession()));
+			transaction.set(CREATED_TIME, SimpleValueSupport.wrap(object.getCreatedTime()));
+			transaction.set(SCOPE, SimpleValueSupport.wrap(object.getScope()));
+			transaction.set("id", SimpleValueSupport.wrap(object.getId())); //$NON-NLS-1$
 			
 			return transaction;
 		}
-		throw new IllegalArgumentException("Cannot convert session " + object);
+		throw new IllegalArgumentException("Cannot convert TransactionMetadata " + object); //$NON-NLS-1$
 	}
 
 	@Override
@@ -85,12 +89,12 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			CompositeValue compositeValue = (CompositeValue) metaValue;
 			
 			TransactionMetadata transaction = new TransactionMetadata();
-			transaction.setAssociatedSession((Long) metaValueFactory.unwrap(compositeValue.get("associatedSession")));
-			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get("createdTime")));
-			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get("scope")));
-			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get("id")));
+			transaction.setAssociatedSession((Long) metaValueFactory.unwrap(compositeValue.get(ASSOCIATED_SESSION)));
+			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get(CREATED_TIME)));
+			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get(SCOPE)));
+			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get("id"))); //$NON-NLS-1$
 			return transaction;
 		}
-		throw new IllegalStateException("Unable to unwrap transaction " + metaValue);
+		throw new IllegalStateException("Unable to unwrap TransactionMetadata " + metaValue); //$NON-NLS-1$
 	}
 }

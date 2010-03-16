@@ -66,5 +66,12 @@ public interface Model extends AdminObject {
      * Associated Source Names for the Models (Connector Bindings)
      * @return String
      */
-    List<String> getSourceNames();    
+    List<String> getSourceNames();
+    
+    /**
+     * Get the configured JNDI name for the given source name.
+     * @param sourceName - name of the source
+     * @return null if none configured.
+     */
+    String getSourceJndiName(String sourceName);
 }

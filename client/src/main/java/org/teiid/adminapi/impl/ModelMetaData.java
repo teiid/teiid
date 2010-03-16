@@ -165,6 +165,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	return new ArrayList<String>(this.sources.getMap().keySet());
 	}
     
+    @Override
     public String getSourceJndiName(String sourceName) {
     	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
     	if (s == null) {

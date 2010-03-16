@@ -22,7 +22,6 @@
 
 package org.teiid.adminapi;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Properties;
@@ -82,7 +81,7 @@ public interface Admin {
      * @return InputStream of contents of the rar file
      * @throws AdminException if there's a system error.
      */
-    InputStream exportConnectorType(String name) throws AdminException;    
+    byte[] exportConnectorType(String name) throws AdminException;    
 
     /**
      * Deploy a {@link ConnectorBinding} to Configuration
@@ -111,7 +110,7 @@ public interface Admin {
      * @throws AdminException
      *             if there's a system error.
      */
-    InputStream exportConnectorBinding(String deployedName) throws AdminException;    
+    char[] exportConnectorBinding(String deployedName) throws AdminException;    
 
     /**
      * Deploy a {@link VDB} file.
@@ -140,7 +139,7 @@ public interface Admin {
      * @return InputStream of the VDB
      * @throws AdminException if there's a system error.
      */
-    InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException;    
+    byte[] exportVDB(String vdbName, int vdbVersion) throws AdminException;    
     
     /**
      * Set a process level property. 

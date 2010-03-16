@@ -155,7 +155,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 					ic.lookup(mapping.getJndiName());
 				} catch (NamingException e) {
 					valid = false;
-					String msg = RuntimePlugin.Util.getString("jndi_not_found", mapping.getJndiName(),mapping.getName()); //$NON-NLS-1$
+					String msg = RuntimePlugin.Util.getString("jndi_not_found", deployment.getName(), deployment.getVersion(), mapping.getJndiName(),mapping.getName()); //$NON-NLS-1$
 					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 				}

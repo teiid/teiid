@@ -10,8 +10,8 @@ import org.teiid.jdbc.TeiidDataSource;
 
 
 public class BaseConnection {
-	static String user = "ramesh";
-	static String password = "mm";
+	static String user = "admin";
+	static String password = "teiid";
 	
 	interface ConnectionFactory{
 		Connection getConnection(String vdbName) throws Exception;
@@ -25,7 +25,7 @@ public class BaseConnection {
 			ds.setServerName("localhost");
 			ds.setPortNumber(31000);
 			ds.setDatabaseName(vdbName);
-			ds.setAutoCommitTxn("AUTO");
+			ds.setAutoCommitTxn("DETECT");
 			return ds.getConnection();
 		}
 	}

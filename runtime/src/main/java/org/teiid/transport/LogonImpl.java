@@ -92,6 +92,7 @@ public class LogonImpl implements ILogon {
 		
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
+		DQPWorkContext.getWorkContext().getSession().setSessionId(-1);
 		return ResultsFuture.NULL_FUTURE;
 	}
 

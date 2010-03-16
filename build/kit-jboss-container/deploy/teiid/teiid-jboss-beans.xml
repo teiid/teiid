@@ -72,7 +72,7 @@
         <property name="adminSocketConfiguration"><inject bean="AdminSocketConfiguration"/></property>
         <property name="workManager"><inject bean="WorkManager"/></property>
         <property name="XATerminator"><inject bean="TransactionManager" property="XATerminator"/></property>
-        <property name="TransactionManager"><inject bean="TransactionManager"/></property>
+        <property name="transactionManager"><inject bean="TransactionManager" property="transactionManager"/></property>
         <property name="authorizationService"><inject bean="AuthorizationService"/></property>
         <property name="sessionService"><inject bean="SessionService"/></property>
         <property name="bufferService"><inject bean="BufferService"/></property>
