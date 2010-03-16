@@ -23,9 +23,7 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -47,9 +45,7 @@ import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.util.ContextProperties;
 
 
@@ -68,19 +64,6 @@ public class TestRequest extends TestCase {
         super(name);
     }
     
-    public void testGetSchemasForValidation() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject doc1 = metadata.getStore().findObject("xmltest.doc1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        List<String> schemas = Arrays.asList("a.xsd", "b.xsd"); //$NON-NLS-1$ //$NON-NLS-2$
-        doc1.putProperty(FakeMetadataObject.Props.XML_SCHEMAS, schemas);
-        RequestMessage message = new RequestMessage("select * from xmltest.doc1"); //$NON-NLS-1$
-        message.setValidationMode(true);
-        DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
-        Request request = helpProcessMessage(message, null, workContext);
-        assertEquals(schemas, request.schemas);
-    }
-
-
     /**
      * Test Request.validateEntitlement().  
      * Make sure that this can be called both before and after metadata is initialized. 

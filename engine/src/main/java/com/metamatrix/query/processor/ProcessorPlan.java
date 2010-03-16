@@ -23,13 +23,14 @@
 package com.metamatrix.query.processor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.*;
+import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.util.CommandContext;
 
@@ -143,11 +144,9 @@ public abstract class ProcessorPlan implements Cloneable, Describable, BatchProd
 	 * processing
 	 */
 	public abstract ProcessorPlan clone();
+	
+	public boolean requiresTransaction(boolean transactionalReads) {
+		return transactionalReads;
+	}
     
-    /**
-     * Finds all nested plans and returns them.
-     * @return List of ProcessorPlan 
-     * @since 4.2
-     */
-    public abstract Collection getChildPlans();
 }

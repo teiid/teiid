@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.xquery.saxon;
 
-import java.io.IOException;
 import java.io.Writer;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -184,12 +183,8 @@ public class SaxonXQueryExpression implements XQueryExpression {
                 return new XMLTranslator() {
 					
 					@Override
-					public void translate(Writer writer) throws IOException {
-				        try {
-				            QueryResult.serialize(nodeInfo, new StreamResult(writer), props, new Configuration());
-				        } catch (TransformerException e) {
-				            throw new IOException(e);
-				        }
+					public void translate(Writer writer) throws TransformerException {
+			            QueryResult.serialize(nodeInfo, new StreamResult(writer), props, new Configuration());
 					}
 				};
             } 

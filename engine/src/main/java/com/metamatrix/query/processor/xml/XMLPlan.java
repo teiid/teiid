@@ -25,10 +25,8 @@ package com.metamatrix.query.processor.xml;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,18 +35,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
-import net.sf.saxon.TransformerFactoryImpl;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
@@ -67,11 +57,11 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -85,7 +75,6 @@ import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.XMLFormatConstants;
 /**
  * 
  */
@@ -110,8 +99,6 @@ public class XMLPlan extends ProcessorPlan {
     private FileStore docInProgressStore;
     
     // Post-processing
-	private String styleSheet;
-    private boolean shouldValidate = false;
 	private Collection xmlSchemas;
 
     /**
@@ -140,14 +127,11 @@ public class XMLPlan extends ProcessorPlan {
     public void reset() {
         super.reset();
         
-        styleSheet = null;
-        shouldValidate = false;
-        
         nextBatchCount = 1;
         
         this.env = (XMLProcessorEnvironment)this.env.clone();
 
-		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
     }
 
     public ProcessorDataManager getDataManager() {
@@ -216,7 +200,6 @@ public class XMLPlan extends ProcessorPlan {
     private XMLType processXML(LobChunk chunk)
         throws MetaMatrixComponentException, BlockedException {
 
-        boolean postProcess = (this.styleSheet != null || this.shouldValidate);
         // Note that we need to stream the document right away, as multiple documents
         // results are generated from the same "env" object. So the trick here is either
         // post process will stream it, or save to buffer manager to stream the document
@@ -253,8 +236,21 @@ public class XMLPlan extends ProcessorPlan {
         }
 
         // check to see if we need to do any post validation on the document.
-        if (postProcess){
-            xml = postProcessDocument(xml, getProperties());
+        if (getContext().validateXML()){
+        	Reader reader;
+			try {
+				reader = xml.getCharacterStream();
+			} catch (SQLException e) {
+				throw new MetaMatrixComponentException(e);
+			}
+        	try {
+        		validateDoc(reader);
+        	} finally {
+        		try {
+					reader.close();
+				} catch (IOException e) {
+				}
+        	}
         }
                                 
         return xml;
@@ -272,7 +268,7 @@ public class XMLPlan extends ProcessorPlan {
         // do the xml processing.
         ProcessorInstruction inst = env.getCurrentInstruction();
         while (inst != null){
-        	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
+        	LogManager.logTrace(LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
             this.context = inst.process(this.env, this.context);
 
             //code to check for end of document, set current doc
@@ -294,33 +290,6 @@ public class XMLPlan extends ProcessorPlan {
         return null;
     }
         
-    private Properties getProperties() {
-        Properties props = new Properties();                
-        if (XMLFormatConstants.XML_TREE_FORMAT.equals(this.env.getXMLFormat())) {
-            props.setProperty("indent", "yes");//$NON-NLS-1$//$NON-NLS-2$
-        }                
-        return props;
-    }
-    
-	private XMLType postProcessDocument(XMLType xmlDoc, Properties props) throws MetaMatrixComponentException {
-        Reader source = null;
-
-        try {        
-            source = xmlDoc.getCharacterStream();
-        
-            // Validate against schema
-            if(this.shouldValidate) {
-                validateDoc(source);
-            }
-
-            // Apply XSLT
-            xmlDoc = transformXML(xmlDoc, props);
-            return xmlDoc;
-        } catch (SQLException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-    }
-
     /**
      * Sets the XML schema
      * @param xmlSchema
@@ -482,69 +451,6 @@ public class XMLPlan extends ProcessorPlan {
         return nameSpaceMap;
    	}
 
-	/**
-	 * <p> This method is used to transform the XML results obtained, by applying transformations
-	 * using any style sheets that are added to the <code>Query</code> object.
-	 * @param xmlResults The xml result string that is being transformed using stylesheets
-	 * @return The xml string transformed using style sheets.
-	 * @throws MetaMatrixComponentException if there is an error trying to perform transformation
-	 */
-	private XMLType transformXML(XMLType xmlResults, Properties props) throws SQLException, MetaMatrixComponentException {
-
-		// perform transformation only if a style sheet is specified
-		if(styleSheet != null && styleSheet.trim().length() > 0) {
-
-			// get a reader object for the style sheet
-			Reader styleReader = new StringReader(styleSheet);
-			// construct a Xlan source object for the syle sheet
-			final Source styleSource = new StreamSource(styleReader);
-
-			// get a reader object for the xml results
-			//Reader xmlReader = new StringReader(xmlResults);
-			// construct a Xlan source object for the xml results
-			final Source xmlSource = new StreamSource(xmlResults.getCharacterStream());
-
-			// Convert the output target for use in Xalan-J 2
-			SQLXML result = XMLUtil.saveToBufferManager(bufferMgr, new XMLTranslator() {
-				
-				@Override
-				public void translate(Writer writer) throws IOException {
-					try {
-						// get the Xalan-J 2 XSLT transformer
-		                TransformerFactory factory = new TransformerFactoryImpl();
-		                Transformer transformer = factory.newTransformer(styleSource);
-
-					    /*
-		                 * To use this line, the system property "javax.xml.transform.TransformerFactory"
-		                 * needs to be set to "com.icl.saxon.TransformerFactoryImpl" or desired
-		                 * TransformerFactory classname.  See com.metamatrix.jdbc.TestXMLQuery
-					     */
-		                //Transformer transformer = TransformerFactory.newInstance().newTransformer(styleSource);
-
-		                // Feed the resultant I/O stream into the XSLT processor
-						transformer.transform(xmlSource, new StreamResult(writer));
-					} catch(Exception e) {
-						throw new IOException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0046), e);
-					}
-				}
-			}, chunkSize);
-
-			// obtain the stringified XML results for the
-			xmlResults = new XMLType(result);
-		}
-
-		return xmlResults;
-	}
-
-	/**
-	 * <p> This method sets a style sheet to this object. The style sheet is
-	 * used to perform transformations on XML results
-	 * @param styleSheet A string representing a xslt styleSheet
-	 */
-	public void setStylesheet(String styleSheet) {
-		this.styleSheet = styleSheet;
-	}
-
     /**
      * This method sets whether the documents should be returned in compact
      * format (no extraneous whitespace).  Non-compact format is more human-readable
@@ -553,14 +459,6 @@ public class XMLPlan extends ProcessorPlan {
      */
     public void setXMLFormat(String xmlFormat) {
         this.env.setXMLFormat(xmlFormat);
-    }
-
-    /**
-     * Set the validation mode on this plan.  By default validation is off.
-     * @param validate True to validate, false to not validate
-     */
-    public void setShouldValidate(boolean validate) {
-        this.shouldValidate = validate;
     }
 
     /**
@@ -575,7 +473,7 @@ public class XMLPlan extends ProcessorPlan {
             return "XMLPlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
         } catch (Exception e){
             e.printStackTrace();
-            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, e,
+            LogManager.logWarning(LogConstants.CTX_XML_PLAN, e,
                                  QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0001));
         }
         return "XMLPlan"; //$NON-NLS-1$
@@ -645,6 +543,7 @@ public class XMLPlan extends ProcessorPlan {
  	 */
 	public XMLPlan clone(){
         XMLPlan xmlPlan = new XMLPlan((XMLProcessorEnvironment)this.env.clone());
+        xmlPlan.xmlSchemas = this.xmlSchemas;
         return xmlPlan;
     }
 
@@ -671,14 +570,6 @@ public class XMLPlan extends ProcessorPlan {
         return props;
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        return this.env.getChildPlans();
-    }
-
     public GroupSymbol getDocumentGroup() {
         return env.getDocumentGroup();
     }

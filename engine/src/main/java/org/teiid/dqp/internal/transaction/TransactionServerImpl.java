@@ -522,11 +522,7 @@ public class TransactionServerImpl implements TransactionService {
 			txnImpl.setAssociatedSession(Long.parseLong(transactionContext.getThreadId()));
 			txnImpl.setCreatedTime(transactionContext.getCreationTime());
 			txnImpl.setScope(transactionContext.getTransactionType().toString());
-			if (transactionContext.getXid() != null) {
-				txnImpl.setId(transactionContext.getXid().toString());
-			} else {
-				txnImpl.setId(transactionContext.getTransaction().toString());
-			}
+			txnImpl.setId(transactionContext.getTransactionId());
 			result.add(txnImpl);
 		}
 		return result;

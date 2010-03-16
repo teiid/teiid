@@ -117,6 +117,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     private boolean disableLocalTransactions = false;
     private DQP dqp;
     protected ServerConnection serverConn;
+    private int transactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
         
     /**
      * <p>MMConnection constructor, tring to establish connection to metamatrix with
@@ -525,16 +526,8 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         return ResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
-    /**
-     * Return the corresponding java.sql.Connection Transaction isolation level that
-     * this connection is currently set to. Although there is no concept of transaction
-     * isolation in MetaMatrix, it is assumed that the level is TRANSACTION_SERIALIZABLE
-     * to be able to work with client applications.
-     * @return int value giving the transaction isolation level
-     * @throws SQLException
-     */
     public int getTransactionIsolation() throws SQLException {
-    	return Connection.TRANSACTION_SERIALIZABLE;
+    	return this.transactionIsolation;
     }
 
     /**
@@ -1034,7 +1027,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
 	}
 
 	public void setTransactionIsolation(int level) throws SQLException {
-		
+		this.transactionIsolation = level;
 	}
 
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {

@@ -38,7 +38,6 @@ import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.common.util.Permutation;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -54,6 +53,7 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.query.util.Permutation;
 
 /**
  *  Determines join orderings based upon dependency and cost information 

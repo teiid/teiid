@@ -98,24 +98,24 @@ class Log4JUtil {
 	
 	public static Set<String> getContexts(){
 		HashSet<String> contexts = new HashSet<String>();
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_DQP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_CONNECTOR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_TXN_LOG);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_COMMANDLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SESSION);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_MEMBERSHIP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_TRANSPORT);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN_API);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_PLANNER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_RUNTIME);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_DQP);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_CONNECTOR);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_TXN_LOG);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_COMMANDLOGGING);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_SESSION);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_MEMBERSHIP);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_TRANSPORT);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_ADMIN_API);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_QUERY_PLANNER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_RUNTIME);
 		
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_FUNCTION_TREE);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_XML_PLANNER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_XML_PLAN);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_FUNCTION_TREE);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_QUERY_RESOLVER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_XML_PLANNER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_XML_PLAN);
 		
 		contexts.add("com.arjuna"); //$NON-NLS-1$
 		contexts.add("org.jboss"); //$NON-NLS-1$

@@ -56,7 +56,7 @@ public class AddCommentInstruction extends ProcessorInstruction {
         DocumentInProgress doc = env.getDocumentInProgress();
         
         doc.addComment(this.commentText);         
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
         
         env.incrementCurrentProgramCounter();
         return context;

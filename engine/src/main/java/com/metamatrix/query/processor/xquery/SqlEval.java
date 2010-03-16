@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.query.processor.dynamic;
+package com.metamatrix.query.processor.xquery;
 
 import java.io.StringReader;
 import java.util.ArrayList;

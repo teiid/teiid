@@ -22,8 +22,7 @@
 
 package com.metamatrix.query.processor.proc;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,13 +127,10 @@ public abstract class AbstractAssignmentInstruction extends ProgramInstruction {
      * @see com.metamatrix.query.processor.program.ProgramInstruction#getChildPlans()
      * @since 4.2
      */
-    public Collection getChildPlans() {
+    public List<ProcessorPlan> getChildPlans() {
         if(this.processPlan != null) {
-            List plans = new ArrayList(1);
-            plans.add(this.processPlan);
-            return plans;
+            return Arrays.asList(this.processPlan);
         }
-        
         return null;
     }
 

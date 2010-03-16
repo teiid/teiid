@@ -55,9 +55,9 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -75,6 +75,7 @@ import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
+import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
@@ -247,8 +248,8 @@ public class DQPCore implements DQP {
             	req.setCommand(holder.requestMsg.getCommandString());
             	req.setProcessingTime(holder.getProcessingTimestamp());
             	
-            	if (holder.getTransactionContext() != null && holder.getTransactionContext().getXid() != null) {
-            		req.setTransactionId(holder.getTransactionContext().getXid().toString());
+            	if (holder.getTransactionContext() != null && holder.getTransactionContext().getTransactionType() != Scope.NONE) {
+            		req.setTransactionId(holder.getTransactionContext().getTransactionId());
             	}
 
                 for (DataTierTupleSource conInfo : holder.getConnectorRequests()) {
@@ -568,8 +569,8 @@ public class DQPCore implements DQP {
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
     	String txnID = null;
 		TransactionContext tc = workItem.getTransactionContext();
-		if (tc != null && tc.getXid() != null) {
-			txnID = tc.getXid().toString();
+		if (tc != null && tc.getTransactionType() != Scope.NONE) {
+			txnID = tc.getTransactionId();
 		}
     	String appName = workContext.getAppName();
         // Log to request log

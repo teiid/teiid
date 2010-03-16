@@ -58,7 +58,7 @@ public class ExecStagingTableInstruction extends ProcessorInstruction {
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
         if (!env.isStagingTableLoaded(this.resultSetName)) {
-            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
             
             PlanExecutor executor = context.getResultExecutor(resultSetName);
             if (executor == null) {

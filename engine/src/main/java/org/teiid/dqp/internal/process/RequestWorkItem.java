@@ -25,8 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,9 +43,9 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -120,7 +118,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	private int begin;
 	private int end;
     private TupleBatch savedBatch;
-    private Map<Integer, LobWorkItem> lobStreams = Collections.synchronizedMap(new HashMap<Integer, LobWorkItem>(4));
+    private Map<Integer, LobWorkItem> lobStreams = new ConcurrentHashMap<Integer, LobWorkItem>(4);
     
     /**The time when command begins processing on the server.*/
     private long processingTimestamp = System.currentTimeMillis();
@@ -313,6 +311,10 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 			this.resultsBuffer = null;
 			this.processor = null;
+			
+			for (LobWorkItem lobWorkItem : this.lobStreams.values()) {
+				lobWorkItem.close();
+			}
 		}
 
 		if (this.transactionState == TransactionState.ACTIVE) {

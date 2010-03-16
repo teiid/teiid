@@ -93,15 +93,15 @@ public class ObjectConverterUtil {
     public static byte[] convertToByteArray(final InputStream is) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BufferedOutputStream bos  = new BufferedOutputStream(out);
-
-        byte[] l_buffer = new byte[1024]; // buffer holding bytes to be transferred
-        int l_nbytes = 0;  // Number of bytes read
-        while ((l_nbytes = is.read(l_buffer)) != -1) // Read from BLOB stream
-          bos.write(l_buffer,0,l_nbytes); // Write to file stream
-
-        bos.flush();
-        bos.close();
-
+        try {
+	        byte[] l_buffer = new byte[1024]; // buffer holding bytes to be transferred
+	        int l_nbytes = 0;  // Number of bytes read
+	        while ((l_nbytes = is.read(l_buffer)) != -1) // Read from BLOB stream
+	          bos.write(l_buffer,0,l_nbytes); // Write to file stream
+        } finally {
+        	is.close();
+            bos.close();
+        }
         byte[] data = out.toByteArray();
         return data;
     }

@@ -22,13 +22,14 @@
 
 package com.metamatrix.query.processor.program;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.Describable;
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.proc.ProcedurePlan;
 
 /**
@@ -61,7 +62,7 @@ public abstract class ProgramInstruction implements Cloneable, Describable {
      * @return List of ProcessorPlan 
      * @since 4.2
      */
-    public Collection getChildPlans() {
+    public List<ProcessorPlan> getChildPlans() {
         return null;
     }
     

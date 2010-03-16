@@ -266,8 +266,6 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
-        
-        checkSubPlanCount(plan, 1);        
     }
 
     @Test public void testCorrelatedSubquery2() {
@@ -352,7 +350,6 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
-        checkSubPlanCount(plan, 1);        
     }
 
     @Test public void testCorrelatedSubqueryInTransformation2() {
@@ -602,9 +599,6 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
-        
-        checkSubPlanCount(plan, 1);
-
     }
 
     /**
@@ -715,8 +709,6 @@ public class TestSubqueryPushdown {
                                       null, capFinder,
             new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
-          
-        checkSubPlanCount(plan, 0);        
     }
 
 

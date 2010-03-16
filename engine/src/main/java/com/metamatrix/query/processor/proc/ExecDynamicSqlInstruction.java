@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.proc;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -145,7 +144,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
 
-			LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
+			LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
@@ -235,7 +234,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
 				Object assignment = procEnv.evaluateExpression(setClause.getValue());
 
-				LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
+				LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(), assignment);
@@ -341,17 +340,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			props.put(PROP_GROUP, dynamicCommand.getIntoGroup().toString());
 		}
 		return props;
-	}
-
-	/**
-	 * @see com.metamatrix.query.processor.program.ProgramInstruction#getChildPlans()
-	 * @since 4.2
-	 */
-	public Collection getChildPlans() {
-		if (this.dynamicProgram != null) {
-		    return dynamicProgram.getChildPlans();
-        }
-        return Collections.EMPTY_LIST;
 	}
 
 }

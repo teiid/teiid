@@ -146,12 +146,4 @@ public class FakeProcessorPlan extends ProcessorPlan {
         return new HashMap();
     }
 
-    /** 
-     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        return Collections.EMPTY_LIST;
-    }
-
 }

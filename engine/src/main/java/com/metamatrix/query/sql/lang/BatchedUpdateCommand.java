@@ -115,54 +115,6 @@ public class BatchedUpdateCommand extends Command {
         return Command.getUpdateCommandSymbol();
     }
     
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        //if all the updates are against the same physical source, 
-        //the txn is handled in the connector using the transaction
-        //from the source, and 0 will be returned
-        
-        int sunCommandUpdatingModelCount = 0;
-        if(commands != null && !commands.isEmpty()) {
-            Object sourceModel = null;
-            //if all the updates are against the same physical source, 
-            //the txn is handled in the connector using the transaction
-            //from the source, and 0 will be returned
-            Iterator iter = commands.iterator();
-            while(iter.hasNext()) {
-                Command command = (Command)iter.next();
-                GroupSymbol group = null;
-                if(command.getType() == Command.TYPE_INSERT) {
-                    group = ((Insert)command).getGroup();
-                }else if(command.getType() == Command.TYPE_UPDATE) {
-                    group = ((Update)command).getGroup();
-                }else if(command.getType() == Command.TYPE_DELETE) {
-                    group = ((Delete)command).getGroup();
-                }else {
-                    sunCommandUpdatingModelCount += command.updatingModelCount(metadata);
-                }
-                
-                if(group != null) {
-                    try {
-                        if(sourceModel == null) {
-                            sourceModel = metadata.getModelID(group.getMetadataID());
-                            sunCommandUpdatingModelCount += 1;
-                            continue;
-                        }
-                        if(!sourceModel.equals(metadata.getModelID(group.getMetadataID()))) {
-                            return 2;
-                        }
-                    }catch(QueryMetadataException qme) {
-                        throw new MetaMatrixComponentException(qme);
-                    }
-                }
-                
-                if(sunCommandUpdatingModelCount > 1) {
-                    break;
-                }
-            }
-        }
-        return sunCommandUpdatingModelCount;
-    }
-
     /** 
      * @since 4.2
      */

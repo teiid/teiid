@@ -92,14 +92,6 @@ public class Create extends Command {
     }
 
     /** 
-     * @see com.metamatrix.query.sql.lang.Command#updatingModelCount(com.metamatrix.query.metadata.QueryMetadataInterface)
-     * @since 5.5
-     */
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        return 0;
-    }
-
-    /** 
      * @see com.metamatrix.query.sql.LanguageObject#acceptVisitor(com.metamatrix.query.sql.LanguageVisitor)
      * @since 5.5
      */

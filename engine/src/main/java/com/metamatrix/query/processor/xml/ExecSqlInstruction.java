@@ -47,7 +47,7 @@ public class ExecSqlInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
 
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
         PlanExecutor executor = context.getResultExecutor(resultSetName);
         if (executor == null) {
             executor = env.createResultExecutor(resultSetName, info);

@@ -234,7 +234,7 @@ class CodeTableCache {
         // Clear the cacheKeyDone
         this.rowCount = 0;
         // Log status
-        LogManager.logInfo(com.metamatrix.common.util.LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
+        LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
     }
         
 	/**

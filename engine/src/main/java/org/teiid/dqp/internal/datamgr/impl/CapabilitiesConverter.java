@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.datamgr;
+package org.teiid.dqp.internal.datamgr.impl;
 
 import java.util.Iterator;
 import java.util.List;
@@ -107,7 +107,6 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(srcCaps.getMaxInCriteriaSize()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
-        tgtCaps.setSourceProperty(Capability.TRANSACTIONS_XA, isXa);
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         return tgtCaps;
     }

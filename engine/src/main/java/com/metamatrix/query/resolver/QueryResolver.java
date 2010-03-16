@@ -131,7 +131,7 @@ public class QueryResolver {
                                       AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryResolverException, MetaMatrixComponentException {
 
-		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
+		LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
         
         TempMetadataAdapter resolverMetadata = null;
         try {

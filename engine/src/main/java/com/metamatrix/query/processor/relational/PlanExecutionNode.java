@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -139,7 +138,7 @@ public class PlanExecutionNode extends RelationalNode {
         try {
         	plan.close();
 		} catch (MetaMatrixComponentException e1){
-			LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
+			LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
 		}
 	}
 	
@@ -147,7 +146,7 @@ public class PlanExecutionNode extends RelationalNode {
 		super.getNodeString(str);
 	}
 
-    protected ProcessorPlan getProcessorPlan(){
+    public ProcessorPlan getProcessorPlan(){
         return this.plan;
     }
 
@@ -171,13 +170,4 @@ public class PlanExecutionNode extends RelationalNode {
         return props;
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.relational.RelationalNode#getSubPlans()
-     * @since 4.2
-     */
-    public List getChildPlans() {
-        List subPlans = new ArrayList(1);
-        subPlans.add(this.plan);
-        return subPlans;
-    }
 }

@@ -267,9 +267,4 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         return props;
     }
     
-    @Override
-    public Collection<LanguageObject> getLanguageObjects() {
-    	return this.getSelectSymbols();
-    }
-    
 }

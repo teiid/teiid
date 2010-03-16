@@ -77,7 +77,7 @@ public class InitializeDocumentInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
             
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "DOC begin"); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "DOC begin"); //$NON-NLS-1$
 
         // Only process this instruction if there are no recursive programs in the
         // program stack (don't want to start a new doc in the middle of 

@@ -27,10 +27,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -137,13 +135,6 @@ public class DynamicCommand extends Command {
     
     public int getUpdatingModelCount() {
         return this.updatingModelCount;
-    }
-
-    /** 
-     * @see com.metamatrix.query.sql.lang.Command#updatingModelCount(com.metamatrix.query.metadata.QueryMetadataInterface)
-     */
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        return updatingModelCount;
     }
 
     /** 

@@ -22,23 +22,20 @@
 
 package com.metamatrix.query.function;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
-import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 
 /**

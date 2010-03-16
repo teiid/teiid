@@ -59,7 +59,7 @@ public class AssignmentInstruction extends AbstractAssignmentInstruction {
     protected void processValue(Object value, VariableContext varContext) throws MetaMatrixComponentException,
                                              MetaMatrixProcessingException {
         varContext.setValue(getVariable(), value);
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
                             new Object[] {this.toString() + " The variable " //$NON-NLS-1$
                                           + getVariable() + " in the variablecontext is updated with the value :", value}); //$NON-NLS-1$
     }

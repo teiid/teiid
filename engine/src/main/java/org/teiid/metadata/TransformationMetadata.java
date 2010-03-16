@@ -992,7 +992,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public String getCharacterVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
     	try {
-			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(getBinaryVDBResource(resourcePath)));
+    		byte[] bytes = getBinaryVDBResource(resourcePath);
+    		if (bytes == null) {
+    			return null;
+    		}
+			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(bytes));
 		} catch (IOException e) {
 			throw new MetaMatrixComponentException(e);
 		}

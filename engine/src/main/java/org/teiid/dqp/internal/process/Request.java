@@ -22,9 +22,8 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -43,9 +42,9 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -57,6 +56,7 @@ import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
+import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -71,6 +71,7 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TempTableDataManager;
 import com.metamatrix.query.processor.xml.XMLPlan;
+import com.metamatrix.query.processor.xml.XMLPostProcessor;
 import com.metamatrix.query.processor.xquery.XQueryPlan;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -85,6 +86,7 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
@@ -126,7 +128,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected AnalysisRecord analysisRecord;
     protected CommandContext context;
     protected QueryProcessor processor;
-    protected List schemas;
     
     protected TransactionContext transactionContext;
     protected ConnectorManagerRepository connectorManagerRepo; 
@@ -322,7 +323,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
 
-    protected void createProcessor(Command processingCommand) throws MetaMatrixComponentException {
+    private void createProcessor() throws MetaMatrixComponentException {
         
         TransactionContext tc = null;
         
@@ -335,16 +336,20 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
 
         // If local or global transaction is not started.
-        if (tc == null || tc.getXid() == null) {
+        if (tc == null || tc.getTransactionType() != Scope.NONE) {
             
             boolean startAutoWrapTxn = false;
             
             if(ExecutionProperties.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
-            } else if ( processingCommand.updatingModelCount(metadata) > 1) { 
-                if (ExecutionProperties.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
-                    startAutoWrapTxn = true;
-                }
+            } else if (ExecutionProperties.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
+            	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
+						|| requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
+            	if (!transactionalRead && userCommand instanceof StoredProcedure && ((StoredProcedure)userCommand).getUpdateCount() == 0) {
+            		startAutoWrapTxn = false;
+            	} else {
+            		startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
+            	}
             } 
             
             if (startAutoWrapTxn) {
@@ -464,53 +469,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
 
-    private void setSchemasForXMLPlan(Command command, QueryMetadataInterface metadata)
-        throws MetaMatrixComponentException, QueryMetadataException {
-    	
-    	XMLPlan xmlPlan = null;
-        
-        if(processPlan instanceof XMLPlan) {
-            xmlPlan = (XMLPlan)processPlan;
-        }else if(processPlan instanceof XQueryPlan) {
-            ((XQueryPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-        }else if(command instanceof StoredProcedure) {
-            Collection childPlans = processPlan.getChildPlans();
-            if(!childPlans.isEmpty()) {
-                ProcessorPlan plan = (ProcessorPlan)childPlans.iterator().next();
-                //check the last child plan of this procedure plan
-                Collection procChildPlans = plan.getChildPlans();
-                if(procChildPlans.size() > 0) {
-                    Iterator iter = procChildPlans.iterator();
-                    ProcessorPlan lastPlan = null;
-                    while(iter.hasNext()) {
-                        lastPlan = (ProcessorPlan) iter.next();
-                    }
-                    if(lastPlan instanceof XMLPlan) {
-                        xmlPlan = (XMLPlan)lastPlan;
-                    }
-                }
-            }
-        }
-        
-        if (xmlPlan == null) {
-        	return;
-        }
-
-        // Set the post-processing options on the plan
-        boolean shouldValidate = requestMsg.getValidationMode();
-
-        xmlPlan.setShouldValidate(shouldValidate);
-        xmlPlan.setStylesheet(requestMsg.getStyleSheet());
-        xmlPlan.setXMLFormat(requestMsg.getXMLFormat());
-
-        // if the validation/schema mode is set to true look up the schema in runtime metadata
-        if (shouldValidate) {
-            this.schemas = metadata.getXMLSchemas(xmlPlan.getDocumentGroup().getMetadataID());
-            // set the schema into the plan
-            xmlPlan.setXMLSchemas(schemas);
-        }
-    }
-
     private void createAnalysisRecord(Command command) {
         Option option = command.getOption();
         boolean getPlan = requestMsg.getShowPlan();
@@ -532,12 +490,37 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         generatePlan();
         
+        postProcessXML();
+        
         validateAccess(userCommand);
         
-        setSchemasForXMLPlan(userCommand, metadata);
-        
-        createProcessor(userCommand);
+        createProcessor();
     }
+
+	private void postProcessXML() {
+		boolean alreadyFormatted = false;
+        if (requestMsg.getXMLFormat() != null) {
+	        if(processPlan instanceof XQueryPlan) {
+	            ((XQueryPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
+	            alreadyFormatted = true;
+	        } else if (processPlan instanceof XMLPlan) {
+	        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
+	        	alreadyFormatted = true;
+	        }
+        }
+        boolean xml = alreadyFormatted 
+        	|| (processPlan.getOutputElements().size() == 1 && DataTypeManager.DefaultDataClasses.XML.equals(((SingleElementSymbol)processPlan.getOutputElements().get(0)).getType()));
+        
+        if (xml && ((!alreadyFormatted && requestMsg.getXMLFormat() != null) || requestMsg.getStyleSheet() != null)) {
+        	XMLPostProcessor postProcessor = new XMLPostProcessor(processPlan);
+        	postProcessor.setStylesheet(requestMsg.getStyleSheet());
+        	if (!alreadyFormatted) {
+        		postProcessor.setXMLFormat(requestMsg.getXMLFormat());
+        	}
+        	this.processPlan = postProcessor;
+        }
+        this.context.setValidateXML(requestMsg.getValidationMode());
+	}
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && userCommand instanceof XQuery;
@@ -570,7 +553,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, MetaMatrixComponentException {
-		// See if entitlement checking is turned on
 		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.authService, this.workContext.getVDB());
 		validateWithVisitor(visitor, this.metadata, command);
 	}

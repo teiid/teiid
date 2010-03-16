@@ -112,12 +112,12 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 				if (!ignoreDone) {
 					throw new IllegalStateException("More work is not valid once DONE"); //$NON-NLS-1$
 				}
-				LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] {this, "ignoring more work, since the work item is done"}); //$NON-NLS-1$
+				LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] {this, "ignoring more work, since the work item is done"}); //$NON-NLS-1$
     	}
     }
     
 	private void logTrace(String msg) {
-		LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[] {this, msg, this.threadState}); 
+		LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] {this, msg, this.threadState}); 
 	}
     
     protected abstract void process();

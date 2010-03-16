@@ -53,7 +53,7 @@ public class EndDocumentInstruction extends ProcessorInstruction {
         // program stack (don't want to start a new doc in the middle of 
         // recursive processing)
         if (!env.isRecursiveProgramInStack()) {
-            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "ending document"); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "ending document"); //$NON-NLS-1$
             env.getDocumentInProgress().markAsFinished();
         }
             

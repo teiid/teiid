@@ -56,8 +56,8 @@ import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 
 /**
  * Main class for creating Netty Nio Channels 

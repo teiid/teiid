@@ -30,8 +30,8 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 
 public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> {

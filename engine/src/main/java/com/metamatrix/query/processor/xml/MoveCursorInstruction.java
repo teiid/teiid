@@ -51,7 +51,7 @@ public class MoveCursorInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"NEXT", resultSetName}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"NEXT", resultSetName}); //$NON-NLS-1$
 
         context.getNextRow(resultSetName);
 

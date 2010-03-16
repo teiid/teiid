@@ -23,10 +23,10 @@
 package com.metamatrix.query.util;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TimeZone;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -99,13 +99,15 @@ public class CommandContext implements Cloneable {
 	    private long timeoutEnd = Long.MAX_VALUE;
 	    
 	    private QueryMetadataInterface metadata; 
+	    
+	    private boolean validateXML;
 	}
 	
 	private GlobalState globalState = new GlobalState();
 
     private VariableContext variableContext = new VariableContext();
     private Object tempTableStore;
-    private Stack<String> recursionStack;
+    private LinkedList<String> recursionStack;
 
     /**
      * Construct a new context.
@@ -173,7 +175,7 @@ public class CommandContext implements Cloneable {
     	clone.globalState = this.globalState;
     	clone.variableContext = this.variableContext;
     	if (this.recursionStack != null) {
-            clone.recursionStack = (Stack<String>)this.recursionStack.clone();
+            clone.recursionStack = new LinkedList<String>(this.recursionStack);
         }
     	return clone;
     }
@@ -318,7 +320,7 @@ public class CommandContext implements Cloneable {
 
     public void pushCall(String value) throws QueryProcessingException {
         if (recursionStack == null) {
-            recursionStack = new Stack<String>();
+            recursionStack = new LinkedList<String>();
         } else if (recursionStack.contains(value)) {
 			throw new QueryProcessingException(QueryExecPlugin.Util.getString("ExecDynamicSqlInstruction.3", value)); //$NON-NLS-1$
         }
@@ -436,4 +438,13 @@ public class CommandContext implements Cloneable {
 	public QueryMetadataInterface getMetadata() {
 		return globalState.metadata;
 	}
+    
+    public void setValidateXML(boolean validateXML) {
+    	globalState.validateXML = validateXML;
+	}
+    
+    public boolean validateXML() {
+		return globalState.validateXML;
+	}
+	
 }

@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -52,8 +51,8 @@ public class DataTierTupleSource implements TupleSource {
     
     // Data state
     private ConnectorWork cwi;
-    private int index = 0;
-    private int rowsProcessed = 0;
+    private int index;
+    private int rowsProcessed;
     private AtomicResultsMessage arm;
     private boolean closed;
     
@@ -95,11 +94,11 @@ public class DataTierTupleSource implements TupleSource {
     }
     
     void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
         try {
 	        if (this.cwi == null) {
 	        	this.cwi = this.dataMgr.executeRequest(aqr, this.connectorName);
-		        workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
+	        	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
+	            workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
 	        }
 	        receiveResults(this.cwi.execute());
         } catch (ConnectorException e) {
@@ -132,21 +131,21 @@ public class DataTierTupleSource implements TupleSource {
     	}
     }
 
-    void exceptionOccurred(Exception exception, boolean removeState) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    void exceptionOccurred(ConnectorException exception, boolean removeState) throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	if (removeState) {
 			fullyCloseSource();
 		}
     	if(workItem.requestMsg.supportsPartialResults()) {
 			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0], null);
-			emptyResults.setWarnings(Arrays.asList(exception));
+			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
 			receiveResults(arm);
 		} else {
-    		if (exception instanceof MetaMatrixComponentException) {
-    			throw (MetaMatrixComponentException)exception;
+    		if (exception.getCause() instanceof MetaMatrixComponentException) {
+    			throw (MetaMatrixComponentException)exception.getCause();
     		}
-    		if (exception instanceof MetaMatrixProcessingException) {
-    			throw (MetaMatrixProcessingException)exception;
+    		if (exception.getCause() instanceof MetaMatrixProcessingException) {
+    			throw (MetaMatrixProcessingException)exception.getCause();
     		}
     		throw new MetaMatrixComponentException(exception);
 		}	

@@ -65,7 +65,7 @@ public class EndBlockInstruction extends ProcessorInstruction {
 
         context.removeResultSet(resultSetName);
 
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{CLOSE_FINISHED,resultSetName});
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{CLOSE_FINISHED,resultSetName});
             
         env.incrementCurrentProgramCounter();
         return context;

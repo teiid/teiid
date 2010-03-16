@@ -75,7 +75,7 @@ public class LobWorkItem implements Work {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
         } catch (MetaMatrixComponentException e) {            
-            LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+            LogManager.logWarning(com.metamatrix.common.log.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
         } catch (IOException e) {
 			ex = e;
@@ -92,15 +92,19 @@ public class LobWorkItem implements Work {
         }
         
         if (shouldClose) {
-        	try {
-        		if (stream != null) {
-        			stream.close();
-        		}
-			} catch (IOException e) {
-				LogManager.logWarning(com.metamatrix.common.util.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
-			}
-        	parent.removeLobStream(streamRequestId);
+        	close();
         }
+	}
+
+	void close() {
+		try {
+			if (stream != null) {
+				stream.close();
+			}
+		} catch (IOException e) {
+			LogManager.logWarning(com.metamatrix.common.log.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+		}
+		parent.removeLobStream(streamRequestId);
 	}    
     
     /**

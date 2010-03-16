@@ -29,6 +29,7 @@ import java.util.List;
 
 import javax.transaction.xa.Xid;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -124,7 +125,7 @@ public class TestConnectorWorkItem {
 		assertEquals(1, results.getWarnings().size());
 	}
 
-    
+	@Ignore    
 	@Test public void testIsImmutablePropertySucceeds() throws Exception {
     	/*
     	 * Setup:
@@ -152,6 +153,7 @@ public class TestConnectorWorkItem {
 		new ConnectorWorkItem(requestMsg, cm);
     }
     
+	@Ignore
 	@Test(expected=ConnectorException.class) public void testIsImmutablePropertyFails() throws Exception {
     	/*
     	 * Setup:

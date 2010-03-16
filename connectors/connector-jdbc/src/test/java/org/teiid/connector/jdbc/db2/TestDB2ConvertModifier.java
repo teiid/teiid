@@ -35,7 +35,6 @@ import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.LanguageFactory;
 
 import com.metamatrix.query.unittest.TimestampUtil;
 

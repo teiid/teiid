@@ -153,7 +153,7 @@ class RelationalPlanExecutor implements PlanExecutor {
      */
     public void close() throws MetaMatrixComponentException {
 		this.internalProcessor.closeProcessing();
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
     }
   
 }

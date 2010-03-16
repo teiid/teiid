@@ -44,8 +44,8 @@ import javax.resource.spi.work.WorkRejectedException;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 import com.metamatrix.query.QueryPlugin;

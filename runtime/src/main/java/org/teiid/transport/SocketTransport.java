@@ -23,8 +23,8 @@ package org.teiid.transport;
 
 import org.teiid.runtime.RuntimePlugin;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 
 /**
  * This class starts a Socket for DQP connections and listens on the port and hands out the connections to the 

@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,6 @@ import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.xml.TestXMLPlanningEnhancements;
 import com.metamatrix.query.processor.xml.TestXMLProcessor;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -98,11 +96,7 @@ public class TestProcedureProcessor {
         	if ( capabilitiesFinder == null ) capabilitiesFinder = new DefaultCapabilitiesFinder();
         	ProcessorPlan plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, capabilitiesFinder, analysisRecord, null);
 
-            // verify we can get child plans for any plan with no problem
-            plan.getChildPlans();
-            
             return plan;
-            
         } finally {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());  	
@@ -2304,16 +2298,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {"5"}), //$NON-NLS-1$
             }, dataMgr);
-    }
-    
-    /**
-     * previously the following would break with an npe
-     * 
-     * Now it will not and the rewriter should remove empty loops, where this was happening
-     */
-    @Test public void testGetChildPlans() {
-        Program program = new Program();
-        assertEquals(Collections.EMPTY_LIST, program.getChildPlans());
     }
     
     /**

@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -239,10 +238,6 @@ public class SetQuery extends QueryCommand {
 		return leftQuery.areResultsCachable() && rightQuery.areResultsCachable();
 	}
     
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        return getSubCommandsUpdatingModelCount(metadata);
-    }
-
     /**
      * @return the left and right queries as a list.  This list cannot be modified.
      */

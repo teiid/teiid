@@ -22,9 +22,9 @@
 
 package com.metamatrix.query.sql.symbol;
 
-import org.teiid.connector.language.SQLReservedWords;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.core.util.UnitTestUtil;
 

@@ -335,14 +335,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     }
     
     @Override
-    public Collection<? extends LanguageObject> getLanguageObjects() {
-    	if (this.joinCriteria == null) {
-    		return Collections.emptyList();
-    	}
-    	return Arrays.asList(this.joinCriteria);
-    }
-    
-    @Override
     protected void addBatchRow(List row) {
         List projectTuple = projectTuple(this.projectionIndexes, row);
         super.addBatchRow(projectTuple);

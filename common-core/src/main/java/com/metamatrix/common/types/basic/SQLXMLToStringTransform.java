@@ -23,6 +23,7 @@
 package com.metamatrix.common.types.basic;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.sql.SQLException;
 
 import com.metamatrix.common.types.DataTypeManager;
@@ -47,15 +48,23 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
      */
     public Object transformDirect(Object value) throws TransformationException {
         XMLType source = (XMLType)value;
-        
+        Reader reader = null;
         try {       
             char[] result = new char[DataTypeManager.MAX_STRING_LENGTH];
-            int read = source.getCharacterStream().read(result);
+            reader = source.getCharacterStream();
+            int read = reader.read(result);
             return new String(result, 0, read);
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
         } catch (IOException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$
+        } finally {
+        	try {
+        		if (reader != null) {
+        			reader.close();
+        		}
+			} catch (IOException e) {
+			}
         }
     }
 

@@ -24,8 +24,6 @@ package com.metamatrix.query.processor.xquery;
 
 import java.sql.SQLXML;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +41,6 @@ import com.metamatrix.common.types.XMLType;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.dynamic.SqlEval;
 import com.metamatrix.query.processor.xml.XMLUtil;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -185,15 +182,6 @@ public class XQueryPlan extends ProcessorPlan {
         return "XQueryPlan: " + this.xQuery.toString();  //$NON-NLS-1$
     }
    
-    /** 
-     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        //return xmlPlans.values();
-        return Collections.EMPTY_LIST;
-    }
-
     /**
      * This method sets whether the documents should be returned in compact
      * format (no extraneous whitespace).  Non-compact format is more human-readable

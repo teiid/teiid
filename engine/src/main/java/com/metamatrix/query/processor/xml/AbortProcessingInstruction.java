@@ -60,7 +60,7 @@ public class AbortProcessingInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
 
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
         throw new MetaMatrixComponentException(DEFAULT_MESSAGE);
     }
 

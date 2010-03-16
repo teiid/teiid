@@ -22,8 +22,7 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -37,6 +36,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.core.util.UnitTestUtil;
+
 public class TestFileStorageManager {
 		
 	public FileStorageManager getStorageManager(Integer maxFileSize, Integer openFiles, String dir) throws MetaMatrixComponentException {

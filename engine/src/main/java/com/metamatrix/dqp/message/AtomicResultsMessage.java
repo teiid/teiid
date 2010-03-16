@@ -81,6 +81,7 @@ public class AtomicResultsMessage implements Externalizable {
         finalRow = in.readInt();
         supportsImplicitClose = in.readBoolean();
         warnings = (List<Exception>)in.readObject();
+        isTransactional = in.readBoolean();
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
@@ -89,6 +90,7 @@ public class AtomicResultsMessage implements Externalizable {
         out.writeInt(finalRow);
         out.writeBoolean(supportsImplicitClose);
         out.writeObject(warnings);
+        out.writeBoolean(isTransactional);
 	}
 
 	public boolean isTransactional() {

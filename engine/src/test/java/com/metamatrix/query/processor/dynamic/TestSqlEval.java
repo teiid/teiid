@@ -40,6 +40,7 @@ import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.processor.xml.TestXMLProcessor;
+import com.metamatrix.query.processor.xquery.SqlEval;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.util.CommandContext;

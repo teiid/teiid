@@ -22,10 +22,7 @@
 
 package com.metamatrix.query.processor.proc;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -93,13 +90,13 @@ public class IfInstruction extends ProgramInstruction {
     	boolean evalValue = procEnv.evaluateCriteria(condition);
 
         if(evalValue) {
-	        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to true, processing the if block"}); //$NON-NLS-1$
 
             //push the "if" Program onto the stack
             procEnv.push(ifProgram);
         } else if(elseProgram != null) {
-	        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$            
             //push the "else" Program onto the stack
             procEnv.push(elseProgram);
@@ -142,19 +139,5 @@ public class IfInstruction extends ProgramInstruction {
         }
         return props;
     }
-    
-    /** 
-     * @see com.metamatrix.query.processor.program.ProgramInstruction#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        List plans = new ArrayList();        
-        plans.addAll(this.ifProgram.getChildPlans());
-        if(this.elseProgram != null) {
-            plans.addAll(this.elseProgram.getChildPlans());
-        }
-        return plans;
-    }
-    
     
 }

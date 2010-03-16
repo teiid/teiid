@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.types;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -771,7 +770,7 @@ public class DataTypeManager {
 				StandardXMLTranslator sxt = new StandardXMLTranslator(value, null);
 				try {
 					return new XMLType(new SQLXMLImpl(sxt.getString()));
-				} catch (IOException e) {
+				} catch (Exception e) {
 					throw new MetaMatrixRuntimeException(e);
 				}
 			}

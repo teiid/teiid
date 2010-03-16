@@ -24,9 +24,6 @@ package com.metamatrix.query.sql.lang;
 
 import java.util.Map;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 public abstract class ProcedureContainer extends Command {
@@ -35,31 +32,10 @@ public abstract class ProcedureContainer extends Command {
     
     public abstract GroupSymbol getGroup();
     
-    protected void copyMetadataState(Command copy) {
+    protected void copyMetadataState(ProcedureContainer copy) {
         super.copyMetadataState(copy);
+        copy.updateCount = updateCount;
     }
-    
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        if (updateCount != -1) {
-            return updateCount;
-        }
-        
-        if(this.getGroup().isTempGroupSymbol()) {
-            //TODO: this is not correct.  once temp tables are transactional, this will need to return a better value
-            return 0;
-        }
-        
-        try {
-            if (!metadata.isVirtualGroup(this.getGroup().getMetadataID())) {
-                return 1; //physical stored procedures are assumed to perform an update
-            } 
-        } catch (QueryMetadataException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-        
-        return 2;
-    }
-
     
     /** 
      * @return Returns the updateCount.

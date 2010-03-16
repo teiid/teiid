@@ -844,6 +844,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setStyleSheet(this.styleSheet);
         reqMsg.setRowLimit(this.maxRows);
+        reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
 
         // Get connection properties and set them onto request message
         copyPropertiesToRequest(reqMsg);

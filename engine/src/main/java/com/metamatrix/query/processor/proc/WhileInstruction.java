@@ -24,7 +24,6 @@
  */
 package com.metamatrix.query.processor.proc;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,14 +74,6 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         return props;
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.program.ProgramInstruction#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        return this.whileProgram.getChildPlans();
-    }
-
     /** 
      * @throws MetaMatrixProcessingException 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)

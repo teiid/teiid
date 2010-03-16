@@ -23,10 +23,8 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,13 +39,9 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.BatchCollector.BatchProducer;
-import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public abstract class RelationalNode implements Cloneable, Describable, BatchProducer {
@@ -388,7 +382,7 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
      * @param batch Batch being sent
      */
     private void recordBatch(TupleBatch batch) {
-        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         	return;
         }
     	// Print summary
@@ -404,7 +398,7 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
         for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
         	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
-        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_DQP, str.toString());
+        LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, str.toString());
     }
 
     // =========================================================================
@@ -499,34 +493,6 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
             }
         }
 	}
-    
-    /**
-     * Find all ProcessorPlans used by this node.  If no plans are used, null may be returned.
-     * The default implementation will return null. 
-     * @return List of ProcessorPlan or null if none
-     * @since 4.2
-     */
-    public List getChildPlans() {
-    	Collection<? extends LanguageObject> objs = getLanguageObjects();
-    	if (objs == null || objs.isEmpty()) {
-    		return null;
-    	}
-    	Collection<SubqueryContainer> containers = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objs);
-    	if (containers.isEmpty()) {
-    		return null;
-    	}
-    	List<ProcessorPlan> plans = new LinkedList<ProcessorPlan>();
-    	for (SubqueryContainer container : containers) {
-			if (container.getCommand().getProcessorPlan() != null) {
-				plans.add(container.getCommand().getProcessorPlan());
-			}
-		}
-    	return plans;
-    }
-    
-    public Collection<? extends LanguageObject> getLanguageObjects() {
-    	return null;
-    }
     
     /*
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()

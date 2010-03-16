@@ -51,8 +51,8 @@ import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VdbConstants;

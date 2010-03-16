@@ -44,13 +44,12 @@ import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.logging.api.CommandLogMessage.Event;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.TupleBuffer;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -110,20 +109,12 @@ public class ConnectorWorkItem implements ConnectorWork {
         
         this.connector = manager.getConnector();
         this.connectorEnv = connector.getConnectorEnvironment();
-        try {
-        	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
-        	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
-	        this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
-	        
-	        if (requestMsg.isTransactional()){
-	        	if (this.connectorEnv.isXaCapable()) {
-		    		this.securityContext.setTransactional(true);
-	        	} else if (!this.connectorEnv.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
-	    	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
-	    	    }
-	        }
-        } catch(MetaMatrixComponentException e) {
-        	throw new ConnectorException(e);
+    	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
+    	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
+        this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
+        
+        if (requestMsg.isTransactional() &&  this.connectorEnv.isXaCapable()) {
+    		this.securityContext.setTransactional(true);
         }
     }
     

@@ -41,7 +41,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.dqp.message.ParameterInfo;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
 import com.metamatrix.query.mapping.xml.MappingDocument;

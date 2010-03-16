@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,10 +33,10 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -133,34 +132,6 @@ public class RelationalPlan extends ProcessorPlan {
 		return plan;
 	}
 	
-    /** 
-     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        // Walk nodes and find all sub-plans 
-        List plans = new ArrayList();
-        findPlans(this.root, plans);
-        return plans;
-    }
-    
-    private void findPlans(RelationalNode node, List plans) {
-        List subPlans = node.getChildPlans();
-        if(subPlans != null) {
-            plans.addAll(subPlans);
-        }
-        
-        RelationalNode[] children = node.getChildren();
-        for(int i=0; i<children.length; i++) {
-            if(children[i] != null) {
-                findPlans(children[i], plans);
-            } else {
-                break;
-            }
-        }
-    }
-    
-    
     /* 
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */
@@ -180,6 +151,20 @@ public class RelationalPlan extends ProcessorPlan {
      */
     public void setOutputElements(List outputCols) {
         this.outputCols = outputCols;
+    }
+    
+    @Override
+    public boolean requiresTransaction(boolean transactionalReads) {
+    	if (root instanceof DependentAccessNode) {
+			if (transactionalReads || !(((DependentAccessNode)root).getCommand() instanceof QueryCommand)) {
+				return true;
+			}
+			return false;
+		}
+    	if (root instanceof AccessNode) {
+			return false; //full pushdown
+		}
+		return transactionalReads; //embedded procedures are not detected
     }
 	
 }

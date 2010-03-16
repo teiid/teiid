@@ -27,11 +27,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
@@ -442,18 +440,6 @@ public class Query extends QueryCommand {
 		return true;
 	}
     
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        if(isXML) { //TODO: this is incorrect
-            return 0;
-        }
-        
-        if(into != null && !into.getGroup().isTempGroupSymbol()) {
-            return 2;
-        }
-        
-        return getSubCommandsUpdatingModelCount(metadata);
-    }
-
     /** 
      * @see com.metamatrix.query.sql.lang.QueryCommand#getProjectedQuery()
      */

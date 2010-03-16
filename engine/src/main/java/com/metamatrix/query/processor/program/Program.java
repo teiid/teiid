@@ -23,11 +23,9 @@
 package com.metamatrix.query.processor.program;
 
 import java.util.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import com.metamatrix.query.processor.Describable;
+import com.metamatrix.query.processor.ProcessorPlan;
 
 /**
  * A program is a sequence of {@link ProgramInstruction ProgramInstruction}.  Certain
@@ -156,12 +154,12 @@ public class Program implements Cloneable, Describable {
      * @return List of ProcessorPlan 
      * @since 4.2
      */
-    public Collection getChildPlans() {
-        List plans = new ArrayList();
+    public List<ProcessorPlan> getChildPlans() {
+        List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>();
         if (programInstructions != null) {
             for(int i=0; i<programInstructions.size(); i++) {
                 ProgramInstruction inst = (ProgramInstruction) programInstructions.get(i);
-                Collection instPlans = inst.getChildPlans();            
+                Collection<ProcessorPlan> instPlans = inst.getChildPlans();            
                 if(instPlans != null) {
                     plans.addAll(instPlans);
                 }            

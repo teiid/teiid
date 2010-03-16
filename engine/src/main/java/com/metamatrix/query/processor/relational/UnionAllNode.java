@@ -100,9 +100,6 @@ public class UnionAllNode extends RelationalNode {
                             }
                         }
                     } catch(BlockedException e) {
-                    	if(i<children.length-1 && hasDependentProcedureExecutionNode(children[0])){
-                    		throw e;
-                    	}
                         // no problem - try the next one
                     }
                 } else {
@@ -161,23 +158,5 @@ public class UnionAllNode extends RelationalNode {
         
         return props;
     }
-    
-	private boolean hasDependentProcedureExecutionNode(RelationalNode node) {
-		if(node == null){
-			return false;
-		}
-		
-		if(node instanceof DependentProcedureExecutionNode) {
-			return true;
-		}
-		if(node.getChildren() != null ) { 
-			for(int i=0; i<node.getChildren().length; i++){
-				if(hasDependentProcedureExecutionNode(node.getChildren()[i])){
-					return true;
-				}
-			}
-		}	
-		return false;
-	}
     
 }

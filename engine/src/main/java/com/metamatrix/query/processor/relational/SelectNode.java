@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +31,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.util.CommandContext;
 
@@ -156,11 +153,6 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         props.put(PROP_TYPE, "Select"); //$NON-NLS-1$
         props.put(PROP_CRITERIA, this.criteria.toString());        
         return props;
-    }
-    
-    @Override
-    public Collection<? extends LanguageObject> getLanguageObjects() {
-    	return Arrays.asList(this.criteria);
     }
     
 }

@@ -35,8 +35,6 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode1_1() { 
@@ -59,8 +57,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode2() { 
@@ -97,8 +93,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode4() { 
@@ -148,8 +142,6 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode11() { 
@@ -157,8 +149,6 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode12() { 
@@ -166,8 +156,6 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode13() { 
@@ -190,8 +178,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     /**
@@ -217,8 +203,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode15() { 
@@ -226,8 +210,6 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode16() { 
@@ -250,8 +232,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinNode17() { 
@@ -274,8 +254,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinWithIntersection() throws Exception { 
@@ -305,8 +283,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
 
     /**
@@ -332,8 +308,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     /**
@@ -359,8 +333,6 @@ public class TestOptionalJoins {
             0,      // Sort
             1       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinWithCompoundCriteria() { 
@@ -383,8 +355,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     @Test public void testOptionalJoinWithDupRemoval() { 
@@ -407,8 +377,6 @@ public class TestOptionalJoins {
             0,      // Sort
             0       // UnionAll
         });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     /**
@@ -455,8 +423,6 @@ public class TestOptionalJoins {
 				0, // Sort
 				0 // UnionAll
 				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
 	}
     
     /**
@@ -484,8 +450,6 @@ public class TestOptionalJoins {
 				0, // Sort
 				0 // UnionAll
 				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
 	}
     
     @Test public void testOptionalJoinWithoutHint_union() {
@@ -510,8 +474,6 @@ public class TestOptionalJoins {
 				0, // Sort
 				1 // UnionAll
 				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
 	}
     
     @Test public void testOptionalJoinWithOrderedLimit() {
@@ -536,8 +498,6 @@ public class TestOptionalJoins {
 				0, // Sort
 				0  // UnionAll
 				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
 	}
     
 }

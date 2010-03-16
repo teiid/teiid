@@ -52,7 +52,6 @@ import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
@@ -2275,87 +2274,6 @@ public class TestResolver {
         QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached());
     }
 
-    @Test public void testCommandUpdatingCount1() throws Exception{
-        Command command = helpResolve("SELECT * FROM pm1.g1 as x, pm1.g1 as y"); //$NON-NLS-1$
-        assertEquals(0, command.updatingModelCount(metadata));
-    }
-    
-    @Test public void testCommandUpdatingCount2() throws Exception{
-        Command command = helpResolve("SELECT * FROM doc1"); //$NON-NLS-1$
-        assertEquals(0, command.updatingModelCount(metadata));
-    }
-    
-    @Test public void testCommandUpdatingCount5() throws Exception{
-        Command command = helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY e1"); //$NON-NLS-1$
-        assertEquals(0, command.updatingModelCount(metadata));
-    }
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountPhysicalInsert() throws Exception{
-        Command command = helpResolve("INSERT INTO pm1.g1 (e2) VALUES (666) "); //$NON-NLS-1$
-        assertEquals(1, command.updatingModelCount(metadata));
-    }     
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountVirtualInsert() throws Exception{
-        Command command = helpResolve("INSERT INTO vm1.g1 (e2) VALUES (666) "); //$NON-NLS-1$
-        assertEquals(2, command.updatingModelCount(metadata));
-    }    
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountPhysicalUpdate() throws Exception{
-        Command command = helpResolve("UPDATE pm1.g1 SET e2=667 WHERE e2=666"); //$NON-NLS-1$
-        assertEquals(1, command.updatingModelCount(metadata));
-    }     
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountVirtualUpdate() throws Exception{
-        Command command = helpResolve("UPDATE vm1.g1 SET e2=667 WHERE e2=666"); //$NON-NLS-1$
-        assertEquals(2, command.updatingModelCount(metadata));
-    }
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountPhysicalDelete() throws Exception{
-        Command command = helpResolve("DELETE FROM pm1.g1 WHERE e2 = 666 "); //$NON-NLS-1$
-        assertEquals(1, command.updatingModelCount(metadata));
-    }     
-    
-    /** case 3955 */
-    @Test public void testCommandUpdatingCountVirtualDelete() throws Exception{
-        Command command = helpResolve("DELETE FROM vm1.g37 WHERE e2 = 666 "); //$NON-NLS-1$
-        assertEquals(2, command.updatingModelCount(metadata));
-    } 
-    
-    @Test public void testCommandUpdatingCountEmbeddedExecs() throws Exception {
-        Command command = helpResolve("SELECT * FROM pm1.g1 WHERE e1 IN ((select e1 from (EXEC pm1.sp1()) x), (select e1 from (EXEC pm1.sp2(1)) x))"); //$NON-NLS-1$
-        
-        assertEquals(2, command.updatingModelCount(new TempMetadataAdapter(metadata, new TempMetadataStore())));
-    }
-    
-	@Test public void testCommandUpdatingCountEmbeddedExec() throws Exception {
-        Command command = helpResolve("SELECT * FROM pm1.g1 WHERE e1 IN (select e1 from (EXEC pm1.sp1()) x)"); //$NON-NLS-1$
-        
-        assertEquals(2, command.updatingModelCount(new TempMetadataAdapter(metadata, new TempMetadataStore())));
-    }
-			    
-    @Test public void testCommandUpdatingCountFromMetadata() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject proc = metadata.getStore().findObject("pm1.sp1", FakeMetadataObject.PROCEDURE); //$NON-NLS-1$
-        proc.putProperty(FakeMetadataObject.Props.UPDATE_COUNT, new Integer(0));
-        
-        Command command = QueryParser.getQueryParser().parseCommand("EXEC pm1.sp1()"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, metadata);
-        assertEquals(0, command.updatingModelCount(metadata));
-        
-        command = QueryParser.getQueryParser().parseCommand("select * from pm1.sp1"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, metadata);
-        assertEquals(0, command.updatingModelCount(metadata));
-        
-        command = QueryParser.getQueryParser().parseCommand("select * from pm1.g1 where e1 in (select e1 from (exec pm1.sp1()) x)"); //$NON-NLS-1$
-        QueryResolver.resolveCommand(command, metadata);
-        assertEquals(0, command.updatingModelCount(metadata));
-    }
-    
     @Test public void testParameterError() throws Exception {
         helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }

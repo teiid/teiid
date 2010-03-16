@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,7 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.junit.Ignore;
+import javax.xml.transform.OutputKeys;
+
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -73,6 +75,7 @@ import com.metamatrix.query.optimizer.xml.TestXMLPlanner;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -83,6 +86,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.query.util.XMLFormatConstants;
 
 /**
  * Tests XML processing, which involves XMLPlanner making a ProcessorPlan
@@ -2933,16 +2937,16 @@ public class TestXMLProcessor {
         return command;
     }
 
-    static XMLPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
         return helpTestProcess(sql, expectedDoc, metadata, dataMgr, true, MetaMatrixComponentException.class, null);
     }
 
-    static XMLPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg) throws Exception{
 
         return helpTestProcess(sql, expectedDoc, metadata, dataMgr, shouldSucceed, expectedException, shouldFailMsg, new DefaultCapabilitiesFinder());
     }
 
-    static XMLPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg, CapabilitiesFinder capFinder) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg, CapabilitiesFinder capFinder) throws Exception{
         Command command = helpGetCommand(sql, metadata);
 
         if (shouldSucceed){
@@ -2950,15 +2954,12 @@ public class TestXMLProcessor {
             AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
             CommandContext planningContext = new CommandContext(); //this should be the same as the processing context, but that's not easy to do
             
-            XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, planningContext);
+            ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, planningContext);
             
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }
             
-            // Verify we can get the child plans without error
-            plan.getChildPlans();            
-
             // Process twice, to test reset and clone methods
             for (int i=1; i<=2; i++) {
                 BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();                
@@ -2988,7 +2989,7 @@ public class TestXMLProcessor {
                 //Test reset, clone methods
                 if (i==1) {
                     plan.reset();
-                    plan = (XMLPlan)plan.clone();
+                    plan = plan.clone();
                 }
             }
             return plan;
@@ -2996,7 +2997,7 @@ public class TestXMLProcessor {
         Exception expected = null;
         AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);                                              
         try{
-            XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
+            ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
     
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
             CommandContext context = new CommandContext("pID", null, null, null, 1);                                                                 //$NON-NLS-1$
@@ -3044,8 +3045,15 @@ public class TestXMLProcessor {
             System.out.println(analysisRecord.getDebugLog());
         }
         
-        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+        helpTestProcess(expectedDocs, dataMgr, plan);
+    }
+
+	private void helpTestProcess(String[] expectedDocs, FakeDataManager dataMgr,
+			ProcessorPlan plan) throws MetaMatrixComponentException,
+			MetaMatrixProcessingException, SQLException {
+		BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pID", null, null, null, 1);                                 //$NON-NLS-1$
+        context.setProcessDebug(DEBUG);
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
         processor.setNonBlocking(true);
         BatchCollector collector = processor.createBatchCollector();
@@ -3067,7 +3075,7 @@ public class TestXMLProcessor {
             compareDocuments(expectedDocs[i], actualDoc);
         }
         tupleBuffer.remove();
-    }    
+	}    
 
     // =============================================================================================
     // T E S T S 
@@ -4620,7 +4628,7 @@ public class TestXMLProcessor {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
 
-        XMLPlan plan = helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)='52'", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)='52'", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
 
         // check the staging base line (unknown cost)
         // one for staging and for unloading
@@ -11842,7 +11850,9 @@ public class TestXMLProcessor {
         
     }    
     
-    @Ignore("stored procedure wrapper removal has been disabled")
+    /**
+     * Also tests the logic of the {@link XMLPostProcessor}
+     */
     @Test public void testProcedureAndXML() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -11867,7 +11877,32 @@ public class TestXMLProcessor {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
         
-        helpTestProcess("exec xmltest.vsp1()", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        ProcessorPlan plan = helpTestProcess("exec xmltest.vsp1()", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        plan.reset();
+        XMLPostProcessor postProcessor = new XMLPostProcessor(plan);
+        postProcessor.setXMLFormat(XMLFormatConstants.XML_TREE_FORMAT);
+        postProcessor.setStylesheet("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>");
+        expectedDoc = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
+            "    <Catalog>\r\n" +  //$NON-NLS-1$
+            "        <Items>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"001\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
+            " \r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
+            " \r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
+            " \r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "        </Items>\r\n" +  //$NON-NLS-1$
+            "    </Catalog>\r\n" +  //$NON-NLS-1$
+            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
+        helpTestProcess(new String[] {expectedDoc}, dataMgr, postProcessor); //$NON-NLS-1$
     }
     
     /**

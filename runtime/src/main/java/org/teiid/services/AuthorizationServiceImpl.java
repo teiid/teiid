@@ -136,7 +136,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
     	
     	SessionToken caller = getSession();
     	
-        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", caller, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", caller, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         List<String> resources = new ArrayList<String>();
         if (requests != null && ! requests.isEmpty()) {            
@@ -148,7 +148,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
         
         // Audit - request
     	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-    	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
+    	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
         
         if (isEntitled()){
             return Collections.EMPTY_LIST;
@@ -173,10 +173,10 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
 
         if (results.isEmpty()) {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
         } else {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", caller.getUsername(), resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.util.LogConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
         }
         return results;
     }
@@ -386,7 +386,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
     
     protected boolean isEntitled(){
         if (DQPWorkContext.getWorkContext().getSubject() == null) {
-            LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,new Object[]{ "Automatically entitling principal", DQPWorkContext.getWorkContext().getSessionToken().getUsername()}); //$NON-NLS-1$ 
+            LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION,new Object[]{ "Automatically entitling principal", DQPWorkContext.getWorkContext().getSessionToken().getUsername()}); //$NON-NLS-1$ 
             return true;
         }
         return false;
@@ -455,7 +455,7 @@ public class AuthorizationServiceImpl implements AuthorizationService, Serializa
 
 	@Override
 	public boolean isCallerInRole(String roleName) throws AuthorizationMgmtException {
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"isCallerInRole(", getSession(), roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION, new Object[]{"isCallerInRole(", getSession(), roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         return hasPolicy(RolePermissionFactory.getRealm(), roleName);
 	}
 

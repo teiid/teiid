@@ -31,6 +31,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.dqp.service.TransactionContext;
+import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
@@ -121,7 +122,7 @@ public class AtomicRequestMessage implements Serializable {
     }
 
     public boolean isTransactional(){
-        return this.txnContext != null && this.txnContext.getXid() != null;
+        return this.txnContext != null && this.txnContext.getTransactionType() != Scope.NONE;
     }    
 	
 	public Command getCommand() {
@@ -138,7 +139,7 @@ public class AtomicRequestMessage implements Serializable {
 
 	public void setFetchSize(int fetchSize) {
 		if (fetchSize < 1) {
-			throw new IllegalArgumentException("fetch size must be positive");
+			throw new IllegalArgumentException("fetch size must be positive"); //$NON-NLS-1$
 		}
 		this.fetchSize = fetchSize;
 	}   

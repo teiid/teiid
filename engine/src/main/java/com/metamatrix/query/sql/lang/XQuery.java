@@ -26,10 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
@@ -150,10 +148,6 @@ public class XQuery extends Command {
 		return true;
 	}
     
-    public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        return 2; //since there may be dynamic sql, just assume a transaction is required
-    }
-
 	public String getProcedureGroup() {
 		return procedureGroup;
 	}

@@ -66,7 +66,7 @@ public class ErrorInstruction extends AbstractAssignmentInstruction {
      */
     protected void processValue(Object value, VariableContext varContext) throws MetaMatrixComponentException,
                                              MetaMatrixProcessingException {
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP,
+        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
                             new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
         throw new ProcedureErrorInstructionException(ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
     }

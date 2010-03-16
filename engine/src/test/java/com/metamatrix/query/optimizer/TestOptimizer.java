@@ -465,10 +465,6 @@ public class TestOptimizer {
         checkNodeTypes(plan, new int[] {expectedCount}, new Class[] {DependentJoin.class});
     }
                 
-    public static void checkSubPlanCount(ProcessorPlan plan, int expectedCount) {
-        assertEquals("Checking plan count", expectedCount, plan.getChildPlans().size()); //$NON-NLS-1$        
-    }
-
 	public static FakeMetadataFacade example1() {
 		// Create models
 		FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
@@ -764,8 +760,6 @@ public class TestOptimizer {
 			new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
-        
-        checkSubPlanCount(plan, 0);
 	}
     
 	@Test public void testSelectStarPhysical() { 
@@ -4764,7 +4758,7 @@ public class TestOptimizer {
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql,  
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql,  
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"SELECT bqt1.smalla.datevalue, bqt1.smalla.intkey, bqt1.smalla.stringkey, bqt1.smalla.objectvalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = 46) AND (bqt1.smalla.stringkey = '46')"}, //$NON-NLS-1$
@@ -4787,9 +4781,7 @@ public class TestOptimizer {
                                         0       // UnionAll
                                     });   
         
-        Collection subplans = plan.getChildPlans();
-        assertEquals(1, subplans.size());
-        ProcessorPlan subplan = (ProcessorPlan) subplans.iterator().next();
+        ProcessorPlan subplan = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((SelectNode)plan.getRootNode().getChildren()[0]).getCriteria()).get(0).getCommand().getProcessorPlan();
         
         // Collect atomic queries
         Set<String> actualQueries = getAtomicQueries(subplan);
@@ -5701,8 +5693,6 @@ public class TestOptimizer {
                                       null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 IN (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g1.e1 = '2')" }, SHOULD_SUCCEED); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
-          
-        checkSubPlanCount(plan, 0);        
     }
     
     /*
@@ -5725,8 +5715,6 @@ public class TestOptimizer {
         		metadata, null, capFinder, new String[] {"SELECT g_0.e1, g_2.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_0.e1 = g_2.e1) AND (g_0.e2 IN (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
-        
-        checkSubPlanCount(plan, 0);
     }
     
     /** 
@@ -5856,8 +5844,6 @@ public class TestOptimizer {
             0,      // Sort
             0       // UnionAll
         });    
-                                  
-        checkSubPlanCount(plan, 1); 
     }
     
     /*
@@ -6007,8 +5993,6 @@ public class TestOptimizer {
                                       null, capFinder,
             new String[] { "SELECT g1__1.e1 FROM pm1.g1 AS g1__1 LEFT OUTER JOIN pm1.g1 AS g1__2 ON g1__2.e1 = g1__1.e1 AND g1__2.e1 = (SELECT MAX(pm1.g1.e1) FROM pm1.g1 WHERE pm1.g1.e1 = g1__2.e1)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
-          
-        checkSubPlanCount(plan, 0);        
     }
     
     @Test public void testCase4263b() {
@@ -6043,8 +6027,6 @@ public class TestOptimizer {
             0,      // Sort
             0       // UnionAll
         }); 
-          
-        checkSubPlanCount(plan, 1);        
     }
     
     @Test public void testCase4279() throws Exception {
@@ -6065,8 +6047,6 @@ public class TestOptimizer {
                                       null, capFinder,
             new String[] { "SELECT CASE WHEN g_0.e1 = 'S' THEN 'Pay' WHEN g_0.e1 = 'P' THEN 'Rec' ELSE g_0.e1 END, CASE WHEN g_1.e1 = 'S' THEN 'Pay' WHEN g_1.e1 = 'P' THEN 'Rec' ELSE g_1.e1 END, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_0.e2 = g_1.e2 AND g_1.e2 = 1 WHERE g_0.e2 = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
-          
-        checkSubPlanCount(plan, 0);        
     }
     
     @Test public void testCase4312() {
@@ -6241,7 +6221,6 @@ public class TestOptimizer {
             0,      // Sort
             0       // UnionAll
         }); 
-        checkSubPlanCount(plan, 1);
     }   
     
     /**

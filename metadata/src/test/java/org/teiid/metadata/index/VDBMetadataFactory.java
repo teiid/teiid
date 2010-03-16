@@ -28,7 +28,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.virtual.VFS;
 import org.jboss.virtual.VirtualFile;
@@ -73,6 +75,18 @@ public class VDBMetadataFactory {
 				}
 			});
 			
+			List<VirtualFile> files = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
+				@Override
+				public boolean accepts(VirtualFile file) {
+					return !file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
+				}
+			});
+			
+			Map<VirtualFile, Boolean> vdbFiles = new HashMap<VirtualFile, Boolean>();
+			for (VirtualFile virtualFile : files) {
+				vdbFiles.put(virtualFile, Boolean.TRUE);
+			}
+			
 			IndexMetadataFactory imf = new IndexMetadataFactory();
 			for (VirtualFile f: children) {
 				imf.addIndexFile(f);
@@ -83,7 +97,7 @@ public class VDBMetadataFactory {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
 			
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(imf.getMetadataStore())), null, methods);
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(imf.getMetadataStore())), vdbFiles, methods);
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {

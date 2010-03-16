@@ -24,7 +24,6 @@ package com.metamatrix.query.processor.batch;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -241,13 +240,13 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     public List getUpdatePlans() {
         return Arrays.asList(updatePlans);
     }
-
-    /** 
-     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        return Arrays.asList(updatePlans);
+    
+    @Override
+    public boolean requiresTransaction(boolean transactionalReads) {
+		if (updatePlans.length == 1) {
+			return updatePlans[0].requiresTransaction(transactionalReads);
+		}
+		return true;
     }
 
 }

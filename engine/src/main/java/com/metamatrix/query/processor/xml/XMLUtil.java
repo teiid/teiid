@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import javax.xml.transform.TransformerException;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.FileStore;
@@ -62,6 +64,8 @@ public class XMLUtil {
             success = true;
             return createSQLXML(lobBuffer);
         } catch(IOException e) {
+            throw new MetaMatrixComponentException(e);
+        } catch(TransformerException e) {
             throw new MetaMatrixComponentException(e);
         } finally {
         	if (!success && lobBuffer != null) {

@@ -35,9 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -62,14 +62,8 @@ public class FunctionTree {
     // Constant used to look up the special descriptor key in a node map
     private static final Integer DESCRIPTOR_KEY = new Integer(-1);
 
-    /**
-     *  Function selection use: Category name (uppercase) to <Map of function name to List of FunctionMethod>
-     */
-    private Map metadata = new HashMap();
+    private Map<String, Set<String>> categories = new HashMap<String, Set<String>>();
 
-    /**
-     * Function selection use: Map of function name (uppercase) to List of FunctionMethod
-     */
     private Map<String, List<FunctionMethod>> functionsByName = new HashMap<String, List<FunctionMethod>>();
     
     private Set<FunctionMethod> allFunctions = new HashSet<FunctionMethod>();
@@ -179,25 +173,14 @@ public class FunctionTree {
         String nameKey = method.getName().toUpperCase();
 
         // Look up function map (create if necessary)
-        Map functions = null;
-        if(metadata.containsKey(categoryKey)) {
-            functions = (Map) metadata.get(categoryKey);
-        } else {
-            functions = new HashMap();
-            metadata.put(categoryKey, functions);
+        Set<String> functions = categories.get(categoryKey);
+        if (functions == null) {
+            functions = new HashSet<String>();
+            categories.put(categoryKey, functions);
         }
 
         // Look up function in function map
-        List methods = null;
-        if(functions.containsKey(nameKey)) {
-            methods = (List) functions.get(nameKey);
-        } else {
-            methods = new ArrayList();
-            functions.put(nameKey, methods);
-        }
-
-        // Add method to method list
-        methods.add(method);
+        functions.add(nameKey);
 
         // Add method to list by function name
         List<FunctionMethod> knownMethods = functionsByName.get(nameKey);
@@ -213,8 +196,8 @@ public class FunctionTree {
      * Get collection of category names.
      * @return Category names
      */
-    Collection getCategories() {
-        return metadata.keySet();
+    Collection<String> getCategories() {
+        return categories.keySet();
     }
 
     /**
@@ -222,19 +205,14 @@ public class FunctionTree {
      * @param category Category to get (case-insensitive)
      * @return Collection of {@link FunctionForm}s
      */
-    Collection getFunctionForms(String category) {
-        Set functionForms = new HashSet();
+    Collection<FunctionForm> getFunctionForms(String category) {
+        Set<FunctionForm> functionForms = new HashSet<FunctionForm>();
 
-        Map functions = (Map) metadata.get(category.toUpperCase());
+        Set<String> functions = categories.get(category.toUpperCase());
         if(functions != null) {
-            Iterator functionIter = functions.values().iterator();
-            while(functionIter.hasNext()) {
-                List methods = (List) functionIter.next();
-
-                Iterator methodIter = methods.iterator();
-                while(methodIter.hasNext()) {
-                    FunctionMethod method = (FunctionMethod) methodIter.next();
-                    functionForms.add(new FunctionForm(method));
+        	for (String functionName : functions) {
+        		for (FunctionMethod functionMethod : this.functionsByName.get(functionName)) {
+                    functionForms.add(new FunctionForm(functionMethod));
                 }
             }
         }

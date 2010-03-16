@@ -56,7 +56,6 @@ public class XMLProcessorEnvironment {
     private DocumentInProgress documentInProgress;
     
     private String xmlFormat;
-    private String xmlResultsForm;
     
     private GroupSymbol documentGroup;
     
@@ -138,8 +137,8 @@ public class XMLProcessorEnvironment {
         while (this.programStack.size() > 1 &&
                programState.programCounter >= programState.program.getProcessorInstructions().size()) {
             this.programStack.removeFirst();
-            if(LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
-                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"Processor Environment popped program w/ recursion count " + programState.recursionCount, "; " + this.programStack.size(), " programs left."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            if(LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
+                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Processor Environment popped program w/ recursion count " + programState.recursionCount, "; " + this.programStack.size(), " programs left."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             programState = (ProgramState)this.programStack.getFirst();
         }        
@@ -163,10 +162,10 @@ public class XMLProcessorEnvironment {
             } else {
                 programState.recursionCount = ProgramState.NOT_RECURSIVE + 1;
             }
-            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
             
         } else {
-            LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed non-recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
+            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed non-recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
         }
         this.programStack.addFirst(programState);
     }

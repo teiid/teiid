@@ -71,6 +71,7 @@ public class RequestMessage implements Externalizable {
     private int rowLimit;
     private Serializable executionPayload;
     private long executionId;
+    private int transactionIsolation;
     
     public RequestMessage() {
     }
@@ -322,6 +323,14 @@ public class RequestMessage implements Externalizable {
 	public void setResultsMode(ResultsMode resultsMode) {
 		this.resultsMode = resultsMode;
 	}
+	
+	public int getTransactionIsolation() {
+		return transactionIsolation;
+	}
+	
+	public void setTransactionIsolation(int transactionIsolation) {
+		this.transactionIsolation = transactionIsolation;
+	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
@@ -344,6 +353,7 @@ public class RequestMessage implements Externalizable {
 		this.rowLimit = in.readInt();
 		this.executionPayload = (Serializable)in.readObject();
 		this.executionId = in.readLong();
+		this.transactionIsolation = in.readInt();
 	}
 	
 	@Override
@@ -366,6 +376,7 @@ public class RequestMessage implements Externalizable {
 		out.writeInt(rowLimit);
 		out.writeObject(executionPayload);
 		out.writeLong(executionId);
+		out.writeInt(transactionIsolation);
 	}
 	
 }

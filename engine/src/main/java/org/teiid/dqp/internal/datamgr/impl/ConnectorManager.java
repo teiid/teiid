@@ -36,9 +36,6 @@ import javax.naming.NamingException;
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
-import org.jboss.managed.api.annotation.ManagementProperty;
-import org.jboss.managed.api.annotation.ViewUse;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorCapabilities;
@@ -49,14 +46,12 @@ import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
-import org.teiid.dqp.internal.process.StatsCapturingWorkManager;
 import org.teiid.logging.api.CommandLogMessage;
 import org.teiid.logging.api.CommandLogMessage.Event;
 import org.teiid.security.SecurityHelper;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
@@ -255,7 +250,7 @@ public class ConnectorManager  {
         String userName = qr.getWorkContext().getUserName();
         String transactionID = null;
         if ( qr.isTransactional() ) {
-            transactionID = qr.getTransactionContext().getXid().toString();
+            transactionID = qr.getTransactionContext().getTransactionId();
         }
         
         String modelName = qr.getModelName();

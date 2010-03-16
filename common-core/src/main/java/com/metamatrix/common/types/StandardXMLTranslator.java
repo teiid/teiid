@@ -61,19 +61,13 @@ public class StandardXMLTranslator extends XMLTranslator {
     }
     
     @Override
-    public void translate(Writer writer) throws IOException {
-        try {
-            Transformer t = TransformerFactory.newInstance().newTransformer(new StreamSource(new StringReader(idenityTransform)));
-            writer.write(XMLPI);
-            if (useIndentation()) {
-                writer.write(newLine); 
-            }
-            t.transform(source, new StreamResult(writer));
-        } catch (TransformerException e) {
-            IOException ex = new IOException(e.getMessage());
-            ex.initCause(e);
-            throw ex;
+    public void translate(Writer writer) throws TransformerException, IOException {
+        Transformer t = TransformerFactory.newInstance().newTransformer(new StreamSource(new StringReader(idenityTransform)));
+        writer.write(XMLPI);
+        if (useIndentation()) {
+            writer.write(newLine); 
         }
+        t.transform(source, new StreamResult(writer));
     }
         
     private boolean useIndentation() {

@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.teiid.connector.jdbc.oracle.OracleCapabilities;
 import org.teiid.connector.jdbc.sqlserver.SqlServerCapabilities;
-import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
+import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -193,7 +193,6 @@ public class TestTPCR extends BaseQueryTest {
         		METADATA, null, finder,
         		new String[] {"SELECT v_0.c_0, COUNT(*) AS c_1, SUM(v_0.c_1) AS c_2 FROM (SELECT left(g_0.C_PHONE, 2) AS c_0, g_0.C_ACCTBAL AS c_1 FROM TPCR_Oracle_9i.CUSTOMER AS g_0 WHERE (left(g_0.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')) AND (g_0.C_ACCTBAL > (SELECT AVG(g_1.C_ACCTBAL) FROM TPCR_Oracle_9i.CUSTOMER AS g_1 WHERE (g_1.C_ACCTBAL > 0.0) AND (left(g_1.C_PHONE, 2) IN ('13', '31', '23', '29', '30', '18', '17')))) AND (NOT (EXISTS (SELECT g_2.O_ORDERKEY, g_2.O_CUSTKEY, g_2.O_ORDERSTATUS, g_2.O_TOTALPRICE, g_2.O_ORDERDATE, g_2.O_ORDERPRIORITY, g_2.O_CLERK, g_2.O_SHIPPRIORITY, g_2.O_COMMENT FROM TPCR_Oracle_9i.ORDERS AS g_2 WHERE g_2.O_CUSTKEY = g_0.C_CUSTKEY)))) AS v_0 GROUP BY v_0.c_0 ORDER BY c_0"}, true); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testDefect22475() throws Exception {

@@ -25,7 +25,6 @@
 package com.metamatrix.query.processor.proc;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +74,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
      * Returns a deep clone
      */
     public Object clone(){
-        ProcessorPlan clonedPlan = (ProcessorPlan) this.plan.clone();
+        ProcessorPlan clonedPlan = this.plan.clone();
         return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan);
     }
     
@@ -89,16 +88,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         props.put(PROP_RESULT_SET, this.rsName);
         props.put(PROP_PROGRAM, this.loopProgram.getDescriptionProperties());
         return props;
-    }
-
-    /** 
-     * @see com.metamatrix.query.processor.program.ProgramInstruction#getChildPlans()
-     * @since 4.2
-     */
-    public Collection getChildPlans() {
-        Collection result = new ArrayList(super.getChildPlans());
-        result.addAll(loopProgram.getChildPlans());
-        return result;
     }
 
     /** 

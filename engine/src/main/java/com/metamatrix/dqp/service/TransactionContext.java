@@ -46,16 +46,7 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private long creationTime;
     private boolean rollback;
     private Transaction transaction;
-    private boolean embeddedTransaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-    
-    public boolean isEmbeddedTransaction() {
-		return embeddedTransaction;
-	}
-    
-    public void setEmbeddedTransaction(boolean embeddedTransaction) {
-		this.embeddedTransaction = embeddedTransaction;
-	}
     
     public long getCreationTime() {
 		return creationTime;
@@ -90,13 +81,16 @@ public class TransactionContext extends ExecutionContext implements Serializable
 	}
 
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        if (getXid() != null) {
-        	sb.append("xid: ").append(getXid()); //$NON-NLS-1$
-        } else {
-        	sb.append(transaction);
-        }
-        return sb.toString();
+    	return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
+    
+    public String getTransactionId() {
+    	if (this.transaction != null) {
+    		return this.transaction.toString();
+    	} else if (this.getXid() != null) {
+    		return this.getXid().toString();
+    	}
+    	return "NONE"; //$NON-NLS-1$
     }
 
     public void setRollbackOnly() {

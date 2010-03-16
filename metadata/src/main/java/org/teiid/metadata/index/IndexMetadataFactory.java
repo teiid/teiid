@@ -73,13 +73,19 @@ public class IndexMetadataFactory {
 			this.store = new MetadataStore();
 	    	ArrayList<Index> tmp = new ArrayList<Index>();
 			for (VirtualFile f : indexFiles) {
-	            tmp.add( new Index(f, true) );
+				Index index = new Index(f, true);
+				index.setDoCache(true);
+	            tmp.add(index);
 			}
 			this.indexes = tmp.toArray(new Index[tmp.size()]);
 			getDatatypeCache();
 			getModels();
 			getTables();
 			getProcedures();
+			//force close, since we cached the index files
+			for (Index index : tmp) {
+				index.close(); 
+			}
 		}
 		return store;
     }
@@ -360,14 +366,6 @@ public class IndexMetadataFactory {
         return patternStr;        
     }
         
-    /** 
-     * @see com.metamatrix.modeler.core.index.IndexSelector#getIndexes()
-     * @since 4.2
-     */
-    public synchronized Index[] getIndexes() {
-    	return this.indexes;
-    }
-
 	/**
 	 * Return all index file records that match the specified entity name  
 	 * @param indexName
@@ -492,10 +490,10 @@ public class IndexMetadataFactory {
     private IEntryResult[] queryIndex(char recordType, final char[] pattern, boolean isPrefix, boolean isCaseSensitive, boolean returnFirstMatch) {
     	// The the index file name for the record type
         final String indexName = SimpleIndexUtil.getIndexFileNameForRecordType(recordType);
-        Index[] search = SimpleIndexUtil.getIndexes(indexName, this.getIndexes());            
+        Index[] search = SimpleIndexUtil.getIndexes(indexName, this.indexes);            
 
     	try {
-            return SimpleIndexUtil.queryIndex(null, search, pattern, isPrefix, isCaseSensitive, returnFirstMatch);
+            return SimpleIndexUtil.queryIndex(search, pattern, isPrefix, isCaseSensitive, returnFirstMatch);
         } catch (MetaMatrixCoreException e) {
             throw new MetaMatrixRuntimeException(e);
         }

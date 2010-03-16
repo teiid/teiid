@@ -250,8 +250,6 @@ public class TestInlineView  {
 		ProcessorPlan plan = TestOptimizer.helpPlan(testCase.userQuery, metadata, null, capFinder, new String[] {testCase.optimizedQuery}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-            
-        TestOptimizer.checkSubPlanCount(plan, 0);
 	}	
 	
     @Test public void testAliasCreationWithInlineView() {
@@ -262,8 +260,6 @@ public class TestInlineView  {
                 metadata, null, capFinder, new String[] {"SELECT a, b FROM (SELECT DISTINCT COUNT(intNum) AS a, COUNT(stringKey) AS count1, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intkey) AS q1 ORDER BY a"}, true); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
-            
-        checkSubPlanCount(plan, 0);
     }
     
     @Test public void testAliasPreservationWithInlineView() {
@@ -274,8 +270,6 @@ public class TestInlineView  {
                 metadata, null, capFinder, new String[] {"SELECT (q1.a + 1), q1.b FROM (SELECT COUNT(bqt1.smalla.intNum) AS a, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intNum, bqt1.smalla.intkey HAVING COUNT(bqt1.smalla.intNum) = 1) AS q1"}, true); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
-            
-        checkSubPlanCount(plan, 0);
     }
     
     /**
@@ -305,8 +299,6 @@ public class TestInlineView  {
                 0,      // Sort
                 0       // UnionAll
             });    
-            
-        checkSubPlanCount(plan, 0);
     }
 
 }

@@ -22,10 +22,11 @@
 
 package com.metamatrix.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -35,6 +36,8 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.processor.proc.CreateCursorResultSetInstruction;
+import com.metamatrix.query.processor.proc.ProcedurePlan;
 import com.metamatrix.query.processor.proc.TestProcedureProcessor;
 import com.metamatrix.query.processor.relational.DependentProcedureExecutionNode;
 import com.metamatrix.query.processor.relational.RelationalNode;
@@ -259,8 +262,6 @@ public class TestProcedureRelational {
         ProcessorPlan plan = TestOptimizer.helpPlan(userQuery, FakeMetadataFactory.example1Cached(), 
             new String[] {} ); 
         
-        TestOptimizer.checkSubPlanCount(plan, 1);
-        
         RelationalPlan rplan = (RelationalPlan)plan;
 
         RelationalNode root = rplan.getRootNode();
@@ -277,7 +278,11 @@ public class TestProcedureRelational {
         
         assertEquals(inputCriteria, dep.getInputCriteria().toString()); 
         
-        plan = (ProcessorPlan)((ProcessorPlan)plan.getChildPlans().iterator().next()).getChildPlans().iterator().next();
+        ProcedurePlan pp = (ProcedurePlan)dep.getProcessorPlan();
+        
+        CreateCursorResultSetInstruction ccrsi = (CreateCursorResultSetInstruction)pp.getOriginalProgram().getInstructionAt(0);
+        
+        plan = ccrsi.getCommand();
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
         

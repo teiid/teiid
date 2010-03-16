@@ -221,8 +221,8 @@ public class FileStorageManager implements StorageManager {
     File createFile(String name, int fileNumber) throws MetaMatrixComponentException {
         try {
         	File storageFile = File.createTempFile(FILE_PREFIX + name + "_" + String.valueOf(fileNumber) + "_", null, this.dirFile); //$NON-NLS-1$ //$NON-NLS-2$
-            if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
+            if (LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+                LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
             }
             return storageFile;
         } catch(IOException e) {

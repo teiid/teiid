@@ -169,10 +169,6 @@ public class TestNameInSourceResolverVisitor extends TestCase {
             return 0;
         }
 
-        public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-            return 0;
-        }
-
         public void acceptVisitor(LanguageVisitor visitor) {
         }        
     }

@@ -40,7 +40,6 @@ public class TestStoredProcedurePlanning {
         ProcessorPlan plan = TestOptimizer.helpPlan("EXEC pm1.sq1()", new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1" }); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
-        TestOptimizer.checkSubPlanCount(plan, 0);        
     }
     
     /**

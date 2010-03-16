@@ -261,8 +261,8 @@ public class SortUtility {
             bufferManager.releaseBuffers(release);
             reserved -= release;
             try {
-	        	if (LogManager.isMessageToBeRecorded(com.metamatrix.common.util.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-	            	LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
+	        	if (LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
+	            	LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	        	// initialize the sublists with the min value
 	            for(int i = 0; i<maxSortIndex; i++) { 

@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -52,7 +53,6 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -246,18 +246,12 @@ public class TestPreparedStatement {
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
         workContext.getSession().setSessionId(conn); 
         
-        PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache) {
-        	@Override
-        	protected void createProcessor(Command processingCommand)
-        			throws MetaMatrixComponentException {
-        		
-        	}
-        };
+        PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache);
         
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
-        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null,  null, null, DEBUG, null, workContext, 101024,repo);
+        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, DEBUG, null, workContext, 101024,repo);
 
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();

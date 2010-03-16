@@ -22,7 +22,6 @@
 
 package org.teiid.metadata.index;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,21 +31,12 @@ import org.teiid.internal.core.index.Index;
 
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * IndexUtil
  */
 public class SimpleIndexUtil {
 	
-	public static interface ProgressMonitor {
-		
-		public void beginTask(String name, int totalWork);
-		
-		public void worked(int work);
-	}
-    
     //############################################################################################################################
     //# Constants                                                                                                                #
     //############################################################################################################################    
@@ -55,20 +45,6 @@ public class SimpleIndexUtil {
 
     //############################################################################################################################
     //# Indexing Methods                                                                                                       #
-    //############################################################################################################################
-
-    public static String getIndexFilePath(final String indexDirectoryPath, final String indexFileName) {
-        StringBuffer sb = new StringBuffer(100);
-        sb.append(indexDirectoryPath);
-        if (!indexDirectoryPath.endsWith(File.separator)) {
-            sb.append(File.separator);
-        }
-        sb.append(indexFileName);
-        return sb.toString();
-    }
-
-    //############################################################################################################################
-    //# Methods to query indexes                                                                                                 #
     //############################################################################################################################
 
     /**
@@ -84,18 +60,11 @@ public class SimpleIndexUtil {
      * @return results
      * @throws MetamatrixCoreException
      */
-    public static IEntryResult[] queryIndex(ProgressMonitor monitor, final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws MetaMatrixCoreException {
+    public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws MetaMatrixCoreException {
         final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();
-        if ( monitor != null ) {
-            monitor.beginTask( null, indexes.length );        
-        }
         
         try {
             for (int i = 0; i < indexes.length; i++) {
-                
-                if ( monitor != null ) {
-                    monitor.worked( 1 );
-                }
                 
                 IEntryResult[] partialResults = null;
                 if(isPrefix) {
@@ -178,68 +147,6 @@ public class SimpleIndexUtil {
     //############################################################################################################################
 
     /**
-     * Return true if the specifed index file exists on the file system
-     * otherwise return false.
-     */
-    public static boolean indexFileExists(final String indexFilePath) {
-        if (indexFilePath == null) {
-            return false;
-        }
-        String filePath = indexFilePath.replace(FileUtils.SEPARATOR, File.separatorChar);
-        final File indexFile = new File(filePath);
-        return indexFileExists(indexFile);
-    }  
-
-	/**
-	 * Return true if the specifed index file exists on the file system
-	 * otherwise return false.
-	 */
-	public static boolean indexFileExists(final File indexFile) {
-		if ( !indexFile.isDirectory() && indexFile.exists() ) {
-			return isIndexFile(indexFile.getName());
-		}
-		return false;
-	}
-	
-    /**
-     * Return true if the specifed index file represents a known index file
-     * on the file system otherwise return false.
-     */
-    public static boolean isModelIndex(final String indexFileName) {
-        if (!isIndexFile(indexFileName)) {
-            return false;
-        }
-        return !IndexConstants.INDEX_NAME.isKnownIndex(indexFileName);
-    }
-
-    /**
-     * Return true if the specifed index file represents a index file
-     * on the file system otherwise return false.
-     */
-    public static boolean isIndexFile(final String indexFileName) {
-		if (!StringUtil.isEmpty(indexFileName)) {
-		    String extension = FileUtils.getExtension(indexFileName);
-			if(extension != null ) {
-				if( extension.equals(IndexConstants.INDEX_EXT) || extension.equals(IndexConstants.SEARCH_INDEX_EXT)) {
-					return true;
-				}
-			}
-		}        
-		return false; 
-    }
-
-	/**
-	 * Return true if the specifed index file represents a index file
-	 * on the file system otherwise return false.
-	 */
-	public static boolean isIndexFile(final File indexFile) {
-		if (indexFile != null && indexFile.isFile()) {
-			return isIndexFile(indexFile.getName());
-		}        
-		return false; 
-	}
-
-	/**
 	 * Return an array of indexes given a indexName. 
 	 * @param indexName The shortName of the index file
 	 * @param selector The indexSelector to lookup indexes
@@ -298,48 +205,6 @@ public class SimpleIndexUtil {
 		  case MetadataConstants.RECORD_TYPE.FILE: return IndexConstants.INDEX_NAME.FILES_INDEX;
         }
         throw new IllegalArgumentException("Unkown record type " + recordType);
-    }
-    
-    /**
-     * Return the name of the index file to use for the specified record type, applies only for sever and vdb
-     * index files.
-     * @param recordType
-     * @return
-     */
-    public static String getRecordTypeForIndexFileName(final String indexName) {
-        char recordType;
-        if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.COLUMNS_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.COLUMN;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.TABLES_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.TABLE;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.MODELS_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.MODEL;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.DATATYPES_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.DATATYPE;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.VDBS_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.VDB_ARCHIVE;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.ANNOTATION_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.ANNOTATION;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.PROPERTIES_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.PROPERTY;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.SELECT_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.INSERT_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.UPDATE_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.DELETE_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.PROC_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.PROC_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.MAPPING_TRANSFORM_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM;
-        } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.FILES_INDEX)) {
-            recordType = MetadataConstants.RECORD_TYPE.FILE;
-        } else {
-            return null;
-        }
-        return StringUtil.Constants.EMPTY_STRING + recordType;
     }    
     
 }

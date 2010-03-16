@@ -331,7 +331,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
  
-        XMLPlan plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
 
         Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
@@ -383,7 +383,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for staging; one for staging and for unloading
         Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
@@ -404,7 +404,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging
         Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
@@ -417,7 +417,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging
         Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
@@ -430,13 +430,13 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        XMLPlan plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging by the mapping class name
         Map stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
         assertNull(stats.get(ExecStagingTableInstruction.class));
         
-        plan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
+        plan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 OPTION NOCACHE XMLTEST.SUPPLIERS", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
         
         //check for no staging by the alias mapping class name
         stats = XMLProgramUtil.getProgramStats(plan.getOriginalProgram());
@@ -450,7 +450,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan xmlPlan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
+        XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
         Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
         List list = (List)stats.get(ExecSqlInstruction.class);
         
@@ -490,7 +490,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan xmlPlan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
+        XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
         Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
         List list = (List)stats.get(ExecSqlInstruction.class);
         
@@ -528,7 +528,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-OnlySupplier51.xml"); //$NON-NLS-1$
         
-        XMLPlan xmlPlan = TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin where context(Supplier, SupplierID) = 51", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
+        XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin where context(Supplier, SupplierID) = 51", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
         //check for staging; one for staging and for unloading - only two pairs are expected
         Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
         assertEquals(4, ((List)stats.get(ExecStagingTableInstruction.class)).size());

@@ -163,9 +163,6 @@ public class TestProcessor {
 	        
 	        assertNotNull("Output elements of process plan are null", process.getOutputElements()); //$NON-NLS-1$
 
-	        // verify we can get child plans for any plan with no problem
-	        process.getChildPlans();
-	        
 			return process;
         } catch (MetaMatrixComponentException e) {
             throw new RuntimeException(e);

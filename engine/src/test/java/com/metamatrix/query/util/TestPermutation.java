@@ -20,12 +20,14 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.util;
+package com.metamatrix.query.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import com.metamatrix.query.util.Permutation;
 
 import junit.framework.TestCase;
 

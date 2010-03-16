@@ -31,8 +31,8 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -62,7 +62,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -111,8 +110,7 @@ public final class XMLPlanner implements CommandPlanner{
         }
 
         // lookup mapping node for the user command
-        Collection groups = GroupCollectorVisitor.getGroups(xmlQuery, true);
-        GroupSymbol group = (GroupSymbol) groups.iterator().next();
+        GroupSymbol group = (GroupSymbol)xmlQuery.getFrom().getGroups().iterator().next();
 
         MappingDocument doc = (MappingDocument)metadata.getMappingNode(group.getMetadataID());
         doc = (MappingDocument)doc.clone();
@@ -140,7 +138,7 @@ public final class XMLPlanner implements CommandPlanner{
         XMLProcessorEnvironment env = planEnv.createProcessorEnvironment(programPlan);    
         env.setChildPlans(getChildPlans(doc));
         XMLPlan plan = new XMLPlan(env);
-
+    	plan.setXMLSchemas(metadata.getXMLSchemas(group.getMetadataID()));
         if(debug) {
             analysisRecord.println(""); //$NON-NLS-1$
             analysisRecord.println(plan.toString());

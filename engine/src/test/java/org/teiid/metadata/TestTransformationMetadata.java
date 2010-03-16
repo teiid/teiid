@@ -35,7 +35,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
@@ -61,7 +60,6 @@ public class TestTransformationMetadata {
 		vdb.addModel(buildModel("x1"));
 		
 		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, null);
-		DQPWorkContext context = FakeMetadataFactory.buildWorkContext(tm, vdb);
 
 		try {
 			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$

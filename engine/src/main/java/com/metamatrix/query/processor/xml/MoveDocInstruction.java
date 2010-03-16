@@ -61,7 +61,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
 
         switch(this.direction) {
             case UP:
-                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
                 try {
                     doc.moveToParent();
                 } catch (SAXException err) {
@@ -69,7 +69,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
                 }
                 break;
             case DOWN:
-                LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
+                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
                 doc.moveToLastChild();
                 break;
             default:

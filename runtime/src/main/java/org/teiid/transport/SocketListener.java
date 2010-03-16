@@ -33,9 +33,9 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 

@@ -31,8 +31,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.security.SecurityPlugin;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 
 /**
  * This class represents a heterogeneous set of AuthorizationPermission instances.  Like the AuthorizationPermission

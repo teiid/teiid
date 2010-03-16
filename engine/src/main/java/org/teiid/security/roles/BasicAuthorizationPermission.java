@@ -24,8 +24,8 @@ package org.teiid.security.roles;
 
 import org.teiid.security.SecurityPlugin;
 
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogConstants;
 
 /**
  * A BasicAuthorizationPermission defines access permissions for Metadata resources (i.e., MetadataID instances).

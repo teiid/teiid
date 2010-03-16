@@ -31,9 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -317,24 +315,6 @@ public abstract class Command implements LanguageObject {
             updateCommandSymbol = Arrays.asList((SingleElementSymbol)symbol);
         }
         return updateCommandSymbol;
-    }
-    
-    /**
-     * Return the number of updates on physical sources by this command. 
-     * @param metadata QueryMetadataInterface
-     * @return The number of updates on physical sources by this command. 
-     * @since 4.3
-     */
-    public abstract int updatingModelCount(QueryMetadataInterface metadata)  throws MetaMatrixComponentException;
-    
-    protected int getSubCommandsUpdatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException{
-        List<Command> subCommands = CommandCollectorVisitor.getCommands(this);
-        for (Command command : subCommands) {
-            if (command.updatingModelCount(metadata) > 0) {
-                return 2; //require a transaction if there is more than 1 statement
-            }
-        }
-        return 0;
     }
     
     public ProcessorPlan getProcessorPlan() {
