@@ -39,6 +39,7 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.adminapi.DataRole;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
@@ -50,7 +51,7 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
     "description",
     "JAXBProperties",
     "models",
-    "securityRoleMappings"
+    "roles"
 })
 @XmlRootElement(name = "vdb")
 public class VDBMetaData extends AdminObjectImpl implements VDB {
@@ -70,26 +71,23 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});
 	
+	@XmlElement(name = "role", required = true, type = DataRoleMetadata.class)
+	protected ListOverMap<DataRoleMetadata> roles = new ListOverMap<DataRoleMetadata>(new KeyBuilder<DataRoleMetadata>() {
+		@Override
+		public String getKey(DataRoleMetadata entry) {
+			return entry.getName();
+		}
+	});	
+	
 	@XmlAttribute(name = "version", required = true)
 	private int version = 1;
 	
 	@XmlElement(name = "description")
 	protected String description;
 	
-    @XmlElement(name = "role-mapping")
-    protected ListOverMap<ReferenceMappingMetadata> securityRoleMappings = new ListOverMap<ReferenceMappingMetadata>(new KeyBuilder<ReferenceMappingMetadata>() {
-			@Override
-			public String getKey(ReferenceMappingMetadata entry) {
-				return entry.getRefName();
-			}
-	});
-    
 	private String fileUrl = null;
 	private boolean dynamic = false;
 	
-	public VDBMetaData() {
-		// auto add sytem model.
-	}
 
 	@ManagementProperty(description="Name of the VDB")
 	@ManagementObjectID(type="vdb")
@@ -230,15 +228,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return list;
 	}
 	
-    @ManagementProperty(description="Security refrence mappings", managed=true)
-	public List<ReferenceMappingMetadata> getSecurityRoleMappings() {
-		return new ArrayList<ReferenceMappingMetadata>(this.securityRoleMappings);
-	}    
-	
-	public void addSecurityRoleMapping(ReferenceMappingMetadata data) {
-		this.securityRoleMappings.getMap().put(data.getRefName(), data);
-	}
-	
 	@Override
     public Properties getProperties() {
         return super.getProperties();
@@ -260,4 +249,29 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public void setDynamic(boolean dynamic) {
 		this.dynamic = dynamic;
 	}	
+	
+	@Override
+	@ManagementProperty(description="Data Roles in a VDB", managed=true)
+	public List<DataRole> getDataRoles(){
+		return new ArrayList<DataRole>(this.roles.getMap().values());
+	}	
+	
+	/**
+	 * This method is required by the Management framework to write the mappings.
+	 * @param roles
+	 */
+	public void setDataRoles(List<DataRole> roles){
+		this.roles.getMap().clear();
+		for (DataRole role:roles) {
+			this.roles.getMap().put(role.getName(), (DataRoleMetadata)role);
+		}
+	}	
+	
+	public void addDataRole(DataRoleMetadata role){
+		this.roles.getMap().put(role.getName(), role);
+	}
+	
+	public DataRoleMetadata getDataRole(String roleName) {
+		return this.roles.getMap().get(roleName);
+	}
 }

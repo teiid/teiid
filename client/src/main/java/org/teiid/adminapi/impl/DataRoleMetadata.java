@@ -22,6 +22,8 @@
 package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,55 +32,41 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
+import org.jboss.managed.api.annotation.ManagementProperties;
+import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.adminapi.DataRole;
 
 
-/**
- * <pre>
- * &lt;complexType>
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="description" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
- *         &lt;element name="resource-name" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="allow-create" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="allow-read" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="allow-update" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="allow-delete" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *       &lt;/sequence>
- *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- * 
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
     "description",
-    "resourceName",
-    "allowCreate",
-    "allowRead",
-    "allowUpdate",
-    "allowDelete"
+    "permissions",
+    "mappedRoleNames"
 })
-@ManagementObject
-public class DataRoleMetadata implements Serializable {
-
-    @XmlAttribute(name = "name", required = true)
+@ManagementObject(properties=ManagementProperties.EXPLICIT)
+public class DataRoleMetadata implements DataRole, Serializable {
+	private static final long serialVersionUID = -4119646357275977190L;
+	
+	@XmlAttribute(name = "name", required = true)
     protected String name;
 	@XmlElement(name = "description")
     protected String description;
-    @XmlElement(name = "resource-name", required = true)
-    protected String resourceName;
-    @XmlElement(name = "allow-create")
-    protected Boolean allowCreate;
-    @XmlElement(name = "allow-read")
-    protected Boolean allowRead;
-    @XmlElement(name = "allow-update")
-    protected Boolean allowUpdate;
-    @XmlElement(name = "allow-delete")
-    protected Boolean allowDelete;
 
+    @XmlElement(name = "permission")
+    protected ListOverMap<PermissionMetaData> permissions = new ListOverMap<PermissionMetaData>(new KeyBuilder<PermissionMetaData>() {
+		@Override
+		public String getKey(PermissionMetaData entry) {
+			return entry.getResourceName();
+		}
+	});	
+    
+    @XmlElement(name = "mapped-role-name")
+    protected List<String> mappedRoleNames;
+
+	@Override
+	@ManagementProperty(description="Role Name")
+	@ManagementObjectID(type="role")
     public String getName() {
         return name;
     }
@@ -87,6 +75,8 @@ public class DataRoleMetadata implements Serializable {
         this.name = value;
     }
     
+    @Override
+    @ManagementProperty(description="Role Description")
     public String getDescription() {
         return description;
     }
@@ -95,43 +85,120 @@ public class DataRoleMetadata implements Serializable {
         this.description = value;
     }
 
-    public String getResourceName() {
-        return resourceName;
-    }
+	@Override
+	@ManagementProperty(description="Permissions in a Data Role", managed=true)
+	public List<Permission> getPermissions() {
+		return new ArrayList<Permission>(this.permissions.getMap().values());
+	}
+	
+	public void setPermissions(List<Permission> permissions) {
+		this.permissions.getMap().clear();
+		for (Permission permission:permissions) {
+			this.permissions.getMap().put(permission.getResourceName(), (PermissionMetaData)permission);
+		}
+	}	
+	
+	public PermissionMetaData getPermission(String resourceName) {
+		return this.permissions.getMap().get(resourceName);
+	}
+	
+	public void addPermission(PermissionMetaData permission) {
+		this.permissions.getMap().put(permission.getResourceName(), permission);
+	}
+	
+    @Override
+    @ManagementProperty(description="Mapped Container role names mapped to this role")    
+    public List<String> getMappedRoleNames() {
+		return mappedRoleNames;
+	}
 
-    public void setResourceName(String value) {
-        this.resourceName = value;
-    }
+	public void setMappedRoleNames(List<String> names) {
+		this.mappedRoleNames = names;
+	}    
+	
+	
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "", propOrder = {
+        "resourceName",
+        "allowCreate",
+        "allowRead",
+        "allowUpdate",
+        "allowDelete"
+    })	
+    @ManagementObject(properties=ManagementProperties.EXPLICIT)
+	public static class PermissionMetaData implements Permission{
+        @XmlElement(name = "resource-name", required = true)
+        protected String resourceName;
+        @XmlElement(name = "allow-create")
+        protected Boolean allowCreate;
+        @XmlElement(name = "allow-read")
+        protected Boolean allowRead;
+        @XmlElement(name = "allow-update")
+        protected Boolean allowUpdate;
+        @XmlElement(name = "allow-delete")
+        protected Boolean allowDelete;
+        
+        @Override
+        @ManagementProperty(description="Resource Name, for which role defined")
+        @ManagementObjectID(type="permission")
+        public String getResourceName() {
+            return resourceName;
+        }
 
-    public Boolean isAllowCreate() {
-        return allowCreate;
-    }
+        public void setResourceName(String value) {
+            this.resourceName = value;
+        }
 
-    public void setAllowCreate(Boolean value) {
-        this.allowCreate = value;
-    }
+        @Override
+        @ManagementProperty(description="Allows Create")
+        public boolean isAllowCreate() {
+        	if (allowCreate == null) {
+        		return false;
+        	}
+            return allowCreate;
+        }
 
-    public Boolean isAllowRead() {
-        return allowRead;
-    }
+        public void setAllowCreate(Boolean value) {
+            this.allowCreate = value;
+        }
 
-    public void setAllowRead(Boolean value) {
-        this.allowRead = value;
-    }
+        @Override
+        @ManagementProperty(description="Allows Read")
+        public boolean isAllowRead() {
+        	if (allowRead == null) {
+        		return false;
+        	}
+            return allowRead;
+        }
 
-    public Boolean isAllowUpdate() {
-        return allowUpdate;
-    }
+        public void setAllowRead(Boolean value) {
+            this.allowRead = value;
+        }
 
-    public void setAllowUpdate(Boolean value) {
-        this.allowUpdate = value;
-    }
+        @Override
+        @ManagementProperty(description="Allows Update")
+        public boolean isAllowUpdate() {
+        	if (allowUpdate == null) {
+        		return false;
+        	}
+            return allowUpdate;
+        }
 
-    public Boolean isAllowDelete() {
-        return allowDelete;
-    }
+        public void setAllowUpdate(Boolean value) {
+            this.allowUpdate = value;
+        }
 
-    public void setAllowDelete(Boolean value) {
-        this.allowDelete = value;
-    }
+        @Override
+        @ManagementProperty(description="Allows Delete")
+        public boolean isAllowDelete() {
+        	if (allowDelete == null) {
+        		return false;
+        	}
+            return allowDelete;
+        }
+
+        public void setAllowDelete(Boolean value) {
+            this.allowDelete = value;
+        }        
+	}
 }

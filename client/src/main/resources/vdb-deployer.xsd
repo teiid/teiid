@@ -53,11 +53,18 @@
 					<xs:complexType>
 						<xs:sequence>
 							<xs:element name="description" type="xs:string" minOccurs="0"/>
-							<xs:element name="resource-name" type="xs:string"/>
-							<xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
-							<xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
-							<xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
-							<xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
+                            <xs:element name="permission" minOccurs="1" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>                            
+							             <xs:element name="resource-name" type="xs:string"/>
+							             <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
+                                   </xs:sequence>      
+                                </xs:complexType>
+                            </xs:element>                                                                      
+                            <xs:element name="mapped-role-name" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="name" type="xs:string" use="required"/>
 					</xs:complexType>
@@ -71,7 +78,6 @@
                         <xs:attribute name="path" type="xs:string" use="required"/>
                     </xs:complexType>
                 </xs:element>
-				<xs:element name="role-mapping" type="reference-mapping" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 			<xs:attribute name="name" type="xs:string" use="required"/>
 			<xs:attribute name="version" type="xs:int" use="required"/>
@@ -83,11 +89,5 @@
 		</xs:annotation>
 		<xs:attribute name="name" type="xs:string" use="required"/>
 		<xs:attribute name="value" type="xs:string" use="required"/>
-	</xs:complexType>
-	<xs:complexType name="reference-mapping">
-		<xs:sequence>
-			<xs:element name="ref-name" type="xs:string"/>
-			<xs:element name="resource-name" type="xs:string" maxOccurs="unbounded"/>
-		</xs:sequence>
 	</xs:complexType>
 </xs:schema>

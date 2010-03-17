@@ -25,6 +25,8 @@ import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -34,7 +36,9 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.junit.Test;
+import org.teiid.adminapi.DataRole;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.impl.DataRoleMetadata.PermissionMetaData;
 
 
 public class TestVDBMetaData {
@@ -43,34 +47,53 @@ public class TestVDBMetaData {
 	public void testMarshellUnmarshell() throws Exception {
 		
 		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("myVDB");
-		vdb.setDescription("vdb description");
+		vdb.setName("myVDB"); //$NON-NLS-1$
+		vdb.setDescription("vdb description"); //$NON-NLS-1$
 		vdb.setVersion(1);
-		vdb.addProperty("vdb-property", "vdb-value");
+		vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		ModelMetaData modelOne = new ModelMetaData();
-		modelOne.setName("model-one");
-		modelOne.addSourceMapping("s1", "java:mybinding");
-		modelOne.setModelType("PHYSICAL");
-		modelOne.addProperty("model-prop", "model-value");
-		modelOne.addProperty("model-prop", "model-value-override");
+		modelOne.setName("model-one"); //$NON-NLS-1$
+		modelOne.addSourceMapping("s1", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.setModelType("PHYSICAL"); //$NON-NLS-1$
+		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setVisible(false);
-		modelOne.addError("ERROR", "There is an error in VDB");
+		modelOne.addError("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		vdb.addModel(modelOne);
 		
 		ModelMetaData modelTwo = new ModelMetaData();
-		modelTwo.setName("model-two");
-		modelTwo.addSourceMapping("s1", "java:binding-one");
-		modelTwo.addSourceMapping("s2", "java:binding-two");
-		modelTwo.setModelType("VIRTUAL");
-		modelTwo.addProperty("model-prop", "model-value");
+		modelTwo.setName("model-two"); //$NON-NLS-1$
+		modelTwo.addSourceMapping("s1", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.addSourceMapping("s2", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.setModelType("VIRTUAL"); //$NON-NLS-1$
+		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		vdb.addModel(modelTwo);
 		
+		DataRoleMetadata roleOne = new DataRoleMetadata();
+		roleOne.setName("roleOne"); //$NON-NLS-1$
+		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
+		
+		PermissionMetaData perm1 = new PermissionMetaData();
+		perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
+		perm1.setAllowRead(true);
+		roleOne.addPermission(perm1);
+		
+		PermissionMetaData perm2 = new PermissionMetaData();
+		perm2.setResourceName("myTable.T2"); //$NON-NLS-1$
+		perm2.setAllowRead(false);
+		perm2.setAllowDelete(true);
+		roleOne.addPermission(perm2);
+		
+		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		vdb.addDataRole(roleOne);
+		
 
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		
+        Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		 //$NON-NLS-1$
 		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
 		Marshaller marshell = jc.createMarshaller();
 		marshell.setSchema(schema);
@@ -86,31 +109,51 @@ public class TestVDBMetaData {
 		un.setSchema(schema);
 		vdb = (VDBMetaData)un.unmarshal(new StringReader(sw.toString()));
 		
-		assertEquals("myVDB", vdb.getName());
-		assertEquals("vdb description", vdb.getDescription());
+		assertEquals("myVDB", vdb.getName()); //$NON-NLS-1$
+		assertEquals("vdb description", vdb.getDescription()); //$NON-NLS-1$
 		assertEquals(1, vdb.getVersion());
-		assertEquals("vdb-value", vdb.getPropertyValue("vdb-property"));
+		assertEquals("vdb-value", vdb.getPropertyValue("vdb-property")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		assertNotNull(vdb.getModel("model-one"));
-		assertNotNull(vdb.getModel("model-two"));
-		assertNull(vdb.getModel("model-unknown"));
+		assertNotNull(vdb.getModel("model-one")); //$NON-NLS-1$
+		assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$
+		assertNull(vdb.getModel("model-unknown")); //$NON-NLS-1$
 		
-		modelOne = vdb.getModel("model-one");
-		assertEquals("model-one", modelOne.getName());
-		assertEquals("s1", modelOne.getSourceNames().get(0));
+		modelOne = vdb.getModel("model-one"); //$NON-NLS-1$
+		assertEquals("model-one", modelOne.getName()); //$NON-NLS-1$
+		assertEquals("s1", modelOne.getSourceNames().get(0)); //$NON-NLS-1$
 		assertEquals(Model.Type.PHYSICAL, modelOne.getModelType()); 
-		assertEquals("model-value-override", modelOne.getPropertyValue("model-prop"));
+		assertEquals("model-value-override", modelOne.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertFalse(modelOne.isVisible());
 
 		
-		modelTwo = vdb.getModel("model-two");
-		assertEquals("model-two", modelTwo.getName());
-		assertTrue(modelTwo.getSourceNames().contains("s1"));
-		assertTrue(modelTwo.getSourceNames().contains("s2"));
+		modelTwo = vdb.getModel("model-two"); //$NON-NLS-1$
+		assertEquals("model-two", modelTwo.getName()); //$NON-NLS-1$
+		assertTrue(modelTwo.getSourceNames().contains("s1")); //$NON-NLS-1$
+		assertTrue(modelTwo.getSourceNames().contains("s2")); //$NON-NLS-1$
 		assertEquals(Model.Type.VIRTUAL, modelTwo.getModelType()); // this is not persisted in the XML
-		assertEquals("model-value", modelTwo.getPropertyValue("model-prop"));
+		assertEquals("model-value", modelTwo.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		
-		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB"));
+		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
+		
+		List<DataRole> roles = vdb.getDataRoles();
+		
+		assertTrue(roles.size() == 1);
+		
+		DataRoleMetadata role = vdb.getDataRole("roleOne"); //$NON-NLS-1$
+		assertEquals("roleOne described", role.getDescription()); //$NON-NLS-1$
+		assertNotNull(role.getMappedRoleNames());
+		assertTrue(role.getMappedRoleNames().contains("ROLE1")); //$NON-NLS-1$
+		assertTrue(role.getMappedRoleNames().contains("ROLE2")); //$NON-NLS-1$
+		
+		assertEquals(2, role.getPermissions().size());
+		PermissionMetaData p1 = role.getPermission("myTable.T1"); //$NON-NLS-1$
+		
+		assertTrue(p1.isAllowRead());
+		assertFalse(p1.isAllowDelete());
+		
+		PermissionMetaData p2 = role.getPermission("myTable.T2"); //$NON-NLS-1$
+		assertFalse(p2.isAllowRead());
+		assertTrue(p2.isAllowDelete());
 	}
 }

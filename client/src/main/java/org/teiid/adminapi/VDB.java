@@ -88,4 +88,10 @@ public interface VDB extends AdminObject {
      * @return
      */
     public boolean isValid();
+    
+    /**
+     * Get the data roles defined on this VDB
+     * @return
+     */
+    public List<DataRole> getDataRoles();
 }
