@@ -4,12 +4,11 @@
  */
 package org.teiid.test.testcases;
 
+import org.teiid.jdbc.api.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
 import org.teiid.test.framework.transaction.LocalTransaction;
-
-import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
 

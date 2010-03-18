@@ -35,12 +35,16 @@ import com.metamatrix.core.CorePlugin;
  * this is the ID that client needs to reference to get the chunk of data.
  */
 public abstract class Streamable<T> implements Serializable {
+
+	private static final long serialVersionUID = -8252488562134729374L;
+	
 	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
     public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 
     private String referenceStreamId;
     protected transient T reference;
+	protected long length = -1;
     
     public Streamable() {
     	
@@ -53,6 +57,10 @@ public abstract class Streamable<T> implements Serializable {
 
     	this.reference = reference;
     }
+    
+    public long getLength() {
+		return length;
+	}
     
     public T getReference() {
 		return reference;

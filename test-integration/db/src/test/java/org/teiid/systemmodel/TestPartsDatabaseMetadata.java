@@ -32,9 +32,9 @@ import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.jdbc.api.AbstractMMQueryTestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 /**
  * Test the DatabaseMetadata results using the Parts VDB.

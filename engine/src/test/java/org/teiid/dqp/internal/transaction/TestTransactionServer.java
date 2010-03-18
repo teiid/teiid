@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Transaction;
 
-import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XidImpl;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.service.TransactionContext;
 public class TestTransactionServer {
@@ -45,10 +45,10 @@ public class TestTransactionServer {
     private static final String THREAD1 = "1"; //$NON-NLS-1$
     private static final String THREAD2 = "2"; //$NON-NLS-1$
 
-    private static final MMXid XID1 = new MMXid(0, new byte[] {
+    private static final XidImpl XID1 = new XidImpl(0, new byte[] {
         1
     }, new byte[0]);
-    private static final MMXid XID2 = new MMXid(0, new byte[] {
+    private static final XidImpl XID2 = new XidImpl(0, new byte[] {
         2
     }, new byte[0]);
 

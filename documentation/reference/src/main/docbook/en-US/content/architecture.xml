@@ -6,41 +6,15 @@
     <title>Terminology</title>
     <itemizedlist>
       <listitem>
-        <para>VM or Process – a processing node and Java VM.  Now
-          typically called a Process or “node” depending on context.  
+        <para>VM or Process – a JBossAS instance running Teiid.  
         </para>
       </listitem>
       <listitem>
         <para>Host – a machine that is “hosting” one or more VMs.</para>
       </listitem>
       <listitem>
-        <para>Host controller – an app that runs on a host and can
-          stop/start/control a VM</para>
-      </listitem>
-      <listitem>
-        <para>VM controller – the component of a VM that starts up the
-          VM, connects to the distributed message bus and registry, and
-          triggers the service controller to start all the services for
-          this VM.</para>
-      </listitem>
-      <listitem>
         <para>Service – a subsystem running in a VM (often in
           many VMs) and providing a  related set of functionality</para>
-      </listitem>
-      <listitem>
-        <para>Registry – a distributed service registry (one
-          instance in each VM and host controller) that shares the
-          status of current system (existence of VMs and services), and
-          provides remote access to other services via RMI</para>
-      </listitem>
-      <listitem>
-        <para>Service Controller – a component within the VM that
-          the registry uses to start/stop/control services</para>
-      </listitem>
-      <listitem>
-        <para>Repository database – the repository database
-          stores the system configuration and other service-specific
-          information (sessions, users, entitlements, vdbs, etc).</para>
       </listitem>
     </itemizedlist>
     <para>In addition to these main components, the service platform
@@ -51,21 +25,22 @@
         <para>Session – the Session service manages active
           session information.  Active sessions are stored in a
           distributed cache and shared between Session services in each
-          VM.</para>
-      </listitem>
-      <listitem>
-        <para>Membership – the Membership service manages
-          authentication, users, and groups.  This was redesigned in the
-          5.5 release to provide primary support for LDAP authentication
-          and authorization.  Custom membership modules can allow be
-          developed as needed.</para>
+          VM.
+        </para>
       </listitem>
       <listitem>
         <para>Authorization – the Authorization service
-          manages user entitlements.  This service persists entitlements
-          information in the repository database.  Entitlements use is
+          manages user entitlements.  Entitlements use is
           optional (as specified in the configuration) and off by
           default.</para>
+      </listitem>
+      <listitem>
+        <para>Buffer Manager – the <link linkend="buffer_management">Buffer Manager</link> service
+          provides access to data management for intermediate results.</para>
+      </listitem>
+      <listitem>
+        <para>Transaction – the Transaction service
+          manages global, local, and request scoped transactions.  See also the documentation on <link linkend="transaction_support">transaction support</link>.</para>
       </listitem>
     </itemizedlist>
   </sect1>
@@ -89,7 +64,7 @@
         based on client demand for the data. Pre-fetching is utilized at
         both the client and connector levels.</para>
     </sect2>
-    <sect2>
+    <sect2 id="buffer_management">
       <title>Buffer Management</title>
       <para> The buffer manager manages memory for all result sets used
         in the query engine. That includes result sets read from a
@@ -98,9 +73,7 @@
         is referred to in the buffer manager as a tuple source.</para>
       <para>When retrieving batches from the buffer manager, the
         size of a batch in bytes is estimated and then allocated against
-        the max and session session limits. If a limit is exceeded and
-        memory space cannot be cleared for the batch, then processing
-        can optionally give up its timeslice and try again.</para>
+        the max limit.</para>
       <sect3>
         <title>Memory Management</title>
         <para>The buffer manager has two storage managers - a memory
@@ -116,18 +89,13 @@
           is random access. The connector batch size and processor batch
           size properties define how many rows can exist in a batch and
           thus define how granular the batches are when stored into the
-          storage manager. Batches are NOT removed from the file when
-          they are swapped back into memory because that would require
-          removing data out of the middle of the file and updating all
-          the indexes which would be very expensive. Thus the disk
-          storage manager never removes a particular batch. Batches are
+          storage manager. Batches are
           always read and written from the storage manager whole.</para>
         <para>The disk storage manager has a cap on the maximum
           number of open files to prevent running out of file handles.
           In cases with heavy buffering, this can cause wait times while
-          waiting for a file handle to become available - customers may
-          want to increase the number of open files allowed (a
-          configuration parameter defaulted to 10).</para>
+          waiting for a file handle to become available (the default max
+          open files is 64).</para>
       </sect3>
     </sect2>
     <sect2>
@@ -141,13 +109,10 @@
         session is terminated (by closing the connection, server
         detecting client shutdown, or administrative termination), a
         call is sent to the buffer manager to remove all tuple sources
-        for the session. This is a final cleanup mechanism that removes
-        all state associated with a session.</para>
+        for the session.</para>
       <para> In addition, when the query engine is shutdown, the buffer
         manager is shut down, which will remove all state from the disk
-        storage manager and cause all files to be closed. In general,
-        these mechanisms mean that the engine should always shut down
-        with 0 open files. When the query engine is stopped, it is safe
+        storage manager and cause all files to be closed. When the query engine is stopped, it is safe
         to delete any files in the buffer directory as they are not used
         across query engine restarts and must be due to a system crash
         where buffer files were not cleaned up.</para>
@@ -157,9 +122,6 @@
     <title>Query Termination</title>
     <sect2>
       <title>Canceling Queries</title>
-      <para>If the client issues a ‘cancel’ command, then no results
-        from the batch currently being processed in the server will be
-        returned to the client.</para>
       <para>When a query is canceled, processing will be stopped in
         the query engine and in all connectors involved in the query.
         The semantics of what a connector does in response to a
@@ -191,16 +153,11 @@
       <para>Merge join first sorts the input sources on the joined
         columns.  You can then walk through each side in parallel
         (effectively one pass through each sorted source) and when you
-        have a match, emit a row.  Because the inputs are sorted, you
-        can skip through large portions of the input without comparing
-        if one side is less than the other.  In general, merge join is
-        on the order of n+m rather than n*m in nested loop.  When n and
-        m are large, this makes a huge difference.  Merge join is the
-        default algorithm.  It cannot support full outer join or
-        non-equality criteria, but other than that handles almost all
-        common cases well.  </para>
+        have a match, emit a row.  In general, merge join is
+        on the order of n+m rather than n*m in nested loop.  Merge join is the
+        default algorithm.</para>
       <para>Any of the Join Algorithms above can be made into a
-        dependent join (however hash joins would need new logic).  The
+        dependent join.  The
         decision to implement a dependent join is considered after the
         join algorithm is chosen, and does not currently influence the
         algorithm selection.</para>

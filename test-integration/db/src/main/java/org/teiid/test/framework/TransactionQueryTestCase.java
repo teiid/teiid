@@ -5,10 +5,10 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.jdbc.api.AbstractQueryTest;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
-import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 /**
  * The TransactionQueryTest interface represents the transaction test lifecycle of execution

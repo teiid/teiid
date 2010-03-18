@@ -25,12 +25,13 @@ package com.metamatrix.dqp.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.plan.api.ExecutionProperties;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.message.RequestMessage.StatementType;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestRequestMessage extends TestCase {
 

@@ -8,11 +8,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.api.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
-
-import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
 /** 
@@ -524,8 +524,8 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
                  	Throwable t = s.getCause();
                  	if (t instanceof TimeoutException) {
                  	   msg = t.getMessage();
-                 	} else if (s instanceof com.metamatrix.jdbc.MMSQLException) {
-                 	     com.metamatrix.jdbc.MMSQLException mm = (com.metamatrix.jdbc.MMSQLException) t;
+                 	} else if (s instanceof TeiidSQLException) {
+                 		 TeiidSQLException mm = (TeiidSQLException) t;
                  	     if (mm.getNextException() != null) {
                  		 SQLException next = mm.getNextException();
                  		 msg = next.getMessage();

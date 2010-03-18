@@ -36,6 +36,7 @@ import org.jboss.virtual.VFS;
 import org.jboss.virtual.VirtualFile;
 import org.jboss.virtual.VirtualFileFilter;
 import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
@@ -43,13 +44,12 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBMetadataFactory {
 	
-	public static LRUCache<URL, QueryMetadataInterface> VDB_CACHE = new LRUCache<URL, QueryMetadataInterface>(10);
+	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
 	
-	public static QueryMetadataInterface getVDBMetadata(String vdbFile) {
+	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
 			return getVDBMetadata(new File(vdbFile).toURI().toURL(), null);
 		} catch (IOException e) {
@@ -57,23 +57,16 @@ public class VDBMetadataFactory {
 		}
     }
 	
-	public static QueryMetadataInterface getVDBMetadata(URL vdbURL, URL udfFile) throws IOException {
-		QueryMetadataInterface vdbmetadata = VDB_CACHE.get(vdbURL);
+	public static TransformationMetadata getVDBMetadata(URL vdbURL, URL udfFile) throws IOException {
+		TransformationMetadata vdbmetadata = VDB_CACHE.get(vdbURL);
 		if (vdbmetadata != null) {
 			return vdbmetadata;
 		}
 
 		try {
-			VFS.init();
-			VDBContext vdbContext = new VDBContext(vdbURL);
-			VirtualFile vdbFile = new VirtualFile(vdbContext.getRoot());
+			VirtualFile vdbFile = getVirtualFile(vdbURL);
 			
-			List<VirtualFile> children = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
-				@Override
-				public boolean accepts(VirtualFile file) {
-					return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
-				}
-			});
+			MetadataStore store = getMetadataStore(vdbFile);
 			
 			List<VirtualFile> files = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
 				@Override
@@ -87,23 +80,44 @@ public class VDBMetadataFactory {
 				vdbFiles.put(virtualFile, Boolean.TRUE);
 			}
 			
-			IndexMetadataFactory imf = new IndexMetadataFactory();
-			for (VirtualFile f: children) {
-				imf.addIndexFile(f);
-			}
-			
 			Collection <FunctionMethod> methods = null;
 			if (udfFile != null) {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
-			
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(imf.getMetadataStore())), vdbFiles, methods);
+			MetadataStore system = getMetadataStore(getVirtualFile(VDBMetadataFactory.class.getResource("/System.vdb"))); //$NON-NLS-1$
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(system, store)), vdbFiles, methods); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
-    }	
+    }
+
+	private static VirtualFile getVirtualFile(URL vdbURL) throws IOException,
+			URISyntaxException {
+		VFS.init();
+		VDBContext vdbContext = new VDBContext(vdbURL);
+		VirtualFile vdbFile = new VirtualFile(vdbContext.getRoot());
+		return vdbFile;
+	}
+
+	private static MetadataStore getMetadataStore(VirtualFile vdbFile)
+			throws IOException {
+		List<VirtualFile> children = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
+			@Override
+			public boolean accepts(VirtualFile file) {
+				return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
+			}
+		});
+		
+		IndexMetadataFactory imf = new IndexMetadataFactory();
+		for (VirtualFile f: children) {
+			imf.addIndexFile(f);
+		}
+		
+		MetadataStore store = imf.getMetadataStore();
+		return store;
+	}	
 	
 
 	private static class VDBContext extends ZipEntryContext{

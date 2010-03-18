@@ -46,6 +46,11 @@
 			<artifactId>teiid-connector-api</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-jdbc</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client-jdbc</artifactId>
 		</dependency>
@@ -91,6 +96,6 @@
 
   <modules>
     <module>common</module>
-    <!-- <module>db</module> -->
+    <module>db</module>
   </modules>
 </project>

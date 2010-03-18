@@ -25,13 +25,13 @@ package com.metamatrix.common.xa;
 import junit.framework.TestCase;
 
 public class TestMMXid extends TestCase {
-    private static final MMXid XID1 = new MMXid(0, new byte[] {
+    private static final XidImpl XID1 = new XidImpl(0, new byte[] {
         1
     }, new byte[0]);
-    private static final MMXid XID2 = new MMXid(0, new byte[] {
+    private static final XidImpl XID2 = new XidImpl(0, new byte[] {
         2
     }, new byte[] {3});
-    private static final MMXid XID1Copy = new MMXid(0, new byte[] {
+    private static final XidImpl XID1Copy = new XidImpl(0, new byte[] {
         1
     }, new byte[0]);
 
@@ -41,7 +41,7 @@ public class TestMMXid extends TestCase {
     }
     
     public void testCopyConstructor() {
-        MMXid xidcopy = new MMXid(XID1);
+        XidImpl xidcopy = new XidImpl(XID1);
         assertEquals(XID1Copy, xidcopy);
         assertNotSame(XID1Copy, xidcopy);
     }

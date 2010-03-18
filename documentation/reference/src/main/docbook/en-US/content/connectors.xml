@@ -63,21 +63,6 @@
           </row>
           <row>
             <entry>
-              <para>ConnectorClassPath</para>
-            </entry>
-            <entry>
-              <para>The class path of the custom connector class that
-                connects to the data source. Required.</para>
-            </entry>
-            <entry>
-              <para>string</para>
-            </entry>
-            <entry>
-              <para />
-            </entry>
-          </row>
-          <row>
-            <entry>
               <para>ConnectorMaxThreads</para>
             </entry>
             <entry>
@@ -86,21 +71,6 @@
             </entry>
             <entry>
               <para>integer</para>
-            </entry>
-            <entry>
-              <para />
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ConnectorThreadTTL</para>
-            </entry>
-            <entry>
-              <para>The maximum length of time a connector thread may
-                live in idle state. Required.</para>
-            </entry>
-            <entry>
-              <para>integer - milliseconds</para>
             </entry>
             <entry>
               <para />
@@ -145,89 +115,5 @@
         </tbody>
       </tgroup>
     </informaltable>
-  </sect1>
-  <sect1>
-    <title>Source Security</title>
-    <para> Teiid can use the security mechanisms of individual data
-      sources during execution.</para>
-    <para>The use of source security is driven off the credentials
-      JDBC property.</para>
-    <orderedlist>
-      <para>There are 3 basic use cases:</para>
-      <listitem>
-        <para>Specify the credentials for all sources</para>
-      </listitem>
-      <listitem>
-        <para>Pass the session logon credentials to all sources</para>
-      </listitem>
-      <listitem>
-        <para>Some combination of the previous two</para>
-      </listitem>
-    </orderedlist>
-    <sect2>
-      <title>Specific Source Credentials</title>
-      <para>This use case is for when you want to specify the logon
-        credentials for all the source systems in the JDBC URL. The form of
-        the credentials property is:</para>
-      <para>credentials=(system=&lt;sys1&gt;,user=&lt;uname&gt;, password=&lt;pwd&gt;/system=&lt;sys2&gt;,...) </para>
-      <note>
-        <para>Any property can be specified for a system, using the
-          name=value syntax, as long as the connector associated with the
-          source understands the property or can pass it to the source.</para>
-      </note>
-      <itemizedlist>
-        <para>The following properties are "well-known" and required:
-        </para>
-        <listitem>
-          <para>system - The name of the system; this must correspond to
-            the connector binding name</para>
-        </listitem>
-        <listitem>
-          <para>user - The username that can be used to connect to the
-            system; must be valid user of the system being accessed</para>
-        </listitem>
-        <listitem>
-          <para>
-            password - The password for the user in the target system; the
-            user and password are used to authenticate to the target system.
-          </para>
-        </listitem>
-      </itemizedlist>
-      <example>
-        <title>Example URL With Two Source Credentials</title>
-        <para><code>jdbc:metamatrix:MyVDB@mm://HostA:5001;credentials=(system=s1,user=u1,password=p1/system=s2,user=u2,password=p2)</code></para>
-      </example>
-    </sect2>
-    <sect2>
-      <title>Using Session Credentials</title> 
-      <para>This use case uses the session credentials
-        for all source systems.
-      </para>
-      <example>
-        <title>Example URL With Session Credentials</title>
-        <para><code>jdbc:metamatrix:MyVDB@mm://HostA:5001;credentials=defaultToLogon</code></para>
-      </example>
-    </sect2>
-    <sect2>
-      <title>Session and Specific Source Credentials</title>
-      <para>The above techniques can be used in combination with one another as needed.</para>
-      <example>
-        <title>Combination of Source Credential Approaches</title>
-        <para><code>jdbc:metamatrix:MyVDB@mm://HostA:5001; credentials=defaultToLogon,(system=s1,user=u1,password=p1)</code></para>
-      </example>
-    </sect2>
-    <sect2>
-      <title>Configuring Connectors For Source Security</title>
-      <para>When source security is used, the connector bindings for the sources must be configured appropriately.</para>
-      <itemizedlist>
-        <listitem>
-          <para>Connector binding name - this is the name used in the system part of the credentials property</para>
-        </listitem>
-        <listitem>
-          <para>For JDBC connectors, the extension connection factory class name must be set for user instead of single identity.  For example the Oracle JDBC connector would use <classname>com.metamatrix.connector.jdbc.oracle.OracleUserIdentityConnectionFactory</classname>
-          </para>
-        </listitem>
-      </itemizedlist>
-    </sect2>
   </sect1>
 </chapter>

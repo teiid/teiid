@@ -24,6 +24,7 @@ package com.metamatrix.common.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import javax.xml.transform.Source;
 
@@ -31,6 +32,11 @@ public abstract class InputStreamFactory implements Source {
 	
 	private String encoding;
 	private String systemId;
+	private long length = -1;
+	
+	public InputStreamFactory() {
+		this(Charset.defaultCharset().name());
+	}
 	
 	public InputStreamFactory(String encoding) {
 		this.encoding = encoding;
@@ -59,4 +65,12 @@ public abstract class InputStreamFactory implements Source {
     public void free() throws IOException {
     	
     }
+    
+    public long getLength() {
+		return length;
+	}
+    
+    public void setLength(long length) {
+		this.length = length;
+	}
 }

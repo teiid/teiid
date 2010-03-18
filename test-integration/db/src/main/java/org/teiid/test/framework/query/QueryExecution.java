@@ -2,7 +2,7 @@ package org.teiid.test.framework.query;
 
 import java.sql.Connection;
 
-import com.metamatrix.jdbc.api.AbstractQueryTest;
+import org.teiid.jdbc.api.AbstractQueryTest;
 
 /**
  * The QueryExecution class can be used to query the source directly.   The intended use

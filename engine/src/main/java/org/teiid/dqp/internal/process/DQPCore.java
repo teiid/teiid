@@ -51,15 +51,14 @@ import org.teiid.logging.api.CommandLogMessage.Event;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.common.xa.XidImpl;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
@@ -76,7 +75,6 @@ import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.TransactionContext.Scope;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 
@@ -246,7 +244,7 @@ public class DQPCore implements DQP {
             	req.setExecutionId(holder.requestID.getExecutionID());
             	req.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
             	req.setCommand(holder.requestMsg.getCommandString());
-            	req.setProcessingTime(holder.getProcessingTimestamp());
+            	req.setStartTime(holder.getProcessingTimestamp());
             	
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().getTransactionType() != Scope.NONE) {
             		req.setTransactionId(holder.getTransactionContext().getTransactionId());
@@ -266,7 +264,7 @@ public class DQPCore implements DQP {
                 	info.setExecutionId(arm.getRequestID().getExecutionID());
                 	info.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
                 	info.setCommand(arm.getCommand().toString());
-                	info.setProcessingTime(arm.getProcessingTimestamp());
+                	info.setStartTime(arm.getProcessingTimestamp());
                 	info.setSourceRequest(true);
                 	info.setNodeId(arm.getAtomicRequestID().getNodeID());
                 	
@@ -670,14 +668,6 @@ public class DQPCore implements DQP {
 		this.transactionService = service;
 	}
 	
-	public List<String> getXmlSchemas(String docName) throws MetaMatrixComponentException, QueryMetadataException {
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        QueryMetadataInterface metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
-
-        Object groupID = metadata.getGroupID(docName);
-        return metadata.getXMLSchemas(groupID);
-	}
-
 	@Override
 	public boolean cancelRequest(long requestID)
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {
@@ -719,7 +709,7 @@ public class DQPCore implements DQP {
 	}
 
 	// global txn
-	public ResultsFuture<?> commit(final MMXid xid, final boolean onePhase) throws XATransactionException {
+	public ResultsFuture<?> commit(final XidImpl xid, final boolean onePhase) throws XATransactionException {
 		Callable<Void> processor = new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
@@ -731,20 +721,20 @@ public class DQPCore implements DQP {
 		return addWork(processor);
 	}
 	// global txn
-	public ResultsFuture<?> end(MMXid xid, int flags) throws XATransactionException {
+	public ResultsFuture<?> end(XidImpl xid, int flags) throws XATransactionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		this.getTransactionService().end(workContext.getConnectionID(), xid, flags, workContext.getSession().isEmbedded());
 		return ResultsFuture.NULL_FUTURE;
 	}
 	// global txn
-	public ResultsFuture<?> forget(MMXid xid) throws XATransactionException {
+	public ResultsFuture<?> forget(XidImpl xid) throws XATransactionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		this.getTransactionService().forget(workContext.getConnectionID(), xid, workContext.getSession().isEmbedded());
 		return ResultsFuture.NULL_FUTURE;
 	}
 		
 	// global txn
-	public ResultsFuture<Integer> prepare(final MMXid xid) throws XATransactionException {
+	public ResultsFuture<Integer> prepare(final XidImpl xid) throws XATransactionException {
 		Callable<Integer> processor = new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
@@ -774,7 +764,7 @@ public class DQPCore implements DQP {
 		return result;
 	}
 	// global txn
-	public ResultsFuture<?> rollback(final MMXid xid) throws XATransactionException {
+	public ResultsFuture<?> rollback(final XidImpl xid) throws XATransactionException {
 		Callable<Void> processor = new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
@@ -786,7 +776,7 @@ public class DQPCore implements DQP {
 		return addWork(processor);
 	}
 	// global txn
-	public ResultsFuture<?> start(MMXid xid, int flags, int timeout)
+	public ResultsFuture<?> start(XidImpl xid, int flags, int timeout)
 			throws XATransactionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		this.getTransactionService().start(workContext.getConnectionID(), xid, flags, timeout, workContext.getSession().isEmbedded());

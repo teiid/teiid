@@ -6,13 +6,12 @@ package org.teiid.test.testcases;
 
 import java.util.ArrayList;
 
+import org.teiid.jdbc.api.AbstractQueryTest;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
 import org.teiid.test.framework.transaction.TxnAutoTransaction;
-
-import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
 public class AutoWrapTransactionTests extends CommonTransactionTests {

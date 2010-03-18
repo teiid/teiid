@@ -59,7 +59,7 @@ public interface Request extends AdminObject {
      * Get when the processing began for this Request
      * @return Date processing began
      */
-    public long getProcessingTime();
+    public long getStartTime();
 
     /**
      * Get the TransactionID of the Request

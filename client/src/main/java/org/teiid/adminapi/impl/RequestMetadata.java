@@ -39,8 +39,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	private long executionId;
 	private long sessionId;
     private String command;
-    private long createdTime;
-    private long processTime;
+    private long startTime;
     private boolean sourceRequest;
 	private int nodeID = Integer.MIN_VALUE;
     private String transactionId;
@@ -66,13 +65,13 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     }
     
     @Override
-    @ManagementProperty(description="Processing time for the request", readOnly=true)
-    public long getProcessingTime() {
-        return this.processTime;
+    @ManagementProperty(description="Start time for the request", readOnly=true)
+    public long getStartTime() {
+        return this.startTime;
     }
     
-    public void setProcessingTime(long time) {
-        this.processTime = time;
+    public void setStartTime(long time) {
+        this.startTime = time;
     }    
 
     @Override
@@ -142,8 +141,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     		str.append("; transactionId=").append(transactionId);
     	}
     	str.append("; sourceRequest=").append(sourceRequest);
-    	str.append("; createdTime=").append(new Date(createdTime));
-    	str.append("; processingTime=").append(new Date(processTime));
+    	str.append("; processingTime=").append(new Date(startTime));
     	str.append("; command=").append(command); 
     	
     	return str.toString();

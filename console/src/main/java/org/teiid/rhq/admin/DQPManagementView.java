@@ -383,7 +383,7 @@ public class DQPManagementView implements PluginConstants {
 		Iterator<RequestMetadata> requestsIter = list.iterator();
 		while (requestsIter.hasNext()) {
 			RequestMetadata request = requestsIter.next();
-			long startTime = request.getProcessingTime();
+			long startTime = request.getStartTime();
 			// Get msec from each, and subtract.
 			long runningTime = Calendar.getInstance().getTimeInMillis()
 					- startTime;

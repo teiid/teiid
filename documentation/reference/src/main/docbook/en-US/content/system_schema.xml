@@ -1,0 +1,1564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="system_schema">
+	<sect1 id="system_tables">
+		<title>System Tables</title>
+		<sect2>
+			<title>VDB, Schema, and Properties</title>
+			<sect3>
+				<title>SYS.VirtualDatabases</title>
+				<para>This table supplies information about the currently
+					connected
+					virtual database, of which there is always exactly one
+					(in the
+					context of a connection).</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>The name of the VDB</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Version</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>The version of the VDB</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.Schemas</title>
+				<para>This table supplies information about all the schemas in
+					the
+					virtual database, including the system schema itself
+					(System).
+				</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsPhysical</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if this represents a source</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Unique ID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>PrimaryMetamodelURI</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>URI for the primary metamodel describing the model used
+										for this schema</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.Properties</title>
+				<para>This table supplies user-defined properties on all objects
+					based on metamodel extensions. Normally, this table is empty if
+					no
+					metamodel extensions are being used.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Extension property name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Value</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Extension property value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key unique ID</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+		</sect2>
+		<sect2>
+			<title>Table Metadata</title>
+			<sect3>
+				<title>SYS.Tables</title>
+				<para>This table supplies information about all the groups
+					(tables,
+					views, documents, etc) in the virtual database.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Short group name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Table type (Table, View, Document, ...)
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NameInSource</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Name of this group in the source</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsPhysical</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if this is a source table</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SupportsUpdates</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if group can be updated</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Group unique ID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Cardinality</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Approximate number of rows in the group
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsSystem</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if in system table</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.Columns</title>
+				<para>This table supplies information about all the elements
+					(columns, tags, attributes, etc) in the virtual database.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TableName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Table name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Element name (not qualified)</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Position</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Position in group (1-based)</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NameInSource</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Name of element in source</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>DataType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Teiid runtime data type name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Scale</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Number of digits after the decimal point
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>ElementLength</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Element length (mostly used for strings)
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>sLengthFixed</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Whether the length is fixed or variable
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SupportsSelect</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Element can be used in SELECT</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SupportsUpdates</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Values can be inserted or updated in the
+										element</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsCaseSensitive</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Element is case-sensitive</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsSigned</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Element is signed numeric value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsCurrency</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Element represents monetary value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsAutoIncremented</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Element is auto-incremented in the source
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NullType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Nullability: "Nullable", "No Nulls",
+										"Unknown"</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>MinRange</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Minimum numeric value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>MaxRange</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Maximum numeric value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SearchType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Searchability: "Searchable", "All
+										Except Like", "Like
+										Only", "Unsearchable"</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Format</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Format of string value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>DefaultValue</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Default value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>JavaClass</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Java class that will be returned</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Precision</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Number of digits in numeric value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>CharOctetLength</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Measure of return value size</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Radix</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Radix for numeric values</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>GroupUpperName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Upper-case full group name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UpperName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Upper-case element name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Element unique ID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.Keys</title>
+				<para>This table supplies information about primary, foreign,
+					and
+					unique keys.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Table Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Table name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NameInSource</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Name of key in source system</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Type of key: "Primary", "Foreign", "Unique",
+										etc</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsIndexed</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if key is indexed</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>RefKeyUID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Referenced key UID (if foreign key)
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key unique ID</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.KeyColumns</title>
+				<para>This table supplies information about the columns
+					referenced by
+					a key.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TableName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Table name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Element name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>KeyName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>KeyType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key type: "Primary", "Foreign", "Unique", etc
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>RefKeyUID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Referenced key UID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Key UID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Position</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Position in key</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+		</sect2>
+		<sect2>
+			<title>
+				Procedure Metadata
+    </title>
+			<sect3>
+				<title>SYS.Procedures</title>
+				<para>This table supplies information about the procedures in
+					the
+					virtual database.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Procedure name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NameInSource</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Procedure name in source system</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>ReturnsResults</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Returns a result set</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Procedure UID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+			<sect3>
+				<title>SYS.ProcedureParams</title>
+				<para>This supplies information on procedure parameters.
+      </para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>ProcedureName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Procedure name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Parameter name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>DataType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Teiid runtime data type name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Position</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Position in procedure args</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Parameter direction: "In", "Out",
+										"InOut", "ResultSet",
+										"ReturnValue"</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Optional</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Parameter is optional</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Precision</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Precision of parameter</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TypeLength</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Length of parameter value</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Scale</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Scale of parameter</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Radix</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Radix of parameter</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NullType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Nullability: "Nullable", "No Nulls",
+										"Unknown"</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+		</sect2>
+		<sect2>
+			<title>
+				Datatype Metadata
+    </title>
+			<sect3>
+				<title>SYS.DataTypes</title>
+				<para>
+					This table supplies information on
+					<link linkend="datatypes">datatypes</link>
+					.
+				</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Teiid design-time type name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsStandard</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Always false</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsPhysical</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Always false</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TypeName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Design-time type name (same as Name)
+                </para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>JavaClass</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Java class returned for this type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Scale</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Max scale of this type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TypeLength</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Max length of this type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>NullType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Nullability: "Nullable", "No Nulls",
+										"Unknown"</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsSigned</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Is signed numeric?</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsAutoIncremented</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Is auto-incremented?</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>IsCaseSensitive</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>Is case-sensitive?</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Precision</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Max precision of this type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Radix</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>Radix of this type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SearchType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Searchability: "Searchable", "All
+										Except Like", "Like
+										Only", "Unsearchable"</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>UID</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Data type unique ID</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>RuntimeType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Teiid runtime data type name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>BaseType</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Base type</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Description</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Description of type</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</sect3>
+		</sect2>
+	</sect1>
+	<sect1 id="system_procedures">
+		<title>System Procedures</title>
+		<informaltable frame="all">
+			<tgroup cols="3">
+				<thead>
+					<row>
+						<entry>
+							<para>Procedure</para>
+						</entry>
+						<entry>
+							<para>Parameter Datatypes</para>
+						</entry>
+						<entry>
+							<para>ResultSet</para>
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<para>getCharacterVDBResource(resourcePath)</para>
+						</entry>
+						<entry>
+							<para>resourcePath is a string</para>
+						</entry>
+						<entry>
+							<para>A single column containing the resource as a clob.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>getBinaryVDBResource(resourcePath)</para>
+						</entry>
+						<entry>
+							<para>resourcePath is a string</para>
+						</entry>
+						<entry>
+							<para>A single column containing the resource as a blob.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>getVDBResourcePaths()</para>
+						</entry>
+						<entry>
+							<para></para>
+						</entry>
+						<entry>
+							<para>A single column containing the resource paths as strings.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>getXMLSchemas(document)</para>
+						</entry>
+						<entry>
+							<para>document is a string</para>
+						</entry>
+						<entry>
+							<para>A single column containing the schemas as clobs.</para>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</informaltable>
+	</sect1>
+</chapter>

@@ -25,9 +25,9 @@ package org.teiid.systemmodel;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.jdbc.api.AbstractMMQueryTestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 /**
  * Exercises each virtual table in the system model.

@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.TransactionContainer;
@@ -45,7 +46,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  *      validate the results of the testcase.
  * 
  */
-public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.api.AbstractQueryTest
+public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.api.AbstractQueryTest
 	implements TransactionQueryTestCase {
     
     private static String initialized = null;
@@ -94,8 +95,8 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 
     @Override
     protected void assignExecutionProperties(Statement stmt) {
-	if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
-	    com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement) stmt;
+	if (stmt instanceof org.teiid.jdbc.api.Statement) {
+		org.teiid.jdbc.api.Statement statement = (org.teiid.jdbc.api.Statement) stmt;
 
 	    Properties executionProperties = this.connStrategy.getEnvironment();
 	    if (executionProperties != null) {
@@ -302,7 +303,7 @@ public abstract class AbstractQueryTransactionTest extends  com.metamatrix.jdbc.
 		return (SQLException) this.applicationException;
 	    }
 	    
-	    com.metamatrix.jdbc.MMSQLException mm = new com.metamatrix.jdbc.MMSQLException(this.applicationException.getMessage());
+	    TeiidSQLException mm = new TeiidSQLException(this.applicationException.getMessage());
 	    return mm;
 
 	}

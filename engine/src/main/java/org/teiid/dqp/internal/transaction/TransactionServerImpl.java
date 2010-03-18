@@ -47,7 +47,7 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.TransactionMetadata;
 
-import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XidImpl;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
@@ -80,7 +80,7 @@ public class TransactionServerImpl implements TransactionService {
             return threadToTransactionContext.get(threadId);
         }
 
-        public synchronized TransactionContext getTransactionContext(MMXid xid) {
+        public synchronized TransactionContext getTransactionContext(XidImpl xid) {
             return xidToTransactionContext.get(xid);
         }
         
@@ -123,7 +123,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */
-	public int prepare(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException {
+	public int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
         TransactionContext tc = checkXAState(threadId, xid, true, false);
         if (!tc.getSuspendedBy().isEmpty()) {
             throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.suspended_exist", xid)); //$NON-NLS-1$
@@ -148,7 +148,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */    
-    public void commit(final String threadId, MMXid xid, boolean onePhase, boolean singleTM) throws XATransactionException {
+    public void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException {
     	TransactionContext tc = checkXAState(threadId, xid, true, false);  
     	try {
         	if (singleTM || (onePhase && XAResource.XA_RDONLY == prepare(threadId, xid, singleTM))) {
@@ -166,7 +166,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */
-    public void rollback(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException {
+    public void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
     	TransactionContext tc = checkXAState(threadId, xid, true, false);  
     	try {
     		// In the case of single TM, the container directly roll backs the sources.
@@ -199,7 +199,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */    
-    public void forget(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException {
+    public void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
     	TransactionContext tc = checkXAState(threadId, xid, true, false); 
         try {
         	if (singleTM) {
@@ -216,7 +216,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */
-    public void start(final String threadId, final MMXid xid, int flags, int timeout, boolean singleTM) throws XATransactionException {
+    public void start(final String threadId, final XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException {
         
         TransactionContext tc = null;
 
@@ -260,7 +260,7 @@ public class TransactionServerImpl implements TransactionService {
     /**
      * Global Transaction 
      */    
-    public void end(final String threadId, MMXid xid, int flags, boolean singleTM) throws XATransactionException {
+    public void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException {
         TransactionContext tc = checkXAState(threadId, xid, true, true);
         try {
             switch (flags) {
@@ -285,7 +285,7 @@ public class TransactionServerImpl implements TransactionService {
         }
     }
 
-    private TransactionContext checkXAState(final String threadId, final MMXid xid, boolean transactionExpected, boolean threadBound) throws XATransactionException {
+    private TransactionContext checkXAState(final String threadId, final XidImpl xid, boolean transactionExpected, boolean threadBound) throws XATransactionException {
         TransactionContext tc = transactions.getTransactionContext(xid);
         
         if (transactionExpected && tc == null) {

@@ -38,11 +38,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.MMConnection;
-import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
  * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server or Teiid Embedded.
@@ -77,7 +72,7 @@ final class SocketProfile {
      */
     public static Connection connect(String url, Properties info) throws SQLException {
 
-        MMConnection myConnection = null;
+        ConnectionImpl myConnection = null;
         // create a properties obj if it is null
         if(info == null) {
             info = new Properties();
@@ -92,7 +87,7 @@ final class SocketProfile {
             myConnection = createConnection(url, info);
         } catch (MetaMatrixCoreException e) {
             logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
-            throw MMSQLException.create(e, e.getMessage());
+            throw TeiidSQLException.create(e, e.getMessage());
         }
 
         // logging
@@ -102,13 +97,13 @@ final class SocketProfile {
         return myConnection;
     }
 
-    static MMConnection createConnection(String url, Properties info)
+    static ConnectionImpl createConnection(String url, Properties info)
         throws ConnectionException, CommunicationException {
 
         ServerConnection serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
 
         // construct a MMConnection object.
-        MMConnection connection = new MMConnection(serverConn, info, url);
+        ConnectionImpl connection = new ConnectionImpl(serverConn, info, url);
         return connection;
     }
 
@@ -122,14 +117,14 @@ final class SocketProfile {
     protected static void parseURL(String url, Properties info) throws SQLException {
         if(url == null) {
             String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
-            throw new MMSQLException(msg);
+            throw new TeiidSQLException(msg);
         }
         try {
-            MMJDBCURL jdbcURL = new MMJDBCURL(url);
+            JDBCURL jdbcURL = new JDBCURL(url);
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
             info.setProperty(MMURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
             Properties optionalParams = jdbcURL.getProperties();
-            MMJDBCURL.normalizeProperties(info);
+            JDBCURL.normalizeProperties(info);
             Enumeration keys = optionalParams.keys();
             while (keys.hasMoreElements()) {
                 String propName = (String)keys.nextElement();
@@ -148,7 +143,7 @@ final class SocketProfile {
             }
 
         } catch(IllegalArgumentException iae) {
-            throw new MMSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
         }  
     }
     

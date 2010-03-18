@@ -32,12 +32,12 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
-import com.metamatrix.common.lob.ReaderInputStream;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.common.util.ReaderInputStream;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 

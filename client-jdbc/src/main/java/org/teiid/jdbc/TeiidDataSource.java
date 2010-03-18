@@ -26,10 +26,6 @@ import java.sql.Connection;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
  * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
@@ -57,15 +53,17 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  */
 public class TeiidDataSource extends BaseDataSource {
 
-    /**
-     * The port number where a MetaMatrix Server is listening for requests.
+	private static final long serialVersionUID = -5170316154373144878L;
+
+	/**
+     * The port number where a server is listening for requests.
      * This property name is one of the standard property names defined by the JDBC 2.0 specification,
      * and is <i>optional</i>.
      */
     private int portNumber;
 
     /**
-     * The name of the host where the MetaMatrix Server is running.
+     * The name of the host where the sServer is running.
      * This property name is one of the standard property names defined by the JDBC 2.0 specification,
      * and is <i>required</i>.
      */
@@ -79,7 +77,7 @@ public class TeiidDataSource extends BaseDataSource {
     private boolean secure = false;
 
     /**
-     * Holds a comma delimited list of alternate MetaMatrix Server(s):Port(s) that can 
+     * Holds a comma delimited list of alternate Server(s):Port(s) that can 
      * be used for connection fail-over.
      * @since 5.5
      */
@@ -159,7 +157,7 @@ public class TeiidDataSource extends BaseDataSource {
     }
 
     protected String buildURL() {
-        return new MMJDBCURL(this.getDatabaseName(), buildServerURL(), buildProperties(getUser(), getPassword())).getJDBCURL();
+        return new JDBCURL(this.getDatabaseName(), buildServerURL(), buildProperties(getUser(), getPassword())).getJDBCURL();
     }
 
     protected void validateProperties( final String userName, final String password) throws java.sql.SQLException {
@@ -181,9 +179,9 @@ public class TeiidDataSource extends BaseDataSource {
         }
     }
     
-    private MMSQLException createConnectionError(String reason) {
+    private TeiidSQLException createConnectionError(String reason) {
         String msg = JDBCPlugin.Util.getString("MMDataSource.Err_connecting", reason); //$NON-NLS-1$
-        return new MMSQLException(msg);        
+        return new TeiidSQLException(msg);        
     }
 
     // --------------------------------------------------------------------------------------------
@@ -214,7 +212,7 @@ public class TeiidDataSource extends BaseDataSource {
     	// check if this is embedded connection 
     	if (getServerName() == null) {
 	        final Properties props = buildEmbeddedProperties(userName, password);	 
-	        String url = new MMJDBCURL(getDatabaseName(), null, props).getJDBCURL();
+	        String url = new JDBCURL(getDatabaseName(), null, props).getJDBCURL();
 	        return driver.connect(url, props);    		    		
     	}
     	
@@ -234,7 +232,7 @@ public class TeiidDataSource extends BaseDataSource {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return buildURL().substring(16);    // URL without the "jdbc:metamatrix:" at the front 
+        return buildURL(); 
     }
 
     // --------------------------------------------------------------------------------------------
@@ -250,8 +248,8 @@ public class TeiidDataSource extends BaseDataSource {
     }
 
     /**
-     * Returns the name of the MetaMatrix Server.
-     * @return the name of the MetaMatrix Server
+     * Returns the name of the server.
+     * @return the name of the server
      */
     public String getServerName() {
         return serverName;
@@ -308,7 +306,7 @@ public class TeiidDataSource extends BaseDataSource {
     }
     
     /**
-     * Sets a list of alternate MetaMatrix Sserver(s) that can be used for 
+     * Sets a list of alternate server(s) that can be used for 
      * connection fail-over.
      * 
      * The form of the list should be server2[:port2][,server3:[port3][,...]].  
@@ -317,7 +315,7 @@ public class TeiidDataSource extends BaseDataSource {
      * 
      * If <code>servers</code> is empty or <code>null</code>, the value of
      * <code>alternateServers</code> is cleared.
-     * @param servers A comma delimited list of alternate MetaMatrix 
+     * @param servers A comma delimited list of alternate 
      * Server(s):Port(s) to use for connection fail-over. If blank or 
      * <code>null</code>, the list is cleared.
      * @since 5.5

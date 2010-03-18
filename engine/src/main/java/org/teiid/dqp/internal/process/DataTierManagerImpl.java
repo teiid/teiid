@@ -23,7 +23,6 @@
 package org.teiid.dqp.internal.process;
 
 import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,9 +30,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-
-import javax.sql.rowset.serial.SerialBlob;
-import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -60,6 +56,12 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.types.BlobImpl;
+import com.metamatrix.common.types.BlobType;
+import com.metamatrix.common.types.ClobImpl;
+import com.metamatrix.common.types.ClobType;
+import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
@@ -97,7 +99,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private enum SystemProcs {
 		GETCHARACTERVDBRESOURCE,
 		GETBINARYVDBRESOURCE,
-		GETVDBRESOURCEPATHS
+		GETVDBRESOURCEPATHS,
+		GETXMLSCHEMAS
 	}
 	
 	// Resources
@@ -123,7 +126,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
-			return processSystemQuery(command, workItem);
+			return processSystemQuery(command, workItem.getDqpWorkContext());
 		}
 		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
@@ -139,10 +142,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	 */
 	@SuppressWarnings("unchecked")
 	private TupleSource processSystemQuery(Command command,
-			RequestWorkItem workItem) throws MetaMatrixComponentException {
-		String vdbName = workItem.getDqpWorkContext().getVdbName();
-		int vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
-		VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
+			DQPWorkContext workContext) throws MetaMatrixComponentException {
+		String vdbName = workContext.getVdbName();
+		int vdbVersion = workContext.getVdbVersion();
+		VDBMetaData vdb = workContext.getVDB();
 		CompositeMetadataStore metadata = vdb.getAttachment(CompositeMetadataStore.class);
 		Collection rows = new ArrayList();
 		if (command instanceof Query) {
@@ -277,25 +280,24 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		        }
 				break;
 			case GETBINARYVDBRESOURCE:
-				String filePath = (String)((Constant)proc.getParameter(0).getExpression()).getValue();
-				byte[] contents = indexMetadata.getBinaryVDBResource(filePath);
+				String filePath = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
+				BlobImpl contents = indexMetadata.getVDBResourceAsBlob(filePath);
 				if (contents != null) {
-					try {
-						rows.add(Arrays.asList(new SerialBlob(contents)));
-					} catch (SQLException e) {
-						throw new MetaMatrixComponentException(e);
-					}					
+					rows.add(Arrays.asList(new BlobType(contents)));
 				}
 				break;
 			case GETCHARACTERVDBRESOURCE:
-				filePath = (String)((Constant)proc.getParameter(0).getExpression()).getValue();
-				String filecontents = indexMetadata.getCharacterVDBResource(filePath);
+				filePath = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
+				ClobImpl filecontents = indexMetadata.getVDBResourceAsClob(filePath);
 				if (filecontents != null) {
-					try {
-						rows.add(Arrays.asList(new SerialClob(filecontents.toCharArray())));
-					} catch (SQLException e) {
-						throw new MetaMatrixComponentException(e);
-					}					
+					rows.add(Arrays.asList(new ClobType(filecontents)));
+				}
+				break;
+			case GETXMLSCHEMAS:
+				Object groupID = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
+				List<SQLXMLImpl> schemas = indexMetadata.getXMLSchemas(groupID);
+				for (SQLXMLImpl schema : schemas) {
+					rows.add(Arrays.asList(new XMLType(schema)));
 				}
 				break;
 			}

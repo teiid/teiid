@@ -1,10 +1,11 @@
 package org.teiid.test.framework;
 
+import org.teiid.plan.api.ExecutionProperties;
+import org.teiid.test.client.TestClientTransaction;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceMgr;
-
-import com.metamatrix.jdbc.api.ExecutionProperties;
+import org.teiid.test.framework.datasource.DataStore;
 
 /**
  * The following properties can be set in 2 ways:

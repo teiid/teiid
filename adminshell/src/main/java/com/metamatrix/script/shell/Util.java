@@ -27,8 +27,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.teiid.jdbc.JDBCURL;
+
 import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.jdbc.util.MMJDBCURL;
 
 public class Util {
 
@@ -119,12 +120,12 @@ public class Util {
 	}
 
 	public static String extractVDBName(String url) {
-	    MMJDBCURL mmurl = new MMJDBCURL(url);
+	    JDBCURL mmurl = new JDBCURL(url);
 	    return mmurl.getVDBName();
 	}
 
 	public static String extractHost(String url) {
-		MMJDBCURL mmurl = new MMJDBCURL(url);
+		JDBCURL mmurl = new JDBCURL(url);
 	    return mmurl.getConnectionURL();
 	}
 

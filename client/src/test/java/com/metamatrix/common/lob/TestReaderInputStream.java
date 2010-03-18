@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.util.ReaderInputStream;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestReaderInputStream extends TestCase {

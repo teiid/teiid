@@ -29,10 +29,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.plan.api.ExecutionProperties;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestSocketProfile {
     public String localhost = "localhost"; //$NON-NLS-1$

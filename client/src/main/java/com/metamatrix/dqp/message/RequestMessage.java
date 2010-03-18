@@ -31,10 +31,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.plan.api.ExecutionProperties;
+
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.CommonCommPlugin;
 import com.metamatrix.core.util.ExternalizeUtil;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
  * Request Message, used by MMXStatement for submitting queries.

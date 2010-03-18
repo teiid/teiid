@@ -34,8 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.util.MMJDBCURL;
+import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  * JDBC Driver class for Teiid Embedded and Teiid Server. This class automatically registers with the 
@@ -47,7 +46,7 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  *  	<li> Embedded  connection:<b> jdbc:teiid:&lt;vdb-name&gt;@&lt;file-path-to-deploy.properties&gt;;[user=&lt;user-name&gt;][password=&lt;user-password&gt;][other-properties]*</b>
  *  </ul>
  *  The user, password properties are needed if the user authentication is turned on. All the "other-properties" are simple name value pairs.
- *  Look at {@link MMJDBCURL} KNOWN_PROPERTIES for list of known properties allowed.
+ *  Look at {@link JDBCURL} KNOWN_PROPERTIES for list of known properties allowed.
  */
 
 public class TeiidDriver implements Driver {
@@ -57,7 +56,6 @@ public class TeiidDriver implements Driver {
 	
     private static TeiidDriver INSTANCE = new TeiidDriver();
         
-    // Static initializer
     static {
         try {
             DriverManager.registerDriver(INSTANCE);
@@ -79,13 +77,6 @@ public class TeiidDriver implements Driver {
         // this is not singleton, if you want singleton make this private.
     }
 
-    /**
-     * This method tries to make a connection to the given URL. This class
-     * will return a null if this is not the right driver to connect to the given URL.
-     * @param The URL used to establish a connection.
-     * @return Connection object created
-     * @throws SQLException if it is unable to establish a connection to the MetaMatrix server.
-     */
     public Connection connect(String url, Properties info) throws SQLException {
 
     	if (EmbeddedProfile.acceptsURL(url)) {
@@ -133,16 +124,27 @@ public class TeiidDriver implements Driver {
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
         if(info == null) {
             info = new Properties();
+        } else {
+        	info = PropertiesUtils.clone(info);
         }
 
         // construct list of driverPropertyInfo objects
         List<DriverPropertyInfo> driverProps = new LinkedList<DriverPropertyInfo>();
 
-        for (String property: MMJDBCURL.KNOWN_PROPERTIES) {
+        if (EmbeddedProfile.acceptsURL(url)) {
+        	EmbeddedProfile.parseURL(url, info);
+        } else if (SocketProfile.acceptsURL(url)) {
+        	SocketProfile.parseURL(url, info);
+        }
+
+        for (String property: JDBCURL.KNOWN_PROPERTIES) {
         	DriverPropertyInfo dpi = new DriverPropertyInfo(property, info.getProperty(property));
+        	if (property.equals(BaseDataSource.VDB_NAME)) {
+        		dpi.required = true;
+        	}
         	driverProps.add(dpi);
         }
-                
+        
         // create an array of DriverPropertyInfo objects
         DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
 

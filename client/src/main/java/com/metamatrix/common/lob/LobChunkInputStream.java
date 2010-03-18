@@ -24,11 +24,7 @@ package com.metamatrix.common.lob;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.Charset;
 
-import com.metamatrix.common.types.Streamable;
 import com.metamatrix.core.CorePlugin;
 
 
@@ -76,10 +72,4 @@ public class LobChunkInputStream extends InputStream {
         this.reader.close();
     }
 
-    /**
-     * @return a valid reader
-     */
-    public Reader getReader() {
-    	return new InputStreamReader(this, Charset.forName(Streamable.ENCODING));
-    }
 }

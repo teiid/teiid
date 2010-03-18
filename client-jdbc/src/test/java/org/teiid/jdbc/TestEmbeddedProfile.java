@@ -28,9 +28,8 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.plan.api.ExecutionProperties;
 
-import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
 
 public class TestEmbeddedProfile {

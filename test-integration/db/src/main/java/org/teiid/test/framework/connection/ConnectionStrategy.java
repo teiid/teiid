@@ -20,6 +20,8 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.JDBCURL;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.datasource.DataSource;
@@ -30,7 +32,6 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.jdbc.util.MMJDBCURL;
 
 
 public abstract class ConnectionStrategy {
@@ -124,11 +125,7 @@ public abstract class ConnectionStrategy {
 
 			java.sql.Connection conn = getConnection();
 
-			if (conn instanceof com.metamatrix.jdbc.MMConnection) {
-				com.metamatrix.jdbc.MMConnection c = (com.metamatrix.jdbc.MMConnection) conn;
-			} else if (conn instanceof com.metamatrix.jdbc.api.Connection) {
-				com.metamatrix.jdbc.api.Connection c = (com.metamatrix.jdbc.api.Connection) conn;
-			} else {
+			if (!(conn instanceof ConnectionImpl)) {
 				TestLogger.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
 				return;
 			}
@@ -166,7 +163,7 @@ public abstract class ConnectionStrategy {
 	    }
 
 	    String urlString = this.env.getProperty(DriverConnection.DS_URL);
-	    MMJDBCURL url = new MMJDBCURL(urlString);
+	    JDBCURL url = new JDBCURL(urlString);
 	    TestLogger.logDebug("Trying to match VDB : " + url.getVDBName());
 
 	    for (Iterator<VDB> iterator = vdbs.iterator(); iterator.hasNext();) {

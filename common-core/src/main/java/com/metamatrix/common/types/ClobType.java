@@ -42,7 +42,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 public final class ClobType extends Streamable<Clob> implements Clob, Sequencable {
 
 	private static final long serialVersionUID = 2753412502127824104L;
-	private long length = -1;
     
     /**
      * Can't construct
@@ -52,14 +51,8 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
     
     public ClobType(Clob clob) {
     	super(clob);
-        
-        try {
-            this.length = clob.length();
-        } catch (SQLException e) {
-            // ignore.
-        }
     }
-            
+    
     /** 
      * @see java.sql.Clob#getAsciiStream()
      */
@@ -89,7 +82,8 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
             return this.length;
         }
         
-        return this.reference.length();
+        this.length = this.reference.length();
+        return length;
     }
 
     /** 
@@ -224,4 +218,13 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 			throw new MetaMatrixRuntimeException(e);
 		}
 	}
+	
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		try {
+			length();
+		} catch (SQLException e) {
+		}
+		out.defaultWriteObject();
+	}
+
 }

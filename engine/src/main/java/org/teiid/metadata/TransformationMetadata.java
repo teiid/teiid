@@ -55,7 +55,11 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.types.BlobImpl;
+import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.core.util.ObjectConverterUtil;
@@ -825,7 +829,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLSchemas(java.lang.Object)
      */
-    public List getXMLSchemas(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
 
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
@@ -836,7 +840,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         // get the schema Paths
         List<String> schemaPaths = tableRecord.getSchemaPaths();
         
-        List<String> schemas = new LinkedList<String>();
+        List<SQLXMLImpl> schemas = new LinkedList<SQLXMLImpl>();
         if (schemaPaths == null) {
         	return schemas;
         }
@@ -844,15 +848,16 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         String path = f.getParent();
         
         for (String string : schemaPaths) {
-        	String schema = getCharacterVDBResource(string);
+        	SQLXMLImpl schema = getVDBResourceAsSQLXML(string);
         	
         	if (schema == null) {
-        		schema = getCharacterVDBResource(path + File.separator + string);
+        		schema = getVDBResourceAsSQLXML(path + File.separator + string);
         	}
         	
         	if (schema == null) {
         		throw new MetaMatrixComponentException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
         	}
+        	schemas.add(schema);
         }
         
         return schemas;
@@ -970,15 +975,73 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public byte[] getBinaryVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
-    	for (VirtualFile f:this.vdbEntries.keySet()) {
+    	final VirtualFile f = getFile(resourcePath);
+    	if (f == null) {
+    		return null;
+    	}
+		try {
+			return ObjectConverterUtil.convertToByteArray(f.openStream());
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		}
+    }
+    
+    public ClobImpl getVDBResourceAsClob(String resourcePath) {
+    	final VirtualFile f = getFile(resourcePath);
+    	if (f == null) {
+    		return null;
+    	}
+		return new ClobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return f.openStream();
+			}
+		}, -1);
+    }
+    
+    public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
+    	final VirtualFile f = getFile(resourcePath);
+    	if (f == null) {
+    		return null;
+    	}
+		return new SQLXMLImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return f.openStream();
+			}
+		});
+    }
+    
+    public BlobImpl getVDBResourceAsBlob(String resourcePath) {
+    	final VirtualFile f = getFile(resourcePath);
+    	if (f == null) {
+    		return null;
+    	}
+    	InputStreamFactory isf = new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return f.openStream();
+			}
+		};
+		try {
+			isf.setLength(f.getSize());
+		} catch (IOException e) {
+		}
+		return new BlobImpl(isf);
+    }
+    
+    private VirtualFile getFile(String resourcePath) {
+    	if (resourcePath == null) {
+    		return null;
+    	}
+    	for (final VirtualFile f:this.vdbEntries.keySet()) {
     		if (f.getPathName().equals(resourcePath)) {
     			Boolean v = this.vdbEntries.get(f);
     			if (v.booleanValue()) {
-	    			try {
-						return ObjectConverterUtil.convertToByteArray(f.openStream());
-					} catch (IOException e) {
-						throw new MetaMatrixComponentException(e);
-					}
+					return f;
     			}
 				break;
     		}

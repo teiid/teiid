@@ -31,7 +31,7 @@ import javax.transaction.xa.Xid;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Transaction;
 
-import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XidImpl;
 import com.metamatrix.common.xa.XATransactionException;
 
 /**
@@ -61,19 +61,19 @@ public interface TransactionService {
     void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException;
 
     // global transaction methods
-    int prepare(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException;
+    int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 
-	void commit(final String threadId, MMXid xid, boolean onePhase, boolean singleTM) throws XATransactionException;
+	void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException;
 	
-	void rollback(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException;
+	void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 	
 	Xid[] recover(int flag, boolean singleTM) throws XATransactionException;
 	
-	void forget(final String threadId, MMXid xid, boolean singleTM) throws XATransactionException;
+	void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 	
-	void start(final String threadId, MMXid xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
+	void start(final String threadId, XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
 	
-	void end(final String threadId, MMXid xid, int flags, boolean singleTM) throws XATransactionException;
+	void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
         
 	// management methods
     Collection<Transaction> getTransactions();

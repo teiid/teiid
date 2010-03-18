@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.types;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -37,7 +38,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 public final class BlobType extends Streamable<Blob> implements Blob {
 
 	private static final long serialVersionUID = 1294191629070433450L;
-	private long length = -1;
     
     /**
      * Can't construct
@@ -48,11 +48,6 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 
     public BlobType(Blob blob) {
     	super(blob);
-        try {
-            this.length = blob.length();
-        } catch (SQLException e) {
-            // ignore.
-        }
     }
     
     /** 
@@ -77,11 +72,11 @@ public final class BlobType extends Streamable<Blob> implements Blob {
         if (this.length != -1) {
             return this.length;
         }
-        
         // if did not find before then do it again.
-        return this.reference.length();
+        this.length = this.reference.length();
+        return length;
     }
-
+    
     /** 
      * @see java.sql.Blob#position(java.sql.Blob, long)
      */
@@ -148,6 +143,14 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 		} catch (SQLException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		try {
+			length();
+		} catch (SQLException e) {
+		}
+		out.defaultWriteObject();
 	}
 	
 }

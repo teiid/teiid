@@ -23,10 +23,12 @@
 package com.metamatrix.query.processor.xml;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -99,7 +101,7 @@ public class XMLPlan extends ProcessorPlan {
     private FileStore docInProgressStore;
     
     // Post-processing
-	private Collection xmlSchemas;
+	private Collection<SQLXML> xmlSchemas;
 
     /**
      * Constructor for XMLPlan.
@@ -294,7 +296,7 @@ public class XMLPlan extends ProcessorPlan {
      * Sets the XML schema
      * @param xmlSchema
      */
-    public void setXMLSchemas(Collection xmlSchema){
+    public void setXMLSchemas(Collection<SQLXML> xmlSchema){
     	this.xmlSchemas = xmlSchema;
     }
 
@@ -302,7 +304,7 @@ public class XMLPlan extends ProcessorPlan {
      * Returns the XML Schema
      * @return xmlSchema
      */
-    public Collection getXMLSchemas(){
+    public Collection<SQLXML> getXMLSchemas(){
     	return this.xmlSchemas;
     }
     
@@ -415,7 +417,7 @@ public class XMLPlan extends ProcessorPlan {
      * @throws ParserConfigurationException 
      * @throws IOException 
      */
-   	private HashMap getTargetNameSpaces(Collection schemas) throws MetaMatrixException {
+   	private HashMap getTargetNameSpaces(Collection<SQLXML> schemas) throws MetaMatrixException {
    		HashMap nameSpaceMap = new HashMap();
    		SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
@@ -429,18 +431,27 @@ public class XMLPlan extends ProcessorPlan {
         }
    		PeekContentHandler pch = new PeekContentHandler();
         
-   		Iterator it = schemas.iterator();       
-        while (it.hasNext()) {
-            String schema = (String)it.next();
-			StringReader reader = new StringReader(schema);
-			InputSource source = new InputSource(reader);
+   		for (SQLXML schema : schemas) {
+   			InputStream is;
+			try {
+				is = schema.getBinaryStream();
+			} catch (SQLException e) {
+				throw new MetaMatrixComponentException(e);
+			}
+			InputSource source = new InputSource(is);
    	        pch.targetNameSpace = null;
 	   		try {
                 parser.parse(source, pch);
             } catch (SAXException err) {
                 throw new MetaMatrixException(err);
             } catch (IOException err) {
-                throw new MetaMatrixException(err);
+                throw new MetaMatrixComponentException(err);
+            } finally {
+            	try {
+					is.close();
+				} catch (IOException e) {
+					
+				}
             }
 	   		
 	   		// Record the name space with the schema

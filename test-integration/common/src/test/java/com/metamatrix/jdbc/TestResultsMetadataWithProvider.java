@@ -25,6 +25,8 @@ package com.metamatrix.jdbc;
 import java.util.Map;
 
 import org.teiid.dqp.internal.process.MetaDataProcessor;
+import org.teiid.jdbc.ResultsMetadataWithProvider;
+import org.teiid.jdbc.StaticMetadataProvider;
 
 import junit.framework.TestCase;
 

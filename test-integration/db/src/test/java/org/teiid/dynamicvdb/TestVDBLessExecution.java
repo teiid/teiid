@@ -26,9 +26,9 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
 import org.junit.Test;
+import org.teiid.jdbc.api.AbstractMMQueryTestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 /**
  * Test the DatabaseMetadata results using the Parts VDB.

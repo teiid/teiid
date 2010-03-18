@@ -24,11 +24,9 @@ package org.teiid.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,16 +38,8 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.MMConnection;
-import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.util.MMJDBCURL;
-
 
 final class EmbeddedProfile {
-    
-    private static final String BUNDLE_NAME = "com.metamatrix.jdbc.basic_i18n"; //$NON-NLS-1$
     
 	/** 
      * Match URL like
@@ -67,7 +57,7 @@ final class EmbeddedProfile {
      * will return a null if this is not the right driver to connect to the given URL.
      * @param The URL used to establish a connection.
      * @return Connection object created
-     * @throws SQLException if it is unable to establish a connection to the MetaMatrix server.
+     * @throws SQLException if it is unable to establish a connection
      */
     public static Connection connect(String url, Properties info) 
         throws SQLException {
@@ -80,27 +70,27 @@ final class EmbeddedProfile {
 
         // parse the URL to add it's properties to properties object
         parseURL(url, info);            
-        MMConnection conn = createConnection(url, info);
+        ConnectionImpl conn = createConnection(url, info);
         logger.fine(JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess")); //$NON-NLS-1$ 
         return conn;
     }
     
-    static MMConnection createConnection(String url, Properties info) throws SQLException{
+    static ConnectionImpl createConnection(String url, Properties info) throws SQLException{
         
         // first validate the properties as this may called from the EmbeddedDataSource
         // and make sure we have all the properties we need.
         validateProperties(info);
         try {
         	ServerConnection sc = (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
-			return new MMConnection(sc, info, url);
+			return new ConnectionImpl(sc, info, url);
 		} catch (MetaMatrixRuntimeException e) {
-			throw MMSQLException.create(e);
+			throw TeiidSQLException.create(e);
 		} catch (ConnectionException e) {
-			throw MMSQLException.create(e);
+			throw TeiidSQLException.create(e);
 		} catch (CommunicationException e) {
-			throw MMSQLException.create(e);
+			throw TeiidSQLException.create(e);
 		} catch (MetaMatrixCoreException e) {
-			throw MMSQLException.create(e);
+			throw TeiidSQLException.create(e);
 		}
     }
     
@@ -116,18 +106,18 @@ final class EmbeddedProfile {
      */
      static void parseURL(String url, Properties info) throws SQLException {
         if (url == null || url.trim().length() == 0) {
-            String logMsg = getResourceMessage("EmbeddedDriver.URL_must_be_specified"); //$NON-NLS-1$
+            String logMsg = JDBCPlugin.Util.getString("EmbeddedDriver.URL_must_be_specified"); //$NON-NLS-1$
             throw new SQLException(logMsg);
         }
                 
         try {
-            MMJDBCURL jdbcURL = new MMJDBCURL(url);
+            JDBCURL jdbcURL = new JDBCURL(url);
 
             // Set the VDB Name
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
                        
             Properties optionalParams = jdbcURL.getProperties();
-            MMJDBCURL.normalizeProperties(info);
+            JDBCURL.normalizeProperties(info);
             
             Enumeration keys = optionalParams.keys();
             while (keys.hasMoreElements()) {
@@ -161,7 +151,7 @@ final class EmbeddedProfile {
         String value = null;
         value = info.getProperty(BaseDataSource.VDB_NAME);
         if (value == null || value.trim().length() == 0) {
-            String logMsg = getResourceMessage("MMDataSource.Virtual_database_name_must_be_specified"); //$NON-NLS-1$
+            String logMsg = JDBCPlugin.Util.getString("MMDataSource.Virtual_database_name_must_be_specified"); //$NON-NLS-1$
             throw new SQLException(logMsg);
         }
 
@@ -174,10 +164,4 @@ final class EmbeddedProfile {
         return matched;
     }    
     
-    static String getResourceMessage(String key) {
-        ResourceBundle messages = ResourceBundle.getBundle(BUNDLE_NAME);          
-        String messageTemplate = messages.getString(key);
-        return MessageFormat.format(messageTemplate, (Object[])null);
-    }    
-
 }

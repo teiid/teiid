@@ -22,16 +22,13 @@
 
 package com.metamatrix.dqp.client;
 
-import java.util.List;
-
 import javax.transaction.xa.Xid;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.lob.LobChunk;
-import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.common.xa.XidImpl;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 
@@ -49,8 +46,6 @@ public interface DQP {
 	
 	ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 		
-	List<String> getXmlSchemas(String docName) throws MetaMatrixComponentException, QueryMetadataException;
-
 	MetadataResult getMetadata(long requestID) throws MetaMatrixComponentException, MetaMatrixProcessingException;
 	
 	MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException;
@@ -65,20 +60,20 @@ public interface DQP {
 
     // XA
 
-    ResultsFuture<?> start(MMXid xid,
+    ResultsFuture<?> start(XidImpl xid,
             int flags,
             int timeout) throws XATransactionException;
 
-    ResultsFuture<?> end(MMXid xid,
+    ResultsFuture<?> end(XidImpl xid,
             int flags) throws XATransactionException;
 
-    ResultsFuture<Integer> prepare(MMXid xid) throws XATransactionException;
+    ResultsFuture<Integer> prepare(XidImpl xid) throws XATransactionException;
 
-    ResultsFuture<?> commit(MMXid xid, boolean onePhase) throws XATransactionException;
+    ResultsFuture<?> commit(XidImpl xid, boolean onePhase) throws XATransactionException;
     
-    ResultsFuture<?> rollback(MMXid xid) throws XATransactionException;
+    ResultsFuture<?> rollback(XidImpl xid) throws XATransactionException;
 
-    ResultsFuture<?> forget(MMXid xid) throws XATransactionException;
+    ResultsFuture<?> forget(XidImpl xid) throws XATransactionException;
 
     ResultsFuture<Xid[]> recover(int flag) throws XATransactionException; 
     

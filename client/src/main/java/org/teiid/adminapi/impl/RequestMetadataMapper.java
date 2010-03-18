@@ -39,7 +39,7 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 	private static final String NODE_ID = "nodeId"; //$NON-NLS-1$
 	private static final String SOURCE_REQUEST = "sourceRequest"; //$NON-NLS-1$
 	private static final String COMMAND = "command"; //$NON-NLS-1$
-	private static final String PROCESSING_TIME = "processingTime"; //$NON-NLS-1$
+	private static final String PROCESSING_TIME = "startTime"; //$NON-NLS-1$
 	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
 	private static final String SESSION_ID = "sessionId"; //$NON-NLS-1$
 	private static final String EXECUTION_ID = "executionId"; //$NON-NLS-1$
@@ -79,7 +79,7 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			
 			request.set(EXECUTION_ID, SimpleValueSupport.wrap(object.getExecutionId()));
 			request.set(SESSION_ID, SimpleValueSupport.wrap(object.getSessionId()));
-			request.set(PROCESSING_TIME, SimpleValueSupport.wrap(object.getProcessingTime()));
+			request.set(PROCESSING_TIME, SimpleValueSupport.wrap(object.getStartTime()));
 			request.set(COMMAND, SimpleValueSupport.wrap(object.getCommand()));
 			request.set(SOURCE_REQUEST, SimpleValueSupport.wrap(object.sourceRequest()));
 			request.set(NODE_ID, SimpleValueSupport.wrap(object.getNodeId()));
@@ -101,7 +101,7 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			RequestMetadata request = new RequestMetadata();
 			request.setExecutionId((Long) metaValueFactory.unwrap(compositeValue.get(EXECUTION_ID)));
 			request.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get(SESSION_ID)));
-			request.setProcessingTime((Long) metaValueFactory.unwrap(compositeValue.get(PROCESSING_TIME)));
+			request.setStartTime((Long) metaValueFactory.unwrap(compositeValue.get(PROCESSING_TIME)));
 			request.setCommand((String) metaValueFactory.unwrap(compositeValue.get(COMMAND)));
 			request.setSourceRequest((Boolean) metaValueFactory.unwrap(compositeValue.get(SOURCE_REQUEST)));
 			request.setNodeId((Integer) metaValueFactory.unwrap(compositeValue.get(NODE_ID)));

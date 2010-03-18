@@ -25,9 +25,9 @@ package org.teiid.systemmodel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.jdbc.api.AbstractMMQueryTestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 /**
  * Tests xml virtual documents which are built on top of virtual

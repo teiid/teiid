@@ -12,11 +12,11 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XidImpl;
 
 public class XATransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
-	private MMXid xid;
+	private XidImpl xid;
 	
 	public XATransaction() {
 		super();
@@ -35,12 +35,12 @@ public class XATransaction extends TransactionContainer {
         }        
     }
 
-	public static MMXid createXid() {
+	public static XidImpl createXid() {
 		byte[] gid = new byte[10];
 		byte[] bid = new byte[10];
 		RANDOM.nextBytes(gid);
 		RANDOM.nextBytes(bid);
-		return new MMXid(0, gid, bid);
+		return new XidImpl(0, gid, bid);
 	}
     
     protected void after(TransactionQueryTestCase test) {

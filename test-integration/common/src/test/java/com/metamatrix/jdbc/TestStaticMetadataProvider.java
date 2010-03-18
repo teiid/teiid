@@ -28,6 +28,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.teiid.dqp.internal.process.MetaDataProcessor;
+import org.teiid.jdbc.StaticMetadataProvider;
 
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
