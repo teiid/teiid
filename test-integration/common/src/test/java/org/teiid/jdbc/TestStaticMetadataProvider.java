@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.jdbc;
+package org.teiid.jdbc;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.teiid.dqp.internal.process.MetaDataProcessor;
-import org.teiid.jdbc.StaticMetadataProvider;
+import org.teiid.jdbc.MetadataProvider;
 
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
@@ -44,18 +44,18 @@ public class TestStaticMetadataProvider extends TestCase {
         super(name);
     }
 
-    private StaticMetadataProvider example1() throws Exception {
+    private MetadataProvider example1() throws Exception {
     	MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$
         Map[] columnMetadata = new Map[] { 
             processor.getDefaultColumn("table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$ 
             processor.getDefaultColumn("table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$ 
         };               
         
-        return StaticMetadataProvider.createWithData(columnMetadata, 0);
+        return new MetadataProvider(columnMetadata);
     }
     
     public void testMetadata() throws Exception {
-        StaticMetadataProvider provider = example1();
+        MetadataProvider provider = example1();
         assertEquals(2, provider.getColumnCount());
         
         for(int i=0; i<provider.getColumnCount(); i++) {
@@ -74,7 +74,7 @@ public class TestStaticMetadataProvider extends TestCase {
         Map columnMetadata = new HashMap();
         columnMetadata.put(property, value); 
 
-        StaticMetadataProvider md = StaticMetadataProvider.createWithData(new Map[] {columnMetadata}, 0);
+        MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
         
         String actualValue = md.getStringValue(0, property);
         assertEquals(value, actualValue);               
@@ -87,7 +87,7 @@ public class TestStaticMetadataProvider extends TestCase {
         Map columnMetadata = new HashMap();
         columnMetadata.put(property, value); 
 
-        StaticMetadataProvider md = StaticMetadataProvider.createWithData(new Map[] {columnMetadata}, 0);
+        MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
         
         int actualValue = md.getIntValue(0, property);
         assertEquals(10, actualValue);               
@@ -100,7 +100,7 @@ public class TestStaticMetadataProvider extends TestCase {
         Map columnMetadata = new HashMap();
         columnMetadata.put(property, value); 
 
-        StaticMetadataProvider md = StaticMetadataProvider.createWithData(new Map[] {columnMetadata}, 0);
+        MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
         
         boolean actualValue = md.getBooleanValue(0, property);
         assertEquals(true, actualValue);               

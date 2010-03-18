@@ -464,7 +464,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     private ResultSet createResultSet(List records, Map[] columnMetadata) throws SQLException {
-        ResultSetMetaData rsmd = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(columnMetadata, 0));
+        ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata));
 
         return createResultSet(records, rsmd);
     }
@@ -488,7 +488,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         for (int i = 0; i < columnNames.length; i++) {
             metadata[i] = getColumnMetadata(null, columnNames[i], dataTypes[i], ResultsMetadataConstants.NULL_TYPES.UNKNOWN);
         }
-        return new ResultSetImpl(resultsMsg, stmt, ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadata, 0)), 0);
+        return new ResultSetImpl(resultsMsg, stmt, new ResultSetMetaDataImpl(new MetadataProvider(metadata)), 0);
     }
 
     private ResultsMessage createDummyResultsMessage(String[] columnNames, String[] dataTypes, List records) {
@@ -1791,7 +1791,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         metadataList[16] = getColumnMetadata(CoreConstants.SYSTEM_MODEL + "." + DATA_TYPES, JDBCColumnNames.TYPE_INFO.SQL_DATETIME_SUB, MMJDBCSQLTypeInfo.INTEGER,  ResultsMetadataConstants.NULL_TYPES.NULLABLE, ResultsMetadataConstants.SEARCH_TYPES.SEARCHABLE, Boolean.TRUE, Boolean.TRUE, Boolean.FALSE);//$NON-NLS-1$ 
         metadataList[17] = getColumnMetadata(CoreConstants.SYSTEM_MODEL + "." + DATA_TYPES, JDBCColumnNames.TYPE_INFO.NUM_PREC_RADIX, MMJDBCSQLTypeInfo.INTEGER,  ResultsMetadataConstants.NULL_TYPES.NULLABLE, ResultsMetadataConstants.SEARCH_TYPES.SEARCHABLE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);//$NON-NLS-1$ 
 
-        ResultSetMetaData rmetadata = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadataList, 0));
+        ResultSetMetaData rmetadata = new ResultSetMetaDataImpl(new MetadataProvider(metadataList));
 
         logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTypes_success")); //$NON-NLS-1$
 

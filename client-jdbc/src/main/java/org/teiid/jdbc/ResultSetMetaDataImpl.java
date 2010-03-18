@@ -30,31 +30,12 @@ import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
 /**
  */
-public class ResultsMetadataWithProvider extends WrapperImpl implements ResultSetMetaData {
+public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaData {
 
-    private ResultsMetadataProvider provider;
+    private MetadataProvider provider;
     
-    /**
-     * Factory Constructor 
-     * @param statement
-     * @param valueID
-     */
-    public static ResultsMetadataWithProvider newInstance(ResultsMetadataProvider provider) {
-        return new ResultsMetadataWithProvider(provider);        
-    }
-    
-    public ResultsMetadataWithProvider(ResultsMetadataProvider provider) {
-        setMetadataProvider(provider);
-    }
-    
-    void setMetadataProvider(ResultsMetadataProvider provider) {
-        this.provider = provider;
-    }
-    
-    private void verifyProvider() throws SQLException {
-        if(this.provider == null) {
-            throw new SQLException(JDBCPlugin.Util.getString("ResultsMetadataWithProvider.No_provider")); //$NON-NLS-1$
-        }
+    public ResultSetMetaDataImpl(MetadataProvider provider) {
+    	this.provider = provider;
     }
     
     /**
@@ -67,43 +48,35 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements ResultSe
     }
     
     public String getVirtualDatabaseName(int index) throws SQLException {
-        verifyProvider();
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
     }
 
     public String getVirtualDatabaseVersion(int index) throws SQLException {
-        verifyProvider();
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION);
     }
 
     public int getColumnCount() throws SQLException {
-        verifyProvider();
         return provider.getColumnCount();
     }
 
     public boolean isAutoIncrement(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.AUTO_INCREMENTING);
     }
 
     public boolean isCaseSensitive(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.CASE_SENSITIVE);
     }
 
     public boolean isSearchable(int index) throws SQLException {
-        verifyProvider();
         Integer searchable = (Integer) provider.getValue(adjustColumn(index), ResultsMetadataConstants.SEARCHABLE);
         return !(ResultsMetadataConstants.SEARCH_TYPES.UNSEARCHABLE.equals(searchable));
     }
 
     public boolean isCurrency(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.CURRENCY);
     }
 
     public int isNullable(int index) throws SQLException {
-        verifyProvider();
         Object nullable = provider.getValue(adjustColumn(index), ResultsMetadataConstants.NULLABLE);
         if(nullable.equals(ResultsMetadataConstants.NULL_TYPES.NULLABLE)) {
             return columnNullable;    
@@ -115,27 +88,22 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements ResultSe
     }
                         
     public boolean isSigned(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.SIGNED);
     }
 
     public int getColumnDisplaySize(int index) throws SQLException {
-        verifyProvider();
         return provider.getIntValue(adjustColumn(index), ResultsMetadataConstants.DISPLAY_SIZE);
     }
 
     public String getColumnLabel(int index) throws SQLException {
-        verifyProvider();
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
     }
 
     public String getColumnName(int index) throws SQLException {
-        verifyProvider();
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_NAME);
     }
 
     public String getSchemaName(int index) throws SQLException {
-        verifyProvider();
         String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
         if (name != null) {
         	int dotIndex = name.indexOf('.');
@@ -147,17 +115,14 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements ResultSe
     }
 
     public int getPrecision(int index) throws SQLException {
-        verifyProvider();
         return provider.getIntValue(adjustColumn(index), ResultsMetadataConstants.PRECISION);
     }
 
     public int getScale(int index) throws SQLException {
-        verifyProvider();
         return provider.getIntValue(adjustColumn(index), ResultsMetadataConstants.SCALE);
     }
 
     public String getTableName(int index) throws SQLException {
-        verifyProvider();
         String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
         if (name != null) {
         	int dotIndex = name.indexOf('.');
@@ -169,45 +134,32 @@ public class ResultsMetadataWithProvider extends WrapperImpl implements ResultSe
     }
 
     public String getCatalogName(int index) throws SQLException {
-    	verifyProvider();
     	return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
     }
 
     public int getColumnType(int index) throws SQLException {
-        verifyProvider();
-        
         String runtimeTypeName = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.DATA_TYPE);
         return MMJDBCSQLTypeInfo.getSQLType(runtimeTypeName);
     }
 
     public String getColumnTypeName(int index) throws SQLException {
-        verifyProvider();        
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.DATA_TYPE);
     }
 
     public boolean isReadOnly(int index) throws SQLException {
-        verifyProvider();
         return ! provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.WRITABLE);
     }
 
     public boolean isWritable(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.WRITABLE);
     }
 
     public boolean isDefinitelyWritable(int index) throws SQLException {
-        verifyProvider();
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.WRITABLE);
     }
 
     public String getColumnClassName(int index) throws SQLException {
-        verifyProvider();
-        
         return MMJDBCSQLTypeInfo.getJavaClassName(getColumnType(index));
-    }
-
-    public int getParameterCount() throws SQLException{
-        return provider.getParameterCount();
     }
 
 }

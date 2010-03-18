@@ -33,34 +33,35 @@ import com.metamatrix.core.util.ExternalizeUtil;
 public class MetadataResult implements Externalizable {
 	private static final long serialVersionUID = -1520482281079030324L;
 	private Map[] columnMetadata;
-	private int parameterCount;
+	private Map[] parameterMetadata;
 	
 	public MetadataResult() {
 	}
 	
-	public MetadataResult(Map[] columnMetadata, int parameterCount) {
+	public MetadataResult(Map[] columnMetadata, Map[] parameterMetadata) {
 		super();
 		this.columnMetadata = columnMetadata;
-		this.parameterCount = parameterCount;
+		this.parameterMetadata = parameterMetadata;
 	}
 	public Map[] getColumnMetadata() {
 		return columnMetadata;
 	}
-	public int getParameterCount() {
-		return parameterCount;
+	
+	public Map[] getParameterMetadata() {
+		return parameterMetadata;
 	}
 	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
 		columnMetadata = ExternalizeUtil.readArray(in, Map.class);
-		parameterCount = in.readInt();
+		parameterMetadata = ExternalizeUtil.readArray(in, Map.class);
 	}
 	
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		ExternalizeUtil.writeArray(out, columnMetadata);
-		out.writeInt(parameterCount);
+		ExternalizeUtil.writeArray(out, parameterMetadata);
 	}
 	
 }

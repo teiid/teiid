@@ -20,13 +20,13 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.jdbc;
+package org.teiid.jdbc;
 
 import java.util.Map;
 
 import org.teiid.dqp.internal.process.MetaDataProcessor;
-import org.teiid.jdbc.ResultsMetadataWithProvider;
-import org.teiid.jdbc.StaticMetadataProvider;
+import org.teiid.jdbc.ResultSetMetaDataImpl;
+import org.teiid.jdbc.MetadataProvider;
 
 import junit.framework.TestCase;
 
@@ -43,7 +43,7 @@ public class TestResultsMetadataWithProvider extends TestCase {
         super(name);
     }
 
-    public StaticMetadataProvider exampleProvider() throws Exception {
+    public MetadataProvider exampleProvider() throws Exception {
         MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$  
         Map col1 = processor.getDefaultColumn("table", "col1", String.class); //$NON-NLS-1$ //$NON-NLS-2$ 
         Map col2 = processor.getDefaultColumn("table", "col2", Integer.class); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -52,12 +52,12 @@ public class TestResultsMetadataWithProvider extends TestCase {
             col1, col2
         };
                 
-        StaticMetadataProvider provider = StaticMetadataProvider.createWithData(columnMetadata, 0);                      
+        MetadataProvider provider = new MetadataProvider(columnMetadata);                      
         return provider;        
     }
 
     public void test1() throws Exception {        
-        ResultsMetadataWithProvider rmd = new ResultsMetadataWithProvider(exampleProvider());
+        ResultSetMetaDataImpl rmd = new ResultSetMetaDataImpl(exampleProvider());
         
         assertEquals(false, rmd.isAutoIncrement(1));
         assertEquals(false, rmd.isCaseSensitive(1));

@@ -87,7 +87,9 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     protected List<List<Object>> batchParameterList;
 
     // metadata
+	private MetadataResult metadataResults;
     private ResultSetMetaData metadata;
+    private ParameterMetaData parameterMetaData;
     
     private Calendar serverCalendar;
 
@@ -251,24 +253,29 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         	} else if(resultSet != null) {
                 metadata = resultSet.getMetaData();
             } else {
-    			MetadataResult results;
-				try {
-					results = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
-				} catch (MetaMatrixComponentException e) {
-					throw TeiidSQLException.create(e);
-				} catch (MetaMatrixProcessingException e) {
-					throw TeiidSQLException.create(e);
-				}
-				if (results.getColumnMetadata() == null) {
+				if (getMetadataResults().getColumnMetadata() == null) {
 					return null;
 				}
-                StaticMetadataProvider provider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount());
-                metadata = ResultsMetadataWithProvider.newInstance(provider);
+                MetadataProvider provider = new MetadataProvider(getMetadataResults().getColumnMetadata());
+                metadata = new ResultSetMetaDataImpl(provider);
             }
         }
 
         return metadata;
     }
+
+	private MetadataResult getMetadataResults() throws TeiidSQLException {
+		if (metadataResults == null) {
+			try {
+				metadataResults = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
+			} catch (MetaMatrixComponentException e) {
+				throw TeiidSQLException.create(e);
+			} catch (MetaMatrixProcessingException e) {
+				throw TeiidSQLException.create(e);
+			}
+		}
+		return metadataResults;
+	}
 
     public void setAsciiStream (int parameterIndex, java.io.InputStream in, int length) throws SQLException {
         //create a clob from the ascii stream
@@ -661,12 +668,12 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         return new ArrayList<Object>(parameterMap.values());
     }
 
-	/* (non-Javadoc)
-	 * @see java.sql.PreparedStatement#getParameterMetaData()
-	 */
 	public ParameterMetaData getParameterMetaData() throws SQLException {
-		/* Implement for JDBC 3.0 */
-		return null;
+		if (parameterMetaData == null) {
+			//TODO: some of the base implementation of ResultSetMetadata could be on the MetadataProvider
+			this.parameterMetaData = new ParameterMetaDataImpl(new ResultSetMetaDataImpl(new MetadataProvider(getMetadataResults().getParameterMetadata())));
+		}
+		return parameterMetaData;
 	}
 
     /**

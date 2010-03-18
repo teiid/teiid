@@ -61,6 +61,7 @@ import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
@@ -168,7 +169,13 @@ public class MetaDataProcessor {
                 columnMetadata = createProjectedSymbolMetadata(originalCommand);                   
         }
         
-        return new MetadataResult(columnMetadata, ReferenceCollectorVisitor.getReferences(originalCommand).size());
+        List<Reference> params = ReferenceCollectorVisitor.getReferences(originalCommand);
+        Map[] paramMetadata = new Map[params.size()];
+        for (int i = 0; i < params.size(); i++) {
+			paramMetadata[i] = getDefaultColumn(null, null, params.get(i).getType());
+		}
+        
+        return new MetadataResult(columnMetadata, paramMetadata);
     }
 
     private Map[] createProjectedSymbolMetadata(Command originalCommand) throws MetaMatrixComponentException {

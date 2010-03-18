@@ -130,10 +130,10 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         this.serverTimeZone = statement.getServerTimeZone();
 
 		if (metadata == null) {
-			ResultsMetadataProvider provider = DeferredMetadataProvider.createWithInitialData(resultsMsg.getColumnNames(),
+			MetadataProvider provider = new DeferredMetadataProvider(resultsMsg.getColumnNames(),
 							resultsMsg.getDataTypes(), statement,
 							statement.getCurrentRequestID());
-			rmetadata = ResultsMetadataWithProvider.newInstance(provider);
+			rmetadata = new ResultSetMetaDataImpl(provider);
 		} else {
 			rmetadata = metadata;
 		}
@@ -142,7 +142,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		
 		this.resultColumns = columnCount - parameters;
 		if (this.parameters > 0) {
-			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns);
+			rmetadata = new FilteredResultsMetadata(rmetadata, resultColumns);
 		}
 		this.fetchSize = statement.getFetchSize();
 	}

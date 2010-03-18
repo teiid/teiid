@@ -28,61 +28,38 @@ import java.util.Map;
 
 /**
  */
-public class StaticMetadataProvider extends AbstractMetadataProvider {
+public class MetadataProvider {
 
     // Map of detail maps -- <columnIndex, Map<propertyName, metadataObject>>
-    private Map[] columnMetadata;
-    private int paramCount;
+	protected Map[] metadata;
 
-    StaticMetadataProvider() {
+    public MetadataProvider(Map[] metadata) {
+    	this.metadata = metadata;
     }
     
-    public static StaticMetadataProvider createWithData(Map[] columnMetadata, int paramCount) {
-        StaticMetadataProvider provider = null;
-        
-        provider = new StaticMetadataProvider();    
-        provider.setData(columnMetadata);
-        provider.setParameterCount(paramCount);        
-        return provider;
-    }
-    
-    /**
-     * Set column metadata.  The Map[] holds metadata for each column, 
-     * indexed by column 
-     * @param columnMetadata Each Map is from metadata key to metadata value
-     */
-    private void setData(Map[] columnMetadata) { 
-        this.columnMetadata = columnMetadata;
-    }
-
-    private void checkMetadataExists() throws SQLException {
-        if(columnMetadata == null) {
-            throw new SQLException(JDBCPlugin.Util.getString("StaticMetadataProvider.No_metadata"));  //$NON-NLS-1$
-        }         
-    }
-        
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-        checkMetadataExists();
-        
-        if(columnIndex < 0 || columnIndex >= columnMetadata.length) {
+        if(columnIndex < 0 || columnIndex >= metadata.length) {
             throw new SQLException(JDBCPlugin.Util.getString("StaticMetadataProvider.Invalid_column", columnIndex)); //$NON-NLS-1$
         }
         
-        Map column = this.columnMetadata[columnIndex];
+        Map column = this.metadata[columnIndex];
         return column.get(metadataPropertyKey);
     }
 
     public int getColumnCount() throws SQLException {
-        checkMetadataExists();
-        return columnMetadata.length;
+        return metadata.length;
+    }
+    
+    public String getStringValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
+        return (String) getValue(columnIndex, metadataPropertyKey);
     }
 
-    public int getParameterCount() {
-        return paramCount;
+    public int getIntValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
+        return ((Integer) getValue(columnIndex, metadataPropertyKey)).intValue();
     }
 
-    public void setParameterCount(int paramCount) {
-        this.paramCount = paramCount;
+    public boolean getBooleanValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
+        return ((Boolean) getValue(columnIndex, metadataPropertyKey)).booleanValue();
     }
 
 }

@@ -36,44 +36,30 @@ import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
  * This metadata provider starts with just column names and types (provided in the response)
  * but must lazily load the rest of the metadata when necessary.
  */
-public class DeferredMetadataProvider extends AbstractMetadataProvider {
-    private StaticMetadataProvider staticProvider;
-
+public class DeferredMetadataProvider extends MetadataProvider {
     private StatementImpl statement;
     private long requestID;
 
-    DeferredMetadataProvider() {        
+    public DeferredMetadataProvider(String[] columnNames, String[] columnTypes, StatementImpl statement, long requestID) {
+        super(loadPartialMetadata(columnNames, columnTypes));
+        this.statement = statement;
+        this.requestID = requestID;
     }
     
-    public static DeferredMetadataProvider createWithInitialData(String[] columnNames, String[] columnTypes, StatementImpl statement, long requestID) {
-        if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
+    static Map[] loadPartialMetadata(String[] columnNames, String[] columnTypes) {
+    	if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
             Object[] params = new Object[] { 
                 StringUtil.toString(columnNames), StringUtil.toString(columnTypes)
             };
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("DeferredMetadataProvider.Invalid_data", params)); //$NON-NLS-1$
         }
-        
-        DeferredMetadataProvider provider = null;
-        provider = new DeferredMetadataProvider();    
-        provider.setDeferredLookupAttributes(statement, requestID);
-        provider.loadPartialMetadata(columnNames, columnTypes);        
-        return provider;    
-    }
-    
-    private void setDeferredLookupAttributes(StatementImpl statement, long requestID) {
-        this.statement = statement;
-        this.requestID = requestID;
-    }
-    
-    private void loadPartialMetadata(String[] columnNames, String[] columnTypes) {
         Map[] columnMetadata = new Map[columnNames.length];
         for(int i=0; i<columnNames.length; i++) {
             columnMetadata[i] = new HashMap();
             columnMetadata[i].put(ResultsMetadataConstants.ELEMENT_NAME, columnNames[i]);
             columnMetadata[i].put(ResultsMetadataConstants.DATA_TYPE, columnTypes[i]);
         }
-        
-        this.staticProvider = StaticMetadataProvider.createWithData(columnMetadata, -1);    
+        return columnMetadata;
     }
 
     private void loadFullMetadata() throws SQLException {
@@ -85,33 +71,19 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
 		} catch (MetaMatrixProcessingException e) {
 			throw TeiidSQLException.create(e);
 		}
-        this.staticProvider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount());
+        this.metadata = results.getColumnMetadata();
     }
 
-    public int getColumnCount() throws SQLException {
-        return staticProvider.getColumnCount();
-    }
-
+    @Override
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-        Object value = staticProvider.getValue(columnIndex, metadataPropertyKey);
+        Object value = super.getValue(columnIndex, metadataPropertyKey);
         
         if(value == null) {
             loadFullMetadata();
-            value = staticProvider.getValue(columnIndex, metadataPropertyKey);          
+            value = super.getValue(columnIndex, metadataPropertyKey);          
         }
         
         return value;
-    }
-
-    public int getParameterCount() throws SQLException {
-        int count = staticProvider.getParameterCount();
-        
-        if(count < 0) {
-            loadFullMetadata();
-            count = staticProvider.getParameterCount();          
-        }
-        
-        return count;
     }
 
 }
