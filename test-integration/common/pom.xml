@@ -8,9 +8,7 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>test-integration-common</artifactId>
-
 	<name>Common Integration Tests</name>
- 	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Common Integration tests that do not require external dependencies</description>
-
+     
 </project>

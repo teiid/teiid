@@ -29,7 +29,7 @@
             <scope>provided</scope>
         </dependency>         
     </dependencies>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -42,6 +42,17 @@
                             <goal>jar</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>deploy_jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>lib</classifier>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
         </plugins>

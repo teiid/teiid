@@ -10,8 +10,7 @@
 	<artifactId>teiid-test-integration</artifactId>
   	<packaging>pom</packaging>
 	<name>Integration Tests</name>
-	<description>Integration tests spanning
-		server/embedded/connectors.</description>
+	<description>Integration tests spanning	server/embedded/connectors.</description>
 
 	<properties>
 		<derby.version>10.2.1.6</derby.version>
@@ -49,6 +48,7 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-jdbc</artifactId>
 			<version>${project.version}</version>
+            <classifier>lib</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>

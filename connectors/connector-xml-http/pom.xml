@@ -74,7 +74,17 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                          <classifier>export</classifier>
+                            <classifier>export</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy_jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>lib</classifier>
                         </configuration>
                     </execution>
                 </executions>
