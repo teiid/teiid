@@ -52,17 +52,18 @@
       <artifactId>connector-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
         <scope>provided</scope>
-    </dependency> 
-    
-    <dependency>
-        <groupId>org.jboss.man</groupId>
-        <artifactId>jboss-managed</artifactId>
-        <scope>test</scope>
-    </dependency>     
+    </dependency>
+
+	<dependency>
+		<groupId>org.jboss.man</groupId>
+		<artifactId>jboss-managed</artifactId>
+	</dependency>
+  
   </dependencies>
   
 </project>

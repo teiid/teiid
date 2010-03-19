@@ -19,10 +19,8 @@ import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.RequestMetadataMapper;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.SessionMetadataMapper;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
 import org.teiid.rhq.comm.ExecutedResult;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -76,7 +74,7 @@ public class DQPManagementView implements PluginConstants {
 						.equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
 					Integer longRunningQueryLimit = (Integer) valueMap
 							.get(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT);
-					Collection<RequestMetadata> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
+					Collection<Request> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
 					resultObject = new Double(longRunningQueries.size());
 				}
 			}
@@ -106,7 +104,7 @@ public class DQPManagementView implements PluginConstants {
 						.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
 					Integer longRunningQueryLimit = (Integer) valueMap
 							.get(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT);
-					Collection<RequestMetadata> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
+					Collection<Request> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
 					resultObject = new Double(longRunningQueries.size());
 				}
 			}
@@ -136,8 +134,8 @@ public class DQPManagementView implements PluginConstants {
 
 	private void executePlatformOperation(ExecutedResult operationResult,
 			final String operationName, final Map<String, Object> valueMap) {
-		Collection<RequestMetadata> resultObject = new ArrayList<RequestMetadata>();
-		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
+		Collection<Request> resultObject = new ArrayList<Request>();
+		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
 
 		if (operationName.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
 			Integer longRunningValue = (Integer) valueMap
@@ -185,8 +183,8 @@ public class DQPManagementView implements PluginConstants {
 
 	private void executeVdbOperation(ExecutedResult operationResult,
 			final String operationName, final Map<String, Object> valueMap) {
-		Collection<RequestMetadata> resultObject = new ArrayList<RequestMetadata>();
-		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
+		Collection<Request> resultObject = new ArrayList<Request>();
+		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
 
 		if (operationName.equals(VDB.Operations.GET_PROPERTIES)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
@@ -347,7 +345,7 @@ public class DQPManagementView implements PluginConstants {
 		Integer count = new Integer(0);
 
 		MetaValue requests = null;
-		Collection<RequestMetadata> requestsCollection = new ArrayList<RequestMetadata>();
+		Collection<Request> requestsCollection = new ArrayList<Request>();
 
 		requests = getRequests();
 
@@ -362,17 +360,17 @@ public class DQPManagementView implements PluginConstants {
 
 	private Integer getSessionCount() {
 
-		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
+		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
 		MetaValue sessionMetaValue = getSessions();
 		getSessionCollectionValue(sessionMetaValue, activeSessionsCollection);
 		return activeSessionsCollection.size();
 	}
 
-	protected Collection<RequestMetadata> getLongRunningQueries(
+	protected Collection<Request> getLongRunningQueries(
 			int longRunningValue) {
 
 		MetaValue requestsCollection = null;
-		Collection<RequestMetadata> list = new ArrayList<RequestMetadata>();
+		Collection<Request> list = new ArrayList<Request>();
 
 		double longRunningQueryTimeDouble = new Double(longRunningValue);
 
@@ -380,9 +378,9 @@ public class DQPManagementView implements PluginConstants {
 
 		getRequestCollectionValue(requestsCollection, list);
 
-		Iterator<RequestMetadata> requestsIter = list.iterator();
+		Iterator<Request> requestsIter = list.iterator();
 		while (requestsIter.hasNext()) {
-			RequestMetadata request = requestsIter.next();
+			Request request = requestsIter.next();
 			long startTime = request.getStartTime();
 			// Get msec from each, and subtract.
 			long runningTime = Calendar.getInstance().getTimeInMillis()
@@ -397,16 +395,14 @@ public class DQPManagementView implements PluginConstants {
 	}
 
 	public static <T> void getRequestCollectionValue(MetaValue pValue,
-			Collection<RequestMetadata> list) {
+			Collection<Request> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue)
 					.getElements()) {
 				if (value.getMetaType().isComposite()) {
-					RequestMetadataMapper requestMapper = new RequestMetadataMapper();
-					RequestMetadata requestMetaData = requestMapper
-							.unwrapMetaValue(value);
-					list.add(requestMetaData);
+					Request Request = (Request)MetaValueFactory.getInstance().unwrap(value);
+					list.add(Request);
 				} else {
 					throw new IllegalStateException(pValue
 							+ " is not a Composite type");
@@ -416,16 +412,14 @@ public class DQPManagementView implements PluginConstants {
 	}
 
 	public static <T> void getSessionCollectionValue(MetaValue pValue,
-			Collection<SessionMetadata> list) {
+			Collection<Session> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue)
 					.getElements()) {
 				if (value.getMetaType().isComposite()) {
-					SessionMetadataMapper sessionMapper = new SessionMetadataMapper();
-					SessionMetadata sessionMetaData = sessionMapper
-							.unwrapMetaValue(value);
-					list.add(sessionMetaData);
+					Session Session = (Session)MetaValueFactory.getInstance().unwrap(value);
+					list.add(Session);
 				} else {
 					throw new IllegalStateException(pValue
 							+ " is not a Composite type");

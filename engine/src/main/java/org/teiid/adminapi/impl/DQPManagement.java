@@ -19,15 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package com.metamatrix.dqp.client;
+package org.teiid.adminapi.impl;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 
 
 public interface DQPManagement {
