@@ -86,6 +86,16 @@ import com.metamatrix.query.sql.lang.SPParameter;
  * index files for various metadata properties.
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
+	
+	public static class Resource {
+		public Resource(VirtualFile file, boolean visible) {
+			this.file = file;
+			this.visible = visible;
+		}
+		VirtualFile file;
+		boolean visible;
+	}
+	
 	private static final long serialVersionUID = 1058627332954475287L;
 	
 	/** Delimiter character used when specifying fully qualified entity names */
@@ -98,7 +108,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private static UnmodifiableProperties EMPTY_PROPS = new UnmodifiableProperties(new Properties());
     
     private final CompositeMetadataStore store;
-    private Map<VirtualFile, Boolean> vdbEntries;
+    private Map<String, Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
     private VDBMetaData vdbMetaData;
     
@@ -113,14 +123,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<VirtualFile, Boolean> vdbEntries, Collection <FunctionMethod> udfMethods) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, Collection <FunctionMethod> udfMethods) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
         this.store = store;
         if (vdbEntries == null) {
-        	vdbEntries = Collections.emptyMap();
+        	this.vdbEntries = Collections.emptyMap();
+        } else {
+        	this.vdbEntries = vdbEntries;
         }
-        this.vdbEntries = vdbEntries;
         if (udfMethods == null) {
         	udfMethods = Collections.emptyList();
         }
@@ -1037,14 +1048,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (resourcePath == null) {
     		return null;
     	}
-    	for (final VirtualFile f:this.vdbEntries.keySet()) {
-    		if (f.getPathName().equals(resourcePath)) {
-    			Boolean v = this.vdbEntries.get(f);
-    			if (v.booleanValue()) {
-					return f;
-    			}
-				break;
-    		}
+    	Resource r = this.vdbEntries.get(resourcePath);
+    	if (r != null && r.visible) {
+    		return r.file;
     	}
     	return null;
     }
@@ -1074,14 +1080,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public String[] getVDBResourcePaths() throws MetaMatrixComponentException, QueryMetadataException {
-    	ArrayList<String> paths = new ArrayList<String>();
-    	for (VirtualFile f:this.vdbEntries.keySet()) {
-    		Boolean v = this.vdbEntries.get(f);
-    		if (v.booleanValue()) {
-    			paths.add(f.getPathName());
-    		}
-    	}
-        return paths.toArray(new String[paths.size()]);
+    	ArrayList<String> paths = new ArrayList<String>(this.vdbEntries.keySet());
+    	return paths.toArray(new String[paths.size()]);
     }
     
     /** 

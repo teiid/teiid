@@ -20,7 +20,9 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc;
+
+import com.metamatrix.dqp.message.RequestMessage;
 
 /**
  * MetaMatrix-specific execution properties.  These execution properties can 
@@ -49,16 +51,16 @@ public interface ExecutionProperties {
     public static final String XML_COMPACT_FORMAT = "Compact"; //$NON-NLS-1$
 
     /** Transaction auto wrap constant - never wrap a command execution in a transaction */
-    public static final String TXN_WRAP_OFF = "OFF"; //$NON-NLS-1$
+    public static final String TXN_WRAP_OFF = RequestMessage.TXN_WRAP_OFF;
 
     /** Transaction auto wrap constant - always wrap commands in a transaction. */
-    public static final String TXN_WRAP_ON = "ON"; //$NON-NLS-1$
+    public static final String TXN_WRAP_ON = RequestMessage.TXN_WRAP_ON;
 
     /**
      * Transaction auto wrap constant - checks if a command
      * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_WRAP_DETECT = "DETECT"; //$NON-NLS-1$
+    public static final String TXN_WRAP_DETECT = RequestMessage.TXN_WRAP_DETECT;
 
     /** 
      * Whether to use result set cache if it is available 

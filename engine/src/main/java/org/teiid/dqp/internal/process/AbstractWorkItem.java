@@ -43,12 +43,8 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     private volatile boolean release;
     
     public void run() {
-    	try {
-    		startProcessing();
-    		process();
-    	} finally {
-    		endProcessing();
-    	}
+		startProcessing();
+		process();
     }
     
     synchronized ThreadState getThreadState() {
@@ -146,6 +142,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 
 	@Override
 	public void workCompleted(WorkEvent arg0) {
+		endProcessing();
 	}
 
 	@Override

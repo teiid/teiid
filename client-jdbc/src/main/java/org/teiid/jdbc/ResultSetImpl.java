@@ -52,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import org.teiid.jdbc.BatchResults.Batch;
+import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;

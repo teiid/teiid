@@ -25,7 +25,7 @@ package org.teiid.jdbc;
 import java.sql.DriverPropertyInfo;
 import java.util.Properties;
 
-import org.teiid.plan.api.ExecutionProperties;
+
 
 import junit.framework.TestCase;
 

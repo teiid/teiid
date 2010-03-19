@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc.plan;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -50,12 +50,12 @@ public abstract class PlanVisitor {
      * @param rootNode The rootNode of the tree
      */
     public void visit(PlanNode rootNode) {
-        LinkedList nodeStack = new LinkedList();
+        LinkedList<PlanNode> nodeStack = new LinkedList<PlanNode>();
         nodeStack.add(rootNode);
         
         while(! nodeStack.isEmpty()) {
             // Obtain next node
-            PlanNode node = (PlanNode) nodeStack.removeFirst();
+            PlanNode node = nodeStack.removeFirst();
             
             // Visit node
             visitNode(node);

@@ -29,10 +29,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.jboss.virtual.VirtualFile;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
@@ -47,13 +50,16 @@ import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.TransformationMetadata.Resource;
 
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.UUID;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.core.vdb.VdbConstants;
 
 /**
  * Loads MetadataRecords from index files.  
@@ -66,7 +72,7 @@ public class IndexMetadataFactory {
     private Map<String, Table> tableCache = new HashMap<String, Table>();
 	private MetadataStore store;
 	private HashSet<VirtualFile> indexFiles = new HashSet<VirtualFile>();
-	private Map<VirtualFile, Boolean> vdbEntries;
+	private LinkedHashMap<String, Resource> vdbEntries;
     
 	public MetadataStore getMetadataStore() throws IOException {
 		if (this.store == null) {
@@ -94,11 +100,50 @@ public class IndexMetadataFactory {
     	this.indexFiles.add(f);
     }
     
-	public void addEntriesPlusVisibilities(Map<VirtualFile, Boolean> entries) {
-		this.vdbEntries = entries;
+	public void addEntriesPlusVisibilities(VirtualFile root, VDBMetaData vdb) throws IOException {
+		LinkedHashMap<String, Resource> visibilityMap = new LinkedHashMap<String, Resource>();
+		for(VirtualFile f: root.getChildrenRecursively()) {
+			visibilityMap.put("/" + f.getPathName(), new Resource(f, isFileVisible(f.getPathName(), vdb))); //$NON-NLS-1$
+		}
+		this.vdbEntries = visibilityMap;
 	}
 	
-	public Map<VirtualFile, Boolean> getEntriesPlusVisibilities(){
+	private final static boolean isSystemModelWithSystemTableType(String modelName) {
+        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName);
+    }
+	
+	private boolean isFileVisible(String pathInVDB, VDBMetaData vdb) {
+
+		String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
+
+		// If this is any of the Public System Models, like JDBC,ODBC system
+		// models
+		if (isSystemModelWithSystemTableType(modelName)) {
+			return true;
+		}
+
+		ModelMetaData model = vdb.getModel(modelName);
+		if (model != null) {
+			return model.isVisible();
+		}
+
+        String entry = StringUtil.getLastToken(pathInVDB, "/"); //$NON-NLS-1$
+        
+        // index files should not be visible
+		if( entry.endsWith(VdbConstants.INDEX_EXT) || entry.endsWith(VdbConstants.SEARCH_INDEX_EXT)) {
+			return false;
+		}
+
+		// deployment file should not be visible
+        if(entry.equalsIgnoreCase(VdbConstants.DEPLOYMENT_FILE)) {
+            return false;
+        }
+        
+        // any other file should be visible
+        return true;		
+	}
+	
+	public LinkedHashMap<String, Resource> getEntriesPlusVisibilities(){
 		return this.vdbEntries;
 	}
 	

@@ -20,41 +20,44 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc.plan;
+
 
 /**
- * Annotation from query engine, collected during execution.
  */
-public interface Annotation {
+public class Annotation {
 
-    public static final int LOW = 1;
-    public static final int MEDIUM = 2;
-    public static final int HIGH = 3;
+    private String category;
+    private String description;
+    private String resolution;
+    private int severity;
 
-    /**
-     * Get category of this annotation.
-     * @return Category
-     */
-    public String getCategory();
+    public Annotation(String[] serverAnnotation) {
+        category = serverAnnotation[0];
+        description = serverAnnotation[1];
+        resolution = serverAnnotation[2];
+        
+        severity = Integer.parseInt(serverAnnotation[3]);
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public String getAnnotation() {
+        return description;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public int getSeverity() {
+        return severity;
+    }
     
-    /**
-     * Get annotation description.
-     * @return Annotation description
-     */
-    public String getAnnotation();
-    
-    /**
-     * Get resolution for annotation.  May be null if no resolution is suggested.
-     * @return Resolution, or null
-     */
-    public String getResolution();
-    
-    /**
-     * Get severity of this annotation
-     * @return Severity level
-     * @see #LOW
-     * @see #MEDIUM
-     * @see #HIGH
-     */
-    public int getSeverity();
+    public String toString() {
+        return description;
+    }
+
 }

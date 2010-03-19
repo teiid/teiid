@@ -20,37 +20,41 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc.plan;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Represents one node in a query plan tree.  Every node has a list of child nodes
- * and a Map of property name to property value.  Property names are always strings
- * and property values should always be Java primitive types such as String, Integer, 
- * Boolean, and Lists of those types.  In some cases, a property value may itself also be 
- * a PlanNode.  
+ * Implement a default display helper that can be used with the {@link TextOutputVisitor} 
+ * and {@link XMLOutputVisitor}.  
  */
-public interface PlanNode {
+public class DefaultDisplayHelper implements DisplayHelper {
 
-    /**
-     * Get the parent node for this node.
-     * @return Parent node or null if this node is the root
-     */
-    PlanNode getParent();
+    public String getName(PlanNode node) {
+        return (String)node.getProperties().get(PlanNode.TYPE); 
+    }
 
-    /**
-     * Get the children of this component, which are always of type PlanNode.   
-     * @return List of PlanNode
-     */
-    List getChildren();
-    
-    /**
-     * Get the properties for this component.  Property names are always String.  
-     * Property values are typically String, Integer, Boolean, a List of one of 
-     * those primitive types, or another PlanNode in rare cases.  
-     */
-    Map getProperties();
-    
+    public String getDescription(PlanNode node) {
+        return ""; //$NON-NLS-1$
+    }
+
+    public List<String> getOrderedProperties(PlanNode node) {
+        List<String> props = new ArrayList<String>(node.getProperties().keySet());
+        props.remove(PlanNode.TYPE);
+        if(props.contains(PlanNode.OUTPUT_COLS)) {
+            props.remove(PlanNode.OUTPUT_COLS);
+            props.add(0, PlanNode.OUTPUT_COLS);            
+        }
+        return props;
+    }
+
+    public String getPropertyName(String property) {
+        return property;
+    }
+
+    public void setMaxDescriptionLength(int length) {
+
+    }
+
 }

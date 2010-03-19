@@ -304,15 +304,14 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           results mode may be overridden on a per-query basis by setting
           the execution property on the Statement. To set this property,
           cast to the Teiid Statement JDBC API extension interface
-          <classname>com.metamatrix.jdbc.api.Statement
+          <classname>org.teiid.jdbc.TeiidStatement
           </classname>
         </para>
         <example>
           <title>Example - Setting Partial Results Mode</title>
           <programlisting>Statement statement = ...obtain statement from Connection... 
 
-com.metamatrix.jdbc.api.Statement mmStatement = 
-  (com.metamatrix.jdbc.api.Statement) statement;
+TeiidStatement mmStatement = statement.unWrap(TeiidStatement.class);
   
 mmStatement.setExecutionProperty( 
   ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, "true");</programlisting>
@@ -348,7 +347,7 @@ mmStatement.setExecutionProperty(
           warnings can be obtained from the Statement.getWarnings()
           method. This method returns a SQLWarning object but in the
           case of "partial results" warnings, this will be an object of
-          type com.metamatrix.jdbc.api.PartialResultsWarning. This class
+          type org.teiid.jdbc.PartialResultsWarning. This class
           can be used to obtain a list of all the failed connectors by
           name and to obtain the specific exception thrown by each
           connector.</para>
@@ -399,13 +398,13 @@ if(warning instanceof PartialResultsWarning) {
       <para>
         With the above options, the query plan is available from the
         Statement object by casting to the
-        <classname>com.metamatrix.jdbc.api.Statement
+        <classname>org.teiid.jdbc.TeiidStatement
         </classname>
         interface.
       </para>
       <example>
         <title>Retrieving a Query Plan</title>
-        <programlisting>com.metamatrix.jdbc.api.Statement mmstatement = (com.metamatrix.jdbc.api.Statement)statement;
+        <programlisting>TeiidStatement mmstatement = statement.unWrap(TeiidStatement.class);
 String sql = "select ...";
 
 mmstatement.setExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS, ExecutionProperties.SQL_OPTION_SHOWPLAN);

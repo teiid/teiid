@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc.plan;
 
 import java.util.List;
 
@@ -56,7 +56,7 @@ public interface DisplayHelper {
      * @param node The node
      * @return List of property names
      */ 
-    List getOrderedProperties(PlanNode node);
+    List<String> getOrderedProperties(PlanNode node);
     
     /**
      * Get display name for a particular property name.  

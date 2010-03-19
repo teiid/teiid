@@ -20,15 +20,15 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jdbc.api;
+package org.teiid.jdbc;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.teiid.plan.api.Annotation;
-import org.teiid.plan.api.PlanNode;
+import org.teiid.jdbc.plan.Annotation;
+import org.teiid.jdbc.plan.PlanNode;
 
 
 
@@ -36,7 +36,7 @@ import org.teiid.plan.api.PlanNode;
  * This interface provides methods in 
  * addition to the standard JDBC methods. 
  */
-public interface Statement extends java.sql.Statement {
+public interface TeiidStatement extends java.sql.Statement {
 
     /**
      * Get the execution property value.
@@ -72,23 +72,23 @@ public interface Statement extends java.sql.Statement {
     
     /**
      * Get collection of annotations from the query planner from
-     * the last command executed on the Statement, if annotations
-     * were requested.  If no annotation was requested, this method
-     * will return null  
-     * @return Collection of {@link Annotation}s
+     * the last command executed on the Statement  
+     * @return Collection of {@link Annotation}s, may return null
      */
-    Collection getAnnotations();
+    Collection<Annotation> getAnnotations();
      
     /**
      * Attach a stylesheet to be applied on the server for XML queries 
      * executed with this Statement.
      * @param reader Reader for reading a stylesheet in XML
      * @throws IOException If an error occurs reading the stylesheet
+     * @deprecated
      */
     void attachStylesheet(Reader reader) throws IOException;    
 
     /**
      * Clear any previously attached stylesheet for this Statement object.
+     * @deprecated
      */
     void clearStylesheet();    
 
@@ -98,24 +98,15 @@ public interface Statement extends java.sql.Statement {
      * @return String identifier for the last execution
      */
     String getRequestIdentifier();
-
     
     /**
      * Set the per-statement security payload.  This optional payload will 
      * accompany each request to the data source(s) so that the connector
      * will have access to it.
-     * <br>Once the payload is set, it will be used for each statment
-     * execution until it is set to <code>null</code>, a new payload is set on
-     * the statement or the statement is closed.</br>
      * 
      * <p>To remove an existing payload from a statement, call this method
      * with a <code>null</code> argument.</p>
      *   
-     * <p>The execution payload differs from the Trusted Payload in that it
-     * is set on the Statement and so may not be constant over the Connection lifecycle
-     * and may be changed upon each statement execution.  The Execution Payload is
-     * <em>not</em> authenticated or validated by the Teiid system.</p>
-     * 
      * @param payload The payload that is to accompany requests executed
      * from this statement.
      * @since 4.2

@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -35,7 +35,6 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
-import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -48,6 +47,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -107,7 +107,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);
 		UDFMetaData udf = unit.getAttachment(UDFMetaData.class);
 		if (indexFactory != null) {
-			Map<VirtualFile, Boolean> visibilityMap = indexFactory.getEntriesPlusVisibilities();
+			LinkedHashMap<String, Resource> visibilityMap = indexFactory.getEntriesPlusVisibilities();
 			metadata = buildTransformationMetaData(deployment, visibilityMap, store, udf);
 		}
 		else {
@@ -166,7 +166,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 
 
 	// does this need to be synchronized? 
-	private TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, Map<VirtualFile, Boolean> visibilityMap, CompositeMetadataStore store, UDFMetaData udf) throws DeploymentException {
+	private TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, CompositeMetadataStore store, UDFMetaData udf) throws DeploymentException {
 		
 		// get the system VDB metadata store
 		MetadataStore systemStore = this.vdbRepository.getMetadataStore(CoreConstants.SYSTEM_VDB, 1);

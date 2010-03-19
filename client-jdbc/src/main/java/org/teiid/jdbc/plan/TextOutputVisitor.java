@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.plan.api;
+package org.teiid.jdbc.plan;
 
 import java.util.Collection;
 import java.util.HashMap;

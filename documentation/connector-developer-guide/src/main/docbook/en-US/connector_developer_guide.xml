@@ -48,7 +48,6 @@
     <xi:include href="content/introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connector-api.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/command-language.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/connector-development-kit.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />    
     <xi:include href="content/connector-deployment.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connection-pooling.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/lob-support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

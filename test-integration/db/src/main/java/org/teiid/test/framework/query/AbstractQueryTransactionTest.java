@@ -95,8 +95,8 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.api.A
 
     @Override
     protected void assignExecutionProperties(Statement stmt) {
-	if (stmt instanceof org.teiid.jdbc.api.Statement) {
-		org.teiid.jdbc.api.Statement statement = (org.teiid.jdbc.api.Statement) stmt;
+	if (stmt instanceof org.teiid.jdbc.TeiidStatement) {
+		org.teiid.jdbc.TeiidStatement statement = (org.teiid.jdbc.TeiidStatement) stmt;
 
 	    Properties executionProperties = this.connStrategy.getEnvironment();
 	    if (executionProperties != null) {

@@ -23,7 +23,6 @@ package org.teiid.deployers;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +53,6 @@ import org.xml.sax.SAXException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VdbConstants;
 
 /**
@@ -134,20 +132,12 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		
 		vdb.setUrl(unit.getRoot().toURL().toExternalForm());		
 		
-		// add the entries and determine their visibility
-		VirtualFile root = unit.getRoot();
-		List<VirtualFile> children = root.getChildrenRecursively();
-		Map<VirtualFile, Boolean> visibilityMap = new LinkedHashMap<VirtualFile, Boolean>();
-		for(VirtualFile f: children) {
-			visibilityMap.put(f, isFileVisible(f.getPathName(), vdb));
-		}
-		
 		// build the metadata store
 		List<Object> indexFiles = metadata.get(IndexMetadataFactory.class);
 		if (indexFiles != null && !indexFiles.isEmpty()) {
 			IndexMetadataFactory imf = (IndexMetadataFactory)indexFiles.get(0);
 			if (imf != null) {
-				imf.addEntriesPlusVisibilities(visibilityMap);
+				imf.addEntriesPlusVisibilities(unit.getRoot(), vdb);
 				unit.addAttachment(IndexMetadataFactory.class, imf);
 								
 				// add the cached store.
@@ -190,41 +180,6 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
-	}
-
-	private final static boolean isSystemModelWithSystemTableType(String modelName) {
-        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName);
-    }
-	
-	private boolean isFileVisible(String pathInVDB, VDBMetaData vdb) {
-
-		String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
-
-		// If this is any of the Public System Models, like JDBC,ODBC system
-		// models
-		if (isSystemModelWithSystemTableType(modelName)) {
-			return true;
-		}
-
-		ModelMetaData model = vdb.getModel(modelName);
-		if (model != null) {
-			return model.isVisible();
-		}
-
-        String entry = StringUtil.getLastToken(pathInVDB, "/"); //$NON-NLS-1$
-        
-        // index files should not be visible
-		if( entry.endsWith(VdbConstants.INDEX_EXT) || entry.endsWith(VdbConstants.SEARCH_INDEX_EXT)) {
-			return false;
-		}
-
-		// deployment file should not be visible
-        if(entry.equalsIgnoreCase(VdbConstants.DEPLOYMENT_FILE)) {
-            return false;
-        }
-        
-        // any other file should be visible
-        return true;		
 	}	
 	
 	public void setObjectSerializer(ObjectSerializer serializer) {

@@ -28,14 +28,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.jboss.virtual.VFS;
 import org.jboss.virtual.VirtualFile;
 import org.jboss.virtual.VirtualFileFilter;
 import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
@@ -66,26 +65,15 @@ public class VDBMetadataFactory {
 		try {
 			VirtualFile vdbFile = getVirtualFile(vdbURL);
 			
-			MetadataStore store = getMetadataStore(vdbFile);
-			
-			List<VirtualFile> files = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
-				@Override
-				public boolean accepts(VirtualFile file) {
-					return !file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
-				}
-			});
-			
-			Map<VirtualFile, Boolean> vdbFiles = new HashMap<VirtualFile, Boolean>();
-			for (VirtualFile virtualFile : files) {
-				vdbFiles.put(virtualFile, Boolean.TRUE);
-			}
+			IndexMetadataFactory imf = getMetadataStore(vdbFile);
+			imf.addEntriesPlusVisibilities(vdbFile, new VDBMetaData());
 			
 			Collection <FunctionMethod> methods = null;
 			if (udfFile != null) {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
-			MetadataStore system = getMetadataStore(getVirtualFile(VDBMetadataFactory.class.getResource("/System.vdb"))); //$NON-NLS-1$
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(system, store)), vdbFiles, methods); 
+			MetadataStore system = getMetadataStore(getVirtualFile(VDBMetadataFactory.class.getResource("/System.vdb"))).getMetadataStore(); //$NON-NLS-1$
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(system, imf.getMetadataStore())), imf.getEntriesPlusVisibilities(), methods); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
@@ -101,7 +89,7 @@ public class VDBMetadataFactory {
 		return vdbFile;
 	}
 
-	private static MetadataStore getMetadataStore(VirtualFile vdbFile)
+	private static IndexMetadataFactory getMetadataStore(VirtualFile vdbFile)
 			throws IOException {
 		List<VirtualFile> children = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
 			@Override
@@ -115,8 +103,7 @@ public class VDBMetadataFactory {
 			imf.addIndexFile(f);
 		}
 		
-		MetadataStore store = imf.getMetadataStore();
-		return store;
+		return imf;
 	}	
 	
 

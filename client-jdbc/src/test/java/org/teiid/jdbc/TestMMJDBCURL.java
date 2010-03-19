@@ -20,14 +20,14 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jdbc.util;
+package org.teiid.jdbc;
 
 import java.net.URLEncoder;
 import java.util.Properties;
 
 import org.teiid.jdbc.BaseDataSource;
+import org.teiid.jdbc.ExecutionProperties;
 import org.teiid.jdbc.JDBCURL;
-import org.teiid.plan.api.ExecutionProperties;
 
 import junit.framework.TestCase;
 

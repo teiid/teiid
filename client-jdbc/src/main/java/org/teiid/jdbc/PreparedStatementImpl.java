@@ -51,7 +51,7 @@ import java.util.TreeMap;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
-import org.teiid.plan.api.ExecutionProperties;
+
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;

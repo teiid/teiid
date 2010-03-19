@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.plan.api.ExecutionProperties;
+
 
 
 import com.metamatrix.common.api.MMURL;

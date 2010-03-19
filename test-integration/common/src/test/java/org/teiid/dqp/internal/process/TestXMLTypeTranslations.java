@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -108,7 +110,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         DataTierManagerImpl dataMgr = new DataTierManagerImpl(core, null, null, 0, 0, 0);
         doProcess(metadata,  
                 sql, 
-                finder, dataMgr , new List[0], DEBUG);
+                finder, dataMgr , new List[] {Arrays.asList(new String(ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile("test-schema.xsd")))))}, DEBUG); //$NON-NLS-1$
         
     }
     

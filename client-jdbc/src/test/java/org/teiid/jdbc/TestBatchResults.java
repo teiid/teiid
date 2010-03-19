@@ -29,9 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.jdbc.BatchFetcher;
-import org.teiid.jdbc.BatchResults;
 import org.teiid.jdbc.BatchResults.Batch;
+import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 
 /** 

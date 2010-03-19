@@ -32,7 +32,7 @@ import javax.sql.PooledConnection;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
-import org.teiid.plan.api.ExecutionProperties;
+
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.dqp.message.RequestMessage;

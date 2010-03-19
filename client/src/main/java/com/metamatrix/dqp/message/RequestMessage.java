@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.plan.api.ExecutionProperties;
-
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.CommonCommPlugin;
 import com.metamatrix.core.util.ExternalizeUtil;
@@ -43,6 +41,19 @@ import com.metamatrix.core.util.ExternalizeUtil;
 public class RequestMessage implements Externalizable {
 
     public static final int DEFAULT_FETCH_SIZE = 2048;
+    
+    /** Transaction auto wrap constant - never wrap a command execution in a transaction */
+    public static final String TXN_WRAP_OFF = "OFF"; //$NON-NLS-1$
+
+    /** Transaction auto wrap constant - always wrap commands in a transaction. */
+    public static final String TXN_WRAP_ON = "ON"; //$NON-NLS-1$
+
+    /**
+     * Transaction auto wrap constant - checks if a command
+     * requires a transaction and will be automatically wrap it.
+     */
+    public static final String TXN_WRAP_DETECT = "DETECT"; //$NON-NLS-1$
+
     
     public enum StatementType {
     	PREPARED, CALLABLE, STATEMENT
@@ -189,7 +200,7 @@ public class RequestMessage implements Externalizable {
      */
     public String getTxnAutoWrapMode() {
     	if (txnAutoWrapMode == null) {
-    		return ExecutionProperties.TXN_WRAP_DETECT;
+    		return TXN_WRAP_DETECT;
     	}
         return txnAutoWrapMode;
     }
@@ -202,9 +213,9 @@ public class RequestMessage implements Externalizable {
     public void setTxnAutoWrapMode(String txnAutoWrapMode) throws MetaMatrixProcessingException {
     	if (txnAutoWrapMode != null) {
     		txnAutoWrapMode = txnAutoWrapMode.toUpperCase();
-    		if (!(txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_OFF)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_ON)
-    			|| txnAutoWrapMode.equals(ExecutionProperties.TXN_WRAP_DETECT))) {
+    		if (!(txnAutoWrapMode.equals(TXN_WRAP_OFF)
+    			|| txnAutoWrapMode.equals(TXN_WRAP_ON)
+    			|| txnAutoWrapMode.equals(TXN_WRAP_DETECT))) {
     			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 

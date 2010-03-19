@@ -32,6 +32,10 @@ import com.metamatrix.core.util.Assertion;
  * @since 4.3
  */
 public class BatchResults {
+	
+	public interface BatchFetcher {
+		Batch requestBatch(int beginRow) throws SQLException;
+	}
 		
 	static class Batch{
 	    private List[] batch;

@@ -33,7 +33,6 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.internal.process.validator.AuthorizationValidationVisitor;
-import org.teiid.plan.api.ExecutionProperties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -351,9 +350,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
             
             boolean startAutoWrapTxn = false;
             
-            if(ExecutionProperties.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
+            if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
-            } else if (ExecutionProperties.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
+            } else if (RequestMessage.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
             	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
 						|| requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
             	if (!transactionalRead && userCommand instanceof StoredProcedure && ((StoredProcedure)userCommand).getUpdateCount() == 0) {
@@ -467,11 +466,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                     LogManager.logInfo(LogConstants.CTX_DQP, debugLog);               
                 }
             }
-            
-            if (analysisRecord.recordQueryPlan()) {
-                analysisRecord.setQueryPlan(processPlan.getDescriptionProperties());
-            }
-            
             LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
             Object[] params = new Object[] { requestId};

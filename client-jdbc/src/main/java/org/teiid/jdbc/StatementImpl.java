@@ -47,10 +47,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.teiid.jdbc.api.Statement;
-import org.teiid.plan.api.Annotation;
-import org.teiid.plan.api.ExecutionProperties;
-import org.teiid.plan.api.PlanNode;
+import org.teiid.jdbc.plan.Annotation;
+import org.teiid.jdbc.plan.Annotation;
+import org.teiid.jdbc.plan.PlanNode;
+import org.teiid.jdbc.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -63,7 +63,7 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 
-public class StatementImpl extends WrapperImpl implements Statement {
+public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
     // State constants
@@ -114,7 +114,7 @@ public class StatementImpl extends WrapperImpl implements Statement {
     private String debugLog;
 
     // the last query annotations
-    private List annotations;
+    private List<Annotation> annotations;
 
     // resultSet object produced by execute methods on the statement.
     protected ResultSetImpl resultSet;
@@ -889,7 +889,7 @@ public class StatementImpl extends WrapperImpl implements Statement {
         this.debugLog = debugLog;
     }
 
-    void setAnnotations(List annotations) {
+    void setAnnotations(List<Annotation> annotations) {
         this.annotations = annotations;
     }
 
@@ -909,9 +909,9 @@ public class StatementImpl extends WrapperImpl implements Statement {
         }
         if(planDescription != null) {
             this.currentPlanDescription = planDescription;
-            return PlanNodeImpl.constructFromMap(this.currentPlanDescription);
+            return PlanNode.constructFromMap(this.currentPlanDescription);
         }else if(this.currentPlanDescription != null) {
-            return PlanNodeImpl.constructFromMap(this.currentPlanDescription);
+            return PlanNode.constructFromMap(this.currentPlanDescription);
         }
         return null;
     }
@@ -928,7 +928,7 @@ public class StatementImpl extends WrapperImpl implements Statement {
      * Get annotations
      * @return Query planner annotations - Collection of Annotation
      */
-    public Collection getAnnotations() {
+    public Collection<Annotation> getAnnotations() {
         return this.annotations;
     }
     
@@ -958,11 +958,11 @@ public class StatementImpl extends WrapperImpl implements Statement {
         this.currentPlanDescription = resultsMsg.getPlanDescription();
         Collection serverAnnotations = resultsMsg.getAnnotations();
         if(serverAnnotations != null) {
-            List annotations = new ArrayList(serverAnnotations.size());
+            List<Annotation> annotations = new ArrayList<Annotation>(serverAnnotations.size());
             Iterator annIter = serverAnnotations.iterator();
             while(annIter.hasNext()) {
                 String[] serverAnnotation = (String[]) annIter.next();
-                Annotation annotation = new AnnotationImpl(serverAnnotation);
+                Annotation annotation = new Annotation(serverAnnotation);
                 annotations.add(annotation);                
             }
             this.annotations = annotations;            

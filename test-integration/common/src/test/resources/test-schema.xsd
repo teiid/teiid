@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes" xmlns:XSDTypesNS="http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      MetaMatrix Data Set Library Version 1.1.
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:complexType name="testelements">
+    <xsd:sequence maxOccurs="unbounded" minOccurs="0">
+      <xsd:element name="book" type="XSDTypesNS:testelement"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="testelement">
+    <xsd:annotation>
+      <xsd:documentation>
+        Flat representation of a book, consisting of full title, set of authors, publisher, 
+        publication date, and edition.  ISBN and book type are represented as attributes.
+        Book type is optional.  Edition defaults to blank.  There can be more than one
+        authors tag.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="datetime" type="xsd:dateTime"/> 
+      <xsd:element name="double" type="xsd:double"/>
+	  <xsd:element name="float" type="xsd:float"/> 
+      <xsd:element name="gday" type="xsd:gDay"/>
+	  <xsd:element name="gmonth" type="xsd:gMonth"/> 
+      <xsd:element name="gmonthday" type="xsd:gMonthDay"/>
+	  <xsd:element name="gyear" type="xsd:gYear"/> 
+      <xsd:element name="gyearmonth" type="xsd:gYearMonth"/>	  
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:element name="test" type="XSDTypesNS:testelements"/>
+</xsd:schema>

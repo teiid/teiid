@@ -57,7 +57,7 @@ import java.util.logging.Logger;
 
 import javax.transaction.xa.Xid;
 
-import org.teiid.plan.api.ExecutionProperties;
+
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;

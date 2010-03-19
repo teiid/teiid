@@ -29,7 +29,6 @@ import java.sql.SQLException;
 
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.TeiidDataSource;
-import org.teiid.plan.api.ExecutionProperties;
 
 import junit.framework.TestCase;
 

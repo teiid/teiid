@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
-import org.teiid.plan.api.ExecutionProperties;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.queue.FakeWorkManager;
@@ -43,7 +42,6 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestDQPCore {
@@ -189,7 +187,7 @@ public class TestDQPCore {
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
-        reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_OFF);
+        reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
         assertEquals("[QueryValidatorException]Group does not exist: BQT3.SmallA", results.getException().toString()); //$NON-NLS-1$
@@ -216,7 +214,7 @@ public class TestDQPCore {
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
         if (txnAutoWrap) {
-        	reqMsg.setTxnAutoWrapMode(ExecutionProperties.TXN_WRAP_ON);
+        	reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_ON);
         }
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);

@@ -49,6 +49,10 @@ public class SQLXMLImpl implements SQLXML {
     
     private InputStreamFactory streamFactory;
     
+    /**
+     * Constructs a SQLXML from bytes that are already encoded in {@link Streamable#ENCODING}
+     * @param bytes
+     */
     public SQLXMLImpl(final byte[] bytes) {
     	setStreamFactory(bytes);
     }
@@ -74,16 +78,17 @@ public class SQLXMLImpl implements SQLXML {
         this.streamFactory = factory;
     }
     
-    public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
+    @SuppressWarnings("unchecked")
+	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
 		if (sourceClass == null || sourceClass == StreamSource.class) {
 			return (T)new StreamSource(getBinaryStream());
 		}
-        throw new SQLException("Unsupported source type " + sourceClass);
+        throw new SQLException("Unsupported source type " + sourceClass); //$NON-NLS-1$
     }
 
     public Reader getCharacterStream() throws SQLException {
     	if (this.streamFactory == null) {
-    		throw new SQLException("SQLXML already freed"); 
+    		throw new SQLException("SQLXML already freed"); //$NON-NLS-1$ 
     	}
     	try {
 			return new InputStreamReader(this.streamFactory.getInputStream(), this.streamFactory.getEncoding());
@@ -96,7 +101,7 @@ public class SQLXMLImpl implements SQLXML {
 
     public InputStream getBinaryStream() throws SQLException {
     	if (this.streamFactory == null) {
-    		throw new SQLException("SQLXML already freed"); 
+    		throw new SQLException("SQLXML already freed"); //$NON-NLS-1$
     	}
         try {
 			return this.streamFactory.getInputStream();
@@ -109,7 +114,7 @@ public class SQLXMLImpl implements SQLXML {
 
     public String getString() throws SQLException {
         try {
-            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), Streamable.ENCODING);
+            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), this.streamFactory.getEncoding());
         } catch (IOException e) {
 			SQLException ex = new SQLException(e.getMessage());
 			ex.initCause(e);
