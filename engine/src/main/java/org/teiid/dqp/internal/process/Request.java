@@ -54,11 +54,11 @@ import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
-import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -109,7 +109,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     private BufferManager bufferManager;
     private ProcessorDataManager processorDataManager;
     private TransactionService transactionService;
-    private AuthorizationService authService;
     private TempTableStore tempTableStore;
     protected IDGenerator idGenerator = new IDGenerator();
     private boolean procDebugAllowed = false;
@@ -135,17 +134,18 @@ public class Request implements QueryProcessor.ProcessorFactory {
     
     protected Command userCommand;
     protected boolean returnsUpdateCount;
+    protected boolean useEntitlements;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
                               ProcessorDataManager processorDataManager,
                               TransactionService transactionService,
-                              AuthorizationService authService,
                               boolean procDebugAllowed,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
                               int chunckSize,
-                              ConnectorManagerRepository repo) {
+                              ConnectorManagerRepository repo,
+                              boolean useEntitlements) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -153,7 +153,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.bufferManager = bufferManager;
         this.processorDataManager = processorDataManager;
         this.transactionService = transactionService;
-        this.authService = authService;
         this.procDebugAllowed = procDebugAllowed;
         this.tempTableStore = tempTableStore;
         idGenerator.setDefaultFactory(new IntegerIDFactory());
@@ -161,6 +160,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.chunkSize = chunckSize;
         this.connectorManagerRepo = repo;
+        this.useEntitlements = useEntitlements;
     }
     
 	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
@@ -253,7 +253,18 @@ public class Request implements QueryProcessor.ProcessorFactory {
             context.setPlanToProcessConverter(modifier);
         }
 
-        context.setSecurityFunctionEvaluator(this.authService);
+        context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
+			@Override
+			public boolean hasRole(String roleType, String roleName) throws MetaMatrixComponentException {
+				if (isEntitled() || !useEntitlements) {
+					return true;
+				}
+		        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
+		            return false;
+		        }
+				return workContext.getAllowedDataPolicies().containsKey(roleName);
+			}
+        });
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(this);
         context.setMetadata(this.metadata);
@@ -553,7 +564,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, MetaMatrixComponentException {
-		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.authService, this.workContext.getVDB());
+		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getVDB(), !isEntitled() && this.useEntitlements, this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
 		validateWithVisitor(visitor, this.metadata, command);
 	}
+	
+    protected boolean isEntitled(){
+        if (this.workContext.getSubject() == null) {
+            LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION,new Object[]{ "Automatically entitling principal", this.workContext.getUserName()}); //$NON-NLS-1$ 
+            return true;
+        }
+        return false;
+    }	
 }

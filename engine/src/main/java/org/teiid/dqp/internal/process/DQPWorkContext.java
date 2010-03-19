@@ -23,10 +23,19 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.Serializable;
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.security.SecurityHelper;
@@ -60,6 +69,7 @@ public class DQPWorkContext implements Serializable {
     private String clientAddress;
     private String clientHostname;
     private SecurityHelper securityHelper;
+    private HashMap<String, DataPolicy> policies;
     
     public DQPWorkContext() {
 	}
@@ -189,4 +199,52 @@ public class DQPWorkContext implements Serializable {
 		}
 	}
 
+	public HashMap<String, DataPolicy> getAllowedDataPolicies() {
+		if (this.policies == null) {
+	    	this.policies = new HashMap<String, DataPolicy>();
+	    	Set<String> userRoles = getUserRoles();
+	    	if (userRoles.isEmpty()) {
+	    		return this.policies;
+	    	}
+	    	
+	    	// get data roles from the VDB
+	        List<DataPolicy> policies = getVDB().getDataPolicies();
+	        
+	    	for (DataPolicy policy : policies) {
+	        	if (matchesPrincipal(userRoles, policy)) {
+	        		this.policies.put(policy.getName(), policy);
+	        	}
+	        }
+		}
+        return this.policies;
+    }
+    
+	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
+		List<String> roles = policy.getMappedRoleNames();
+		for (String role:roles) {
+			return userRoles.contains(role);
+		}
+		return false;
+	}    
+
+	private Set<String> getUserRoles() {
+		Set<String> roles = new HashSet<String>();
+		
+		if (getSubject() == null) {
+			return Collections.EMPTY_SET;
+		}
+		
+		Set<Principal> principals = getSubject().getPrincipals();
+		for(Principal p: principals) {
+			// this JBoss specific, but no code level dependencies
+			if ((p instanceof Group) && p.getName().equals("Roles")){ //$NON-NLS-1$
+				Group g = (Group)p;
+				Enumeration rolesPrinciples = g.members();
+				while(rolesPrinciples.hasMoreElements()) {
+					roles.add(((Principal)rolesPrinciples.nextElement()).getName());	
+				}
+			}
+		}
+		return roles;
+	}	
 }

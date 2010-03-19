@@ -49,7 +49,7 @@
                         <xs:attribute name="path" type="xs:string"/>
 					</xs:complexType>
 				</xs:element>
-				<xs:element name="role" minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="data-policy" minOccurs="0" maxOccurs="unbounded">
 					<xs:complexType>
 						<xs:sequence>
 							<xs:element name="description" type="xs:string" minOccurs="0"/>

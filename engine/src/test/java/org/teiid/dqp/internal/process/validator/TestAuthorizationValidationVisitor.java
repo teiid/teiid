@@ -23,22 +23,24 @@
 package org.teiid.dqp.internal.process.validator;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.PermissionType;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.dqp.internal.process.Request;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.dqp.service.AuthorizationService;
-import com.metamatrix.dqp.service.FakeAuthorizationService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -60,71 +62,108 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     public TestAuthorizationValidationVisitor(String name) {
         super(name);
     }
+    
+    PermissionMetaData addResource(PermissionType type, boolean flag, String resource) {
+    	PermissionMetaData p = new PermissionMetaData();
+    	p.setResourceName(resource);
+    	switch(type) {
+    	case CREATE:
+    		p.setAllowCreate(flag);
+    		break;
+    	case DELETE:
+    		p.setAllowDelete(flag);
+    		break;
+    	case READ:
+    		p.setAllowRead(flag);
+    		break;
+    	case UPDATE:
+    		p.setAllowUpdate(flag);
+    		break;
+    	}
+    	return p;    	
+    }
+    PermissionMetaData addResource(PermissionType type, String resource) {
+    	return addResource(type, true, resource);
+    }
 
-    private AuthorizationService exampleAuthSvc1() {
-        FakeAuthorizationService svc = new FakeAuthorizationService(false);
+    private DataPolicyMetadata exampleAuthSvc1() {
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
         
         // pm1.g1
-        svc.addResource(AuthorizationService.ACTION_DELETE, "pm1.g1"); //$NON-NLS-1$
+        svc.addPermission(addResource(PermissionType.DELETE, "pm1.g1")); //$NON-NLS-1$
         
-        svc.addResource(AuthorizationService.ACTION_READ, "pm1.g1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_READ, "pm1.g1.e1"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, false, "pm1.g1.e2")); //$NON-NLS-1$
 
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g1.e1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g1.e2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g1.e3"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g1.e4"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e3")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e4")); //$NON-NLS-1$
 
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g1.e2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g1.e3"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g1.e4"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, false, "pm1.g1.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e3")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e4")); //$NON-NLS-1$
+        
 
         // pm1.g2
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g2.e2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g2.e3"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm1.g2.e4"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, false, "pm1.g2.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e3")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e4")); //$NON-NLS-1$
 
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g2.e2"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g2.e3"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_UPDATE, "pm1.g2.e4"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, false, "pm1.g2.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e2")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e3")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e4")); //$NON-NLS-1$
 
         // pm1.g4
-        svc.addResource(AuthorizationService.ACTION_DELETE, "pm1.g4"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_DELETE, "pm1.g4.e1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_DELETE, "pm1.g4.e2"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e2")); //$NON-NLS-1$
 
         // pm1.sq2
-        svc.addResource(AuthorizationService.ACTION_READ, "pm1.sq1"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
         
         return svc;
     }
     
     //allow by default
-    private AuthorizationService exampleAuthSvc2() {
-        FakeAuthorizationService svc = new FakeAuthorizationService(true);
+    private DataPolicyMetadata exampleAuthSvc2() {
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
+    	
+    	svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
+    	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g2")); //$NON-NLS-1$
+    	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm2.g1")); //$NON-NLS-1$
         
-        // pm2.g2
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm2.g2.e1"); //$NON-NLS-1$
+    	// pm2.g2
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm2.g2.e1")); //$NON-NLS-1$
         
         // pm3.g2
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm3.g2.e1"); //$NON-NLS-1$
-        svc.addResource(AuthorizationService.ACTION_CREATE, "pm3.g2.e2"); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
         
         return svc;
     }
 
-    private void helpTest(AuthorizationService svc, String sql, QueryMetadataInterface metadata, String[] expectedInaccesible, VDBMetaData vdb) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private void helpTest(DataPolicyMetadata policy, String sql, QueryMetadataInterface metadata, String[] expectedInaccesible, VDBMetaData vdb) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
         QueryParser parser = QueryParser.getQueryParser();
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
         
         vdb.addAttchment(QueryMetadataInterface.class, metadata);
         
-        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(svc, vdb); 
+        HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
+        policies.put(policy.getName(), policy);
+        
+        AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(vdb, true, policies, "test"); //$NON-NLS-1$
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
@@ -213,11 +252,11 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     }
 
     public void testSelectIntoTarget_e1_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm2.g2.e1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm2.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm2.g2.e2","pm2.g2.e4","pm2.g2.e3"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     public void testSelectIntoTarget_e1e2_NotAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm3.g2.e1", "pm3.g2.e2"},FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(exampleAuthSvc2(), "SELECT e1, e2, e3, e4 INTO pm3.g2 FROM pm2.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm3.g2.e4", "pm3.g2.e3"},FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     public void testTempTableSelectInto() throws Exception {
@@ -233,7 +272,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     }
 
     public void testXMLAccessible() throws Exception {
-        helpTest(exampleAuthSvc2(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testXMLInAccessible() throws Exception {
@@ -242,10 +281,8 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     
 	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, MetaMatrixComponentException {
 		VDBMetaData vdb = FakeMetadataFactory.example1VDB();
-		if (!visible) {
-			vdb.getModel("pm1").setVisible(false);
-		}
-		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(Mockito.mock(AuthorizationService.class), vdb);
+		vdb.getModel("pm1").setVisible(visible); //$NON-NLS-1$
+		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(vdb, false, new HashMap<String, DataPolicy>(), "test"); //$NON-NLS-1$
 		String sql = "select lookup('pm1.g1', 'e1', 'e2', 1)"; //$NON-NLS-1$
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		Request.validateWithVisitor(mvvv, FakeMetadataFactory.example1Cached(), command);

@@ -18,12 +18,6 @@
    </bind>
     
     <!-- Teiid Services -->
-    <bean name="AuthorizationService" class="org.teiid.services.AuthorizationServiceImpl">
-        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
-        <!-- Turn on checking the entitlements on resources based on the roles defined in VDB -->
-        <property name="useEntitlements" class="java.lang.Boolean">false</property>
-    </bean>
-    
     <bean name="SessionService" class="org.teiid.services.SessionServiceImpl">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
@@ -73,7 +67,6 @@
         <property name="workManager"><inject bean="WorkManager"/></property>
         <property name="XATerminator"><inject bean="TransactionManager" property="XATerminator"/></property>
         <property name="transactionManager"><inject bean="TransactionManager" property="transactionManager"/></property>
-        <property name="authorizationService"><inject bean="AuthorizationService"/></property>
         <property name="sessionService"><inject bean="SessionService"/></property>
         <property name="bufferService"><inject bean="BufferService"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
@@ -101,6 +94,8 @@
         <property name="resultSetCacheMaxEntries">1024</property>
         <!-- Enable Resultset Caching -->
         <property name="resultSetCacheEnabled">true</property>
+        <!-- Turn on checking the entitlements on resources based on the roles defined in VDB -->
+        <property name="useEntitlements" class="java.lang.Boolean">false</property>        
     </bean>
 
     <!-- JDBC Socket connection properties (SSL see below) -->

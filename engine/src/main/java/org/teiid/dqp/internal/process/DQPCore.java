@@ -70,7 +70,6 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
@@ -176,7 +175,6 @@ public class DQPCore implements DQP {
     private SessionAwareCache<PreparedPlan> prepPlanCache;
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
-    private AuthorizationService authorizationService;
     private BufferService bufferService;
     private ConnectorManagerRepository connectorManagerRepository;
     
@@ -189,7 +187,7 @@ public class DQPCore implements DQP {
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
 	private DQPContextCache contextCache;
-    
+    private boolean useEntitlements = false;
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      */
@@ -288,9 +286,9 @@ public class DQPCore implements DQP {
 	    }
 	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
 	    request.initialize(requestMsg, bufferManager,
-				dataTierMgr, transactionService, authorizationService, processorDebugAllowed,
+				dataTierMgr, transactionService, processorDebugAllowed,
 				state.tempTableStoreImpl, workContext,
-				chunkSize, connectorManagerRepository);
+				chunkSize, connectorManagerRepository, this.useEntitlements);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -622,6 +620,7 @@ public class DQPCore implements DQP {
         this.maxCodeTableRecords = config.getCodeTablesMaxRowsPerTable();
         this.maxCodeTables = config.getCodeTablesMaxCount();
         this.maxCodeRecords = config.getCodeTablesMaxRows();
+        this.useEntitlements = config.useEntitlements();
         
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
         
@@ -656,10 +655,6 @@ public class DQPCore implements DQP {
 		setContextCache(service.getContextCache());
 	}
 	
-	public void setAuthorizationService(AuthorizationService service) {
-		this.authorizationService = service;
-	}
-
 	public void setContextCache(DQPContextCache cache) {
 		this.contextCache = cache;
 	}
@@ -804,9 +799,5 @@ public class DQPCore implements DQP {
 	
 	public ConnectorManagerRepository getConnectorManagerRepository() {
 		return this.connectorManagerRepository;
-	}
-	
-	public AuthorizationService getAuthorizationService() {
-		return this.authorizationService;
 	}
 }

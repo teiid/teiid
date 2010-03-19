@@ -93,5 +93,5 @@ public interface VDB extends AdminObject {
      * Get the data roles defined on this VDB
      * @return
      */
-    public List<DataRole> getDataRoles();
+    public List<DataPolicy> getDataPolicies();
 }

@@ -32,7 +32,6 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.security.Credentials;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 
 /**
@@ -90,7 +89,6 @@ public interface SessionService {
      * @param adminSessionID The session id identifying session of administrator
      * @throws InvalidSessionException If terminatedSessionID identifies an invalid
      * session
-     * @throws AuthorizationException if the caller denoted by <code>adminSessionID</code>
      * does not have authority to terminate the <code>terminatedSessionID</code> session
      * @throws SessionServiceException
      */

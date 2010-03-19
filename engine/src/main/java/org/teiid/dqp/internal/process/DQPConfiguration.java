@@ -38,7 +38,7 @@ public class DQPConfiguration{
     public static final int DEFAULT_MAX_PROCESS_WORKERS = 16;
 	
     
-	private String processName = "localhost";
+	private String processName = "localhost"; //$NON-NLS-1$
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private boolean processDebugAllowed;
@@ -50,6 +50,7 @@ public class DQPConfiguration{
 	private int codeTablesMaxRows = DEFAULT_MAX_CODE_RECORDS;
 	private boolean resultSetCacheEnabled = true;
 	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
+	private boolean useEntitlements = false;
 	
 	@ManagementProperty (description="Name of the process that uniquely identifies this process")
 	public String getProcessName() {
@@ -158,4 +159,17 @@ public class DQPConfiguration{
 	public void setResultSetCacheEnabled(boolean value) {
 		this.resultSetCacheEnabled = value;
 	}		
+	
+    /**
+     * Determine whether entitlements checking is enabled on the server.
+     * @return <code>true</code> if server-side entitlements checking is enabled.
+     */
+    @ManagementProperty(description="Turn on checking the entitlements on resources based on the roles defined in VDB")
+    public boolean useEntitlements() {
+        return useEntitlements;
+    }
+
+	public void setUseEntitlements(Boolean useEntitlements) {
+		this.useEntitlements = useEntitlements.booleanValue();
+	}	
 }

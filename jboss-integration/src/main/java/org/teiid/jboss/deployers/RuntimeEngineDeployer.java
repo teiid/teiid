@@ -74,7 +74,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.client.DQPManagement;
-import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionService;
@@ -215,10 +214,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     public void setWorkManager(WorkManager mgr) {
     	this.dqpCore.setWorkManager(mgr);
     }
-	
-	public void setAuthorizationService(AuthorizationService service) {
-		this.dqpCore.setAuthorizationService(service);
-	}
 	
 	public void setSessionService(SessionService service) {
 		this.sessionService = service;

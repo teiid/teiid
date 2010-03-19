@@ -28,12 +28,12 @@ import java.util.AbstractList;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-final class ListOverMap<E> extends AbstractList<E> implements Serializable {
+class ListOverMap<E> extends AbstractList<E> implements Serializable {
 	
 	private static final long serialVersionUID = 5171741731121210240L;
 	
-	private LinkedHashMap<String, E> map = new LinkedHashMap<String, E>();
-	private KeyBuilder<E> builder;
+	protected LinkedHashMap<String, E> map = new LinkedHashMap<String, E>();
+	protected KeyBuilder<E> builder;
 	
 	public ListOverMap(KeyBuilder<E> builder) {
 		this.builder = builder;

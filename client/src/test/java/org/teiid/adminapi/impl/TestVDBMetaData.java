@@ -36,9 +36,9 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.junit.Test;
-import org.teiid.adminapi.DataRole;
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.DataRoleMetadata.PermissionMetaData;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 
 
 public class TestVDBMetaData {
@@ -72,7 +72,7 @@ public class TestVDBMetaData {
 		
 		vdb.addModel(modelTwo);
 		
-		DataRoleMetadata roleOne = new DataRoleMetadata();
+		DataPolicyMetadata roleOne = new DataPolicyMetadata();
 		roleOne.setName("roleOne"); //$NON-NLS-1$
 		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
 		
@@ -89,7 +89,7 @@ public class TestVDBMetaData {
 		
 		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		vdb.addDataRole(roleOne);
+		vdb.addDataPolicy(roleOne);
 		
 
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -136,24 +136,28 @@ public class TestVDBMetaData {
 		
 		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
 		
-		List<DataRole> roles = vdb.getDataRoles();
+		List<DataPolicy> roles = vdb.getDataPolicies();
 		
 		assertTrue(roles.size() == 1);
 		
-		DataRoleMetadata role = vdb.getDataRole("roleOne"); //$NON-NLS-1$
+		DataPolicyMetadata role = vdb.getDataPolicy("roleOne"); //$NON-NLS-1$
 		assertEquals("roleOne described", role.getDescription()); //$NON-NLS-1$
 		assertNotNull(role.getMappedRoleNames());
 		assertTrue(role.getMappedRoleNames().contains("ROLE1")); //$NON-NLS-1$
 		assertTrue(role.getMappedRoleNames().contains("ROLE2")); //$NON-NLS-1$
 		
-		assertEquals(2, role.getPermissions().size());
-		PermissionMetaData p1 = role.getPermission("myTable.T1"); //$NON-NLS-1$
+		List<DataPolicy.DataPermission> permissions = role.getPermissions();
+		assertEquals(2, permissions.size());
 		
-		assertTrue(p1.isAllowRead());
-		assertFalse(p1.isAllowDelete());
-		
-		PermissionMetaData p2 = role.getPermission("myTable.T2"); //$NON-NLS-1$
-		assertFalse(p2.isAllowRead());
-		assertTrue(p2.isAllowDelete());
+		for (DataPolicy.DataPermission p: permissions) {
+			if (p.getResourceName().equalsIgnoreCase("myTable.T1")) { //$NON-NLS-1$
+				assertTrue(p.isAllowRead());
+				assertFalse(p.isAllowDelete());
+			}
+			else {
+				assertFalse(p.isAllowRead());
+				assertTrue(p.isAllowDelete());
+			}
+		}
 	}
 }

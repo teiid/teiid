@@ -23,35 +23,38 @@ package org.teiid.adminapi;
 
 import java.util.List;
 
-public interface DataRole {
+public interface DataPolicy {
+	
+	public enum PermissionType {CREATE, READ, UPDATE, DELETE};
+	
 	/**
-	 * Get the Name of the Data Role
+	 * Get the Name of the Data Policy
 	 * @return
 	 */
 	String getName();
 	
 	/**
-	 * Get the description of the Data Role
+	 * Get the description of the Data Policy
 	 * @return
 	 */
 	String getDescription();
 	
 	/**
-	 * Get the List of Permissions for this Data Role.
+	 * Get the List of Permissions for this Data Policy.
 	 * @return
 	 */
-	List<Permission> getPermissions();
+	List<DataPermission> getPermissions();
 	
 	/**
-	 * Mapped Container Role names for this Data Role
+	 * Mapped Container Role names for this Data Policy
 	 * @return
 	 */
 	List<String> getMappedRoleNames();
 	
 	
-	interface Permission {
+	interface DataPermission {
 		/**
-		 * Get the Resource Name that Data Role representing
+		 * Get the Resource Name that Data Permission representing
 		 * @return
 		 */
 		String getResourceName();

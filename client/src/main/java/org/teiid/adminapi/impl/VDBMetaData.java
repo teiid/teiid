@@ -39,7 +39,7 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
-import org.teiid.adminapi.DataRole;
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
@@ -51,7 +51,7 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
     "description",
     "JAXBProperties",
     "models",
-    "roles"
+    "dataPolicies"
 })
 @XmlRootElement(name = "vdb")
 public class VDBMetaData extends AdminObjectImpl implements VDB {
@@ -71,10 +71,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});
 	
-	@XmlElement(name = "role", required = true, type = DataRoleMetadata.class)
-	protected ListOverMap<DataRoleMetadata> roles = new ListOverMap<DataRoleMetadata>(new KeyBuilder<DataRoleMetadata>() {
+	@XmlElement(name = "data-policy", required = true, type = DataPolicyMetadata.class)
+	protected ListOverMap<DataPolicyMetadata> dataPolicies = new ListOverMap<DataPolicyMetadata>(new KeyBuilder<DataPolicyMetadata>() {
 		@Override
-		public String getKey(DataRoleMetadata entry) {
+		public String getKey(DataPolicyMetadata entry) {
 			return entry.getName();
 		}
 	});	
@@ -251,27 +251,27 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 	
 	@Override
-	@ManagementProperty(description="Data Roles in a VDB", managed=true)
-	public List<DataRole> getDataRoles(){
-		return new ArrayList<DataRole>(this.roles.getMap().values());
+	@ManagementProperty(description="Data Policies in a VDB", managed=true)
+	public List<DataPolicy> getDataPolicies(){
+		return new ArrayList<DataPolicy>(this.dataPolicies.getMap().values());
 	}	
 	
 	/**
 	 * This method is required by the Management framework to write the mappings.
-	 * @param roles
+	 * @param policies
 	 */
-	public void setDataRoles(List<DataRole> roles){
-		this.roles.getMap().clear();
-		for (DataRole role:roles) {
-			this.roles.getMap().put(role.getName(), (DataRoleMetadata)role);
+	public void setDataPolicies(List<DataPolicy> policies){
+		this.dataPolicies.getMap().clear();
+		for (DataPolicy policy:policies) {
+			this.dataPolicies.getMap().put(policy.getName(), (DataPolicyMetadata)policy);
 		}
 	}	
 	
-	public void addDataRole(DataRoleMetadata role){
-		this.roles.getMap().put(role.getName(), role);
+	public void addDataPolicy(DataPolicyMetadata policy){
+		this.dataPolicies.getMap().put(policy.getName(), policy);
 	}
 	
-	public DataRoleMetadata getDataRole(String roleName) {
-		return this.roles.getMap().get(roleName);
+	public DataPolicyMetadata getDataPolicy(String policyName) {
+		return this.dataPolicies.getMap().get(policyName);
 	}
 }

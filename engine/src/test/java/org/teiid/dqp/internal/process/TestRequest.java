@@ -86,7 +86,7 @@ public class TestRequest extends TestCase {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null, null,null,false, null, workContext, 101024, repo);
+        request.initialize(message, null, null,null,false, null, workContext, 101024, repo, false);
         request.initMetadata();
         request.validateAccess(command);
     }
@@ -143,8 +143,8 @@ public class TestRequest extends TestCase {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(),  null, null, false, null, workContext,
-				101024, repo);
+				new FakeDataManager(),  null, false, null, workContext,
+				101024, repo, false);
         
         request.processRequest();
         return request;
