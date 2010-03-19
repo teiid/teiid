@@ -2,18 +2,14 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="introduction">
   <title>Introduction</title>
-  <para>This guide introduces to all the user extensions that are supported by the Teiid server. These
-    extensions are provided to let user introduce custom functionality into their deployment of the server. 
-    All the extensions are provided though implementing Java based API.</para>
-    
-  <para>The following are the currently available extensions</para>
-      <orderedlist>
-        <listitem>
-          <para><link linkend="custom_security">Teiid Security</link></para>
-        </listitem>
-        <listitem>
-          <para><link linkend="command_logging">Command Logging</link></para>
-        </listitem>
-      </orderedlist>  
+  <para>This guide introduces the extensions supported by Teiid to introduce custom functionality.</para>
+  <orderedlist>
+    <listitem>
+      <para><link linkend="custom_security">Teiid Security</link></para>
+    </listitem>
+    <listitem>
+      <para><link linkend="command_logging">Command Logging</link></para>
+    </listitem>
+  </orderedlist>  
   
 </chapter>
