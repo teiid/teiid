@@ -7,7 +7,7 @@ source(getResource("/scripts/adminapi.bsh"));
 
 
 import java.sql.*;
-import com.metamatrix.common.api.MMURL;
+import org.teiid.net.*;
 import org.teiid.adminapi.*;
 
 // These values are default values, a user can supply a property file called
@@ -43,7 +43,7 @@ private Connection connectURL (String url, String driver) {
         newContext(contextName);        
         url = url+";ApplicationName="+contextName;
         try {
-        	com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);
+        	Connection mmConn = connectDriver(driver, url);
             currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
     		return mmConn;        	
         } catch(e) {
@@ -82,7 +82,7 @@ void useConnection(name) {
 */
 void connectAsAdmin(String username, String password, String url) {
 
-    if (MMURL.isValidServerURL(url)) {
+    if (TeiidURL.isValidServerURL(url)) {
         try {
             //url is in "server URL format": connect via ServerAdminFactory
             internalAdmin = createExceptionHandlingProxy(AdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
@@ -91,7 +91,7 @@ void connectAsAdmin(String username, String password, String url) {
         	debug(e);
         }        
     } else {
-    	print("Wrong syntax for the URL.. connection failed. ex: \"jnp://localhost:1099\"");
+    	print("Wrong syntax for the URL.. connection failed. ex: \"mm://localhost:31443\"");
     }
 }
 

@@ -10,9 +10,8 @@
  */
 
 import java.sql.*;
-import com.metamatrix.script.io.*;
-import com.metamatrix.jdbc.api.*;
-import com.metamatrix.jdbc.*;
+import org.teiid.script.io.*;
+import org.teiid.jdbc.*;
 
 protected Connection getConnection() {
     if (currentContext().internalConnection != void && currentContext().internalConnection != null) {
@@ -264,7 +263,7 @@ void showPlan(boolean xml) {
     	print("Statement is null - execute then issue showPlan");
         return;  
     }
-	PlanNode queryPlan = ((MMResultSet)currentContext().internalStatement).getPlanDescription();
+	PlanNode queryPlan = ((ResultSetImpl)currentContext().internalStatement).getPlanDescription();
 	if (queryPlan != null) {
 	    if (xml != null && xml) {
 			print(XMLOutputVisitor.convertToXML(queryPlan));
