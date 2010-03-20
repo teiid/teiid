@@ -34,19 +34,18 @@ import java.util.concurrent.TimeUnit;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.NetPlugin;
+import org.teiid.net.ServerConnection;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.client.ExceptionUtil;
-import com.metamatrix.common.comm.CommonCommPlugin;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.LogonResult;
 
 public class LocalServerConnection implements ServerConnection {
 	private static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
@@ -80,7 +79,7 @@ public class LocalServerConnection implements ServerConnection {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();
         	}
-            throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
+            throw new CommunicationException(e, NetPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
         } 	
 	}	
 	
@@ -89,7 +88,7 @@ public class LocalServerConnection implements ServerConnection {
 
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (!isOpen()) {
-					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(CommonCommPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
+					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(NetPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
 				}
 				try {
 					final T service = csr.getClientService(iface);

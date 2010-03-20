@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -43,7 +44,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingDocument;

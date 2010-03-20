@@ -48,11 +48,12 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
+import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.RequestMessage.StatementType;
+
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
-import com.metamatrix.dqp.message.RequestMessage.StatementType;
 
 /**
  * <p> This class inherits Statement methods, which deal with SQL statements in

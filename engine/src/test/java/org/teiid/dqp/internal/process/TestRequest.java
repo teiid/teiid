@@ -28,6 +28,8 @@ import java.util.Collections;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -36,8 +38,6 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;

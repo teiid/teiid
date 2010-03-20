@@ -28,10 +28,10 @@ import java.util.Properties;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.ExecutionProperties;
 import org.teiid.jdbc.JDBCURL;
+import org.teiid.net.TeiidURL;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.api.MMURL;
 
 
 /** 
@@ -57,7 +57,7 @@ public class TestMMJDBCURL extends TestCase {
         expectedProperties.setProperty("logLevel", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, "true"); //$NON-NLS-1$
-        expectedProperties.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, "false"); //$NON-NLS-1$
+        expectedProperties.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, "false"); //$NON-NLS-1$
         JDBCURL url = new JDBCURL(URL); 
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
         assertEquals("mm://localhost:12345", url.getConnectionURL()); //$NON-NLS-1$

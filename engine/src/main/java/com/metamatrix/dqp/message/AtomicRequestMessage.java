@@ -27,6 +27,7 @@ package com.metamatrix.dqp.message;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.client.RequestMessage;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.buffer.BufferManager;

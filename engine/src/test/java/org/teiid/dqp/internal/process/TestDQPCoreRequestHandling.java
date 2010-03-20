@@ -29,15 +29,15 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.SourceWarning;
+import org.teiid.client.security.SessionToken;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
 
 import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.sql.lang.Command;
 
 /**

@@ -24,15 +24,11 @@ package org.teiid.deployers;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileFilter;
-import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.index.RuntimeMetadataPlugin;
 import org.teiid.runtime.RuntimePlugin;
 
 import com.metamatrix.core.CoreConstants;
@@ -55,29 +51,16 @@ public class SystemVDBDeployer {
 		try {
 			URL url = Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB);
 			if (url == null) {
-				throw new MetaMatrixRuntimeException(RuntimePlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
+				throw new MetaMatrixRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
 			}
-			SystemVDBContext systemVDB = new SystemVDBContext(url);
-			VirtualFile vdb = new VirtualFile(systemVDB.getRoot());
-			List<VirtualFile> children = vdb.getChildrenRecursively(new VirtualFileFilter() {
-				@Override
-				public boolean accepts(VirtualFile file) {
-					return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
-				}
-			});
-			
-			IndexMetadataFactory imf = new IndexMetadataFactory();
-			for (VirtualFile f: children) {
-				imf.addIndexFile(f);
-			}
-			this.vdbRepository.addMetadataStore(deployment, imf.getMetadataStore());
+			this.vdbRepository.addMetadataStore(deployment, new IndexMetadataFactory(url).getMetadataStore());
 		} catch (URISyntaxException e) {
 			throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
 		} catch (IOException e) {
 			throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
 		}
 	}
-	
+
 	public void stop() {
 		this.vdbRepository.removeVDB(CoreConstants.SYSTEM_VDB, 1);
 	}
@@ -86,11 +69,4 @@ public class SystemVDBDeployer {
 		this.vdbRepository = repo;
 	}	
 	
-	private static class SystemVDBContext extends ZipEntryContext{
-		private static final long serialVersionUID = -6504988258841073415L;
-
-		protected SystemVDBContext(URL url) throws IOException, URISyntaxException {
-			super(url,true);
-		}
-	}
 }

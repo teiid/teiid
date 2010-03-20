@@ -33,13 +33,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.query.unittest.FakeMetadataFactory;

@@ -37,6 +37,7 @@ import java.util.StringTokenizer;
 import javax.xml.transform.OutputKeys;
 
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -51,7 +52,6 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;

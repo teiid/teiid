@@ -24,6 +24,7 @@ package com.metamatrix.dqp.message;
 
 import junit.framework.TestCase;
 
+import org.teiid.client.RequestMessage;
 import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 

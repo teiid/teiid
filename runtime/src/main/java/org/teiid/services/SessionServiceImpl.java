@@ -43,22 +43,22 @@ import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.SessionToken;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.ServerConnection;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.platform.security.api.SessionToken;
 
 /**
  * This class serves as the primary implementation of the Session Service.
@@ -163,9 +163,9 @@ public class SessionServiceImpl implements SessionService {
 
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
-        String vdbName = properties.getProperty(MMURL.JDBC.VDB_NAME);
+        String vdbName = properties.getProperty(TeiidURL.JDBC.VDB_NAME);
         if (vdbName != null) {
-        	String vdbVersion = properties.getProperty(MMURL.JDBC.VDB_VERSION);
+        	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
             try {
                 if (vdbVersion == null) {
                 	vdb = this.vdbRepository.getActiveVDB(vdbName);
@@ -175,8 +175,8 @@ public class SessionServiceImpl implements SessionService {
                 }            
                 
                 // Reset product info with validated constants
-                productInfo.put(MMURL.JDBC.VDB_NAME, vdb.getName());
-                productInfo.put(MMURL.JDBC.VDB_VERSION, vdb.getVersion());                
+                productInfo.put(TeiidURL.JDBC.VDB_NAME, vdb.getName());
+                productInfo.put(TeiidURL.JDBC.VDB_VERSION, vdb.getVersion());                
             } catch (VirtualDatabaseException e) {
             	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$ 
 			}            
@@ -195,8 +195,8 @@ public class SessionServiceImpl implements SessionService {
         newSession.setUserName(userName);
         newSession.setCreatedTime(creationTime);
         newSession.setApplicationName(applicationName);
-        newSession.setClientHostName(properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
-        newSession.setIPAddress(properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS));
+        newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
+        newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
         newSession.setSecurityDomain(securityDomain);
         if (vdb != null) {
 	        newSession.setVDBName(vdb.getName());

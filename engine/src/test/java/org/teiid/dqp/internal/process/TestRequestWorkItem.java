@@ -25,10 +25,10 @@ package org.teiid.dqp.internal.process;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.TestRequestMessage;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 
-import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.message.TestRequestMessage;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;

@@ -38,10 +38,10 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.security.SessionToken;
 import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class DQPWorkContext implements Serializable {
 	

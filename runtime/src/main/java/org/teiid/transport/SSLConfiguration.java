@@ -30,7 +30,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import com.metamatrix.common.comm.platform.socket.SocketUtil;
+import org.teiid.net.socket.SocketUtil;
+
 import com.metamatrix.core.util.Assertion;
 
 

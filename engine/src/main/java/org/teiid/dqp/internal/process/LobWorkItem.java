@@ -28,10 +28,10 @@ import java.sql.SQLException;
 
 import javax.resource.spi.work.Work;
 
+import org.teiid.client.lob.LobChunk;
+import org.teiid.client.util.ResultsReceiver;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.lob.ByteLobChunkStream;
-import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobType;

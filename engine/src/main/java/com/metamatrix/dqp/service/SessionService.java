@@ -28,10 +28,10 @@ import java.util.Properties;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.security.Credentials;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 
 /**

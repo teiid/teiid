@@ -55,7 +55,7 @@ public interface ProcessObject extends
 
 
     /**
-     * Get the port number for this MetaMatrix Process
+     * Get the port number for this Process
      *  
      * @return listener port for this host
      * @since 4.3
@@ -63,8 +63,8 @@ public interface ProcessObject extends
     public int getPort();
     
     /**
-     * Get the IP address for the MetaMatrix Process 
-     * @return the IP address for the MetaMatrix Process 
+     * Get the IP address for the Process 
+     * @return the IP address for the Process 
      * @since 4.3
      */
     public InetAddress getInetAddress(); 

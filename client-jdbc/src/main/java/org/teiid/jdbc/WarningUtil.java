@@ -25,8 +25,9 @@ package org.teiid.jdbc;
 import java.sql.SQLWarning;
 import java.util.List;
 
+import org.teiid.client.SourceWarning;
 
-import com.metamatrix.dqp.exception.SourceWarning;
+
 
 /**
  * Utilities for creating SQLWarnings.  

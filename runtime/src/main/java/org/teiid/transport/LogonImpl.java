@@ -27,22 +27,22 @@ import java.util.Properties;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.ServerConnection;
 import org.teiid.security.Credentials;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class LogonImpl implements ILogon {
 	
@@ -57,17 +57,17 @@ public class LogonImpl implements ILogon {
 	public LogonResult logon(Properties connProps) throws LogonException,
 			ComponentNotFoundException {
 		
-        String applicationName = connProps.getProperty(MMURL.CONNECTION.APP_NAME);
+        String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
-        String user = connProps.getProperty(MMURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
+        String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
         // password may be null if using trustedToken to log on
-        String password = connProps.getProperty(MMURL.CONNECTION.PASSWORD);
+        String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
 		Credentials credential = null;
         if (password != null) {
             credential = new Credentials(password.toCharArray());
         }
         
-        boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(MMURL.CONNECTION.ADMIN));
+        boolean adminConnection = Boolean.parseBoolean(connProps.getProperty(TeiidURL.CONNECTION.ADMIN));
 		try {
 			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection);
 	        updateDQPContext(sessionInfo);

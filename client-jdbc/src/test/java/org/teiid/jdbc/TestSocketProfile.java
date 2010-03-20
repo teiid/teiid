@@ -29,8 +29,8 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.net.TeiidURL;
 
-import com.metamatrix.common.api.MMURL;
 
 public class TestSocketProfile {
     public String localhost = "localhost"; //$NON-NLS-1$
@@ -91,7 +91,7 @@ public class TestSocketProfile {
         Properties p = new Properties();
         SocketProfile.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234")); //$NON-NLS-1$
+        assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234")); //$NON-NLS-1$
         assertEquals(3, p.size());        
     }
 
@@ -100,7 +100,7 @@ public class TestSocketProfile {
         SocketProfile.parseURL("jdbc:teiid:BQT@mms://slwxp157:1234;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mms://slwxp157:1234")); //$NON-NLS-1$
+        assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://slwxp157:1234")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.APP_NAME).equals(BaseDataSource.DEFAULT_APP_NAME));
         assertEquals(5, p.size());
@@ -113,7 +113,7 @@ public class TestSocketProfile {
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));         //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302")); //$NON-NLS-1$
+        assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.APP_NAME).equals("Client")); //$NON-NLS-1$
         assertEquals(7, p.size());        

@@ -31,7 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.metamatrix.dqp.message.ParameterInfo;
+import org.teiid.client.metadata.ParameterInfo;
+
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;

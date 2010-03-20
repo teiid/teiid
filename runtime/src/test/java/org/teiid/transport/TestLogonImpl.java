@@ -29,12 +29,12 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.TeiidURL;
 
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestLogonImpl extends TestCase {
 
@@ -44,8 +44,8 @@ public class TestLogonImpl extends TestCase {
 		String userName = "Fred"; //$NON-NLS-1$
 		String applicationName = "test"; //$NON-NLS-1$
 		Properties p = new Properties();
-		p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
-		p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
+		p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
+		p.setProperty(TeiidURL.CONNECTION.APP_NAME, applicationName);
 
 		SessionMetadata session = new SessionMetadata();
 		session.setUserName(userName);

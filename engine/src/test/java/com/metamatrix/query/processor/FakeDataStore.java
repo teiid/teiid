@@ -27,9 +27,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.client.metadata.ParameterInfo;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.sql.lang.SPParameter;

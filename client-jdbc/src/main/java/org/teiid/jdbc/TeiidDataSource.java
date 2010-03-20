@@ -25,7 +25,8 @@ package org.teiid.jdbc;
 import java.sql.Connection;
 import java.util.Properties;
 
-import com.metamatrix.common.api.MMURL;
+import org.teiid.net.TeiidURL;
+
 
 /**
  * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
@@ -105,11 +106,11 @@ public class TeiidDataSource extends BaseDataSource {
         Properties props = super.buildProperties(userName, password);
         
         if (this.getAutoFailover() != null) {
-            props.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
+            props.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
         }
         
         if (this.getDiscoveryStrategy() != null) {
-        	props.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
+        	props.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
         }
 
         return props;
@@ -118,7 +119,7 @@ public class TeiidDataSource extends BaseDataSource {
     private Properties buildServerProperties(final String userName, final String password) {               
         Properties props = buildProperties(userName, password);
         
-        props.setProperty(MMURL.CONNECTION.SERVER_URL,this.buildServerURL());
+        props.setProperty(TeiidURL.CONNECTION.SERVER_URL,this.buildServerURL());
 
         return props;
     }    
@@ -126,34 +127,34 @@ public class TeiidDataSource extends BaseDataSource {
     protected String buildServerURL() {
     	if ( this.alternateServers == null ) {
     		// Format:  "mm://server:port"
-    		return new MMURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
+    		return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
     	} 
 
     	// Format: "mm://server1:port,server2:port,..."
 		String serverURL = ""; //$NON-NLS-1$
 		
-		serverURL = "" + ( this.secure ? MMURL.SECURE_PROTOCOL : MMURL.DEFAULT_PROTOCOL ); //$NON-NLS-1$
+		serverURL = "" + ( this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL ); //$NON-NLS-1$
 		serverURL += "" + this.serverName; //$NON-NLS-1$
 		if ( this.portNumber != 0 ) 
-			serverURL += MMURL.COLON_DELIMITER  + this.portNumber;
+			serverURL += TeiidURL.COLON_DELIMITER  + this.portNumber;
 		if ( this.alternateServers.length() > 0 ) {
-        	String[] as = this.alternateServers.split( MMURL.COMMA_DELIMITER);
+        	String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
         	
         	for ( int i = 0; i < as.length; i++ ) {
-        		String[] server = as[i].split( MMURL.COLON_DELIMITER );
+        		String[] server = as[i].split( TeiidURL.COLON_DELIMITER );
 
         		if ( server.length > 0 ) {
-        			serverURL += MMURL.COMMA_DELIMITER + server[0];
+        			serverURL += TeiidURL.COMMA_DELIMITER + server[0];
         			if ( server.length > 1 ) {
-        				serverURL += MMURL.COLON_DELIMITER + server[1];
+        				serverURL += TeiidURL.COLON_DELIMITER + server[1];
         			} else {
-        				serverURL += MMURL.COLON_DELIMITER + this.portNumber;
+        				serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
         			}
         		}
         	}
 		}
 		
-		return new MMURL(serverURL).getAppServerURL();
+		return new TeiidURL(serverURL).getAppServerURL();
     }
 
     protected String buildURL() {
@@ -407,14 +408,14 @@ public class TeiidDataSource extends BaseDataSource {
     	if ( alternateServers == null || alternateServers.trim().length() < 1 )
     		return null;
     	
-    	String[] as = alternateServers.split( MMURL.COMMA_DELIMITER);
+    	String[] as = alternateServers.split( TeiidURL.COMMA_DELIMITER);
     	String sReason = null;
     	String reason = ""; //$NON-NLS-1$
     	int reasonCount = 0;
     	final String newline = System.getProperty("line.separator"); //$NON-NLS-1$
     	
     	for ( int i = 0; i < as.length; i++ ) {
-    		String[] server = as[i].split( MMURL.COLON_DELIMITER );
+    		String[] server = as[i].split( TeiidURL.COLON_DELIMITER );
 
     		if ( server.length < 1 || server.length > 2 ) {
     			// ie "server:31000:an invalid value"

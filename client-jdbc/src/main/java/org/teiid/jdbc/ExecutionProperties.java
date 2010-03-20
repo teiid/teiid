@@ -22,7 +22,7 @@
 
 package org.teiid.jdbc;
 
-import com.metamatrix.dqp.message.RequestMessage;
+import org.teiid.client.RequestMessage;
 
 /**
  * MetaMatrix-specific execution properties.  These execution properties can 

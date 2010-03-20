@@ -37,14 +37,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.metadata.ResultsMetadataConstants;
+import org.teiid.client.metadata.ResultsMetadataDefaults;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
-import com.metamatrix.dqp.metadata.ResultsMetadataDefaults;
 
 public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaData {
 	private static final String DATA_TYPES = "DataTypes"; //$NON-NLS-1$

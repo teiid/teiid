@@ -32,9 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Transaction;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
 
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.service.TransactionContext;
 public class TestTransactionServer {
 

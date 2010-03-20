@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.connector.language.SQLReservedWords;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.LanguageObject;

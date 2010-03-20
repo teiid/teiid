@@ -24,26 +24,26 @@ package org.teiid.metadata.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
-import org.jboss.virtual.VFS;
-import org.jboss.virtual.VirtualFile;
-import org.jboss.virtual.VirtualFileFilter;
-import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.LRUCache;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 
+@SuppressWarnings("nls")
 public class VDBMetadataFactory {
 	
 	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
@@ -63,16 +63,13 @@ public class VDBMetadataFactory {
 		}
 
 		try {
-			VirtualFile vdbFile = getVirtualFile(vdbURL);
-			
-			IndexMetadataFactory imf = getMetadataStore(vdbFile);
-			imf.addEntriesPlusVisibilities(vdbFile, new VDBMetaData());
+			IndexMetadataFactory imf = loadMetadata(vdbURL);
 			
 			Collection <FunctionMethod> methods = null;
 			if (udfFile != null) {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
-			MetadataStore system = getMetadataStore(getVirtualFile(VDBMetadataFactory.class.getResource("/System.vdb"))).getMetadataStore(); //$NON-NLS-1$
+			MetadataStore system = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore();
 			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(system, imf.getMetadataStore())), imf.getEntriesPlusVisibilities(), methods); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
@@ -81,37 +78,17 @@ public class VDBMetadataFactory {
 		}
     }
 
-	private static VirtualFile getVirtualFile(URL vdbURL) throws IOException,
-			URISyntaxException {
-		VFS.init();
-		VDBContext vdbContext = new VDBContext(vdbURL);
-		VirtualFile vdbFile = new VirtualFile(vdbContext.getRoot());
-		return vdbFile;
+	private static IndexMetadataFactory loadMetadata(URL vdbURL)
+			throws IOException, MalformedURLException, URISyntaxException {
+		//vfs has a problem with vdbs embedded in jars in the classpath, so we'll create a temp version
+		if (vdbURL.getProtocol().equals("jar")) {
+			InputStream is = vdbURL.openStream();
+			File temp = File.createTempFile("temp", ".vdb", new File(UnitTestUtil.getTestScratchPath()));
+			temp.deleteOnExit();
+			FileUtils.write(is, temp);
+			vdbURL = temp.toURI().toURL();
+		}
+		return new IndexMetadataFactory(vdbURL);
 	}
 
-	private static IndexMetadataFactory getMetadataStore(VirtualFile vdbFile)
-			throws IOException {
-		List<VirtualFile> children = vdbFile.getChildrenRecursively(new VirtualFileFilter() {
-			@Override
-			public boolean accepts(VirtualFile file) {
-				return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
-			}
-		});
-		
-		IndexMetadataFactory imf = new IndexMetadataFactory();
-		for (VirtualFile f: children) {
-			imf.addIndexFile(f);
-		}
-		
-		return imf;
-	}	
-	
-
-	private static class VDBContext extends ZipEntryContext{
-		private static final long serialVersionUID = -6504988258841073415L;
-
-		protected VDBContext(URL url) throws IOException, URISyntaxException {
-			super(url,false);
-		}
-	}
 }

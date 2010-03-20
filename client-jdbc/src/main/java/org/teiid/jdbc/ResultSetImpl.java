@@ -51,12 +51,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.lob.LobChunkInputStream;
+import org.teiid.client.lob.StreamingLobChunckProducer;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.BatchResults.Batch;
 import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobImpl;
@@ -67,9 +70,6 @@ import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.client.StreamingLobChunckProducer;
-import com.metamatrix.dqp.message.ResultsMessage;
 
 /**
  * <p>

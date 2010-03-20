@@ -28,7 +28,6 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Transaction;
 
-import com.metamatrix.admin.AdminPlugin;
 
 @MetaMapping(TransactionMetadataMapper.class)
 public class TransactionMetadata extends AdminObjectImpl implements Transaction {

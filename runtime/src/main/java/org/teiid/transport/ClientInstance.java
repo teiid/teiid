@@ -25,9 +25,9 @@ package org.teiid.transport;
 import java.io.Serializable;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.socket.Message;
 
-import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.util.crypto.Cryptor;
 
 /**

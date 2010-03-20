@@ -46,9 +46,9 @@ import javax.transaction.xa.Xid;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
 
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.TransactionContext;

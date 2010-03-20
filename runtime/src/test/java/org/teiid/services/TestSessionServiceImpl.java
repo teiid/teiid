@@ -13,11 +13,11 @@ import javax.security.auth.login.LoginException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.security.Credentials;
 import org.teiid.services.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 
 public class TestSessionServiceImpl {
 	

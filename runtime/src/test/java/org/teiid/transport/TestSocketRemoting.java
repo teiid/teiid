@@ -32,30 +32,30 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.teiid.client.DQP;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.client.util.ResultsReceiver;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.HostInfo;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.Message;
+import org.teiid.net.socket.SocketServerConnection;
+import org.teiid.net.socket.SocketServerInstance;
+import org.teiid.net.socket.SocketServerInstanceFactory;
+import org.teiid.net.socket.SocketServerInstanceImpl;
+import org.teiid.net.socket.UrlServerDiscovery;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.HostInfo;
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceFactory;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImpl;
-import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestSocketRemoting {
 	
@@ -213,7 +213,7 @@ public class TestSocketRemoting {
 				return serverInstance;
 			}
 			
-		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
+		}, false, new UrlServerDiscovery(new TeiidURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
 		return connection;
 	}
 	

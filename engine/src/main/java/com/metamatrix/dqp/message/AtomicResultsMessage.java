@@ -28,7 +28,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
 
-import com.metamatrix.common.batch.BatchSerializer;
+import org.teiid.client.BatchSerializer;
+
 import com.metamatrix.core.util.ExternalizeUtil;
 
 public class AtomicResultsMessage implements Externalizable {

@@ -47,6 +47,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.client.DQP;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.jdbc.plan.Annotation;
 import org.teiid.jdbc.plan.Annotation;
 import org.teiid.jdbc.plan.PlanNode;
@@ -57,11 +62,6 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.message.ParameterInfo;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$

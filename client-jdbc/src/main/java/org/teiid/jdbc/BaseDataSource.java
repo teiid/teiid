@@ -32,10 +32,11 @@ import javax.sql.PooledConnection;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
+import org.teiid.client.RequestMessage;
+import org.teiid.net.TeiidURL;
 
 
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.dqp.message.RequestMessage;
+
 
 /**
  * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
@@ -100,17 +101,17 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 	public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
 	
     // constant indicating Virtual database name
-    public static final String VDB_NAME = MMURL.JDBC.VDB_NAME; 
+    public static final String VDB_NAME = TeiidURL.JDBC.VDB_NAME; 
     // constant indicating Virtual database version
-    public static final String VDB_VERSION = MMURL.JDBC.VDB_VERSION; 
+    public static final String VDB_VERSION = TeiidURL.JDBC.VDB_VERSION; 
     // constant for vdb version part of serverURL
-    public static final String VERSION = MMURL.JDBC.VERSION; 
+    public static final String VERSION = TeiidURL.JDBC.VERSION; 
     // name of the application which is obtaining connection
-    public static final String APP_NAME = MMURL.CONNECTION.APP_NAME; 
+    public static final String APP_NAME = TeiidURL.CONNECTION.APP_NAME; 
     // constant for username part of url
-    public static final String USER_NAME = MMURL.CONNECTION.USER_NAME; 
+    public static final String USER_NAME = TeiidURL.CONNECTION.USER_NAME; 
     // constant for password part of url
-    public static final String PASSWORD = MMURL.CONNECTION.PASSWORD; 
+    public static final String PASSWORD = TeiidURL.CONNECTION.PASSWORD; 
     
     protected static final int DEFAULT_TIMEOUT = 0;
     protected static final int DEFAULT_LOG_LEVEL = 0;

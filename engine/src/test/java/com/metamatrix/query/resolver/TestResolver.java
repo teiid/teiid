@@ -39,13 +39,13 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;

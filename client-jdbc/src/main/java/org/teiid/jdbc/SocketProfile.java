@@ -31,11 +31,12 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.ServerConnection;
+import org.teiid.net.socket.SocketServerConnectionFactory;
+
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 
@@ -122,7 +123,7 @@ final class SocketProfile {
         try {
             JDBCURL jdbcURL = new JDBCURL(url);
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
-            info.setProperty(MMURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
+            info.setProperty(TeiidURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
             Properties optionalParams = jdbcURL.getProperties();
             JDBCURL.normalizeProperties(info);
             Enumeration keys = optionalParams.keys();

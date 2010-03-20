@@ -27,13 +27,13 @@ import java.sql.SQLException;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.client.xa.XidImpl;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.XAConnectionImpl;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.xa.XidImpl;
 
 
 public class TestMMXAConnection extends TestCase {

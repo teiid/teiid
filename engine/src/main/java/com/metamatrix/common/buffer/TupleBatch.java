@@ -28,7 +28,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
 
-import com.metamatrix.common.batch.BatchSerializer;
+import org.teiid.client.BatchSerializer;
+
 
 /**
  * Represents a set of indexed tuples.  The {@link #getBeginRow beginning row}

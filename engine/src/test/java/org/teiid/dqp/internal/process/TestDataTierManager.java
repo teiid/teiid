@@ -25,13 +25,13 @@ package org.teiid.dqp.internal.process;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.client.RequestMessage;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;

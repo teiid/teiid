@@ -23,6 +23,8 @@
 package org.teiid.metadata.index;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,7 +35,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.virtual.VFS;
 import org.jboss.virtual.VirtualFile;
+import org.jboss.virtual.VirtualFileFilter;
+import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
+import org.jboss.virtual.spi.VirtualFileHandler;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
@@ -65,7 +71,7 @@ import com.metamatrix.core.vdb.VdbConstants;
  * Loads MetadataRecords from index files.  
  */
 public class IndexMetadataFactory {
-
+	
 	private Index[] indexes;
     private Map<String, Datatype> datatypeCache;
     private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
@@ -73,6 +79,35 @@ public class IndexMetadataFactory {
 	private MetadataStore store;
 	private HashSet<VirtualFile> indexFiles = new HashSet<VirtualFile>();
 	private LinkedHashMap<String, Resource> vdbEntries;
+	
+	public IndexMetadataFactory() {
+		
+	}
+	
+	/**
+	 * Load index metadata from a URL.  For the system and test vdbs
+	 * @param url
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	public IndexMetadataFactory(URL url) throws IOException, URISyntaxException {
+		VFS.init();
+		ZipEntryContext context = new ZipEntryContext(url);
+		VirtualFileHandler vfh = context.getRoot();
+		VirtualFile vdb = new VirtualFile(vfh);
+		List<VirtualFile> children = vdb.getChildrenRecursively(new VirtualFileFilter() {
+			@Override
+			public boolean accepts(VirtualFile file) {
+				return file.getName().endsWith(IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT);
+			}
+		});
+		
+		for (VirtualFile f: children) {
+			addIndexFile(f);
+		}
+		//just use the defaults for model visibility
+		addEntriesPlusVisibilities(vdb, new VDBMetaData());
+	}
     
 	public MetadataStore getMetadataStore() throws IOException {
 		if (this.store == null) {

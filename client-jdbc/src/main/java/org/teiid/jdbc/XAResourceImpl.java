@@ -30,9 +30,10 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
+import org.teiid.net.CommunicationException;
+
 
 /**
  * Implementation of XAResource.

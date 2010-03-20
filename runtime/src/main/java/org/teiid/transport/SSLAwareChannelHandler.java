@@ -53,9 +53,9 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.teiid.net.NetPlugin;
+import org.teiid.net.socket.ObjectChannel;
 
-import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 
@@ -217,7 +217,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
-			LogManager.logDetail(LogConstants.CTX_TRANSPORT, CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT, NetPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
 		}
 	}
 

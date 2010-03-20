@@ -22,8 +22,9 @@
 
 package org.teiid.transport;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.socket.ObjectChannel;
+
 
 public interface ChannelListener {
 	

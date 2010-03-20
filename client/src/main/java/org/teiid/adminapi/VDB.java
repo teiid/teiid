@@ -40,13 +40,6 @@ import java.util.List;
  */
 public interface VDB extends AdminObject {
 
-    /** 
-     * Constant to denote the latest version of a VDB located
-     * at a given repository location. Used when deploying a
-     * VDB to the MetaMatrix Server from the server repository.
-     */
-    public static final String SERVER_REPOSITORY_LATEST_VERSION = "LATEST"; //$NON-NLS-1$
-    
     public static enum Status{INCOMPLETE, INACTIVE, ACTIVE, DELETED, ACTIVE_DEFAULT};
 
 

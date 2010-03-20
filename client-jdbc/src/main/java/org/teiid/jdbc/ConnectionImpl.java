@@ -57,17 +57,18 @@ import java.util.logging.Logger;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.client.DQP;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.ServerConnection;
+import org.teiid.net.socket.SocketServerConnection;
 
 
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
+
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.client.ResultsFuture;
 
 public class ConnectionImpl extends WrapperImpl implements Connection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
@@ -195,7 +196,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
                 String key = (String)enumeration.nextElement();
                 Object anObj = info.get(key);
                 // Log each property except for password and token.
-                if (!MMURL.CONNECTION.PASSWORD.equalsIgnoreCase(key)) { 
+                if (!TeiidURL.CONNECTION.PASSWORD.equalsIgnoreCase(key)) { 
                     logger.fine(key+"="+anObj); //$NON-NLS-1$
                 }
             }

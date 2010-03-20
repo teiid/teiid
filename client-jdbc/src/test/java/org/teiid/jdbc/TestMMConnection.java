@@ -32,16 +32,16 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.teiid.client.DQP;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.net.ServerConnection;
 
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestMMConnection extends TestCase {
 

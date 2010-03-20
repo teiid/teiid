@@ -8,11 +8,11 @@ import java.util.Random;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.client.xa.XidImpl;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.xa.XidImpl;
 
 public class StandaloneGlobalTransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();

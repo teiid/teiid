@@ -29,10 +29,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.net.TeiidURL;
 
 
 
-import com.metamatrix.common.api.MMURL;
+
 
 
 /** 
@@ -59,8 +60,8 @@ public class JDBCURL {
         ExecutionProperties.PROP_XML_FORMAT,
         ExecutionProperties.PROP_XML_VALIDATION,
         ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-        MMURL.CONNECTION.AUTO_FAILOVER,
-        MMURL.CONNECTION.DISCOVERY_STRATEGY
+        TeiidURL.CONNECTION.AUTO_FAILOVER,
+        TeiidURL.CONNECTION.DISCOVERY_STRATEGY
     };
     
     private String vdbName;
@@ -268,7 +269,7 @@ public class JDBCURL {
     }
     
     public String getTransparentFailover() {
-        return properties.getProperty(MMURL.CONNECTION.AUTO_FAILOVER);
+        return properties.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER);
     }
     
     public String getDisableLocalTransactions() {

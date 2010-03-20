@@ -30,8 +30,8 @@ import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Session;
+import org.teiid.client.security.SessionToken;
 
-import com.metamatrix.platform.security.api.SessionToken;
 
 
 /**

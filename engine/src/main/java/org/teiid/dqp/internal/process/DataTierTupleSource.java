@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.client.SourceWarning;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 
@@ -32,7 +33,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 

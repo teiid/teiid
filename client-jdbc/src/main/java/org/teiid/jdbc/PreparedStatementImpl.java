@@ -51,6 +51,11 @@ import java.util.TreeMap;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
+import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.metadata.MetadataResult;
+
 
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -60,10 +65,6 @@ import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.dqp.client.MetadataResult;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
-import com.metamatrix.dqp.message.RequestMessage.StatementType;
 
 /**
  * <p> Instances of PreparedStatement contain a SQL statement that has already been

@@ -30,9 +30,9 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Transaction;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
 
-import com.metamatrix.common.xa.XidImpl;
-import com.metamatrix.common.xa.XATransactionException;
 
 /**
  */

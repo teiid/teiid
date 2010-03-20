@@ -22,8 +22,8 @@
 package org.teiid.dqp.internal.process;
 
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.client.RequestMessage;
 
-import com.metamatrix.dqp.message.RequestMessage;
 
 public class DQPConfiguration{
 	

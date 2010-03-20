@@ -30,13 +30,13 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;

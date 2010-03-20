@@ -31,6 +31,8 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
@@ -40,8 +42,6 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.RequestMessage.StatementType;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;

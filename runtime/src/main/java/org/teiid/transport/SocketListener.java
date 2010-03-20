@@ -30,9 +30,9 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.teiid.net.socket.ObjectChannel;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
-import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ApplicationInfo;

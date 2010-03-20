@@ -28,21 +28,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminObject;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.util.ExceptionUtil;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.NetPlugin;
+import org.teiid.net.ServerConnection;
+import org.teiid.net.ServerConnectionFactory;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.SocketServerConnectionFactory;
 
-import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.client.ExceptionUtil;
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionFactory;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
@@ -69,7 +64,7 @@ public class AdminFactory {
     	
     	private synchronized Admin getTarget() throws AdminComponentException, CommunicationException {
     		if (closed) {
-    			throw new AdminComponentException(CommPlatformPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
+    			throw new AdminComponentException(NetPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
     		}
     		if (target != null && registry.isOpen()) {
     			return target;
@@ -210,25 +205,25 @@ public class AdminFactory {
                                    String applicationName) throws AdminException {
         
         if (userName == null || userName.trim().length() == 0) {
-            throw new IllegalArgumentException(AdminPlugin.Util.getString("ERR.014.001.0099")); //$NON-NLS-1$
+            throw new IllegalArgumentException(NetPlugin.Util.getString("ERR.014.001.0099")); //$NON-NLS-1$
         }
         
     	final Properties p = new Properties();
-    	p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
-    	p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
+    	p.setProperty(TeiidURL.CONNECTION.APP_NAME, applicationName);
+    	p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
         if (password != null) {
-        	p.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        	p.setProperty(TeiidURL.CONNECTION.PASSWORD, new String(password));
         }
-    	p.setProperty(MMURL.CONNECTION.SERVER_URL, serverURL);
+    	p.setProperty(TeiidURL.CONNECTION.SERVER_URL, serverURL);
     	return createAdmin(p);
     }
 
 	public Admin createAdmin(Properties p) throws AdminException {
 		p = PropertiesUtils.clone(p);
-		p.remove(MMURL.JDBC.VDB_NAME);
-		p.remove(MMURL.JDBC.VDB_VERSION);
-    	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-    	p.setProperty(MMURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
+		p.remove(TeiidURL.JDBC.VDB_NAME);
+		p.remove(TeiidURL.JDBC.VDB_VERSION);
+    	p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
+    	p.setProperty(TeiidURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
     	
 		try {
 			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));

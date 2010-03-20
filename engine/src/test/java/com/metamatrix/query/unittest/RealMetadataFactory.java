@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
 import org.teiid.connector.metadata.runtime.MetadataStore;
@@ -42,7 +43,6 @@ import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.sql.lang.SPParameter;
 

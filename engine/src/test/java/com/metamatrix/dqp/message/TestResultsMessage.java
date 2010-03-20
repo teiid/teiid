@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.metadata.ParameterInfo;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;

@@ -41,6 +41,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -54,7 +55,6 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionTree;

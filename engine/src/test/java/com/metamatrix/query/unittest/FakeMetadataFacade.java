@@ -29,12 +29,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.client.metadata.ParameterInfo;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.SystemFunctionManager;
 import com.metamatrix.query.mapping.relational.QueryNode;

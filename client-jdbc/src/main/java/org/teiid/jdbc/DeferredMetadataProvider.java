@@ -26,11 +26,12 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.metadata.ResultsMetadataConstants;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.dqp.client.MetadataResult;
-import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
 /**
  * This metadata provider starts with just column names and types (provided in the response)

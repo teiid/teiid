@@ -32,20 +32,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
+import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.SocketServerConnection;
+import org.teiid.net.socket.SocketServerConnectionFactory;
+import org.teiid.net.socket.SocketUtil;
+import org.teiid.net.socket.UrlServerDiscovery;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.SocketUtil;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
-import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.LogonResult;
 
 public class TestCommSockets {
 
@@ -69,8 +69,8 @@ public class TestCommSockets {
 
 		try {
 			Properties p = new Properties();
-			String url = new MMURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
-			p.setProperty(MMURL.CONNECTION.SERVER_URL, url); //wrong port
+			String url = new TeiidURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
+			p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); //wrong port
 			SocketServerConnectionFactory.getInstance().getConnection(p);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
@@ -151,9 +151,9 @@ public class TestCommSockets {
 		}
 
 		Properties p = new Properties();
-		String url = new MMURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
-		p.setProperty(MMURL.CONNECTION.SERVER_URL, url); 
-		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
+		String url = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
+		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
+		p.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);

@@ -33,6 +33,7 @@ import java.util.TimeZone;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -43,7 +44,6 @@ import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;

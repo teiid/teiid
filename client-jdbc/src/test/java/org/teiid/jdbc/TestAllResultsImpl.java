@@ -41,16 +41,16 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
+import org.teiid.client.DQP;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestAllResultsImpl {

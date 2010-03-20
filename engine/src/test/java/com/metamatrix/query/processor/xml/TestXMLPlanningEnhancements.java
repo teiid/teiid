@@ -26,11 +26,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.metadata.ParameterInfo;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
 import com.metamatrix.query.mapping.xml.MappingDocument;

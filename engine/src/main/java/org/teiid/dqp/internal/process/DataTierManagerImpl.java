@@ -33,6 +33,7 @@ import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.RequestMessage;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
@@ -67,7 +68,6 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.query.processor.CollectionTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;

@@ -27,12 +27,12 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.NetPlugin;
+import org.teiid.net.socket.Handshake;
+import org.teiid.net.socket.Message;
+import org.teiid.net.socket.ObjectChannel;
 
-import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.Handshake;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -113,7 +113,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             
             //ensure the key information
             if (returnedPublicKey == null) {
-                throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketClientInstance.invalid_sessionkey")); //$NON-NLS-1$
+                throw new CommunicationException(NetPlugin.Util.getString("SocketClientInstance.invalid_sessionkey")); //$NON-NLS-1$
             }
             
             try {

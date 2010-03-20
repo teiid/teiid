@@ -38,10 +38,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
+import org.teiid.client.DQP;
+import org.teiid.client.ResultsMessage;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.message.ResultsMessage;
 
 public class TestMMResultSet {
 

@@ -28,9 +28,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.client.metadata.ParameterInfo;
+
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.symbol.ElementSymbol;

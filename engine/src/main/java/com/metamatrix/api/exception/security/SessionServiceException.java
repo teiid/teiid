@@ -22,7 +22,8 @@
 
 package com.metamatrix.api.exception.security;
 
-import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
+import org.teiid.client.security.MetaMatrixSecurityException;
+
 
 public class SessionServiceException extends MetaMatrixSecurityException {
     /**

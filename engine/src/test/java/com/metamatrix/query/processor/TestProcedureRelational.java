@@ -28,12 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.processor.proc.CreateCursorResultSetInstruction;

@@ -25,11 +25,12 @@ package com.metamatrix.query.sql.util;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.client.metadata.ParameterInfo;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;

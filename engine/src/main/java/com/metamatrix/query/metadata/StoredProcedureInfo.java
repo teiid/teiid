@@ -26,7 +26,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.metamatrix.dqp.message.ParameterInfo;
+import org.teiid.client.metadata.ParameterInfo;
+
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.sql.lang.SPParameter;
 /**

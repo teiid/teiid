@@ -50,6 +50,9 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
+import org.teiid.client.DQP;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -68,16 +71,13 @@ import org.teiid.transport.SocketTransport;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.client.DQP;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.platform.security.api.ILogon;
 
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {

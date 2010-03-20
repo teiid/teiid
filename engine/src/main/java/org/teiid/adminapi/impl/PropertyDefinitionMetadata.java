@@ -28,7 +28,6 @@ import java.util.Collection;
 
 import org.teiid.adminapi.PropertyDefinition;
 
-import com.metamatrix.admin.AdminPlugin;
 
 
 public class PropertyDefinitionMetadata extends AdminObjectImpl implements PropertyDefinition {

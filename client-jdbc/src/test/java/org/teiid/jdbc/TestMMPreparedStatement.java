@@ -35,17 +35,17 @@ import java.util.TimeZone;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.teiid.client.DQP;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.net.ServerConnection;
 
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.dqp.client.DQP;
-import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.message.ResultsMessage;
-import com.metamatrix.dqp.message.RequestMessage.ResultsMode;
-import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Test case to validate general operations on an <code>MMPreparedStatement

@@ -27,10 +27,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.dqp.internal.process.MetaDataProcessor;
 import org.teiid.jdbc.MetadataProvider;
 
-import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
 /**
  */
