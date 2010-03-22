@@ -22,6 +22,9 @@
 
 package org.teiid.jdbc.plan;
 
+import org.teiid.client.plan.DefaultDisplayHelper;
+import org.teiid.client.plan.XMLOutputVisitor;
+
 import junit.framework.TestCase;
 
 

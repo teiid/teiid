@@ -73,13 +73,12 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>    
-    
+
     <dependency>
       <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-client-jdbc</artifactId>
-      <scope>test</scope>
+      <artifactId>teiid-client</artifactId>
     </dependency>
-        
+            
     <dependency>
         <groupId>org.jboss.naming</groupId>
         <artifactId>jnp-client</artifactId>

@@ -27,8 +27,8 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.teiid.jdbc.plan.Annotation;
-import org.teiid.jdbc.plan.PlanNode;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 
 
 

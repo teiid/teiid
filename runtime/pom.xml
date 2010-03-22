@@ -45,11 +45,6 @@
       <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-client-jdbc</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
     	<groupId>org.jboss.teiid</groupId>
     	<artifactId>teiid-cache-jbosscache</artifactId>
     </dependency>

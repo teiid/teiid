@@ -16,7 +16,6 @@
                
         <includes>
             <include>org.jboss.teiid:teiid-client</include>
-            <include>org.jboss.teiid:teiid-client-jdbc</include>	
             <include>org.jboss.teiid:teiid-common-core</include>	
         </includes>
         

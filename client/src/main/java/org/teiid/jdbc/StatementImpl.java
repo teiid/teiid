@@ -52,10 +52,8 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.jdbc.plan.Annotation;
-import org.teiid.jdbc.plan.Annotation;
-import org.teiid.jdbc.plan.PlanNode;
-import org.teiid.jdbc.plan.PlanNode;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;

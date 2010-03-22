@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jdbc.plan;
+package org.teiid.client.plan;
 
 
 /**

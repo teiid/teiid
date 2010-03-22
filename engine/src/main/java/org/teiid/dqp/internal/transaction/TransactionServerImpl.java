@@ -398,17 +398,14 @@ public class TransactionServerImpl implements TransactionService {
 	private void rollbackDirect(TransactionContext tc)
 			throws XATransactionException {
 		try {
-			this.transactionManager.resume(tc.getTransaction());
     		this.transactionManager.rollback();
 		} catch (SecurityException e) {
 			throw new XATransactionException(e);
 		} catch (SystemException e) {
 			throw new XATransactionException(e);
-		} catch (InvalidTransactionException e) {
-			throw new XATransactionException(e);
-		} finally {
-            transactions.removeTransactionContext(tc);
-        }
+        } finally {
+			transactions.removeTransactionContext(tc);
+		}
 	}
 	
 	public void suspend(TransactionContext context) throws XATransactionException {

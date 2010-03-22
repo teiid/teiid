@@ -27,6 +27,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.teiid.client.plan.DefaultDisplayHelper;
+import org.teiid.client.plan.PlanNode;
+import org.teiid.client.plan.TextOutputVisitor;
+
 import junit.framework.TestCase;
 
 
