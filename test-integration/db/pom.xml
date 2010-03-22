@@ -42,6 +42,13 @@
 			<type>test-jar</type>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<type>test-jar</type>
+			<scope>compile</scope>
+		</dependency>
      
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
