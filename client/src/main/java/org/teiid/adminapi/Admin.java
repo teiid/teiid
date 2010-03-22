@@ -92,7 +92,7 @@ public interface Admin {
 
      * @throws AdminException if there's a system error.
      */
-    void addConnectorBinding(String deployedName, String typeName, Properties properties) throws AdminException;
+    ConnectorBinding addConnectorBinding(String deployedName, String typeName, Properties properties) throws AdminException;
 
     /**
      * Delete the {@link ConnectorBinding} from the Configuration

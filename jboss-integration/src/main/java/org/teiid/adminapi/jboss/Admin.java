@@ -275,12 +275,14 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public void addConnectorBinding(String deploymentName, String typeName, Properties properties) throws AdminException {
+	public ConnectorBinding addConnectorBinding(String deploymentName, String typeName, Properties properties) throws AdminException {
 		if (getConnectorBinding(deploymentName) != null) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deploymentName)); //$NON-NLS-1$;
 		}
 		properties.setProperty("connection-definition", Connector.class.getName()); //$NON-NLS-1$	
 		addConnectionfactory(deploymentName, typeName, properties);
+		
+		return getConnectorBinding(deploymentName);
 	}
 	
 	@Override
