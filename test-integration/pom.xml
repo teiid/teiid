@@ -64,7 +64,11 @@
 			<artifactId>teiid-engine</artifactId>
 			<type>test-jar</type>
 		</dependency>
-
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-adminshell</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
 		<!-- external dependencies -->
 		<dependency>
