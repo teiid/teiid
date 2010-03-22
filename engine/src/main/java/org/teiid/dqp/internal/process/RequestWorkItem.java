@@ -76,7 +76,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	private enum ProcessingState {NEW, PROCESSING, CLOSE}
 	private ProcessingState state = ProcessingState.NEW;
     
-	private enum TransactionState {NONE, ACTIVE, END, DONE}
+	private enum TransactionState {NONE, ACTIVE, DONE}
 	private TransactionState transactionState = TransactionState.NONE;
 	
 	/*
@@ -166,10 +166,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void process() {
         LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "with state", state); //$NON-NLS-1$ //$NON-NLS-2$
         try {
-        	if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
-        		//there's no need to do this for xa transactions, as that is done by the workmanager
-        		this.transactionService.resume(this.transactionContext);
-            }
             if (this.state == ProcessingState.NEW) {
                 state = ProcessingState.PROCESSING;
         		processNew();
@@ -178,6 +174,9 @@ public class RequestWorkItem extends AbstractWorkItem {
                     state = ProcessingState.CLOSE;
                 } 
         	}
+        	
+            resume();
+        	
             if (this.state == ProcessingState.PROCESSING) {
             	processMore();
             	if (this.closeRequested) {
@@ -226,15 +225,23 @@ public class RequestWorkItem extends AbstractWorkItem {
         		}
         		sendError();
         	} 
-        	if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
-        		try {
-					this.transactionService.suspend(this.transactionContext);
-				} catch (XATransactionException e) {
-					LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
-				}
-            }
         }
     }
+
+	private void resume() throws XATransactionException {
+		if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
+			//there's no need to do this for xa transactions, as that is done by the workmanager
+			this.transactionService.resume(this.transactionContext);
+		}
+	}
+
+	private void suspend() {
+		try {
+			this.transactionService.suspend(this.transactionContext);
+		} catch (XATransactionException e) {
+			LogManager.logDetail(LogConstants.CTX_DQP, e, "Error suspending active transaction"); //$NON-NLS-1$
+		}
+	}
 
 	protected void processMore() throws BlockedException, MetaMatrixCoreException {
 		if (this.processor != null) {
@@ -247,7 +254,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 		}
 		if (doneProducingBatches) {
 			if (this.transactionState == TransactionState.ACTIVE) {
-				boolean endState = true;
 				/*
 				 * TEIID-14 if we are done producing batches, then proactively close transactional 
 				 * executions even ones that were intentionally kept alive. this may 
@@ -257,16 +263,14 @@ public class RequestWorkItem extends AbstractWorkItem {
 	        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
 	        		if (connectorRequest.isTransactional()) {
 	        			connectorRequest.fullyCloseSource();
-	        			endState = false;
 	        		}
 	            }
-				if (endState) {
-					this.transactionState = TransactionState.END;
-				}
-			}
-			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
-				this.transactionService.commit(transactionContext);
 				this.transactionState = TransactionState.DONE;
+				if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+					this.transactionService.commit(transactionContext);
+				} else {
+					suspend();
+				}
 			}
 			sendResultsIfNeeded(null);
 		} else {
@@ -317,20 +321,17 @@ public class RequestWorkItem extends AbstractWorkItem {
 			}
 		}
 
-		if (this.transactionState == TransactionState.ACTIVE) {
-			if (!this.connectorInfo.isEmpty()) {
-				return; //wait for pending connector work
-			}
-			this.transactionState = TransactionState.END;
-		} 
-		
-		if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+		if (this.transactionState == TransactionState.ACTIVE) { 
 			this.transactionState = TransactionState.DONE;
-            try {
-        		this.transactionService.rollback(transactionContext);
-            } catch (XATransactionException e1) {
-                LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
-            } 
+            if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+				try {
+	        		this.transactionService.rollback(transactionContext);
+	            } catch (XATransactionException e1) {
+	                LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
+	            } 
+			} else {
+	        	suspend();
+			}
 		}
 		
 		isClosed = true;

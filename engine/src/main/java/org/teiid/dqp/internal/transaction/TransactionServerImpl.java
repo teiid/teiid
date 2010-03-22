@@ -354,19 +354,22 @@ public class TransactionServerImpl implements TransactionService {
 	            if (!transactionExpected) {
 	            	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
 	            }
+	            transactionManager.resume(tc.getTransaction());
 	        } else if (transactionExpected) {
 	        	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
 	        }
         } catch (InvalidTransactionException e) {
         	throw new XATransactionException(e);
-        }
+		} catch (SystemException e) {
+        	throw new XATransactionException(e);
+		}
         return tc;
     }
     
     private void beginDirect(TransactionContext tc) throws XATransactionException {
 		try {
 			transactionManager.begin();
-			Transaction tx = transactionManager.getTransaction();
+			Transaction tx = transactionManager.suspend();
 			tc.setTransaction(tx);
 			tc.setCreationTime(System.currentTimeMillis());
         } catch (javax.transaction.NotSupportedException err) {
@@ -403,9 +406,9 @@ public class TransactionServerImpl implements TransactionService {
 			throw new XATransactionException(e);
 		} catch (SystemException e) {
 			throw new XATransactionException(e);
-        } finally {
-			transactions.removeTransactionContext(tc);
-		}
+		} finally {
+            transactions.removeTransactionContext(tc);
+        }
 	}
 	
 	public void suspend(TransactionContext context) throws XATransactionException {
@@ -473,12 +476,6 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public TransactionContext commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        
-        TransactionContext tc = transactions.getTransactionContext(context.getThreadId());
-        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE) {
-            return tc;
-        }
-        
         commitDirect(context);
         return context;
     }

@@ -147,7 +147,7 @@ public class DataTierTupleSource implements TupleSource {
     		if (exception.getCause() instanceof MetaMatrixProcessingException) {
     			throw (MetaMatrixProcessingException)exception.getCause();
     		}
-    		throw new MetaMatrixComponentException(exception);
+    		throw new MetaMatrixProcessingException(exception);
 		}	
 	}
 

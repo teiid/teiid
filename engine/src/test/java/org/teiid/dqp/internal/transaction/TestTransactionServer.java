@@ -60,6 +60,7 @@ public class TestTransactionServer {
         tm = Mockito.mock(TransactionManager.class);
         txn = Mockito.mock(javax.transaction.Transaction.class);
         Mockito.stub(tm.getTransaction()).toReturn(txn);
+        Mockito.stub(tm.suspend()).toReturn(txn);
         server.setXaTerminator(xaTerminator);
         server.setTransactionManager(tm);
         server.setWorkManager(new FakeWorkManager());
