@@ -29,9 +29,13 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import javax.resource.NotSupportedException;
 import javax.resource.spi.XATerminator;
+import javax.resource.spi.work.WorkException;
+import javax.resource.spi.work.WorkManager;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
@@ -48,6 +52,7 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
@@ -111,6 +116,7 @@ public class TransactionServerImpl implements TransactionService {
     
     private XATerminator xaTerminator;
     private TransactionManager transactionManager;
+    private WorkManager workManager;
 
     public void setXaTerminator(XATerminator xaTerminator) {
 		this.xaTerminator = xaTerminator;
@@ -118,6 +124,10 @@ public class TransactionServerImpl implements TransactionService {
     
     public void setTransactionManager(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
+	}
+    
+    public void setWorkManager(WorkManager workManager) {
+		this.workManager = workManager;
 	}
 
     /**
@@ -128,10 +138,6 @@ public class TransactionServerImpl implements TransactionService {
         if (!tc.getSuspendedBy().isEmpty()) {
             throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.suspended_exist", xid)); //$NON-NLS-1$
         }		
-        
-        if (tc.shouldRollback()) {
-        	throw new XATransactionException(XAException.XAER_RMERR, DQPPlugin.Util.getString("TransactionServer.rollback_set", xid)); //$NON-NLS-1$
-        }
         
         // In the container this pass though
         if (singleTM) {        	    	
@@ -231,8 +237,29 @@ public class TransactionServerImpl implements TransactionService {
 					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
 					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
+					if (singleTM) {
+						tc.setTransaction(transactionManager.getTransaction());
+						assert tc.getTransaction() != null;
+					} else {
+						FutureWork<Transaction> work = new FutureWork<Transaction>(new Callable<Transaction>() {
+							@Override
+							public Transaction call() throws Exception {
+								return transactionManager.getTransaction();
+							}
+						});
+						workManager.doWork(work, WorkManager.INDEFINITE, tc, null);
+						tc.setTransaction(work.getResult().get());
+					}
 				} catch (NotSupportedException e) {
-					throw new XATransactionException(XAException.XAER_INVAL, e.getMessage());
+					throw new XATransactionException(e, XAException.XAER_INVAL);
+				} catch (WorkException e) {
+					throw new XATransactionException(e, XAException.XAER_INVAL);
+				} catch (InterruptedException e) {
+					throw new XATransactionException(e, XAException.XAER_INVAL);
+				} catch (ExecutionException e) {
+					throw new XATransactionException(e, XAException.XAER_INVAL);
+				} catch (SystemException e) {
+					throw new XATransactionException(e, XAException.XAER_INVAL);
 				}
                 break;
             }
@@ -273,7 +300,7 @@ public class TransactionServerImpl implements TransactionService {
                     break;
                 }
                 case XAResource.TMFAIL: {
-                	tc.setRollbackOnly();
+                	cancelTransactions(threadId, false);
                     break;
                 }
                 default:
@@ -417,12 +444,7 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public void commit(String threadId) throws XATransactionException {
         TransactionContext tc = checkLocalTransactionState(threadId, true);
-
-        if (tc.shouldRollback()) {
-        	rollback(threadId);
-        } else {
-            commitDirect(tc);
-        }
+        commitDirect(tc);
     }
 
     /**
@@ -460,8 +482,6 @@ public class TransactionServerImpl implements TransactionService {
             return tc;
         }
         
-        Assertion.assertTrue(!tc.shouldRollback());
-        
         commitDirect(context);
         return context;
     }
@@ -483,27 +503,11 @@ public class TransactionServerImpl implements TransactionService {
             return;
         }
         
-        if (tc.getTransactionType() == TransactionContext.Scope.GLOBAL) {
-        	tc.setRollbackOnly();
-            return;
-        }
-        
         try {
-            try {
-				transactionManager.resume(tc.getTransaction());
-	            transactionManager.setRollbackOnly();
-			} catch (InvalidTransactionException e) {
-				throw new XATransactionException(e);
-			} catch (SystemException e) {
-				throw new XATransactionException(e);
-			}
-        } finally {
-        	try {
-				transactionManager.suspend();
-			} catch (SystemException e) {
-				throw new XATransactionException(e);
-			}
-        }
+            tc.getTransaction().setRollbackOnly();
+		} catch (SystemException e) {
+			throw new XATransactionException(e);
+		}
     }
 
 	@Override

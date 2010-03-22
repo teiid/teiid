@@ -335,18 +335,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
     private void createProcessor() throws MetaMatrixComponentException {
         
-        TransactionContext tc = null;
+        TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getConnectionID());
         
-        if (transactionService != null) {
-            tc = transactionService.getOrCreateTransactionContext(workContext.getConnectionID());
-        }
-        
-        if (tc != null){ 
-            Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
-        }
+        Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
         // If local or global transaction is not started.
-        if (tc == null || tc.getTransactionType() != Scope.NONE) {
+        if (tc.getTransactionType() == Scope.NONE) {
             
             boolean startAutoWrapTxn = false;
             
@@ -355,17 +349,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
             } else if (RequestMessage.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
             	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
 						|| requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
-            	if (!transactionalRead && userCommand instanceof StoredProcedure && ((StoredProcedure)userCommand).getUpdateCount() == 0) {
-            		startAutoWrapTxn = false;
-            	} else {
-            		startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
-            	}
+        		startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
             } 
             
             if (startAutoWrapTxn) {
-                if (transactionService == null) {
-                    throw new MetaMatrixComponentException(DQPPlugin.Util.getString("Request.transaction_not_supported")); //$NON-NLS-1$
-                }
                 try {
                     tc = transactionService.begin(tc);
                 } catch (XATransactionException err) {

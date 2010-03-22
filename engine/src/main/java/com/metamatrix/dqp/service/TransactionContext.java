@@ -44,7 +44,6 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private String threadId;
     private Scope transactionType = Scope.NONE;
     private long creationTime;
-    private boolean rollback;
     private Transaction transaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     
@@ -93,14 +92,6 @@ public class TransactionContext extends ExecutionContext implements Serializable
     	return "NONE"; //$NON-NLS-1$
     }
 
-    public void setRollbackOnly() {
-    	this.rollback = true;
-    }
-    
-    public boolean shouldRollback() {
-    	return this.rollback;
-    }
-    
     public Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }

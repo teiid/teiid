@@ -155,16 +155,35 @@ public class RelationalPlan extends ProcessorPlan {
     
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
-    	if (root instanceof DependentAccessNode) {
-			if (transactionalReads || !(((DependentAccessNode)root).getCommand() instanceof QueryCommand)) {
+    	return requiresTransaction(transactionalReads, root);
+    }
+    
+    /**
+     * Currently does not detect procedures in non-inline view subqueries
+     */
+    boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
+    	if (node instanceof DependentAccessNode) {
+			if (transactionalReads || !(((DependentAccessNode)node).getCommand() instanceof QueryCommand)) {
 				return true;
 			}
 			return false;
 		}
-    	if (root instanceof AccessNode) {
-			return false; //full pushdown
+    	if (node instanceof AccessNode) {
+			return false;
 		}
-		return transactionalReads; //embedded procedures are not detected
+		if (transactionalReads) {
+			return true;
+		}
+		if (node instanceof PlanExecutionNode) {
+			ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
+			return plan.requiresTransaction(transactionalReads);
+		}
+		for (RelationalNode child : node.getChildren()) {
+			if (child != null && requiresTransaction(transactionalReads, child)) {
+				return true;
+			}
+		}
+		return false;
     }
 	
 }

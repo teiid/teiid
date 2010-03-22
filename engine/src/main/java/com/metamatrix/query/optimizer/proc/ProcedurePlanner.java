@@ -53,6 +53,7 @@ import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.DynamicCommand;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
+import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.Block;
@@ -120,6 +121,9 @@ public final class ProcedurePlanner implements CommandPlanner {
         ProcedureContainer container = (ProcedureContainer)((CreateUpdateProcedureCommand) procCommand).getUserCommand();
         
         if (container != null) {
+        	if (container instanceof StoredProcedure) {
+        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
+        	}
             Map params = container.getProcedureParameters();
             plan.setParams(params);
             plan.setMetadata(metadata);
@@ -156,16 +160,13 @@ public final class ProcedurePlanner implements CommandPlanner {
     private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
-        Iterator stmtIter = block.getStatements().iterator();
-
         // Generate program and add instructions
         // this program represents the block on the procedure
         // instruction in the program would correspond to statements in the block
         Program programBlock = new Program();
 
 		// plan each statement in the block
-        while(stmtIter.hasNext()) {
-			Statement statement = (Statement) stmtIter.next();
+        for (Statement statement : block.getStatements()) {
 			Object instruction = planStatement(parentProcCommand, statement, metadata, debug, idGenerator, capFinder, analysisRecord, context);
 			//childIndex = ((Integer) array[0]).intValue();
             if(instruction instanceof ProgramInstruction){

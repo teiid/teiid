@@ -213,6 +213,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     
     public void setWorkManager(WorkManager mgr) {
     	this.dqpCore.setWorkManager(mgr);
+    	this.transactionServerImpl.setWorkManager(mgr);
     }
 	
 	public void setSessionService(SessionService service) {

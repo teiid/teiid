@@ -2135,6 +2135,8 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
         helpTestProcess(plan, 1, dataMgr);
+        
+        assertTrue(plan.requiresTransaction(false));
     }
     
     @Test public void testUpdateAssignmentNotExecutedVirtual() throws Exception {
@@ -2600,6 +2602,8 @@ public class TestProcedureProcessor {
                 Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
         };
         helpTestProcess(plan, expected, dataMgr);
+        
+        assertTrue(!plan.requiresTransaction(false));
     }
     
     /**

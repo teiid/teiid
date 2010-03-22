@@ -758,7 +758,7 @@ public class TestOptimizer {
 	@Test public void testQueryPhysical() { 
 		ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
-
+		assertTrue(!plan.requiresTransaction(true));
         checkNodeTypes(plan, FULL_PUSHDOWN);    
 	}
     

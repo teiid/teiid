@@ -44,12 +44,6 @@ public class TestWorkItemState extends TestCase {
 		}
 		
 		@Override
-		public void run() {
-			super.run();
-			workCompleted(null);
-		}
-		
-		@Override
 		protected boolean isDoneProcessing() {
 			return isDone;
 		}

@@ -27,6 +27,7 @@ import javax.transaction.TransactionManager;
 
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
+import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.core.util.SimpleMock;
 
 public class FakeTransactionService extends TransactionServerImpl {
@@ -34,6 +35,7 @@ public class FakeTransactionService extends TransactionServerImpl {
 	public FakeTransactionService() {
 		this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 		this.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
+		this.setWorkManager(new FakeWorkManager());
 	}
 	
 }

@@ -31,6 +31,7 @@ import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -86,7 +87,7 @@ public class TestRequest extends TestCase {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null,null,false, null, workContext, 101024, repo, false);
+        request.initialize(message, null, null,new FakeTransactionService(),false, null, workContext, 101024, repo, false);
         request.initMetadata();
         request.validateAccess(command);
     }
@@ -143,7 +144,7 @@ public class TestRequest extends TestCase {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(),  null, false, null, workContext,
+				new FakeDataManager(), new FakeTransactionService(), false, null, workContext,
 				101024, repo, false);
         
         request.processRequest();

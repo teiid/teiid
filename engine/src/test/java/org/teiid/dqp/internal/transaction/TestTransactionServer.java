@@ -35,12 +35,14 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 
+import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.dqp.service.TransactionContext;
 public class TestTransactionServer {
 
     private TransactionServerImpl server;
     private XATerminator xaTerminator;
     private TransactionManager tm;
+	private javax.transaction.Transaction txn;
     
     private static final String THREAD1 = "1"; //$NON-NLS-1$
     private static final String THREAD2 = "2"; //$NON-NLS-1$
@@ -56,10 +58,11 @@ public class TestTransactionServer {
         server = new TransactionServerImpl();
         xaTerminator = Mockito.mock(XATerminator.class);
         tm = Mockito.mock(TransactionManager.class);
-        javax.transaction.Transaction txn = Mockito.mock(javax.transaction.Transaction.class);
+        txn = Mockito.mock(javax.transaction.Transaction.class);
         Mockito.stub(tm.getTransaction()).toReturn(txn);
         server.setXaTerminator(xaTerminator);
         server.setTransactionManager(tm);
+        server.setWorkManager(new FakeWorkManager());
     }
 
     /**
@@ -166,15 +169,6 @@ public class TestTransactionServer {
         }
     }
 
-    @Test public void testLocalSetRollback() throws Exception {
-        TransactionContext tc = server.begin(THREAD1);
-        tc.setRollbackOnly();
-        
-        server.commit(THREAD1);
-        
-        Mockito.verify(tm).rollback();
-    }    
-    
     @Test public void testTwoPhaseCommit() throws Exception {
     	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
     	server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
@@ -296,12 +290,7 @@ public class TestTransactionServer {
     @Test public void testGlobalPrepareFail() throws Exception {
     	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         server.end(THREAD1, XID1, XAResource.TMFAIL, false);
-        
-    	try {
-			server.prepare(THREAD1, XID1, false);
-			fail("should have failed to prepare as end resulted in TMFAIL"); //$NON-NLS-1$
-		} catch (XATransactionException e) {
-		}
+        Mockito.verify(txn).setRollbackOnly();
     }    
     
     @Test public void testGlobalOnePhaseCommit() throws Exception {
@@ -395,7 +384,7 @@ public class TestTransactionServer {
         
         server.cancelTransactions(THREAD1, false);
         
-        Mockito.verify(tm).setRollbackOnly();
+        Mockito.verify(txn).setRollbackOnly();
     }  
     
     @Test public void testRequestCancel() throws Exception{
@@ -403,6 +392,6 @@ public class TestTransactionServer {
     	server.begin(tc);
     	
     	server.cancelTransactions(THREAD1, true);
-    	Mockito.verify(tm).setRollbackOnly();
+    	Mockito.verify(txn).setRollbackOnly();
     }      
 }

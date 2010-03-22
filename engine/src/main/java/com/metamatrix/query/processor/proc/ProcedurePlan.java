@@ -118,6 +118,8 @@ public class ProcedurePlan extends ProcessorPlan {
     private Stack<Program> programs = new Stack<Program>();
     
     private boolean evaluatedParams;
+    
+    private boolean requiresTransaction = true;
 
     /**
      * Constructor for ProcedurePlan.
@@ -328,6 +330,7 @@ public class ProcedurePlan extends ProcessorPlan {
         plan.setParams(params);
         plan.setImplicitParams(implicitParams);
         plan.setMetadata(metadata);
+        plan.requiresTransaction = requiresTransaction;
         return plan;
     }
 
@@ -625,9 +628,14 @@ public class ProcedurePlan extends ProcessorPlan {
         return programs.peek();
     }
     
+    public void setRequiresTransaction(boolean requiresTransaction) {
+		this.requiresTransaction = requiresTransaction;
+	}
+    
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
-    	return true;
+    	//TODO: detect simple select case
+    	return requiresTransaction || transactionalReads;
     }
     
 }

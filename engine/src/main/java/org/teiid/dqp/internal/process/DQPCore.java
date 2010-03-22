@@ -82,18 +82,21 @@ import com.metamatrix.query.tempdata.TempTableStoreImpl;
  */
 public class DQPCore implements DQP {
 	
-	private final static class FutureWork<T> implements Work, WorkListener {
-		private final ResultsReceiver<T> receiver;
+	public final static class FutureWork<T> implements Work, WorkListener {
 		private final Callable<T> toCall;
 		private DQPWorkContext workContext;
+		private ResultsFuture<T> result = new ResultsFuture<T>();
+		private ResultsReceiver<T> receiver = result.getResultsReceiver();
 
-		private FutureWork(ResultsReceiver<T> receiver,
-				Callable<T> processor) {
+		public FutureWork(Callable<T> processor) {
 			this.workContext = DQPWorkContext.getWorkContext();
-			this.receiver = receiver;
 			this.toCall = processor;
 		}
-
+		
+		public ResultsFuture<T> getResult() {
+			return result;
+		}
+		
 		@Override
 		public void run() {
 			try {
@@ -326,12 +329,8 @@ public class DQPCore implements DQP {
     }
     
     void addWork(Work work) {
-    	TransactionContext tc = null;
-    	if (work instanceof RequestWorkItem && this.transactionService != null) {
-    		tc = transactionService.getOrCreateTransactionContext(DQPWorkContext.getWorkContext().getConnectionID());
-    	}
     	try {
-			this.processWorkerPool.scheduleWork(work, tc, 0);
+			this.processWorkerPool.scheduleWork(work);
 		} catch (WorkException e) {
 			//TODO: cancel? close?
 			throw new MetaMatrixRuntimeException(e);
@@ -439,13 +438,11 @@ public class DQPCore implements DQP {
 	        }
         }
         
-        if (transactionService != null) {
-            try {
-                transactionService.cancelTransactions(sessionId, false);
-            } catch (XATransactionException err) {
-                LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
-            } 
-        }
+        try {
+            transactionService.cancelTransactions(sessionId, false);
+        } catch (XATransactionException err) {
+            LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
+        } 
         contextCache.removeSessionScopedCache(sessionId);
     }
 
@@ -542,16 +539,10 @@ public class DQPCore implements DQP {
 	}
     
 	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
-		if (this.transactionService == null) {
-			return Collections.emptyList();
-		}
 		return this.transactionService.getTransactions();
 	}
 	
 	public void terminateTransaction(String xid) throws AdminException {
-		if (this.transactionService == null) {
-			return;
-		}
 		this.transactionService.terminateTransaction(xid);
 	}	
 	
@@ -592,9 +583,6 @@ public class DQPCore implements DQP {
 	}
 
 	public TransactionService getTransactionService() {
-		if (transactionService == null) {
-			throw new MetaMatrixRuntimeException("Transactions are not enabled"); //$NON-NLS-1$
-		}
 		return transactionService;
 	}
 
@@ -741,14 +729,13 @@ public class DQPCore implements DQP {
 	}
 
 	private <T> ResultsFuture<T> addWork(Callable<T> processor) {
-		ResultsFuture<T> result = new ResultsFuture<T>();
-		ResultsReceiver<T> receiver = result.getResultsReceiver();
+		FutureWork<T> work = new FutureWork<T>(processor);
 		try {
-			this.workManager.scheduleWork(new FutureWork<T>(receiver, processor));
+			this.workManager.scheduleWork(work);
 		} catch (WorkException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
-		return result;
+		return work.getResult();
 	}
 	
 	// global txn
@@ -771,11 +758,17 @@ public class DQPCore implements DQP {
 		return addWork(processor);
 	}
 	// global txn
-	public ResultsFuture<?> start(XidImpl xid, int flags, int timeout)
+	public ResultsFuture<?> start(final XidImpl xid, final int flags, final int timeout)
 			throws XATransactionException {
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		this.getTransactionService().start(workContext.getConnectionID(), xid, flags, timeout, workContext.getSession().isEmbedded());
-		return ResultsFuture.NULL_FUTURE;
+		Callable<Void> processor = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+				getTransactionService().start(workContext.getConnectionID(), xid, flags, timeout, workContext.getSession().isEmbedded());
+				return null;
+			}
+		};
+		return addWork(processor);
 	}
 
 	public MetadataResult getMetadata(long requestID)
