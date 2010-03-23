@@ -22,17 +22,18 @@
 
 package com.metamatrix.common.types.basic;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.dom.DOMSource;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
-import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+import org.xml.sax.helpers.DefaultHandler;
 
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.common.types.StandardXMLTranslator;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
@@ -49,16 +50,24 @@ public class StringToSQLXMLTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-        String xml = (String)value;        
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();        
+        String xml = (String)value;
+        Reader reader = new StringReader(xml);
+        isXml(reader);
+        return new XMLType(new SQLXMLImpl(xml));
+	}
+
+	static void isXml(Reader reader) throws TransformationException {
+		SAXParserFactory spf = SAXParserFactory.newInstance();
         try{        
-             DocumentBuilder parser = factory.newDocumentBuilder();
-             Document doc = parser.parse(new InputSource(new StringReader(xml)));
-             StandardXMLTranslator sxt = new StandardXMLTranslator(new DOMSource(doc), null);
-             return new XMLType(new SQLXMLImpl(sxt.getString()));
-        }
-        catch (Exception e){
+             SAXParser sp = spf.newSAXParser();
+             sp.parse(new InputSource(reader), new DefaultHandler());
+        } catch (Exception e){
             throw new TransformationException(e, CorePlugin.Util.getString("invalid_string")); //$NON-NLS-1$
+        } finally {
+        	try {
+				reader.close();
+			} catch (IOException e) {
+			}
         }
 	}
 
@@ -66,16 +75,16 @@ public class StringToSQLXMLTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return String.class;
+	public Class<?> getSourceType() {
+		return DataTypeManager.DefaultDataClasses.STRING;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return XMLType.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.XML;
 	}
 	
 	@Override

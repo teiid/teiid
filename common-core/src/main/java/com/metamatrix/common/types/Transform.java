@@ -23,7 +23,6 @@
 package com.metamatrix.common.types;
 
 import com.metamatrix.core.CorePlugin;
-import com.metamatrix.core.util.HashCodeUtil;
 
 /**
  * This interface represents the transformation from one data type to
@@ -55,7 +54,7 @@ public abstract class Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public abstract Class getSourceType();
+	public abstract Class<?> getSourceType();
 
 	/**
 	 * Name of the source type.
@@ -69,7 +68,7 @@ public abstract class Transform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public abstract Class getTargetType();
+	public abstract Class<?> getTargetType();
 
 	/**
 	 * Name of the target type.
@@ -107,33 +106,6 @@ public abstract class Transform {
 		return getDisplayName();
 	}
 
-	/**
-	 * Override Object.hashCode() to build a hash based on types.
-	 * @return Hash code
-	 */
-	public int hashCode() {
-		return HashCodeUtil.hashCode( getSourceTypeName().hashCode(), getTargetTypeName().hashCode() );
-	}
-
-	/**
-	 * Override Object.equals() to build an equals based on src and tgt types.
-	 * @param obj Other object
-	 * @return True if obj==this
-	 */
-	public boolean equals(Object obj) {
-		if(this == obj) {
-			return true;
-		}
-
-		if(! this.getClass().isInstance(obj)) {
-			return false;
-		}
-
-		Transform other = (Transform) obj;
-		return other.getSourceType() == this.getSourceType() &&
-			   other.getTargetType() == this.getTargetType();
-	}
-	
 	protected void checkValueRange(Object value, Number min, Number max)
 			throws TransformationException {
 		if (((Comparable)value).compareTo(DataTypeManager.transformValue(min, getSourceType())) < 0 || ((Comparable)value).compareTo(DataTypeManager.transformValue(max, getSourceType())) > 0) {

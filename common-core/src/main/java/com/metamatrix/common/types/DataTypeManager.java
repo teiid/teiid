@@ -50,6 +50,8 @@ import javax.xml.transform.Source;
 import com.metamatrix.common.types.basic.AnyToObjectTransform;
 import com.metamatrix.common.types.basic.AnyToStringTransform;
 import com.metamatrix.common.types.basic.BooleanToNumberTransform;
+import com.metamatrix.common.types.basic.ClobToSQLXMLTransform;
+import com.metamatrix.common.types.basic.ClobToStringTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigDecimalTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigIntegerTransform;
 import com.metamatrix.common.types.basic.FloatingNumberToBigDecimalTransform;
@@ -63,6 +65,7 @@ import com.metamatrix.common.types.basic.NumberToIntegerTransform;
 import com.metamatrix.common.types.basic.NumberToLongTransform;
 import com.metamatrix.common.types.basic.NumberToShortTransform;
 import com.metamatrix.common.types.basic.ObjectToAnyTransform;
+import com.metamatrix.common.types.basic.SQLXMLToClobTransform;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
@@ -583,26 +586,6 @@ public class DataTypeManager {
 	 * set is always installed but may be overridden.
 	 */
 	static void loadBasicTransforms() {
-		DataTypeManager.addTransform(new NumberToBooleanTransform(BigDecimal.valueOf(0)));
-		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.BIG_DECIMAL));
-		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.BIG_DECIMAL, true));
-		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.BIG_DECIMAL, true));
-		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.BigDecimalToBigIntegerTransform());
-		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
-		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_DECIMAL));
-		
-		DataTypeManager.addTransform(new NumberToBooleanTransform(BigInteger.valueOf(0)));
-		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.BIG_INTEGER));
-		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.BIG_INTEGER, true));
-		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.BIG_INTEGER, true));
-		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.BIG_INTEGER, true, false));
-		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.BIG_INTEGER, true, false));
-		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.BIG_INTEGER, true, false));
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBigDecimalTransform());
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_INTEGER));
-
 		DataTypeManager.addTransform(new BooleanToNumberTransform(Byte.valueOf((byte)1), Byte.valueOf((byte)0)));
 		DataTypeManager.addTransform(new BooleanToNumberTransform(Short.valueOf((short)1), Short.valueOf((short)0)));
 		DataTypeManager.addTransform(new BooleanToNumberTransform(Integer.valueOf(1), Integer.valueOf(0)));
@@ -624,32 +607,17 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BYTE));
 
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.CHAR));
-
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.ClobToStringTransform());
-
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.DateToTimestampTransform());
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DATE));
-
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Double.valueOf(0)));
-		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.DOUBLE));
-		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.DOUBLE, true));
-		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.DOUBLE, true));
-		DataTypeManager.addTransform(new NumberToLongTransform(	DefaultDataClasses.DOUBLE, false, true)); //lossy, but not narrowing
-		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.DOUBLE));
-		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.DOUBLE, true, false));
-		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.DOUBLE));
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DOUBLE));
-
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(0)));
-		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.FLOAT));
-		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.FLOAT, true));
-		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.FLOAT, true));
-		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.FLOAT, false, true)); //lossy, but not narrowing
-		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.FLOAT));
-		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.FLOAT, false, false));
-		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.FLOAT));
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.FLOAT));
-
+		
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.SHORT));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.SHORT, false));
+		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.SHORT, false, false));
+		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.SHORT));
+		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.SHORT, false, false));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.SHORT, false, false));
+		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.SHORT));
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.SHORT));
+		
 		DataTypeManager.addTransform(new NumberToBooleanTransform(Integer.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.INTEGER));
 		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.INTEGER, true));
@@ -669,16 +637,56 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.LONG, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.LONG));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.LONG));
-				
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)0)));
-		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.SHORT));
-		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.SHORT, false));
-		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.SHORT, false, false));
-		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.SHORT));
-		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.SHORT, false, false));
-		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.SHORT, false, false));
-		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.SHORT));
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.SHORT));
+
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigInteger.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.BIG_INTEGER));
+		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.BIG_INTEGER, true, false));
+		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.BIG_INTEGER, true, false));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.BIG_INTEGER, true, false));
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBigDecimalTransform());
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_INTEGER));
+
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigDecimal.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.BIG_DECIMAL));
+		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.BigDecimalToBigIntegerTransform());
+		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_DECIMAL));
+		
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.FLOAT));
+		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.FLOAT, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.FLOAT, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(DefaultDataClasses.FLOAT, false, true)); //lossy, but not narrowing
+		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.FLOAT));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.FLOAT, false, false));
+		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.FLOAT));
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.FLOAT));
+
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Double.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.DOUBLE));
+		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.DOUBLE, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.DOUBLE, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(	DefaultDataClasses.DOUBLE, false, true)); //lossy, but not narrowing
+		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.DOUBLE));
+		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.DOUBLE, true, false));
+		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.DOUBLE));
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DOUBLE));
+
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.DateToTimestampTransform());
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DATE));
+
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimeToTimestampTransform());
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.TIME));
+
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimestampToTimeTransform());
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimestampToDateTransform());
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.TIMESTAMP));
 
 		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.StringToBooleanTransform());
 		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.StringToByteTransform());
@@ -696,14 +704,11 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.StringToClobTransform());
 		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.StringToSQLXMLTransform());
 		
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.SQLXMLToStringTransform());
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.ClobToStringTransform());
+		DataTypeManager.addTransform(new ClobToSQLXMLTransform());
 
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimestampToTimeTransform());
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimestampToDateTransform());
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.TIMESTAMP));
-		
-		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.TimeToTimestampTransform());
-		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.TIME));
+		DataTypeManager.addTransform(new com.metamatrix.common.types.basic.SQLXMLToStringTransform());		
+		DataTypeManager.addTransform(new SQLXMLToClobTransform());		
 		
 		for (Class<?> type : getAllDataTypeClasses()) {
 			if (type != DefaultDataClasses.OBJECT) {

@@ -25,7 +25,6 @@ package com.metamatrix.common.types;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
@@ -45,7 +44,7 @@ import com.metamatrix.core.CorePlugin;
  * of the Clob data. Connectors can use this object when dealing with large
  * objects.
  */
-public class ClobImpl implements Clob {
+public class ClobImpl extends BaseLob implements Clob {
     
 	private final static class ClobStreamProvider implements
 			LobSearchUtil.StreamProvider {
@@ -66,7 +65,6 @@ public class ClobImpl implements Clob {
 		}
 	}
 
-	private final InputStreamFactory streamFactory;
 	private long len;
 	
 	/**
@@ -76,7 +74,7 @@ public class ClobImpl implements Clob {
 	 * @param length
 	 */
     public ClobImpl(InputStreamFactory streamFactory, long length) {
-		this.streamFactory = streamFactory;
+		super(streamFactory);
 		this.len = length;
 	}
 
@@ -89,21 +87,6 @@ public class ClobImpl implements Clob {
      */
     public InputStream getAsciiStream() throws SQLException {
     	return new ReaderInputStream(getCharacterStream(), Charset.forName("US-ASCII")); //$NON-NLS-1$
-    }
-
-    /**
-     * Gets the <code>CLOB</code> value designated by this <code>Clob</code>
-     * object as a Unicode stream.
-     * @return a Unicode stream containing the <code>CLOB</code> data
-     * @exception SQLException if there is an error accessing the
-     * <code>CLOB</code> value
-     */
-    public Reader getCharacterStream() throws SQLException {
-        try {
-			return new InputStreamReader(this.streamFactory.getInputStream(), this.streamFactory.getEncoding());
-		} catch (IOException e) {
-			throw new SQLException(e);
-		}
     }
 
     /**
@@ -214,10 +197,6 @@ public class ClobImpl implements Clob {
     	return position(new SerialClob(searchstr.toCharArray()), start);
     }
     	    
-	public void free() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
-	
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}

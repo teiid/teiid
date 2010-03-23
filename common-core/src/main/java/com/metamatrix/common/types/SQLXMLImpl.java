@@ -25,11 +25,9 @@ package com.metamatrix.common.types;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
@@ -38,44 +36,33 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 
 /** 
  * Default SQLXML impl
  */
-public class SQLXMLImpl implements SQLXML {
-    
-    private InputStreamFactory streamFactory;
+public class SQLXMLImpl extends BaseLob implements SQLXML {
     
     /**
      * Constructs a SQLXML from bytes that are already encoded in {@link Streamable#ENCODING}
      * @param bytes
      */
     public SQLXMLImpl(final byte[] bytes) {
-    	setStreamFactory(bytes);
-    }
-
-	private void setStreamFactory(final byte[] bytes) {
-		this.streamFactory = new InputStreamFactory(Streamable.ENCODING) {
+    	super(new InputStreamFactory(Streamable.ENCODING) {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new ByteArrayInputStream(bytes);
 			}
-		};
+		});
 	}
     
     public SQLXMLImpl(final String str) {
-    	try {
-			setStreamFactory(str.getBytes(Streamable.ENCODING));
-		} catch (UnsupportedEncodingException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
+		this(str.getBytes(Charset.forName(Streamable.ENCODING)));
     }
     
     public SQLXMLImpl(InputStreamFactory factory) {
-        this.streamFactory = factory;
+        super(factory);
     }
     
     @SuppressWarnings("unchecked")
@@ -86,35 +73,9 @@ public class SQLXMLImpl implements SQLXML {
         throw new SQLException("Unsupported source type " + sourceClass); //$NON-NLS-1$
     }
 
-    public Reader getCharacterStream() throws SQLException {
-    	if (this.streamFactory == null) {
-    		throw new SQLException("SQLXML already freed"); //$NON-NLS-1$ 
-    	}
-    	try {
-			return new InputStreamReader(this.streamFactory.getInputStream(), this.streamFactory.getEncoding());
-		} catch (IOException e) {
-			SQLException ex = new SQLException(e.getMessage());
-			ex.initCause(e);
-			throw ex;
-		}
-    }
-
-    public InputStream getBinaryStream() throws SQLException {
-    	if (this.streamFactory == null) {
-    		throw new SQLException("SQLXML already freed"); //$NON-NLS-1$
-    	}
-        try {
-			return this.streamFactory.getInputStream();
-		} catch (IOException e) {
-			SQLException ex = new SQLException(e.getMessage());
-			ex.initCause(e);
-			throw ex;
-		}
-    }
-
     public String getString() throws SQLException {
         try {
-            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), this.streamFactory.getEncoding());
+            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), this.getStreamFactory().getEncoding());
         } catch (IOException e) {
 			SQLException ex = new SQLException(e.getMessage());
 			ex.initCause(e);
@@ -141,19 +102,6 @@ public class SQLXMLImpl implements SQLXML {
             throw new RuntimeException(e);
         }
     }
-
-	public void free() throws SQLException {
-		if (this.streamFactory != null) {
-			try {
-				this.streamFactory.free();
-				this.streamFactory = null;
-			} catch (IOException e) {
-				SQLException ex = new SQLException(e.getMessage());
-				ex.initCause(e);
-				throw ex;
-			}
-		}
-	}
 
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {

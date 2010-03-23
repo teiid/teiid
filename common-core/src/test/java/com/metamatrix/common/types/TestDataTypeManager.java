@@ -161,7 +161,7 @@ public class TestDataTypeManager {
         assertEquals(DataTypeManager.DefaultDataClasses.DATE, t.getTargetType());
         
         t = DataTypeManager.getTransform(DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        
+       
         assertEquals(DataTypeManager.DefaultDataClasses.TIMESTAMP, t.getTargetType());
     }
     
@@ -215,6 +215,11 @@ public class TestDataTypeManager {
     			DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
     			DataTypeManager.DefaultDataTypes.STRING, 
     			DataTypeManager.DefaultDataTypes.OBJECT), DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER));
+    }
+    
+    @SuppressWarnings("unchecked")
+	@Test(expected=TransformationException.class) public void testStringToXML() throws Exception {
+    	DataTypeManager.transformValue("hello", DataTypeManager.DefaultDataClasses.XML); //$NON-NLS-1$
     }
 	
 }

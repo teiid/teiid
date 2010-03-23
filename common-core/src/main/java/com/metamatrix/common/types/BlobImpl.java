@@ -41,31 +41,14 @@ import com.metamatrix.core.CorePlugin;
  * of the blob data. Connectors can use this object when dealing with large
  * objects.
  */
-public class BlobImpl implements Blob, StreamProvider {
-
-	private InputStreamFactory streamFactory;
+public class BlobImpl extends BaseLob implements Blob, StreamProvider {
     
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
      * @param valueID reference to value chunk in data source.
      */
     public BlobImpl(InputStreamFactory streamFactory) {
-    	this.streamFactory = streamFactory;
-    }
-
-    /**
-     * Retrieves the <code>BLOB</code> designated by this
-     * <code>Blob</code> instance as a stream.
-     * @return a stream containing the whole or part of the <code>BLOB</code> data
-     * @exception SQLException if there is an error accessing the
-     * <code>BLOB</code>
-     */
-    public InputStream getBinaryStream() throws SQLException {
-        try {
-			return streamFactory.getInputStream();
-		} catch (IOException e) {
-			throw new SQLException(e);
-		}
+    	super(streamFactory);
     }
 
     /**
@@ -122,14 +105,14 @@ public class BlobImpl implements Blob, StreamProvider {
      * @return length of the <code>BLOB</code> in bytes
      */
     public long length() throws SQLException{
-    	if (streamFactory.getLength() == -1) {
+    	if (getStreamFactory().getLength() == -1) {
     		InputStream is = new BufferedInputStream(getBinaryStream());
 			try {
 	    		long length = 0;
 	    		while (is.read() != -1) {
 	    			length++;
 	    		}
-				streamFactory.setLength(length);
+				getStreamFactory().setLength(length);
 			} catch (IOException e) {
 				throw new SQLException(e);
 			} finally {
@@ -139,7 +122,7 @@ public class BlobImpl implements Blob, StreamProvider {
 				}
 			}
     	}
-        return streamFactory.getLength();
+        return getStreamFactory().getLength();
     }
 
     /**
@@ -187,10 +170,6 @@ public class BlobImpl implements Blob, StreamProvider {
         return position(new SerialBlob(pattern), start);
     }
         
-	public void free() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
-
 	public InputStream getBinaryStream(long arg0, long arg1)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();

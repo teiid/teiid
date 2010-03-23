@@ -342,12 +342,12 @@
           <row>
             <entry>clob</entry>
             <entry></entry>
-            <entry>string</entry>
+            <entry>string, xml</entry>
           </row>
           <row>
             <entry>xml</entry>
             <entry></entry>
-            <entry>string</entry>
+            <entry>string, clob</entry>
           </row>
         </tbody>
       </tgroup>

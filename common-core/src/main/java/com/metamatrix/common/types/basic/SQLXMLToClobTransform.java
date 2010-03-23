@@ -39,16 +39,16 @@ import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.ReaderInputStream;
 import com.metamatrix.core.CorePlugin;
 
-public class ClobToSQLXMLTransform extends Transform {
+public class SQLXMLToClobTransform extends Transform {
 
 	@Override
 	public Class<?> getSourceType() {
-		return DataTypeManager.DefaultDataClasses.CLOB;
+		return DataTypeManager.DefaultDataClasses.XML;
 	}
 	
 	@Override
 	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.XML;
+		return DataTypeManager.DefaultDataClasses.CLOB;
 	}
 	
     /**
@@ -60,15 +60,14 @@ public class ClobToSQLXMLTransform extends Transform {
      * the transformation fails
      */
     public Object transformDirect(Object value) throws TransformationException {
-        final ClobType source = (ClobType)value;
+        final XMLType source = (XMLType)value;
         
         try {
-            StringToSQLXMLTransform.isXml(source.getCharacterStream());
-            if (source.getReference() instanceof ClobImpl) {
-            	ClobImpl clob = (ClobImpl)source.getReference();
-            	return new XMLType(new SQLXMLImpl(clob.getStreamFactory()));
+            if (source.getReference() instanceof SQLXMLImpl) {
+            	SQLXMLImpl xml = (SQLXMLImpl)source.getReference();
+            	return new ClobType(new ClobImpl(xml.getStreamFactory(), -1));
             } 
-            return new XMLType(new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
+            return new ClobType(new ClobImpl(new InputStreamFactory(Streamable.ENCODING) {
             	@Override
             	public InputStream getInputStream() throws IOException {
             		try {
@@ -77,7 +76,7 @@ public class ClobToSQLXMLTransform extends Transform {
 						throw new IOException(e);
 					}
             	}
-            }));
+            }, -1));
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
         } 

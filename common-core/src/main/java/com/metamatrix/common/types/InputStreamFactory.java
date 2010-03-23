@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 
 import javax.xml.transform.Source;
 
+//TODO: add support for Readers
 public abstract class InputStreamFactory implements Source {
 	
 	private String encoding;
