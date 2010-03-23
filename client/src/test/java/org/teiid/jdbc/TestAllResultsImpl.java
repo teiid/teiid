@@ -914,7 +914,7 @@ public class TestAllResultsImpl {
 		assertEquals(TimestampUtil.createTime(0, 0, 0), rs.getTime(2)); 
 		assertEquals(TimestampUtil.createDate(1, 1, 1), rs.getDate(3));
 		assertEquals(TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), rs.getTimestamp(4));
-		assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>", rs.getSQLXML(5).getString()); //$NON-NLS-1$
+		assertEquals("<root/>", rs.getSQLXML(5).getString()); //$NON-NLS-1$
 		try {
 			rs.getSQLXML(1);
 		} catch (SQLException e) {

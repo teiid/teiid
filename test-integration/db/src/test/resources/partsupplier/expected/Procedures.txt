@@ -1,4 +1,0 @@
-PROCEDURE_CAT[string]	PROCEDURE_SCHEM[string]	PROCEDURE_NAME[string]	RESERVED_1[string]	RESERVED_2[string]	RESERVED_3[string]	REMARKS[string]	PROCEDURE_TYPE[short]	SPECIFIC_NAME[string]
-PartsSupplier	System	getBinaryVDBResource	null	null	null	null	2	getBinaryVDBResource
-PartsSupplier	System	getCharacterVDBResource	null	null	null	null	2	getCharacterVDBResource
-PartsSupplier	System	getVDBResourcePaths	null	null	null	null	2	getVDBResourcePaths

@@ -8,8 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.jdbc.api.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;

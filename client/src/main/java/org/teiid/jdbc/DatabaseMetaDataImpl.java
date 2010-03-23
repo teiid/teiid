@@ -69,7 +69,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     // constant value giving extra name characters used in Identifiers
     private final static String EXTRA_CHARS = ".@"; //$NON-NLS-1$
     // constant value giving the key words not in SQL-92
-    private final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG"; //$NON-NLS-1$
+    final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG, BIGDECIMAL"+ //$NON-NLS-1$
+	", BIGDECIMAL, BIGINTEGER, BREAK, BYTE, CRITERIA, ERROR, FN, LONG, LOOP, MAKEDEP, MAKENOTDEP"+ //$NON-NLS-1$
+	", NOCACHE, OJ, PLANONLY, SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH"+ //$NON-NLS-1$
+    ", SQL_TSI_QUARTER, SQL_TSI_YEAR, STRING, VIRTUAL, WHILE"; //$NON-NLS-1$
     // constant value giving preferred name for a procedure
     private final static String PROCEDURE_TERM = "StoredProcedure"; //$NON-NLS-1$
     // constant value giving the names of numeric functions supported
@@ -196,9 +199,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(", convert(decodeString(DataType, '").append(TYPE_MAPPING).append("', ','), short) AS DATA_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", DataType AS TYPE_NAME") //$NON-NLS-1$
         .append(", CASE WHEN (DataType IN (").append(DATATYPES_WITH_NO_PRECISION) //$NON-NLS-1$
-        .append(")) THEN CASE WHEN ElementLength <= 0 THEN convert(decodeString(DataType,'").append(PRECISION_MAPPING) //$NON-NLS-1$
-        .append("',','), integer) ELSE ElementLength END ELSE CASE WHEN Precision <= 0 THEN convert(decodeString(DataType,'") //$NON-NLS-1$
-        .append(PRECISION_MAPPING).append("',','), integer) ELSE Precision END END AS COLUMN_SIZE") //$NON-NLS-1$
+        .append(")) THEN CASE WHEN Length <= 0 THEN convert(decodeString(DataType,'").append(PRECISION_MAPPING) //$NON-NLS-1$
+        .append("',','), integer) ELSE Length END ELSE CASE WHEN e.Precision <= 0 THEN convert(decodeString(DataType,'") //$NON-NLS-1$
+        .append(PRECISION_MAPPING).append("',','), integer) ELSE e.Precision END END AS COLUMN_SIZE") //$NON-NLS-1$
         .append(", NULL AS BUFFER_LENGTH, Scale AS DECIMAL_DIGITS, Radix AS NUM_PREC_RADIX") //$NON-NLS-1$
         .append(", convert(decodeString(NullType, '").append(NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", Description AS REMARKS, DefaultValue AS COLUMN_DEF, NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB") //$NON-NLS-1$
@@ -252,8 +255,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(", ProcedureName AS PROCEDURE_NAME, p.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", convert(decodeString(TYPE, '").append(PARAM_DIRECTION_MAPPING).append("', ','), short) AS COLUMN_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", convert(decodeString(DataType, '").append(TYPE_MAPPING).append("', ','), integer) AS DATA_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(", DataType AS TYPE_NAME, CASE WHEN Precision <= 0 THEN convert(decodeString(DataType,'").append(PRECISION_MAPPING) //$NON-NLS-1$
-        .append("',','), integer) ELSE Precision END AS PRECISION, CASE WHEN TypeLength <= 0 THEN convert(decodeString(DataType,'") //$NON-NLS-1$
+        .append(", DataType AS TYPE_NAME, CASE WHEN p.Precision <= 0 THEN convert(decodeString(DataType,'").append(PRECISION_MAPPING) //$NON-NLS-1$
+        .append("',','), integer) ELSE p.Precision END AS \"PRECISION\", CASE WHEN TypeLength <= 0 THEN convert(decodeString(DataType,'") //$NON-NLS-1$
         .append(PRECISION_MAPPING).append("',','), integer) ELSE TypeLength END AS LENGTH, convert(Scale, short) AS SCALE") //$NON-NLS-1$
         .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
         .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
@@ -320,13 +323,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * <p>Checks whether the current user can use SELECT statement with all of the
-     * tables returned by the method getTables. Selectability is column level in
-     * metamatrix, hence return true</p>
-     * @return true if tables are selectable else return false
-     * @throws SQLException. Should never occur.
-     */
     public boolean allTablesAreSelectable() throws SQLException {
         return true;
     }
@@ -436,13 +432,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, metadataList);
     }
 
-    /**
-     * <p>Gets the catalog names available to metamatrix. The results are ordered by
-     * catalog name. There is no concept of catalogs in a metamatrix driver and this
-     * returns an empty resultSet.
-     * @return ResultSet object containing metadata info of the catalog on this connection.
-     * @throws SQLException if there is an error obtaining server results
-     */
     public ResultSet getCatalogs() throws SQLException {
         // list containing records/rows in the ResultSet
         List records = new ArrayList (0);
@@ -512,13 +501,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return EMPTY_STRING;
     }
 
-    /**
-     * <p>Get the metamatrix term for catalog
-     * @return String representing catalog name
-     * @throws SQLException, should never occur.
-     */
     public String getCatalogTerm() throws SQLException {
-        return EMPTY_STRING;
+        return "VirtualDatabase"; //$NON-NLS-1$
     }
 
     /**
@@ -759,22 +743,12 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return this.driverConnection.getDatabaseName();
     }
 
-    /**
-     * <p>Gets the version of metamatrix server to which this driver connects
-     * @return String representing the product version
-     * @throws SQLException if there is an error accessing product release info.
-     */
     public String getDatabaseProductVersion() throws SQLException {
         return TeiidDriver.getInstance().getMajorVersion() + "." + TeiidDriver.getInstance().getMinorVersion(); //$NON-NLS-1$
     }
 
-    /**
-     * <p>Gets metamatrix default transaction isolation level.
-     * @return intvalue giving the transaction isolation level
-     * @throws SQLException never
-     */
     public int getDefaultTransactionIsolation() throws SQLException {
-        return Connection.TRANSACTION_NONE;
+        return ConnectionImpl.DEFAULT_ISOLATION;
     }
 
     /**
@@ -1065,39 +1039,18 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return NO_LIMIT;
     }
 
-    /**
-     * <p>Gets the maximum number of columns allowed in a table
-     * @return int gives maximum columns in a table.
-     * @throws SQLException, should never occur
-     */
     public int getMaxColumnsInTable() throws SQLException {
         return NO_LIMIT;
     }
 
-    /**
-     * <p>Gets the maximum number of active connections to metamatrix that can be
-     * maintained through this driver instance
-     * @return int gives maximum connections.
-     * @throws SQLException, should never occur
-     */
     public int getMaxConnections() throws SQLException {
         return NO_LIMIT;
     }
 
-    /**
-     * <p>Gets the maximum number of characters allowed in a cursor name
-     * @return int gives maximum max charachters allowed in a cursor name.
-     * @throws SQLException, should never occur
-     */
     public int getMaxCursorNameLength() throws SQLException {
         return NO_LIMIT;
     }
 
-    /**
-     * <p>Gets the maximum number of bytes allowed in an index
-     * @return int gives maximum bytes.
-     * @throws SQLException, should never occur
-     */
     public int getMaxIndexLength() throws SQLException {
         return NO_LIMIT;
     }
@@ -1175,26 +1128,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return MAX_USER_NAME_LENGTH;
     }
 
-    /**
-     * <p>Gets the OPEN GROUP CLI names of metamatrix math functions
-     * @return string giving numeric functions supported.
-     * @throws SQLException, should never occur
-     */
     public String getNumericFunctions() throws SQLException {
         return NUMERIC_FUNCTIONS;
     }
 
-    /**
-     * <p>Get's a description of the primary key columns in a table. The descriptions
-     * are ordered by column name. Catalog and schema names are not used to narrow
-     * down the search, but they should match the virtualdatabasename and version
-     * used to obtain this driver connection.
-     * @param name of the catalog which contains the given table.
-     * @param schema name which contains the given table.
-     * @param table name which contains the primary keys.
-     * @return ResultSet object containing primary keys of the given table.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         if (catalog == null) {
             catalog = PERCENT;
@@ -1251,18 +1188,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * <p>Gets a description of the input, output and results associated with certain
-     * stored procedures matching the given procedureNamePattern. Catalog and
-     * schema names are not used to narrow down the search, but they should match
-     * the virtualdatabasename and version used to obtain this driver connection.</p>
-     * @param name of the catalog the procedure is present in.
-     * @param pattern of schama name the procedure is present in.
-     * @param pattern which is to be matched by the procedureNames.
-     * @param pattern to be matched by the column names.
-     * @return ResultSet containing the metadata info for procedure parameters.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern) throws SQLException {
         if (catalog == null) {
             catalog = PERCENT;
@@ -1321,17 +1246,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * <p>Gets description of all the available stored procedures whose names match
-     * the given pattern. Catalog and schemaPattern are not used to narrow down
-     * the search, but they should match the virtualdatabasename and version used
-     * to obtain this driver connection.
-     * @param name of the catalog.
-     * @param name of the schema.
-     * @param pattern which is to be matched by the procedureNames.
-     * @return ResultSet object which gives the metadata information about procedures.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern) throws SQLException {
 	    if (catalog == null) {
 	    	catalog = PERCENT;
@@ -1390,31 +1304,14 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * <p>Gets MetaMatrix's preferred term for procedures
-     * @return String representing metamatrix procedure term.
-     * @throws SQLException, should never occur
-     */
     public String getProcedureTerm() throws SQLException {
         return PROCEDURE_TERM;
     }
 
-    /**
-     * <p>Gets the schema names available for this connection. The results are ordered
-     * by schema name. Schema information retreived only for the schema to which
-     * used in obtaining this driver connection.
-     * @return ResultsSet object containing schema and catalog names.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getSchemas() throws SQLException {
     	return getSchemas(null, null);
     }
 
-    /**
-     * <p>Gets MetaMatrix's preferred term for schema
-     * @return String object giving schema term
-     * @throws SQLException, should never occur
-     */
     public String getSchemaTerm() throws SQLException {
         return SCHEMA_TERM;
     }
@@ -1429,11 +1326,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return ESCAPE_SEARCH_STRING;
     }
 
-    /**
-     * <p>Get metamatrix keywords that are not SQL-92 keyword
-     * @return String object giving non SQL-92 keywords
-     * @throws SQLException, should never occur
-     */
     public String getSQLKeywords() throws SQLException {
         return KEY_WORDS;
     }
@@ -1448,11 +1340,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return 2;
     }
 
-    /**
-     * <p>Gets the Open Group CLI names for metamatrix string functions
-     * @return String containing string function names
-     * @throws SQLException, should never occur
-     */
     public String getStringFunctions() throws SQLException {
         return STRING_FUNCTIONS;
     }
@@ -1541,26 +1428,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, metadataList);
     }
 
-    /**
-     * <p>Gets the Open Group CLI names for metamatrix system functions
-     * @return String containing system function names
-     * @throws SQLException, should never occur
-     */
     public String getSystemFunctions() throws SQLException {
-        return SYSTEM_FUNCTIONS; // there are no system functions
+        return SYSTEM_FUNCTIONS; 
     }
 
-    /**
-     * <p>Gets a description of access rights for the table of the given name.
-     * <p>Catalog and schemaPattern are not used to narrow down the search, but they
-     * should match the virtualdatabasename and version used to obtain this driver
-     * connection.
-     * @param name of the catalog the table is present in.
-     * @param pattern of schama name the table is present in.
-     * @param pattern of table names whose privilage info is needed.
-     * @return ResultSet containing table privilages info.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableName) throws SQLException {
         List records = new ArrayList (0);
         /***********************************************************************
@@ -1587,20 +1458,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         
     }
 
-    /**
-     * <p>Gets a description of tables whose table name matches tableNamePattern.
-     * <p>Catalog, schemaPattern and types[] are not used to narrow down the search,
-     * but catalog and schemaPattern should match the virtualdatabasename and
-     * version respectively used to obtain this driver connection.
-     * Note:
-     * supports 1.4 API
-     * @param name of the catalog in which tables are present.
-     * @param pattern of schema names which in which the tables are present.
-     * @param pattern of tables names.
-     * @param list of possible table types.
-     * @return ResultSet containing Table metadata information.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[]) throws SQLException {
         if (catalog == null) {
         	catalog = PERCENT;
@@ -1698,12 +1555,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * <p>Gets the table types available to metamatrix. The results are ordered by
-     * table type
-     * @return ResultSet object containing hardcoded table type info.
-     * @throws SQLException, should never occur.
-     */
     public ResultSet getTableTypes() throws SQLException {
 
         // list which represent records containing Table Type info
@@ -1733,20 +1584,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, metadataList);
     }
 
-    /**
-     * <p>Gets the Open Group CLI names for metamatrix time and date functions
-     * @return String representing time and date functions in MetaMatrix
-     * @throws SQLException, should never occur
-     */
     public String getTimeDateFunctions() throws SQLException {
         return DATE_FUNCTIONS;
     }
 
-    /**
-     * <p>Gets the description of all datatypes supported by metamatrix.
-     * @return ResultSet object containing info about the datatypes supported by MetaMatrix.
-     * @throws SQLException if there is an error obtaining metamatrix results.
-     */
     public ResultSet getTypeInfo() throws SQLException {
 
         // list which represent records containing data type info
@@ -1847,19 +1688,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createEmptyResultSet(columnNames, dataTypes);
     }
     
-    /**
-     * <p>Gets the URL used to connect to metamatrix
-     * @return URL used to connect.
-     * @throws SQLException
-     */
     public String getURL() throws SQLException {
         return driverConnection.getUrl();
     }
 
-    /**
-     * <p>Gets the user name as known to metamatrix
-     * @return name if the user.
-     */
     public String getUserName() throws SQLException {
         return driverConnection.getUserName();
     }
@@ -1906,11 +1738,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Checks whether the databases used by metamatrix are in read-only mode</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean isReadOnly() throws SQLException {
         return false;
     }
@@ -2038,113 +1865,46 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case unquoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them as all lowercase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesLowerCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case quoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them as all lowercase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case unquoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them as all mixedcase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesMixedCaseIdentifiers() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case quoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them in mixedcase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case unquoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them as all uppercase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesUpperCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>This method checks whether metamatrix treats mixed-case quoted SQL identifiers
-     * used in SQL statements as case-insensitive and stores them as all uppercase
-     * in its metadata tables.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ALTER TABLE with add column.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsAlterTableWithAddColumn() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ALTER TABLE with drop column.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsAlterTableWithDropColumn() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ANSI-92 entry level SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsANSI92EntryLevelSQL() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ANSI-92 full SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsANSI92FullSQL() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ANSI-92 intermediate SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsANSI92IntermediateSQL() throws SQLException {
         return false;
     }
@@ -2158,84 +1918,34 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a catalog name in a data manipulation
-     * statement.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCatalogsInDataManipulation() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a catalog name in an index definition
-     * statement.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a catalog name in a privilage
-     * definition statement.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a catalog name in a procedure call
-     * statement.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCatalogsInProcedureCalls() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a catalog name in a table definition
-     * statement.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCatalogsInTableDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports column aliasing. If true the SQL AS clause
-     * can be used to provide names for alias names for columns.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsColumnAliasing() throws SQLException {
         return true;
-   }
+    }
 
-    /**
-     * <p>Checks whether metamatrix supports scalar function CONVERT for the conversion
-     * of one JDBC type to another.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsConvert() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports scalar function CONVERT for the conversion
-     * of fromType to toType.</p>
-     * @param fromType SQL type from which to convert
-     * @param toType SQL type to convert to
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsConvert(int fromType, int toType) throws SQLException {
     	String fromName = MMJDBCSQLTypeInfo.getTypeName(fromType);
     	String toName = MMJDBCSQLTypeInfo.getTypeName(toType);
@@ -2249,77 +1959,34 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     	return DataTypeManager.isTransformable(fromName, toName);
     }
 
-    /**
-     * <p>Checks whether metamatrix supports correlated subqueries.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCorrelatedSubqueries() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ODBC Core SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsCoreSQLGrammar() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatric supports both data definition and data manipulation
-     * statements within a transaction.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsDataDefinitionAndDataManipulationTransactions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Are only data manipulation statements within a transaction
-     * supported?</p>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
     public boolean supportsDataManipulationTransactionsOnly() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatric supports only data manipulation statements within
-     * a transaction.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsDifferentTableCorrelationNames() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports expressions in ORDER BY lists.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsExpressionsInOrderBy() throws SQLException {
-        return false;
+        return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports ODBC Extended SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsExtendedSQLGrammar() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports full outer joins</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsFullOuterJoins() throws SQLException {
         return true;
     }
@@ -2335,67 +2002,30 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports GROUP BY</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsGroupBy() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether a GROUP BY clause can use columns that are not in the SELECT
-     * clause, provided that it specifies all the columns in the SELECT clause.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsGroupByBeyondSelect() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether a GROUP BY clause can use columns that are not in the SELECT
-     * clause.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsGroupByUnrelated() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports the SQL Integrity Enhancement Facility.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsIntegrityEnhancementFacility() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports specifying a LIKE escape clause.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsLikeEscapeClause() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix provides limited support for outer joins.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsLimitedOuterJoins() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports the ODBC minimum SQL grammer.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsMinimumSQLGrammar() throws SQLException {
         return true;
     }
@@ -2420,11 +2050,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports having cursors open across commits.
-     * @return if so return true, else false.</p>
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOpenCursorsAcrossCommit() throws SQLException {
         return false;
     }
@@ -2457,47 +2082,22 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * Retrieves whether metamatrix supports named parameters to callable statements.
-     * @return boolean true if named parameters are supported; false otherwise.
-     * @throws SQLException, should never occur
-     */
     public boolean supportsNamedParameters() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports defining columns as nonnullable.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsNonNullableColumns() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports having cursors open across rollbacks.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOpenCursorsAcrossRollback() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports having cursors open across commits.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOpenStatementsAcrossCommit() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports having cursors open across rollbacks.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOpenStatementsAcrossRollback() throws SQLException {
         return true;
     }
@@ -2511,42 +2111,18 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports some form of outer joins.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOuterJoins() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports positioned DELETEs on resultsets</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsPositionedDelete() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports positioned UPDATEs on result sets.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsPositionedUpdate() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Does the database support the concurrency type in combination
-     * with the given result set type?</p>
-     * @param type defined in <code>java.sql.ResultSet</code>
-     * @param concurrency type defined in <code>java.sql.ResultSet</code>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     * @see Connection
-     */
     public boolean supportsResultSetConcurrency(int type, int concurrency)
       throws SQLException {
         if(type == java.sql.ResultSet.TYPE_FORWARD_ONLY || type == java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE) {
@@ -2586,200 +2162,86 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * Retrieves whether metamatrix supports savepoints.
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSavepoints() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a schema name in a data manipulation
-     * statement</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSchemasInDataManipulation() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a schema name in an index definition
-     * statement</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSchemasInIndexDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a schema name in a privilage
-     * definition statement</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a schema name in an procedure
-     * call statement</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSchemasInProcedureCalls() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports using a schema name in an table
-     * definition statement</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSchemasInTableDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports SELECT FOR UPDATE statements</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSelectForUpdate() throws SQLException {
         return false;
     }
 
-    /**
-     * Retrieves whether this metamatrix supports statement pooling.
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsStatementPooling() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports stored procedure calls using the stored
-     * procedure escape syntax</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsStoredProcedures() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports subqueries in comparision expressions.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSubqueriesInComparisons() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports subqueries in EXISTS expressions.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSubqueriesInExists() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports subqueries in IN statements.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSubqueriesInIns() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports subqueries in qualified expressions.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsSubqueriesInQuantifieds() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports table correlation names</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsTableCorrelationNames() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports the given transaction isolation level</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports transactions</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsTransactions() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports SQL UNION</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsUnion() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Checks whether metamatrix supports SQL UNION ALL</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsUnionAll() throws SQLException {
         return true;
     }
 
-    /**
-     * <p>Indicates whether or not a visible row update can be detected by
-     * calling the method <code>ResultSet.rowUpdated</code>.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if changes are detected by the result set type;
-     *         <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
     public boolean updatesAreDetected(int type) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix uses a separate local file to store each table</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean usesLocalFilePerTable() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether metamatrix stores tables in a local file</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean usesLocalFiles() throws SQLException {
         return false;
     }
@@ -2829,17 +2291,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return createResultSet(records, rmetadata);
     }
 
-    /**
-     * <p>This method is used to hardcode metadata details for a given column into
-     * a map object. While some of the details are obtained as parameters, most
-     * are hardcoded.
-     * @param tableName The group/table name in which the column is present
-     * @param columnName The name of the column/element
-     * @param dataType The MetaMatrix datatype of the column
-     * @param nullable An int value indicating nallability of the column
-     * @return a map containing metadata details for any given column
-     * @throws SQLException, should never occur
-     */
     private Map getColumnMetadata(String tableName, String columnName, String dataType, Integer nullable) throws SQLException {
             return getColumnMetadata(tableName, columnName, dataType, nullable, ResultsMetadataConstants.SEARCH_TYPES.UNSEARCHABLE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
     }

@@ -42,7 +42,7 @@ public class TestTranslationUtility extends TestCase {
     }
 
     public String getTestVDB() {
-        return UnitTestUtil.getTestDataPath() + "/partssupplier/PartsSupplier.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
     }
     
     public void helpTestTranslate(String sql, String expectedOutput) {

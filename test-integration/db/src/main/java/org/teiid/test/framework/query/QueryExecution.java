@@ -2,7 +2,7 @@ package org.teiid.test.framework.query;
 
 import java.sql.Connection;
 
-import org.teiid.jdbc.api.AbstractQueryTest;
+import org.teiid.jdbc.AbstractQueryTest;
 
 /**
  * The QueryExecution class can be used to query the source directly.   The intended use

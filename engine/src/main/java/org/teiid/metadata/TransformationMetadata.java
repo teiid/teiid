@@ -1080,7 +1080,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public String[] getVDBResourcePaths() throws MetaMatrixComponentException, QueryMetadataException {
-    	ArrayList<String> paths = new ArrayList<String>(this.vdbEntries.keySet());
+    	LinkedList<String> paths = new LinkedList<String>();
+    	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
+			if (entry.getValue().visible) {
+				paths.add(entry.getKey());
+			}
+		}
     	return paths.toArray(new String[paths.size()]);
     }
     

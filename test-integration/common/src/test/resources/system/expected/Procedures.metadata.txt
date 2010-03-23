@@ -1,8 +1,8 @@
 ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
-VDBName	12	string	java.lang.String	0	Procedures	System	PartsSupplier	
-SchemaName	12	string	java.lang.String	1	Procedures	System	PartsSupplier	
-Name	12	string	java.lang.String	0	Procedures	System	PartsSupplier	
-NameInSource	12	string	java.lang.String	1	Procedures	System	PartsSupplier	
-ReturnsResults	-7	boolean	java.lang.Boolean	0	Procedures	System	PartsSupplier	
-UID	12	string	java.lang.String	0	Procedures	System	PartsSupplier	
-Description	12	string	java.lang.String	1	Procedures	System	PartsSupplier	
+VDBName	12	string	java.lang.String	0	Procedures	SYS	PartsSupplier	
+SchemaName	12	string	java.lang.String	1	Procedures	SYS	PartsSupplier	
+Name	12	string	java.lang.String	0	Procedures	SYS	PartsSupplier	
+NameInSource	12	string	java.lang.String	1	Procedures	SYS	PartsSupplier	
+ReturnsResults	-7	boolean	java.lang.Boolean	0	Procedures	SYS	PartsSupplier	
+UID	12	string	java.lang.String	0	Procedures	SYS	PartsSupplier	
+Description	12	string	java.lang.String	1	Procedures	SYS	PartsSupplier	

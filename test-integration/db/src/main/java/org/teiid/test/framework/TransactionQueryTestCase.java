@@ -5,7 +5,7 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
-import org.teiid.jdbc.api.AbstractQueryTest;
+import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 

@@ -138,7 +138,9 @@ public class IndexMetadataFactory {
 	public void addEntriesPlusVisibilities(VirtualFile root, VDBMetaData vdb) throws IOException {
 		LinkedHashMap<String, Resource> visibilityMap = new LinkedHashMap<String, Resource>();
 		for(VirtualFile f: root.getChildrenRecursively()) {
-			visibilityMap.put("/" + f.getPathName(), new Resource(f, isFileVisible(f.getPathName(), vdb))); //$NON-NLS-1$
+			if (f.isLeaf()) {
+				visibilityMap.put("/" + f.getPathName(), new Resource(f, isFileVisible(f.getPathName(), vdb))); //$NON-NLS-1$
+			}
 		}
 		this.vdbEntries = visibilityMap;
 	}
@@ -149,19 +151,25 @@ public class IndexMetadataFactory {
 	
 	private boolean isFileVisible(String pathInVDB, VDBMetaData vdb) {
 
-		String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
-
-		// If this is any of the Public System Models, like JDBC,ODBC system
-		// models
-		if (isSystemModelWithSystemTableType(modelName)) {
-			return true;
+		if (pathInVDB.endsWith(".xmi")) { //$NON-NLS-1$
+			String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
+	
+			// If this is any of the Public System Models, like JDBC,ODBC system
+			// models
+			if (isSystemModelWithSystemTableType(modelName)) {
+				return true;
+			}
+	
+			ModelMetaData model = vdb.getModel(modelName);
+			if (model != null) {
+				return model.isVisible();
+			}
 		}
-
-		ModelMetaData model = vdb.getModel(modelName);
-		if (model != null) {
-			return model.isVisible();
+		
+		if (pathInVDB.startsWith("META-INF/")) {//$NON-NLS-1$
+			return false;
 		}
-
+		
         String entry = StringUtil.getLastToken(pathInVDB, "/"); //$NON-NLS-1$
         
         // index files should not be visible

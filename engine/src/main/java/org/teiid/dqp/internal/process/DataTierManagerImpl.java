@@ -146,7 +146,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		String vdbName = workContext.getVdbName();
 		int vdbVersion = workContext.getVdbVersion();
 		VDBMetaData vdb = workContext.getVDB();
-		CompositeMetadataStore metadata = vdb.getAttachment(CompositeMetadataStore.class);
+		CompositeMetadataStore metadata = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		Collection rows = new ArrayList();
 		if (command instanceof Query) {
 			Query query = (Query)command;

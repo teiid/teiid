@@ -24,7 +24,6 @@ package com.metamatrix.dqp.service;
 
 import org.teiid.dqp.internal.cache.DQPContextCache;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.buffer.BufferManager;
@@ -42,11 +41,7 @@ public class FakeBufferService implements BufferService {
     public FakeBufferService() {
         super();
         
-        try {
-            bufferMgr = BufferManagerFactory.getStandaloneBufferManager();            
-        } catch(MetaMatrixComponentException e) {
-            e.printStackTrace();
-        }
+        bufferMgr = BufferManagerFactory.getStandaloneBufferManager();            
     }
 
     /* 

@@ -35,7 +35,6 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.ServerConnection;
 import org.teiid.security.Credentials;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -71,9 +70,9 @@ public class LogonImpl implements ILogon {
 		try {
 			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, adminConnection);
 	        updateDQPContext(sessionInfo);
-			if (Boolean.parseBoolean(connProps.getProperty(ServerConnection.LOCAL_CONNECTION))) {
+	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
-			}
+	        }
 			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
 		} catch (LoginException e) {
 			throw new LogonException(e.getMessage());

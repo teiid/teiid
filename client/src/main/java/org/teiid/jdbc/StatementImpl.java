@@ -74,7 +74,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     //######## Configuration state #############
     private ConnectionImpl driverConnection;
-    private Properties execProps = null;
+    private Properties execProps;
 
     // the string which is the XSLT style sheet
     private String styleSheet;
@@ -797,11 +797,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     }
 
     public void setExecutionProperty(String name, String value) {
-        this.execProps.put(name, value);
+        this.execProps.setProperty(name, value);
     }
 
     public String getExecutionProperty(String name) {
-        return (String) this.execProps.get(name);
+        return this.execProps.getProperty(name);
     }
 
     /**

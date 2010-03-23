@@ -1,7 +1,0 @@
-PROCEDURE_CAT[string]	PROCEDURE_SCHEM[string]	PROCEDURE_NAME[string]	COLUMN_NAME[string]	COLUMN_TYPE[short]	DATA_TYPE[integer]	TYPE_NAME[string]	PRECISION[integer]	LENGTH[integer]	SCALE[short]	RADIX[integer]	NULLABLE[integer]	REMARKS[string]	COLUMN_DEF[string]	SQL_DATA_TYPE[string]	SQL_DATETIME_SUB[string]	CHAR_OCTET_LENGTH[string]	ORDINAL_POSITION[integer]	IS_NULLABLE[string]	SPECIFIC_NAME[string]
-PartsSupplier	System	getBinaryVDBResource	resourcePath	1	12	string	50	50	0	10	0	null	null	null	null	null	1	NO	getBinaryVDBResource
-PartsSupplier	System	getBinaryVDBResource	VdbResource	3	2004	blob	2147483647	2147483647	0	10	1	null	null	null	null	null	1	YES	getBinaryVDBResource
-PartsSupplier	System	getCharacterVDBResource	resourcePath	1	12	string	50	50	0	10	0	null	null	null	null	null	1	NO	getCharacterVDBResource
-PartsSupplier	System	getCharacterVDBResource	VdbResource	3	2005	clob	2147483647	2147483647	0	10	1	null	null	null	null	null	1	YES	getCharacterVDBResource
-PartsSupplier	System	getVDBResourcePaths	ResourcePath	3	12	string	50	50	0	10	1	null	null	null	null	null	1	YES	getVDBResourcePaths
-PartsSupplier	System	getVDBResourcePaths	isBinary	3	-7	boolean	1	1	0	10	1	null	null	null	null	null	2	YES	getVDBResourcePaths

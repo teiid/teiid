@@ -56,19 +56,22 @@ public class LocalServerConnection implements ServerConnection {
     private DQPWorkContext workContext = new DQPWorkContext();
 
 	public LocalServerConnection(Properties connectionProperties) throws CommunicationException, ConnectionException{
+		this.csr = getClientServiceRegistry();
+		workContext.setSecurityHelper(csr.getSecurityHelper());
+		this.result = authenticate(connectionProperties);
+	}
+
+	protected ClientServiceRegistry getClientServiceRegistry() {
 		try {
 			InitialContext ic = new InitialContext();
-			csr = (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME);
+			return (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME);
 		} catch (NamingException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
-		workContext.setSecurityHelper(csr.getSecurityHelper());
-		this.result = authenticate(connectionProperties);
 	}
 	
 	public synchronized LogonResult authenticate(Properties connProps) throws ConnectionException, CommunicationException {
         try {
-        	connProps.setProperty(ServerConnection.LOCAL_CONNECTION, Boolean.TRUE.toString()); 
         	LogonResult logonResult = this.getService(ILogon.class).logon(connProps);
         	return logonResult;
         } catch (LogonException e) {
@@ -79,7 +82,7 @@ public class LocalServerConnection implements ServerConnection {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();
         	}
-            throw new CommunicationException(e, NetPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
+            throw new CommunicationException(e);
         } 	
 	}	
 	

@@ -1,3 +1,0 @@
-TABLE_SCHEM[string]	TABLE_CATALOG[string]
-PartsSupplier	PartsSupplier
-System	PartsSupplier

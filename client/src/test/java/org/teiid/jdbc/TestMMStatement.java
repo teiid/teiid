@@ -72,4 +72,17 @@ public class TestMMStatement {
 		assertEquals("bar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
+	@Test public void testPropertiesOverride() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		p.setProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
+		Mockito.stub(conn.getConnectionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertEquals(Boolean.TRUE.toString(), statement.getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS));
+		statement.setExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.FALSE.toString());
+		assertEquals(Boolean.FALSE.toString(), statement.getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS));
+		assertEquals(Boolean.TRUE.toString(), p.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS));
+	}
+
+	
 }

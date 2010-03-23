@@ -119,7 +119,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		deployment.removeAttachment(IndexMetadataFactory.class);
 		deployment.removeAttachment(UDFMetaData.class);
 		deployment.addAttchment(QueryMetadataInterface.class, metadata);
-		deployment.addAttchment(CompositeMetadataStore.class, metadata.getMetadataStore());
+		deployment.addAttchment(TransformationMetadata.class, metadata);
 		
 		// add transformation metadata to the repository.
 		this.vdbRepository.addMetadata(deployment, metadata);

@@ -23,7 +23,7 @@ package org.teiid.test.testcases;
 
 import java.util.ArrayList;
 
-import org.teiid.jdbc.api.AbstractQueryTest;
+import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;

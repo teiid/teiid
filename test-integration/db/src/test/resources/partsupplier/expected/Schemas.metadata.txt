@@ -1,3 +1,0 @@
-ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
-TABLE_SCHEM	12	string	java.lang.String	1	Schemas	System	PartsSupplier	
-TABLE_CATALOG	12	string	java.lang.String	1	Schemas	System	PartsSupplier	

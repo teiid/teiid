@@ -101,7 +101,6 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         RequestWorkItem rwi = Mockito.mock(RequestWorkItem.class);
         DQPWorkContext workContext = new DQPWorkContext();
         VDBMetaData vdb = new VDBMetaData();
-        vdb.addAttchment(CompositeMetadataStore.class, metadata.getMetadataStore());
         vdb.addAttchment(TransformationMetadata.class, metadata);
         workContext.getSession().setVdb(vdb);
         Mockito.stub(rwi.getDqpWorkContext()).toReturn(workContext);

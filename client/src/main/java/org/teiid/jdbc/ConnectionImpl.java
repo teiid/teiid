@@ -73,6 +73,8 @@ import com.metamatrix.common.util.SqlUtil;
 public class ConnectionImpl extends WrapperImpl implements Connection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
+	public static final int DEFAULT_ISOLATION = Connection.TRANSACTION_READ_COMMITTED;
+	
 	// constant value giving product name
     private final static String SERVER_NAME = "Teiid Server"; //$NON-NLS-1$
     private final static String EMBEDDED_NAME = "Teiid Embedded"; //$NON-NLS-1$
@@ -105,7 +107,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     private boolean disableLocalTransactions = false;
     private DQP dqp;
     protected ServerConnection serverConn;
-    private int transactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
+    private int transactionIsolation = DEFAULT_ISOLATION;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) {        
     	this.serverConn = serverConn;

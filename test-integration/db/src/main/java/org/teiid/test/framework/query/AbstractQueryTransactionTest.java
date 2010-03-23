@@ -46,7 +46,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  *      validate the results of the testcase.
  * 
  */
-public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.api.AbstractQueryTest
+public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.AbstractQueryTest
 	implements TransactionQueryTestCase {
     
     private static String initialized = null;

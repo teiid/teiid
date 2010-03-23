@@ -46,10 +46,14 @@ public class BufferManagerFactory {
      * typically used for testing or when memory is not an issue.
      * @return BufferManager ready for use
      */
-    public static BufferManager getStandaloneBufferManager() throws MetaMatrixComponentException {
+    public static BufferManager getStandaloneBufferManager() {
     	if (INSTANCE == null) {
 	        BufferManagerImpl bufferMgr = new BufferManagerImpl();
-	        bufferMgr.initialize();
+	        try {
+				bufferMgr.initialize();
+			} catch (MetaMatrixComponentException e) {
+				throw new RuntimeException(e);
+			}
 	
 	        // Add unmanaged memory storage manager
 	        bufferMgr.setStorageManager(new MemoryStorageManager());

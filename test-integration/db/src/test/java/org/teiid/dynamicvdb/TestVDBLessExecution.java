@@ -26,7 +26,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
 import org.junit.Test;
-import org.teiid.jdbc.api.AbstractMMQueryTestCase;
+import org.teiid.jdbc.AbstractMMQueryTestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
 
