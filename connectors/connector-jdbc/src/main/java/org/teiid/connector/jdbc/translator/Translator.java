@@ -593,6 +593,11 @@ public class Translator {
     				} catch (SQLException e) {
     					// ignore
     				}
+    				try {
+    					return results.getBytes(columnIndex);
+    				} catch (SQLException e) {
+    					// ignore
+    				}
     				break;
     			}
     			case CLOB_CODE: {
@@ -674,6 +679,11 @@ public class Translator {
     			case BLOB_CODE: {
     				try {
     					return results.getBlob(parameterIndex);
+    				} catch (SQLException e) {
+    					// ignore
+    				}
+    				try {
+    					return results.getBytes(parameterIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
