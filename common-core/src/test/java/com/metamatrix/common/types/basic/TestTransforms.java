@@ -156,7 +156,8 @@ public class TestTransforms {
         return (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.XML))
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIME)) 
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.DATE));             
+            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.DATE))
+            || (src.equals(DataTypeManager.DefaultDataTypes.CLOB) && tgt.equals(DataTypeManager.DefaultDataTypes.XML));
     }
     
     @Test public void testAllConversions() throws TransformationException {
@@ -216,7 +217,7 @@ public class TestTransforms {
             }
         }
         
-        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"; //$NON-NLS-1$
+        String expected = ""; //$NON-NLS-1$
         expected += xml.substring(0, DataTypeManager.MAX_STRING_LENGTH - expected.length());
                 
         helpTestTransform(new StringToSQLXMLTransform().transformDirect(xml.toString()), expected);

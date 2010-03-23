@@ -76,8 +76,8 @@ public class TestDataTypeManager {
         /*timestamp*/   {   'I','N','N','N','N','N','N','N','N','N','N','C','C','O','I','N','N','N'     },
         /*object*/      {   'C','C','C','C','C','C','C','C','C','C','C','C','C','C','O','C','C','C'     },
         /*blob*/        {   'N','N','N','N','N','N','N','N','N','N','N','N','N','N','I','O','N','N'     },
-        /*clob*/        {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','O','N'     },
-        /*xml*/         {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','N','O'     }
+        /*clob*/        {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','O','C'     },
+        /*xml*/         {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','C','O'     }
     };
     
 
