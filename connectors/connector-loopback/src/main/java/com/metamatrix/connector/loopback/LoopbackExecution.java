@@ -63,7 +63,6 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     private List<Object> row;
     private boolean waited = false;
     private int rowsReturned = 0;
-    private boolean asynch = false;
     private int rowsNeeded = 1;
     
     public LoopbackExecution(Command command, LoopbackManagedConnectionFactory config, RuntimeMetadata metadata) {
@@ -78,20 +77,17 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
             // Wait a random amount of time up to waitTime milliseconds
             int randomTimeToWait = randomNumber.nextInt(this.config.getWaitTime());
 
-            if(asynch) {
-                // If we're asynch and the wait time was longer than the poll interval,
-                // then just say we don't have results instead
-                if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
-                	waited = true;
-                    throw new DataNotAvailableException(randomTimeToWait);
-                } 
-            } else {    
-                try {
-                    Thread.sleep(randomTimeToWait);
-                } catch(InterruptedException e) {
-                }
-                waited = true;
+            // If we're asynch and the wait time was longer than the poll interval,
+            // then just say we don't have results instead
+            if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
+            	waited = true;
+                throw new DataNotAvailableException(randomTimeToWait);
+            } 
+            try {
+                Thread.sleep(randomTimeToWait);
+            } catch(InterruptedException e) {
             }
+            waited = true;
         }
                 
         if(rowsReturned < this.rowsNeeded && row.size() > 0) {

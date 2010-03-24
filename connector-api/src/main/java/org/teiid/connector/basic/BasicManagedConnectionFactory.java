@@ -62,7 +62,6 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	private int maxResultRows = -1;
 	private boolean xaCapable;
 	
-	private boolean synchWorkers = true;
 	private String overrideCapabilitiesFile;
 	
 	// derived

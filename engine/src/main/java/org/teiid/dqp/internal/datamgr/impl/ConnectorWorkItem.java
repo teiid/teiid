@@ -304,7 +304,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
-	            if(this.connectorEnv.getMaxResultRows() != 0 && this.rowCount >= this.connectorEnv.getMaxResultRows()){
+	            if(this.connectorEnv.getMaxResultRows() > -1 && this.rowCount >= this.connectorEnv.getMaxResultRows()){
 	                if (this.rowCount == this.connectorEnv.getMaxResultRows() && !this.connectorEnv.isExceptionOnMaxRows()) {
 		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.connectorEnv.getMaxResultRows()}); //$NON-NLS-1$
 		        		this.lastBatch = true;
