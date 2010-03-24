@@ -12,7 +12,8 @@
 			control logging level, contexts, and log locations, you should be
 			familiar with
 			<ulink url="http://logging.apache.org/log4j/">log4j</ulink>
-			and the container's jboss-log4j.xml configuration file.
+			and the container's jboss-log4j.xml configuration file.  
+			Teiid also provides a &lt;profile&gt;/conf/jboss-teiid-log4j.xml containing much of information from chapter.
 		</para>
 		<para>
 			All the logs
@@ -20,7 +21,7 @@
 			makes it extremely
 			easy to control of of Teiid logging from a single
 			context. Note however that changes to the log configuration file
-			require a restart to take affect.			
+			require a restart to take affect			
 		</para>
 		<sect2>
 			<title>Logging Contexts</title>
@@ -30,7 +31,8 @@
 				integrated org.jboss components, will be logged through their
 				respective contexts and not through org.teiid. See the table below for information on contexts
 				relevant to Teiid. See the container's jboss-log4j.xml for a more
-				complete listing of logging contexts used in the container.</para>
+				complete listing of logging contexts used in the container.  
+				</para>
 			<informaltable frame="all">
 				<tgroup cols="2">
 					<thead>
@@ -83,18 +85,10 @@
 						</row>
 						<row>
 							<entry>
-								<para>org.teiid.SESSION</para>
+								<para>org.teiid.SECURITY</para>
 							</entry>
 							<entry>
-								<para>Session events logs.</para>
-							</entry>
-						</row>
-						<row>
-							<entry>
-								<para>org.teiid.MEMBERSHIP</para>
-							</entry>
-							<entry>
-								<para>Authentication and group event logs.</para>
+								<para>Session/Authentication events - see also AUDIT logging</para>
 							</entry>
 						</row>
 						<row>
