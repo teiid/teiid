@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <jndi-name>text-connector</jndi-name>
+      <rar-name>connector-text-{project.version}.rar</rar-name>
+      <connection-definition>org.teiid.connector.api.Connector</connection-definition>
+      
+      <!--
+        All the available properties for this connector are defined inside the "ra.xml" defined inside the rar
+        file mentioned above. 
+       -->
+      <config-property name="XaCapable" type="java.lang.Boolean">false</config-property>
+      <config-property name="DescriptorFile" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/portfolio/marketdata-def.txt</config-property>
+            
+    </no-tx-connection-factory>
+
+</connection-factories>
