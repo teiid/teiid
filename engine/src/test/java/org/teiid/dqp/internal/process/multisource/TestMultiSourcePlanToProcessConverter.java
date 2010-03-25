@@ -106,7 +106,7 @@ public class TestMultiSourcePlanToProcessConverter {
         }
         
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels); 
-        AnalysisRecord analysis = new AnalysisRecord(false, false, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(false, DEBUG);
         
         Command command = TestResolver.helpResolve(userSql, wrapper, analysis);               
                 

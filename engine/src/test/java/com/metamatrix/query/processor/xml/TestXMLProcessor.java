@@ -2951,7 +2951,7 @@ public class TestXMLProcessor {
 
         if (shouldSucceed){
             
-            AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+            AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
             CommandContext planningContext = new CommandContext(); //this should be the same as the processing context, but that's not easy to do
             
             ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, planningContext);
@@ -2995,7 +2995,7 @@ public class TestXMLProcessor {
             return plan;
         } 
         Exception expected = null;
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);                                              
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);                                              
         try{
             ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
     
@@ -3039,7 +3039,7 @@ public class TestXMLProcessor {
 
 	private void helpTestProcess(String sql, String[] expectedDocs, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
         Command command = helpGetCommand(sql, metadata);
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);                                              
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);                                              
         XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
         if(DEBUG) {
             System.out.println(analysisRecord.getDebugLog());

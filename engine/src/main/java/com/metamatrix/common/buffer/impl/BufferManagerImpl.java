@@ -371,7 +371,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (value instanceof InputStreamFactory) {
 					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
 				}
-				StandardXMLTranslator sxt = new StandardXMLTranslator(value, null);
+				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
 				SQLXMLImpl sqlxml;
 				try {
 					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);

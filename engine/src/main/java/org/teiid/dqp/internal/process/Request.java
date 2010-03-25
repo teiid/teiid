@@ -50,6 +50,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
@@ -255,7 +256,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
 			@Override
 			public boolean hasRole(String roleType, String roleName) throws MetaMatrixComponentException {
-				if (isEntitled() || !useEntitlements) {
+				if (!useEntitlements) {
 					return true;
 				}
 		        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
@@ -450,14 +451,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
             } finally {
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
-                    LogManager.logInfo(LogConstants.CTX_DQP, debugLog);               
+                    LogManager.log(analysisRecord.logDebug()?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
                 }
             }
             LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
-            Object[] params = new Object[] { requestId};
-            String msg = DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", params); //$NON-NLS-1$
-            throw new QueryPlannerException(e, msg);
+            throw new QueryPlannerException(e, DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", requestId)); //$NON-NLS-1$
         }
     }
 
@@ -470,7 +469,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             debug = option.getDebug();
         }
         
-        this.analysisRecord = new AnalysisRecord(getPlan, getPlan, debug);
+        this.analysisRecord = new AnalysisRecord(getPlan, debug);
     }
 
     public void processRequest() 
@@ -545,15 +544,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, MetaMatrixComponentException {
-		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getVDB(), !isEntitled() && this.useEntitlements, this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
+		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getVDB(), this.useEntitlements, this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
 		validateWithVisitor(visitor, this.metadata, command);
 	}
 	
-    protected boolean isEntitled(){
-        if (this.workContext.getSubject() == null) {
-            LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION,new Object[]{ "Automatically entitling principal", this.workContext.getUserName()}); //$NON-NLS-1$ 
-            return true;
-        }
-        return false;
-    }	
 }

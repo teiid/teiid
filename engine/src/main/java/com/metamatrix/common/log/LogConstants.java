@@ -26,9 +26,7 @@ import org.teiid.connector.basic.DefaultConnectorLogger;
 
 public interface LogConstants {
 	// add the new contexts to the Log4JUtil.java class, for configuration purpose
-	public static final String CTX_SESSION = "SESSION"; //$NON-NLS-1$
-	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
-	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
+	public static final String CTX_SECURITY = "SECURITY"; //$NON-NLS-1$
 	public static final String CTX_TRANSPORT = "TRANSPORT"; //$NON-NLS-1$
 	public static final String CTX_QUERY_PLANNER = "PLANNER"; //$NON-NLS-1$
 	public static final String CTX_DQP = "PROCESSOR"; //$NON-NLS-1$

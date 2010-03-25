@@ -239,7 +239,7 @@ public class ConnectorManager  {
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
     void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt) {
-    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
+    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
     		return;
     	}
         String sqlStr = null;

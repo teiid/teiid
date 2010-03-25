@@ -27,7 +27,7 @@ import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 /**
  * Note: this is currently only accurate for {@link PreparedStatement}s.
@@ -43,7 +43,7 @@ public class ParameterMetaDataImpl extends WrapperImpl implements ParameterMetaD
 
 	@Override
 	public String getParameterClassName(int param) throws SQLException {
-		return MMJDBCSQLTypeInfo.getJavaClassName(getParameterType(param));
+		return JDBCSQLTypeInfo.getJavaClassName(getParameterType(param));
 	}
 
 	@Override

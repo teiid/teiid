@@ -35,6 +35,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.RuleStack;
@@ -168,7 +169,7 @@ public class TestRuleChooseDependent extends TestCase {
     public void helpTestValidJoin(PlanNode joinNode, PlanNode accessNode, boolean expectedValid) {
         RuleChooseDependent rule = new RuleChooseDependent();
         RuleChooseJoinStrategy.chooseJoinStrategy(joinNode, metadata);
-        boolean isValid = rule.isValidJoin(joinNode, accessNode);
+        boolean isValid = rule.isValidJoin(joinNode, accessNode, AnalysisRecord.createNonRecordingRecord());
         assertEquals("Valid join check is wrong ", expectedValid, isValid);         //$NON-NLS-1$
     }
 

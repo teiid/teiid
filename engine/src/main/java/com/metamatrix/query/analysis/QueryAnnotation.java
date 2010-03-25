@@ -28,6 +28,7 @@ package com.metamatrix.query.analysis;
 public class QueryAnnotation {
     
     public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
+    public static final String HINTS = "Hints"; //$NON-NLS-1$
     
     public static final int LOW = 1;
     public static final int MEDIUM = 2;

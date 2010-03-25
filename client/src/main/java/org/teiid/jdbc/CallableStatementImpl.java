@@ -111,14 +111,6 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         super.close();
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.math.BigDecimal object with
-     * scale digits to the right of the decimal point.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as an BigDecimal object.
-     * @throws SQLException if param datatype is not NUMERIC
-     * @deprecated
-     */
     public java.math.BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         BigDecimal bigDecimalParam = DataTypeTransformer.getBigDecimal(getObject(parameterIndex));
 
@@ -428,7 +420,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public byte[] getBytes(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getBytes(getObject(parameterIndex)); 
 	}
 
 	public byte[] getBytes(String parameterName) throws SQLException {
@@ -436,7 +428,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public Reader getCharacterStream(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getCharacterStream(getObject(parameterIndex));
 	}
 
 	public Reader getCharacterStream(String parameterName) throws SQLException {

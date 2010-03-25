@@ -27,10 +27,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.xml.transform.Source;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
@@ -55,7 +54,7 @@ public class FileProcedureExecution extends BasicExecution implements ProcedureE
     private Call procedure;
     private FileManagedConnectionFactory config;
     private boolean returnedResult;
-    protected Source returnValue;
+    private SQLXML returnValue;
     
     /** 
      * @param env
@@ -95,13 +94,13 @@ public class FileProcedureExecution extends BasicExecution implements ProcedureE
         
         String encoding = this.config.getCharacterEncodingScheme();
         
-        returnValue = new InputStreamFactory(encoding) {
+        returnValue = (SQLXML)this.config.getTypeFacility().convertToRuntimeType(new InputStreamFactory(encoding) {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new BufferedInputStream(new FileInputStream(xmlFile));
 			}
-		};
+		});
         
         this.config.getLogger().logDetail(XMLSourcePlugin.Util.getString("executing_procedure", new Object[] {procedure.getProcedureName()})); //$NON-NLS-1$
     }

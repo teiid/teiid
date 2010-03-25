@@ -41,7 +41,7 @@ public class TestAnalysisRecord extends TestCase {
     }
 
     public void testQueryPlan() {
-        AnalysisRecord rec = new AnalysisRecord(true, false, false);
+        AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordQueryPlan());
         
         Map plan = new HashMap();
@@ -51,7 +51,7 @@ public class TestAnalysisRecord extends TestCase {
     }
     
     public void testAnnotations() {
-        AnalysisRecord rec = new AnalysisRecord(false, true, false);
+        AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordAnnotations());
         
         QueryAnnotation ann1 = new QueryAnnotation("cat", "ann", "res", QueryAnnotation.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -60,7 +60,7 @@ public class TestAnalysisRecord extends TestCase {
         rec.addAnnotation(ann1);
         rec.addAnnotation(ann2);
         
-        Collection annotations = rec.getAnnotations();
+        Collection<QueryAnnotation> annotations = rec.getAnnotations();
         assertEquals(2, annotations.size());
         assertTrue(annotations.contains(ann1));
         assertTrue(annotations.contains(ann2));
@@ -68,7 +68,7 @@ public class TestAnalysisRecord extends TestCase {
     }
     
     public void testDebugLog() {
-        AnalysisRecord rec = new AnalysisRecord(false, false, true);
+        AnalysisRecord rec = new AnalysisRecord(false, true);
         assertTrue(rec.recordDebug());
         
         rec.println("a"); //$NON-NLS-1$

@@ -82,7 +82,7 @@ public class TestProcedurePlanner extends TestCase {
         }
         userCommand = QueryRewriter.rewrite(userCommand, metadata, null);
         
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
         
         try {
             return QueryOptimizer.optimizePlan(userCommand, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);

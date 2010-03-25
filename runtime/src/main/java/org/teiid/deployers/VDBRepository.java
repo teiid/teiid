@@ -123,7 +123,7 @@ public class VDBRepository implements Serializable{
 
 			// now save the change in the configuration.
 			saveVDB(vdb);
-			LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.getString("VDBService.vdb_change_status", new Object[] { vdbName, vdbVersion, status})); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("VDBService.vdb_change_status", new Object[] { vdbName, vdbVersion, status})); //$NON-NLS-1$
 		}
 	}
 	

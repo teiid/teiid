@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.proc;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;

@@ -60,7 +60,7 @@ public abstract class BaseQueryTest extends TestCase {
         Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
 
         // plan
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, debug, debug);
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, debug);
         ProcessorPlan plan = null;
         try {
             plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, createCommandContext());

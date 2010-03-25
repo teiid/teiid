@@ -793,7 +793,7 @@ public class TestXMLPlanner extends TestCase {
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
         IDGenerator idGenerator = new IDGenerator();
         idGenerator.setDefaultFactory(new IntegerIDFactory());
-        AnalysisRecord analysis = new AnalysisRecord(false, false, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(false, DEBUG);
         try {
             if (DEBUG) {
                 System.out.println("\n####################################\n" + command); //$NON-NLS-1$

@@ -70,7 +70,7 @@ public class TestSqlEval extends TestCase {
     }
     
     String toXMLString(Source xmlSrc) throws Exception{
-    	StandardXMLTranslator sxt = new StandardXMLTranslator(xmlSrc, null);
+    	StandardXMLTranslator sxt = new StandardXMLTranslator(xmlSrc);
     	return sxt.getString();
     }
       

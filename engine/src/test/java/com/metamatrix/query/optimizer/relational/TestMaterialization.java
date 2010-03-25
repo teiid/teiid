@@ -43,16 +43,16 @@ public class TestMaterialization {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Collection annotations = analysis.getAnnotations();
+        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 
     @Ignore("we no longer auto detect this case, if we need this logic it will have to be added to the rewriter since it changes select into to an insert")
@@ -60,32 +60,32 @@ public class TestMaterialization {
         String userSql = "SELECT MATVIEW.E1 INTO MatTable.MatStage FROM MATVIEW"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
 
         Command command = helpGetCommand(userSql, metadata, null);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Collection annotations = analysis.getAnnotations();
+        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }    
     
     @Test public void testMaterializedTransformationNoCache() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MatView.MatView"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
-        Collection annotations = analysis.getAnnotations();
+        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
     //related to defect 14423
@@ -93,23 +93,23 @@ public class TestMaterialization {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
-        Collection annotations = analysis.getAnnotations();
+        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", ((QueryAnnotation)annotations.iterator().next()).getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
     @Test public void testNoCacheInTransformation() throws Exception {
         String userSql = "SELECT VGROUP.E1 FROM VGROUP"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         
@@ -120,7 +120,7 @@ public class TestMaterialization {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache matview.matview1"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         
@@ -131,7 +131,7 @@ public class TestMaterialization {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(false, true, DEBUG);
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         

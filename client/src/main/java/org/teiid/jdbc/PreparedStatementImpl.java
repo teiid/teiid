@@ -60,7 +60,7 @@ import org.teiid.client.metadata.MetadataResult;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ArgCheck;
@@ -501,37 +501,37 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         }
 
         // get the java class name for the given JDBC type
-        String javaClassName = MMJDBCSQLTypeInfo.getJavaClassName(targetJdbcType);
+        String javaClassName = JDBCSQLTypeInfo.getJavaClassName(targetJdbcType);
         // transform the value to the target datatype
-        if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.STRING_CLASS)) {
+        if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.STRING_CLASS)) {
            targetObject = value.toString();
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.CHAR_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CHAR_CLASS)) {
             targetObject = DataTypeTransformer.getCharacter(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.INTEGER_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.INTEGER_CLASS)) {
             targetObject = DataTypeTransformer.getInteger(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.BYTE_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BYTE_CLASS)) {
             targetObject = DataTypeTransformer.getByte(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.SHORT_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.SHORT_CLASS)) {
             targetObject = DataTypeTransformer.getShort(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.LONG_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.LONG_CLASS)) {
             targetObject = DataTypeTransformer.getLong(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.FLOAT_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.FLOAT_CLASS)) {
             targetObject = DataTypeTransformer.getFloat(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.DOUBLE_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.DOUBLE_CLASS)) {
             targetObject = DataTypeTransformer.getDouble(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.BOOLEAN_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BOOLEAN_CLASS)) {
             targetObject = DataTypeTransformer.getBoolean(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.BIGDECIMAL_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BIGDECIMAL_CLASS)) {
             targetObject = DataTypeTransformer.getBigDecimal(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.TIMESTAMP_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.TIMESTAMP_CLASS)) {
             targetObject = DataTypeTransformer.getTimestamp(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.DATE_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.DATE_CLASS)) {
             targetObject = DataTypeTransformer.getDate(value);
-        } else if(javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.TIME_CLASS)) {
+        } else if(javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.TIME_CLASS)) {
             targetObject = DataTypeTransformer.getTime(value);
-        } else if (javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.BLOB_CLASS)) {
+        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.BLOB_CLASS)) {
             targetObject = DataTypeTransformer.getBlob(value);
-        } else if (javaClassName.equalsIgnoreCase(MMJDBCSQLTypeInfo.CLOB_CLASS)) {
+        } else if (javaClassName.equalsIgnoreCase(JDBCSQLTypeInfo.CLOB_CLASS)) {
             targetObject = DataTypeTransformer.getClob(value);
         } else {
             String msg = JDBCPlugin.Util.getString("MMPreparedStatement.Err_transform_obj"); //$NON-NLS-1$

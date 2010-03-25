@@ -91,7 +91,7 @@ public class TestProcedureProcessor {
         }
         QueryRewriter.rewrite(userCommand, metadata, new CommandContext());
 
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
         try {
         	if ( capabilitiesFinder == null ) capabilitiesFinder = new DefaultCapabilitiesFinder();
         	ProcessorPlan plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, capabilitiesFinder, analysisRecord, null);

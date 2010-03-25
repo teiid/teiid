@@ -157,7 +157,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
         return data;        
     }
     
-    private final static int CHAR_SEQUENCE_BUFFER_SIZE = 2 << 12;
+    private final static int CHAR_SEQUENCE_BUFFER_SIZE = 1 << 12;
     
     public CharSequence getCharSequence() {
         return new CharSequence() {

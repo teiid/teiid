@@ -144,7 +144,7 @@ public class TestProcessor {
 	
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
-		AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+		AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
 		try {
 			QueryResolver.resolveCommand(command, metadata);
         

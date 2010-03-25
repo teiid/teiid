@@ -41,11 +41,11 @@ import java.util.Map;
  * strings returned by methods in this class are based on constants in java.sql.Types.
  */
 
-public final class MMJDBCSQLTypeInfo {
+public final class JDBCSQLTypeInfo {
 
 
     // Prevent instantiation
-    private MMJDBCSQLTypeInfo() {}
+    private JDBCSQLTypeInfo() {}
     
     // metamatrix types    
     public static final String STRING = DataTypeManager.DefaultDataTypes.STRING;

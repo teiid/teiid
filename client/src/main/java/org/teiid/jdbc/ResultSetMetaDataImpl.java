@@ -27,7 +27,7 @@ import java.sql.SQLException;
 
 import org.teiid.client.metadata.ResultsMetadataConstants;
 
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 /**
  */
@@ -140,7 +140,7 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
 
     public int getColumnType(int index) throws SQLException {
         String runtimeTypeName = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.DATA_TYPE);
-        return MMJDBCSQLTypeInfo.getSQLType(runtimeTypeName);
+        return JDBCSQLTypeInfo.getSQLType(runtimeTypeName);
     }
 
     public String getColumnTypeName(int index) throws SQLException {
@@ -160,7 +160,7 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     }
 
     public String getColumnClassName(int index) throws SQLException {
-        return MMJDBCSQLTypeInfo.getJavaClassName(getColumnType(index));
+        return JDBCSQLTypeInfo.getJavaClassName(getColumnType(index));
     }
 
 }

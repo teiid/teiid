@@ -70,7 +70,7 @@ public class QueryOptimizer {
 		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
 		if (analysisRecord == null) {
-			analysisRecord = new AnalysisRecord(false, false, false);
+			analysisRecord = new AnalysisRecord(false, false);
 		}
 		
 		if (context == null) {

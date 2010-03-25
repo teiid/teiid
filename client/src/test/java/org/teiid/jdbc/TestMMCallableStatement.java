@@ -42,7 +42,7 @@ import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.net.ServerConnection;
 
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 public class TestMMCallableStatement extends TestCase {
 	
@@ -72,7 +72,7 @@ public class TestMMCallableStatement extends TestCase {
 		List[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.INTEGER }); 
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);

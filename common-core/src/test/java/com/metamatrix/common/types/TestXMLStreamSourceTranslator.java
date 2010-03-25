@@ -23,7 +23,6 @@
 package com.metamatrix.common.types;
 
 import java.io.StringReader;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.xml.transform.stream.StreamSource;
@@ -78,7 +77,7 @@ public class TestXMLStreamSourceTranslator extends TestCase {
         "</Books:bookCollection>"; //$NON-NLS-1$
    
     public void testStreamSourceWithStream() throws Exception {
-        StandardXMLTranslator translator = new StandardXMLTranslator(new StreamSource(new StringReader(sourceXML)),  new Properties());
+        StandardXMLTranslator translator = new StandardXMLTranslator(new StreamSource(new StringReader(sourceXML)));
         compareDocuments(sourceXML, translator.getString());
     }    
     

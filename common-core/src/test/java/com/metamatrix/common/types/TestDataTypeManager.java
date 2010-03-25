@@ -167,25 +167,25 @@ public class TestDataTypeManager {
     
     @Test public void testJDBCSQLTypeInfo() {
         
-        String[] types = MMJDBCSQLTypeInfo.getMMTypeNames();
+        String[] types = JDBCSQLTypeInfo.getMMTypeNames();
         
         for (int i = 0; i < types.length; i++) {
             String type = types[i];
             
-            assertEquals("Didn't get match for "+ type, MMJDBCSQLTypeInfo.getSQLType(type), MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.getDataTypeClass(type))); //$NON-NLS-1$
+            assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.getDataTypeClass(type))); //$NON-NLS-1$
             
             //the classnames will not match the runtime types for xml, clob, blob
             if (!type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.XML) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CLOB) && !type.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BLOB)) {
-                assertEquals("Didn't get match for "+ type, MMJDBCSQLTypeInfo.getSQLType(type), MMJDBCSQLTypeInfo.getSQLTypeFromClass(DataTypeManager.getDataTypeClass(type).getName())); //$NON-NLS-1$
+                assertEquals("Didn't get match for "+ type, JDBCSQLTypeInfo.getSQLType(type), JDBCSQLTypeInfo.getSQLTypeFromClass(DataTypeManager.getDataTypeClass(type).getName())); //$NON-NLS-1$
             }
         }
         
-        assertEquals(Types.TIMESTAMP, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP));
+        assertEquals(Types.TIMESTAMP, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP));
         //## JDBC4.0-begin ##
-        assertEquals(Types.SQLXML, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML));
+        assertEquals(Types.SQLXML, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML));
         //## JDBC4.0-end ##
-        assertEquals(DataTypeManager.DefaultDataTypes.STRING, MMJDBCSQLTypeInfo.getTypeName(Types.CHAR));
-        assertEquals(Types.CHAR, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
+        assertEquals(DataTypeManager.DefaultDataTypes.STRING, JDBCSQLTypeInfo.getTypeName(Types.CHAR));
+        assertEquals(Types.CHAR, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
     }
     
     @Test public void testRuntimeTypeConversion() throws Exception {

@@ -49,7 +49,7 @@ import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.query.unittest.TimestampUtil;
 
@@ -758,8 +758,8 @@ public class TestAllResultsImpl {
 
 	private String[] dataTypes() {
 		String[] types = new String[2];
-		types[0] = MMJDBCSQLTypeInfo.INTEGER;
-		types[1] = MMJDBCSQLTypeInfo.STRING;
+		types[0] = JDBCSQLTypeInfo.INTEGER;
+		types[1] = JDBCSQLTypeInfo.STRING;
 		return types;
 	}
 
@@ -780,7 +780,7 @@ public class TestAllResultsImpl {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg1() {
-		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
+		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { JDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
 	}
 	
 	private ResultsMessage exampleMessage(List<Object>[] results, String[] columnNames, String[] datatypes) {
@@ -798,7 +798,7 @@ public class TestAllResultsImpl {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg2() {
-		return exampleMessage(exampleResults2(), new String[] { "IntNum", "StringNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+		return exampleMessage(exampleResults2(), new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/** with limited metadata info. */
@@ -817,7 +817,7 @@ public class TestAllResultsImpl {
 
 	/** no rows. */
 	private ResultsMessage exampleResultsMsg3() {
-		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private static ResultsMessage exampleResultsMsg4(int begin, int length, int fetchSize, boolean lastBatch) {
@@ -827,7 +827,7 @@ public class TestAllResultsImpl {
 		List[] results = exampleResults1(length, begin);
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntKey" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.INTEGER }); 
 		resultsMsg.setFirstRow(begin);
 		if (lastBatch) {
 			resultsMsg.setFinalRow(begin + results.length - 1);
@@ -854,7 +854,7 @@ public class TestAllResultsImpl {
 		ResultsMessage resultsMsg = new ResultsMessage(request);
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
 		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.TIMESTAMP }); 
+		resultsMsg.setDataTypes(new String[] { JDBCSQLTypeInfo.TIMESTAMP }); 
 		resultsMsg.setFirstRow(1);
 		resultsMsg.setFinalRow(1);
 		resultsMsg.setLastRow(1);
@@ -871,7 +871,7 @@ public class TestAllResultsImpl {
 	
 	@Test public void testWasNull() throws SQLException{
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$
-				new String[] { MMJDBCSQLTypeInfo.STRING });
+				new String[] { JDBCSQLTypeInfo.STRING });
 		ResultSetImpl rs = new ResultSetImpl(message, statement);
 		assertTrue(rs.next());
 		assertEquals(Boolean.FALSE.booleanValue(), rs.getBoolean(1));
@@ -898,7 +898,7 @@ public class TestAllResultsImpl {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00")); //$NON-NLS-1$
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$ 
 				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ 
-				new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.TIME, MMJDBCSQLTypeInfo.DATE, MMJDBCSQLTypeInfo.TIMESTAMP, MMJDBCSQLTypeInfo.STRING });
+				new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.TIME, JDBCSQLTypeInfo.DATE, JDBCSQLTypeInfo.TIMESTAMP, JDBCSQLTypeInfo.STRING });
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
 		ResultSetImpl rs = new ResultSetImpl(message, statement);
 		assertTrue(rs.next());

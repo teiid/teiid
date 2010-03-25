@@ -237,7 +237,7 @@ public class RelationalPlanner implements CommandPlanner {
      * @param groups List of groups (Strings) to be made dependent
      * @param plan The canonical plan
      */
-    private static void distributeDependentHints(Collection<String> groups, PlanNode plan, QueryMetadataInterface metadata, NodeConstants.Info hintProperty)
+    private void distributeDependentHints(Collection<String> groups, PlanNode plan, QueryMetadataInterface metadata, NodeConstants.Info hintProperty)
         throws QueryMetadataException, MetaMatrixComponentException {
     
         if(groups == null || groups.isEmpty()) {
@@ -261,7 +261,9 @@ public class RelationalPlanner implements CommandPlanner {
                 }
                 
                 if(! appliedHint) {
-                    LogManager.logWarning(LogConstants.CTX_QUERY_PLANNER, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0010, groupName));
+                	String msg = QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0010, groupName);
+                    LogManager.logInfo(LogConstants.CTX_QUERY_PLANNER, msg);
+                    this.analysisRecord.addAnnotation(new QueryAnnotation(QueryAnnotation.HINTS, msg, "ignoring hint", QueryAnnotation.MEDIUM)); //$NON-NLS-1$
                 }
             }
         }

@@ -44,6 +44,7 @@ import org.teiid.logging.api.AuditMessage;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.DQPPlugin;
@@ -316,16 +317,15 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * Out of resources specified, return the subset for which the specified not have authorization to access.
      */
     public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
-    	
-        LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", this.userName, ", ", context, ", ", resources, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        
         if (!this.useEntitlements) {
-        	return Collections.EMPTY_SET;
+        	return Collections.emptySet();
         }
         
-        // Audit - request
-    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-    	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        // Audit - request
+	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+        }
         
         HashSet<String> results = new HashSet<String>(resources);
         
@@ -344,13 +344,15 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			}
 		}
 
-        if (results.isEmpty()) {
-        	msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
-        } else {
-        	msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING, msg);
-        }
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        if (results.isEmpty()) {
+	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+	        } else {
+	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+	        }
+		}
         return results;
     }    
 }

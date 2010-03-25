@@ -282,7 +282,7 @@ public class TestOptimizer {
 		// plan
 		ProcessorPlan plan = null;
 		if (analysisRecord == null) {
-        	analysisRecord = new AnalysisRecord(false, false, DEBUG);
+        	analysisRecord = new AnalysisRecord(false, DEBUG);
 		}
 		if (shouldSucceed) {
 			try {

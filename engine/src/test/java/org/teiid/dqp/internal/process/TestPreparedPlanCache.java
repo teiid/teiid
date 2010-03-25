@@ -155,7 +155,7 @@ public class TestPreparedPlanCache {
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             Map props = new HashMap();
             props.put("desc", "desc"+i); //$NON-NLS-1$ //$NON-NLS-2$
-            AnalysisRecord analysisRecord = new AnalysisRecord(true, true, false);
+            AnalysisRecord analysisRecord = new AnalysisRecord(true, false);
             analysisRecord.setQueryPlan(props);
     		pPlan.setAnalysisRecord(analysisRecord);
     		ArrayList refs = new ArrayList();

@@ -554,19 +554,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	public java.io.Reader getCharacterStream(int columnIndex)
 			throws SQLException {
 		Object value = getObject(columnIndex);
-		if (value == null) {
-			return null;
-		}
-
-		if (value instanceof Clob) {
-			return ((Clob) value).getCharacterStream();
-		}
-		
-		if (value instanceof SQLXML) {
-			return ((SQLXML)value).getCharacterStream();
-		}
-		
-		return new StringReader(getString(columnIndex));
+		return DataTypeTransformer.getCharacterStream(value);
 	}
 
 	/**

@@ -25,6 +25,10 @@ package com.metamatrix.query.analysis;
 import java.io.*;
 import java.util.*;
 
+import com.metamatrix.common.log.LogConstants;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.log.MessageLevel;
+
 /**
  * <p>The AnalysisRecord holds all debug/analysis information for 
  * a particular query as it is executed.  This includes:</p>
@@ -38,37 +42,41 @@ import java.util.*;
 public class AnalysisRecord implements Serializable {
 
     // Flags regarding what should be recorded
-    private boolean recordQueryPlan = false;
-    private boolean recordAnnotations = false;
-    private boolean recordDebug = false;
+    private boolean recordQueryPlan;
+    private boolean recordDebug;
+    private boolean logDebug;
     
     // Query plan
     private Map queryPlan;
     
     // Annotations
-    private Collection annotations;
+    private Collection<QueryAnnotation> annotations;
     
     // Debug trace log
     private StringWriter stringWriter;  // inner
     private PrintWriter debugWriter;    // public
     
-    public AnalysisRecord(boolean recordQueryPlan, boolean recordAnnotations, boolean recordDebug) {
+    public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
         this.recordQueryPlan = recordQueryPlan;
-        this.recordAnnotations = recordAnnotations;
-        this.recordDebug = recordDebug;
+        this.logDebug = recordDebug;
+        this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
-        if(recordAnnotations) {
-            this.annotations = new ArrayList();
+        if(recordQueryPlan) {
+            this.annotations = new ArrayList<QueryAnnotation>();
         }
         
-        if(recordDebug) {
+        if(this.recordDebug) {
             this.stringWriter = new StringWriter();
             this.debugWriter = new PrintWriter(this.stringWriter); 
         }
     }
     
+    public boolean logDebug() {
+		return logDebug;
+	}
+    
     public static AnalysisRecord createNonRecordingRecord() {
-        return new AnalysisRecord(false, false, false);
+        return new AnalysisRecord(false, false);
     }
 
     /**
@@ -84,7 +92,7 @@ public class AnalysisRecord implements Serializable {
      * @return True to record
      */
     public boolean recordAnnotations() {
-        return this.recordAnnotations;
+        return this.recordQueryPlan;
     }
     
     /**
@@ -124,7 +132,7 @@ public class AnalysisRecord implements Serializable {
      * Get annotations.  
      * @return
      */
-    public Collection getAnnotations() {
+    public Collection<QueryAnnotation> getAnnotations() {
         return this.annotations;
     }
     

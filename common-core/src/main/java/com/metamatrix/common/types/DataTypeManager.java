@@ -51,7 +51,6 @@ import com.metamatrix.common.types.basic.AnyToObjectTransform;
 import com.metamatrix.common.types.basic.AnyToStringTransform;
 import com.metamatrix.common.types.basic.BooleanToNumberTransform;
 import com.metamatrix.common.types.basic.ClobToSQLXMLTransform;
-import com.metamatrix.common.types.basic.ClobToStringTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigDecimalTransform;
 import com.metamatrix.common.types.basic.FixedNumberToBigIntegerTransform;
 import com.metamatrix.common.types.basic.FloatingNumberToBigDecimalTransform;
@@ -772,7 +771,7 @@ public class DataTypeManager {
 				if (value instanceof InputStreamFactory) {
 					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
 				}
-				StandardXMLTranslator sxt = new StandardXMLTranslator(value, null);
+				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
 				try {
 					return new XMLType(new SQLXMLImpl(sxt.getString()));
 				} catch (Exception e) {

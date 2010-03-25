@@ -26,7 +26,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 /**
  */
@@ -95,11 +95,11 @@ public abstract class TypeFacility {
      * @return
      */
     public static final int getSQLTypeFromRuntimeType(Class<?> type) {
-        return MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
+        return JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
     } 
     
     public static final String getDataTypeNameFromSQLType(int sqlType) {
-    	return MMJDBCSQLTypeInfo.getTypeName(sqlType);
+    	return JDBCSQLTypeInfo.getTypeName(sqlType);
     }
     
     /**

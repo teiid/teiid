@@ -22,6 +22,8 @@
 
 package org.teiid.jdbc;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -266,5 +268,21 @@ final class DataTypeTransformer {
      */    
     static final SQLXML getSQLXML(Object value) throws SQLException {
     	return transform(value, SQLXML.class, DefaultDataClasses.XML, "SQLXML"); //$NON-NLS-1$
+    }
+    
+    static final Reader getCharacterStream(Object value) throws SQLException {
+    	if (value == null) {
+			return null;
+		}
+
+		if (value instanceof Clob) {
+			return ((Clob) value).getCharacterStream();
+		}
+		
+		if (value instanceof SQLXML) {
+			return ((SQLXML)value).getCharacterStream();
+		}
+		
+		return new StringReader(getString(value));
     }
 }

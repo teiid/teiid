@@ -97,21 +97,21 @@ public class SessionServiceImpl implements SessionService {
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
     			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
     				closeSession(info.getSessionId());
     			}
 			} catch (Exception e) {
-				LogManager.logDetail(LogConstants.CTX_SESSION, e, "error running session monitor, unable to monitor: " + info.getSessionId()); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_SECURITY, e, "error running session monitor, unable to monitor: " + info.getSessionId()); //$NON-NLS-1$
 			}
 		}
 	}
 
 	@Override
 	public void closeSession(long sessionID) throws InvalidSessionException {
-		LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		SessionMetadata info = this.sessionCache.remove(sessionID);
 		if (info == null) {
 			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
@@ -120,7 +120,7 @@ public class SessionServiceImpl implements SessionService {
             try {
     			dqp.terminateSession(info.getSessionId());
             } catch (Exception e) {
-                LogManager.logWarning(LogConstants.CTX_SESSION,e,"Exception terminitating session"); //$NON-NLS-1$
+                LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
             }
 		}
 
@@ -131,7 +131,7 @@ public class SessionServiceImpl implements SessionService {
         		context.logout();
         	}
 		} catch (LoginException e) {
-			 LogManager.logWarning(LogConstants.CTX_SESSION,e,"Exception terminitating session"); //$NON-NLS-1$
+			 LogManager.logWarning(LogConstants.CTX_SECURITY,e,"Exception terminitating session"); //$NON-NLS-1$
 		}
 	}
 	
@@ -141,8 +141,6 @@ public class SessionServiceImpl implements SessionService {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
-        Properties productInfo = new Properties();
-
         LoginContext loginContext = null;
         String securityDomain = "none"; //$NON-NLS-1$
         Object securityContext = null;
@@ -173,10 +171,6 @@ public class SessionServiceImpl implements SessionService {
                 else {
                 	vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
                 }            
-                
-                // Reset product info with validated constants
-                productInfo.put(TeiidURL.JDBC.VDB_NAME, vdb.getName());
-                productInfo.put(TeiidURL.JDBC.VDB_VERSION, vdb.getVersion());                
             } catch (VirtualDatabaseException e) {
             	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$ 
 			}            
@@ -208,7 +202,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
         newSession.setSessionToken(new SessionToken(id, userName));
-        LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + id, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + id, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
@@ -260,12 +254,12 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public boolean terminateSession(long terminatedSessionID, long adminSessionID) {
 		Object[] params = {adminSessionID, terminatedSessionID};
-		LogManager.logInfo(LogConstants.CTX_SESSION, RuntimePlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SESSION,e,RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
+			LogManager.logWarning(LogConstants.CTX_SECURITY,e,RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
 			return false;
 		}
 	}
@@ -305,7 +299,7 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setSecurityDomains(String domainNameOrder) {
         if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
-        	LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Security Enabled: true"); //$NON-NLS-1$
+        	LogManager.logDetail(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
 
 	        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
 	        for (String domainName : domainNames) {
@@ -316,7 +310,7 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setAdminSecurityDomain(String domain) {
 		this.adminSecurityDomains.add(domain);
-		LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Admin Security Enabled: true"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
 	}
 
 	public void start() {

@@ -119,7 +119,7 @@ public class TestRuleAccessPatternValidation {
 				System.out.println("EXECUTING " + rule); //$NON-NLS-1$
 			}
              
-            plan = rule.execute(plan, metadata, FINDER, rules, new AnalysisRecord(false, false, debug), context);
+            plan = rule.execute(plan, metadata, FINDER, rules, new AnalysisRecord(false, debug), context);
 			if(debug) {
 				System.out.println("\nAFTER: \n" + plan); //$NON-NLS-1$
 			}

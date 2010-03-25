@@ -95,7 +95,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         
         // plan
         ProcessorPlan plan = null;
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
         if (shouldSucceed) {
             try {
                 //do planning

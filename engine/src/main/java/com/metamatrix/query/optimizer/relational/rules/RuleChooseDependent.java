@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -68,7 +66,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
         
         // Find first criteria node in plan with conjuncts        
-        List<CandidateJoin> matches = findCandidate(plan, metadata);
+        List<CandidateJoin> matches = findCandidate(plan, metadata, analysisRecord);
         
         boolean pushCriteria = false;
 
@@ -84,7 +82,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             JoinStrategyType joinStrategy = (JoinStrategyType)joinNode.getProperty(NodeConstants.Info.JOIN_STRATEGY);
             
-            PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null);
+            PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
             if(chosenNode != null) {
                 pushCriteria |= markDependent(chosenNode, joinNode);
                 continue;
@@ -148,7 +146,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @param node Root node to search
      * @param matches Collection to accumulate matches in
      */
-    List<CandidateJoin> findCandidate(PlanNode root, QueryMetadataInterface metadata) {
+    List<CandidateJoin> findCandidate(PlanNode root, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) {
 
         List<CandidateJoin> candidates = new ArrayList<CandidateJoin>();
         
@@ -159,7 +157,7 @@ public final class RuleChooseDependent implements OptimizerRule {
                 PlanNode child = (PlanNode)j.next();
                 child = FrameUtil.findJoinSourceNode(child);
                 
-                if(child.hasBooleanProperty(NodeConstants.Info.MAKE_NOT_DEP) || !isValidJoin(joinNode, child)) {
+                if(child.hasBooleanProperty(NodeConstants.Info.MAKE_NOT_DEP) || !isValidJoin(joinNode, child, analysisRecord)) {
                 	continue;
                 }
                 if (candidate == null) {
@@ -185,39 +183,48 @@ public final class RuleChooseDependent implements OptimizerRule {
      * join that has the outer side not the same as the dependent.
      * @param joinNode The join node to check
      * @param sourceNode The access node being considered
+     * @param analysisRecord TODO
      * @return True if valid for making dependent
      */
-    boolean isValidJoin(PlanNode joinNode, PlanNode sourceNode) {
+    boolean isValidJoin(PlanNode joinNode, PlanNode sourceNode, AnalysisRecord analysisRecord) {
         JoinType jtype = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
 
         // Check that join is not a CROSS join or FULL OUTER join
         if(jtype.equals(JoinType.JOIN_CROSS) || jtype.equals(JoinType.JOIN_FULL_OUTER)) {
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Rejecting dependent access node as parent join is CROSS or FULL OUTER: ", sourceNode.nodeToString()}); //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Rejecting dependent access node as parent join is CROSS or FULL OUTER: "+ sourceNode.nodeToString()); //$NON-NLS-1$
+        	}
             return false;
         }
 
         // Check that join criteria exist
         List jcrit = (List) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
         if(jcrit == null || jcrit.size() == 0) {
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Rejecting dependent access node as parent join has no join criteria: ", sourceNode.nodeToString()}); //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Rejecting dependent access node as parent join has no join criteria: "+ sourceNode.nodeToString()); //$NON-NLS-1$
+        	}
             return false;
         }
         
         if(joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS) == null) { 
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Rejecting dependent access node as parent join has no equality expressions: ", sourceNode.nodeToString()}); //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Rejecting dependent access node as parent join has no equality expressions: "+ sourceNode.nodeToString()); //$NON-NLS-1$
+        	}
             return false;
         }
                         
         // Check that for a left or right outer join the dependent side must be the inner 
         if(jtype.isOuter() && JoinUtil.getInnerSideJoinNodes(joinNode)[0] != sourceNode) {
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Rejecting dependent access node as it is on outer side of a join: ", sourceNode.nodeToString()}); //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Rejecting dependent access node as it is on outer side of a join: "+ sourceNode.nodeToString()); //$NON-NLS-1$
+        	}
             return false;
         }
 
         return true;        
     }
     
-    PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2)  {
+    PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2, AnalysisRecord analysisRecord)  {
     	PlanNode sourceNode1 = FrameUtil.findJoinSourceNode(rootNode1);
         PlanNode sourceNode2 = null;
         
@@ -228,23 +235,31 @@ public final class RuleChooseDependent implements OptimizerRule {
             if (sourceNode2 != null && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
                 //Return null - query planning should fail because both access nodes
                 //have unsatisfied access patterns
-                LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Neither access node can be made dependent because both have unsatisfied access patterns: ", sourceNode1.nodeToString(), "\n", sourceNode2.toString()}); //$NON-NLS-1$ //$NON-NLS-2$
+            	if (analysisRecord.recordDebug()) {
+            		analysisRecord.println("Neither access node can be made dependent because both have unsatisfied access patterns: " + sourceNode1.nodeToString() + "\n" + sourceNode2.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+            	}
                 return null;
             }  
             return rootNode1;
         } else if (sourceNode2 != null && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
             //Access node 2 has unsatisfied access pattern,
             //so try to make node 2 dependent
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Making access node dependent to satisfy access pattern: ", sourceNode2.nodeToString()}); //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Making access node dependent to satisfy access pattern: "+ sourceNode2.nodeToString()); //$NON-NLS-1$
+        	}
             return rootNode2;
         } 
         
         // Check for hints, which over-rule heuristics
         if(sourceNode1.hasBooleanProperty(NodeConstants.Info.MAKE_DEP)) {
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Making access node dependent due to hint: ", sourceNode1.nodeToString()});                     //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Making access node dependent due to hint: "+ sourceNode1.nodeToString());                     //$NON-NLS-1$
+        	}
             return rootNode1;
         } else if(sourceNode2 != null && sourceNode2.hasBooleanProperty(NodeConstants.Info.MAKE_DEP)) {
-            LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[] {"Making access node dependent due to hint: ", sourceNode2.nodeToString()});                     //$NON-NLS-1$
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Making access node dependent due to hint: "+ sourceNode2.nodeToString());                     //$NON-NLS-1$
+        	}
             return rootNode2;
         }
         

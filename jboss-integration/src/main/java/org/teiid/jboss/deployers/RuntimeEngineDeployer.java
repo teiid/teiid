@@ -113,14 +113,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
     public void start() {
-		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(com.metamatrix.common.log.LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
+		dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL));
 
     	// create the necessary services
     	createClientServices();
     	
-    	this.csr.registerClientService(ILogon.class, logon, com.metamatrix.common.log.LogConstants.CTX_SESSION);
-    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore), com.metamatrix.common.log.LogConstants.CTX_DQP);
-    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), com.metamatrix.common.log.LogConstants.CTX_ADMIN_API);
+    	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore), LogConstants.CTX_DQP);
+    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), LogConstants.CTX_ADMIN_API);
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
 	    	this.jdbcSocket = new SocketTransport(this.jdbcSocketConfiguration, csr);
@@ -133,11 +133,11 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	if (this.adminSocketConfiguration.isEnabled()) {
 	    	this.adminSocket = new SocketTransport(this.adminSocketConfiguration, csr);
 	    	this.adminSocket.start(); 
-	    	LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
-    		LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
-    	LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 	}	
     
     public void stop() {
@@ -158,7 +158,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     		this.adminSocket.stop();
     		this.adminSocket = null;
     	}    	
-    	LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     }
     
 	private void createClientServices() {

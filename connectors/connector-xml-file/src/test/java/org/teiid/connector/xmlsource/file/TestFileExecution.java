@@ -22,9 +22,8 @@
 
 package org.teiid.connector.xmlsource.file;
 
-import java.io.FileReader;
+import java.io.File;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.sql.SQLXML;
 import java.util.List;
 
@@ -33,60 +32,54 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.language.LanguageFactory;
 import org.teiid.connector.language.Call;
+import org.teiid.connector.language.LanguageFactory;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.xmlsource.file.FileConnection;
-import org.teiid.connector.xmlsource.file.FileProcedureExecution;
-import org.teiid.connector.xmlsource.file.FileManagedConnectionFactory;
 
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
 /** 
  */
+@SuppressWarnings("nls")
 public class TestFileExecution extends TestCase {
     
-    public void testGoodFile() throws Exception {
+	public void testGoodFile() throws Exception {
         String file = UnitTestUtil.getTestDataPath(); 
         FileManagedConnectionFactory config = new FileManagedConnectionFactory();
         config.setLogWriter(Mockito.mock(PrintWriter.class));
         config.setDirectoryLocation(file);
         
+        FileConnection conn = new FileConnection(config);
+        assertTrue(conn.isConnected());
+        RuntimeMetadata metadata = Mockito.mock(RuntimeMetadata.class);
+
+        LanguageFactory fact = config.getLanguageFactory();
+       	Call procedure = fact.createCall("GetXMLFile", null, createMockProcedureMetadata("BookCollection.xml")); //$NON-NLS-1$
+
+        FileProcedureExecution exec = (FileProcedureExecution)conn.createExecution(procedure, Mockito.mock(ExecutionContext.class), metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        exec.execute();
+        
+        List<?> result = exec.next();
+        assertNotNull(result);
+        assertNull(exec.next());
         try {
-            FileConnection conn = new FileConnection(config);
-            assertTrue(conn.isConnected());
-            RuntimeMetadata metadata = Mockito.mock(RuntimeMetadata.class);
-
-            LanguageFactory fact = config.getLanguageFactory();
-           	Call procedure = fact.createCall("GetXMLFile", null, createMockProcedureMetadata("BookCollection.xml")); //$NON-NLS-1$
-
-            FileProcedureExecution exec = (FileProcedureExecution)conn.createExecution(procedure, Mockito.mock(ExecutionContext.class), metadata); //$NON-NLS-1$ //$NON-NLS-2$
-            
-            exec.execute();
-            
-            List result = exec.next();
-            assertNotNull(result);
-            assertNull(exec.next());
-            try {
-                exec.getOutputParameterValues();
-                fail("should have thrown error in returning a return"); //$NON-NLS-1$
-            }catch(Exception e) {                
-            }
-            SQLXML xmlSource = (SQLXML)result.get(0);            
-            assertNotNull(xmlSource);
-            String xml = xmlSource.getString();
-                        
-            String fileContents = readFile(file+"/BookCollection.xml"); //$NON-NLS-1$
-            fileContents = fileContents.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
-            //System.out.println(fileContents);
-            
-            assertEquals(fileContents, xml);
-        } catch (ConnectorException e) {
-            e.printStackTrace();
-            fail("must have passed connection"); //$NON-NLS-1$
-        }                    
+            exec.getOutputParameterValues();
+            fail("should have thrown error in returning a return"); //$NON-NLS-1$
+        }catch(Exception e) {                
+        }
+        SQLXML xmlSource = (SQLXML)result.get(0);            
+        assertNotNull(xmlSource);
+        String xml = xmlSource.getString();
+                    
+        String fileContents = ObjectConverterUtil.convertFileToString(new File(file+"/BookCollection.xml")); //$NON-NLS-1$
+        fileContents = fileContents.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        //System.out.println(fileContents);
+        
+        assertEquals(fileContents, xml);
     }
         
     public void testBadFile() throws Exception {
@@ -111,18 +104,6 @@ public class TestFileExecution extends TestCase {
         }         
     }    
  
-    String readFile(String filename) throws Exception {
-        Reader reader = new FileReader(filename); 
-        StringBuffer fileContents = new StringBuffer();
-        int c= reader.read();
-        while (c != -1) {
-            fileContents.append((char)c);
-            c = reader.read();
-        }        
-        reader.close();
-        return fileContents.toString();
-    }    
-    
     public static Procedure createMockProcedureMetadata(String nameInSource) {
     	Procedure rm = Mockito.mock(Procedure.class);
 		Mockito.stub(rm.getNameInSource()).toReturn(nameInSource);
