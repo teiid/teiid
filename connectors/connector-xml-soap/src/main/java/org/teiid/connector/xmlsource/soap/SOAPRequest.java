@@ -22,6 +22,7 @@
 package org.teiid.connector.xmlsource.soap;
 
 import java.io.StringReader;
+import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -37,7 +38,6 @@ import javax.xml.ws.soap.SOAPBinding;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
-import org.teiid.connector.api.CacheScope;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.xmlsource.XMLSourcePlugin;
@@ -121,14 +121,14 @@ public class SOAPRequest extends BaseRequest {
         CriteriaDesc criterion = this.executionInfo.getResponseIDCriterion();
         if (criterion != null) {
             String responseid = (String) (criterion.getValues().get(0));
-            SQLXML xml = (SQLXML)this.context.getFromCache(CacheScope.REQUEST, responseid);
+            SQLXML xml = this.config.getResponse(responseid);
             Assertion.isNotNull(xml);
         	document = new DocumentImpl(xml, responseid);
         } else {
         	// Not a join, but might still be cached.
         	// Not cached, so make the request
             SQLXML responseBody = executeRequest();
-            this.context.storeInCache(CacheScope.REQUEST,this.context.getExecutionCountIdentifier(), responseBody);
+            this.config.setResponse(this.context.getExecutionCountIdentifier(), responseBody);
             //InputStream filteredStream = getState().addStreamFilters(responseBody);
             document = new DocumentImpl(responseBody, this.context.getExecutionCountIdentifier());
         }
@@ -179,7 +179,7 @@ public class SOAPRequest extends BaseRequest {
             // I should be able to send no value here, but the dispatch throws an exception
             // if soapAction == null.  We allow the default "" to get sent in that case.
             // In SOAP 1.1 we must send a SoapAction.
-            String soapAction = (String)this.executionInfo.getOtherProperties().get("SOAPAction");
+            String soapAction = this.executionInfo.getOtherProperties().get("SOAPAction");
             if(null != soapAction) {
             	dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, soapAction);
             }
@@ -198,11 +198,19 @@ public class SOAPRequest extends BaseRequest {
 		}
 	}
 	
+	public void release() {
+		SQLXML response = this.config.removeResponse(this.context.getExecutionCountIdentifier());
+		if (response != null) {
+			try {
+				response.free();
+			} catch (SQLException e) {
+			}
+		}
+	}
+	
 	private SQLXML createSQLXML(Source output) {
 		return (SQLXML)this.config.getTypeFacility().convertToRuntimeType(output);
 	}	
-
-
 
 	public int getDocumentCount() throws ConnectorException {
 		return 1;

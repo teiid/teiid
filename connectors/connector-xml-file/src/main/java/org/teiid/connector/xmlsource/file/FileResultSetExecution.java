@@ -116,13 +116,8 @@ public class FileResultSetExecution extends BaseStreamingExecution implements Re
 	}
 
 	@Override
-	public void closeStreams() {
-		// Nothing to do
-	}
-	
-	@Override
 	public void close() throws ConnectorException {
-		closeStreams();
+		// Nothing to do
 	}	
 	
 	@Override

@@ -91,14 +91,14 @@ public class HTTPRequest extends BaseRequest {
         CriteriaDesc criterion = this.exeInfo.getResponseIDCriterion();
         if (criterion != null) {
             String responseid = (String) (criterion.getValues().get(0));
-            SQLXML xml = this.state.getResponse(responseid);
+            SQLXML xml = this.config.getResponse(responseid);
             Assertion.isNotNull(xml);
         	document = new DocumentImpl(xml, responseid);
         } else {
         	// Not a join, but might still be cached.
         	// Not cached, so make the request
             SQLXML responseBody = executeRequest();
-    		this.state.setResponse(this.context.getExecutionCountIdentifier(), responseBody);
+    		this.config.setResponse(this.context.getExecutionCountIdentifier(), responseBody);
             this.response = responseBody;
             //InputStream filteredStream = getState().addStreamFilters(responseBody);
             document = new DocumentImpl(responseBody, this.context.getExecutionCountIdentifier());
@@ -140,7 +140,7 @@ public class HTTPRequest extends BaseRequest {
 			request.releaseConnection();
 		}
 		if (response != null) {
-			this.state.removeResponse(this.context.getExecutionCountIdentifier());
+			this.config.removeResponse(this.context.getExecutionCountIdentifier());
 			try {
 				response.free();
 			} catch (SQLException e) {

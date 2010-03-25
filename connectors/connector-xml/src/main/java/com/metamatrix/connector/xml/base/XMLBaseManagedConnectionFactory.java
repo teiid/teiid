@@ -22,11 +22,16 @@
 
 package com.metamatrix.connector.xml.base;
 
+import java.sql.SQLXML;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.teiid.connector.basic.BasicManagedConnectionFactory;
 
 public class XMLBaseManagedConnectionFactory extends BasicManagedConnectionFactory {
 		
 	private String saxFilterProviderClass;
+	private Map<String, SQLXML> responses = new ConcurrentHashMap<String, SQLXML>();
 
 	public String getSaxFilterProviderClass() {
 		return this.saxFilterProviderClass;
@@ -55,5 +60,17 @@ public class XMLBaseManagedConnectionFactory extends BasicManagedConnectionFacto
 	public void setInputStreamFilterClass(String inputStreamFilterClass) {
 		this.inputStreamFilterClass = inputStreamFilterClass;
 	}
+	
+	public SQLXML getResponse(String key) {
+		return this.responses.get(key);
+	}
+	
+	public void setResponse(String key, SQLXML xml) {
+		this.responses.put(key, xml);
+	}
+	
+	public SQLXML removeResponse(String key) {
+		return this.responses.remove(key);
+	}	
 	
 }

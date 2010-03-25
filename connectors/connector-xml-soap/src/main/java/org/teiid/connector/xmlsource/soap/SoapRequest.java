@@ -27,7 +27,6 @@ import java.util.List;
 
 import javax.xml.transform.Source;
 
-import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.xmlsource.XMLSourcePlugin;
 import org.teiid.connector.xmlsource.soap.ServiceOperation.ExcutionFailedException;
@@ -101,15 +100,8 @@ public abstract class SoapRequest {
         }
     }
     
-    protected SQLXML convertToXMLType(Source value) throws ConnectorException {
-    	if (value == null) {
-    		return null;
-    	}
-    	Object result = env.getTypeFacility().convertToRuntimeType(value);
-    	if (!(result instanceof SQLXML)) {
-    		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml")); //$NON-NLS-1$
-    	}
-    	return (SQLXML)result;
+    protected SQLXML convertToXMLType(Source value) {
+    	return (SQLXML)env.getTypeFacility().convertToRuntimeType(value);
     }
     
     public List<?> getOutputParameterValues() throws ConnectorException {

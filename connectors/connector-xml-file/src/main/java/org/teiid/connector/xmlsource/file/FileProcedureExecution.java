@@ -27,13 +27,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.transform.Source;
 
-import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
@@ -108,22 +106,11 @@ public class FileProcedureExecution extends BasicExecution implements ProcedureE
         this.config.getLogger().logDetail(XMLSourcePlugin.Util.getString("executing_procedure", new Object[] {procedure.getProcedureName()})); //$NON-NLS-1$
     }
     
-    protected SQLXML convertToXMLType(Source value) throws ConnectorException {
-    	if (value == null) {
-    		return null;
-    	}
-    	Object result = this.config.getTypeFacility().convertToRuntimeType(value);
-    	if (!(result instanceof SQLXML)) {
-    		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml")); //$NON-NLS-1$
-    	}
-    	return (SQLXML)result;
-    }
-
     @Override
     public List<?> next() throws ConnectorException, DataNotAvailableException {
     	if (!returnedResult) {
     		returnedResult = true;
-    		return Arrays.asList(convertToXMLType(returnValue));
+    		return Arrays.asList(returnValue);
     	}
     	return null;
     }  

@@ -29,7 +29,6 @@ import java.util.List;
 
 import javax.xml.transform.Source;
 
-import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
@@ -113,15 +112,8 @@ public abstract class BaseStreamingExecution implements XMLRelationalExecution {
 		}
 	}
 	
-    protected SQLXML convertToXMLType(Source value) throws ConnectorException {
-    	if (value == null) {
-    		return null;
-    	}
-    	Object result = this.config.getTypeFacility().convertToRuntimeType(value);
-    	if (!(result instanceof SQLXML)) {
-    		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml")); //$NON-NLS-1$
-    	}
-    	return (SQLXML)result;
+    protected SQLXML convertToXMLType(Source value) {
+    	return (SQLXML)this.config.getTypeFacility().convertToRuntimeType(value);
     }	
     
 	@Override

@@ -75,12 +75,9 @@ public class SOAPResultSetExecution extends BaseStreamingExecution implements Re
 
 	@Override
 	public void close() throws ConnectorException {
-		closeStreams();
-	}
-	
-	@Override
-	public void closeStreams() {
-		// do clean up?
+		for (SOAPRequest request : requests) {
+			request.release();
+		}
 	}
 
 	@Override

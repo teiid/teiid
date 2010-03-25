@@ -101,7 +101,7 @@
                 <description>{$display:"XML Filter Provider",$description:"The class the provides extended XML Filters",$advanced:"true"}</description>
                 <config-property-name>SaxFilterProviderClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.NoExtendedFilters</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>
             
             <config-property>
@@ -115,14 +115,14 @@
                 <description>{$display:"Input Stream Filter Class",$description:"The class to use to preprocess raw XML input stream",$advanced:"true"}</description>
                 <config-property-name>InputStreamFilterClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.PluggableInputStreamFilterImpl</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>
             
             <config-property>
                 <description>{$display:"Query Preprocessor Class",$description:"The class to use to preprocess the IQuery",$advanced:"true"}</description>
                 <config-property-name>QueryPreprocessorClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.NoQueryPreprocessing</config-property-value>
+                <config-property-value></config-property-value>
             </config-property> 
                         
             <config-property>

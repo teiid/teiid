@@ -155,16 +155,6 @@ public class HTTPManagedConnectionFactory extends XMLBaseManagedConnectionFactor
 		this.connectorStateClass = connectorStateClass;
 	}
 
-	private boolean cacheEnabled;
-
-	public boolean getCacheEnabled() {
-		return this.cacheEnabled;
-	}
-
-	public void setCacheEnabled(Boolean cacheEnabled) {
-		this.cacheEnabled = cacheEnabled;
-	}
-	
 	private boolean logRequestResponseDocs;
 
 	public boolean getLogRequestResponseDocs() {

@@ -76,7 +76,7 @@ public class HTTPExecutor implements ResultProducer {
 	}
 	
 	@Override
-	public void closeStreams() {
+	public void close() {
         for(HTTPRequest request : this.requests) {
         	if (request != null) {
         		request.release();

@@ -29,7 +29,6 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.basic.BasicConnector;
-import org.teiid.connector.basic.BasicManagedConnectionFactory;
 import org.teiid.connector.xml.StatefulConnector;
 import org.teiid.connector.xml.XMLConnectorState;
 import org.teiid.connector.xml.http.HTTPConnectorState;

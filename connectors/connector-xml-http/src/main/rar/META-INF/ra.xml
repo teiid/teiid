@@ -38,13 +38,13 @@
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>com.metamatrix.connector.xml.http.HTTPManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.connector.xml.http.HTTPManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
                <description>{$display:"Connector Class",$advanced:"true"}</description>
                <config-property-name>ConnectorClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.xml.base.XMLConnector</config-property-value>
+               <config-property-value>org.teiid.connector.xml.base.XMLConnector</config-property-value>
             </config-property>
 
             <config-property>
@@ -88,7 +88,7 @@
                 <description>{$display:"XML Filter Provider",$description:"The class the provides extended XML Filters",$advanced:"true"}</description>
                 <config-property-name>SaxFilterProviderClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.NoExtendedFilters</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>
             
             <config-property>
@@ -115,7 +115,7 @@
                 <description>{$display:"Connector State Class",$required:"true",$advanced:"true"}</description>
                 <config-property-name>ConnectorStateClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.http.HTTPConnectorState</config-property-value>
+                <config-property-value>org.teiid.connector.xml.http.HTTPConnectorState</config-property-value>
             </config-property>
             
             <config-property>
@@ -168,7 +168,7 @@
                 <description>{$display:"Trust Deserializer Class",$description:"The class to use to process trusted payloads and execution payloads",$advanced:"true"}</description>
                 <config-property-name>TrustDeserializerClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.http.DefaultTrustDeserializer</config-property-value>
+                <config-property-value>org.teiid.connector.xml.http.DefaultTrustDeserializer</config-property-value>
             </config-property>
             
             <config-property>
@@ -182,7 +182,7 @@
                 <description>{$display:"Input Stream Filter Class",$description:"The class to use to preprocess raw XML input stream",$advanced:"true"}</description>
                 <config-property-name>InputStreamFilterClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.PluggableInputStreamFilterImpl</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>
             
             <config-property>
@@ -195,7 +195,7 @@
                 <description>{$display:"Query Preprocessor Class",$description:"The class to use to preprocess the IQuery",$advanced:"true"}</description>
                 <config-property-name>QueryPreprocessorClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.NoQueryPreprocessing</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>                    
             
             <connectionfactory-interface>org.teiid.connector.api.Connector</connectionfactory-interface>

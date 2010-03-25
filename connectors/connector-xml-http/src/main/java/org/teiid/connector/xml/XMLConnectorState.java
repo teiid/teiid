@@ -28,11 +28,13 @@ import java.sql.SQLXML;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.xml.http.HTTPManagedConnectionFactory;
 
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 
-public interface XMLConnectorState extends BaseXMLConnectorState {
+public interface XMLConnectorState {
 
 	public static final String STATE_CLASS_PROP = "ConnectorStateClass"; //$NON-NLS-1$
 
@@ -51,8 +53,11 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 
 	public String getPluggableInputStreamFilterClass();
 
-	public boolean isCaching();
+	public abstract void setState(HTTPManagedConnectionFactory env) throws ConnectorException;
 	
-	public SQLXML getResponse(String key);
+	public abstract void setLogger(ConnectorLogger logger);
+
+	public abstract ConnectorLogger getLogger();
+
 
 }

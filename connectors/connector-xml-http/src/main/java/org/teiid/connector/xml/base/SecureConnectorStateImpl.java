@@ -24,8 +24,6 @@
 
 package org.teiid.connector.xml.base;
 
-import java.util.Properties;
-
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.xml.SecureConnectorState;
 import org.teiid.connector.xml.TrustedPayloadHandler;
@@ -61,13 +59,6 @@ public abstract class SecureConnectorStateImpl extends XMLConnectorStateImpl imp
         
         //ensure that we can get it when we need it.
         getTrustDeserializerInstance();
-	}
-	
-	@Override
-	public Properties getState() {
-		Properties props = super.getState();
-        props.setProperty(SECURITY_DESERIALIZER_CLASS, getSecurityDeserializerClass());
-		return props;
 	}
 	
     private void setSecurityDeserializerClass(String secClass) {

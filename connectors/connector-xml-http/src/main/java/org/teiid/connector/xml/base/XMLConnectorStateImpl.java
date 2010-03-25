@@ -24,10 +24,6 @@
 package org.teiid.connector.xml.base;
 
 import java.io.InputStream;
-import java.sql.SQLXML;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
@@ -53,23 +49,11 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     
     private String m_pluggableInputStreamFilterClass;
 
-    public static final String CACHE_ENABLED = "CacheEnabled"; //$NON-NLS-1$
+    public static final String SAX_FILTER_PROVIDER_CLASS_DEFAULT = ""; //$NON-NLS-1$
 
-    public static final String LOG_REQUEST_RESPONSE_DOCS = "LogRequestResponseDocs"; //$NON-NLS-1$
-
-    public static final String SAX_FILTER_PROVIDER_CLASS = "SaxFilterProviderClass"; //$NON-NLS-1$
-
-    public static final String QUERY_PREPROCESS_CLASS = "QueryPreprocessorClass"; //$NON-NLS-1$
+    public static final String QUERY_PREPROCESS_CLASS_DEFAULT = ""; //$NON-NLS-1$
     
-    public static final String INPUT_STREAM_FILTER_CLASS = "InputStreamFilterClass"; //$NON-NLS-1$
-
-    public static final String SAX_FILTER_PROVIDER_CLASS_DEFAULT = "com.metamatrix.connector.xml.base.NoExtendedFilters"; //$NON-NLS-1$
-
-    public static final String QUERY_PREPROCESS_CLASS_DEFAULT = "com.metamatrix.connector.xml.base.NoQueryPreprocessing"; //$NON-NLS-1$
-    
-    private static final String INPUT_STREAM_FILTER_CLASS_DEFAULT = "com.metamatrix.connector.xml.base.PluggableInputStreamFilterImpl"; //$NON-NLS-1$
-
-    public static final String CONNECTOR_CAPABILITES = "ConnectorCapabilities";
+    private static final String INPUT_STREAM_FILTER_CLASS_DEFAULT = ""; //$NON-NLS-1$
 
     protected ConnectorLogger logger;
 
@@ -78,11 +62,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     private SAXFilterProvider provider;
 
     private ConnectorCapabilities capabilites;
-
-
-	private boolean caching = false;
-	
-	private Map<String, SQLXML> responses = new ConcurrentHashMap<String, SQLXML>();
 
     public XMLConnectorStateImpl() {
         setPreprocess(true);
@@ -96,36 +75,27 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         if (logger == null) {
             throw new RuntimeException("Internal Exception: logger is null");
         }
-        setCaching(env.getCacheEnabled());
         setLogRequestResponse(env.getLogRequestResponseDocs());
 
         setCapabilites(loadConnectorCapabilities(env.getCapabilitiesClass()));
         
         String provider = env.getSaxFilterProviderClass();
-        if (provider != null && !provider.equals("")) {
+        if (provider != null && !provider.equals(SAX_FILTER_PROVIDER_CLASS_DEFAULT)) {
             setSaxProviderClass(provider);
             setSAXFilterProvider(loadSAXFilter(getSaxProviderClass()));
         }
         
         String preprocessor = env.getQueryPreprocessorClass();
-        if (preprocessor != null && !preprocessor.equals("")) {
+        if (preprocessor != null && !preprocessor.equals(QUERY_PREPROCESS_CLASS_DEFAULT)) {
             setQueryPreprocessorClass(preprocessor);
             setPreprocessor(loadPreprocessor(getQueryPreprocessorClass()));
         }
         
         String streamFilter = env.getInputStreamFilterClass();
-        if(streamFilter != null && !streamFilter.equals("")) {
+        if(streamFilter != null && !streamFilter.equals(INPUT_STREAM_FILTER_CLASS_DEFAULT)) {
         	setPluggableInputStreamFilterClass(streamFilter);
         }
     }
-
-	private void setCaching(Boolean caching) {
-		this.caching = caching;	
-	}
-	
-	public boolean isCaching() {
-		return this.caching;
-	}
 
 	private ConnectorCapabilities loadConnectorCapabilities(
             String connectorCapabilitiesClass) throws ConnectorException {
@@ -156,15 +126,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
      */
     public ConnectorLogger getLogger() {
         return logger;
-    }
-
-    public java.util.Properties getState() {
-        Properties props = new Properties();
-        props.setProperty(LOG_REQUEST_RESPONSE_DOCS, Boolean
-                .toString(isLogRequestResponse()));
-        props.setProperty(SAX_FILTER_PROVIDER_CLASS, getSaxProviderClass());
-        props.setProperty(QUERY_PREPROCESS_CLASS, getQueryPreprocessorClass());
-        return props;
     }
 
     protected boolean isNotNullOrEmpty(String value) {
@@ -316,16 +277,4 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 		return stream;
 	}
 	
-	@Override
-	public SQLXML getResponse(String key) {
-		return this.responses.get(key);
-	}
-	
-	public void setResponse(String key, SQLXML xml) {
-		this.responses.put(key, xml);
-	}
-	
-	public void removeResponse(String key) {
-		this.responses.remove(key);
-	}	
 }

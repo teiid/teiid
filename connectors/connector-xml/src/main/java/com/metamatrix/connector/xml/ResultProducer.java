@@ -21,5 +21,5 @@ public interface ResultProducer {
 	 */
 	public Iterator<Document>  getXMLDocuments() throws ConnectorException;
 	
-	public void closeStreams();
+    void close() throws ConnectorException;
 }

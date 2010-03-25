@@ -175,7 +175,7 @@
                 <description>{$display:"XML Filter Provider",$description:"The class the provides extended XML Filters",$advanced:"true"}</description>
                 <config-property-name>SaxFilterProviderClass</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>com.metamatrix.connector.xml.base.NoExtendedFilters</config-property-value>
+                <config-property-value></config-property-value>
             </config-property>
             
             <config-property>
