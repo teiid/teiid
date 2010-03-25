@@ -42,6 +42,10 @@
 									<xs:enumeration value="PHYSICAL"/>
 									<xs:enumeration value="VIRTUAL"/>
 									<xs:enumeration value="FUNCTION"/>
+									<xs:enumeration value="TYPE"/>
+									<xs:enumeration value="EXTENSION"/>
+									<xs:enumeration value="LOGICAL"/>
+									<xs:enumeration value="MATERIALIZATION"/>
 								</xs:restriction>
 							</xs:simpleType>
 						</xs:attribute>
