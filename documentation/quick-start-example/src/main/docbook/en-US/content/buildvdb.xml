@@ -24,8 +24,8 @@
   <sect1 id="step-3">
     <title>Building a VDB</title>
     <para>Once you start the Designer, there are several steps you must perform to create a VDB. These steps are 
-    summarized in the following table. There is a video at the end of the
-      list that will take you though all the steps involved.</para>
+    summarized in the following table. This is a <ulink url="../images/EmbeddedDesignerExampleVideo.swf">video</ulink> 
+    will take you though all the steps involved. (please note this video is based on old version of Designer, a updated one coming soon..)</para>
     <orderedlist>
       <listitem>
         <para>Switch to the Designer Perspective, by opening the "Window->Open Perspective.."</para>
@@ -61,16 +61,5 @@
         <para>Export or copy the VDB for use in your application.</para>
       </listitem>
     </orderedlist>
-    <!-- 
-      <center>
-      <OBJECT CLASSID="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" WIDTH="802" HEIGHT="687" CODEBASE="http://active.macromedia.com/flash5/cabs/swflash.cab#version=5,0,0,0">
-      <PARAM NAME=movie VALUE="EmbeddedDesignerExampleVideo.swf">
-      <PARAM NAME=play VALUE=true>
-      <PARAM NAME=loop VALUE=false>
-      <PARAM NAME=quality VALUE=low>
-      <EMBED SRC="../images/EmbeddedDesignerExampleVideo.swf" WIDTH=802 HEIGHT=687 quality=low loop=false TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash"></EMBED>
-      </OBJECT>
-      </center>    
-     -->
   </sect1>
 </chapter>

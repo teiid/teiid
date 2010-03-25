@@ -4,29 +4,26 @@
   <title>Connecting to a VDB through JDBC</title>
   <para>At this point you have deployed Teiid and your VDB. Now it's time to connect the sample application
    to this VDB, issue SQL queries, and view the returned, integrated data. Note that
-    this process is no different than connecting to any other JDBC source.</para>
+    this process is no different than connecting to any other JDBC source like Oracle.</para>
   <sect1>
     <title>Stand-alone Java Application Deployment</title>
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
       connect to your VDB all you need is a URL and any additional optional properties that you would like to set.
-       Teiid defaults to allowing the admin user with password teiid.  Additional user accounts can be added through
-       Teiid extensible MembershipDomain mechanism.  A JDBC connection can be obtained through the Teiid driver
+       Teiid defaults to allowing the "admin" as user with password as "teiid".  Additional user accounts can be added.
+        A JDBC connection can be obtained through the Teiid driver
       <emphasis>"org.teiid.jdbc.TeiidDriver"</emphasis>
       with the URL syntax of
     </para>
     <para>
-      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@((mm|mms)://&lt;host name&gt;:&lt;port&gt;)|(&lt;path to deploy.properties&gt;)</emphasis>
-    </para>
-	<para>When the path to deploy.properties is specified Teiid operates in
-		embedded mode and runs in the same VM as the application.
+      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@(mm|mms)://&lt;host name&gt;:&lt;port&gt;</emphasis>
     </para>
 	<para>
 		You can add optional properties at the end of the URL using a semi-colon(;) name=value
 		format. For example</para>
 	<para />
     <para>
-      <emphasis>jdbc:metamatrix:&lt;VDB-Name&gt;;dqp.logFile=/home/query.log</emphasis>
+      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@(mm|mms)://&lt;host name&gt;:&lt;port&gt;;autoCommitTxn=DETECT</emphasis>
     </para>
     <para />
     <para>
@@ -87,7 +84,7 @@
   To execute this demonstration, follow these steps:</para> 
   <orderedlist numeration="arabic">
     <listitem><para>Ensure Derby is running</para></listitem>
-    <listitem><para>Change to the /examples/portfolio directory within your Teiid installation</para></listitem>
+    <listitem><para>Change to the ${jboss-install}/server/profile/teiid-examples/portfolio directory</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
     <para>The sample query, "select * from CustomerAccount", queries the view model and, from that, queries the two underlying
@@ -101,6 +98,8 @@
   <para>If your application is Web based, you can also deploy Teiid in an application server 
   and treat it as any other JDBC source by creating a connection pool with the 
   <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis> and assigning it a JNDI name. 
-  Refer to <ulink url="https://www.jboss.org/community/docs/DOC-13183">deployment to application server</ulink> for more information.</para>
+  Refer to <ulink url="https://community.jboss.org/docs/DOC-13888">deployment to application server</ulink> for more information. 
+  </para>
+  <note><para>"embedded" mode is only available in versions of Teiid up to 6.2</para></note>
   </sect1>   
 </chapter>

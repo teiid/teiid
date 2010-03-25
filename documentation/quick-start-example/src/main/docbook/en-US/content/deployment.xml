@@ -2,16 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="deployment">
   <title>Deployment</title>
-  <para> Having built the VDB, it must be deployed so it can be access through a JDBC connection.
-  Note there are two steps involved in this deployment:</para>
-  <orderedlist>
-    <listitem>
-      <para>Deploying Teiid</para>
-    </listitem>
-    <listitem>
-      <para>Deploying a VDB</para>
-    </listitem>
-  </orderedlist>
+  <para> Having built the VDB, it must be deployed so it can be access through a JDBC connection.</para>
   <para> Teiid is typically used in one of two manners:</para>
   <itemizedlist>
     <listitem>
@@ -33,10 +24,33 @@
     <title>Stand-alone Application Deployment</title>
     <orderedlist>
       <listitem>
-        <para>Add the "${teiid.home}/client/teiid-${version}-client.jar" to your application classpath</para>
+        <para>Add the "${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar" to your application classpath</para>
       </listitem>
       <listitem>
-        <para>Place your VDB in a the "${teiid.home}/deploy". 
+        <para>
+        Before we can deploy the VDB to the server, we need to create and deploy the required Connector Bindings for Derby
+        and File sources. Connector bindings are JCA sources that provide the data then their data is integrated through Teiid. If you are
+        familiar with creating data sources or connection factories in JBoss AS, then this is exactly the same operation. 
+        </para>
+        
+        <para>For this example we need to create three (3) different data sources. You would first need to create a data source to Derby. 
+        See ${teiid-examples}/portfolio/PortfolioModel/portfolio-ds.xml.
+        Then create Teiid specific connectors to Derby and File sources.
+        See ${teiid-examples}/portfolio/PortfolioModel/derby-connector-ds.xml 
+        and ${teiid-examples}/portfolio/PortfolioModel/text-connector-ds.xml</para>
+        
+        <para>The reason we created a data source and also a connector binding for Derby is, the data source provides a 
+        JDBC connection to the portfolio database, and the connector binding provides a Teiid wrapper around 
+        data source that understands execution and query translation defined by the Teiid runtime. The concerns about the
+        connection and Teiid access are separated into two different sources. So, the data source can be used by any other application
+         however the Teid connector is only used by the Teiid. This will be case for any JDBC
+        based sources. The same is not true for File source, because File Connector can access the resource directly itself.</para>
+        <para>To deploy these connector bindings copy the "-ds.xml" files into "${jboss-install}/server/{profile}/deploy" directory. 
+        Make sure they are started correctly and you have supplied correct credentials for data source. </para>
+      </listitem>      
+      <listitem>
+        <para>Place your VDB in a the "${jboss-install}/server/{profile}/deploy" directory. If the JBoss AS is not already 
+        started, start by running the "${jboss-install}/bin/run.sh" or "${jboss-install}/bin/run.bat" scripts.
         </para>
       </listitem>
       <listitem>

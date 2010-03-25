@@ -20,26 +20,20 @@
     </listitem>
   </orderedlist>
   <para>
-    For this Quick Start, download the
-    <emphasis>Teiid Kit</emphasis>
-    and extract this tar/zip file to a directory you can access.
+    For this Quick Start, download and install <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink>. 
+    Then download <emphasis>Teiid</emphasis> runtime and unzip the contents of the Teiid under any of one of the JBoss AS profiles 
+    like "default" or "all". For example in "&lt;jboss-install&gt;/server/default". The Teiid runtime directory structure matches that 
+    of the JBoss profile directly, so you can just overlay the needed classes.
   </para>
-  <para>In the expanded directory, you will find "client/teiid-${version}-client.jar", which is the main client binary jar
-    file for Teiid, and the "lib" and "extension" directories containing binaries either directly or indirectly
-    required to execute Teiid. Later sections describe installing these artifacts.</para>
+  <para>In the "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory, you will find "teiid-${version}-client.jar", which 
+    is the main client binary jar file for Teiid. This jar file contains the Teiid's JDBC driver and data source classes. </para>
   <note>
-    <para>Teiid requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
+    <para>JBoss AS requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
     </para>
   	<para>
       Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon
-      the user supplying their own JDBC drivers in the deployment. Teiid
-      has been tested extensively with
-      <ulink url="http://www.datadirect.com">DataDirect</ulink>
-       If you have access to these JDBC drivers, we recommend their use.
+      the user supplying their own JDBC drivers in the deployment. Copy the JDBC driver files into 
+      "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" before you create any data sources.
     </para>
-    <!-- 
-    <para>Free open source software JDBC drivers for MySQL, Postgres,and Derby are included in the "lib" folder as the LGPL
-      license permits them to be included with the Teiid kit.</para>
-    -->
   </note>
 </chapter>
