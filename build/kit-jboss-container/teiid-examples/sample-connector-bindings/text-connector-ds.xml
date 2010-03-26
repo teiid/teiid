@@ -4,7 +4,7 @@
 
    <no-tx-connection-factory>
       <jndi-name>text-connector</jndi-name>
-      <rar-name>connector-text-{project.version}.rar</rar-name>
+      <rar-name>connector-text-${project.version}.rar</rar-name>
       <connection-definition>org.teiid.connector.api.Connector</connection-definition>
       
       <!--
@@ -12,6 +12,8 @@
         file mentioned above. 
        -->
       <config-property name="XaCapable" type="java.lang.Boolean">false</config-property>
+      
+      <!-- Provide a fully qualified path to the text descriptor file -->
       <config-property name="DescriptorFile" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/portfolio/marketdata-def.txt</config-property>
             
     </no-tx-connection-factory>
