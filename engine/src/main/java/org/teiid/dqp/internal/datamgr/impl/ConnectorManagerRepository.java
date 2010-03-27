@@ -23,6 +23,8 @@
 package org.teiid.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +41,11 @@ public class ConnectorManagerRepository implements Serializable{
 	public ConnectorManager getConnectorManager(String connectorName) {
 		return this.repo.get(connectorName);
 	}
+	
+	public List<ConnectorManager> getConnectorManagers() {
+		return new ArrayList(this.repo.values());
+	}
+	
 	
 	public ConnectorManager removeConnectorManager(String connectorName) {
 		return this.repo.remove(connectorName);

@@ -76,8 +76,8 @@
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
             <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
             <include>org.jboss.teiid.connectors:connector-xml-http:rar</include>
-            <include>org.jboss.teiid.connectors:connector-xmlsource-file:rar</include>
-            <include>org.jboss.teiid.connectors:connector-xmlsource-soap:rar</include>
+            <include>org.jboss.teiid.connectors:connector-xml-file:rar</include>
+            <include>org.jboss.teiid.connectors:connector-xml-soap:rar</include>
         </includes>
 
         <binaries>        

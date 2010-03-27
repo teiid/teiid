@@ -137,8 +137,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// Check if the VDB is fully configured.
 		if (valid) {
 			deployment.setStatus(VDB.Status.ACTIVE);
+		} else {
+			deployment.setStatus(VDB.Status.INACTIVE);
 		}
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	private boolean validateSources(VDBMetaData deployment) {

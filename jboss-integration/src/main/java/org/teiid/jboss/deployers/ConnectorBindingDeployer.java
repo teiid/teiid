@@ -25,26 +25,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.spi.deployer.managed.ManagedObjectCreator;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.logging.Logger;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentGroup;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentMetaData;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.api.Connector;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.security.SecurityHelper;
 
+import com.metamatrix.common.log.LogConstants;
+import com.metamatrix.common.log.LogManager;
+
 public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<ManagedConnectionFactoryDeploymentGroup> implements ManagedObjectCreator {
-	protected Logger log = Logger.getLogger(getClass());
 	private ManagedObjectFactory mof;
 	private SecurityHelper securityHelper;
 	
 	private ConnectorManagerRepository connectorManagerRepository;
+	private VDBRepository vdbRepository;
 	
 	public ConnectorBindingDeployer() {
 		super(ManagedConnectionFactoryDeploymentGroup.class);
@@ -60,16 +71,20 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 		for (ManagedConnectionFactoryDeploymentMetaData data : deployments) {
 			String connectorDefinition = data.getConnectionDefinition();
 			if (connectorDefinition.equals(Connector.class.getName())) {
-				String connectorName = data.getJndiName();
+				String connectorName = "java:"+data.getJndiName(); //$NON-NLS-1$
 
-				ConnectorManager cm = createConnectorManger("java:"+connectorName, data.getMaxSize()); //$NON-NLS-1$
+				ConnectorManager cm = createConnectorManger(connectorName, data.getMaxSize());
 				cm.start();
 				cmGroup.addConnectorManager(cm);
 
 				// Add the references to the mgr as loaded.
-	            this.connectorManagerRepository.addConnectorManager("java:"+connectorName, cm);  //$NON-NLS-1$    
+	            this.connectorManagerRepository.addConnectorManager(connectorName, cm);      
 	            
-	            log.info("Teiid Connector Started = " + connectorName); //$NON-NLS-1$
+	            connectorAdded(connectorName);
+	            LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("connector_started", connectorName)); //$NON-NLS-1$
+			}
+			else {
+				// check if data source is down
 			}
 		}
 		
@@ -96,14 +111,15 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 		for (ManagedConnectionFactoryDeploymentMetaData data : deployments) {
 			String connectorDefinition = data.getConnectionDefinition();
 			if (connectorDefinition.equals(Connector.class.getName())) {
-				String connectorName = data.getJndiName();
+				String connectorName = "java:"+data.getJndiName(); //$NON-NLS-1$
 				if (this.connectorManagerRepository != null) {
-					ConnectorManager cm = this.connectorManagerRepository.removeConnectorManager("java:"+connectorName); //$NON-NLS-1$
+					ConnectorManager cm = this.connectorManagerRepository.removeConnectorManager(connectorName);
 					if (cm != null) {
 						cm.stop();
 					}
 				}
-				log.info("Teiid Connector Stopped = " + connectorName); //$NON-NLS-1$
+				connectorRemoved(connectorName);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("connector_stopped", connectorName)); //$NON-NLS-1$				
 			}
 		}
 	}
@@ -131,4 +147,78 @@ public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<Managed
 	public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
+	
+	public void setVDBRepository(VDBRepository repo) {
+		this.vdbRepository = repo;
+	}
+	
+	public void connectorAdded(String connectorName) {
+		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
+			if (vdb.getStatus() == VDB.Status.ACTIVE) {
+				continue;
+			}
+			for (Model m:vdb.getModels()) {
+				ModelMetaData model = (ModelMetaData)m;
+				if (model.getErrors().isEmpty()) {
+					continue;
+				}
+
+				boolean inUse = false;
+				for (String sourceName:model.getSourceNames()) {
+					if (connectorName.equals(model.getSourceJndiName(sourceName))) {
+						inUse = true;
+					}
+				}
+					
+				if (inUse) {
+					model.clearErrors();
+					for (String sourceName:model.getSourceNames()) {
+						if (!connectorName.equals(model.getSourceJndiName(sourceName))) {
+							try {
+								InitialContext ic = new InitialContext();
+								ic.lookup(model.getSourceJndiName(sourceName));
+							} catch (NamingException e) {
+								String msg = IntegrationPlugin.Util.getString("jndi_not_found", vdb.getName(), vdb.getVersion(), model.getSourceJndiName(sourceName), sourceName); //$NON-NLS-1$
+								model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+								LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+							}								
+						}
+					}						
+				}
+			}
+
+			boolean valid = true;
+			for (Model m:vdb.getModels()) {
+				ModelMetaData model = (ModelMetaData)m;
+				if (!model.getErrors().isEmpty()) {
+					valid = false;
+					break;
+				}
+			}
+			
+			if (valid) {
+				vdb.setStatus(VDB.Status.ACTIVE);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}
+			
+		}
+	}
+
+	public void connectorRemoved(String connectorName) {
+		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
+			for (Model m:vdb.getModels()) {
+				ModelMetaData model = (ModelMetaData)m;
+				for (String sourceName:model.getSourceNames()) {
+					if (connectorName.equals(model.getSourceJndiName(sourceName))) {
+						vdb.setStatus(VDB.Status.INACTIVE);
+						String msg = IntegrationPlugin.Util.getString("jndi_not_found", vdb.getName(), vdb.getVersion(), model.getSourceJndiName(sourceName), sourceName); //$NON-NLS-1$
+						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
+					}
+				}
+			}
+		}
+	}		
+	
 }

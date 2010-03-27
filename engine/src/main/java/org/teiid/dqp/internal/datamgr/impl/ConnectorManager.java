@@ -202,7 +202,7 @@ public class ConnectorManager  {
     	}
     	this.state = ConnectorStatus.INIT_FAILED;
         
-        LogManager.logInfo(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
 
     	this.state = ConnectorStatus.OPEN;
     }

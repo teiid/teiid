@@ -58,6 +58,7 @@
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
     </bean>
     
     <!-- Persistence class for the VDB deployment file -->

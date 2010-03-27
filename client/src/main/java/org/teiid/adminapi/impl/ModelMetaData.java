@@ -24,6 +24,7 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -180,6 +181,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	@ManagementProperty(description = "Model Validity Errors", readOnly=true, managed=true)
 	public List<ValidationError> getErrors(){
+		if (this.errors == null) {
+			return Collections.emptyList();
+		}
 		return this.errors;
 	}
 	
@@ -188,7 +192,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
             this.errors = new ArrayList<ValidationError>();
         }
         this.errors.add(new ValidationError(severity, message));
-    }	
+    }
+    
+    public void clearErrors() {
+    	this.errors.clear();
+    }
 	
     @XmlAccessorType(XmlAccessType.NONE)
     @XmlType(name = "", propOrder = {
