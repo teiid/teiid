@@ -36,19 +36,7 @@
 							</xs:element>
 						</xs:sequence>
 						<xs:attribute name="name" type="xs:string" use="required"/>
-						<xs:attribute name="type" default="PHYSICAL">
-							<xs:simpleType>
-								<xs:restriction base="xs:string">
-									<xs:enumeration value="PHYSICAL"/>
-									<xs:enumeration value="VIRTUAL"/>
-									<xs:enumeration value="FUNCTION"/>
-									<xs:enumeration value="TYPE"/>
-									<xs:enumeration value="EXTENSION"/>
-									<xs:enumeration value="LOGICAL"/>
-									<xs:enumeration value="MATERIALIZATION"/>
-								</xs:restriction>
-							</xs:simpleType>
-						</xs:attribute>
+						<xs:attribute name="type" type="xs:string" default="PHYSICAL"/>
 						<xs:attribute name="visible" type="xs:boolean" default="true"/>
                         <xs:attribute name="path" type="xs:string"/>
 					</xs:complexType>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:param name="version">7.0</xsl:param>
-	<xsl:output method="xml" omit-xml-declaration="yes" indent="yes"/>
+	<xsl:output method="xml" indent="yes"/>
 	<xsl:strip-space elements="*"/>
-	<xsl:template match="Header"/>
-	<xsl:template match="VDB/ConnectorBindings/Connector">
+	<xsl:template match="VDB">
+	<xsl:if test="ConnectorBindings">
+	<connection-factories>
+	<xsl:for-each select="ConnectorBindings/Connector">
 		<no-tx-connection-factory>
 		   <jndi-name><xsl:value-of select="translate(@Name, ' ', '_')" /></jndi-name>
 		   <xsl:choose>
@@ -45,19 +47,21 @@
 		   		<xsl:choose>
 		   			<xsl:when test="@Name='ConnectorMaxConnections' or @Name='UsePostDelegation'
 		   		or @Name='ConnectorThreadTTL' or @Name='DeployedName'
-		   		or @Name='ConnectorMaxThreads'
+		   		or @Name='ConnectorMaxThreads' or @Name='SetCriteriaBatchSize'
 		        or @Name='ConnectorClassPath' or @Name='SourceConnectionTestInterval'
 		        or @Name='metamatrix.service.essentialservice' or @Name='ServiceMonitoringEnabled'
 		        or @Name='ConnectorClass' or @Name='ServiceClassName'
 		        or @Name='SynchWorkers' or @Name='UseCredentialMap'
 		        or @Name='ConnectionPoolEnabled' or @Name='AdminConnectionsAllowed'
-		        or @Name='com.metamatrix.data.pool.max_connections_for_each_id' or @Name='com.metamatrix.data.pool.live_and_unused_time'
-		        or @Name='com.metamatrix.data.pool.wait_for_source_time' or @Name='com.metamatrix.data.pool.cleaning_interval'
-		        or @Name='com.metamatrix.data.pool.enable_shrinking' or starts-with(@Name, 'getMax')
+		        or starts-with(@Name,'com.metamatrix.data.pool') or starts-with(@Name, 'getMax')
 		        or starts-with(@Name, 'supports') or starts-with(@Name, 'getSupported')
 		        or @Name='requiresCriteria' or @Name='useAnsiJoin'
 		        or @Name='URL' or @Name='ConnectionSource'
-		        or @Name='User' or @Name='Password'"/>
+		        or @Name='User' or @Name='Password' or starts-with(@Name, 'ResultSetCache') 
+		        or starts-with(@Name, 'Extension') or @Name='Driver'
+		        or @Name='MaxSQLLength'">
+		        <xsl:comment>&lt;config-property name="<xsl:value-of select="@Name"/>"&gt;<xsl:value-of select="text()"/>&lt;/config-property&gt;</xsl:comment>
+		        	</xsl:when>
 		        	<xsl:when test="@Name='MaxResultRows' and text()='0'">
      	        <config-property>
 		           <xsl:attribute name="name">
@@ -83,6 +87,7 @@
 		   	   or starts-with(@ComponentType,'HSQLDB ') or starts-with(@ComponentType,'Sybase ')
 		   	   ">
 		   <config-property name="SourceJNDIName">java:<xsl:value-of select="translate(@Name, ' ', '_')" />DS</config-property>
+		   <xsl:message>For connector binding "<xsl:value-of select="@Name" />" of legacy type "<xsl:value-of select="@ComponentType" />", you will need to create a -ds.xml JDBC DataSource with JNDI name <xsl:value-of select="translate(@Name, ' ', '_')" />DS</xsl:message>
 		  	<xsl:choose>
 			<xsl:when test="starts-with(@ComponentType,'Apache ')">
 		   <config-property name="ExtensionTranslationClassName">org.teiid.connector.jdbc.derby.DerbySQLTranslator</config-property>
@@ -122,9 +127,12 @@
 		   <xsl:if test="contains(@ComponentType,'XA')">
 		   <config-property name="IsXA">true</config-property>
 		   </xsl:if>
-		   <xsl:if test="Properties/Property[@Name='ConnectorMaxConnections']">
-		   <max-pool-size><xsl:value-of select="Properties/Property[@Name='ConnectorMaxConnections']/text()"/></max-pool-size>
+		   <xsl:if test="Properties/Property[@Name='ConnectorMaxConnections' or @Name='com.metamatrix.data.pool.max_connections']">
+		   <max-pool-size><xsl:value-of select="Properties/Property[@Name='ConnectorMaxConnections' or @Name='com.metamatrix.data.pool.max_connections']/text()"/></max-pool-size>
 		   </xsl:if>
 		</no-tx-connection-factory>
+		</xsl:for-each>
+	</connection-factories>
+	</xsl:if>
 	</xsl:template>
 </xsl:stylesheet>
