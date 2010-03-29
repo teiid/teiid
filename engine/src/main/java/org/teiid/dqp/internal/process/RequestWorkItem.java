@@ -224,7 +224,8 @@ public class RequestWorkItem extends AbstractWorkItem {
         			this.processingException = new IllegalStateException("Request is already closed"); //$NON-NLS-1$
         		}
         		sendError();
-        	} 
+        	}
+        	suspend();
         }
     }
 
@@ -329,8 +330,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 	            } catch (XATransactionException e1) {
 	                LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
 	            } 
-			} else {
-	        	suspend();
 			}
 		}
 		
