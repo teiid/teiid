@@ -61,6 +61,16 @@ public class XMLBaseManagedConnectionFactory extends BasicManagedConnectionFacto
 		this.inputStreamFilterClass = inputStreamFilterClass;
 	}
 	
+	private boolean logRequestResponseDocs;
+	
+	public boolean isLogRequestResponseDocs() {
+		return logRequestResponseDocs;
+	}
+
+	public void setLogRequestResponseDocs(Boolean logRequestResponseDocs) {
+		this.logRequestResponseDocs = logRequestResponseDocs;
+	}
+
 	public SQLXML getResponse(String key) {
 		return this.responses.get(key);
 	}

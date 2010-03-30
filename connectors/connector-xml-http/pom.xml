@@ -73,9 +73,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <classifier>export</classifier>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>deploy_jar</id>

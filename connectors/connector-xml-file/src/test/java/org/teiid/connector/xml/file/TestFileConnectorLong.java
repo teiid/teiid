@@ -9,8 +9,8 @@ import org.mockito.Mockito;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.xmlsource.file.FileConnector;
-import org.teiid.connector.xmlsource.file.FileManagedConnectionFactory;
+import org.teiid.connector.xml.file.FileConnector;
+import org.teiid.connector.xml.file.FileManagedConnectionFactory;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 

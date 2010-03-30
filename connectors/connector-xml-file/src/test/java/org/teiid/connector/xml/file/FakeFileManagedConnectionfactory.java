@@ -1,6 +1,6 @@
 package org.teiid.connector.xml.file;
 
-import org.teiid.connector.xmlsource.file.FileManagedConnectionFactory;
+import org.teiid.connector.xml.file.FileManagedConnectionFactory;
 
 import com.metamatrix.core.util.UnitTestUtil;
 

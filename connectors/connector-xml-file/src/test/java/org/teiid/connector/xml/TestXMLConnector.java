@@ -27,8 +27,8 @@ import junit.framework.TestCase;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.xml.file.FakeFileManagedConnectionfactory;
-import org.teiid.connector.xmlsource.file.FileConnection;
-import org.teiid.connector.xmlsource.file.FileConnector;
+import org.teiid.connector.xml.file.FileConnection;
+import org.teiid.connector.xml.file.FileConnector;
 
 
 public class TestXMLConnector extends TestCase {

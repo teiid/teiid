@@ -38,20 +38,20 @@
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>org.teiid.connector.xmlsource.soap.SoapManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.connector.xml.soap.SoapManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
                <description>{$display:"Connector Class",$advanced:"true"}</description>
                <config-property-name>ConnectorClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>org.teiid.connector.xmlsource.soap.SoapConnector</config-property-value>
+               <config-property-value>org.teiid.connector.xml.soap.SoapConnector</config-property-value>
             </config-property>
 
             <config-property>
                <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
                <config-property-name>CapabilitiesClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>org.teiid.connector.xmlsource.soap.SoapSourceCapabilities</config-property-value>
+               <config-property-value>org.teiid.connector.xml.soap.SoapSourceCapabilities</config-property-value>
             </config-property>
             
             <config-property>
