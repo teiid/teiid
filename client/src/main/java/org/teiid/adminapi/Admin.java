@@ -22,7 +22,8 @@
 
 package org.teiid.adminapi;
 
-import java.net.URL;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
@@ -60,10 +61,10 @@ public interface Admin {
      * Add Connector Type, will import Connector Type from a file
      *
      * @param name  of the Connector Type to add
-     * @param URL URL to RAR file
+     * @param rar RAR file
      * @throws AdminException  if there's a system error.
      */
-    void addConnectorType(String name, URL rarURL) throws AdminException;
+    void addConnectorType(String name, InputStream rar) throws AdminException;
 
     /**
      * Delete Connector Type from Next Configuration
@@ -81,7 +82,7 @@ public interface Admin {
      * @return InputStream of contents of the rar file
      * @throws AdminException if there's a system error.
      */
-    byte[] exportConnectorType(String name) throws AdminException;    
+    InputStream exportConnectorType(String name) throws AdminException;    
 
     /**
      * Deploy a {@link ConnectorBinding} to Configuration
@@ -106,21 +107,21 @@ public interface Admin {
      * Export a {@link ConnectorBinding} to character Array in XML format
      *
      * @param deployedName the unique identifier for a {@link ConnectorBinding}.
-     * @return character Array in XML format
+     * @return Reader in XML format
      * @throws AdminException
      *             if there's a system error.
      */
-    char[] exportConnectorBinding(String deployedName) throws AdminException;    
+    Reader exportConnectorBinding(String deployedName) throws AdminException;    
 
     /**
      * Deploy a {@link VDB} file.
      * @param name  Name of the VDB file to save under
-     * @param URL 	VDB file location.
+     * @param VDB 	VDB.
      * @throws AdminException
      *             if there's a system error.
      * @return the {@link VDB} representing the current property values and runtime state.
      */
-    public void deployVDB(String fileName, URL vdbURL) throws AdminException;
+    public void deployVDB(String fileName, InputStream vdb) throws AdminException;
     
     
     /**
@@ -139,7 +140,7 @@ public interface Admin {
      * @return InputStream of the VDB
      * @throws AdminException if there's a system error.
      */
-    byte[] exportVDB(String vdbName, int vdbVersion) throws AdminException;    
+    InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException;    
     
     /**
      * Set a process level property. 
@@ -354,4 +355,5 @@ public interface Admin {
      * Closes the admin connection
      */
     void close();
+
 }

@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.util.crypto;
 
-import java.io.Serializable;
 
 /**
  * Interface defining a utility that can perform both encryption and decryption.
@@ -43,7 +42,7 @@ public interface Cryptor {
      */
     String encrypt( String cleartext ) throws CryptoException;
     
-    Serializable sealObject(Serializable object) throws CryptoException;
+    Object sealObject(Object object) throws CryptoException;
     
     /**
      * Decrypt the ciphertext in byte array format to yield the original
@@ -61,6 +60,6 @@ public interface Cryptor {
      */
     String decrypt( String ciphertext ) throws CryptoException;
     
-    Serializable unsealObject(Serializable object) throws CryptoException;
+    Object unsealObject(Object object) throws CryptoException;
     
 }

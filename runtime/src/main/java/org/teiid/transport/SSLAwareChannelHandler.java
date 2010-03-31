@@ -49,8 +49,8 @@ import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.ObjectChannel;
 
@@ -228,6 +228,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 	    }
 	    pipeline.addLast("decoder", new ObjectDecoder(1 << 20, classLoader, storageManager)); //$NON-NLS-1$
+	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
 	    return pipeline;

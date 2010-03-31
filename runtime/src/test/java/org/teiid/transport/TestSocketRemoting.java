@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -70,6 +71,8 @@ public class TestSocketRemoting {
 		
 		int lobMethod(InputStream is, Reader r) throws IOException;
 		
+		Reader getReader() throws IOException;
+		
 	}
 	
 	static class FakeServiceImpl implements FakeService {
@@ -87,6 +90,11 @@ public class TestSocketRemoting {
 		@Override
 		public int lobMethod(InputStream is, Reader r) throws IOException {
 			return ObjectConverterUtil.convertToByteArray(is).length + ObjectConverterUtil.convertToString(r).length();
+		}
+
+		@Override
+		public Reader getReader() throws IOException {
+			return new StringReader("hello world"); //$NON-NLS-1$
 		}
 		
 	}

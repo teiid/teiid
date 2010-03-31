@@ -83,11 +83,11 @@ public class ServerWorkItem implements Runnable {
 				throw e.getCause();
 			}
 			if (ResultsFuture.class.isAssignableFrom(m.getReturnType()) && methodResult != null) {
-				ResultsFuture<Serializable> future = (ResultsFuture<Serializable>) methodResult;
-				future.addCompletionListener(new ResultsFuture.CompletionListener<Serializable>() {
+				ResultsFuture<Object> future = (ResultsFuture<Object>) methodResult;
+				future.addCompletionListener(new ResultsFuture.CompletionListener<Object>() {
 
 							public void onCompletion(
-									ResultsFuture<Serializable> completedFuture) {
+									ResultsFuture<Object> completedFuture) {
 								Message asynchResult = new Message();
 								try {
 									asynchResult.setContents(completedFuture.get());
@@ -102,7 +102,7 @@ public class ServerWorkItem implements Runnable {
 						});
 			} else { // synch call
 				Message resultHolder = new Message();
-				resultHolder.setContents((Serializable)methodResult);
+				resultHolder.setContents(methodResult);
 				result = resultHolder;
 			}
 		} catch (Throwable t) {

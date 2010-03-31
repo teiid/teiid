@@ -31,24 +31,24 @@ import java.io.Serializable;
 
 public class Message implements Externalizable {
 	public static final long serialVersionUID = 1063704220782714098L;
-	private Serializable contents;
+	private Object contents;
 	private Serializable messageKey;
 
 	public String toString() {
 		return "MessageHolder: contents=" + contents; //$NON-NLS-1$
 	}
 
-	public void setContents(Serializable contents) {
+	public void setContents(Object contents) {
 		this.contents = contents;
 	}
 
-	public Serializable getContents() {
+	public Object getContents() {
 		return contents;
 	}
 
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		this.contents = (Serializable) in.readObject();
+		this.contents = in.readObject();
 		this.messageKey = (Serializable) in.readObject();
 	}
 

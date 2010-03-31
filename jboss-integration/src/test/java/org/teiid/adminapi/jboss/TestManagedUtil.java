@@ -20,34 +20,23 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.util.crypto;
+package org.teiid.adminapi.jboss;
 
+import static org.junit.Assert.*;
 
-public class NullCryptor implements Cryptor {
+import java.io.ByteArrayInputStream;
+import java.net.URL;
 
-	public byte[] encrypt(byte[] cleartext) throws CryptoException {
-		return cleartext;
+import org.junit.Test;
+
+import com.metamatrix.core.util.ObjectConverterUtil;
+
+public class TestManagedUtil {
+
+	@Test public void testTempURL() throws Exception {
+		ByteArrayInputStream bais = new ByteArrayInputStream(new byte[100]);
+		URL url = ManagedUtil.getTempURL(bais);
+		assertEquals(100, ObjectConverterUtil.convertToByteArray(url.openStream()).length);
 	}
-
-	public String encrypt(String cleartext) throws CryptoException {
-		return cleartext;
-	}
-
-	public Object sealObject(Object object) throws CryptoException {
-		return object;
-	}
-
-	public byte[] decrypt(byte[] ciphertext) throws CryptoException {
-		return ciphertext;
-	}
-
-	public String decrypt(String ciphertext) throws CryptoException {
-		return ciphertext;
-	}
-
-	public Object unsealObject(Object object)
-			throws CryptoException {
-		return object;
-	}
-    
+	
 }

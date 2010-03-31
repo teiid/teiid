@@ -1,13 +1,13 @@
 package org.teiid.adminapi.jboss;
 
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.*;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashSet;
@@ -227,11 +227,16 @@ public class TestConnectorBindings extends BaseConnection {
 		}
 	}
 
-	private static void installVDB() throws AdminException, MalformedURLException {
+	private static void installVDB() throws AdminException, FileNotFoundException {
 		VDB vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		if (vdb == null) {
 			File f = UnitTestUtil.getTestDataFile("TransactionsRevisited.vdb"); //$NON-NLS-1$
-			admin.deployVDB(f.getName(), f.toURI().toURL());
+			FileInputStream fis = new FileInputStream(f);
+			admin.deployVDB(f.getName(), fis);
+			try {
+				fis.close();
+			} catch (IOException e) {
+			}
 		}
 	}
 	
@@ -299,7 +304,9 @@ public class TestConnectorBindings extends BaseConnection {
 	@Test
 	public void testTemplate() throws Exception{
 		File f = new File(UnitTestUtil.getTestDataPath()+"/connector-loopback.rar"); //$NON-NLS-1$
-		admin.addConnectorType("connector-loopy", f.toURI().toURL()); //$NON-NLS-1$
+		FileInputStream fis = new FileInputStream(f);
+		admin.addConnectorType("connector-loopy", fis); //$NON-NLS-1$
+		fis.close();
 		
 		Set<String> names = admin.getConnectorTypes();
 		assertTrue(names.contains("connector-loopy")); //$NON-NLS-1$
@@ -316,7 +323,7 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		assertTrue(!f.exists());
 		
-		byte[] contents = admin.exportVDB("TransactionsRevisited", 1); //$NON-NLS-1$
+		InputStream contents = admin.exportVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		if (contents != null) {
 			ObjectConverterUtil.write(contents, f.getCanonicalPath());
 		}

@@ -128,7 +128,7 @@ public class BasicCryptor implements Cryptor {
         }
     }
     
-    public synchronized Serializable unsealObject(Serializable object) throws CryptoException {
+    public synchronized Object unsealObject(Object object) throws CryptoException {
         
         if (!(object instanceof SealedObject)) {
             return object;
@@ -137,7 +137,7 @@ public class BasicCryptor implements Cryptor {
         SealedObject so = (SealedObject)object;
         
         try {
-            return (Serializable)so.getObject(decryptCipher);
+            return so.getObject(decryptCipher);
         } catch ( Exception e ) {
             try {
                 initDecryptCipher();
@@ -204,9 +204,12 @@ public class BasicCryptor implements Cryptor {
         } 
     }
     
-    public synchronized Serializable sealObject(Serializable object) throws CryptoException {
+    public synchronized Object sealObject(Object object) throws CryptoException {
+    	if (object != null && !(object instanceof Serializable)) {
+    		throw new CryptoException(ErrorMessageKeys.CM_UTIL_ERR_0081, CorePlugin.Util.getString(ErrorMessageKeys.CM_UTIL_ERR_0081, "not Serializable")); //$NON-NLS-1$
+    	}
         try {
-            return new SealedObject(object, encryptCipher);        
+            return new SealedObject((Serializable)object, encryptCipher);        
         } catch ( Exception e ) {
             try {
                 initEncryptCipher();

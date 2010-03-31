@@ -29,7 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -198,7 +197,7 @@ public class TestEncryptDecrypt {
         
         ArrayList test = new ArrayList(Arrays.asList(new String[] {ALPHA_L, ALPHA_U, CLEARTEXT, NUMBERS}));
         
-        Serializable result = randomSymCryptor.sealObject(test);
+        Object result = randomSymCryptor.sealObject(test);
 
         //ensure that we can serialize
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -207,7 +206,7 @@ public class TestEncryptDecrypt {
         
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         ObjectInputStream ois = new ObjectInputStream(bais);
-        result = (Serializable)ois.readObject();
+        result = ois.readObject();
         
         ArrayList clearObject = (ArrayList)randomSymCryptor.unsealObject(result);
         

@@ -23,10 +23,12 @@
 package org.teiid.adminapi.jboss;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -85,8 +87,6 @@ import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
-
-import com.metamatrix.core.util.FileUtils;
 
 public class Admin extends TeiidAdmin {
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
@@ -174,20 +174,18 @@ public class Admin extends TeiidAdmin {
 	}
 
 	@Override
-	public char[] exportConnectorBinding(String deployedName) throws AdminException {
+	public Reader exportConnectorBinding(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
-			return new String(exportDeployment(mc.getDeployment().getName()).toByteArray()).toCharArray();
+			return new InputStreamReader(exportDeployment(mc.getDeployment().getName()));
 		}
 		return null;
 	}
 
-	private ByteArrayOutputStream exportDeployment(String url) throws AdminComponentException {
+	private InputStream exportDeployment(String url) throws AdminComponentException {
 		try {
 			URL contentURL = new URL(url);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			FileUtils.write(contentURL.openStream(), bos, FileUtils.DEFAULT_BUFFER_SIZE);
-			return bos;
+			return contentURL.openStream();
 		} catch (MalformedURLException e) {
 			throw new AdminComponentException(e);
 		} catch (IOException e) {
@@ -382,11 +380,11 @@ public class Admin extends TeiidAdmin {
     }	
     
 	@Override
-	public void deployVDB(String fileName, URL vdbURL) throws AdminException {
+	public void deployVDB(String fileName, InputStream vdb) throws AdminException {
 		if (!fileName.endsWith(".vdb") && !fileName.endsWith("-vdb.xml")) {//$NON-NLS-1$ //$NON-NLS-2$
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_vdb_extension")); //$NON-NLS-1$
 		}
-		ManagedUtil.deployArchive(getDeploymentManager(), fileName, vdbURL, false);
+		ManagedUtil.deployArchive(getDeploymentManager(), fileName, vdb, false);
 	}
 
 	
@@ -399,10 +397,10 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public byte[] exportVDB(String vdbName, int vdbVersion) throws AdminException{
+	public InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException{
 		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
 		if (mc != null) {
-			return exportDeployment(mc.getDeployment().getName()).toByteArray();
+			return exportDeployment(mc.getDeployment().getName());
 		}
 		return null;
 	}
@@ -592,7 +590,7 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public void addConnectorType(String connectorName, URL rarURL) throws AdminException{
+	public void addConnectorType(String connectorName, InputStream rar) throws AdminException{
 		if (!connectorName.startsWith("connector-")) {//$NON-NLS-1$
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
@@ -606,7 +604,7 @@ public class Admin extends TeiidAdmin {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_exists", deployerName)); //$NON-NLS-1$
 		}
 		
-		ManagedUtil.deployArchive(getDeploymentManager(), connectorName, rarURL, false);
+		ManagedUtil.deployArchive(getDeploymentManager(), connectorName, rar, false);
 		
 		//also need to add a template for the properties
 		try {
@@ -635,18 +633,16 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public byte[] exportConnectorType(String connectorName) throws AdminException {
+	public InputStream exportConnectorType(String connectorName) throws AdminException {
 		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
 			connectorName = connectorName + ".rar";//$NON-NLS-1$
 		}
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName != null) {
-			return exportDeployment(deployerName).toByteArray();			
+			return exportDeployment(deployerName);			
 		}
 		return null;
 	}
-	
-
 	
 	@Override
 	public Collection<String> getCacheTypes() throws AdminException {

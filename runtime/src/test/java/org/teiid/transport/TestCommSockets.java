@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -49,8 +50,10 @@ import org.teiid.transport.TestSocketRemoting.FakeService;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.dqp.service.SessionService;
 
+@SuppressWarnings("nls")
 public class TestCommSockets {
 
 	SocketListener listener;
@@ -124,6 +127,14 @@ public class TestCommSockets {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
 		assertEquals(150, fs.lobMethod(new ByteArrayInputStream(new byte[100]), new StringReader(new String(new char[50]))));
+		assertEquals(0, fs.lobMethod(new ByteArrayInputStream(new byte[0]), new StringReader(new String(new char[0]))));
+	}
+	
+	@Test public void testServerRemoteStreaming() throws Exception {
+		SocketServerConnection conn = helpEstablishConnection(false);
+		FakeService fs = conn.getService(FakeService.class);
+		assertEquals("hello world", ObjectConverterUtil.convertToString(fs.getReader()));
+		assertTrue(Serializable.class.isAssignableFrom(fs.getReader().getClass()));
 	}
 
 	@Test public void testConnectWithoutClientEncryption() throws Exception {

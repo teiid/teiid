@@ -60,7 +60,7 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
     static final int TYPE_PRIMITIVE = 0;
     static final int TYPE_NON_PRIMITIVE = 1;
     
-    private List<InputStream> lobs = new LinkedList<InputStream>();
+    private List<InputStream> streams = new LinkedList<InputStream>();
     private List<StreamFactoryReference> references = new LinkedList<StreamFactoryReference>();
     
     public CompactObjectOutputStream(OutputStream out) throws IOException {
@@ -68,8 +68,8 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
         enableReplaceObject(true);
     }
     
-    public List<InputStream> getLobs() {
-		return lobs;
+    public List<InputStream> getStreams() {
+		return streams;
 	}
     
     public List<StreamFactoryReference> getReferences() {
@@ -99,27 +99,27 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
     	}
 		try {
 	    	if (obj instanceof Reader) {
-	    		lobs.add(new ReaderInputStream((Reader)obj, Charset.forName(Streamable.ENCODING)));
+	    		streams.add(new ReaderInputStream((Reader)obj, Charset.forName(Streamable.ENCODING)));
 	    		StreamFactoryReference sfr = new SerializableReader();
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof InputStream) {
-	    		lobs.add((InputStream)obj);
+	    		streams.add((InputStream)obj);
 	    		StreamFactoryReference sfr = new SerializableInputStream();
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof SQLXML) {
-				lobs.add(new ReaderInputStream(((SQLXML)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
+				streams.add(new ReaderInputStream(((SQLXML)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
 	    		StreamFactoryReference sfr = new SQLXMLImpl((InputStreamFactory)null);
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof Clob) {
-	    		lobs.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
+	    		streams.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
 	    		StreamFactoryReference sfr = new ClobImpl(null, -1);
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof Blob) {
-	    		lobs.add(((Blob)obj).getBinaryStream());
+	    		streams.add(((Blob)obj).getBinaryStream());
 	    		StreamFactoryReference sfr = new BlobImpl(null);
 	    		references.add(sfr);
 	    		return sfr;

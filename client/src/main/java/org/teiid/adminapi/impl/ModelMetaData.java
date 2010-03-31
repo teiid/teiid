@@ -26,7 +26,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -121,11 +120,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		String supports = getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY);
 		return Boolean.parseBoolean(supports);
     }    
-	
-	@Override
-    public Properties getProperties() {
-        return new Properties(super.getProperties());
-    }		
 	
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)

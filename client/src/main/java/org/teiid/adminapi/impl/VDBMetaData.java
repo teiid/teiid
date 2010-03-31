@@ -228,11 +228,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return list;
 	}
 	
-	@Override
-    public Properties getProperties() {
-        return super.getProperties();
-    }		
-	
 	// This one manages the JAXB binding
 	@Override
 	@XmlElement(name = "property", type = PropertyMetadata.class)

@@ -127,19 +127,13 @@ public class ObjectDecoder extends FrameDecoder {
 	                new ChannelBufferInputStream(buffer, dataLen), classLoader);
 	        result = cois.readObject();
 	        streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
+	        streamIndex = 0;
     	}
     	while (streamIndex < streams.size()) {
 	    	if (buffer.readableBytes() < 2) {
 	            return null;
 	        }
-	        int dataLen = buffer.getShort(buffer.readerIndex()) & 0xff;
-	        if (dataLen == 0) {
-	        	stream.close();
-	        	stream = null;
-	        	streamIndex++;
-		        buffer.skipBytes(2);
-		        continue;
-	        }
+	        int dataLen = buffer.getShort(buffer.readerIndex()) & 0xffff;
 	        if (buffer.readableBytes() < dataLen + 2) {
 	            return null;
 	        }
@@ -158,10 +152,18 @@ public class ObjectDecoder extends FrameDecoder {
 				});
 		        this.stream = new BufferedOutputStream(store.createOutputStream());
 	        }
+	        if (dataLen == 0) {
+	        	stream.close();
+	        	stream = null;
+	        	streamIndex++;
+		        continue;
+	        }
 	        buffer.readBytes(this.stream, dataLen);
     	}
         Object toReturn = result;
         result = null;
+        streams = null;
+        stream = null;
         return toReturn;
     }
 }

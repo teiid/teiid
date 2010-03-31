@@ -21,9 +21,14 @@
  */
 package org.teiid.adminapi.jboss;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,6 +55,7 @@ import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.profileservice.spi.DeploymentOption;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.jboss.IntegrationPlugin;
 
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
@@ -96,7 +102,7 @@ public class ManagedUtil {
 				SimpleValue simple = (SimpleValue)v1;
 				return simple.getValue().toString();
 			}
-			throw new MetaMatrixRuntimeException("Failed to convert value to string value");
+			throw new MetaMatrixRuntimeException("Failed to convert value to string value"); //$NON-NLS-1$
 		}
 		return null;
 	}	
@@ -113,7 +119,7 @@ public class ManagedUtil {
 				 EnumValue enumValue = (EnumValue)mp.getValue();
 				 return expectedType.cast((enumValue != null) ? enumValue.getValue() : null);
 			 }
-			 throw new IllegalStateException(prop+ " is not a simple type");
+			 throw new IllegalArgumentException(prop+ " is not a simple type"); //$NON-NLS-1$
 		 }
 		 return null;
 	}	
@@ -135,7 +141,7 @@ public class ManagedUtil {
 				}
 				return props;
 			 }
-			 throw new IllegalStateException(prop+ " is not a properties type");
+			 throw new IllegalArgumentException(prop+ " is not a properties type"); //$NON-NLS-1$
 		 }
 		 return null;
 	}	
@@ -152,7 +158,7 @@ public class ManagedUtil {
 						 list.add(expectedType.cast(simpleValue.getValue()));
 					 }
 					 else {
-						 throw new IllegalStateException(prop+ " is not a simple type");
+						 throw new IllegalArgumentException(prop+ " is not a simple type"); //$NON-NLS-1$
 					 }
 				 }
 			 }
@@ -181,9 +187,9 @@ public class ManagedUtil {
 				return new SimpleValueSupport(st,value.charAt(0));
 			} else if (SimpleMetaType.DATE.equals(st)) {
 				try {
-					return new SimpleValueSupport(st, new SimpleDateFormat().parse(value));
+					return new SimpleValueSupport(st, SimpleDateFormat.getInstance().parse(value));
 				} catch (ParseException e) {
-					throw new MetaMatrixRuntimeException("Failed to convert the String to date value");
+					throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
 				}
 			} else if (SimpleMetaType.DOUBLE.equals(st)) {
 				return new SimpleValueSupport(st, Double.valueOf(value));
@@ -209,23 +215,24 @@ public class ManagedUtil {
 				return new SimpleValueSupport(st,value);
 			}
 		}
-		throw new MetaMatrixRuntimeException("Failed to convert from String value to \""+ type.getClassName() +"\" type");
+		throw new MetaMatrixRuntimeException(IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
 	}
 	
+	public static void deployArchive(DeploymentManager deploymentManager, String fileName, final InputStream resource, boolean deployExploded) throws AdminProcessingException {
+		deployArchive(deploymentManager, fileName, getTempURL(resource), deployExploded);
+	}
 	
 	public static void deployArchive(DeploymentManager deploymentManager, String fileName, URL resourceURL, boolean deployExploded) throws AdminProcessingException {
-
 		List<DeploymentOption> deploymentOptions = new ArrayList<DeploymentOption>();
 		deploymentOptions.add(DeploymentOption.FailIfExists);
 		if (deployExploded) {
 			deploymentOptions.add(DeploymentOption.Explode);
 		}
-		
 		// try to deploy
 		DeploymentProgress progress = null;
 		try {
 			progress = deploymentManager.distribute(fileName, resourceURL, deploymentOptions.toArray(new DeploymentOption[deploymentOptions.size()]));
-			execute(progress, fileName+" Distribute failed for unknown reason.");
+			execute(progress, IntegrationPlugin.Util.getString("distribute_failed", fileName)); //$NON-NLS-1$
 		} catch (Exception e) {
 			handleException(e);
 		}
@@ -235,15 +242,40 @@ public class ManagedUtil {
 		String[] deploymentNames = progress.getDeploymentID().getRepositoryNames();
 		try {
 			progress = deploymentManager.start(deploymentNames);
-			execute(progress, "Start of the deployment Failed");
+			execute(progress, IntegrationPlugin.Util.getString("deployment_start_failed", fileName)); //$NON-NLS-1$ 
 		} catch(Exception e) {
 			try {
 				// if failed to start remove it.
-				execute(deploymentManager.remove(deploymentNames), "Failed to remove the deployment");
+				execute(deploymentManager.remove(deploymentNames), IntegrationPlugin.Util.getString("failed_to_remove")); //$NON-NLS-1$ 
 			} catch (Exception e1) {
 				handleException(e1);
 			}
 			handleException(e);
+		}
+	}
+
+	static URL getTempURL(final InputStream resource) {
+		try {
+			return new URL(null, "temp:#temp", new URLStreamHandler() { //$NON-NLS-1$
+				
+				@Override
+				protected URLConnection openConnection(URL u) throws IOException {
+					return new URLConnection(u) {
+						
+						@Override
+						public void connect() throws IOException {
+							
+						}
+						
+						@Override
+						public InputStream getInputStream() throws IOException {
+							return resource;
+						}
+					};
+				}
+			});
+		} catch (MalformedURLException e2) {
+			throw new MetaMatrixRuntimeException(e2);
 		}
 	}
 
@@ -268,7 +300,7 @@ public class ManagedUtil {
 
 	public static void removeArchive(DeploymentManager deploymentManager, String... deploymentNames) throws AdminProcessingException{
 		try {
-			execute(deploymentManager.remove(deploymentNames), "Failed to remove the deployment");
+			execute(deploymentManager.remove(deploymentNames), IntegrationPlugin.Util.getString("failed_to_remove")); //$NON-NLS-1$ 
 		} catch (Exception e) {
 			handleException(e);
 		}
@@ -280,6 +312,6 @@ public class ManagedUtil {
 				return mo.invoke(args);
 			}
 		}
-		throw new MetaMatrixRuntimeException("No operation found with given name =" + operation); 
+		throw new MetaMatrixRuntimeException(IntegrationPlugin.Util.getString("no_operation", operation)); //$NON-NLS-1$ 
 	}
 }

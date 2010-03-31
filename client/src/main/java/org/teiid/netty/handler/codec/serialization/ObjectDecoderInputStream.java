@@ -22,13 +22,25 @@
  */
 package org.teiid.netty.handler.codec.serialization;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.io.StreamCorruptedException;
+import java.util.List;
+
+import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.InputStreamFactory.StreamFactoryReference;
+import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * An {@link ObjectInput} which is interoperable with {@link ObjectEncoder}
@@ -49,6 +61,11 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
     private boolean foundLength;
     private byte[] buffer;
     private int count;
+    
+    private Object result;
+    private int streamIndex;
+    private OutputStream stream;
+    private List<StreamFactoryReference> streams;
 
     public ObjectDecoderInputStream(InputStream in, ClassLoader classLoader, int maxObjectSize) throws SecurityException, IOException {
     	super();
@@ -60,35 +77,93 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
     @Override
     protected final Object readObjectOverride() throws IOException,
     		ClassNotFoundException {
-        if (!foundLength) {
-        	if (buffer == null) {
-        		buffer = new byte[4];
-        	}
-            fillBuffer();
-    		int dataLen = getIntFromBytes(buffer);
-	        if (dataLen <= 0) {
-	            throw new StreamCorruptedException("invalid data length: " + dataLen); //$NON-NLS-1$
+    	if (result == null) {
+	        if (!foundLength) {
+	        	int dataLen = findLength(4);
+	        	if (dataLen <= 0) {
+	    		    throw new StreamCorruptedException("invalid data length: " + dataLen); //$NON-NLS-1$
+	    		}
+	    		if (dataLen > maxObjectSize) {
+	    		    throw new StreamCorruptedException(
+	    		            "data length too big: " + dataLen + " (max: " + maxObjectSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+	    		}
 	        }
-	        if (dataLen > maxObjectSize) {
-	            throw new StreamCorruptedException(
-	                    "data length too big: " + dataLen + " (max: " + maxObjectSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+	        fillBuffer();
+	        foundLength = false;
+	        ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+	        buffer = null;
+	        CompactObjectInputStream cois = new CompactObjectInputStream(bais, classLoader);
+	        result = cois.readObject();
+	        streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
+	        streamIndex = 0;
+    	}
+    	while (streamIndex < streams.size()) {
+    		if (!foundLength) {
+	        	findLength(2);
+    		}
+	        if (stream == null) {
+	        	final File f = File.createTempFile("teiid", null); //$NON-NLS-1$
+		        StreamFactoryReference sfr = streams.get(streamIndex);
+		        sfr.setStreamFactory(new InputStreamFactory(Streamable.ENCODING) {
+					
+					@Override
+					public InputStream getInputStream() throws IOException {
+						return new BufferedInputStream(new FileInputStream(f)) {
+							@Override
+							public void close() throws IOException {
+								super.close();
+								f.delete();
+							}
+							
+							@Override
+							protected void finalize() throws Throwable {
+								super.finalize();
+								f.delete();
+							}
+						};
+					}
+					
+				});
+		        this.stream = new BufferedOutputStream(new FileOutputStream(f));
 	        }
-        	//check if the underlying buffer can be used
-	        if (in.available() >= dataLen) { 
-	        	return new CompactObjectInputStream(in, classLoader).readObject();
+	        if (buffer.length == 0) {
+	        	stream.close();
+	        	stream = null;
+	        	streamIndex++;
+	        	foundLength = false;
+	        	buffer = null;
+		        continue;
 	        }
-	        buffer = new byte[dataLen];
-	        foundLength = true;
-        }
-        fillBuffer();
-        foundLength = false;
-        ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
-        buffer = null;
-        return new CompactObjectInputStream(bais, classLoader).readObject();
+	        fillBuffer();
+	        foundLength = false;
+	        this.stream.write(buffer);
+	        buffer = null;
+    	}
+        Object toReturn = result;
+        result = null;
+        streams = null;
+        stream = null;
+        return toReturn;
     }
 
+	private int findLength(int bytes) throws IOException, EOFException,
+			StreamCorruptedException {
+		if (buffer == null) {
+			buffer = new byte[bytes];
+		}
+		fillBuffer();
+		int dataLen = getIntFromBytes(buffer);
+		buffer = new byte[dataLen];
+		foundLength = true;
+		return dataLen;
+	}
+
 	static int getIntFromBytes(byte[] buffer) {
-		return ((buffer[0] & 0xff) << 24) + ((buffer[1] & 0xff) << 16) + ((buffer[2] & 0xff) << 8) + (buffer[3] & 0xff);
+		int result = 0;
+		for (int i = 0; i < buffer.length; i++) {
+			result += ((buffer[i] & 0xff) << (buffer.length - i - 1)*8);
+		}
+		return result;
 	}
 
 	private void fillBuffer() throws IOException, EOFException {
