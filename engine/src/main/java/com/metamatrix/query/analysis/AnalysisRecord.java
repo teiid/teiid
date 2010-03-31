@@ -57,7 +57,7 @@ public class AnalysisRecord implements Serializable {
     private PrintWriter debugWriter;    // public
     
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
-        this.recordQueryPlan = recordQueryPlan;
+        this.recordQueryPlan = recordQueryPlan | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
         this.logDebug = recordDebug;
         this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         

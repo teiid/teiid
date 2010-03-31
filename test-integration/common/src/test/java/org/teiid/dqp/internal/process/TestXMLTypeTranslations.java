@@ -31,16 +31,16 @@ import java.util.Set;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.connector.jdbc.oracle.OracleCapabilities;
-import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
-import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.HardcodedDataManager;
 import com.metamatrix.query.unittest.TimestampUtil;
 
@@ -55,7 +55,11 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
     //NOTE that the gMonth and gDay values are invalid (but properly formatted)
     public void testXSDTranslations() throws Exception {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("sample", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        finder.addCapabilities("sample", bsc); //$NON-NLS-1$
         
         QueryMetadataInterface metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/test.vdb"); //$NON-NLS-1$
         
@@ -63,7 +67,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
 
         HardcodedDataManager dataMgr = new HardcodedDataManager();
         
-        Set models = new HashSet();
+        Set<String> models = new HashSet<String>();
         models.add("sample"); //$NON-NLS-1$
         dataMgr.setValidModels(models);
         
@@ -91,7 +95,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
     
     public void testGetXmlSchemas() throws Exception {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("sample", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("sample", new BasicSourceCapabilities()); //$NON-NLS-1$
         
         TransformationMetadata metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/test.vdb"); //$NON-NLS-1$
         

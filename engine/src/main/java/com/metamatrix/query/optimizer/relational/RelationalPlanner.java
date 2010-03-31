@@ -262,8 +262,9 @@ public class RelationalPlanner implements CommandPlanner {
                 
                 if(! appliedHint) {
                 	String msg = QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0010, groupName);
-                    LogManager.logInfo(LogConstants.CTX_QUERY_PLANNER, msg);
-                    this.analysisRecord.addAnnotation(new QueryAnnotation(QueryAnnotation.HINTS, msg, "ignoring hint", QueryAnnotation.MEDIUM)); //$NON-NLS-1$
+                	if (this.analysisRecord.recordAnnotations()) {
+                		this.analysisRecord.addAnnotation(new QueryAnnotation(QueryAnnotation.HINTS, msg, "ignoring hint", QueryAnnotation.MEDIUM)); //$NON-NLS-1$
+                	}
                 }
             }
         }

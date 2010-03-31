@@ -453,6 +453,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 if(debugLog != null && debugLog.length() > 0) {
                     LogManager.log(analysisRecord.logDebug()?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
                 }
+                if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
+                	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
+                }
             }
             LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
