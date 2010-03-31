@@ -106,7 +106,6 @@
                <description>{$display:"Salesforce URL",$description:"URL for connecting to Salesforce",$advanced:"true"}</description>
                <config-property-name>URL</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.salesforce.ConnectorState</config-property-value>
             </config-property>     
             
             <config-property>
