@@ -25,6 +25,8 @@ package org.teiid.transport;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
@@ -42,8 +44,10 @@ import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.net.socket.UrlServerDiscovery;
+import org.teiid.transport.TestSocketRemoting.FakeService;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.dqp.service.SessionService;
 
@@ -65,7 +69,7 @@ public class TestCommSockets {
 
 	@Test public void testFailedConnect() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
-		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),1024, 1024, 1, config, null);
+		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),1024, 1024, 1, config, null, BufferManagerFactory.getStandaloneBufferManager());
 
 		try {
 			Properties p = new Properties();
@@ -116,6 +120,11 @@ public class TestCommSockets {
 		assertEquals(1, stats.maxSockets);
 	}
 
+	@Test public void testLobs() throws Exception {
+		SocketServerConnection conn = helpEstablishConnection(false);
+		FakeService fs = conn.getService(FakeService.class);
+		assertEquals(150, fs.lobMethod(new ByteArrayInputStream(new byte[100]), new StringReader(new String(new char[50]))));
+	}
 
 	@Test public void testConnectWithoutClientEncryption() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
@@ -141,7 +150,8 @@ public class TestCommSockets {
 				}
 
 			}, null); 
-			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server);
+			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
+			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server, BufferManagerFactory.getStandaloneBufferManager());
 			
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);

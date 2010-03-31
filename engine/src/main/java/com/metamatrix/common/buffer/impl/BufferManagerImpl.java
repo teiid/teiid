@@ -23,9 +23,11 @@
 package com.metamatrix.common.buffer.impl;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -213,12 +215,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR, "Writing batch to disk", writeCount.incrementAndGet()); //$NON-NLS-1$
 						synchronized (store) {
 							offset = store.getLength();
-							FileStoreOutputStream fsos = store.createOutputStream(IO_BUFFER_SIZE);
+							OutputStream fsos = new BufferedOutputStream(store.createOutputStream(), IO_BUFFER_SIZE);
 				            ObjectOutputStream oos = new ObjectOutputStream(fsos);
 				            batch.writeExternal(oos);
 				            oos.flush();
 				            oos.close();
-				            fsos.flushBuffer();
 						}
 					}
 					this.batchReference = new WeakReference<TupleBatch>(batch);

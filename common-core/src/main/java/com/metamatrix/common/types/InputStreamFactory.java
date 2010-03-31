@@ -24,12 +24,19 @@ package com.metamatrix.common.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.Charset;
 
 import javax.xml.transform.Source;
 
-//TODO: add support for Readers
 public abstract class InputStreamFactory implements Source {
+	
+	public interface StreamFactoryReference {
+		
+		void setStreamFactory(InputStreamFactory inputStreamFactory);
+		
+	}
 	
 	private String encoding;
 	private String systemId;
@@ -74,4 +81,8 @@ public abstract class InputStreamFactory implements Source {
     public void setLength(long length) {
 		this.length = length;
 	}
+    
+    public Reader getCharacterStream() throws IOException {
+		return new InputStreamReader(this.getInputStream(), this.getEncoding());
+    }
 }

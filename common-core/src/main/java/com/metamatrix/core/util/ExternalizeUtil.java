@@ -71,8 +71,8 @@ public class ExternalizeUtil {
             out.writeInt(0);
         } else {
             final int size = coll.size();
+            out.writeInt(coll.size());
             if (size > 0) {
-                out.writeInt(coll.size());
                 for (Object object : coll) {
                     out.writeObject(object);
                 }

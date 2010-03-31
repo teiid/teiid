@@ -36,7 +36,7 @@ import java.io.StreamCorruptedException;
  * @version $Rev: 381 $, $Date: 2008-10-01 06:06:18 -0500 (Wed, 01 Oct 2008) $
  *
  */
-class CompactObjectInputStream extends ObjectInputStream {
+public class CompactObjectInputStream extends ObjectInputStream {
 
     private final ClassLoader classLoader;
 
@@ -44,7 +44,7 @@ class CompactObjectInputStream extends ObjectInputStream {
         this(in, null);
     }
 
-    CompactObjectInputStream(InputStream in, ClassLoader classLoader) throws IOException {
+    public CompactObjectInputStream(InputStream in, ClassLoader classLoader) throws IOException {
         super(in);
         this.classLoader = classLoader;
     }

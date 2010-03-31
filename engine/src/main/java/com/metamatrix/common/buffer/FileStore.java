@@ -218,6 +218,25 @@ public abstract class FileStore {
 		};
 	}
 	
+	public OutputStream createOutputStream() {
+		return new OutputStream() {
+			
+			@Override
+			public void write(int b) throws IOException {
+				throw new UnsupportedOperationException("buffered reading must be used"); //$NON-NLS-1$
+			}
+			
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException {
+				try {
+					FileStore.this.write(b, off, len);
+				} catch (MetaMatrixComponentException e) {
+					throw new IOException(e);
+				}
+			}
+		};
+	}
+	
 	public  FileStoreOutputStream createOutputStream(int maxMemorySize) {
 		return new FileStoreOutputStream(maxMemorySize);
 	}

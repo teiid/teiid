@@ -49,17 +49,17 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import javax.sql.rowset.serial.SerialBlob;
-import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.metadata.MetadataResult;
 
-
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.types.BlobImpl;
+import com.metamatrix.common.types.ClobImpl;
+import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.common.types.JDBCSQLTypeInfo;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
@@ -278,13 +278,8 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		return metadataResults;
 	}
 
-    public void setAsciiStream (int parameterIndex, java.io.InputStream in, int length) throws SQLException {
-        //create a clob from the ascii stream
-    	try {
-			setObject(parameterIndex, new SerialClob(ObjectConverterUtil.convertToCharArray(in, length, "ASCII"))); //$NON-NLS-1$
-		} catch (IOException e) {
-			throw TeiidSQLException.create(e);
-		} 
+    public void setAsciiStream(int parameterIndex, java.io.InputStream in, int length) throws SQLException {
+    	setAsciiStream(parameterIndex, in);
     }
 
     /**
@@ -299,7 +294,6 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     }
 
     public void setBinaryStream(int parameterIndex, java.io.InputStream in, int length) throws SQLException {
-    	//create a blob from the ascii stream
     	try {
 			setObject(parameterIndex, new SerialBlob(ObjectConverterUtil.convertToByteArray(in, length)));
 		} catch (IOException e) {
@@ -345,17 +339,11 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @param bytes array to which the parameter value is to be set.
      */
     public void setBytes(int parameterIndex, byte bytes[]) throws SQLException {
-    	//create a blob from the ascii stream
     	setObject(parameterIndex, new SerialBlob(bytes));
     }
 
     public void setCharacterStream (int parameterIndex, java.io.Reader reader, int length) throws SQLException {
-    	//create a clob from the ascii stream
-    	try {
-			setObject(parameterIndex, new SerialClob(ObjectConverterUtil.convertToCharArray(reader, length)));
-		} catch (IOException e) {
-			throw TeiidSQLException.create(e);
-		}
+    	setCharacterStream(parameterIndex, reader);
     }
 
     /**
@@ -692,52 +680,68 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public void setAsciiStream(int parameterIndex, InputStream x)
+	public void setAsciiStream(int parameterIndex, final InputStream x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory("US-ASCII") { //$NON-NLS-1$
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return x;
+			}
+		}, -1));
 	}
 
 	public void setAsciiStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setAsciiStream(parameterIndex, x);
 	}
 
 	public void setBinaryStream(int parameterIndex, InputStream x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBlob(parameterIndex, x);
 	}
 
 	public void setBinaryStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBinaryStream(parameterIndex, x);
 	}
 
-	public void setBlob(int parameterIndex, InputStream inputStream)
+	public void setBlob(int parameterIndex, final InputStream inputStream)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		this.setObject(parameterIndex, new BlobImpl(new InputStreamFactory() {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return inputStream;
+			}
+		}));
 	}
 
 	public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setBlob(parameterIndex, inputStream);
 	}
 
 	public void setCharacterStream(int parameterIndex, Reader reader)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterIndex, reader);
 	}
 
 	public void setCharacterStream(int parameterIndex, Reader reader,
 			long length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setCharacterStream(parameterIndex, reader);
 	}
 
 	public void setClob(int parameterIndex, Reader reader) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return null;
+			}
+		}, -1));
 	}
 
 	public void setClob(int parameterIndex, Reader reader, long length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		setClob(parameterIndex, reader);
 	}
 
 	public void setNCharacterStream(int parameterIndex, Reader value)

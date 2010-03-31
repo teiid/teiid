@@ -33,6 +33,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -73,7 +74,7 @@ public class CachedFinder implements CapabilitiesFinder {
         	try {
         		ConnectorManager mgr = this.connectorRepo.getConnectorManager(model.getSourceJndiName(sourceName));
         		if (mgr == null) {
-        			throw new ConnectorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", model.getSourceJndiName(sourceName), modelName, sourceName));
+        			throw new ConnectorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", model.getSourceJndiName(sourceName), modelName, sourceName)); //$NON-NLS-1$
         		}
         		caps = mgr.getCapabilities();
         		break;
@@ -86,6 +87,10 @@ public class CachedFinder implements CapabilitiesFinder {
 
         if (exception != null) {
         	throw new MetaMatrixComponentException(exception);
+        }
+        
+        if (caps == null) {
+        	throw new MetaMatrixRuntimeException("No sources were given for the model " + modelName); //$NON-NLS-1$
         }
         
         userCache.put(modelName, caps);

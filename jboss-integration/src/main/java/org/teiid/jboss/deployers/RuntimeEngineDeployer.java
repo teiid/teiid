@@ -66,7 +66,7 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LogonImpl;
 import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketTransport;
+import org.teiid.transport.SocketListener;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -85,8 +85,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	private transient SocketConfiguration jdbcSocketConfiguration;
 	private transient SocketConfiguration adminSocketConfiguration;	
-	private transient SocketTransport jdbcSocket;	
-	private transient SocketTransport adminSocket;
+	private transient SocketListener jdbcSocket;	
+	private transient SocketListener adminSocket;
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 		
 	private transient DQPCore dqpCore = new DQPCore();
@@ -123,16 +123,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), LogConstants.CTX_ADMIN_API);
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
-	    	this.jdbcSocket = new SocketTransport(this.jdbcSocketConfiguration, csr);
-	    	this.jdbcSocket.start();
+	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, csr, this.dqpCore.getBufferManager());
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+this.jdbcSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
     	if (this.adminSocketConfiguration.isEnabled()) {
-	    	this.adminSocket = new SocketTransport(this.adminSocketConfiguration, csr);
-	    	this.adminSocket.start(); 
+	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, csr, this.dqpCore.getBufferManager());
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -24,10 +24,12 @@ package org.teiid.netty.handler.codec.serialization;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
 import com.metamatrix.core.util.AccessibleByteArrayOutputStream;
+import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * An {@link ObjectOutput} which is interoperable with {@link ObjectDecoder}
@@ -53,13 +55,25 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
     @Override
     final protected void writeObjectOverride(Object obj) throws IOException {
         AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(estimatedLength);
-        ObjectOutputStream oout = new CompactObjectOutputStream(baos);
+        CompactObjectOutputStream oout = new CompactObjectOutputStream(baos);
         oout.writeObject(obj);
+        ExternalizeUtil.writeCollection(oout, oout.getReferences());
         oout.flush();
         oout.close();
-
-        out.writeInt(baos.getCount());
+        
+        out.writeInt(baos.getCount()); //includes the lob references
         out.write(baos.getBuffer(), 0, baos.getCount());
+        byte[] chunk = new byte[1 << 16];
+        for (InputStream is : oout.getLobs()) {
+        	while (true) {
+	        	int bytes = is.read(chunk);
+	        	out.writeShort(Math.max(0, bytes));
+	        	if (bytes < 1) {
+	        		break;
+	        	}
+	    		out.write(chunk, 0, bytes);
+        	}
+		}
     }
     
     @Override

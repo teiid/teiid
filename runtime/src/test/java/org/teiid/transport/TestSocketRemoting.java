@@ -25,6 +25,8 @@ package org.teiid.transport;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -56,6 +58,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class TestSocketRemoting {
 	
@@ -65,9 +68,11 @@ public class TestSocketRemoting {
 		
 		String exceptionMethod() throws MetaMatrixProcessingException;
 		
+		int lobMethod(InputStream is, Reader r) throws IOException;
+		
 	}
 	
-	private static class FakeServiceImpl implements FakeService {
+	static class FakeServiceImpl implements FakeService {
 
 		public ResultsFuture<Integer> asynchResult() {
 			ResultsFuture<Integer> result = new ResultsFuture<Integer>();
@@ -77,6 +82,11 @@ public class TestSocketRemoting {
 
 		public String exceptionMethod() throws MetaMatrixProcessingException {
 			throw new MetaMatrixProcessingException();
+		}
+		
+		@Override
+		public int lobMethod(InputStream is, Reader r) throws IOException {
+			return ObjectConverterUtil.convertToByteArray(is).length + ObjectConverterUtil.convertToString(r).length();
 		}
 		
 	}

@@ -26,6 +26,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -35,10 +37,6 @@ public class TestExternalizeUtil extends TestCase {
 
     private ByteArrayOutputStream bout;
     private ObjectOutputStream oout;   
-    
-    private ByteArrayInputStream bin;
-    private ObjectInputStream oin;
-    
     
     /**
      * Constructor for TestExternalizeUtil.
@@ -53,18 +51,6 @@ public class TestExternalizeUtil extends TestCase {
         oout = new ObjectOutputStream(bout);
     }
     
-    public void tearDown() throws Exception {
-        oout.close();
-        bout.close();
-        
-        if (oin!=null) {
-            oin.close();
-        }
-        if (bin!=null) {
-            bin.close();
-        }
-    }
-    
     /**
      * Test ExternalizeUtil writeThrowable() and readThrowable() on Throwables. 
      * @throws Exception
@@ -76,8 +62,8 @@ public class TestExternalizeUtil extends TestCase {
 
         ExternalizeUtil.writeThrowable(oout, t1);
         oout.flush();        
-        bin = new ByteArrayInputStream(bout.toByteArray());
-        oin = new ObjectInputStream(bin);
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream oin = new ObjectInputStream(bin);
         
         Throwable result1 = ExternalizeUtil.readThrowable(oin);        
         assertEqualThrowables(t1, result1);
@@ -102,8 +88,8 @@ public class TestExternalizeUtil extends TestCase {
         
         ExternalizeUtil.writeThrowable(oout, t1);
         oout.flush();        
-        bin = new ByteArrayInputStream(bout.toByteArray());
-        oin = new ObjectInputStream(bin);
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream oin = new ObjectInputStream(bin);
         
         MetaMatrixCoreException result1 = (MetaMatrixCoreException) ExternalizeUtil.readThrowable(oin);
         assertEqualThrowables(t1, result1);
@@ -128,6 +114,16 @@ public class TestExternalizeUtil extends TestCase {
         for (int i=0; i<stack1.length; i++) {
             assertEquals(stack1[i], stack2[i]);
         }
+    }
+    
+    public void testEmptyCollection() throws Exception {
+    	ExternalizeUtil.writeCollection(oout, Arrays.asList(new Object[0]));
+    	oout.flush();        
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream oin = new ObjectInputStream(bin);
+        
+        List<?> result = ExternalizeUtil.readList(oin);
+        assertEquals(0, result.size());
     }
 
 }

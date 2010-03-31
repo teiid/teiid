@@ -34,7 +34,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
  * how to store data.  The buffer manager should also be aware of memory 
  * management issues.
  */
-public interface BufferManager {
+public interface BufferManager extends StorageManager {
 	
 	public enum TupleSourceType {
 		/**

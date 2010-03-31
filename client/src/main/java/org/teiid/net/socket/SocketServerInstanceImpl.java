@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.teiid.client.DQP;
+import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsReceiver;
@@ -300,7 +300,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		
 		public RemoteInvocationHandler(Class<?> targetClass) {
 			this.targetClass = targetClass;
-			this.secure = !DQP.class.isAssignableFrom(targetClass);
+			this.secure = ILogon.class.isAssignableFrom(targetClass);
 		}
 
 		//## JDBC4.0-begin ##

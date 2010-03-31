@@ -578,7 +578,7 @@ public class DQPCore implements DQP {
     	this.dataTierMgr = dataTierMgr;
     }
 
-	BufferManager getBufferManager() {
+	public BufferManager getBufferManager() {
 		return bufferManager;
 	}
 

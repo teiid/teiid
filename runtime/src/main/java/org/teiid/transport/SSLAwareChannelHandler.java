@@ -27,9 +27,8 @@ package org.teiid.transport;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -50,12 +49,12 @@ import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.ObjectChannel;
 
+import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 
@@ -140,7 +139,8 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	private final ChannelListener.ChannelListenerFactory listenerFactory;
 	private final SSLConfiguration config;
 	private final ClassLoader classLoader;
-	private Map<Channel, ChannelListener> listeners = Collections.synchronizedMap(new HashMap<Channel, ChannelListener>());
+	private final StorageManager storageManager;
+	private Map<Channel, ChannelListener> listeners = new ConcurrentHashMap<Channel, ChannelListener>();
 	private AtomicLong objectsRead = new AtomicLong(0);
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
@@ -158,20 +158,19 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	};
 	 
 	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory,
-			SSLConfiguration config, ClassLoader classloader) {
+			SSLConfiguration config, ClassLoader classloader, StorageManager storageManager) {
 		this.listenerFactory = listenerFactory;
 		this.config = config;
 		this.classLoader = classloader;
+		this.storageManager = storageManager;
 	}
 
 	@Override
 	public void channelConnected(ChannelHandlerContext ctx,
 			final ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(e.getChannel()));
-		synchronized (this.listeners) {
-			this.listeners.put(e.getChannel(), listener);
-			maxChannels = Math.max(maxChannels, this.listeners.size());
-		}
+		this.listeners.put(e.getChannel(), listener);
+		maxChannels = Math.max(maxChannels, this.listeners.size());
 		SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
 		if (sslHandler != null) {
 	        sslHandler.handshake(e.getChannel()).addListener(new ChannelFutureListener() {
@@ -228,7 +227,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	    if (engine != null) {
 	        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 	    }
-	    pipeline.addLast("decoder", new ObjectDecoder(1 << 24, classLoader)); //$NON-NLS-1$
+	    pipeline.addLast("decoder", new ObjectDecoder(1 << 20, classLoader, storageManager)); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
 	    return pipeline;

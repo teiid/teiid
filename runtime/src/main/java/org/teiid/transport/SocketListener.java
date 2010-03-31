@@ -31,8 +31,10 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.teiid.net.socket.ObjectChannel;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
+import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ApplicationInfo;
@@ -49,6 +51,12 @@ public class SocketListener implements ChannelListenerFactory {
     private ExecutorService nettyPool;
     private ClientServiceRegistryImpl csr;
     
+    public SocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
+		this(config.getPortNumber(), config.getHostAddress().getHostAddress(), config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
+        
+		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {config.getHostAddress().getHostAddress(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
+    }
+    
     /**
      * 
      * @param port
@@ -59,7 +67,7 @@ public class SocketListener implements ChannelListenerFactory {
      * @param server
      */
     public SocketListener(int port, String bindAddress, int inputBufferSize,
-			int outputBufferSize, int maxWorkers, SSLConfiguration config, ClientServiceRegistryImpl csr) {
+			int outputBufferSize, int maxWorkers, SSLConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
     	this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
     	this.csr = csr;
     	if (port < 0 || port > 0xFFFF) {
@@ -74,7 +82,7 @@ public class SocketListener implements ChannelListenerFactory {
         ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
-        this.channelHandler = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader());
+        this.channelHandler = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager);
         bootstrap.setPipelineFactory(channelHandler);
         if (inputBufferSize != 0) {
         	bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
