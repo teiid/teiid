@@ -262,7 +262,7 @@ public class DQPManagementView implements PluginConstants {
 
 	}
 	
-	public String getVDBStatus(String vdbName, int version) {
+	public static String getVDBStatus(String vdbName, int version) {
 		
 		ManagedComponent mcVdb = null;
 		try {
@@ -271,11 +271,11 @@ public class DQPManagementView implements PluginConstants {
 					PluginConstants.ComponentType.VDB.TYPE,
 					PluginConstants.ComponentType.VDB.SUBTYPE), vdbName);
 		} catch (NamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			final String msg = "NamingException in getVDBStatus(): " + e.getExplanation(); //$NON-NLS-1$
+			LOG.error(msg, e);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			final String msg = "Exception in getVDBStatus(): " + e.getMessage(); //$NON-NLS-1$
+			LOG.error(msg, e);
 		}
 
 		return ProfileServiceUtil.getSimpleValue(mcVdb,

@@ -22,15 +22,15 @@
 package org.teiid.rhq.plugin;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.api.RunState;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertySimple;
@@ -99,10 +99,7 @@ public class PlatformComponent extends Facet implements PluginConstants {
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
-		} else if (name.equals(Platform.Operations.GET_PROPERTIES)) {
-			// String key = ConnectionConstants.IDENTIFIER;
-			// valueMap.put(key, getComponentIdentifier());
-		}
+		} 
 
 	}
 
@@ -166,7 +163,7 @@ public class PlatformComponent extends Facet implements PluginConstants {
 			} catch (Exception e) {
 				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
 						+ "]. Cause: " + e); //$NON-NLS-1$
-				// throw(e);
+				throw(e);
 			}
 		}
 
@@ -178,22 +175,5 @@ public class PlatformComponent extends Facet implements PluginConstants {
 		super.stop();
 	}
 
-	@Override
-	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
-
-		Properties props = System.getProperties();
-
-		Iterator<PropertySimple> pluginPropIter = report.getConfiguration()
-				.getSimpleProperties().values().iterator();
-
-		while (pluginPropIter.hasNext()) {
-			PropertySimple pluginProp = pluginPropIter.next();
-			props.put(pluginProp.getName(), pluginProp.getStringValue());
-		}
-
-		// SingletonConnectionManager.getInstance().initialize(props);
-		super.updateResourceConfiguration(report);
-
-	}
 
 }

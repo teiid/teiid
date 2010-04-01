@@ -86,17 +86,12 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	 */
 	protected ResourceContext<?> resourceContext;
 
-	private String systemKey;
-
-	private String name;
+	protected String name;
 
 	private String identifier;
 
 	protected String componentType;
 	
-	// may be null when the component is not a host or vm
-	private String port = null;
-
 	protected boolean isAvailable = false;
 
 	private final Log log = LogFactory.getLog(this.getClass());
@@ -147,20 +142,12 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		this.resourceConfiguration = resourceConfiguration;
 	}
 
-	public String getSystemKey() {
-		return systemKey;
-	}
-
 	public String getComponentName() {
 		return name;
 	}
 
 	protected void setComponentName(String componentName) {
 		this.name = componentName;
-	}
-
-	public String getPort() {
-		return port;
 	}
 
 	public String getComponentIdentifier() {

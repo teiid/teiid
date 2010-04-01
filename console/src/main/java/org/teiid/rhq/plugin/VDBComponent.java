@@ -28,13 +28,16 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.rhq.core.domain.configuration.Configuration;
+import org.rhq.core.domain.measurement.AvailabilityType;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementDataTrait;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
+import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.plugin.util.PluginConstants;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 import org.teiid.rhq.plugin.util.PluginConstants.Operation;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
@@ -47,6 +50,17 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
 public class VDBComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(VDBComponent.class);
 
+	
+	
+	/* (non-Javadoc)
+	 * @see org.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.ResourceContext)
+	 */
+	@Override
+	public void start(ResourceContext context) {
+		this.setComponentName(context.getPluginConfiguration().getSimpleValue("name", null));
+		super.start(context);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -54,7 +68,7 @@ public class VDBComponent extends Facet {
 	 */
 	@Override
 	public String getComponentName() {
-		return PluginConstants.ComponentType.VDB.NAME;
+		return this.name;
 	}
 	
 	@Override
@@ -79,6 +93,20 @@ public class VDBComponent extends Facet {
 
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.teiid.rhq.plugin.Facet#getAvailability()
+	 */
+	@Override
+	public AvailabilityType getAvailability() {
+		//TODO Remove vdb version after no longer viable in Teiid
+		String status = DQPManagementView.getVDBStatus(this.getComponentName(), 1);
+		if (status.equals("ACTIVE")){
+			return AvailabilityType.UP;
+		}
+		
+		return AvailabilityType.DOWN;		
+	}
+
 	@Override
 	protected void setMetricArguments(String name,
 			Configuration configuration, Map<String, Object> valueMap) {
@@ -148,7 +176,7 @@ public class VDBComponent extends Facet {
 	@Override
 	String getComponentType() {
 		return PluginConstants.ComponentType.VDB.NAME;
-	} 
+	}	
 	
 }
 
