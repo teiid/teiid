@@ -61,7 +61,7 @@ public class AnalysisRecord implements Serializable {
         this.logDebug = recordDebug;
         this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
-        if(recordQueryPlan) {
+        if(this.recordQueryPlan) {
             this.annotations = new ArrayList<QueryAnnotation>();
         }
         
