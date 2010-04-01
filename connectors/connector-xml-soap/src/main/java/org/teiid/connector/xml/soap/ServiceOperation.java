@@ -111,8 +111,6 @@ public class ServiceOperation {
     	
     	sb.append("</tns1:").append(this.name).append(">");
 
-    	System.out.println(sb.toString());
-    	
     	return new StreamSource(new StringReader(sb.toString()));
     }
     

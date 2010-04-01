@@ -22,7 +22,7 @@
 
 package org.teiid.connector.xml.soap;
 
-import org.teiid.connector.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.xml.base.XMLCapabilities;
 
-public class SoapSourceCapabilities extends BasicConnectorCapabilities {
+public class SoapSourceCapabilities extends XMLCapabilities {
 }
