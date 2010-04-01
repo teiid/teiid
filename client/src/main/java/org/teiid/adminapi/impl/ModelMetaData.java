@@ -205,7 +205,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         @XmlValue
         protected String value;
         
-        @XmlAttribute(name = "severity")
+        @XmlAttribute(name = "severity", required = true)
         protected String severity;
 
         public ValidationError() {};

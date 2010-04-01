@@ -22,7 +22,7 @@
 								<xs:complexType>
 									<xs:simpleContent>
 										<xs:extension base="xs:string">
-											<xs:attribute name="severity">
+											<xs:attribute name="severity" use="required">
 												<xs:simpleType>
 													<xs:restriction base="xs:string">
 														<xs:enumeration value="ERROR"/>
