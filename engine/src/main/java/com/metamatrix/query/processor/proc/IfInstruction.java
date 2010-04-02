@@ -115,7 +115,7 @@ public class IfInstruction extends ProgramInstruction {
     /**
      * Returns a deep clone
      */
-    public Object clone(){
+    public IfInstruction clone(){
     	Program cloneIf = (Program) this.ifProgram.clone();
     	Program cloneElse = null;
     	if(elseProgram != null) {

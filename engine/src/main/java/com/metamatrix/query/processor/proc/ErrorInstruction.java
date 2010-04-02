@@ -47,7 +47,7 @@ public class ErrorInstruction extends AbstractAssignmentInstruction {
     /** 
      * @see com.metamatrix.query.processor.program.ProgramInstruction#clone()
      */
-    public Object clone() {
+    public ErrorInstruction clone() {
         ErrorInstruction clone = new ErrorInstruction();
         this.cloneState(clone);
         return clone;

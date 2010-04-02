@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.plan.Annotation;
+
 import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.util.ExternalizeUtil;
@@ -75,7 +77,7 @@ public class ResultsMessage implements Externalizable {
      * Collection of Object[] where each Object[] holds annotation information
      * that can be used to create an Annotation implementation in JDBC.  
      */
-    private Collection annotations;
+    private Collection<Annotation> annotations;
     
     private boolean isUpdateResult;
 
@@ -266,7 +268,7 @@ public class ResultsMessage implements Externalizable {
         parameters = ExternalizeUtil.readList(in);
 
         debugLog = (String)in.readObject();
-        annotations = (Collection)in.readObject();
+        annotations = ExternalizeUtil.readList(in, Annotation.class);
         isUpdateResult = in.readBoolean();
     }
 
@@ -300,14 +302,14 @@ public class ResultsMessage implements Externalizable {
         ExternalizeUtil.writeList(out, parameters);
 
         out.writeObject(debugLog);
-        out.writeObject(annotations);
+        ExternalizeUtil.writeCollection(out, annotations);
         out.writeBoolean(isUpdateResult);
     }
 
     /**
      * @return
      */
-    public Collection getAnnotations() {
+    public Collection<Annotation> getAnnotations() {
         return annotations;
     }
 
@@ -321,7 +323,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @param collection
      */
-    public void setAnnotations(Collection collection) {
+    public void setAnnotations(Collection<Annotation> collection) {
         annotations = collection;
     }
 

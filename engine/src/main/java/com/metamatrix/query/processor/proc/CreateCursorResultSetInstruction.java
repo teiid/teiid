@@ -71,7 +71,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     /**
      * Returns a deep clone
      */
-    public Object clone(){
+    public CreateCursorResultSetInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
         return new CreateCursorResultSetInstruction(this.rsName, clonedPlan);
     }

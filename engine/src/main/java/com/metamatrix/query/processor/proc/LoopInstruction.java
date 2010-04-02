@@ -73,7 +73,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     /**
      * Returns a deep clone
      */
-    public Object clone(){
+    public LoopInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
         return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan);
     }

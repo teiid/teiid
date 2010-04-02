@@ -32,7 +32,6 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.security.Credentials;
 
-import com.metamatrix.api.exception.security.SessionServiceException;
 
 /**
  * <p>

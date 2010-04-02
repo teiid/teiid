@@ -51,7 +51,6 @@ import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.BatchManager.ManagedBatch;
-import com.metamatrix.common.buffer.FileStore.FileStoreOutputStream;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.InputStreamFactory;

@@ -516,7 +516,6 @@ public class DQPCore implements DQP {
     	ArrayList<String> caches = new ArrayList<String>();
     	caches.add(Admin.Cache.CODE_TABLE_CACHE.toString());
     	caches.add(Admin.Cache.PREPARED_PLAN_CACHE.toString());
-    	caches.add(Admin.Cache.CONNECTOR_RESULT_SET_CACHE.toString());
     	caches.add(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
     	return caches;
     }	
@@ -530,10 +529,8 @@ public class DQPCore implements DQP {
 		case PREPARED_PLAN_CACHE:
 			clearPlanCache();
 			break;
-		case CONNECTOR_RESULT_SET_CACHE:
-			clearResultSetCache();
-			break;
 		case QUERY_SERVICE_RESULT_SET_CACHE:
+			clearResultSetCache();
 			break;
 		}
 	}

@@ -54,7 +54,6 @@ import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TempTableDataManager;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramInstruction;
-import com.metamatrix.query.processor.program.ProgramUtil;
 import com.metamatrix.query.processor.relational.SubqueryAwareEvaluator;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -320,7 +319,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
     public String toString() {
-        return "ProcedurePlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
+        return "ProcedurePlan:\n" + this.originalProgram; //$NON-NLS-1$
     }
 
 	public ProcessorPlan clone(){

@@ -112,7 +112,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     private String debugLog;
 
     // the last query annotations
-    private List<Annotation> annotations;
+    private Collection<Annotation> annotations;
 
     // resultSet object produced by execute methods on the statement.
     protected ResultSetImpl resultSet;
@@ -887,10 +887,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.debugLog = debugLog;
     }
 
-    void setAnnotations(List<Annotation> annotations) {
-        this.annotations = annotations;
-    }
-
     /**
      * Get Query plan description.
      * If the Statement has a resultSet, we get the plan description from the result set
@@ -954,17 +950,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	protected void setAnalysisInfo(ResultsMessage resultsMsg) {
         this.debugLog = resultsMsg.getDebugLog();
         this.currentPlanDescription = resultsMsg.getPlanDescription();
-        Collection serverAnnotations = resultsMsg.getAnnotations();
-        if(serverAnnotations != null) {
-            List<Annotation> annotations = new ArrayList<Annotation>(serverAnnotations.size());
-            Iterator annIter = serverAnnotations.iterator();
-            while(annIter.hasNext()) {
-                String[] serverAnnotation = (String[]) annIter.next();
-                Annotation annotation = new Annotation(serverAnnotation);
-                annotations.add(annotation);                
-            }
-            this.annotations = annotations;            
-        }
+        this.annotations = resultsMsg.getAnnotations();            
 	}
     
     Calendar getDefaultCalendar() {

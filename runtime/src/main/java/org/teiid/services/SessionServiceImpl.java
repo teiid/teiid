@@ -54,11 +54,11 @@ import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 
-import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.service.SessionService;
+import com.metamatrix.dqp.service.SessionServiceException;
 
 /**
  * This class serves as the primary implementation of the Session Service.
@@ -299,7 +299,7 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setSecurityDomains(String domainNameOrder) {
         if (domainNameOrder != null && domainNameOrder.trim().length()>0) {
-        	LogManager.logDetail(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
+        	LogManager.logInfo(LogConstants.CTX_SECURITY, "Security Enabled: true"); //$NON-NLS-1$
 
 	        String[] domainNames = domainNameOrder.split(","); //$NON-NLS-1$
 	        for (String domainName : domainNames) {
@@ -310,7 +310,7 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setAdminSecurityDomain(String domain) {
 		this.adminSecurityDomains.add(domain);
-		LogManager.logDetail(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SECURITY, "Admin Security Enabled: true"); //$NON-NLS-1$
 	}
 
 	public void start() {

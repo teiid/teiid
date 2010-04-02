@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.api.exception.security;
+package com.metamatrix.dqp.service;
 
 import org.teiid.client.security.MetaMatrixSecurityException;
 

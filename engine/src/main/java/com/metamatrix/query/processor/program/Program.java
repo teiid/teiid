@@ -22,10 +22,15 @@
 
 package com.metamatrix.query.processor.program;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.query.processor.Describable;
-import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.proc.IfInstruction;
+import com.metamatrix.query.processor.proc.WhileInstruction;
 
 /**
  * A program is a sequence of {@link ProgramInstruction ProgramInstruction}.  Certain
@@ -34,7 +39,7 @@ import com.metamatrix.query.processor.ProcessorPlan;
  */
 public class Program implements Cloneable, Describable {
 
-    private List programInstructions;
+    private List<ProgramInstruction> programInstructions;
     private int counter = 0;
 
 	/**
@@ -109,10 +114,6 @@ public class Program implements Cloneable, Describable {
         }
     }
 
-    public String toString(){
-        return ("PROGRAM size " + getProcessorInstructions().size() + ", counter " + this.counter); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
     /**
      * Produces a deep clone.
      */
@@ -121,10 +122,9 @@ public class Program implements Cloneable, Describable {
         program.counter = this.counter;
         
         if (this.programInstructions != null){
-            ArrayList clonedInstructions = new ArrayList(this.programInstructions.size());
-            Iterator i = this.programInstructions.iterator();
-            while (i.hasNext()){
-                clonedInstructions.add( ((ProgramInstruction)i.next()).clone() );
+            ArrayList<ProgramInstruction> clonedInstructions = new ArrayList<ProgramInstruction>(this.programInstructions.size());
+            for (ProgramInstruction pi : this.programInstructions) {
+                clonedInstructions.add( pi.clone() );
             }
             program.programInstructions = clonedInstructions;
         }
@@ -149,26 +149,6 @@ public class Program implements Cloneable, Describable {
         return props;
     }
     
-    /**
-     * Finds all nested plans and returns them.
-     * @return List of ProcessorPlan 
-     * @since 4.2
-     */
-    public List<ProcessorPlan> getChildPlans() {
-        List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>();
-        if (programInstructions != null) {
-            for(int i=0; i<programInstructions.size(); i++) {
-                ProgramInstruction inst = (ProgramInstruction) programInstructions.get(i);
-                Collection<ProcessorPlan> instPlans = inst.getChildPlans();            
-                if(instPlans != null) {
-                    plans.addAll(instPlans);
-                }            
-            }
-        }
-        return plans;
-    }
-    
-
     //=========================================================================
     //UTILITY
     //=========================================================================
@@ -182,17 +162,68 @@ public class Program implements Cloneable, Describable {
     private ProgramInstruction getInstructionAtIndex(int instructionIndex){
         if (programInstructions != null){
             if (instructionIndex < getProcessorInstructions().size()){ 
-                return (ProgramInstruction)getProcessorInstructions().get(instructionIndex);
+                return getProcessorInstructions().get(instructionIndex);
             }
         }
         return null;
     }
 
-    public List getProcessorInstructions(){
+    public List<ProgramInstruction> getProcessorInstructions(){
         if (programInstructions == null){
-            programInstructions = new ArrayList();
+            programInstructions = new ArrayList<ProgramInstruction>();
         }
         return programInstructions;
     }
+    
+    public String toString() {
+        StringBuilder str = new StringBuilder();   
+            
+        programToString(str);
+        
+        return "PROGRAM counter " + this.counter + " " + str.toString(); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
 
+    /**
+     * This method calls itself recursively if either a While or If instruction is encountered. 
+     * The sub program(s) from those kinds of instructions are passed, recursively, into this
+     * method.
+     */
+    private final int programToString(StringBuilder str) {
+
+        int instructionIndex = 0;
+        ProgramInstruction inst = getInstructionAt(instructionIndex);
+    
+        while(inst != null) {
+            
+            printLine(counter++, inst.toString(), str);
+
+			if(counter > 1000) { 
+			    printLine(counter, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
+			    break;
+			}
+
+            instructionIndex++;
+            inst = getInstructionAt(instructionIndex);
+        
+        }
+
+        return counter;
+    }
+
+
+    private static final void printLine(int counter, String line, StringBuilder buffer) {
+        // Pad counter with spaces
+        String counterStr = "" + counter + ": "; //$NON-NLS-1$ //$NON-NLS-2$
+        if(counter < 10) { 
+            counterStr += " ";     //$NON-NLS-1$
+        }
+        if(counterStr.length() == 1) { 
+            counterStr += "  "; //$NON-NLS-1$
+        } else if(counterStr.length() == 2) { 
+            counterStr += " ";     //$NON-NLS-1$
+        } 
+        
+        buffer.append(counterStr + line + "\n"); //$NON-NLS-1$
+    }
+        
 }

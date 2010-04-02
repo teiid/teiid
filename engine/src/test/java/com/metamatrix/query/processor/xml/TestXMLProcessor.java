@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.xml.transform.OutputKeys;
-
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
 

@@ -22,7 +22,6 @@
 package org.teiid.jboss.deployers;
 
 import java.io.Serializable;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -70,13 +69,13 @@ import org.teiid.transport.SocketListener;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
+import com.metamatrix.dqp.service.SessionServiceException;
 import com.metamatrix.dqp.service.TransactionService;
 
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
@@ -119,8 +118,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	createClientServices();
     	
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore), LogConstants.CTX_DQP);
-    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin), LogConstants.CTX_ADMIN_API);
+    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP), LogConstants.CTX_DQP);
+    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin, LogConstants.CTX_ADMIN_API), LogConstants.CTX_ADMIN_API);
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
 	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, csr, this.dqpCore.getBufferManager());
@@ -174,21 +173,21 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	/**
 	 * Creates an proxy to validate the incoming session
 	 */
-	private <T> T proxyService(final Class<T> iface, final T instance) {
+	private <T> T proxyService(final Class<T> iface, final T instance, String context) {
 
-		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
+		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new LogManager.LoggingProxy(instance, context, MessageLevel.TRACE) {
 
-			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
+			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {
 					sessionService.validateSession(DQPWorkContext.getWorkContext().getSessionId());
-					return arg1.invoke(instance, arg2);
+					return super.invoke(proxy, method, args);
 				} catch (InvocationTargetException e) {
 					exception = e.getTargetException();
 				} catch(Throwable t){
 					exception = t;
 				}
-				throw ExceptionUtil.convertException(arg1, exception);
+				throw ExceptionUtil.convertException(method, exception);
 			}
 		}));
 	}

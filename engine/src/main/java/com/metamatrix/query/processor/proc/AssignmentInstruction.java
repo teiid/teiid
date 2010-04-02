@@ -47,7 +47,7 @@ public class AssignmentInstruction extends AbstractAssignmentInstruction {
     /** 
      * @see com.metamatrix.query.processor.program.ProgramInstruction#clone()
      */
-    public Object clone() {
+    public AssignmentInstruction clone() {
         AssignmentInstruction clone = new AssignmentInstruction();
         this.cloneState(clone);
         return clone;

@@ -29,9 +29,9 @@ import java.util.Collection;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.client.plan.Annotation;
 
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.sql.lang.Command;
@@ -49,10 +49,10 @@ public class TestMaterialization {
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
+        Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 
     @Ignore("we no longer auto detect this case, if we need this logic it will have to be added to the rewriter since it changes select into to an insert")
@@ -66,10 +66,10 @@ public class TestMaterialization {
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
+        Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }    
     
     @Test public void testMaterializedTransformationNoCache() throws Exception {
@@ -82,10 +82,10 @@ public class TestMaterialization {
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
-        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
+        Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
     //related to defect 14423
@@ -99,10 +99,10 @@ public class TestMaterialization {
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
-        Collection<QueryAnnotation> annotations = analysis.getAnnotations();
+        Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), QueryAnnotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
     @Test public void testNoCacheInTransformation() throws Exception {

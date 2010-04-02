@@ -322,7 +322,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	/**
 	 * Returns a deep clone
 	 */
-	public Object clone() {
+	public ExecDynamicSqlInstruction clone() {
 		ExecDynamicSqlInstruction clone = new ExecDynamicSqlInstruction(
 				parentProcCommand, dynamicCommand, metadata, idGenerator, capFinder);
 		return clone;

@@ -22,32 +22,21 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.processor.Describable;
 
 
 /** 
  * @since 4.2
  */
-public class RelationalNodeStatistics implements Describable {
+public class RelationalNodeStatistics {
 
     //  Statistics
-    static final String NODE_OUTPUT_ROWS = "nodeOutputRows"; //$NON-NLS-1$
-    static final String NODE_PROCESS_TIME = "nodeProcessingTime"; //$NON-NLS-1$
-    static final String NODE_CUMULATIVE_PROCESS_TIME = "nodeCumulativeProcessingTime"; //$NON-NLS-1$
-    static final String NODE_CUMULATIVE_NEXTBATCH_PROCESS_TIME = "nodeCumulativeNextBatchProcessingTime"; //$NON-NLS-1$
-    static final String NODE_NEXT_BATCH_CALLS = "nodeNextBatchCalls"; //$NON-NLS-1$
-    static final String NODE_BLOCKS = "nodeBlocks"; //$NON-NLS-1$
     static final int BATCHCOMPLETE_STOP = 0;
     static final int BLOCKEDEXCEPTION_STOP = 1;
     
-    private Map statisticsProperties;
     private List statisticsList;
     private boolean setNodeStartTime;
     
@@ -57,10 +46,6 @@ public class RelationalNodeStatistics implements Describable {
     // Start and End system time for the node
     private long nodeStartTime;
     private long nodeEndTime;
-    
-    // Start and End timestamps for the node
-    private Timestamp nodeStartTimestamp;
-    private Timestamp nodeEndTimestamp;
     
     // Start and End system time for each batch
     private long batchStartTime;
@@ -82,7 +67,6 @@ public class RelationalNodeStatistics implements Describable {
     private int nodeBlocks;
     
     public RelationalNodeStatistics() {
-        this.statisticsProperties = new HashMap();
         this.statisticsList = new ArrayList();
         this.setNodeStartTime = false;
     }
@@ -110,15 +94,12 @@ public class RelationalNodeStatistics implements Describable {
                 this.nodeBlocks++;
                 break;
         }
-        //this.reset();
     }
     
     public void collectNodeStats(RelationalNode[] relationalNodes, String className) {
         // set nodeEndTime to the time gathered at the end of the last batch
         this.nodeEndTime = this.batchEndTime;
         this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
-        this.nodeEndTimestamp = new Timestamp(this.nodeEndTime);
-        this.nodeStartTimestamp = new Timestamp(this.nodeStartTime);
         if(relationalNodes[0] != null) {
             long maxUnionChildCumulativeProcessingTime = 0;
             for (int i = 0; i < relationalNodes.length; i++) {
@@ -135,19 +116,6 @@ public class RelationalNodeStatistics implements Describable {
         }
     }
     
-    public void setDescriptionProperties() {
-        this.statisticsProperties.put(NODE_OUTPUT_ROWS, new Integer(this.nodeOutputRows));
-        this.statisticsProperties.put(NODE_PROCESS_TIME, new Long(this.nodeProcessingTime));
-        this.statisticsProperties.put(NODE_CUMULATIVE_PROCESS_TIME, new Long(this.nodeCumulativeProcessingTime));
-        this.statisticsProperties.put(NODE_CUMULATIVE_NEXTBATCH_PROCESS_TIME, new Long(this.nodeCumulativeNextBatchProcessingTime));
-        this.statisticsProperties.put(NODE_NEXT_BATCH_CALLS, new Integer(this.nodeNextBatchCalls));
-        this.statisticsProperties.put(NODE_BLOCKS, new Integer(this.nodeBlocks));
-    }
-    
-    public Map getDescriptionProperties() {
-        return this.statisticsProperties;
-    }
-    
     public void setStatisticsList() {
         this.statisticsList.clear();
         this.statisticsList.add("Node Output Rows: " + this.nodeOutputRows); //$NON-NLS-1$
@@ -160,11 +128,6 @@ public class RelationalNodeStatistics implements Describable {
     
     public List getStatisticsList() {
         return this.statisticsList;
-    }
-    
-    public void reset() {
-        this.batchStartTime = 0;
-        this.batchEndTime = 0;
     }
     
     /** 

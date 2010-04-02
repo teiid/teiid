@@ -24,6 +24,9 @@ package com.metamatrix.query.analysis;
 
 import java.util.*;
 
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.Annotation.Priority;
+
 import com.metamatrix.core.util.StringUtil;
 
 import junit.framework.TestCase;
@@ -54,13 +57,13 @@ public class TestAnalysisRecord extends TestCase {
         AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordAnnotations());
         
-        QueryAnnotation ann1 = new QueryAnnotation("cat", "ann", "res", QueryAnnotation.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        QueryAnnotation ann2 = new QueryAnnotation("cat2", "ann2", "res2", QueryAnnotation.HIGH); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Annotation ann1 = new Annotation("cat", "ann", "res", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Annotation ann2 = new Annotation("cat2", "ann2", "res2", Priority.HIGH); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       
         rec.addAnnotation(ann1);
         rec.addAnnotation(ann2);
         
-        Collection<QueryAnnotation> annotations = rec.getAnnotations();
+        Collection<Annotation> annotations = rec.getAnnotations();
         assertEquals(2, annotations.size());
         assertTrue(annotations.contains(ann1));
         assertTrue(annotations.contains(ann2));

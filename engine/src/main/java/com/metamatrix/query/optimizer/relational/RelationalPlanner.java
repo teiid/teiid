@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.dqp.internal.process.Request;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -44,7 +46,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -263,7 +264,7 @@ public class RelationalPlanner implements CommandPlanner {
                 if(! appliedHint) {
                 	String msg = QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0010, groupName);
                 	if (this.analysisRecord.recordAnnotations()) {
-                		this.analysisRecord.addAnnotation(new QueryAnnotation(QueryAnnotation.HINTS, msg, "ignoring hint", QueryAnnotation.MEDIUM)); //$NON-NLS-1$
+                		this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, msg, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$
                 	}
                 }
             }
@@ -941,10 +942,10 @@ public class RelationalPlanner implements CommandPlanner {
                                                       String matTableName, String msg) {
         if ( analysis.recordAnnotations() ) {
             Object[] params = new Object[] {virtualGroup, matTableName};
-            QueryAnnotation annotation = new QueryAnnotation(QueryAnnotation.MATERIALIZED_VIEW, 
+            Annotation annotation = new Annotation(Annotation.MATERIALIZED_VIEW, 
                                                          QueryPlugin.Util.getString(msg, params), 
                                                          null, 
-                                                         QueryAnnotation.LOW);
+                                                         Priority.LOW);
             analysis.addAnnotation(annotation);
         }
     }

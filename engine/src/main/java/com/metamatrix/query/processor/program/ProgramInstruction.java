@@ -73,9 +73,9 @@ public abstract class ProgramInstruction implements Cloneable, Describable {
      * override with custom safe or deep cloning.
      * @return shallow clone
      */
-    public Object clone() {
+    public ProgramInstruction clone() {
         try {
-            return super.clone();
+            return (ProgramInstruction)super.clone();
         } catch (CloneNotSupportedException e) {
             //should never get here, since
             //this Class does support clone

@@ -84,7 +84,58 @@ import com.metamatrix.core.log.MessageLevel;
  */
 public final class LogManager {
 
-    static LogConfiguration configuration = new LogConfigurationImpl(MessageLevel.DETAIL); // either injected or manually set using the set methods
+    public static class LoggingProxy implements InvocationHandler {
+		private final Object instance;
+		private final String loggingContext;
+		private final int level;
+
+		public LoggingProxy(Object instance, String loggingContext, int level) {
+			this.instance = instance;
+			this.loggingContext = loggingContext;
+			this.level = level;
+		}
+
+		public Object invoke(Object proxy,
+		                     Method method,
+		                     Object[] args) throws Throwable {
+		    boolean log = LogManager.isMessageToBeRecorded(loggingContext, level);
+		    if (log) {
+		        StringBuffer message = new StringBuffer();
+		        message.append("before "); //$NON-NLS-1$
+		        message.append(method.getName());
+		        message.append(":"); //$NON-NLS-1$
+		        message.append(instance);
+		        message.append("("); //$NON-NLS-1$
+		        if (args != null) {
+		            for (int i = 0; i < args.length; i++) {
+		                if (args[i] != null) {
+		                	message.append(args[i]);
+		                } else {
+		                	message.append("null"); //$NON-NLS-1$
+		                }
+		                if (i != args.length - 1) {
+		                	message.append(","); //$NON-NLS-1$
+		                }
+		            }
+		        }
+		        message.append(")"); //$NON-NLS-1$
+		        LogManager.log(level, loggingContext, message.toString());
+		    }
+		    try {
+		        Object result = method.invoke(instance, args);
+		        if (log) {
+		            LogManager.log(level, loggingContext, 
+		                "after " + method.getName()+ " : "+result); //$NON-NLS-1$ //$NON-NLS-2$
+		        }
+		        return result;
+		    } catch (InvocationTargetException e) {
+		        throw e.getTargetException();
+		    }
+		}
+	}
+
+
+	static LogConfiguration configuration = new LogConfigurationImpl(MessageLevel.DETAIL); // either injected or manually set using the set methods
     
     static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
 
@@ -367,45 +418,6 @@ public final class LogManager {
                                              final Object instance,
                                              final Class<?>[] interfaces,
                                              final int level) {
-        return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new InvocationHandler() {
-
-            public Object invoke(Object proxy,
-                                 Method method,
-                                 Object[] args) throws Throwable {
-                boolean log = LogManager.isMessageToBeRecorded(loggingContext, level);
-                if (log) {
-                    StringBuffer message = new StringBuffer();
-                    message.append("before "); //$NON-NLS-1$
-                    message.append(method.getName());
-                    message.append(":"); //$NON-NLS-1$
-                    message.append(instance);
-                    message.append("("); //$NON-NLS-1$
-                    if (args != null) {
-	                    for (int i = 0; i < args.length; i++) {
-	                        if (args[i] != null) {
-	                        	message.append(args[i]);
-	                        } else {
-	                        	message.append("null"); //$NON-NLS-1$
-	                        }
-	                        if (i != args.length - 1) {
-	                        	message.append(","); //$NON-NLS-1$
-	                        }
-	                    }
-                    }
-                    message.append(")"); //$NON-NLS-1$
-                    LogManager.log(level, loggingContext, message.toString());
-                }
-                try {
-                    Object result = method.invoke(instance, args);
-                    if (log) {
-                        LogManager.log(level, loggingContext, 
-                            "after " + method.getName()+ " : "+result); //$NON-NLS-1$ //$NON-NLS-2$
-                    }
-                    return result;
-                } catch (InvocationTargetException e) {
-                    throw e.getTargetException();
-                }
-            }
-        });
+        return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new LoggingProxy(instance, loggingContext, level));
     }
 }

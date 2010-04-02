@@ -22,42 +22,52 @@
 
 package org.teiid.client.plan;
 
+import java.io.Serializable;
 
 /**
+ * Annotation describing a decision made during query execution.
  */
-public class Annotation {
-
+public class Annotation implements Serializable {
+    
+	private static final long serialVersionUID = 7389738177788185542L;
+	public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
+    public static final String HINTS = "Hints"; //$NON-NLS-1$
+    
+    public enum Priority {
+		LOW,
+		MEDIUM,
+		HIGH
+    }
+    
     private String category;
-    private String description;
+    private String annotation;
     private String resolution;
-    private int severity;
-
-    public Annotation(String[] serverAnnotation) {
-        category = serverAnnotation[0];
-        description = serverAnnotation[1];
-        resolution = serverAnnotation[2];
-        
-        severity = Integer.parseInt(serverAnnotation[3]);
+    private Priority priority = Priority.LOW;
+    
+    public Annotation(String category, String annotation, String resolution, Priority priority) {
+        this.category = category;
+        this.annotation = annotation;
+        this.resolution = resolution;
+        this.priority = priority;
     }
-
+    
     public String getCategory() {
-        return category;
+        return this.category;
     }
-
+    
     public String getAnnotation() {
-        return description;
+        return this.annotation;
     }
-
+    
     public String getResolution() {
-        return resolution;
+        return this.resolution;
     }
-
-    public int getSeverity() {
-        return severity;
+    
+    public Priority getPriority() {
+        return this.priority;
     }
     
     public String toString() {
-        return description;
+        return "QueryAnnotation<" + getCategory() + ", " + getAnnotation() + ">";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
-
 }

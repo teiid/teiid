@@ -36,6 +36,7 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.plan.Annotation;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.connector.api.DataNotAvailableException;
@@ -60,7 +61,6 @@ import com.metamatrix.dqp.service.TransactionContext;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.TransactionContext.Scope;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.analysis.QueryAnnotation;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -501,24 +501,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         if(analysisRecord != null) {
             response.setPlanDescription(analysisRecord.getQueryPlan());
             response.setDebugLog(analysisRecord.getDebugLog());
-            
-            // Convert annotations to JDBC expected format - String[4]
-            Collection anns = analysisRecord.getAnnotations();
-            Collection converted = null;
-            if(anns != null) {
-                converted = new ArrayList(anns.size());
-                Iterator annIter = anns.iterator();
-                while(annIter.hasNext()) {
-                    QueryAnnotation ann = (QueryAnnotation) annIter.next();
-                    String[] jdbcAnn = new String[4];
-                    jdbcAnn[0] = ann.getCategory();
-                    jdbcAnn[1] = ann.getAnnotation();
-                    jdbcAnn[2] = ann.getResolution();
-                    jdbcAnn[3] = "" + ann.getPriority(); //$NON-NLS-1$
-                    converted.add(jdbcAnn);
-                } 
-                response.setAnnotations(converted);
-            }            
+            response.setAnnotations(analysisRecord.getAnnotations());
         }
 	}
 

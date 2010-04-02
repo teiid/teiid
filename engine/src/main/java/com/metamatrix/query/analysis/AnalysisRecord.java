@@ -25,6 +25,8 @@ package com.metamatrix.query.analysis;
 import java.io.*;
 import java.util.*;
 
+import org.teiid.client.plan.Annotation;
+
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
@@ -50,7 +52,7 @@ public class AnalysisRecord implements Serializable {
     private Map queryPlan;
     
     // Annotations
-    private Collection<QueryAnnotation> annotations;
+    private Collection<Annotation> annotations;
     
     // Debug trace log
     private StringWriter stringWriter;  // inner
@@ -62,7 +64,7 @@ public class AnalysisRecord implements Serializable {
         this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
         if(this.recordQueryPlan) {
-            this.annotations = new ArrayList<QueryAnnotation>();
+            this.annotations = new ArrayList<Annotation>();
         }
         
         if(this.recordDebug) {
@@ -124,7 +126,7 @@ public class AnalysisRecord implements Serializable {
      * returns true.
      * @param annotation Annotation to add
      */
-    public void addAnnotation(QueryAnnotation annotation) {
+    public void addAnnotation(Annotation annotation) {
         this.annotations.add(annotation);
     }
     
@@ -132,7 +134,7 @@ public class AnalysisRecord implements Serializable {
      * Get annotations.  
      * @return
      */
-    public Collection<QueryAnnotation> getAnnotations() {
+    public Collection<Annotation> getAnnotations() {
         return this.annotations;
     }
     

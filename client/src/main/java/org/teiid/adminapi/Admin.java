@@ -30,7 +30,7 @@ import java.util.Set;
 
 public interface Admin {
 	
-	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE, CONNECTOR_RESULT_SET_CACHE};
+	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
      * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model

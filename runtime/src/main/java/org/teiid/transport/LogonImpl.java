@@ -39,9 +39,11 @@ import org.teiid.security.Credentials;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.log.LogConstants;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.service.SessionService;
+import com.metamatrix.dqp.service.SessionServiceException;
 
 public class LogonImpl implements ILogon {
 	
@@ -102,6 +104,7 @@ public class LogonImpl implements ILogon {
 		if (id != -1) {
 			this.service.pingServer(id);
 		}
+		LogManager.logTrace(LogConstants.CTX_SECURITY, "Ping", id); //$NON-NLS-1$
 		return ResultsFuture.NULL_FUTURE;
 	}
 
