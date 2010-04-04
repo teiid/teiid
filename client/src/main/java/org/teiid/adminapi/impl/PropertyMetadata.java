@@ -30,7 +30,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 
@@ -68,7 +67,6 @@ public class PropertyMetadata implements Serializable{
     }
 
     @ManagementProperty(description="property key")
-    @ManagementObjectID(type="property")
     public String getName() {
         return name;
     }

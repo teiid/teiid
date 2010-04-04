@@ -22,7 +22,8 @@
 
 package org.teiid.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Datatype;
@@ -38,7 +40,6 @@ import org.teiid.connector.metadata.runtime.MetadataFactory;
 
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestTransformationMetadata {
@@ -72,7 +73,7 @@ public class TestTransformationMetadata {
 	ModelMetaData buildModel(String name) {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(name);
-		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+		model.setModelType(Model.Type.PHYSICAL);
 		model.setVisible(true);
 		return model;
 	}

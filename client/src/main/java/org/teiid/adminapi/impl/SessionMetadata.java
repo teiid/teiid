@@ -26,7 +26,6 @@ import java.util.Date;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Session;
@@ -111,7 +110,6 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	@Override
 	@ManagementProperty(description="Session ID", readOnly=true)
-	@ManagementObjectID(type="session")	
 	public long getSessionId() {
 		return this.sessionId;
 	}

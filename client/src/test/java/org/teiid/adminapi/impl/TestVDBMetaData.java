@@ -55,7 +55,7 @@ public class TestVDBMetaData {
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model-one"); //$NON-NLS-1$
 		modelOne.addSourceMapping("s1", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelOne.setModelType("PHYSICAL"); //$NON-NLS-1$
+		modelOne.setModelType(Model.Type.PHYSICAL); //$NON-NLS-1$
 		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setVisible(false);
@@ -67,7 +67,7 @@ public class TestVDBMetaData {
 		modelTwo.setName("model-two"); //$NON-NLS-1$
 		modelTwo.addSourceMapping("s1", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelTwo.addSourceMapping("s2", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelTwo.setModelType("VIRTUAL"); //$NON-NLS-1$
+		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
 		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		vdb.addModel(modelTwo);

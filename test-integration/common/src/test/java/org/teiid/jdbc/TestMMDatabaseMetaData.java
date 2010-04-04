@@ -49,6 +49,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
@@ -103,6 +104,7 @@ public class TestMMDatabaseMetaData {
                 vdbMetaData.setName(p.getProperty(TeiidURL.JDBC.VDB_NAME));
                 vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
                 vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
+                vdbMetaData.setStatus(VDB.Status.ACTIVE);
                 repo.addMetadata(vdbMetaData, metadata);
                 for (Schema schema : metadata.getMetadataStore().getSchemas().values()) {
                 	ModelMetaData model = new ModelMetaData();

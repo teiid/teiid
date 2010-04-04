@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
@@ -63,11 +62,11 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	});
     
     @XmlElement(name = "mapped-role-name")
-    protected List<String> mappedRoleNames;
+    protected List<String> mappedRoleNames = new ArrayList<String>();
 
 	@Override
 	@ManagementProperty(description="Policy Name")
-	@ManagementObjectID(type="policy")
+	//@ManagementObjectID(type="policy")
     public String getName() {
         return name;
     }
@@ -112,8 +111,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	}
 
 	public void setMappedRoleNames(List<String> names) {
-		this.mappedRoleNames = names;
+		this.mappedRoleNames.clear();
+		this.mappedRoleNames.addAll(names);
 	}    
+	
+	public void addMappedRoleName(String name) {
+		this.mappedRoleNames.add(name);
+	}  	
 	
 	public boolean allows(String resourceName, DataPolicy.PermissionType type) {
 		for(PermissionMetaData permission:this.permissions.getMap().values()) {
@@ -140,9 +144,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         "allowDelete"
     })	
     @ManagementObject(properties=ManagementProperties.EXPLICIT)
-	public static class PermissionMetaData implements DataPermission{
-    	    	    
-        private static final String SEPARATOR = "."; //$NON-NLS-1$
+	public static class PermissionMetaData implements DataPermission, Serializable {
+		private static final long serialVersionUID = 7034744531663164277L;
+		private static final String SEPARATOR = "."; //$NON-NLS-1$
         public static final String RECURSIVE = "*"; //$NON-NLS-1$
         private static final String ALL_NODES = RECURSIVE;
         public static final String SEPARATOR_WITH_RECURSIVE  = SEPARATOR + RECURSIVE;
@@ -164,7 +168,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         
         @Override
         @ManagementProperty(description="Resource Name, for which permission defined")
-        @ManagementObjectID(type="permission")
+        //@ManagementObjectID(type="permission")
         @XmlElement(name = "resource-name", required = true)
         public String getResourceName() {
             return resourceName;

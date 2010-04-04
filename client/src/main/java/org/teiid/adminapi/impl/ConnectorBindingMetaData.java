@@ -23,7 +23,6 @@ package org.teiid.adminapi.impl;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.ConnectorBinding;
 
@@ -32,25 +31,34 @@ public class ConnectorBindingMetaData extends AdminObjectImpl implements Connect
 
 	private static final long serialVersionUID = -4865836616882247016L;
 	private transient Object type;
+	private String rarFileName;
+	private String jndiName;
 
-	@ManagementProperty(description="Connector Binding Name", readOnly=true)
-	@ManagementObjectID(type="binding")
+	@ManagementProperty(description="Connector Binding Name")
 	public String getName() {
 		return super.getName();
 	}    
 	
 	@Override
-	@ManagementProperty(description="RAR file name", readOnly=true)	
+	@ManagementProperty(description="RAR file name")	
 	public String getRARFileName() {
-		return getPropertyValue("rar-name"); //$NON-NLS-1$
+		return this.rarFileName;
 	}
 
-	@Override
-	@ManagementProperty(description="JNDI name", readOnly=true)	
-	 public String getJNDIName() {
-		return getPropertyValue("jndi-name"); //$NON-NLS-1$
-	 }
+	public void setRARFileName(String name) {
+		this.rarFileName = name;
+	}
 	
+	@Override
+	@ManagementProperty(description="JNDI name")	
+	 public String getJNDIName() {
+		return this.jndiName;
+	 }
+
+	public void setJNDIName(String name) {
+		this.jndiName = name;
+	}
+	 
 	public void setComponentType(Object type) {
 		this.type = type;
 	}

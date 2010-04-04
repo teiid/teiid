@@ -30,6 +30,7 @@ import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.managed.plugins.factory.AbstractInstanceClassFactory;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.jboss.ManagedUtil;
@@ -74,6 +75,19 @@ public class VDBMetaDataInstanceClassFactory extends AbstractInstanceClassFactor
 				vdb.addProperty(ManagedUtil.getSimpleValue(managedProperty, "name", String.class), ManagedUtil.getSimpleValue(managedProperty, "value", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
+		else if (property.getName().equals("dataPolicies")) { //$NON-NLS-1$
+			List<ManagedObject> policies = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(property.getValue());
+			for(ManagedObject managedPolicy:policies) {
+				String policyName = ManagedUtil.getSimpleValue(managedPolicy, "name", String.class); //$NON-NLS-1$
+				DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+				
+		        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
+		        if (mappedRoleNames != null){
+		            List<String> roleNames = (List<String>)MetaValueFactory.getInstance().unwrap(mappedRoleNames.getValue());
+		            policy.setMappedRoleNames(roleNames);
+		        }				
+			}
+		}		
 		else {
 			super.setValue(beanInfo, property, vdb, value);
 		}

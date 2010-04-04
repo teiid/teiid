@@ -25,6 +25,7 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -55,7 +56,7 @@ public class TestConnectorBindings extends BaseConnection {
 		admin.close();
 	}
 	
-	@AfterClass
+	//@AfterClass
 	public static void end() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("admin", "admin".toCharArray(), "mm://localhost:31443"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
@@ -352,4 +353,37 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		assertTrue("Test not veryfied", checked); //$NON-NLS-1$
 	}
+	
+	
+	@Test public void testAddRoleNames() throws Exception {
+		installVDB();
+		admin.addRoleToDataPolicy("TransactionsRevisited", 1, "policy1", "managers"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		
+		VDB vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
+		List<DataPolicy> policies = vdb.getDataPolicies();
+		assertTrue (!policies.isEmpty());
+		for (DataPolicy policy:policies) {
+			if (policy.getName().equals("policy1")) { //$NON-NLS-1$
+				List<String> sources = policy.getMappedRoleNames();
+				assertTrue(sources.contains("managers"));
+			}
+		}
+		
+		// remove the role
+		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "managers");
+		
+		vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
+		policies = vdb.getDataPolicies();
+		assertTrue (!policies.isEmpty());
+		
+		for (DataPolicy policy:policies) {
+			if (policy.getName().equals("policy1")) { //$NON-NLS-1$
+				List<String> sources = policy.getMappedRoleNames();
+				assertFalse(sources.contains("managers"));
+			}
+		}		
+		
+		// remove non-existent role name
+		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
+	}	
 }

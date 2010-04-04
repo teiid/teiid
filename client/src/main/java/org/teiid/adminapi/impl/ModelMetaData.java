@@ -35,7 +35,6 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
@@ -76,7 +75,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     protected List<ValidationError> errors;    
     
 	@ManagementProperty(description="Model Name")
-	@ManagementObjectID(type="model")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
@@ -132,8 +130,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         addProperty(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY, Boolean.toString(supports));
     }
 
-    public void setModelType(String modelType) {
-        this.modelType = modelType;
+    public void setModelType(Model.Type modelType) {
+        this.modelType = modelType.name();
     }
     
     public String toString() {
@@ -216,7 +214,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         }
     	
         @ManagementProperty (description="Error Message")
-        @ManagementObjectID(type="error")
         public String getValue() {
 			return value;
 		}

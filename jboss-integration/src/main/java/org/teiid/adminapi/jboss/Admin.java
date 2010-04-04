@@ -51,6 +51,7 @@ import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
 import org.jboss.managed.plugins.WritethroughManagedPropertyImpl;
+import org.jboss.metatype.api.types.CollectionMetaType;
 import org.jboss.metatype.api.types.MapCompositeMetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
@@ -77,6 +78,7 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.ConnectionPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.ConnectorBindingMetaData;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -84,6 +86,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
@@ -467,17 +470,69 @@ public class Admin extends TeiidAdmin {
 			vdb.addModel(buildModel(mo));
 		}
 		
-		// TODO: add the following
 		// SecurityRoleMappings
-		
+		mp = mc.getProperty("dataPolicies");//$NON-NLS-1$
+		List<ManagedObject> policies = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(mp.getValue());
+		if (policies != null && !policies.isEmpty()) {
+			for(ManagedObject mo:policies) {
+				vdb.addDataPolicy(buildDataPolicy(mo));
+			}		
+		}
 		return vdb;
+	}
+
+	private DataPolicyMetadata buildDataPolicy(ManagedObject managedPolicy) {
+		DataPolicyMetadata policy = new DataPolicyMetadata();
+		policy.setName(ManagedUtil.getSimpleValue(managedPolicy, "name", String.class));//$NON-NLS-1$
+		policy.setDescription(ManagedUtil.getSimpleValue(managedPolicy, "description", String.class));//$NON-NLS-1$
+		
+        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
+        CollectionValueSupport roleCollection = (CollectionValueSupport)mappedRoleNames.getValue();
+        if (roleCollection != null) {
+	        MetaValue[] roleNames = roleCollection.getElements();
+	        for (MetaValue mv:roleNames) {
+	        	policy.addMappedRoleName((String)((SimpleValueSupport)mv).getValue());
+	        }
+        }
+        
+        ManagedProperty permissions = managedPolicy.getProperty("permissions");//$NON-NLS-1$
+        if (permissions != null) {
+        	List<ManagedObject> permissionCollection = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(permissions.getValue());
+            if (permissionCollection != null) {
+            	for (ManagedObject mo:permissionCollection) {
+            		PermissionMetaData permission = new PermissionMetaData();
+            		
+            		permission.setResourceName(ManagedUtil.getSimpleValue(mo, "resourceName", String.class));//$NON-NLS-1$
+            		
+            		if (ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class) != null) {
+            			permission.setAllowCreate(ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class));
+            		}
+            		
+            		if (ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class) != null) {
+            			permission.setAllowRead(ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class));
+            		}
+            		
+            		if (ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class) != null) {
+            			permission.setAllowUpdate(ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class));
+            		}
+            		
+            		if (ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class) != null) {
+            			permission.setAllowDelete(ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class));
+            		}            		
+            		
+            		policy.addPermission(permission);
+            	}
+            }        	
+        }
+        
+		return policy;
 	}
 
 	private ModelMetaData buildModel(ManagedObject managedModel) {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(ManagedUtil.getSimpleValue(managedModel, "name", String.class));//$NON-NLS-1$
 		model.setVisible(ManagedUtil.getSimpleValue(managedModel, "visible", Boolean.class));//$NON-NLS-1$
-		model.setModelType(ManagedUtil.getSimpleValue(managedModel, "modelType", String.class));//$NON-NLS-1$
+		model.setModelType(Model.Type.valueOf(ManagedUtil.getSimpleValue(managedModel, "modelType", String.class)));//$NON-NLS-1$
 
 		ManagedProperty prop = managedModel.getProperty("JAXBProperties"); //$NON-NLS-1$
 		List<ManagedObject> properties = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(prop.getValue());
@@ -932,6 +987,69 @@ public class Admin extends TeiidAdmin {
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}		        
+	}
+
+	private void manageRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role, boolean add)  throws AdminException {
+		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
+		if (mc == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("vdb_not_found", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+		ManagedProperty mp = mc.getProperty("dataPolicies");//$NON-NLS-1$
+		List<ManagedObject> policies = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(mp.getValue());
+		ManagedObject managedPolicy = null;
+		if (policies != null && !policies.isEmpty()) {
+			for(ManagedObject mo:policies) {
+				String name = ManagedUtil.getSimpleValue(mo, "name", String.class); //$NON-NLS-1$
+				if (policyName.equals(name)) {
+					managedPolicy = mo;
+				}
+			}		
+		}
+		
+		if (managedPolicy == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
+        CollectionValueSupport roleCollection = (CollectionValueSupport)mappedRoleNames.getValue();
+        ArrayList<MetaValue> modifiedRoleNames = new ArrayList<MetaValue>();
+        if (roleCollection != null) {
+	        MetaValue[] roleNames = roleCollection.getElements();
+	        for (MetaValue mv:roleNames) {
+	        	String existing = (String)((SimpleValueSupport)mv).getValue();
+	        	if (!existing.equals(role)) {
+	        		modifiedRoleNames.add(mv);
+	        	}
+	        }
+        }
+        else {
+        	roleCollection = new CollectionValueSupport(new CollectionMetaType("java.util.List", SimpleMetaType.STRING));
+        	mappedRoleNames.setValue(roleCollection);
+        }
+        
+        if (add) {
+        	modifiedRoleNames.add(ManagedUtil.wrap(SimpleMetaType.STRING, role));
+        }
+        
+        roleCollection.setElements(modifiedRoleNames.toArray(new MetaValue[modifiedRoleNames.size()]));
+        
+		try {
+			getView().updateComponent(mc);
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		}		
+	}
+
+	
+	@Override
+	public void addRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException {
+		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, true);
+	}
+	
+	@Override
+	public void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException{
+		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, false);
 	}	
 
 }

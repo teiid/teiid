@@ -53,7 +53,7 @@ public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> 
 		ModelMetaData system = new ModelMetaData();
 		system.setName(CoreConstants.SYSTEM_MODEL);
 		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL.name());
+		system.setModelType(Model.Type.PHYSICAL);
 		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
 		system.setSupportsMultiSourceBindings(false);
 		vdb.addModel(system);		

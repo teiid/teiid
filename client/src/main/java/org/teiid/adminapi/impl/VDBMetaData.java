@@ -24,7 +24,6 @@ package org.teiid.adminapi.impl;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -36,7 +35,6 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
@@ -55,7 +53,6 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 })
 @XmlRootElement(name = "vdb")
 public class VDBMetaData extends AdminObjectImpl implements VDB {
-	private static final String STATUS_KEY = "status"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = -4723595252013356436L;
 	
@@ -87,10 +84,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	private String fileUrl = null;
 	private boolean dynamic = false;
+	private VDB.Status status = VDB.Status.INACTIVE;
 	
 
 	@ManagementProperty(description="Name of the VDB")
-	@ManagementObjectID(type="vdb")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
@@ -102,21 +99,17 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	} 
 	
 	@Override
-	@ManagementProperty(description="VDB Status", readOnly=true)
+	@ManagementProperty(description="VDB Status")
 	public Status getStatus() {
-		String status = getPropertyValue(STATUS_KEY);
-		if (status != null) {
-			return VDB.Status.valueOf(status);
-		}
-		return VDB.Status.ACTIVE;
+		return this.status;
 	}
 	
 	public void setStatus(Status s) {
-		addProperty(STATUS_KEY, s.name());
+		this.status = s;
 	}
 	
 	@Override
-	@ManagementProperty(description="VDB version", readOnly=true)
+	@ManagementProperty(description="VDB version")
 	public int getVersion() {
 		return this.version;
 	}
@@ -142,8 +135,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	/**
-	 * This method required to make the JNDI assignment on the model work; if not present Management framework
-	 * treating "models" as ReadOnly property.
+	 * This method required to make the JNDI assignment on the model work; if not persistent Management framework
+	 * treating "models" as ReadOnly property. The actual assignment is done in the VDBMetaDataClassInstancefactory
 	 * @param models
 	 */
 	public void setModels(List<Model> models) {
@@ -252,7 +245,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}	
 	
 	/**
-	 * This method is required by the Management framework to write the mappings.
+	 * This method is required by the Management framework to write the mappings to the persistent form. The actual assignment is done
+	 * in the VDBMetaDataClassInstancefactory
 	 * @param policies
 	 */
 	public void setDataPolicies(List<DataPolicy> policies){

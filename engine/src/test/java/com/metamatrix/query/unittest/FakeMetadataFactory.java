@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -40,7 +41,6 @@ import org.teiid.metadata.TransformationMetadata;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
 import com.metamatrix.query.mapping.xml.MappingDocument;
@@ -155,10 +155,10 @@ public class FakeMetadataFactory {
     	ModelMetaData model = new ModelMetaData();
     	model.setName(name);
     	if (source) {
-    		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+    		model.setModelType(Model.Type.PHYSICAL);
     	}
     	else {
-    		model.setModelType(ModelType.getString(ModelType.VIRTUAL));
+    		model.setModelType(Model.Type.PHYSICAL);
     	}
     	model.setVisible(true);
     	model.setSupportsMultiSourceBindings(false);
@@ -2381,7 +2381,7 @@ public class FakeMetadataFactory {
     	
     	ModelMetaData model = new ModelMetaData();
     	model.setName("MultiModel");
-   		model.setModelType(ModelType.getString(ModelType.PHYSICAL));
+   		model.setModelType(Model.Type.PHYSICAL);
     	model.setVisible(true);
     	
     	model.setSupportsMultiSourceBindings(true);

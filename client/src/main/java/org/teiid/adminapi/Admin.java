@@ -355,5 +355,25 @@ public interface Admin {
      * Closes the admin connection
      */
     void close();
+    
+    /**
+     * Assign a Role name to the Data Policy in a given VDB
+     *  
+     * @param vdbName
+     * @param vdbVersion
+     * @param policyName
+     * @param role
+     */
+    void addRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    
+    /**
+     * Assign a Role name to the Data Policy in a given VDB
+     *  
+     * @param vdbName
+     * @param vdbVersion
+     * @param policyName
+     * @param role
+     */
+    void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;  
 
 }

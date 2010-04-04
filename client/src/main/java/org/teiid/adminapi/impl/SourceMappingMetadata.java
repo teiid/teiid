@@ -31,7 +31,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 
@@ -56,7 +55,6 @@ public class SourceMappingMetadata implements Serializable {
     }
 
     @ManagementProperty (description="Source Name")
-    @ManagementObjectID(type="sourceMapping")
 	public String getName() {
 		return name;
 	}
