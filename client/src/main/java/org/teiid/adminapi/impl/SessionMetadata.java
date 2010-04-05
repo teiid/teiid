@@ -41,7 +41,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	private static final long serialVersionUID = 918638989081830034L;
 	private String applicationName;
-	private long lastPingTime;
+	private long lastPingTime = System.currentTimeMillis();
     private long createdTime;
     private String ipAddress;
     private String clientHostName;    
