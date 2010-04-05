@@ -26,7 +26,7 @@ package org.teiid.adminapi;
 /**
  * Represents a connector binding (the instance of a connector type) in the Teiid system.
  */
-public interface ConnectorBinding extends  AdminObject {
+public interface ConnectionFactory extends  AdminObject {
     
     /**
      * Get the identifier for this connector binding's RAR file name

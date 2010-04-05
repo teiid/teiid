@@ -33,92 +33,87 @@ public interface Admin {
 	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
-     * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model
+     * Assign a {@link ConnectionFactory} to a {@link VDB}'s Model
      *
      * @param vdbName Name of the VDB
      * @param vdbVersion Version of the VDB
-     * @param modelName  Name of the Model to map Connector Binding
+     * @param modelName  Name of the Model to map Connection Factory
      * @param sourceName sourceName for the model
      * @param jndiName JNDI names to which the source name needs to map to
-     * @throws AdminException if there's a system error or if there's a user input error.
+     * @throws AdminException
      */
-    void assignBindingToModel(String vdbName,
-                              int vdbVersion,
-                              String modelName,
-                              String sourceName,
-                              String jndiName) throws AdminException;
+    void assignConnectionFactoryToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException;
     
     /**
-     * Set/update the property for the Connector Binding identified by the given deployed name.
+     * Set/update the property for the Connection Factory identified by the given deployed name.
      * @param deployedName
      * @param propertyName
      * @param propertyValue
      * @throws AdminException
      */
-    void setConnectorBindingProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
+    void setConnectionFactoryProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Add Connector Type, will import Connector Type from a file
+     * Add Connector, will import RAR from a file
      *
-     * @param name  of the Connector Type to add
+     * @param name  of the Connector to add
      * @param rar RAR file
-     * @throws AdminException  if there's a system error.
+     * @throws AdminException  
      */
-    void addConnectorType(String name, InputStream rar) throws AdminException;
+    void addConnector(String name, InputStream rar) throws AdminException;
 
     /**
-     * Delete Connector Type from Next Configuration
+     * Delete Connector 
      *
-     * @param name String name of the Connector Type to delete
-     * @throws AdminException
-     *             if there's a system error.
+     * @param name String name of the Connector to delete
+     * @throws AdminException 
      */
-    void deleteConnectorType(String name) throws AdminException;
+    void deleteConnector(String name) throws AdminException;
     
     /**
-     * Export Connector Type rar file
+     * Export Connector RAR file
      *
-     * @param @param name  of the Connector Type
+     * @param name  of the Connector
      * @return InputStream of contents of the rar file
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
-    InputStream exportConnectorType(String name) throws AdminException;    
+    InputStream exportConnector(String name) throws AdminException;    
 
     /**
-     * Deploy a {@link ConnectorBinding} to Configuration
+     * Deploy a {@link ConnectionFactory} to Configuration
      *
-     * @param deployedName  Connector Binding name that will be added to Configuration
+     * @param deployedName  Connection Factory name that will be added to Configuration
      * @param typeName Connector type name. 
-     * @param properties Name & Value pair need to deploy the Connector Binding
+     * @param properties Name & Value pair need to deploy the Connection Factory
 
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
-    ConnectorBinding addConnectorBinding(String deployedName, String typeName, Properties properties) throws AdminException;
+    ConnectionFactory addConnectionFactory(String deployedName, String typeName, Properties properties) throws AdminException;
 
     /**
-     * Delete the {@link ConnectorBinding} from the Configuration
+     * Delete the {@link ConnectionFactory} from the Configuration
      *
-     * @param deployedName - deployed name of the connector binding
-     * @throws AdminException  if there's a system error.
+     * @param deployedName - deployed name of the connection factory
+     * @throws AdminException  
      */
-    void deleteConnectorBinding(String deployedName) throws AdminException;
+    void deleteConnectionFactory(String deployedName) throws AdminException;
     
     /**
-     * Export a {@link ConnectorBinding} to character Array in XML format
+     * Export a {@link ConnectionFactory} to character Array in XML format
      *
-     * @param deployedName the unique identifier for a {@link ConnectorBinding}.
+     * @param deployedName the unique identifier for a {@link ConnectionFactory}.
      * @return Reader in XML format
      * @throws AdminException
-     *             if there's a system error.
+     *             
      */
-    Reader exportConnectorBinding(String deployedName) throws AdminException;    
+    Reader exportConnectionFactory(String deployedName) throws AdminException;    
 
     /**
      * Deploy a {@link VDB} file.
      * @param name  Name of the VDB file to save under
      * @param VDB 	VDB.
      * @throws AdminException
-     *             if there's a system error.
+     *             
      * @return the {@link VDB} representing the current property values and runtime state.
      */
     public void deployVDB(String fileName, InputStream vdb) throws AdminException;
@@ -138,7 +133,7 @@ public interface Admin {
      * @param vdbName identifier of the {@link VDB}
      * @param vdbVersion {@link VDB} version
      * @return InputStream of the VDB
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException;    
     
@@ -150,19 +145,19 @@ public interface Admin {
     void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Get the Connector Types available in the configuration.
+     * Get the Connectors  available in the configuration.
      *
-     * @return Set of connector types.
-     * @throws AdminException if there's a system error.
+     * @return Set of connector names.
+     * @throws AdminException 
      */
-    Set<String> getConnectorTypes() throws AdminException;
+    Set<String> getConnectorNames() throws AdminException;
 
     /**
      * Get the VDBs that currently deployed in the system
      *
      * @return Collection of {@link VDB}s.  There could be multiple VDBs with the
      * same name in the Collection but they will differ by VDB version.
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     Set<VDB> getVDBs() throws AdminException;
     
@@ -170,43 +165,42 @@ public interface Admin {
      * Get the VDB
      * @param vdbName
      * @param vbdVersion
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      * @return
      */
     VDB getVDB(String vdbName, int vbdVersion) throws AdminException;
 
     /**
-     * Get the Connector Bindings that are available in the configuration
+     * Get the Connection Factories that are available in the configuration
      *
-     * @return Collection of {@link ConnectorBinding}
-     * @throws AdminException if there's a system error.
+     * @return Collection of {@link ConnectionFactory}
+     * @throws AdminException 
      */
-    Collection<ConnectorBinding> getConnectorBindings() throws AdminException;
+    Collection<ConnectionFactory> getConnectionFactories() throws AdminException;
     
     /**
-     * Get the connector binding by the given the deployed name.
-     * @param deployedName - name of the deployed connector binding
-     * @return null if not found a connector binding by the given name
-     * @throws AdminException if there's a system error.
+     * Get the Connection Factory by the given the deployed name.
+     * @param deployedName - name of the deployed Connection Factory
+     * @return null if not found a Connection Factory by the given name
+     * @throws AdminException 
      */
-    ConnectorBinding getConnectorBinding(String deployedName) throws AdminException;
+    ConnectionFactory getConnectionFactory(String deployedName) throws AdminException;
 
     /**
-     * Get all the Connector Bindings for the given VDB identifier pattern
+     * Get all the Connection Factories for the given VDB identifier pattern
 	 * @param vdbName - Name of the VDB
 	 * @param vdbVersion - version of the VDB
-     * @return Collection of {@link ConnectorBinding}
-     * @throws AdminException if there's a system error.
+     * @return Collection of {@link ConnectionFactory}
+     * @throws AdminException 
      */
-    Collection<ConnectorBinding> getConnectorBindingsInVDB(String vdbName, int vdbVersion) throws AdminException;
+    Collection<ConnectionFactory> getConnectionFactoriesInVDB(String vdbName, int vdbVersion) throws AdminException;
 
     /**
      * Get the Work Manager stats that correspond to the specified identifier pattern.
      *
-     * @param identifier - an identifier for the queues {@link QueueWorkerPool}. "runtime" will return the stats for Query 
-     * runtime Worker Pool. Also any Connector Binding name will return the stats for that connector binding.
+     * @param identifier - an identifier for the queues {@link QueueWorkerPool}. 
      * @return Collection of {@link QueueWorkerPool}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     WorkerPoolStatistics getWorkManagerStats(String identifier) throws AdminException;
     
@@ -216,49 +210,49 @@ public interface Admin {
      * If the {@link ConnectionPoolStatistics ConnectionPool} represents an XA connection, there
      * will be 2 {@link ConnectionPoolStatistics ConnectionPool}s.  
      *
-     * @param deployedName - an identifier that corresponds to the ConnectorBinding Name
+     * @param deployedName - an identifier that corresponds to the connection factory Name
      * @return {@link ConnectionPoolStatistics}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
-    ConnectionPoolStatistics getConnectorConnectionPoolStats(String deployedName) throws AdminException;
+    ConnectionPoolStatistics getConnectionFactoryStats(String deployedName) throws AdminException;
         
 
     /**
      * Get the Caches that correspond to the specified identifier pattern
      * @return Collection of {@link String}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     Collection<String> getCacheTypes() throws AdminException;
 
     /**
      * Get all the current Sessions.
      * @return Collection of {@link Session}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     Collection<Session> getSessions() throws AdminException;
 
     /**
      * Get the all Requests that are currently in process
      * @return Collection of {@link Request}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     Collection<Request> getRequests() throws AdminException;
     
     /**
      * Get the Requests for the given session
      * @return Collection of {@link Request}
-     * @throws AdminException if there's a system error.
+     * @throws AdminException 
      */
     Collection<Request> getRequestsForSession(long sessionId) throws AdminException;
     
 
     /**
-     * Get all of the available Configuration Properties for the specified AdminObject, and details about them.
-     * @param connectorTypeIdentifier
+     * Get all of the available configuration Properties for the specified connector
+     * @param connectorName - Name of the connector
      * @return
      * @throws AdminException
      */
-    Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(String connectorTypeIdentifier) throws AdminException;
+    Collection<PropertyDefinition> getConnectorPropertyDefinitions(String connectorName) throws AdminException;
     
     
     /**
@@ -268,7 +262,8 @@ public interface Admin {
      */
     Collection<Transaction> getTransactions() throws AdminException;
     
-    /**
+    
+   /**
      * Get the processes that correspond to the specified identifier pattern.
      *
      * @param processIdentifier the unique identifier for for a {@link org.teiid.adminapi.ProcessObject ProcessObject}
@@ -278,28 +273,29 @@ public interface Admin {
      * @throws AdminException if there's a system error.
      */
     Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException;
-    
+
     
     /**
-     * Start Connector Binding
+     * Start Connection Factory
      *
-     * @param deployedName 
-     * @throws AdminException  if there's a system error.
+     * @param factory 
+     * @throws AdminException  
      */
-    void startConnectorBinding(ConnectorBinding binding) throws AdminException;
+    void startConnectionFactory(ConnectionFactory factory) throws AdminException;
 
     /**
-     * Stop Connector Binding
+     * Stop Connection Factory
      *
-     * @param deployedName  identifier for {@link org.teiid.adminapi.ConnectorBinding}
+     * @param factory
+     * @throws AdminException  
      */
-    void stopConnectorBinding(ConnectorBinding binding) throws AdminException;
+    void stopConnectionFactory(ConnectionFactory factory) throws AdminException;
 
     /**
      * Clear the cache or caches specified by the cacheIdentifier.
      * @param cacheType Cache Type
      * No wild cards currently supported, must be explicit
-     * @throws AdminException  if there's a system error.
+     * @throws AdminException  
      */
     void clearCache(String cacheType) throws AdminException;
 
@@ -308,7 +304,7 @@ public interface Admin {
      *
      * @param identifier  Session Identifier {@link org.teiid.adminapi.Session}.
      * No wild cards currently supported, must be explicit
-     * @throws AdminException  if there's a system error.
+     * @throws AdminException  
      */
     void terminateSession(long sessionId) throws AdminException;
 
@@ -318,7 +314,7 @@ public interface Admin {
      * @param sessionId session Identifier for the request.
      * @param requestId request Identifier
      * 
-     * @throws AdminException  if there's a system error.
+     * @throws AdminException  
      */
     void cancelRequest(long sessionId, long requestId) throws AdminException;
   

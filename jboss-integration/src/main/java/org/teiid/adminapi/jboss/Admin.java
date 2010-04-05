@@ -67,7 +67,7 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ConnectionPoolStatistics;
-import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.ConnectionFactory;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -77,7 +77,7 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.ConnectionPoolStatisticsMetadata;
-import org.teiid.adminapi.impl.ConnectorBindingMetaData;
+import org.teiid.adminapi.impl.ConnectionFactoryMetaData;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
@@ -160,15 +160,15 @@ public class Admin extends TeiidAdmin {
 //	}
 	
 	@Override
-	public Collection<ConnectorBinding> getConnectorBindings() throws AdminException {
-		ArrayList<ConnectorBinding> bindings = new ArrayList<ConnectorBinding>();
+	public Collection<ConnectionFactory> getConnectionFactories() throws AdminException {
+		ArrayList<ConnectionFactory> bindings = new ArrayList<ConnectionFactory>();
 		findConnectorBindings(bindings, "NoTx"); //$NON-NLS-1$			
 		findConnectorBindings(bindings, "Tx"); //$NON-NLS-1$
 		return bindings;
 	}
 
 	@Override
-	public ConnectorBinding getConnectorBinding(String deployedName) throws AdminException {
+	public ConnectionFactory getConnectionFactory(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
 			return buildConnectorBinding(mc);
@@ -177,7 +177,7 @@ public class Admin extends TeiidAdmin {
 	}
 
 	@Override
-	public Reader exportConnectorBinding(String deployedName) throws AdminException {
+	public Reader exportConnectionFactory(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
 			return new InputStreamReader(exportDeployment(mc.getDeployment().getName()));
@@ -221,8 +221,8 @@ public class Admin extends TeiidAdmin {
 		return null;
 	}
 	
-	private ConnectorBinding buildConnectorBinding(ManagedComponent mc) {
-		ConnectorBindingMetaData connector = new ConnectorBindingMetaData();
+	private ConnectionFactory buildConnectorBinding(ManagedComponent mc) {
+		ConnectionFactoryMetaData connector = new ConnectionFactoryMetaData();
 		connector.setName(mc.getName());
 		connector.setComponentType(mc.getType());
 		connector.addProperty("deployer-name", mc.getDeployment().getName());//$NON-NLS-1$	
@@ -258,7 +258,7 @@ public class Admin extends TeiidAdmin {
 	    return Connector.class.getName().equals(connectionDefinition);
 	}
 	
-	private void findConnectorBindings(ArrayList<ConnectorBinding> bindings, String subType) throws AdminException {
+	private void findConnectorBindings(ArrayList<ConnectionFactory> bindings, String subType) throws AdminException {
 		try {
 			ComponentType type = new ComponentType("ConnectionFactory", subType); //$NON-NLS-1$	
 			Set<ManagedComponent> jcaConnectors = getView().getComponentsForType(type);
@@ -276,18 +276,18 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public ConnectorBinding addConnectorBinding(String deploymentName, String typeName, Properties properties) throws AdminException {
-		if (getConnectorBinding(deploymentName) != null) {
+	public ConnectionFactory addConnectionFactory(String deploymentName, String typeName, Properties properties) throws AdminException {
+		if (getConnectionFactory(deploymentName) != null) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deploymentName)); //$NON-NLS-1$;
 		}
 		properties.setProperty("connection-definition", Connector.class.getName()); //$NON-NLS-1$	
 		addConnectionfactory(deploymentName, typeName, properties);
 		
-		return getConnectorBinding(deploymentName);
+		return getConnectionFactory(deploymentName);
 	}
 	
 	@Override
-	public void setConnectorBindingProperty(String deployedName, String propertyName, String propertyValue) throws AdminException{
+	public void setConnectionFactoryProperty(String deployedName, String propertyName, String propertyValue) throws AdminException{
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc == null) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deployedName)); //$NON-NLS-1$;
@@ -311,7 +311,7 @@ public class Admin extends TeiidAdmin {
 	}
 		
 	@Override
-	public void deleteConnectorBinding(String deployedName) throws AdminException {
+	public void deleteConnectionFactory(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
 			ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
@@ -319,7 +319,7 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public void startConnectorBinding(ConnectorBinding binding) throws AdminException {
+	public void startConnectionFactory(ConnectionFactory binding) throws AdminException {
 		try {
 			String deployerName = binding.getPropertyValue("deployer-name"); //$NON-NLS-1$
 			if (deployerName == null) {
@@ -332,7 +332,7 @@ public class Admin extends TeiidAdmin {
 	}
 
 	@Override
-	public void stopConnectorBinding(ConnectorBinding binding) throws AdminException {
+	public void stopConnectionFactory(ConnectionFactory binding) throws AdminException {
 		try {
 			String deployerName = binding.getPropertyValue("deployer-name");//$NON-NLS-1$
 			if (deployerName == null) {
@@ -345,14 +345,14 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public Collection<ConnectorBinding> getConnectorBindingsInVDB(String vdbName, int vdbVersion) throws AdminException {
-		HashMap<String, ConnectorBinding> bindingMap = new HashMap<String, ConnectorBinding>();
+	public Collection<ConnectionFactory> getConnectionFactoriesInVDB(String vdbName, int vdbVersion) throws AdminException {
+		HashMap<String, ConnectionFactory> bindingMap = new HashMap<String, ConnectionFactory>();
 		VDBMetaData vdb = (VDBMetaData) getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
 			for (Model model:vdb.getModels()) {
 				if (model.isSource()) {
 					for (String sourceName : model.getSourceNames()) {
-						ConnectorBinding binding = getConnectorBinding(((ModelMetaData)model).getSourceJndiName(sourceName));
+						ConnectionFactory binding = getConnectionFactory(((ModelMetaData)model).getSourceJndiName(sourceName));
 						if (binding != null) {
 							bindingMap.put(sourceName, binding);
 						}
@@ -365,7 +365,7 @@ public class Admin extends TeiidAdmin {
 	
 	
 	@Override
-	public Set<String> getConnectorTypes() throws AdminException{
+	public Set<String> getConnectorNames() throws AdminException{
 		Set<String> names = getView().getTemplateNames();
 		HashSet<String> matched = new HashSet<String>();
 		for(String name:names) {
@@ -645,7 +645,7 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public void addConnectorType(String connectorName, InputStream rar) throws AdminException{
+	public void addConnector(String connectorName, InputStream rar) throws AdminException{
 		if (!connectorName.startsWith("connector-")) {//$NON-NLS-1$
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
@@ -668,12 +668,12 @@ public class Admin extends TeiidAdmin {
 			ManagedUtil.deployArchive(getDeploymentManager(), connectorNameWithoutExt+"-template.jar", jarFile.toURI().toURL(), false);//$NON-NLS-1$
 			jarFile.delete();
 		} catch (IOException e) {
-			deleteConnectorType(connectorName);
+			deleteConnector(connectorName);
 		}
 	}
 	
 	@Override
-	public void deleteConnectorType(String connectorName) throws AdminException {
+	public void deleteConnector(String connectorName) throws AdminException {
 		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
 			connectorName = connectorName + ".rar";//$NON-NLS-1$
 		}
@@ -688,7 +688,7 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public InputStream exportConnectorType(String connectorName) throws AdminException {
+	public InputStream exportConnector(String connectorName) throws AdminException {
 		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
 			connectorName = connectorName + ".rar";//$NON-NLS-1$
 		}
@@ -763,7 +763,7 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public ConnectionPoolStatistics getConnectorConnectionPoolStats(String deployedName) throws AdminException {
+	public ConnectionPoolStatistics getConnectionFactoryStats(String deployedName) throws AdminException {
 		ManagedComponent mc = getConnectorBindingComponent(deployedName);
 		if (mc != null) {
 			return buildConnectorConnectionPool(mc);
@@ -786,7 +786,7 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(String typeName) throws AdminException {
+	public Collection<PropertyDefinition> getConnectorPropertyDefinitions(String typeName) throws AdminException {
 		try {
 			DeploymentTemplateInfo info = getView().getTemplate(typeName);
 			if(info == null) {
@@ -902,7 +902,7 @@ public class Admin extends TeiidAdmin {
     
 	@Override
     public Collection<PropertyDefinition> getDataSourcePropertyDefinitions() throws AdminException {
-		return getConnectorTypePropertyDefinitions(XA_DATA_SOURCE_TEMPLATE);
+		return getConnectorPropertyDefinitions(XA_DATA_SOURCE_TEMPLATE);
 	}
 	
 	private static final String connectorTemplate = 
@@ -941,7 +941,7 @@ public class Admin extends TeiidAdmin {
 	
 	
 	@Override
-	public void assignBindingToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException {
+	public void assignConnectionFactoryToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException {
 
 		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
 		if (mc == null) {

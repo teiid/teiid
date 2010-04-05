@@ -2097,10 +2097,7 @@
           <para>Optionally extend the OracleSQLTranslator to insert new FunctionModifiers to handle translation of these functions. Given that the syntax of these functions is same as other typical functions, this probably isn't needed - the default translation should work.</para>
         </listitem>
         <listitem>
-          <para>Create a new connector type - the easiest way is to export the Oracle ANSI connector type from the Console and just modify the properties such as the connector name (to differentiate it from base Oracle connector) and the capabilities class (to use the extended version) and possibly the translation class (if that was extended for b. Also, connector classpath needs to be extended to include a new jar of your changes above.</para>
-        </listitem>
-        <listitem>
-          <para>Install the code as an extension module and add your new connector type in the Console.</para>
+          <para>Create a new connector - The easiest way is to copy JDBC connector rar file from the distribution and modify the "ra.xml" file. Change the capabilities class (to use the extended version) and possibly the translation class (if that was extended for b. Also, include a new jar of your changes above in the same rar file. Rename the RAR file to different name to differentiate from original JDBC rar file.</para>
         </listitem>
       </itemizedlist>
     </sect2>

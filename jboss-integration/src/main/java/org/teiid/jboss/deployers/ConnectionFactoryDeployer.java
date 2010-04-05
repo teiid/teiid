@@ -50,14 +50,14 @@ import org.teiid.security.SecurityHelper;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 
-public class ConnectorBindingDeployer extends AbstractSimpleRealDeployer<ManagedConnectionFactoryDeploymentGroup> implements ManagedObjectCreator {
+public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<ManagedConnectionFactoryDeploymentGroup> implements ManagedObjectCreator {
 	private ManagedObjectFactory mof;
 	private SecurityHelper securityHelper;
 	
 	private ConnectorManagerRepository connectorManagerRepository;
 	private VDBRepository vdbRepository;
 	
-	public ConnectorBindingDeployer() {
+	public ConnectionFactoryDeployer() {
 		super(ManagedConnectionFactoryDeploymentGroup.class);
 		setRelativeOrder(3000);
 	}

@@ -13,11 +13,11 @@ public class BaseConnection {
 	static String user = "admin";
 	static String password = "teiid";
 	
-	interface ConnectionFactory{
+	interface DataSourceFactory{
 		Connection getConnection(String vdbName) throws Exception;
 	}
 	
-	static class ServerDatasourceConnection implements ConnectionFactory {
+	static class ServerDatasourceConnection implements DataSourceFactory {
 		public Connection getConnection(String vdbName) throws Exception {
 			TeiidDataSource ds = new TeiidDataSource();
 			ds.setUser(user);
@@ -30,7 +30,7 @@ public class BaseConnection {
 		}
 	}
 	
-	public void execute(ConnectionFactory connF, String vdbName, String sql) throws Exception {
+	public void execute(DataSourceFactory connF, String vdbName, String sql) throws Exception {
 		Connection connection = connF.getConnection(vdbName);
 		try {
 			connection.getMetaData();

@@ -68,7 +68,7 @@
       <title>Buffer Management</title>
       <para> The buffer manager manages memory for all result sets used
         in the query engine. That includes result sets read from a
-        connector binding, result sets used temporarily during
+        connection factory, result sets used temporarily during
         processing, and result sets prepared for a user. Each result set
         is referred to in the buffer manager as a tuple source.</para>
       <para>When retrieving batches from the buffer manager, the

@@ -323,7 +323,7 @@ mmStatement.setExecutionProperty(
       <sect3>
         <title>Source Unavailability</title>
         <para>A source is considered to be 'unavailable' if the
-          connector binding associated with the source issues an
+          connection factory associated with the source issues an
           exception in response to a query. The exception will be
           propagated to the query processor, where it will become a
           warning in the result set.</para>
@@ -472,7 +472,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
       <itemizedlist>
         <listitem>
           <para>Access - Access a source. A source query is sent
-            to the connector binding associated with the source. [For a
+            to the connection factory associated with the source. [For a
             dependent join, this node is called Dependent Select.]
           </para>
           <para />

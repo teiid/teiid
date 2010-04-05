@@ -24,10 +24,10 @@ package org.teiid.adminapi.impl;
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperty;
-import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.ConnectionFactory;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="connector"))
-public class ConnectorBindingMetaData extends AdminObjectImpl implements ConnectorBinding {
+public class ConnectionFactoryMetaData extends AdminObjectImpl implements ConnectionFactory {
 
 	private static final long serialVersionUID = -4865836616882247016L;
 	private transient Object type;

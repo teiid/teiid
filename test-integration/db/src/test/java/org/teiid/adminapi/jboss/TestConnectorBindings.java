@@ -1,7 +1,11 @@
 package org.teiid.adminapi.jboss;
 
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,15 +20,14 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
+import org.teiid.adminapi.ConnectionFactory;
 import org.teiid.adminapi.ConnectionPoolStatistics;
-import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
@@ -68,10 +71,10 @@ public class TestConnectorBindings extends BaseConnection {
 	}
 
 	@Test public void testConnectorBinding() throws Exception {
-		ConnectorBinding binding = admin.getConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+		ConnectionFactory binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		if (binding != null) {
-			admin.deleteConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+			admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		}
 		
 		Properties p = new Properties();
@@ -80,27 +83,27 @@ public class TestConnectorBindings extends BaseConnection {
 		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.derby.DerbyCapabilities"); //$NON-NLS-1$ //$NON-NLS-2$
 		p.setProperty("XaCapable", "true"); //$NON-NLS-1$ //$NON-NLS-2$
 		p.setProperty("SourceJNDIName", "java:DerbyDS"); //$NON-NLS-1$ //$NON-NLS-2$
-		admin.addConnectorBinding("test-mysql-cb","connector-jdbc-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
+		admin.addConnectionFactory("test-mysql-cb","connector-jdbc-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
 		
-		binding = admin.getConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		assertNotNull(binding);	
 		
 		assertEquals("java:DerbyDS", binding.getPropertyValue("SourceJNDIName")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		admin.stopConnectorBinding(binding);
+		admin.stopConnectionFactory(binding);
 		
-		admin.startConnectorBinding(binding);
+		admin.startConnectionFactory(binding);
 		
-		admin.setConnectorBindingProperty("test-mysql-cb", "SourceJNDIName", "DummyDS"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		admin.setConnectionFactoryProperty("test-mysql-cb", "SourceJNDIName", "DummyDS"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
-		binding = admin.getConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		assertEquals("DummyDS", binding.getPropertyValue("SourceJNDIName")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		admin.deleteConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+		admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
-		binding = admin.getConnectorBinding("test-mysql-cb"); //$NON-NLS-1$
+		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		assertNull(binding);		
 	}
@@ -119,7 +122,7 @@ public class TestConnectorBindings extends BaseConnection {
 		Set<VDB> vdbs = admin.getVDBs();
 		assertTrue(vdbs.size() >= 1);
 		
-		Collection<ConnectorBinding> bindings = admin.getConnectorBindingsInVDB("TransactionsRevisited",1); //$NON-NLS-1$
+		Collection<ConnectionFactory> bindings = admin.getConnectionFactoriesInVDB("TransactionsRevisited",1); //$NON-NLS-1$
 		assertEquals(2, bindings.size());
 		
 		admin.deleteVDB("TransactionsRevisited", 1); //$NON-NLS-1$
@@ -250,14 +253,14 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testConnectionPool() throws Exception {
-		ConnectionPoolStatistics stats = admin.getConnectorConnectionPoolStats("mysql-connector-binding"); //$NON-NLS-1$
+		ConnectionPoolStatistics stats = admin.getConnectionFactoryStats("mysql-connector-binding"); //$NON-NLS-1$
 		System.out.println(stats);
 		assertNotNull(stats);
 	}
 	
 	@Test
 	public void testConnectorTypeProperties() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getConnectorTypePropertyDefinitions("connector-jdbc-7.0.0-SNAPSHOT"); //$NON-NLS-1$
+		Collection<PropertyDefinition> defs = admin.getConnectorPropertyDefinitions("connector-jdbc-7.0.0-SNAPSHOT"); //$NON-NLS-1$
 		for (PropertyDefinition pd:defs) {
 			System.out.println(pd.getName());
 			if (pd.getName().equals("ExtensionTranslationClassName")) { //$NON-NLS-1$
@@ -285,7 +288,7 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testConnectorTypes() throws Exception {
-		Set<String> defs = admin.getConnectorTypes();
+		Set<String> defs = admin.getConnectorNames();
 		assertTrue(defs.contains("connector-salesforce-7.0.0-SNAPSHOT")); //$NON-NLS-1$
 		assertTrue(defs.contains("connector-jdbc-7.0.0-SNAPSHOT")); //$NON-NLS-1$
 		assertTrue(defs.contains("connector-text-7.0.0-SNAPSHOT")); //$NON-NLS-1$
@@ -306,15 +309,15 @@ public class TestConnectorBindings extends BaseConnection {
 	public void testTemplate() throws Exception{
 		File f = new File(UnitTestUtil.getTestDataPath()+"/connector-loopback.rar"); //$NON-NLS-1$
 		FileInputStream fis = new FileInputStream(f);
-		admin.addConnectorType("connector-loopy", fis); //$NON-NLS-1$
+		admin.addConnector("connector-loopy", fis); //$NON-NLS-1$
 		fis.close();
 		
-		Set<String> names = admin.getConnectorTypes();
+		Set<String> names = admin.getConnectorNames();
 		assertTrue(names.contains("connector-loopy")); //$NON-NLS-1$
 		
-		admin.deleteConnectorType("connector-loopy"); //$NON-NLS-1$
+		admin.deleteConnector("connector-loopy"); //$NON-NLS-1$
 		
-		names = admin.getConnectorTypes();
+		names = admin.getConnectorNames();
 		//assertTrue(!names.contains("connector-loopy")); //$NON-NLS-1$
 	}
 	
@@ -334,7 +337,7 @@ public class TestConnectorBindings extends BaseConnection {
 	}	
 	
 	@Test public void testAssignConnectorBinding() throws Exception {
-		admin.assignBindingToModel("TransactionsRevisited", 1, "pm1", "mysql", "jndi:FOO"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		admin.assignConnectionFactoryToModel("TransactionsRevisited", 1, "pm1", "mysql", "jndi:FOO"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 		boolean checked = false;
 		VDB vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$

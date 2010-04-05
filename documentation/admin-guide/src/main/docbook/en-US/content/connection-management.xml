@@ -28,7 +28,7 @@ vdb.name = <vdb name>
   </sect1>
   <sect1>
     <title>Handling Multiple Connections</title>
-    <para>Using MMAdmin, user can actively manage more than one connection to a single or multiple Teiid
+    <para>Using AdminShell, user can actively manage more than one connection to a single or multiple Teiid
       systems. For example, two separate connections can be maintained, one to the development server and one to
       the integration server at the same time. This is possible because Admin Shell supports a feature called named
       connections. </para>

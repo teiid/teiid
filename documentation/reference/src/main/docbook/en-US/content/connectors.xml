@@ -30,23 +30,6 @@
         <tbody>
           <row>
             <entry>
-              <para>ConnectorBindingName</para>
-            </entry>
-            <entry>
-              <para>The name of the connector binding. Must be unique
-                across all connector bindings. This property is not
-                editable, and is not seen in the Designer in the
-                connector properties table.</para>
-            </entry>
-            <entry>
-              <para>string</para>
-            </entry>
-            <entry>
-              <para />
-            </entry>
-          </row>
-          <row>
-            <entry>
               <para>ConnectorClass</para>
             </entry>
             <entry>
@@ -63,19 +46,46 @@
           </row>
           <row>
             <entry>
-              <para>ConnectorMaxThreads</para>
+              <para>CapabilitiesClass</para>
             </entry>
             <entry>
-              <para>The maximum number of connector worker threads.
-                Required.</para>
+              <para>The class is used to provide the Connector Capabilities</para>
             </entry>
             <entry>
-              <para>integer</para>
+              <para>string</para>
             </entry>
             <entry>
               <para />
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>Immutable</para>
+            </entry>
+            <entry>
+              <para>True if the source never changes.</para>
+            </entry>
+            <entry>
+              <para>boolean</para>
+            </entry>
+            <entry>
+              <para />
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>XaCapable</para>
+            </entry>
+            <entry>
+              <para>True, if this connector supports XA Transactions</para>
+            </entry>
+            <entry>
+              <para>boolean</para>
+            </entry>
+            <entry>
+              <para />
+            </entry>
+          </row>          
           <row>
             <entry>
               <para>ExceptionOnMaxRows</para>
@@ -116,4 +126,9 @@
       </tgroup>
     </informaltable>
   </sect1>
+  <sect1>
+    <title>Source Security</title>
+    <para>For the configuring the Connection Factories and Data Sources with security check out JBoss AS documentation.</para>
+   </sect1>  
+  
 </chapter>

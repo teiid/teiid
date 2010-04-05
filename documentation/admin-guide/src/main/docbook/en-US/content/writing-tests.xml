@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="writing_tests">
-  <title>Writing Tests using MMAdmin</title>
+  <title>Writing Tests using AdminShell</title>
   <para>
     <ulink url="http://junit.org">JUnit</ulink>
-    testing framework is integrated into the MMAdmin, so you can write regression tests and run tests in the JUnit
+    testing framework is integrated into the AdminShell, so you can write regression tests and run tests in the JUnit
     style. To write a test,
     <orderedlist>
       <listitem>

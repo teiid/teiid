@@ -201,11 +201,11 @@ public abstract class ConnectionStrategy {
 
 		    TestLogger.logInfo("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
 
-		    api.addConnectorBinding(ds.getName(),ds.getConnectorType(), ds.getProperties());
+		    api.addConnectionFactory(ds.getName(),ds.getConnectorType(), ds.getProperties());
 
-		    api.assignBindingToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName(), ds.getProperty("jndi-name"));
+		    api.assignConnectionFactoryToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName(), ds.getProperty("jndi-name"));
 
-		    api.startConnectorBinding(api.getConnectorBinding(ds.getName()));
+		    api.startConnectionFactory(api.getConnectionFactory(ds.getName()));
 		} else {
 		    throw new QueryTestFailedException(
 			    "Error: Unable to create binding to map to model : "

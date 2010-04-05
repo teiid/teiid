@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="getting_started">
-  <title>Getting Started with MMAdmin</title>
+  <title>Getting Started with Admin Shell</title>
   <para>
     To learn the basics of BeanShell (<ulink url="http://beanshell.org/">http://beanshell.org</ulink>) 
     take a look at their documents and tutorials on their website A copy of the BeanShell document is also can
-    be found in the Admin Shell installation directory. Learn how basic scripts can be written and get familiar with
+    be found in the AdminShell installation directory. Learn how basic scripts can be written and get familiar with
     some commonly used commands.
   </para>
   <para>Note: BeanShell documentation provided is of version 1.3, which is taken as is from their website,
     for latest changes refer to BeanShell website. The BeanShell version 2.0b4 is currently being used in
-    MMAdmin.</para>
+    AdminShell.</para>
   <para>
     Basic knowledge of the Java programming language is required in order to effectively design and develop
-    scripts using the MMAdmin. To learn Java language  find learning resources at
+    scripts using the AdminShell. To learn Java language  find learning resources at
     <ulink url="http://java.sun.com/">http://java.sun.com</ulink>.
   </para>
   <para>You can learn about the Teiid administrative API either using “help()” command or find JavaDoc
     for in the installation directory.</para>
-  <para>Admin Shell is a specialized version of BeanShell with lots of pre-built libraries and scripts
-    designed to be  used with the Teiid system. Admin Shell works in two different modes: interactive or script
+  <para>AdminShell is a specialized version of BeanShell with lots of pre-built libraries and scripts
+    designed to be  used with the Teiid system. AdminShell works in two different modes: interactive or script
     run mode.</para>
   <para>In interactive mode, user can invoke the tool and connect to a live Teiid system and issue any
     ad-hoc commands to control the system or issue a SQL query against connected virtual database and view the
@@ -30,8 +30,8 @@
     system</para>  
   
   <sect1>
-    <title>Essential rules to follow in using MMAdmin</title>
-    <para>To use Admin Shell successfully, there are some syntactical rules you should keep in mind.</para>
+    <title>Essential rules to follow in using AdminShell</title>
+    <para>To use AdminShell successfully, there are some syntactical rules you should keep in mind.</para>
     <orderedlist>
       <listitem>
         <para>All the commands end with semi-colon [;]. Commands without any input parameters end with open
@@ -81,13 +81,13 @@
       script finishes the tool will exit automatically, however you still have to disconnect from Teiid
       system in the script.</para>
     <para>Note: If SSL is turned on the Teiid server, you would need to supply the correct certificates
-      for connection. Edit the command file used to execute the Admin Shell and make sure correct trust store is
+      for connection. Edit the command file used to execute the AdminShell and make sure correct trust store is
       defined in the path.</para>
   </sect1>
   <sect1>
     <title>Basic commands to get started</title>
-    <para>The list below contains some common commands used in Admin Shell. The best way to learn scripting in the
-      Admin Shell is to read the scripts in "samples" directory in the Admin Shell kit's installation directory, and
+    <para>The list below contains some common commands used in AdminShell. The best way to learn scripting in the
+      AdminShell is to read the scripts in "samples" directory in the AdminShell kit's installation directory, and
       experiment your own scripts using a developer instance of Teiid System.</para>
     <programlisting><![CDATA[   
 print("xxx");   // print something to console
@@ -113,7 +113,7 @@ exit();   // exit the shell
   </sect1>
   <sect1>
     <title>"help" command</title>
-    <para>This below command lists all the available administrative API commands in the MMAdmin. Please note
+    <para>This below command lists all the available administrative API commands in the AdminShell. Please note
       that none of the BeanShell commands or custom commands will be shown in this list. Documentation is only
       source for reviewing those commands presently.</para>
     <programlisting><![CDATA[ 
@@ -122,18 +122,16 @@ exit();   // exit the shell
     <para>To get a specific definition about a command and it's required input parameters , use the below form
       of help. The example shown will show detailed JavaDoc description about "addVDB" method.</para>
     <programlisting><![CDATA[ 
-admin $ help("addVDB");
-/**
- * Import a {@link VDB} file.
- * <br>A VDB file with internal definitions. This is the default VDB export configuration
- * begining with MetaMatrix version 4.3.</br>
- *
- * @param name VDB Name
- * @param vdbFile byte array of the VDB Archive
- * @param option Code of the AdminOptions to use when executing this method. There are
- choices aboutwhat to do when a connector binding with the given identifier already exists in the system.
- */
-VDB addVDB ( String name , String vdbFile , int option
+admin $ help("deployVDB");
+    /**
+     * Deploy a {@link VDB} file.
+     * @param name  Name of the VDB file to save under
+     * @param VDB 	VDB.
+     * @throws AdminException
+     *             
+     * @return the {@link VDB} representing the current property values and runtime state.
+     */
+public void deployVDB(String fileName, InputStream vdb)
       ]]></programlisting>
     <para />
     <para>If not sure about exact command, and to narrow the list available commands, help can be used in the
@@ -141,9 +139,9 @@ VDB addVDB ( String name , String vdbFile , int option
     <programlisting><![CDATA[ 
 admin $   help(“get*”);
       ]]></programlisting>
-    <para>This will list all the commands available that begin with “get”, for example “getconnectorBindings,
+    <para>This will list all the commands available that begin with “get”, for example “getConnectionFactories,
       getVDBs” etc.</para>
-    <para>For every administrative API call, there is corresponding command in MMAdmin. For a reference to
+    <para>For every administrative API call, there is corresponding command in AdminShell. For a reference to
       full administrative API, please look at “documents” sections in the installation directory.</para>
   </sect1>
   
