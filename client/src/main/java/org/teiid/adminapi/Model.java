@@ -34,6 +34,12 @@ public interface Model extends AdminObject {
 	
 	enum Type {PHYSICAL, VIRTUAL, FUNCTION};
 	
+	/**
+	 * Description about the model
+	 * @return
+	 */
+	String getDescription();
+	
     /**
      * Determine if this model is a Source model.
      * 

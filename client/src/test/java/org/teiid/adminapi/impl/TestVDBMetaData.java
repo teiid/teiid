@@ -60,6 +60,7 @@ public class TestVDBMetaData {
 		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setVisible(false);
 		modelOne.addError("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.setDescription("model description");
 		
 		vdb.addModel(modelOne);
 		
@@ -124,7 +125,7 @@ public class TestVDBMetaData {
 		assertEquals(Model.Type.PHYSICAL, modelOne.getModelType()); 
 		assertEquals("model-value-override", modelOne.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertFalse(modelOne.isVisible());
-
+		assertEquals("model description", modelOne.getDescription());
 		
 		modelTwo = vdb.getModel("model-two"); //$NON-NLS-1$
 		assertEquals("model-two", modelTwo.getName()); //$NON-NLS-1$

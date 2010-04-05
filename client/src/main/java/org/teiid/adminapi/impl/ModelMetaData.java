@@ -44,6 +44,7 @@ import com.metamatrix.core.vdb.ModelType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
+	"description",
     "JAXBProperties",
     "sources",
     "errors"
@@ -65,6 +66,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	@XmlAttribute(name = "type")
 	protected String modelType = Type.PHYSICAL.name();
 	
+	@XmlElement(name = "description")
+	protected String description;	
+	
 	@XmlAttribute(name = "path")
 	protected String path; 
     
@@ -84,6 +88,16 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	public void setName(String name) {
 		super.setName(name);
 	}
+
+	@Override
+	@ManagementProperty(description = "Model description")	
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}	
 	
 	@Override
 	@ManagementProperty(description = "Is Model Source model")

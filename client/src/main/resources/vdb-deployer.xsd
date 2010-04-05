@@ -11,6 +11,7 @@
 				<xs:element name="model" maxOccurs="unbounded">
 					<xs:complexType>
 						<xs:sequence>
+                            <xs:element name="description" type="xs:string" minOccurs="0"/>
 							<xs:element name="property" type="property" minOccurs="0" maxOccurs="unbounded"/>
 							<xs:element name="source" minOccurs="0" maxOccurs="unbounded">
 								<xs:complexType>
