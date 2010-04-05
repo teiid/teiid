@@ -24,6 +24,7 @@ package org.teiid.adminapi;
 
 
 
+
 /** 
  * When a user submits a SQL command to the system for processing, usually that represents
  * a single request. A single request might have one or more source
@@ -34,6 +35,12 @@ package org.teiid.adminapi;
  *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
  */
 public interface Request extends AdminObject {
+	
+	public enum State {
+		PROCESSING,
+		DONE,
+		CANCELED
+	}
 
     /**
      * Get the ExecutionId for a Request
@@ -74,8 +81,13 @@ public interface Request extends AdminObject {
     public boolean sourceRequest();
     
     /**  
+     * @return In the case that this is a source request this represents the node id. Otherwise null
+     */
+    public Integer getNodeId();
+
+    /**  
      * @return In the case that this is a source request this represents the node id. Otherwise blank
      */
-    public int getNodeId();
+	State getState();
     
 }

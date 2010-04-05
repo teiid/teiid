@@ -110,7 +110,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
     private List<MetaMatrixException> warnings = new LinkedList<MetaMatrixException>();
     private boolean doneProducingBatches;
-    private boolean isClosed;
+    private volatile boolean isClosed;
     private volatile boolean isCanceled;
     private volatile boolean closeRequested;
 	//results request

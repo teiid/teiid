@@ -42,6 +42,7 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.Request.State;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
@@ -246,7 +247,7 @@ public class DQPCore implements DQP {
             	req.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
             	req.setCommand(holder.requestMsg.getCommandString());
             	req.setStartTime(holder.getProcessingTimestamp());
-            	
+            	req.setState(holder.isCanceled()?State.CANCELED:holder.isDoneProcessing()?State.DONE:State.PROCESSING);
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().getTransactionType() != Scope.NONE) {
             		req.setTransactionId(holder.getTransactionContext().getTransactionId());
             	}
@@ -268,7 +269,7 @@ public class DQPCore implements DQP {
                 	info.setStartTime(arm.getProcessingTimestamp());
                 	info.setSourceRequest(true);
                 	info.setNodeId(arm.getAtomicRequestID().getNodeID());
-                	
+                	info.setState(conInfo.isCanceled()?State.CANCELED:conInfo.isDone()?State.DONE:State.PROCESSING);
         			results.add(info);
                 }
                 results.add(req);

@@ -53,8 +53,9 @@ public class DataTierTupleSource implements TupleSource {
     private ConnectorWork cwi;
     private int index;
     private int rowsProcessed;
-    private AtomicResultsMessage arm;
+    private volatile AtomicResultsMessage arm;
     private boolean closed;
+    private volatile boolean canceled;
     
     /**
      * Constructor for DataTierTupleSource.
@@ -82,7 +83,7 @@ public class DataTierTupleSource implements TupleSource {
 	    	if (index < arm.getResults().length) {
 	            return this.arm.getResults()[index++];
 	        }
-	    	if (this.arm.getFinalRow() > 0) {
+	    	if (isDone()) {
 	    		return null;
 	    	}
 	    	try {
@@ -92,6 +93,10 @@ public class DataTierTupleSource implements TupleSource {
 			}
     	}
     }
+
+	public boolean isDone() {
+		return this.arm != null && this.arm.getFinalRow() > 0;
+	}
     
     void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         try {
@@ -116,7 +121,12 @@ public class DataTierTupleSource implements TupleSource {
     	}
     }
     
+    public boolean isCanceled() {
+		return canceled;
+	}
+    
     public void cancelRequest() {
+    	this.canceled = true;
     	if (this.cwi != null) {
     		this.cwi.cancel();
     	}

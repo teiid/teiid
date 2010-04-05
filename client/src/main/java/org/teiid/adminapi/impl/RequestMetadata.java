@@ -41,8 +41,9 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     private String command;
     private long startTime;
     private boolean sourceRequest;
-	private int nodeID = Integer.MIN_VALUE;
+	private Integer nodeID;
     private String transactionId;
+    private State state;
     
     @Override
     @ManagementProperty(description="Unique Identifier for Request", readOnly=true)
@@ -52,7 +53,17 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     
     public void setExecutionId(long id) {
 		this.executionId = id;
-	}    
+	}
+    
+    @Override
+    @ManagementProperty(description="State of the Request", readOnly=true)
+    public State getState() {
+		return state;
+	}
+    
+    public void setState(State state) {
+		this.state = state;
+	}
     
     @Override
     @ManagementProperty(description="Session ID", readOnly=true)
@@ -96,7 +107,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
         
 	@Override
 	@ManagementProperty(description="Node Id", readOnly=true)
-    public int getNodeId() {
+    public Integer getNodeId() {
         return this.nodeID;
     }
     
@@ -130,7 +141,8 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	return HashCodeUtil.hashCode((int)executionId, (int)sessionId);
     }    
     
-    public String toString() {
+    @SuppressWarnings("nls")
+	public String toString() {
     	StringBuilder str = new StringBuilder();
     	str.append("Request: sessionid=").append(sessionId);
     	str.append("; executionId=").append(executionId);
