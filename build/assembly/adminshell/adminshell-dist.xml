@@ -10,23 +10,49 @@
   <includeBaseDirectory>true</includeBaseDirectory>
   <baseDirectory>teiid-adminshell-${version}</baseDirectory>
 
-
-  <fileSets>
+  <moduleSets>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
+            <include>org.jboss.teiid:teiid-adminshell</include>
+        </includes>
+                        
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+                                    
+          <dependencySets>
+            <dependencySet>
+              <useProjectArtifact>true</useProjectArtifact>
+              <unpack>false</unpack>
+              <useTransitiveDependencies>true</useTransitiveDependencies>
+              <useDefaultExcludes>true</useDefaultExcludes>
+            </dependencySet>
+          </dependencySets>
+          <outputDirectory>lib</outputDirectory>
+        </binaries>
+      
+    </moduleSet>
+  </moduleSets>
   
-    <fileSet>
-      <directory>target/distribution/teiid-${version}-adminshell-dependencies.dir</directory>
-      <includes>
-        <include>*.jar</include>
-      </includes>
-      <outputDirectory>lib</outputDirectory>      
-    </fileSet>
+  <fileSets>
       
     <fileSet>
         <directory>build/kit-adminshell</directory>
         <outputDirectory>/</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>      
+    </fileSet> 
+          
+    <fileSet>
+        <directory>build/kit-adminshell</directory>
+        <outputDirectory>/</outputDirectory>      
         <excludes>
-          <exclude>**/*.foo</exclude>
-        </excludes>        
+          <exclude>**/*.sh</exclude>
+        </excludes>      
     </fileSet>      
     
     <fileSet>
@@ -38,7 +64,5 @@
     </fileSet>
         
   </fileSets>
-
-
     
 </assembly>

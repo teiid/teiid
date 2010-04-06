@@ -82,7 +82,6 @@
 								<descriptor>build/assembly/src.xml</descriptor>
 								<descriptor>build/assembly/client-jar.xml</descriptor>
                                 <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
 								<descriptor>documentation/assembly/docs.xml</descriptor>
 							</descriptors>
