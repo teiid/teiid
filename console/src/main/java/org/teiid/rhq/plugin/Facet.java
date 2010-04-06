@@ -24,6 +24,7 @@ package org.teiid.rhq.plugin;
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +45,9 @@ import org.rhq.core.domain.content.transfer.ResourcePackageDetails;
 import org.rhq.core.domain.measurement.AvailabilityType;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
+import org.rhq.core.pluginapi.content.version.PackageVersions;
 import org.rhq.core.domain.resource.CreateResourceStatus;
+import org.rhq.core.domain.resource.ResourceType;
 import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.content.ContentFacet;
@@ -91,7 +94,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	private String identifier;
 
 	protected String componentType;
-	
+
 	protected boolean isAvailable = false;
 
 	private final Log log = LogFactory.getLog(this.getClass());
@@ -101,6 +104,21 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	 * C:/opt/jboss-5.0.0.GA/server/default/deploy/foo.vdb).
 	 */
 	protected String deploymentName;
+	
+	private PackageVersions versions = null;
+	
+	 /**
+     * Name of the backing package type that will be used when discovering packages. This corresponds to the name of the
+     * package type defined in the plugin descriptor. For simplicity, the package type for VDBs is called "vdb". This is 
+     * still unique within the context of the parent resource type and lets this class use the same package type name in 
+     * both cases.
+     */
+    private static final String PKG_TYPE_VDB = "vdb";
+
+    /**
+     * Architecture string used in describing discovered packages.
+     */
+    private static final String ARCHITECTURE = "noarch";
 
 	abstract String getComponentType();
 
@@ -113,7 +131,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	 */
 	public void start(ResourceContext context) {
 		resourceContext = context;
-		deploymentName=context.getResourceKey();
+		deploymentName = context.getResourceKey();
 	}
 
 	/**
@@ -166,9 +184,9 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 						+ " named " + this.getComponentName());
 
 	}
-	
-	protected void setMetricArguments(String name,
-			Configuration configuration, Map<String, Object> argumentMap) {
+
+	protected void setMetricArguments(String name, Configuration configuration,
+			Map<String, Object> argumentMap) {
 		// moved this logic up to the associated implemented class
 		throw new InvalidPluginConfigurationException(
 				"Not implemented on component type " + this.getComponentType()
@@ -178,11 +196,11 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 	protected void execute(final ExecutedResult result, final Map valueMap) {
 		DQPManagementView dqp = new DQPManagementView();
-			
+
 		dqp.executeOperation(result, valueMap);
-		
+
 	}
-	
+
 	/*
 	 * (non-Javadoc) This method is called by JON to check the availability of
 	 * the inventoried component on a time scheduled basis
@@ -228,7 +246,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	public OperationResult invokeOperation(String name,
 			Configuration configuration) {
 		Map valueMap = new HashMap();
-	
+
 		Set operationDefinitionSet = this.resourceContext.getResourceType()
 				.getOperationDefinitions();
 
@@ -287,25 +305,31 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 	@Override
 	public void deleteResource() throws Exception {
-		
-		DeploymentManager deploymentManager = ProfileServiceUtil.getDeploymentManager();
-		
-        log.debug("Stopping deployment [" + this.deploymentName + "]...");
-        DeploymentProgress progress = deploymentManager.stop(this.deploymentName);
-        DeploymentStatus stopStatus = DeploymentUtils.run(progress);
-        if (stopStatus.isFailed()) {
-            log.error("Failed to stop deployment '" + this.deploymentName + "'.", stopStatus.getFailure());
-            throw new Exception("Failed to stop deployment '" + this.deploymentName + "' - cause: "
-                    + stopStatus.getFailure());
-        }
-        log.debug("Removing deployment [" + this.deploymentName + "]...");
-        progress = deploymentManager.remove(this.deploymentName);
-        DeploymentStatus removeStatus = DeploymentUtils.run(progress);
-        if (removeStatus.isFailed()) {
-            log.error("Failed to remove deployment '" + this.deploymentName + "'.", removeStatus.getFailure());
-            throw new Exception("Failed to remove deployment '" + this.deploymentName + "' - cause: "
-                    + removeStatus.getFailure());
-        }
+
+		DeploymentManager deploymentManager = ProfileServiceUtil
+				.getDeploymentManager();
+
+		log.debug("Stopping deployment [" + this.deploymentName + "]...");
+		DeploymentProgress progress = deploymentManager
+				.stop(this.deploymentName);
+		DeploymentStatus stopStatus = DeploymentUtils.run(progress);
+		if (stopStatus.isFailed()) {
+			log.error("Failed to stop deployment '" + this.deploymentName
+					+ "'.", stopStatus.getFailure());
+			throw new Exception("Failed to stop deployment '"
+					+ this.deploymentName + "' - cause: "
+					+ stopStatus.getFailure());
+		}
+		log.debug("Removing deployment [" + this.deploymentName + "]...");
+		progress = deploymentManager.remove(this.deploymentName);
+		DeploymentStatus removeStatus = DeploymentUtils.run(progress);
+		if (removeStatus.isFailed()) {
+			log.error("Failed to remove deployment '" + this.deploymentName
+					+ "'.", removeStatus.getFailure());
+			throw new Exception("Failed to remove deployment '"
+					+ this.deploymentName + "' - cause: "
+					+ removeStatus.getFailure());
+		}
 
 	}
 
@@ -318,7 +342,43 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 	@Override
 	public Set<ResourcePackageDetails> discoverDeployedPackages(PackageType arg0) {
-		return null;
+
+		File deploymentFile = null;
+
+		if (this.deploymentName != null) {
+			deploymentFile = new File(deploymentName.substring(7)); 
+		}
+
+		if (!deploymentFile.exists())
+			throw new IllegalStateException("Deployment file '"
+					+ deploymentFile + "' for " + this.getComponentType()
+					+ " does not exist.");
+
+		String fileName = deploymentFile.getName();
+		org.rhq.core.pluginapi.content.version.PackageVersions packageVersions = loadPackageVersions();
+		String version = packageVersions.getVersion(fileName);
+		if (version == null) {
+			// This is either the first time we've discovered this VDB, or
+			// someone purged the PC's data dir.
+			version = "1.0";
+			packageVersions.putVersion(fileName, version);
+			packageVersions.saveToDisk();
+		}
+
+		// Package name is the deployment's file name (e.g. foo.ear).
+		PackageDetailsKey key = new PackageDetailsKey(fileName, version,
+				PKG_TYPE_VDB, ARCHITECTURE);
+		ResourcePackageDetails packageDetails = new ResourcePackageDetails(key);
+		packageDetails.setFileName(fileName);
+		packageDetails.setLocation(deploymentFile.getPath());
+		if (!deploymentFile.isDirectory())
+			packageDetails.setFileSize(deploymentFile.length());
+		packageDetails.setFileCreatedDate(null); // TODO: get created date via
+													// SIGAR
+		Set<ResourcePackageDetails> packages = new HashSet<ResourcePackageDetails>();
+		packages.add(packageDetails);
+
+		return packages;
 	}
 
 	@Override
@@ -339,7 +399,8 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	}
 
 	@Override
-	public CreateResourceReport createResource(CreateResourceReport createResourceReport) {
+	public CreateResourceReport createResource(
+			CreateResourceReport createResourceReport) {
 		ResourcePackageDetails details = createResourceReport
 				.getPackageDetails();
 		PackageDetailsKey key = details.getKey();
@@ -350,7 +411,8 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		try {
 			File archiveFile = new File(archivePath);
 
-			if (!DeploymentUtils.hasCorrectExtension(archiveFile.getName(), resourceContext.getResourceType())) {
+			if (!DeploymentUtils.hasCorrectExtension(archiveFile.getName(),
+					resourceContext.getResourceType())) {
 				createResourceReport.setStatus(CreateResourceStatus.FAILURE);
 				createResourceReport
 						.setErrorMessage("Incorrect extension specified on filename ["
@@ -358,23 +420,47 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 				return createResourceReport;
 			}
 
-			DeploymentManager deploymentManager = ProfileServiceUtil.getDeploymentManager();
-			DeploymentUtils.deployArchive(deploymentManager, archiveFile, false);
+			DeploymentManager deploymentManager = ProfileServiceUtil
+					.getDeploymentManager();
+			DeploymentUtils
+					.deployArchive(deploymentManager, archiveFile, false);
 
 			deploymentName = archivePath;
 			createResourceReport.setResourceName(archivePath);
 			createResourceReport.setResourceKey(archivePath);
 			createResourceReport.setStatus(CreateResourceStatus.SUCCESS);
-			
+
 		} catch (Throwable t) {
 			log.error("Error deploying application for report: "
 					+ createResourceReport, t);
 			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
 			createResourceReport.setException(t);
 		}
-		
+
 		return createResourceReport;
-		
+
+	}
+
+	/**
+	 * Returns an instantiated and loaded versions store access point.
+	 * 
+	 * @return will not be <code>null</code>
+	 */
+	private org.rhq.core.pluginapi.content.version.PackageVersions loadPackageVersions() {
+		if (this.versions == null) {
+			ResourceType resourceType = resourceContext.getResourceType();
+			String pluginName = resourceType.getPlugin();
+			File dataDirectoryFile = resourceContext.getDataDirectory();
+			dataDirectoryFile.mkdirs();
+			String dataDirectory = dataDirectoryFile.getAbsolutePath();
+			log.trace("Creating application versions store with plugin name ["
+					+ pluginName + "] and data directory [" + dataDirectory
+					+ "]");
+			this.versions = new PackageVersions(pluginName, dataDirectory);
+			this.versions.loadFromDisk();
+		}
+
+		return this.versions;
 	}
 
 }
