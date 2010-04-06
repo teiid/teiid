@@ -35,8 +35,10 @@ import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Limit;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.Select;
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.metadata.runtime.Table;
 
 import com.metamatrix.connector.salesforce.Constants;
 import com.metamatrix.connector.salesforce.Messages;
@@ -145,8 +147,19 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			Expression expression = symbol.getExpression();
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
-				String tableName = element.getParent().getNameInSource();
-				result.append(tableName);
+				AbstractMetadataRecord parent = element.getParent();
+				Table table;
+				if(parent instanceof Table) {
+					table = (Table)parent;
+				} else {
+					parent = parent.getParent();
+					if(parent instanceof Table) {
+						table = (Table)parent;
+					} else {
+						throw new ConnectorException("Could not resolve Table for column " + element.getName());
+					}
+				}
+				result.append(table.getNameInSource());
 				result.append('.');
 				result.append(element.getNameInSource());
 			} else if (expression instanceof AggregateFunction) {

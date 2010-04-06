@@ -63,7 +63,6 @@ import com.sforce.soap.partner.sobject.SObject;
 public class ConnectionImpl {
 	private SforceService sfService;
 	private Soap sfSoap;
-	private LoginScopeHeader lh;
 	private SessionHeader sh;
 	private CallOptions co;
 	private ConnectorLogger logger;
@@ -79,7 +78,7 @@ public class ConnectionImpl {
 	
 	String getUserName() throws ConnectorException {
 			try {
-				return sfSoap.getUserInfo(sh, co).getUserName();
+				return sfSoap.getUserInfo(sh).getUserName();
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
 				throw new ConnectorException(e.getMessage());
 			}
@@ -99,16 +98,16 @@ public class ConnectionImpl {
 			co.setClient("RedHat/MetaMatrix/");
 
 			try {
+				/*
 				if(null != url) {
 					sfService = new SforceService(url);
 					sfSoap = sfService.getSoap();
 				} else {
+					*/
 					sfService = new SforceService();
 					sfSoap = sfService.getSoap();
-				}
-				lh = new LoginScopeHeader();
-				lh.setOrganizationId("RedHat/MetaMatrix/");
-				loginResult = sfSoap.login(username, password, lh, co);
+				//}
+				loginResult = sfSoap.login(username, password);
 			} catch (LoginFault e) {
 				throw new ConnectorException(e.getCause().getMessage());
 			} catch (InvalidIdFault e) {
@@ -128,13 +127,13 @@ public class ConnectionImpl {
 					Boolean.TRUE);
 			// Set the timeout.
 			//((BindingProvider)sfSoap).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT, timeout);
-			
+
 			
 			// Test the connection.
 			try {
-				sfSoap.getUserInfo(sh, co);
+				sfSoap.getUserInfo(sh);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ConnectorException(e.getCause().getMessage());
+				throw new ConnectorException(e.getMessage());
 			}
 		}
 	}
@@ -146,7 +145,7 @@ public class ConnectionImpl {
 			result = false;
 		} else {
 			try {
-				sfSoap.getServerTimestamp(sh, co);
+				sfSoap.getServerTimestamp(sh);
 			} catch (Throwable t) {
 				logger.logDetail("Caught Throwable in isAlive", t);
 				result = false;
@@ -161,12 +160,12 @@ public class ConnectionImpl {
 		qo.setBatchSize(batchSize);
 		try {
 			if(queryAll) {
-				qr = sfSoap.queryAll(queryString, sh, co, qo);
+				qr = sfSoap.queryAll(queryString, sh);
 			} else {
 				MruHeader mruHeader = partnerFactory.createMruHeader();
 				mruHeader.setUpdateMru(false);
 				
-				qr = sfSoap.query(queryString, sh, co, qo, mruHeader, pvHeader);
+				qr = sfSoap.query(queryString, sh);
 			}
 		} catch (InvalidFieldFault e) {
 			throw new ConnectorException(e, e.getMessage());
@@ -188,7 +187,7 @@ public class ConnectionImpl {
 		QueryOptions qo = partnerFactory.createQueryOptions();
 		qo.setBatchSize(batchSize);
 		try {
-			return sfSoap.queryMore(queryLocator,sh, co , qo);
+			return sfSoap.queryMore(queryLocator, sh);
 		} catch (InvalidFieldFault e) {
 			throw new ConnectorException(e, e.getMessage());
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
@@ -202,7 +201,7 @@ public class ConnectionImpl {
 	public int delete(String[] ids) throws ConnectorException {
 		List<DeleteResult> results = null;
 		try {
-			results = sfSoap.delete(Arrays.asList(ids), sh, co, null, null, null, null, null, null);
+			results = sfSoap.delete(Arrays.asList(ids), sh);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
 			throw new ConnectorException(e, e.getMessage());
 		}
@@ -240,7 +239,7 @@ public class ConnectionImpl {
 		objects.add(toCreate);
 		List<SaveResult> result;
 		try {
-			result = sfSoap.create(objects, sh, co, null, null, null, null, null, null, null);
+			result = sfSoap.create(objects, sh);
 		} catch (InvalidFieldFault e) {
 			throw new ConnectorException(e, e.getMessage());
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
@@ -265,7 +264,7 @@ public class ConnectionImpl {
 		}
 		List<SaveResult> result;
 			try {
-				result = sfSoap.update(params,sh, co, null, null, null, null, null, null, null);
+				result = sfSoap.update(params, sh);
 			} catch (InvalidFieldFault e) {
 				throw new ConnectorException(e, e.getMessage());
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
@@ -290,7 +289,7 @@ public class ConnectionImpl {
 	public UpdatedResult getUpdated(String objectType, XMLGregorianCalendar startDate, XMLGregorianCalendar endDate) throws ConnectorException {
 			GetUpdatedResult updated;
 			try {
-				updated = sfSoap.getUpdated(objectType, startDate, endDate, sh, co);
+				updated = sfSoap.getUpdated(objectType, startDate, endDate, sh);
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
 				throw new ConnectorException(e, e.getMessage());
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
@@ -306,7 +305,7 @@ public class ConnectionImpl {
 			XMLGregorianCalendar endCalendar) throws ConnectorException {
 			GetDeletedResult deleted;
 			try {
-				deleted = sfSoap.getDeleted(objectName, startCalendar, endCalendar, sh, co);
+				deleted = sfSoap.getDeleted(objectName, startCalendar, endCalendar, sh);
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
 				throw new ConnectorException(e, e.getMessage());
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
@@ -332,7 +331,7 @@ public class ConnectionImpl {
 	
 	public List<SObject> retrieve(String fieldList, String sObjectType, List<String> ids) throws ConnectorException {
 		try {
-			return sfSoap.retrieve(fieldList, sObjectType, ids, sh, co, null, null, null);
+			return sfSoap.retrieve(fieldList, sObjectType, ids, sh);
 		} catch (InvalidFieldFault e) {
 			throw new ConnectorException(e, e.getMessage());
 		} catch (MalformedQueryFault e) {
@@ -349,7 +348,7 @@ public class ConnectionImpl {
 
 	public DescribeGlobalResult getObjects() throws ConnectorException {
 		try {
-			return sfSoap.describeGlobal(sh, co, pvHeader);
+			return sfSoap.describeGlobal(sh);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
 			ConnectorException ce = new ConnectorException(e.getCause().getMessage());
 			ce.initCause(e.getCause());
@@ -359,7 +358,7 @@ public class ConnectionImpl {
 
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ConnectorException {
 		try {
-			return sfSoap.describeSObject(objectName, sh, co, null, null);
+			return sfSoap.describeSObject(objectName, sh);
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
 			throw new ConnectorException(e, e.getMessage());
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {

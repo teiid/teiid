@@ -57,7 +57,7 @@ public class Util {
 	}
 
 	public static SimpleDateFormat getSalesforceDateTimeFormat() {
-			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	}
 	
 	public static SimpleDateFormat getTimeZoneOffsetFormat() {

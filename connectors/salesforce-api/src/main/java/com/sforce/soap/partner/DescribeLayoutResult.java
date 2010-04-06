@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 public class DescribeLayoutResult {
 
     @XmlElement(required = true)
-    protected List<DescribeLayout2> layouts;
+    protected List<DescribeLayout> layouts;
     protected List<RecordTypeMapping> recordTypeMappings;
     protected boolean recordTypeSelectorRequired;
 
@@ -61,13 +61,13 @@ public class DescribeLayoutResult {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link DescribeLayout2 }
+     * {@link DescribeLayout }
      * 
      * 
      */
-    public List<DescribeLayout2> getLayouts() {
+    public List<DescribeLayout> getLayouts() {
         if (layouts == null) {
-            layouts = new ArrayList<DescribeLayout2>();
+            layouts = new ArrayList<DescribeLayout>();
         }
         return this.layouts;
     }

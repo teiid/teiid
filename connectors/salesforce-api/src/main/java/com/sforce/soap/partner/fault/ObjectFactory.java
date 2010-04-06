@@ -43,11 +43,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link ApiQueryFault }
+     * Create an instance of {@link ApiFault }
      * 
      */
-    public ApiQueryFault createApiQueryFault() {
-        return new ApiQueryFault();
+    public ApiFault createApiFault() {
+        return new ApiFault();
     }
 
     /**
@@ -59,43 +59,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link InvalidQueryLocatorFault }
-     * 
-     */
-    public InvalidQueryLocatorFault createInvalidQueryLocatorFault() {
-        return new InvalidQueryLocatorFault();
-    }
-
-    /**
-     * Create an instance of {@link InvalidNewPasswordFault }
-     * 
-     */
-    public InvalidNewPasswordFault createInvalidNewPasswordFault() {
-        return new InvalidNewPasswordFault();
-    }
-
-    /**
-     * Create an instance of {@link InvalidSObjectFault }
-     * 
-     */
-    public InvalidSObjectFault createInvalidSObjectFault() {
-        return new InvalidSObjectFault();
-    }
-
-    /**
      * Create an instance of {@link InvalidIdFault }
      * 
      */
     public InvalidIdFault createInvalidIdFault() {
         return new InvalidIdFault();
-    }
-
-    /**
-     * Create an instance of {@link ApiFault }
-     * 
-     */
-    public ApiFault createApiFault() {
-        return new ApiFault();
     }
 
     /**
@@ -107,11 +75,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link UnexpectedErrorFault }
+     * Create an instance of {@link InvalidSObjectFault }
      * 
      */
-    public UnexpectedErrorFault createUnexpectedErrorFault() {
-        return new UnexpectedErrorFault();
+    public InvalidSObjectFault createInvalidSObjectFault() {
+        return new InvalidSObjectFault();
     }
 
     /**
@@ -123,11 +91,43 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link UnexpectedErrorFault }
+     * 
+     */
+    public UnexpectedErrorFault createUnexpectedErrorFault() {
+        return new UnexpectedErrorFault();
+    }
+
+    /**
+     * Create an instance of {@link InvalidQueryLocatorFault }
+     * 
+     */
+    public InvalidQueryLocatorFault createInvalidQueryLocatorFault() {
+        return new InvalidQueryLocatorFault();
+    }
+
+    /**
+     * Create an instance of {@link ApiQueryFault }
+     * 
+     */
+    public ApiQueryFault createApiQueryFault() {
+        return new ApiQueryFault();
+    }
+
+    /**
      * Create an instance of {@link LoginFault }
      * 
      */
     public LoginFault createLoginFault() {
         return new LoginFault();
+    }
+
+    /**
+     * Create an instance of {@link InvalidNewPasswordFault }
+     * 
+     */
+    public InvalidNewPasswordFault createInvalidNewPasswordFault() {
+        return new InvalidNewPasswordFault();
     }
 
     /**
