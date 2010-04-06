@@ -12,6 +12,7 @@
 import java.sql.*;
 import org.teiid.script.io.*;
 import org.teiid.jdbc.*;
+import org.teiid.client.plan.*;
 
 protected Connection getConnection() {
     if (currentContext().internalConnection != void && currentContext().internalConnection != null) {
@@ -241,40 +242,61 @@ void execute(String sql, Object[] params) throws SQLException {
     }
 }
 
-
+/**
+ * Prints the previously executed query results to console
+ */
 void printResults() throws SQLException {
     printResults(currentContext().internalResultSet);
 }
 
+/**
+ * Prints supplied result set's results to the console
+ */
 void printResults(ResultSet results) throws SQLException {
     printResults(results, false);
 }
 
+/**
+ * Prints the previously executed query results to console in format 
+ * that can be used to later in re-gression testing
+ */
 void printResults(boolean comparePrint) throws SQLException {
     printResults(currentContext().internalResultSet, comparePrint);
 }
 
+/**
+ * Prints the previously executed query results to file in format 
+ * that can be used to later in re-gression testing
+ */
 void printResults(File fileName) throws SQLException {
     printResults(currentContext().internalResultSet, fileName);
 }
 
+/**
+ * Show the query plan for previously executed SQL. 
+ * @param xml when 'true' query plan displayed as XML; 'false' query plan displayed as simple text.
+ */
 void showPlan(boolean xml) {
     if (currentContext().internalStatement == void || currentContext().internalStatement == null) {
     	print("Statement is null - execute then issue showPlan");
         return;  
     }
-	PlanNode queryPlan = ((ResultSetImpl)currentContext().internalStatement).getPlanDescription();
+	PlanNode queryPlan = ((StatementImpl)currentContext().internalStatement).getPlanDescription();
 	if (queryPlan != null) {
 	    if (xml != null && xml) {
 			print(XMLOutputVisitor.convertToXML(queryPlan));
 		} else {
-			print(TextOutputVisitor.convertToText(queryPlan));
+			print(TextOutputVisitor.convertToText(queryPlan, 1));
 		}
 	} else {
 		print("No plan provided - add OPTION SHOWPLAN");
 	}
 }
 
+/**
+ * Simply walks results; but does not print to console. This could be used in situations where
+ * user wants to avoid the time taken to print results to console.
+ */
 void walkResults() {
     rs = currentContext().internalResultSet;
     int columnCount = rs.getMetaData().getColumnCount();
@@ -324,6 +346,10 @@ private void printResults(ResultSet results, File resultsFile) throws SQLExcepti
     print("Wrote "+reader.getRowCount()+" rows to File="+resultsFile.getName()+"\n");
 }
 
+/**
+ * Assert that previously executed query has given number of rows
+ * @param expected - Number of rows expecting.
+ */
 void assertRowCount(int expected) {
     int count = getRowCount();
     assertEquals(expected, count);
@@ -370,7 +396,11 @@ private void closeResultSet() {
     }
 }
 
-
+/**
+ * Assert that previously executed query's result matches to that of the results in the
+ * supplied file
+ * @param expected - Expected results file
+ */
 void assertResultsSetEquals(File expected) {
     ResultSet actual = currentContext().internalResultSet;
     if(actual == void || actual == null) {
@@ -388,6 +418,11 @@ void assertResultsSetEquals(File expected) {
     }
 }
 
+/**
+ * Assert that previously executed query's result matches to that of the results in the
+ * supplied string
+ * @param expected - Expected results string
+ */
 void assertResultsSetEquals(String expected) {
     ResultSet actual = currentContext().internalResultSet;
     if(actual == void || actual == null) {
@@ -405,10 +440,20 @@ void assertResultsSetEquals(String expected) {
     }
 }
 
+/**
+ * Assert that previously executed query's result matches to that of the results in the
+ * supplied string array
+ * @param expected - Expected results string array
+ */
 void assertResults(String[] expected) {
     assertResultsSetEquals(expected);
 }
 
+/**
+ * Assert that previously executed query's result matches to that of the results in the
+ * supplied string array
+ * @param expected - Expected results string array
+ */
 void assertResultsSetEquals(String[] expected) {
     ResultSet actual = currentContext().internalResultSet;
     if(actual == void || actual == null) {

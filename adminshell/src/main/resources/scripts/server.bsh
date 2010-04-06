@@ -69,6 +69,10 @@ String currentConnectionName() {
     throw new Exception("No Connection exists; or it is not a named connection");
 }
 
+/**
+ * If you have multiple active connections; switch between those connections using this
+ * see "currentConnectionName" to get current in scope connection name.
+ */
 void useConnection(name) {
     useContext(name); 
 }
@@ -102,6 +106,9 @@ void connectAsAdmin() {
     connectAsAdmin(auto_admin_user, auto_admin_password, auto_admin_url);
 }
 
+/**
+ * Close Admin connection
+ */
 void closeAdmin() {
     try {
 	    if (internalAdmin != void && internalAdmin != null) {
@@ -187,6 +194,9 @@ private synchronized String genConnectionName() {
     return connection_prefix+"-"+connCount;
 }
 
+/**
+ * exit the tool
+ */
 exit(){
     for (This ctx:allContexts()) {
         gotoContext(ctx);
