@@ -437,7 +437,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             } finally {
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
-                    LogManager.log(analysisRecord.logDebug()?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
+                    LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
                 }
                 if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
                 	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());

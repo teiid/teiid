@@ -105,7 +105,6 @@ public class AnalysisRecord implements Serializable {
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
     private boolean recordDebug;
-    private boolean logDebug;
     
     // Query plan
     private PlanNode queryPlan;
@@ -118,8 +117,7 @@ public class AnalysisRecord implements Serializable {
     private PrintWriter debugWriter;    // public
     
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
-        this.recordQueryPlan = recordQueryPlan | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
-        this.logDebug = recordDebug;
+    	this.recordQueryPlan = recordQueryPlan | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
         this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
         if(this.recordQueryPlan) {
@@ -131,10 +129,6 @@ public class AnalysisRecord implements Serializable {
             this.debugWriter = new PrintWriter(this.stringWriter); 
         }
     }
-    
-    public boolean logDebug() {
-		return logDebug;
-	}
     
     public static AnalysisRecord createNonRecordingRecord() {
         return new AnalysisRecord(false, false);

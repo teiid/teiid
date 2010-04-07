@@ -284,7 +284,7 @@ public class JDBCURL {
         }
     }    
     
-    private static void addNormalizedProperty(String key, Object value, Properties target) {
+    public static void addNormalizedProperty(String key, Object value, Properties target) {
         String validKey = getValidKey(key);
          
         // now add the normalized key and value into the properties object.

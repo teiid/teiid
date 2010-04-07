@@ -371,7 +371,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         	}
         	ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
     		this.accumulateWarnings(currentResultMsg);
-    		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
     		return getCurrentBatch(currentResultMsg);
         } catch (MetaMatrixProcessingException e) {
 			throw TeiidSQLException.create(e);
@@ -385,6 +384,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     }
 
 	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
+		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
 		boolean isLast = currentResultMsg.getResults().length == 0 || currentResultMsg.getFinalRow() == currentResultMsg.getLastRow();
 		return new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
 	}

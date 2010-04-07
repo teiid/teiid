@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.SourceWarning;
+import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.util.ResultsReceiver;
@@ -489,15 +490,19 @@ public class RequestWorkItem extends AbstractWorkItem {
         }
         
         ResultsMessage result = new ResultsMessage(message, batch, columnNames, dataTypes);
-        setAnalysisRecords(result, analysisRecord);
+        setAnalysisRecords(message, result, analysisRecord);
         return result;
     }
     
-	private static void setAnalysisRecords(ResultsMessage response, AnalysisRecord analysisRecord) {
+	private static void setAnalysisRecords(RequestMessage requestMsg, ResultsMessage response, AnalysisRecord analysisRecord) {
         if(analysisRecord != null) {
-            response.setPlanDescription(analysisRecord.getQueryPlan());
-            response.setDebugLog(analysisRecord.getDebugLog());
-            response.setAnnotations(analysisRecord.getAnnotations());
+        	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
+	            response.setPlanDescription(analysisRecord.getQueryPlan());
+	            response.setAnnotations(analysisRecord.getAnnotations());
+        	}
+            if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
+            	response.setDebugLog(analysisRecord.getDebugLog());
+            }
         }
 	}
 
@@ -511,7 +516,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
         response.setException(processingException);
-        setAnalysisRecords(response, analysisRecord);
+        setAnalysisRecords(this.requestMsg, response, analysisRecord);
         resultsReceiver.receiveResults(response);
     }
 

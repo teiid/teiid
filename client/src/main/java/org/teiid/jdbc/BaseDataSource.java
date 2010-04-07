@@ -153,7 +153,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     // Default execution property constants
     protected static final int DEFAULT_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE;
     protected static final String DEFAULT_PARTIAL_RESULTS_MODE = "FALSE"; //$NON-NLS-1$
-    protected static final String DEFAULT_RESULT_SET_CACHE_MODE = "TRUE"; //$NON-NLS-1$
+    protected static final String DEFAULT_RESULT_SET_CACHE_MODE = "FALSE"; //$NON-NLS-1$
     
     /**
      * Transaction auto wrap constant - never wrap a command execution in a transaction

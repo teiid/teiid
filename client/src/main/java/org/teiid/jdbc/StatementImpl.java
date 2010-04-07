@@ -402,7 +402,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	if (match.matches()) {
         		String key = match.group(1);
         		String value = match.group(2);
-        		this.driverConnection.getConnectionProperties().setProperty(key, value);
+        		JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getConnectionProperties());
         		this.updateCounts = new int[] {0};
         		return;
         	}
@@ -745,7 +745,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         String showPlan = getExecutionProperty(ExecutionProperties.SQL_OPTION_SHOWPLAN);
         if (showPlan != null) {
         	try {
-        		res.setShowPlan(ShowPlan.valueOf(showPlan));
+        		res.setShowPlan(ShowPlan.valueOf(showPlan.toUpperCase()));
         	} catch (IllegalArgumentException e) {
         		
         	}
@@ -887,14 +887,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.styleSheet = null;
     }
 
-    void setPlanDescription(PlanNode planDescription) {
-        this.currentPlanDescription = planDescription;
-    }
-
-    void setDebugLog(String debugLog) {
-        this.debugLog = debugLog;
-    }
-
     /**
      * Get Query plan description.
      * If the Statement has a resultSet, we get the plan description from the result set
@@ -905,7 +897,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      * @return Query plan description, if it exists, otherwise null
      */
     public PlanNode getPlanDescription() {
-        Map planDescription = null;
         if(this.resultSet != null) {
 			return this.resultSet.getUpdatedPlanDescription();
         }
