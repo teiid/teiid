@@ -155,11 +155,6 @@ public class TestDQPCore {
     	helpExecute(sql, "a", 1, true); //$NON-NLS-1$
     }
     
-    @Test public void testPlanOnly() throws Exception {
-    	String sql = "SELECT * FROM BQT1.SmallA option planonly"; //$NON-NLS-1$
-    	helpExecute(sql,"a"); //$NON-NLS-1$
-    }
-    
     /**
      * Tests whether an exception result is sent when an exception occurs
      * @since 4.3

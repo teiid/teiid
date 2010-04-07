@@ -203,11 +203,10 @@ public class TestOptionsAndHints {
                  query);
     }
 
-    @Test public void testOptionMakedepBankOfAmerica() throws Exception {
+    @Test public void testOptionMakedep() throws Exception {
         String sql = "SELECT A.alert_id " + //$NON-NLS-1$
             "FROM (FSK_ALERT AS A MAKEDEP INNER JOIN Core.FSC_PARTY_DIM AS C ON A.primary_entity_key = C.PARTY_KEY) " +//$NON-NLS-1$
-            "LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id " +//$NON-NLS-1$ 
-            "OPTION PLANONLY DEBUG"; //$NON-NLS-1$
+            "LEFT OUTER JOIN FSK_SCENARIO AS S ON A.scenario_id = S.scenario_id ";//$NON-NLS-1$ 
         Query command = (Query)new QueryParser().parseCommand(sql);
         JoinPredicate predicate = (JoinPredicate)command.getFrom().getClauses().get(0);
         assertTrue(((JoinPredicate)predicate.getLeftClause()).getLeftClause().isMakeDep());

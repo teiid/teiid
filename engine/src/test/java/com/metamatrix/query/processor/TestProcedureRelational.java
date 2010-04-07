@@ -548,7 +548,7 @@ public class TestProcedureRelational {
 
     //virtual group with procedure in transformation
     @Test public void testCase6395ProcAsVirtualGroup9(){
-        String sql = "SELECT P.e2 as ve3, P.e1 as ve4 FROM pm1.vsp47 as P where param1=1 and param2='a' OPTION DEBUG"; //$NON-NLS-1$
+        String sql = "SELECT P.e2 as ve3, P.e1 as ve4 FROM pm1.vsp47 as P where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] { 

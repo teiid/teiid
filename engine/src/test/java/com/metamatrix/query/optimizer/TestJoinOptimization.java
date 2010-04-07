@@ -136,7 +136,7 @@ public class TestJoinOptimization {
     }
     
     @Test public void testOuterJoinPushNonJoinCriteria_Case5547() {
-        String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (1=1) option debug"; //$NON-NLS-1$
+        String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (1=1)"; //$NON-NLS-1$
         String BQT1 = "BQT1";   //$NON-NLS-1$
         String BQT2 = "BQT2";   //$NON-NLS-1$
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
