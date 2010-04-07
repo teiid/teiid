@@ -91,9 +91,9 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		assertEquals("java:DerbyDS", binding.getPropertyValue("SourceJNDIName")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		admin.stopConnectionFactory(binding);
+		admin.stopConnectionFactory("test-mysql-cb");
 		
-		admin.startConnectionFactory(binding);
+		admin.startConnectionFactory("test-mysql-cb");
 		
 		admin.setConnectionFactoryProperty("test-mysql-cb", "SourceJNDIName", "DummyDS"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		

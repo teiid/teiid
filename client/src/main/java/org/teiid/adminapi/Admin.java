@@ -278,18 +278,18 @@ public interface Admin {
     /**
      * Start Connection Factory
      *
-     * @param factory 
+     @param deployedName - name of the deployed Connection Factory 
      * @throws AdminException  
      */
-    void startConnectionFactory(ConnectionFactory factory) throws AdminException;
+    void startConnectionFactory(String deployedName) throws AdminException;
 
     /**
      * Stop Connection Factory
      *
-     * @param factory
+     * @param deployedName - name of the deployed Connection Factory 
      * @throws AdminException  
      */
-    void stopConnectionFactory(ConnectionFactory factory) throws AdminException;
+    void stopConnectionFactory(String deployedName) throws AdminException;
 
     /**
      * Clear the cache or caches specified by the cacheIdentifier.
@@ -370,6 +370,17 @@ public interface Admin {
      * @param policyName
      * @param role
      */
-    void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;  
+    void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    
+    
+//    /**
+//     * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to
+//     * succeed. The changes will not be persistent between server restarts.
+//     * @param sourceVDBName
+//     * @param sourceVDBVersion
+//     * @param targetVDBName
+//     * @param targetVDBVersion
+//     */
+//    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
 
 }

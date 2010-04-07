@@ -205,7 +205,7 @@ public abstract class ConnectionStrategy {
 
 		    api.assignConnectionFactoryToModel(vdb.getName(), vdb.getVersion(), m.getName(), ds.getName(), ds.getProperty("jndi-name"));
 
-		    api.startConnectionFactory(api.getConnectionFactory(ds.getName()));
+		    api.startConnectionFactory(ds.getName());
 		} else {
 		    throw new QueryTestFailedException(
 			    "Error: Unable to create binding to map to model : "

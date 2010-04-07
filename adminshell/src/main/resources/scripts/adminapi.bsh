@@ -7,10 +7,8 @@ currentContext().internalVerbose = true;
 
 /**
  * Deploy a {@link VDB} file.
- * @param name  Name of the VDB file to save under
- * @param URL 	VDB file location.
+ * @param vdbFile - VDB File Name
  * @throws AdminException
- *             if there's a system error.
  * @return the {@link VDB} representing the current property values and runtime state.
  */
 VDB deployVDB(String vdbFile) {
@@ -21,8 +19,8 @@ VDB deployVDB(String vdbFile) {
 
 /**
  * Delete the VDB with the given name and version
- * @param vdbName
- * @param version
+ * @param name - name of VDB
+ * @param version - version of the VDB
  * @throws AdminException
  */
 void deleteVDB(String name, int version) {
@@ -35,13 +33,13 @@ void deleteVDB(String name, int version) {
  *
  * @param vdbName identifier of the {@link VDB}
  * @param vdbVersion {@link VDB} version
- * @return InputStream of the VDB
- * @throws AdminException if there's a system error.
+ * @param fileName - File name to save the VDB
+ * @throws AdminException
  */
-void exportVDB(String name, int vdbVersion, String fileName){
-    debug("Exporting VDB " + name + " version " + vdbVersion + " to file " + fileName);
+void exportVDB(String vdbName, int vdbVersion, String fileName){
+    debug("Exporting VDB " + vdbName + " version " + vdbVersion + " to file " + fileName);
     checkAdmin();
-    contents = internalAdmin.exportVDB(name, vdbVersion);
+    contents = internalAdmin.exportVDB(vdbName, vdbVersion);
     if (contents != null) {
     	ObjectConverterUtil.write(contents, fileName);
     }
@@ -71,10 +69,10 @@ void addConnectionFactory(String deployedName, String typeName, Properties prope
  * @param deployedName - deployed name of the connection factory
  * @throws AdminException  
  */
-void deleteConnectionFactory(String bindingName) throws AdminException {
-    debug("Deleting Connection Factory " + bindingName);
+void deleteConnectionFactory(String deployedName) throws AdminException {
+    debug("Deleting Connection Factory " + deployedName);
     checkAdmin();    
-    internalAdmin.deleteConnectionFactory(bindingName);
+    internalAdmin.deleteConnectionFactory(deployedName);
 }
 
 /**
@@ -83,12 +81,11 @@ void deleteConnectionFactory(String bindingName) throws AdminException {
  * @param deployedName the unique identifier for a {@link ConnectionFactory}.
  * @param fileName - Name under which exported content stored under
  * @throws AdminException
- *             
  */
-void exportConnectionFactory(String bindingName, String fileName){
-    debug("Exporting Connection Factory " + bindingName + " to file " + fileName);
+void exportConnectionFactory(String deployedName, String fileName){
+    debug("Exporting Connection Factory " + deployedName + " to file " + fileName);
     checkAdmin();
-    contents = internalAdmin.exportConnectionFactory(bindingName);
+    contents = internalAdmin.exportConnectionFactory(deployedName);
     if (contents != null) {
     	ObjectConverterUtil.write(contents, fileName);	
     }
@@ -120,10 +117,10 @@ void assignConnectionFactoryToModel(String vdbName, int vdbVersion, String model
  * @param properties - properties
  * @throws AdminException
  */
-void addDataSource(String deploymentName, Properties properties) {
-    debug("Adding Datasource " + deploymentName);
+void addDataSource(String dsName, Properties properties) {
+    debug("Adding Datasource " + dsName);
     checkAdmin();    
-    return internalAdmin.addDataSource(deploymentName, properties);	
+    return internalAdmin.addDataSource(dsName, properties);	
 }
 
 /**
@@ -131,10 +128,10 @@ void addDataSource(String deploymentName, Properties properties) {
  * @param dsName
  * @throws AdminException
  */
-void deleteDataSource(String deploymentName) {
-    debug("Deleting Datasource " + deploymentName);
+void deleteDataSource(String dsName) {
+    debug("Deleting Datasource " + dsName);
     checkAdmin();    
-    return internalAdmin.deleteDataSource(deploymentName);	
+    return internalAdmin.deleteDataSource(dsName);	
 }
 
 
@@ -218,9 +215,6 @@ void terminateTransaction(String transactionId) {
     checkAdmin();    
     internalAdmin.terminateTransaction(transactionId);	
 }
-
-//** property methods******************************************************************
-
 
 /**
  * Set/update the property for the Connection Factory identified by the given deployed name.
@@ -391,6 +385,7 @@ Collection getRequests() {
 
 /**
  * Get the Requests for the given session
+ * @param sessionId - session id 
  * @return Collection of {@link Request}
  * @throws AdminException if there's a system error.
  */
@@ -442,7 +437,7 @@ Collection getProcesses(String processIdentifier) {
 /**
  * Start Connection Factory
  *
- * @param factory 
+ * @param deployedName 
  * @throws AdminException  
  */
 void startConnectionFactory(String deployedName) {
@@ -454,7 +449,7 @@ void startConnectionFactory(String deployedName) {
 /**
  * Stop Connection Factory
  *
- * @param factory
+ * @param deployedName
  * @throws AdminException  
  */
 void stopConnectionFactory(String deployedName) {
@@ -478,9 +473,8 @@ void clearCache(String cacheType) {
 /**
  * Terminate the Session
  *
- * @param identifier  Session Identifier {@link org.teiid.adminapi.Session}.
- * No wild cards currently supported, must be explicit
- * @throws AdminException  if there's a system error.
+ * @param sessionId  Session Identifier {@link org.teiid.adminapi.Session}.
+ * @throws AdminException
  */
 void terminateSession(long sessionId) {
     debug("Terminating Session " + sessionId);
@@ -493,8 +487,7 @@ void terminateSession(long sessionId) {
  *
  * @param sessionId session Identifier for the request.
  * @param requestId request Identifier
- * 
- * @throws AdminException  if there's a system error.
+ * @throws AdminException
  */
 void cancelRequest(long sessionId, long requestId) {
     debug("Canceling Request Session=" + sessionId + " request id = "+requestId);

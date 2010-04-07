@@ -319,26 +319,34 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public void startConnectionFactory(ConnectionFactory binding) throws AdminException {
+	public void startConnectionFactory(String deployedName) throws AdminException {
 		try {
-			String deployerName = binding.getPropertyValue("deployer-name"); //$NON-NLS-1$
+			ConnectionFactory factory = getConnectionFactory(deployedName);
+			if (factory == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
+			}
+			String deployerName = factory.getPropertyValue("deployer-name"); //$NON-NLS-1$
 			if (deployerName == null) {
 				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
 			}
-			ManagedUtil.execute(getDeploymentManager().start(deployerName), IntegrationPlugin.Util.getString("failed_to_start_connector", binding.getName())); //$NON-NLS-1$
+			ManagedUtil.execute(getDeploymentManager().start(deployerName), IntegrationPlugin.Util.getString("failed_to_start_connector", factory.getName())); //$NON-NLS-1$
 		} catch (Exception e) {
 			ManagedUtil.handleException(e);
 		}
 	}
 
 	@Override
-	public void stopConnectionFactory(ConnectionFactory binding) throws AdminException {
+	public void stopConnectionFactory(String deployedName) throws AdminException {
 		try {
-			String deployerName = binding.getPropertyValue("deployer-name");//$NON-NLS-1$
+			ConnectionFactory factory = getConnectionFactory(deployedName);
+			if (factory == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
+			}			
+			String deployerName = factory.getPropertyValue("deployer-name");//$NON-NLS-1$
 			if (deployerName == null) {
 				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
 			}			
-			ManagedUtil.execute(getDeploymentManager().stop(deployerName), IntegrationPlugin.Util.getString("failed_to_stop_connector", binding.getName())); //$NON-NLS-1$
+			ManagedUtil.execute(getDeploymentManager().stop(deployerName), IntegrationPlugin.Util.getString("failed_to_stop_connector", factory.getName())); //$NON-NLS-1$
 		} catch (Exception e) {
 			ManagedUtil.handleException(e);
 		}
@@ -1052,4 +1060,17 @@ public class Admin extends TeiidAdmin {
 		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, false);
 	}	
 
+//	@Override
+//	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException {
+//		try {
+//			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
+//			ManagedUtil.executeOperation(mc, "mergeVDBs", 
+//					SimpleValueSupport.wrap(sourceVDBName), 
+//					SimpleValueSupport.wrap(sourceVDBVersion), 
+//					SimpleValueSupport.wrap(targetVDBName), 
+//					SimpleValueSupport.wrap(targetVDBVersion));//$NON-NLS-1$
+//		} catch (Exception e) {
+//			throw new AdminComponentException(e.getMessage(), e);
+//		}   		
+//	}
 }
