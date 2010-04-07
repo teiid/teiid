@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -60,12 +61,9 @@ public class BlockInstruction extends ProcessorInstruction {
         return "BLOCK " + resultSetName; //$NON-NLS-1$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "BLOCK"); //$NON-NLS-1$
-
-        props.put(PROP_RESULT_SET, this.resultSetName);
-                
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("BLOCK"); //$NON-NLS-1$
+        props.addProperty(PROP_RESULT_SET, this.resultSetName);
         return props;
     }
 

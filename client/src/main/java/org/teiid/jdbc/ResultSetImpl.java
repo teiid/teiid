@@ -25,7 +25,6 @@ package org.teiid.jdbc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -54,6 +53,7 @@ import java.util.logging.Logger;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunkInputStream;
 import org.teiid.client.lob.StreamingLobChunckProducer;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.jdbc.BatchResults.Batch;
 import org.teiid.jdbc.BatchResults.BatchFetcher;
@@ -104,7 +104,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     private int resultColumns;
     private int parameters;
     private TimeZone serverTimeZone;
-    private Map updatedPlanDescription;
+    private PlanNode updatedPlanDescription;
     private int maxFieldSize;
     private int fetchSize;
 
@@ -356,12 +356,12 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         return batchResults.absolute(row, getOffset());
     }
     
-    protected Map getUpdatedPlanDescription() {
+    protected PlanNode getUpdatedPlanDescription() {
     	return updatedPlanDescription;
     }
     
     public Batch requestBatch(int beginRow) throws SQLException{
-    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	checkClosed();
         try {
         	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);

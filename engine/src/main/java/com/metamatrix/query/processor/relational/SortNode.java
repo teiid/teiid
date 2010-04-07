@@ -22,9 +22,12 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -156,24 +159,12 @@ public class SortNode extends RelationalNode {
 		return clonedNode;
 	}
     
-    public Map getDescriptionProperties() {
-        // Default implementation - should be overridden
-        Map props = super.getDescriptionProperties();
-        switch (mode) {
-        case SORT:
-            props.put(PROP_TYPE, "Sort"); //$NON-NLS-1$
-        	break;
-        case DUP_REMOVE:
-        	props.put(PROP_TYPE, "Duplicate Removal"); //$NON-NLS-1$
-        	break;
-        case DUP_REMOVE_SORT:
-        	props.put(PROP_TYPE, "Duplicate Removal And Sort"); //$NON-NLS-1$
-        	break;
-        }
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
         
         if(this.mode != Mode.DUP_REMOVE && this.sortElements != null) {
             Boolean ASC_B = Boolean.valueOf(OrderBy.ASC);
-            List cols = new ArrayList(this.sortElements.size());
+            List<String> cols = new ArrayList<String>(this.sortElements.size());
             for(int i=0; i<this.sortElements.size(); i++) {
                 String elemName = this.sortElements.get(i).toString();
                 if(this.sortTypes.get(i).equals(ASC_B)) {
@@ -182,10 +173,10 @@ public class SortNode extends RelationalNode {
                     cols.add(elemName + " DESC"); //$NON-NLS-1$
                 }
             }
-            props.put(PROP_SORT_COLS, cols);
+            props.addProperty(PROP_SORT_COLS, cols);
         }
         
-        props.put(PROP_REMOVE_DUPS, this.mode);
+        props.addProperty(PROP_SORT_MODE, this.mode.toString());
         
         return props;
     }

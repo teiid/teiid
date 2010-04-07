@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -112,12 +113,11 @@ public class InitializeDocumentInstruction extends ProcessorInstruction {
         return "DOC  encoding: " + encoding + ", is formatted: " + isFormatted; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "START DOCUMENT"); //$NON-NLS-1$
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode("START DOCUMENT"); //$NON-NLS-1$
 
-        props.put(PROP_ENCODING, this.encoding);
-        props.put(PROP_FORMATTED, ""+this.isFormatted); //$NON-NLS-1$
+        props.addProperty(PROP_ENCODING, this.encoding);
+        props.addProperty(PROP_FORMATTED, String.valueOf(this.isFormatted));
                 
         return props;
     }

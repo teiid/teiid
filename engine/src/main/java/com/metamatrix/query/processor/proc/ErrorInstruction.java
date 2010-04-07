@@ -22,26 +22,35 @@
 
 package com.metamatrix.query.processor.proc;
 
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ProcedureErrorInstructionException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.sql.util.VariableContext;
+import com.metamatrix.query.processor.program.ProgramInstruction;
+import com.metamatrix.query.sql.symbol.Expression;
 
 /**
  * <p> This instruction updates the current variable context with the Variable defined using
  * the declare statement that is used in constructing this instruction.</p>
  */
-public class ErrorInstruction extends AbstractAssignmentInstruction {
+public class ErrorInstruction extends ProgramInstruction {
 	
     public static final String ERROR_PREFIX = "Procedure error:"; //$NON-NLS-1$
+    
+    private Expression expression;
     
 	/**
 	 * Constructor for DeclareInstruction.
 	 */
 	public ErrorInstruction() {
+	}
+	
+	public void setExpression(Expression expression) {
+		this.expression = expression;
 	}
     
     /** 
@@ -49,24 +58,25 @@ public class ErrorInstruction extends AbstractAssignmentInstruction {
      */
     public ErrorInstruction clone() {
         ErrorInstruction clone = new ErrorInstruction();
-        this.cloneState(clone);
+        clone.expression = expression;
         return clone;
     }
 	    
     public String toString() {
-        return "RAISE ERROR INSTRUCTION:"; //$NON-NLS-1$
+        return "RAISE ERROR INSTRUCTION: " + expression; //$NON-NLS-1$
     }  
-
-    protected void getDescriptionProperties(Map props) {
-        props.put(PROP_TYPE, "RAISE ERROR"); //$NON-NLS-1$
+    
+    public PlanNode getDescriptionProperties() {
+    	PlanNode node = new PlanNode("RAISE ERROR"); //$NON-NLS-1$
+    	node.addProperty(PROP_EXPRESSION, this.expression.toString());
+    	return node;
     }
-
-    /** 
-     * @see com.metamatrix.query.processor.proc.AbstractAssignmentInstruction#processValue(java.lang.Object)
-     */
-    protected void processValue(Object value, VariableContext varContext) throws MetaMatrixComponentException,
-                                             MetaMatrixProcessingException {
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
+    
+    @Override
+    public void process(ProcedurePlan env) throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+    	Object value = env.evaluateExpression(expression);
+            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
                             new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
         throw new ProcedureErrorInstructionException(ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
     }

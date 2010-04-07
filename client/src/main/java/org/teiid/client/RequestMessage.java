@@ -55,13 +55,16 @@ public class RequestMessage implements Externalizable {
      */
     public static final String TXN_WRAP_DETECT = "DETECT"; //$NON-NLS-1$
 
-    
     public enum StatementType {
     	PREPARED, CALLABLE, STATEMENT
     }
     
     public enum ResultsMode {
     	RESULTSET, UPDATECOUNT, EITHER
+    }
+    
+    public enum ShowPlan {
+    	ON, DEBUG, OFF
     }
 
     private String[] commands;
@@ -80,11 +83,12 @@ public class RequestMessage implements Externalizable {
     private boolean useResultSetCache;
     // Treat the double quoted strings as variables in the command
     private boolean ansiQuotedIdentifiers = true;
-    private boolean showPlan;
+    private ShowPlan showPlan = ShowPlan.OFF;
     private int rowLimit;
     private Serializable executionPayload;
     private long executionId;
     private int transactionIsolation;
+    private boolean noExec;
     
     public RequestMessage() {
     }
@@ -261,25 +265,15 @@ public class RequestMessage implements Externalizable {
 	public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
 		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
 	}
+	
+	public ShowPlan getShowPlan() {
+		return showPlan;
+	}
+	
+	public void setShowPlan(ShowPlan showPlan) {
+		this.showPlan = showPlan;
+	}
 
-    /** 
-     * @return Returns the showPlan.
-     * @since 4.3
-     */
-    public boolean getShowPlan() {
-        return this.showPlan;
-    }
-
-    
-    /** 
-     * @param showPlan The showPlan to set.
-     * @since 4.3
-     */
-    public void setShowPlan(boolean showPlan) {
-        this.showPlan = showPlan;
-    }
-
-    
     /** 
      * @return Returns the rowLimit.
      * @since 4.3
@@ -344,6 +338,14 @@ public class RequestMessage implements Externalizable {
 	public void setTransactionIsolation(int transactionIsolation) {
 		this.transactionIsolation = transactionIsolation;
 	}
+	
+	public boolean isNoExec() {
+		return noExec;
+	}
+	
+	public void setNoExec(boolean noExec) {
+		this.noExec = noExec;
+	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
@@ -362,11 +364,12 @@ public class RequestMessage implements Externalizable {
 		this.resultsMode = ResultsMode.values()[in.readByte()];
 		this.useResultSetCache = in.readBoolean();
 		this.ansiQuotedIdentifiers = in.readBoolean();
-		this.showPlan = in.readBoolean();
+		this.showPlan = ShowPlan.values()[in.readByte()];
 		this.rowLimit = in.readInt();
 		this.executionPayload = (Serializable)in.readObject();
 		this.executionId = in.readLong();
 		this.transactionIsolation = in.readInt();
+		this.noExec = in.readBoolean();
 	}
 	
 	@Override
@@ -385,11 +388,12 @@ public class RequestMessage implements Externalizable {
 		out.writeByte(resultsMode.ordinal());
 		out.writeBoolean(useResultSetCache);
 		out.writeBoolean(ansiQuotedIdentifiers);
-		out.writeBoolean(showPlan);
+		out.writeByte(showPlan.ordinal());
 		out.writeInt(rowLimit);
 		out.writeObject(executionPayload);
 		out.writeLong(executionId);
 		out.writeInt(transactionIsolation);
+		out.writeBoolean(noExec);
 	}
 	
 }

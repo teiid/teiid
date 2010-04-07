@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.xml;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,7 +32,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -42,8 +40,6 @@ import com.metamatrix.query.mapping.xml.MappingNode;
 import com.metamatrix.query.mapping.xml.MappingNodeLogger;
 import com.metamatrix.query.mapping.xml.MappingRecursiveElement;
 import com.metamatrix.query.mapping.xml.MappingSourceNode;
-import com.metamatrix.query.mapping.xml.MappingVisitor;
-import com.metamatrix.query.mapping.xml.Navigator;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.CommandPlanner;
@@ -136,7 +132,6 @@ public final class XMLPlanner implements CommandPlanner{
         
         // create plan from program and initialized environment
         XMLProcessorEnvironment env = planEnv.createProcessorEnvironment(programPlan);    
-        env.setChildPlans(getChildPlans(doc));
         XMLPlan plan = new XMLPlan(env);
     	plan.setXMLSchemas(metadata.getXMLSchemas(group.getMetadataID()));
         if(debug) {
@@ -148,28 +143,6 @@ public final class XMLPlanner implements CommandPlanner{
         return plan;
 	}
 
-    private static Collection getChildPlans(MappingDocument doc) throws QueryMetadataException, MetaMatrixComponentException {
-    	final List childPlans = new ArrayList();
-    	MappingVisitor real = new MappingVisitor(){
-    		public void visit(MappingSourceNode element) {
-    			childPlans.add(element.getResultSetInfo().getPlan());
-    		}
-    	};
-        try {
-            MappingVisitor visitor = new Navigator(true, real);
-            doc.acceptVisitor(visitor);
-        } catch (MetaMatrixRuntimeException e) {
-            if (e.getCause() instanceof QueryMetadataException) {
-                throw (QueryMetadataException)e.getCause();
-            }
-            else if (e.getCause() instanceof MetaMatrixComponentException) {
-                throw (MetaMatrixComponentException)e.getCause();
-            }
-            throw e;
-        }
-		return childPlans;
-	}
-    
     private static void debugDocumentInfo(String msgTag, XMLPlannerEnvironment planEnv) {
         planEnv.analysisRecord.println("\n"+msgTag+":============================================================================"); //$NON-NLS-1$ //$NON-NLS-2$
         planEnv.analysisRecord.println("MAPPING DOCUMENT:\n" + MappingNode.toStringNodeTree(planEnv.mappingDoc)); //$NON-NLS-1$

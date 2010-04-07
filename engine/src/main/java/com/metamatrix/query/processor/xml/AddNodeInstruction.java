@@ -22,12 +22,14 @@
 
 package com.metamatrix.query.processor.xml;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -183,42 +185,42 @@ public class AddNodeInstruction extends ProcessorInstruction {
         return str.toString();
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = null;
         if(descriptor.isElement()) {
-            props.put(PROP_TYPE, "ADD ELEMENT"); //$NON-NLS-1$                    
+            props = new PlanNode("ADD ELEMENT"); //$NON-NLS-1$                    
         } else {
-            props.put(PROP_TYPE, "ADD ATTRIBUTE"); //$NON-NLS-1$                    
+        	props = new PlanNode("ADD ATTRIBUTE"); //$NON-NLS-1$                    
         }
 
-        props.put(PROP_TAG, this.descriptor.getName());
+        props.addProperty(PROP_TAG, this.descriptor.getName());
         
         if(descriptor.isOptional()) {
-            props.put(PROP_OPTIONAL, ""+descriptor.isOptional()); //$NON-NLS-1$            
+            props.addProperty(PROP_OPTIONAL, ""+descriptor.isOptional()); //$NON-NLS-1$            
         }
         
         if(this.symbol != null) {
-            props.put(PROP_DATA_COL, this.symbol); 
+            props.addProperty(PROP_DATA_COL, this.symbol.toString()); 
         }
 
         if(descriptor.getNamespacePrefix() != null) {
-            props.put(PROP_NAMESPACE, descriptor.getNamespacePrefix());
+            props.addProperty(PROP_NAMESPACE, descriptor.getNamespacePrefix());
         }
 
         Properties namespaceDeclarations = descriptor.getNamespaceURIs();
         if(namespaceDeclarations != null) {
-            List nsDecl = new ArrayList(namespaceDeclarations.size());
+            List<String> nsDecl = new ArrayList<String>(namespaceDeclarations.size());
             Enumeration e = namespaceDeclarations.propertyNames();
             while (e.hasMoreElements()){
                 String prefix = (String)e.nextElement();
                 String ns = namespaceDeclarations.getProperty(prefix);
                 nsDecl.add(prefix + "=\"" + ns + "\""); //$NON-NLS-1$ //$NON-NLS-2$
             }
-            props.put(PROP_NAMESPACE_DECL, nsDecl);
+            props.addProperty(PROP_NAMESPACE_DECL, nsDecl);
         }
 
         if(descriptor.getDefaultValue() != null) {
-            props.put(PROP_DEFAULT, descriptor.getDefaultValue()); 
+            props.addProperty(PROP_DEFAULT, descriptor.getDefaultValue()); 
         }
 
         return props;

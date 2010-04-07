@@ -516,71 +516,35 @@ public class TestSQLStringVisitor extends TestCase {
 		helpTest(option, "OPTION");     //$NON-NLS-1$
 	}
 
-	public void testOption2() {
-		Option option = new Option();
-		option.setDebug(true);	
-		helpTest(option, "OPTION DEBUG");     //$NON-NLS-1$
-	}
-
-	public void testOption3() {
-		Option option = new Option();
-		option.setShowPlan(true);
-		helpTest(option, "OPTION SHOWPLAN");     //$NON-NLS-1$
-	}
-
-	public void testOption4() {
-		Option option = new Option();
-		option.setDebug(true);
-		option.setShowPlan(true);
-		helpTest(option, "OPTION SHOWPLAN DEBUG");     //$NON-NLS-1$
-	}
-	
     public void testOption5() {
         Option option = new Option();
-        option.setDebug(true);
-        option.setShowPlan(true);
         option.addDependentGroup("abc"); //$NON-NLS-1$
         option.addDependentGroup("def"); //$NON-NLS-1$
         option.addDependentGroup("xyz"); //$NON-NLS-1$
-        helpTest(option, "OPTION SHOWPLAN DEBUG MAKEDEP abc, def, xyz");     //$NON-NLS-1$
+        helpTest(option, "OPTION MAKEDEP abc, def, xyz");     //$NON-NLS-1$
     }
 
     public void testOption6() {
         Option option = new Option();
-        option.setDebug(true);
-        option.setShowPlan(true);
-        option.setPlanOnly(true);
         option.addDependentGroup("abc"); //$NON-NLS-1$
         option.addDependentGroup("def"); //$NON-NLS-1$
         option.addDependentGroup("xyz"); //$NON-NLS-1$
-        helpTest(option, "OPTION SHOWPLAN PLANONLY DEBUG MAKEDEP abc, def, xyz");     //$NON-NLS-1$
+        helpTest(option, "OPTION MAKEDEP abc, def, xyz");     //$NON-NLS-1$
     }
 
-    public void testOption7() {
-        Option option = new Option();
-        option.setPlanOnly(true);
-        helpTest(option, "OPTION PLANONLY");     //$NON-NLS-1$
-    }
-    
     public void testOption8() {
         Option option = new Option();
-        option.setDebug(true);
-        option.setShowPlan(true);
-        option.setPlanOnly(true);
         option.addNoCacheGroup("abc"); //$NON-NLS-1$
         option.addNoCacheGroup("def"); //$NON-NLS-1$
         option.addNoCacheGroup("xyz"); //$NON-NLS-1$
-        helpTest(option, "OPTION SHOWPLAN PLANONLY DEBUG NOCACHE abc, def, xyz");     //$NON-NLS-1$
+        helpTest(option, "OPTION NOCACHE abc, def, xyz");     //$NON-NLS-1$
     }
     
 //  related to defect 14423
     public void testOption9() {
         Option option = new Option();
-        option.setDebug(true);
-        option.setShowPlan(true);
-        option.setPlanOnly(true);
         option.setNoCache(true);
-        helpTest(option, "OPTION SHOWPLAN PLANONLY DEBUG NOCACHE");     //$NON-NLS-1$
+        helpTest(option, "OPTION NOCACHE");     //$NON-NLS-1$
     }
     
 	public void testOrderBy1() {
@@ -629,8 +593,6 @@ public class TestSQLStringVisitor extends TestCase {
 		CompareCriteria having = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.GT, new Constant(new Integer(0))); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy();
 		orderBy.addVariable(new ElementSymbol("e1")); //$NON-NLS-1$
-		Option option = new Option();
-		option.setShowPlan(true);
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -639,9 +601,8 @@ public class TestSQLStringVisitor extends TestCase {
 		query.setGroupBy(groupBy);
 		query.setHaving(having);
 		query.setOrderBy(orderBy);
-		query.setOption(option);
 		
-		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 HAVING e1 > 0 ORDER BY e1 OPTION SHOWPLAN");		     //$NON-NLS-1$
+		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 HAVING e1 > 0 ORDER BY e1");		     //$NON-NLS-1$
 	}
 
 	public void testQuery3() {
@@ -654,8 +615,6 @@ public class TestSQLStringVisitor extends TestCase {
 		CompareCriteria having = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.GT, new Constant(new Integer(0))); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy();
 		orderBy.addVariable(new ElementSymbol("e1")); //$NON-NLS-1$
-		Option option = new Option();
-		option.setShowPlan(true);
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -663,9 +622,8 @@ public class TestSQLStringVisitor extends TestCase {
 		query.setGroupBy(groupBy);
 		query.setHaving(having);
 		query.setOrderBy(orderBy);
-		query.setOption(option);
 		
-		helpTest(query, "SELECT * FROM m.g GROUP BY e1 HAVING e1 > 0 ORDER BY e1 OPTION SHOWPLAN");		     //$NON-NLS-1$
+		helpTest(query, "SELECT * FROM m.g GROUP BY e1 HAVING e1 > 0 ORDER BY e1");		     //$NON-NLS-1$
 	}
 
 	public void testQuery4() {
@@ -677,8 +635,6 @@ public class TestSQLStringVisitor extends TestCase {
 		CompareCriteria having = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.GT, new Constant(new Integer(0))); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy();
 		orderBy.addVariable(new ElementSymbol("e1")); //$NON-NLS-1$
-		Option option = new Option();
-		option.setShowPlan(true);
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -686,9 +642,8 @@ public class TestSQLStringVisitor extends TestCase {
 		query.setCriteria(cc);
 		query.setHaving(having);
 		query.setOrderBy(orderBy);
-		query.setOption(option);
 		
-		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 HAVING e1 > 0 ORDER BY e1 OPTION SHOWPLAN");		     //$NON-NLS-1$
+		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 HAVING e1 > 0 ORDER BY e1");		     //$NON-NLS-1$
 	}
 
 	public void testQuery5() {
@@ -701,8 +656,6 @@ public class TestSQLStringVisitor extends TestCase {
 		groupBy.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy();
 		orderBy.addVariable(new ElementSymbol("e1")); //$NON-NLS-1$
-		Option option = new Option();
-		option.setShowPlan(true);
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -710,9 +663,8 @@ public class TestSQLStringVisitor extends TestCase {
 		query.setCriteria(cc);
 		query.setGroupBy(groupBy);
 		query.setOrderBy(orderBy);
-		query.setOption(option);
 		
-		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 ORDER BY e1 OPTION SHOWPLAN");		     //$NON-NLS-1$
+		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 ORDER BY e1");		     //$NON-NLS-1$
 	}
 
 	public void testQuery6() {
@@ -724,8 +676,6 @@ public class TestSQLStringVisitor extends TestCase {
 		GroupBy groupBy = new GroupBy();
 		groupBy.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
 		CompareCriteria having = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.GT, new Constant(new Integer(0))); //$NON-NLS-1$
-		Option option = new Option();
-		option.setShowPlan(true);
 		
 		Query query = new Query();
 		query.setSelect(select);
@@ -733,9 +683,8 @@ public class TestSQLStringVisitor extends TestCase {
 		query.setCriteria(cc);
 		query.setGroupBy(groupBy);
 		query.setHaving(having);
-		query.setOption(option);
 		
-		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 HAVING e1 > 0 OPTION SHOWPLAN");		     //$NON-NLS-1$
+		helpTest(query, "SELECT * FROM m.g WHERE e1 = 5 GROUP BY e1 HAVING e1 > 0");		     //$NON-NLS-1$
 	}
 
 	public void testQuery7() {
@@ -912,13 +861,9 @@ public class TestSQLStringVisitor extends TestCase {
 		q2.setSelect(s2);
 		q2.setFrom(f2);
 		
-		Option option = new Option();
-		option.setDebug(true);
-		
 		SetQuery sq = new SetQuery(Operation.UNION, false, q1, q2);
-		sq.setOption(option);
 
-		helpTest(sq, "SELECT e1 FROM m.g1 UNION SELECT e1 FROM m.g2 OPTION DEBUG"); //$NON-NLS-1$
+		helpTest(sq, "SELECT e1 FROM m.g1 UNION SELECT e1 FROM m.g2"); //$NON-NLS-1$
 	}
 	
 	public void testSetQuery5() {
@@ -1905,12 +1850,11 @@ public class TestSQLStringVisitor extends TestCase {
                 "for $x in doc(\"xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
                 "return  <Item>{$x/text()}</Item>\r\n" + //$NON-NLS-1$
                 "}\r\n" + //$NON-NLS-1$
-                "</Items> OPTION SHOWPLAN DEBUG"; //$NON-NLS-1$
+                "</Items> OPTION NOCACHE"; //$NON-NLS-1$
         
         XQuery xquery = new XQuery(xquerystring, null); 
         Option option = new Option();
-        option.setDebug(true);
-        option.setShowPlan(true);
+        option.setNoCache(true);
         xquery.setOption(option);
         helpTest(xquery, expectedString); 
     }

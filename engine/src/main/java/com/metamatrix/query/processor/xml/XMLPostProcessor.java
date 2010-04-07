@@ -31,7 +31,6 @@ import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -187,11 +186,6 @@ public class XMLPostProcessor extends ProcessorPlan {
 		this.plan.open();
 	}
 
-	@Override
-	public Map getDescriptionProperties() {
-		return this.plan.getDescriptionProperties();
-	}
-	
 	@Override
 	public boolean requiresTransaction(boolean transactionalReads) {
 		return plan.requiresTransaction(transactionalReads);

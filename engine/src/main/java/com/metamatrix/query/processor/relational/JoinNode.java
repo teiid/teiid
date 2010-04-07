@@ -22,12 +22,13 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -39,7 +40,6 @@ import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.relational.SourceState.ImplicitBuffer;
-import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.util.CommandContext;
@@ -234,24 +234,22 @@ public class JoinNode extends SubqueryAwareRelationalNode {
      * @see com.metamatrix.query.processor.relational.RelationalNode#getDescriptionProperties()
      * @since 4.2
      */
-    public Map getDescriptionProperties() {
+    public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden     
-        Map props = super.getDescriptionProperties();
+    	PlanNode props = super.getDescriptionProperties();
         
         if(isDependent()) {
-            props.put(PROP_TYPE, "Dependent Join"); //$NON-NLS-1$
-        } else {
-            props.put(PROP_TYPE, "Join"); //$NON-NLS-1$
+        	props.addProperty(PROP_DEPENDENT, Boolean.TRUE.toString());
         }
-        props.put(PROP_JOIN_STRATEGY, this.joinStrategy.toString());
-        props.put(PROP_JOIN_TYPE, this.joinType.toString());
-        List critList = getCriteriaList();
-        props.put(PROP_JOIN_CRITERIA, critList);
+        props.addProperty(PROP_JOIN_STRATEGY, this.joinStrategy.toString());
+        props.addProperty(PROP_JOIN_TYPE, this.joinType.toString());
+        List<String> critList = getCriteriaList();
+        props.addProperty(PROP_JOIN_CRITERIA, critList);
         return props;
     }
 
-	private List getCriteriaList() {
-		List critList = new ArrayList();
+	private List<String> getCriteriaList() {
+		List<String> critList = new ArrayList<String>();
         if (leftExpressions != null) {
             for(int i=0; i < this.leftExpressions.size(); i++) {
                 critList.add(this.leftExpressions.get(i).toString() + "=" + this.rightExpressions.get(i).toString());  //$NON-NLS-1$

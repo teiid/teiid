@@ -92,7 +92,7 @@ public class TestParserXQuery extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>"; //$NON-NLS-1$
 
-        String expectedString = xQueryString + " OPTION DEBUG"; //$NON-NLS-1$
+        String expectedString = xQueryString + " OPTION NOCACHE"; //$NON-NLS-1$
 
         XQuery xQuery = new XQuery(xQueryString, null);
 
@@ -111,8 +111,8 @@ public class TestParserXQuery extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>"; //$NON-NLS-1$
 
-        String xQueryStringWithOption = xQueryString + " option debug"; //$NON-NLS-1$
-        String expectedString = xQueryString + " OPTION DEBUG"; //$NON-NLS-1$
+        String xQueryStringWithOption = xQueryString + " option nocache"; //$NON-NLS-1$
+        String expectedString = xQueryString + " OPTION NOCACHE"; //$NON-NLS-1$
 
         XQuery xQuery = new XQuery(xQueryString, null);
 

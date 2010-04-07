@@ -348,14 +348,13 @@ public class TestOptionsAndHints {
         option.setNoCache(true);
         option.addNoCacheGroup("a.b.c"); //$NON-NLS-1$
         option.addNoCacheGroup("d.e.f"); //$NON-NLS-1$
-        option.setShowPlan(true);
 
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
         query.setOption(option);
-        TestParser.helpTest("Select a From db.g Option nocache a.b.c, d.e.f showplan",  //$NON-NLS-1$
-                 "SELECT a FROM db.g OPTION SHOWPLAN NOCACHE a.b.c, d.e.f",  //$NON-NLS-1$
+        TestParser.helpTest("Select a From db.g Option nocache a.b.c, d.e.f",  //$NON-NLS-1$
+                 "SELECT a FROM db.g OPTION NOCACHE a.b.c, d.e.f",  //$NON-NLS-1$
                  query);
     }   
     
@@ -396,10 +395,10 @@ public class TestOptionsAndHints {
         values.add(new Reference(0));
         insert.setValues(values);
         Option option = new Option();
-        option.setShowPlan(true);       
+        option.setNoCache(true);       
         insert.setOption(option);
-        TestParser.helpTest("INSERT INTO m.g (a) VALUES (?) OPTION SHOWPLAN",  //$NON-NLS-1$
-                 "INSERT INTO m.g (a) VALUES (?) OPTION SHOWPLAN",  //$NON-NLS-1$
+        TestParser.helpTest("INSERT INTO m.g (a) VALUES (?) OPTION NOCACHE",  //$NON-NLS-1$
+                 "INSERT INTO m.g (a) VALUES (?) OPTION NOCACHE",  //$NON-NLS-1$
                  insert);                     
     }
     
@@ -407,10 +406,10 @@ public class TestOptionsAndHints {
         Delete delete = new Delete();
         delete.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         Option option = new Option();
-        option.setShowPlan(true);       
+        option.setNoCache(true);       
         delete.setOption(option);
-        TestParser.helpTest("DELETE FROM m.g OPTION SHOWPLAN",  //$NON-NLS-1$
-                 "DELETE FROM m.g OPTION SHOWPLAN",  //$NON-NLS-1$
+        TestParser.helpTest("DELETE FROM m.g OPTION NOCACHE",  //$NON-NLS-1$
+                 "DELETE FROM m.g OPTION NOCACHE",  //$NON-NLS-1$
                  delete);                     
     }
     
@@ -419,11 +418,11 @@ public class TestOptionsAndHints {
         update.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
         update.addChange(new ElementSymbol("a"), new Reference(0));
         Option option = new Option();
-        option.setShowPlan(true);
+        option.setNoCache(true);
         Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new Reference(1)); //$NON-NLS-1$
         update.setCriteria(crit);
-        TestParser.helpTest("UPDATE m.g SET a = ? WHERE b = ? OPTION SHOWPLAN",  //$NON-NLS-1$
-                 "UPDATE m.g SET a = ? WHERE b = ? OPTION SHOWPLAN",  //$NON-NLS-1$
+        TestParser.helpTest("UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
+                 "UPDATE m.g SET a = ? WHERE b = ? OPTION NOCACHE",  //$NON-NLS-1$
                  update);                     
     }
 
@@ -840,55 +839,12 @@ public class TestOptionsAndHints {
         StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         Option option = new Option();
-        option.setDebug(true);
+        option.setNoCache(true);
         storedQuery.setOption(option);
-        TestParser.helpTest("exec proc1() option debug", "EXEC proc1() OPTION DEBUG", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        TestParser.helpTest("exec proc1() option nocache", "EXEC proc1() OPTION NOCACHE", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Select a From db.g Option SHOWPLAN */
-    @Test public void testOptionShowPlan(){
-        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-        select.addSymbol(a);
-
-        Option showplan = new Option();
-        showplan.setShowPlan(true);
-
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setOption(showplan);
-        TestParser.helpTest("Select a From db.g Option SHOWPLAN",  //$NON-NLS-1$
-                 "SELECT a FROM db.g OPTION SHOWPLAN",  //$NON-NLS-1$
-                 query);
-    }   
-
-    /** Select a From db.g Option PLANONLY */
-    @Test public void testOptionPlanOnly(){
-        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-        select.addSymbol(a);
-
-        Option showplan = new Option();
-        showplan.setPlanOnly(true);
-
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setOption(showplan);
-        TestParser.helpTest("Select a From db.g Option planOnly",  //$NON-NLS-1$
-                 "SELECT a FROM db.g OPTION PLANONLY",  //$NON-NLS-1$
-                 query);
-    }   
-
     /** Select a From db.g Option makedep a.b.c */
     @Test public void testOptionMakeDependent1(){
         GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
@@ -924,14 +880,13 @@ public class TestOptionsAndHints {
         Option option = new Option();
         option.addDependentGroup("a.b.c"); //$NON-NLS-1$
         option.addDependentGroup("d.e.f"); //$NON-NLS-1$
-        option.setShowPlan(true);
 
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
         query.setOption(option);
-        TestParser.helpTest("Select a From db.g Option makedep a.b.c, d.e.f showplan",  //$NON-NLS-1$
-                 "SELECT a FROM db.g OPTION SHOWPLAN MAKEDEP a.b.c, d.e.f",  //$NON-NLS-1$
+        TestParser.helpTest("Select a From db.g Option makedep a.b.c, d.e.f",  //$NON-NLS-1$
+                 "SELECT a FROM db.g OPTION MAKEDEP a.b.c, d.e.f",  //$NON-NLS-1$
                  query);
     }   
 
@@ -994,14 +949,13 @@ public class TestOptionsAndHints {
         Option option = new Option();
         option.addNotDependentGroup("a.b.c"); //$NON-NLS-1$
         option.addNotDependentGroup("d.e.f"); //$NON-NLS-1$
-        option.setShowPlan(true);
 
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
         query.setOption(option);
-        TestParser.helpTest("Select a From db.g Option makeNOTdep a.b.c, d.e.f showplan",  //$NON-NLS-1$
-                 "SELECT a FROM db.g OPTION SHOWPLAN MAKENOTDEP a.b.c, d.e.f",  //$NON-NLS-1$
+        TestParser.helpTest("Select a From db.g Option makeNOTdep a.b.c, d.e.f",  //$NON-NLS-1$
+                 "SELECT a FROM db.g OPTION MAKENOTDEP a.b.c, d.e.f",  //$NON-NLS-1$
                  query);
     }   
 

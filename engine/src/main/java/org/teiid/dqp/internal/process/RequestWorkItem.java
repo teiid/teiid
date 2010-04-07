@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.client.plan.Annotation;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.connector.api.DataNotAvailableException;
@@ -66,7 +64,6 @@ import com.metamatrix.query.processor.BatchCollector;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.BatchCollector.BatchHandler;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -382,8 +379,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	    if (analysisRecord.recordQueryPlan()) {
 	        analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
 	    }
-		Option option = originalCommand.getOption();
-		if (option != null && option.getPlanOnly()) {
+		if (requestMsg.isNoExec()) {
 		    doneProducingBatches = true;
             resultsBuffer.close();
             this.cid = null;

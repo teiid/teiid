@@ -624,21 +624,6 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(Option obj) {
         parts.add(SQLReservedWords.OPTION);
 
-		if(obj.getShowPlan()) {
-			parts.add(" "); //$NON-NLS-1$
-			parts.add(SQLReservedWords.SHOWPLAN);
-		}
-
-        if(obj.getPlanOnly()) {
-            parts.add(" "); //$NON-NLS-1$
-            parts.add(SQLReservedWords.PLANONLY);
-        }
-
-		if(obj.getDebug()) {
-			parts.add(" "); //$NON-NLS-1$
-			parts.add(SQLReservedWords.DEBUG);
-		}
-        
         Collection groups = obj.getDependentGroups();
         if(groups != null && groups.size() > 0) {
             parts.add(" "); //$NON-NLS-1$

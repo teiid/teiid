@@ -51,6 +51,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
@@ -106,7 +107,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected long currentRequestID = -1;
 
     //  the last query plan description
-    private Map currentPlanDescription;
+    private PlanNode currentPlanDescription;
 
     // the last query debug log
     private String debugLog;
@@ -143,7 +144,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     //Map<out/inout/return param index --> index in results>
     protected Map outParamIndexMap = new HashMap();
     
-    private Pattern setStatement = Pattern.compile("\\s*set\\s*(\\w+)\\s*=\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
      * Factory Constructor 
@@ -397,7 +398,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         
         //handle set statement
         if (commands.length == 1 && resultsMode != ResultsMode.RESULTSET) {
-        	Matcher match = setStatement.matcher(commands[0]);
+        	Matcher match = SET_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
         		String key = match.group(1);
         		String value = match.group(2);
@@ -741,10 +742,17 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         res.setAnsiQuotedIdentifiers(Boolean.valueOf(
                 getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS))
                 .booleanValue());
-        String sqlOptions = getExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS);
-        if (sqlOptions != null &&
-            sqlOptions.toUpperCase().indexOf(ExecutionProperties.SQL_OPTION_SHOWPLAN.toUpperCase()) >= 0) {
-            res.setShowPlan(true);
+        String showPlan = getExecutionProperty(ExecutionProperties.SQL_OPTION_SHOWPLAN);
+        if (showPlan != null) {
+        	try {
+        		res.setShowPlan(ShowPlan.valueOf(showPlan));
+        	} catch (IllegalArgumentException e) {
+        		
+        	}
+        }
+        String noExec = getExecutionProperty(ExecutionProperties.NOEXEC);
+        if (noExec != null) {
+    		res.setNoExec(noExec.equalsIgnoreCase("ON")); //$NON-NLS-1$
         }
     }
 
@@ -879,7 +887,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.styleSheet = null;
     }
 
-    void setPlanDescription(Map planDescription) {
+    void setPlanDescription(PlanNode planDescription) {
         this.currentPlanDescription = planDescription;
     }
 
@@ -899,13 +907,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     public PlanNode getPlanDescription() {
         Map planDescription = null;
         if(this.resultSet != null) {
-			planDescription = this.resultSet.getUpdatedPlanDescription();
+			return this.resultSet.getUpdatedPlanDescription();
         }
-        if(planDescription != null) {
-            this.currentPlanDescription = planDescription;
-            return PlanNode.constructFromMap(this.currentPlanDescription);
-        }else if(this.currentPlanDescription != null) {
-            return PlanNode.constructFromMap(this.currentPlanDescription);
+        if(currentPlanDescription != null) {
+            return this.currentPlanDescription;
         }
         return null;
     }

@@ -22,12 +22,15 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.plan.PlanNode;
 import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -414,21 +417,20 @@ public class GroupingNode extends RelationalNode {
     /*
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */
-    public Map getDescriptionProperties() {
+    public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Grouping"); //$NON-NLS-1$
+    	PlanNode props = super.getDescriptionProperties();
 
         if(sortElements != null) {
             int elements = sortElements.size();
-            List groupCols = new ArrayList(elements);
+            List<String> groupCols = new ArrayList<String>(elements);
             for(int i=0; i<elements; i++) {
                 groupCols.add(this.sortElements.get(i).toString());
             }
-            props.put(PROP_GROUP_COLS, groupCols);
+            props.addProperty(PROP_GROUP_COLS, groupCols);
         }
         
-        props.put(PROP_REMOVE_DUPS, this.removeDuplicates);
+        props.addProperty(PROP_SORT_MODE, String.valueOf(this.removeDuplicates));
 
         return props;
     }

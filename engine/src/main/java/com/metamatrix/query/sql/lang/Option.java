@@ -22,13 +22,15 @@
 
 package com.metamatrix.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.teiid.connector.language.SQLReservedWords;
 
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.sql.*;
 import com.metamatrix.core.util.EquivalenceUtil;
+import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
 /**
@@ -42,11 +44,8 @@ public class Option implements LanguageObject {
     public final static String MAKENOTDEP = SQLReservedWords.MAKENOTDEP; 
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
-	private boolean showPlan = false;
-	private boolean debug = false;
     private List<String> makeDependentGroups;
     private List<String> makeNotDependentGroups;
-    private boolean planOnly = false;
 	private List<String> noCacheGroups;
     private boolean noCache;
 
@@ -56,54 +55,6 @@ public class Option implements LanguageObject {
 	public Option() {
 	}
 
-	/**
-	 * Set flag for returning the query plan with the results
-	 * @param flag True to return the query plan with the results, false otherwise
-	 */
-	public void setShowPlan(boolean flag) {
-		this.showPlan = flag;
-	}
-
-	/**
-	 * Get flag for whether to return the query plan with the results
-	 * @return True to return the query plan with the results
-	 */
-	public boolean getShowPlan() {
-		return this.showPlan;
-	}	
-    
-    /**
-     * Set flag for returning only the query plan without executing the query
-     * @param flag True to return the query plan without the results, false otherwise
-     */
-    public void setPlanOnly(boolean planOnly) {
-        this.planOnly = planOnly;        
-    }
-    
-    /**
-     * Get flag for whether to return the query plan without the results
-     * @return True to return the query plan without the results
-     */
-    public boolean getPlanOnly() {
-        return this.planOnly;
-    }
-	
-	/**
-	 * Set flag to dump debug info on the server
-	 * @param flag True to dump debug info for this query, false otherwise
-	 */
-	public void setDebug(boolean flag) {
-		this.debug = flag;
-	}
-
-	/**
-	 * Get flag for whether to dump debug info on the server
-	 * @return True if debug info should be dumped on the server, false otherwise
-	 */
-	public boolean getDebug() {
-		return this.debug;
-	}	
-    
     /**
      * Add group to make dependent
      * @param group Group to make dependent
@@ -202,10 +153,7 @@ public class Option implements LanguageObject {
 
 		Option other = (Option) obj;
         
-        return getShowPlan() == other.getShowPlan() &&
-               getDebug() == other.getDebug() &&
-               getPlanOnly() == other.getPlanOnly() &&
-               noCache == other.noCache &&
+        return noCache == other.noCache &&
                EquivalenceUtil.areEqual(getDependentGroups(), other.getDependentGroups()) &&
                EquivalenceUtil.areEqual(getNotDependentGroups(), other.getNotDependentGroups()) &&
                EquivalenceUtil.areEqual(getNoCacheGroups(), other.getNoCacheGroups());
@@ -217,9 +165,6 @@ public class Option implements LanguageObject {
      */
     public int hashCode() {
 		int hc = 0;
-		hc = HashCodeUtil.hashCode(hc, getShowPlan());
-		hc = HashCodeUtil.hashCode(hc, getDebug());
-        hc = HashCodeUtil.hashCode(hc, getPlanOnly());
         if(getDependentGroups() != null) {
             hc = HashCodeUtil.hashCode(hc, getDependentGroups());
         }
@@ -238,9 +183,6 @@ public class Option implements LanguageObject {
      */
     public Object clone() {
         Option newOption = new Option();
-        newOption.setDebug(getDebug());
-        newOption.setShowPlan(getShowPlan());
-        newOption.setPlanOnly(getPlanOnly());
         newOption.setNoCache(noCache);
         
         if(getDependentGroups() != null) {

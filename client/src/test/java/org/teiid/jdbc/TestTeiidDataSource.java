@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.TeiidDataSource;
 
@@ -153,7 +154,7 @@ public class TestTeiidDataSource extends TestCase {
         ds.setTransactionAutoWrap(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
         if(showPlan) {
-            ds.setSqlOptions(ExecutionProperties.SQL_OPTION_SHOWPLAN);
+            ds.setShowPlan(ShowPlan.ON.toString());
         }
         ds.setSecure(secure);
         ds.setAlternateServers(alternateServers);
@@ -258,14 +259,6 @@ public class TestTeiidDataSource extends TestCase {
         assertEquals(result,STD_TXN_WRAP);
     }
     
-    public void testGetShowPlan() {
-        assertTrue(dataSource.getSqlOptions() == null);
-        dataSource.setSqlOptions(ExecutionProperties.SQL_OPTION_SHOWPLAN);
-        assertTrue(dataSource.getSqlOptions() == ExecutionProperties.SQL_OPTION_SHOWPLAN);
-        dataSource.setSqlOptions(null);
-        assertTrue(dataSource.getSqlOptions() == null);
-    }
-
     public void testGetSecure() {
         assertTrue(dataSource.isSecure());
         dataSource.setSecure(false);
@@ -511,7 +504,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
 
     // Test secure protocol
@@ -524,7 +517,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
 
     /*
@@ -542,7 +535,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
 
     /*
@@ -560,7 +553,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
 
     /*
@@ -579,7 +572,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL_AdditionalProperties() {

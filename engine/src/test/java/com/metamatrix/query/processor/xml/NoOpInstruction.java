@@ -22,8 +22,7 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -53,11 +52,8 @@ public class NoOpInstruction extends ProcessorInstruction {
         return "NOOP"; //$NON-NLS-1$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "NO OP"); //$NON-NLS-1$            
-
-        return props;
+    public PlanNode getDescriptionProperties() {
+        return new PlanNode("NO OP"); //$NON-NLS-1$            
     }
 
 }

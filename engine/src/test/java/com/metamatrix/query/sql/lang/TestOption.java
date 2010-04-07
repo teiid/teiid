@@ -42,14 +42,7 @@ public class TestOption extends TestCase {
     
     public void testOptionEquals1() {
         Option opt1 = new Option();
-        opt1.setDebug(true);
-        opt1.setShowPlan(true);
-        opt1.setPlanOnly(true);
-        
         Option opt2 = new Option();
-        opt2.setDebug(true);
-        opt2.setShowPlan(true);
-        opt2.setPlanOnly(true);
         
         assertTrue("Options should be equal", opt1.equals(opt2)); //$NON-NLS-1$
         assertTrue("Options should be equal", opt2.equals(opt1)); //$NON-NLS-1$
@@ -89,19 +82,6 @@ public class TestOption extends TestCase {
         assertTrue("Options should be equal", opt2.equals(opt1)); //$NON-NLS-1$
     }
 
-    public void testOptionEqualsFail1() {
-        Option opt1 = new Option();
-        opt1.setDebug(true);
-        opt1.setShowPlan(true);
-        
-        Option opt2 = new Option();
-        opt2.setDebug(true);
-        opt2.setShowPlan(false);
-        
-        assertTrue("Options should not be equal", ! opt1.equals(opt2)); //$NON-NLS-1$
-        assertTrue("Options should not be equal", ! opt2.equals(opt1)); //$NON-NLS-1$
-    }
-
     public void testOptionEqualsFail2() {
         Option opt1 = new Option();
         opt1.addDependentGroup("abc"); //$NON-NLS-1$
@@ -112,19 +92,6 @@ public class TestOption extends TestCase {
         assertTrue("Options should not be equal", ! opt2.equals(opt1)); //$NON-NLS-1$
     }
     
-    public void testOptionEqualsFail3() {
-        Option opt1 = new Option();
-        opt1.setDebug(true);
-        opt1.setPlanOnly(true);
-        
-        Option opt2 = new Option();
-        opt2.setDebug(true);
-        opt2.setPlanOnly(false);
-        
-        assertTrue("Options should not be equal", ! opt1.equals(opt2)); //$NON-NLS-1$
-        assertTrue("Options should not be equal", ! opt2.equals(opt1)); //$NON-NLS-1$
-    }
-
     public void testObjectEquivalence1() {
         Option opt1 = new Option();
         opt1.addDependentGroup("abc"); //$NON-NLS-1$
@@ -198,8 +165,6 @@ public class TestOption extends TestCase {
 
     public void testClone() {
         Option opt1 = new Option();
-        opt1.setDebug(true);
-        opt1.setShowPlan(true);
         opt1.addDependentGroup("abc"); //$NON-NLS-1$
         opt1.addNotDependentGroup("xyz"); //$NON-NLS-1$
         opt1.addNoCacheGroup("abc"); //$NON-NLS-1$

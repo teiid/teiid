@@ -68,7 +68,7 @@ public class TestMMStatement {
 		Properties p = new Properties();
 		Mockito.stub(conn.getConnectionProperties()).toReturn(p);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		assertFalse(statement.execute("set foo = bar")); //$NON-NLS-1$
+		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
 		assertEquals("bar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	

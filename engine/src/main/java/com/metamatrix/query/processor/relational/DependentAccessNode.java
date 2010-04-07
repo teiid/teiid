@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Map;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.Assertion;
@@ -74,17 +72,6 @@ public class DependentAccessNode extends AccessNode {
         clonedNode.maxSetSize = this.maxSetSize;
         super.copy(this, clonedNode);
         return clonedNode;
-    }
-
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Dependent Access"); //$NON-NLS-1$
-        props.put(PROP_SQL, this.getCommand().toString());
-        props.put(PROP_MODEL_NAME, getModelName());
-        return props;
     }
 
     /**

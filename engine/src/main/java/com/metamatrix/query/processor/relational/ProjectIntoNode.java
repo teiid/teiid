@@ -24,9 +24,12 @@
  */
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -217,16 +220,14 @@ public class ProjectIntoNode extends RelationalNode {
         return clonedNode;
     }
 
-    public Map getDescriptionProperties() {
-        // Default implementation - should be overridden
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Project Into"); //$NON-NLS-1$
-        props.put(PROP_INTO_GROUP, intoGroup.toString());
-        List selectCols = new ArrayList(intoElements.size());
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
+        props.addProperty(PROP_INTO_GROUP, intoGroup.toString());
+        List<String> selectCols = new ArrayList<String>(intoElements.size());
         for(int i=0; i<this.intoElements.size(); i++) {
             selectCols.add(this.intoElements.get(i).toString());
         }
-        props.put(PROP_SELECT_COLS, selectCols);
+        props.addProperty(PROP_SELECT_COLS, selectCols);
 
         return props;
     }

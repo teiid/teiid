@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.Collections;
-import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -150,13 +149,5 @@ public class UnionAllNode extends RelationalNode {
 		super.copy(this, clonedNode);
 		return clonedNode;
 	}
-
-    public Map getDescriptionProperties() {
-        // Default implementation - should be overridden
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Union All"); //$NON-NLS-1$
-        
-        return props;
-    }
     
 }

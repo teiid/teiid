@@ -55,13 +55,13 @@ public class SQLReservedWords {
     public static final String CRITERIA = "CRITERIA"; //$NON-NLS-1$
     public static final String ERROR = "ERROR";	 //$NON-NLS-1$
     public static final String FN = "FN"; //$NON-NLS-1$
+    public static final String LIMIT = "LIMIT"; //$NON-NLS-1$
     public static final String LONG = "LONG"; //$NON-NLS-1$
     public static final String LOOP = "LOOP"; //$NON-NLS-1$
     public static final String MAKEDEP = "MAKEDEP"; //$NON-NLS-1$
     public static final String MAKENOTDEP = "MAKENOTDEP"; //$NON-NLS-1$
 	public static final String NOCACHE = "NOCACHE"; //$NON-NLS-1$
 	public static final String OJ = "OJ"; //$NON-NLS-1$
-	public static final String PLANONLY = "PLANONLY"; //$NON-NLS-1$
 	public static final String SQL_TSI_FRAC_SECOND = "SQL_TSI_FRAC_SECOND"; //$NON-NLS-1$
     public static final String SQL_TSI_SECOND = "SQL_TSI_SECOND"; //$NON-NLS-1$
     public static final String SQL_TSI_MINUTE = "SQL_TSI_MINUTE"; //$NON-NLS-1$
@@ -123,7 +123,6 @@ public class SQLReservedWords {
     public static final String DATE = "DATE"; //$NON-NLS-1$
     public static final String DAY = "DAY"; //$NON-NLS-1$
     public static final String DEALLOCATE = "DEALLOCATE"; //$NON-NLS-1$
-    public static final String DEBUG = "DEBUG"; //$NON-NLS-1$   
     public static final String DECIMAL = "DECIMAL"; //$NON-NLS-1$
     public static final String DECLARE = "DECLARE";     //$NON-NLS-1$
     public static final String DEFAULT = "DEFAULT"; //$NON-NLS-1$
@@ -184,7 +183,6 @@ public class SQLReservedWords {
     public static final String LEADING = "LEADING"; //$NON-NLS-1$
     public static final String LEFT = "LEFT"; //$NON-NLS-1$
     public static final String LIKE = "LIKE"; //$NON-NLS-1$
-    public static final String LIMIT = "LIMIT"; //$NON-NLS-1$
     public static final String LOCAL = "LOCAL"; //$NON-NLS-1$
     public static final String MATCH = "MATCH"; //$NON-NLS-1$
     public static final String MAX = "MAX"; //$NON-NLS-1$
@@ -244,7 +242,6 @@ public class SQLReservedWords {
     public static final String SESSION_USER = "SESSION_USER"; //$NON-NLS-1$
     public static final String SET = "SET"; //$NON-NLS-1$
     public static final String SHORT = "SHORT"; //$NON-NLS-1$
-    public static final String SHOWPLAN = "SHOWPLAN"; //$NON-NLS-1$
     public static final String SIILAR = "ROWS"; //$NON-NLS-1$
     public static final String SMALLINT = "ROWS"; //$NON-NLS-1$
     public static final String SOME = "SOME"; //$NON-NLS-1$

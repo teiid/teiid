@@ -24,16 +24,15 @@ package com.metamatrix.query.processor.batch;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
@@ -206,15 +205,11 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      * @since 4.2
      */
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "Batched Update Plan"); //$NON-NLS-1$
-        List children = new ArrayList();
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
         for (int i = 0; i < getPlanCount(); i++) {
-            children.add(updatePlans[i].getDescriptionProperties());
+            props.addProperty("Batch Plan " + i, updatePlans[i].getDescriptionProperties()); //$NON-NLS-1$
         }
-        props.put(PROP_CHILDREN, children);
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
         return props;
     }
     

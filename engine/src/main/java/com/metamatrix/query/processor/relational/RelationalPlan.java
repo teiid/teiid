@@ -24,16 +24,15 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.QueryCommand;
@@ -135,15 +134,8 @@ public class RelationalPlan extends ProcessorPlan {
     /* 
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "Relational Plan"); //$NON-NLS-1$
-        List children = new ArrayList();
-        Map childProps = getRootNode().getDescriptionProperties();
-        children.add(childProps);
-        props.put(PROP_CHILDREN, children);
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
-        return props;
+    public PlanNode getDescriptionProperties() {
+    	return this.root.getDescriptionProperties();
     }
     
     /** 

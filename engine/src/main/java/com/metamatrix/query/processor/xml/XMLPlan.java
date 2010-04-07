@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.xml;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -36,13 +38,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.teiid.client.lob.LobChunk;
+import org.teiid.client.plan.PlanNode;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -66,8 +68,8 @@ import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.TempTableDataManager;
@@ -77,6 +79,7 @@ import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
+
 /**
  * 
  */
@@ -132,7 +135,7 @@ public class XMLPlan extends ProcessorPlan {
         nextBatchCount = 1;
         
         this.env = (XMLProcessorEnvironment)this.env.clone();
-
+        
 		LogManager.logTrace(LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
     }
 
@@ -561,24 +564,10 @@ public class XMLPlan extends ProcessorPlan {
     /*
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */
-    public Map getDescriptionProperties() {
-        Map props = this.originalProgram.getDescriptionProperties();
-//      Get relational plans to get description props and add them to children
-        Collection childRelationalPlans = env.getChildPlans();
-        ArrayList children = (ArrayList) props.get(PROP_CHILDREN);
-        if(childRelationalPlans!=null) {
-	        Iterator childRelationalPlansIterator = childRelationalPlans.iterator();
-	        while(childRelationalPlansIterator.hasNext()) {
-	            ProcessorPlan relationalPlan = (ProcessorPlan) childRelationalPlansIterator.next();
-	            Map planProperties = relationalPlan.getDescriptionProperties();
-	            children.add(planProperties);
-	        }
-        }
-        props.put(PROP_CHILDREN, children);
-        props.put(PROP_TYPE, "XML Plan"); //$NON-NLS-1$
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
-
-        return props;
+    public PlanNode getDescriptionProperties() {
+    	PlanNode node = this.originalProgram.getDescriptionProperties();
+    	node.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
+    	return node;
     }
     
     public GroupSymbol getDocumentGroup() {

@@ -70,7 +70,7 @@ class RelationalPlanExecutor implements PlanExecutor {
         this.resultInfo = resultInfo;
         this.bufferMgr = bufferMgr;
         
-        ProcessorPlan plan = (ProcessorPlan)resultInfo.getPlan();
+        ProcessorPlan plan = resultInfo.getPlan();
         CommandContext subContext = (CommandContext)context.clone();
         subContext.pushVariableContext(new VariableContext());
         this.internalProcessor = new QueryProcessor(plan, subContext, bufferMgr, dataMgr);
@@ -80,7 +80,7 @@ class RelationalPlanExecutor implements PlanExecutor {
      * @see com.metamatrix.query.processor.xml.PlanExecutor#getOutputElements()
      */
     public List getOutputElements() throws MetaMatrixComponentException {
-        ProcessorPlan plan = (ProcessorPlan)resultInfo.getPlan();
+        ProcessorPlan plan = resultInfo.getPlan();
         return plan.getOutputElements();
     }      
 

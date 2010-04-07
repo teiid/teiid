@@ -24,18 +24,18 @@ package com.metamatrix.dqp.message;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import junit.framework.TestCase;
 
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ParameterInfo;
-
-import junit.framework.TestCase;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestResultsMessage extends TestCase {
 
     /**
@@ -46,7 +46,7 @@ public class TestResultsMessage extends TestCase {
         super(name);
     }
 
-    public static ResultsMessage example() {
+	public static ResultsMessage example() {
         ResultsMessage message = new ResultsMessage();
         message.setColumnNames(new String[] {"A", "B", "C", "D"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         message.setDataTypes(new String[] {DataTypeManager.DefaultDataTypes.BIG_INTEGER,
@@ -60,11 +60,11 @@ public class TestResultsMessage extends TestCase {
         parameters.add(new ParameterInfo(ParameterInfo.IN, 0));
         parameters.add(new ParameterInfo(ParameterInfo.RESULT_SET, 5));
         message.setParameters(parameters);
-        Map planDescs = new HashMap();
-        planDescs.put("key1", "val1"); //$NON-NLS-1$ //$NON-NLS-2$
-        planDescs.put("key2", "val2"); //$NON-NLS-1$ //$NON-NLS-2$
-        planDescs.put("key3", "val3"); //$NON-NLS-1$ //$NON-NLS-2$
-        planDescs.put("key4", "val4"); //$NON-NLS-1$ //$NON-NLS-2$
+        PlanNode planDescs = new PlanNode("test");
+        planDescs.addProperty("key1", "val1"); //$NON-NLS-1$ //$NON-NLS-2$
+        planDescs.addProperty("key2", "val2"); //$NON-NLS-1$ //$NON-NLS-2$
+        planDescs.addProperty("key3", "val3"); //$NON-NLS-1$ //$NON-NLS-2$
+        planDescs.addProperty("key4", "val4"); //$NON-NLS-1$ //$NON-NLS-2$
         message.setPlanDescription(planDescs);
 
         List results = new ArrayList();
@@ -113,15 +113,7 @@ public class TestResultsMessage extends TestCase {
         assertEquals(5, info2.getNumColumns());
         
         assertNotNull(copy.getPlanDescription());
-        assertEquals(4, copy.getPlanDescription().size());
-        assertTrue(copy.getPlanDescription().containsKey("key1")); //$NON-NLS-1$
-        assertTrue(copy.getPlanDescription().containsKey("key2")); //$NON-NLS-1$
-        assertTrue(copy.getPlanDescription().containsKey("key3")); //$NON-NLS-1$
-        assertTrue(copy.getPlanDescription().containsKey("key4")); //$NON-NLS-1$
-        assertEquals("val1", copy.getPlanDescription().get("key1")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("val2", copy.getPlanDescription().get("key2")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("val3", copy.getPlanDescription().get("key3")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("val4", copy.getPlanDescription().get("key4")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(4, copy.getPlanDescription().getProperties().size());
         
         assertNotNull(copy.getResults());
         assertEquals(1, copy.getResults().length);

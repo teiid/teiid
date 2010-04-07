@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.List;
-import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -50,15 +49,6 @@ public class DependentProcedureAccessNode extends AccessNode {
         this.inputCriteria = crit;
         this.inputDefaults = defaults;
         this.inputReferences = references;
-    }
-
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Dependent Procedure Access"); //$NON-NLS-1$
-        return props;
     }
 
     /**

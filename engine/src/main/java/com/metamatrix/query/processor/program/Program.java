@@ -23,12 +23,10 @@
 package com.metamatrix.query.processor.program;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import com.metamatrix.query.processor.Describable;
+import org.teiid.client.plan.PlanNode;
+
 import com.metamatrix.query.processor.proc.IfInstruction;
 import com.metamatrix.query.processor.proc.WhileInstruction;
 
@@ -37,7 +35,7 @@ import com.metamatrix.query.processor.proc.WhileInstruction;
  * ProgramInstructions, such as {@link IfInstruction} and {@link WhileInstruction} may 
  * have pointers to sub programs.
  */
-public class Program implements Cloneable, Describable {
+public class Program implements Cloneable {
 
     private List<ProgramInstruction> programInstructions;
     private int counter = 0;
@@ -132,19 +130,15 @@ public class Program implements Cloneable, Describable {
         return program;
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "Program"); //$NON-NLS-1$
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("Program"); //$NON-NLS-1$
         
         if(this.programInstructions != null) {
-            List children = new ArrayList();
-            Iterator iter = this.programInstructions.iterator();
-            while(iter.hasNext()) {
-                ProgramInstruction inst = (ProgramInstruction) iter.next();
-                Map childProps = inst.getDescriptionProperties();
-                children.add(childProps);
+        	for (int i = 0; i < programInstructions.size(); i++) {
+                ProgramInstruction inst = programInstructions.get(i);
+                PlanNode childProps = inst.getDescriptionProperties();
+                props.addProperty("Instruction " + i, childProps); //$NON-NLS-1$
             }
-            props.put(PROP_CHILDREN, children);
         }
         return props;
     }
@@ -180,7 +174,7 @@ public class Program implements Cloneable, Describable {
             
         programToString(str);
         
-        return "PROGRAM counter " + this.counter + " " + str.toString(); //$NON-NLS-1$ //$NON-NLS-2$ 
+        return "PROGRAM counter " + this.counter + "\n" + str.toString(); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
 
     /**

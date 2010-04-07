@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Map;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.TupleBatch;
 
@@ -49,15 +47,5 @@ public class NullNode extends RelationalNode {
 		super.copy(this, clonedNode);
 		return clonedNode;
 	}
-    
-    /* 
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {   
-        // Default implementation - should be overridden     
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Null");         //$NON-NLS-1$
-        return props;
-    }
     
 }

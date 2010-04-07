@@ -26,9 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -139,10 +137,6 @@ public class FakeProcessorPlan extends ProcessorPlan {
      */
     public List getSchema() {
         return this.outputElements;
-    }
-
-    public Map getDescriptionProperties() {
-        return new HashMap();
     }
 
 }

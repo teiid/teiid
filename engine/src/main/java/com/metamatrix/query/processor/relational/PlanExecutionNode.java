@@ -22,8 +22,11 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -158,15 +161,13 @@ public class PlanExecutionNode extends RelationalNode {
     
     protected void copy(PlanExecutionNode source,
                         PlanExecutionNode target) {
-        target.setProcessorPlan((ProcessorPlan)source.plan.clone());
+        target.setProcessorPlan(source.plan.clone());
         super.copy(source, target);
     }
 
-    public Map getDescriptionProperties() {   
-        // Default implementation - should be overridden     
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Plan Execution"); //$NON-NLS-1$
-        props.put(PROP_EXECUTION_PLAN, this.plan.getDescriptionProperties());                
+    public PlanNode getDescriptionProperties() {   
+    	PlanNode props = super.getDescriptionProperties();
+        props.addProperty(PROP_EXECUTION_PLAN, this.plan.getDescriptionProperties());                
         return props;
     }
     

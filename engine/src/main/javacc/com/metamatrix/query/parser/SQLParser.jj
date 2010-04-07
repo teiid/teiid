@@ -144,7 +144,6 @@ TOKEN : /* Reserved words */
 |   <DAY: "day">
 |   <DEALLOCATE: "deallocate">
 |   <DEFAULT_KEYWORD: "default">
-|   <DEBUG: "debug">
 |   <DECLARE: "declare">
 |   <DELETE: "delete">
 |   <DESC: "desc">
@@ -234,7 +233,6 @@ TOKEN : /* Reserved words */
 |   <OVERLAPS: "OVERLAPS">
 |   <PARAMETER: "parameter">
 |   <PARTITION: "partition">
-|   <PLANONLY: "planonly">
 |   <PRECISION: "precision">
 |   <PREPARE: "prepare">
 |   <PRIMARY: "primary">
@@ -260,7 +258,6 @@ TOKEN : /* Reserved words */
 |   <SENSITIVE: "sensitive">
 |   <SESSION_USER: "session_user">
 |   <SET: "set">
-|   <SHOWPLAN: "showplan">
 |   <SIMILAR: "similar">
 |   <SPECIFIC: "specific">
 |   <SOME: "some">
@@ -2504,9 +2501,6 @@ Limit limit(ParseInfo info) :
  */
 Option option(ParseInfo info) :
 {
-	Token plan = null;
-	Token debug = null;
-	Token planOnly = null;
 	String id = null;
 	Token nocache = null;
 	Option option = new Option();
@@ -2514,10 +2508,6 @@ Option option(ParseInfo info) :
 {
 	<OPTION>
 	(
-		plan		= <SHOWPLAN> |
-		planOnly	= <PLANONLY> |
-		debug 		= <DEBUG> |
-		
 		<MAKEDEP>		
 		id=id()
 		{
@@ -2555,9 +2545,6 @@ Option option(ParseInfo info) :
 	)*
 
 	{
-		option.setShowPlan( (plan != null) );
-		option.setPlanOnly( (planOnly != null) );
-		option.setDebug( (debug != null) );
 		option.setNoCache( (nocache != null) );
 		return option;
 	}

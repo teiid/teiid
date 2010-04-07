@@ -35,9 +35,6 @@ import javax.sql.XADataSource;
 import org.teiid.client.RequestMessage;
 import org.teiid.net.TeiidURL;
 
-
-
-
 /**
  * The Teiid JDBC DataSource implementation class of {@link javax.sql.DataSource} and
  * {@link javax.sql.XADataSource}.
@@ -51,51 +48,6 @@ import org.teiid.net.TeiidURL;
  * The {@link javax.sql.XADataSource} interface is almost identical to the {@link javax.sql.DataSource}
  * interface, but rather than returning {@link java.sql.Connection} instances, there are methods that
  * return {@link javax.sql.XAConnection} instances that can be used with distributed transactions.
- * <p>
- * The following are the properties for this DataSource:
- * <table cellspacing="0" cellpadding="0" border="1" width="100%">
- *   <tr><td><b>Property Name</b></td><td><b>Type</b></td><td><b>Description</b></td></tr>
- *   <tr><td>applicationName  </td><td><code>String</code></td><td>The <i>optional</i> name of the application using the DataSource.</td></tr>
- *   <tr><td>clientToken      </td><td><code>Serializable</code></td><td>The <i>optional</i> client token that will be passed directly
- *                                                                 through to the connectors, which may use it and/or pass it
- *                                                                 down to their underlying data source.
- *                                                                 <p>
- *                                                                 The form and type of the client token is up to the client but it <i>must</i> implement the
- *                                                                 <code>Serializable</code> interface.  Teiid does nothing with this token except to make it
- *                                                                 available for authentication/augmentation/replacement upon authentication to the system and to
- *                                                                 connectors that may require it at the data source level.
- *                                                                 </p></td></tr>
- *   <tr><td>databaseName     </td><td><code>String</code></td><td>The name of a particular virtual database on a
- *                                                                 Teiid Server.</td></tr>
- *   <tr><td>databaseVersion  </td><td><code>String</code></td><td>The <i>optional</i> version of a particular
- *                                                                 virtual database on a Teiid Server;
- *                                                                 if not supplied, then the latest version is assumed.</td></tr>
- *   <tr><td>dataSourceName   </td><td><code>String</code></td><td>The <i>optional</i> logical name for the underlying
- *                                                                 <code>XADataSource</code> or <code>ConnectionPoolDataSource</code>;
- *                                                                 used only when pooling connections or distributed transactions
- *                                                                 are implemented.</td></tr>
- *   <tr><td>description      </td><td><code>String</code></td><td>The <i>optional</i> description of this data source.</td></tr>
- *   <tr><td>logFile          </td><td><code>String</code></td><td>The <i>optional</i> path and file name to which JDBC Log Statements
- *                                                                 will be written; if none is specified, then no
- *                                                                 Log Statements will be written.</td></tr>
- *   <tr><td>logLevel         </td><td><code>int   </code></td><td>The <i>optional</i> level for logging, which only applies
- *                                                                 if the <code>logFile</code> property is set.  Value must be
- *                                                                 one of the following:
- *                                                                 <ul>
- *                                                                    <li>"<code>0</code>" - no JDBC log messages will be written to the file;
- *                                                                         this is the default</li>
- *                                                                    <li>"<code>1</code>" - all JDBC log messages will be written to the file</li>
- *                                                                    <li>"<code>2</code>" - all JDBC log messages as well as stack traces
- *                                                                         of any exceptions thrown from this driver will be written
- *                                                                         to the file</li>
- *                                                                 </ul>
- *   <tr><td>password</td><td><code>String</code></td><td>The user's password.</td></tr>
- *   <tr><td>user</td><td><code>String</code></td><td>The user name to use for the connection.</td></tr>
- *   <tr><td>partialResultsMode</td><td><code>boolean</code></td><td>Support partial results mode or not. </td></tr>
- *   <tr><td>fetchSize</td><td><code>int</code></td><td>Set default fetch size for statements, default=500.</td></tr>
- *   <tr><td>sqlOptions</td><td><code>String</code></td><td>Set sql options to use on every command. default=null</td></tr>
- * <table>
- * </p>
  */
 public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable {
 	public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
@@ -183,7 +135,9 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     private int loginTimeout;
     
-    private String sqlOptions;
+    private String showPlan;
+    
+    private boolean noExec;
     
     private String disableLocalTxn;
 
@@ -264,15 +218,19 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
         
         if(this.getFetchSize() > 0) {
-            props.setProperty(ExecutionProperties.PROP_FETCH_SIZE, "" + this.getFetchSize()); //$NON-NLS-1$
+            props.setProperty(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(this.getFetchSize())); 
         }
 
         if (this.getResultSetCacheMode() != null && this.getResultSetCacheMode().trim().length() != 0) {
             props.setProperty(ExecutionProperties.RESULT_SET_CACHE_MODE, this.getResultSetCacheMode());
         }
         
-        if (this.getSqlOptions() != null) {
-            props.setProperty(ExecutionProperties.PROP_SQL_OPTIONS, this.getSqlOptions());
+        if (this.getShowPlan() != null) {
+            props.setProperty(ExecutionProperties.SQL_OPTION_SHOWPLAN, this.getShowPlan());
+        }
+        
+        if (this.isNoExec()) {
+        	props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
         }
         
         if ( this.getTransactionAutoWrap() != null && this.getTransactionAutoWrap().trim().length() != 0   ) {
@@ -610,24 +568,22 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         return this.resultSetCacheMode;
     }
     
-    /**
-     * Get special sqlOptions string, which can currently be set only to SHOWPLAN
-     * @return Returns sqlOptions string or null if none
-     * @since 4.3
-     */
-    public String getSqlOptions() {
-        return this.sqlOptions;
-    }
+    public String getShowPlan() {
+		return showPlan;
+	}
     
-    /** 
-     * Sets special sqlOptions that should be used with each command.
-     * @param sqlOptions SQL options, only "SHOWPLAN" is currently accepted
-     * @since 4.3
-     */
-    public void setSqlOptions(String sqlOptions) {
-        this.sqlOptions = sqlOptions;
-    }
-
+    public void setShowPlan(String showPlan) {
+		this.showPlan = showPlan;
+	}
+    
+    public void setNoExec(boolean noExec) {
+		this.noExec = noExec;
+	}
+    
+    public boolean isNoExec() {
+		return noExec;
+	}
+    
     /**
      * @deprecated
      * @see #getAutoCommitTxn()

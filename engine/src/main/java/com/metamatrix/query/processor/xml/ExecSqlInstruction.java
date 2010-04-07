@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -72,13 +73,10 @@ public class ExecSqlInstruction extends ProcessorInstruction {
         return "SQL  " + resultSetName; //$NON-NLS-1$ 
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "EXECUTE SQL"); //$NON-NLS-1$
-        props.put(PROP_SQL, this.resultSetName);
-        props.put(PROP_RESULT_SET, this.resultSetName);
-        props.put(PROP_IS_STAGING, "false"); //$NON-NLS-1$
-                
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("EXECUTE SQL"); //$NON-NLS-1$
+        props.addProperty(PROP_RESULT_SET, this.resultSetName);
+    	props.addProperty(PROP_SQL, this.info.getPlan().getDescriptionProperties());
         return props;
     }
 }

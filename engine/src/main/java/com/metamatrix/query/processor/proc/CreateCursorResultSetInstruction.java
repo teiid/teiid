@@ -24,10 +24,9 @@
  */
 package com.metamatrix.query.processor.proc;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -80,11 +79,10 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         return "CREATE CURSOR RESULTSET INSTRUCTION - " + rsName; //$NON-NLS-1$
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "CREATE CURSOR"); //$NON-NLS-1$
-        props.put(PROP_RESULT_SET, this.rsName);
-        props.put(PROP_SQL, this.plan.toString());
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode("CREATE CURSOR"); //$NON-NLS-1$
+        props.addProperty(PROP_RESULT_SET, this.rsName);
+        props.addProperty(PROP_SQL, this.plan.getDescriptionProperties());
         return props;
     }
     

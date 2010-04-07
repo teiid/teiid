@@ -22,8 +22,7 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -65,11 +64,8 @@ public class EndDocumentInstruction extends ProcessorInstruction {
         return "END DOC"; //$NON-NLS-1$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "END DOCUMENT"); //$NON-NLS-1$
-        
-        return props;
+    public PlanNode getDescriptionProperties() {
+        return new PlanNode("END DOCUMENT"); //$NON-NLS-1$
     }
 
 }

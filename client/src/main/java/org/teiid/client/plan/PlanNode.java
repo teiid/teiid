@@ -22,23 +22,101 @@
 
 package org.teiid.client.plan;
 
-import java.util.*;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-public class PlanNode {
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-	//TODO: consolidate these constants with Describable
-	public static final String OUTPUT_COLS = "outputCols"; //$NON-NLS-1$
-	public static final String TYPE = "type"; //$NON-NLS-1$
-	static final String PROP_CHILDREN = "children"; //$NON-NLS-1$
-    
-    private Map<String, Object> props;
-    private PlanNode parent;
-    private List<PlanNode> children = new ArrayList<PlanNode>();
+import com.metamatrix.core.util.ExternalizeUtil;
+
+@XmlType
+@XmlRootElement(name="node")
+public class PlanNode implements Externalizable {
+
+	@XmlType(name = "property")
+	public static class Property implements Externalizable {
+		@XmlAttribute
+		private String name;
+		private List<String> values;
+		private PlanNode planNode;
+		
+		public Property() {
+			
+		}
+		
+		public Property(String name) {
+			this.name = name;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
+		@XmlElement(name="value")
+		public List<String> getValues() {
+			return values;
+		}
+		
+		public void setValues(List<String> values) {
+			this.values = values;
+		}
+		
+		@XmlElement(name="node")
+		public PlanNode getPlanNode() {
+			return planNode;
+		}
+		
+		public void setPlanNode(PlanNode planNode) {
+			this.planNode = planNode;
+		}
+		
+		@Override
+		public void readExternal(ObjectInput in) throws IOException,
+				ClassNotFoundException {
+			this.name = (String)in.readObject();
+			this.values = ExternalizeUtil.readList(in, String.class);
+			this.planNode = (PlanNode)in.readObject();
+		}
+		
+		@Override
+		public void writeExternal(ObjectOutput out) throws IOException {
+			out.writeObject(name);
+			ExternalizeUtil.writeCollection(out, values);
+			out.writeObject(planNode);
+		}
+		
+	}
 	
-    PlanNode(Map<String, Object> props) {
-        this.props = props;
+	@XmlElement(name="property")
+    private List<Property> properties = new LinkedList<Property>();
+    private PlanNode parent;
+    @XmlAttribute
+    private String name;
+    
+    public PlanNode() {
+    	
     }
-
+	
+    public PlanNode(String name) {
+    	this.name = name;
+    }
+    
+    public String getName() {
+		return name;
+	}
+    
     void setParent(PlanNode parent) {
         this.parent = parent;
     }
@@ -46,49 +124,105 @@ public class PlanNode {
     public PlanNode getParent() {
         return this.parent;
     }
-
-    void addChild(PlanNode child) {
-        children.add(child); 
-    }
-
-    public List<PlanNode> getChildren() {
-        return this.children;
-    }
-
-    public Map<String, Object> getProperties() {
-        return this.props;
+    
+    public List<Property> getProperties() {
+		return properties;
+	}
+    
+    public void addProperty(String pname, PlanNode value) {
+    	Property p = new Property(pname);
+    	p.setPlanNode(value);
+    	value.setParent(this);
+    	this.properties.add(p);
     }
     
-    public static PlanNode constructFromMap(Map properties) {
-        // Construct node without child property
-        Map copy = new HashMap(properties);
-        List childMaps = (List) copy.remove(PROP_CHILDREN);
-        
-        // Convert any subplans to PlanNodes as well
-        Iterator keyIter = copy.keySet().iterator();
-        while(keyIter.hasNext()) {
-            Object key = keyIter.next();
-            Object value = copy.get(key);
-            if(value instanceof Map) {
-                copy.put(key, constructFromMap((Map)value));
-            }
+    public void addProperty(String pname, List<String> value) {
+    	Property p = new Property(pname);
+    	p.setValues(value);
+    	this.properties.add(p);
+    }
+    
+    public void addProperty(String pname, String value) {
+    	Property p = new Property(pname);
+    	p.setValues(Arrays.asList(value));
+    	this.properties.add(p);
+    }
+    
+    public String toXml() throws JAXBException {
+    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
+		Marshaller marshaller = jc.createMarshaller();
+		marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE); //$NON-NLS-1$
+		StringWriter writer = new StringWriter();
+		marshaller.marshal(this, writer);
+		return writer.toString();
+    }
+    
+    @Override
+    public String toString() {
+    	StringBuilder builder = new StringBuilder();
+    	visitNode(this, 0, builder);
+    	return builder.toString();
+    }
+    
+    /* 
+     * @see com.metamatrix.jdbc.plan.PlanVisitor#visitNode(com.metamatrix.jdbc.plan.PlanNode)
+     */
+    protected void visitNode(PlanNode node, int nodeLevel, StringBuilder text) {
+        for(int i=0; i<nodeLevel; i++) {
+            text.append("  "); //$NON-NLS-1$
         }
-
-        // Construct this node                
-        PlanNode node = new PlanNode(copy); 
-
-        // Then construct children and connect
-        if(childMaps != null) {
-            for(int i=0; i<childMaps.size(); i++) {
-                Map childMap = (Map) childMaps.get(i);
-                PlanNode child = constructFromMap(childMap);
-                child.setParent(node);
-                node.addChild(child);
-            }
-        }
+        text.append(node.getName());        
+        text.append("\n"); //$NON-NLS-1$
         
-        // And return
-        return node;
+        // Print properties appropriately
+        int propTabs = nodeLevel + 1;
+        for (PlanNode.Property property : node.getProperties()) {
+            // Print leading spaces for prop name
+        	for(int t=0; t<propTabs; t++) {
+				text.append("  "); //$NON-NLS-1$
+			}
+            printProperty(nodeLevel, property, text);
+        }
     }
 
+    private void printProperty(int nodeLevel, Property p, StringBuilder text) {
+        text.append("+ "); //$NON-NLS-1$
+        text.append(p.getName());
+        
+        if (p.getPlanNode() != null) {
+	        text.append(":\n"); //$NON-NLS-1$ 
+	        visitNode(p.getPlanNode(), nodeLevel + 2, text);
+        } else if (p.getValues().size() > 1){
+        	text.append(":\n"); //$NON-NLS-1$ 
+        	for (int i = 0; i < p.getValues().size(); i++) {
+            	for(int t=0; t<nodeLevel+2; t++) {
+            		text.append("  "); //$NON-NLS-1$
+            	}
+                text.append(i);
+                text.append(": "); //$NON-NLS-1$
+            	text.append(p.getValues().get(i));
+                text.append("\n"); //$NON-NLS-1$
+			}
+        } else {
+        	text.append(":"); //$NON-NLS-1$
+        	text.append(p.getValues().get(0));
+        	text.append("\n"); //$NON-NLS-1$
+        }
+    }
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	this.properties = ExternalizeUtil.readList(in, Property.class);
+    	this.parent = (PlanNode)in.readObject();
+    	this.name = (String)in.readObject();
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	ExternalizeUtil.writeCollection(out, properties);
+    	out.writeObject(this.parent);
+    	out.writeObject(this.name);
+    }
+    
 }

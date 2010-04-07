@@ -88,15 +88,14 @@ public interface ExecutionProperties {
     public static final String ANSI_QUOTED_IDENTIFIERS = "ansiQuotedIdentifiers"; //$NON-NLS-1$   
     
     /**
-     * Additional options/hints for executing the command
-     * @since 4.3
-     */
-    public static final String PROP_SQL_OPTIONS = "sqlOptions"; //$NON-NLS-1$
-    
-    /**
-     * Passed as an option to PROP_SQL_OPTIONS
+     * Can be one of ON|OFF|DEBUG
      */
     public static final String SQL_OPTION_SHOWPLAN = "SHOWPLAN"; //$NON-NLS-1$
+    
+    /**
+     * Can be one of ON|OFF
+     */
+    public static final String NOEXEC = "NOEXEC"; //$NON-NLS-1$
     
 }
     

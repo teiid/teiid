@@ -22,13 +22,12 @@
 
 package com.metamatrix.query.processor.program;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.proc.ProcedurePlan;
 
@@ -42,7 +41,7 @@ import com.metamatrix.query.processor.proc.ProcedurePlan;
  * The exception to this are instructions that have sub programs in them -
  * those sub programs need to be cloned.</p>
  */
-public abstract class ProgramInstruction implements Cloneable, Describable {
+public abstract class ProgramInstruction implements Cloneable {
 
     public ProgramInstruction() {
     } 
@@ -82,11 +81,7 @@ public abstract class ProgramInstruction implements Cloneable, Describable {
         }
         return null;
     }
-    
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        return props;        
-    }
-    
 
+	public abstract PlanNode getDescriptionProperties();
+    
 }

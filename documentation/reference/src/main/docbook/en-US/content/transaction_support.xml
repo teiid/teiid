@@ -175,7 +175,7 @@
 						Global - the XAResource interface provided by an XAConnection is
 						used to control the transaction. Note that XAConnections are
 						available only if Teiid is consumed through its XADataSource,
-						<classname>com.metamatrix.jdbc.MMDataSource
+						<classname>org.teiid.jdbc.TeiidDataSource
 						</classname>
 						. JEE containers or data access APIs typically control XA
 						transactions on behalf of application code.

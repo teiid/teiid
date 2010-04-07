@@ -22,12 +22,10 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.query.processor.Describable;
+import org.teiid.client.plan.PlanNode;
 
 /**
  * A program is a sequence of {@link ProcessorInstruction ProcessorInstructions}.  Certain
@@ -35,9 +33,9 @@ import com.metamatrix.query.processor.Describable;
  * pointers to sub programs.  XMLPlan will maintain a stack of programs during
  * execution.
  */
-public class Program implements Describable {
+public class Program {
 
-    private List processorInstructions;
+    private List<ProcessorInstruction> processorInstructions;
 
 	/**
 	 * Constructor for Program.
@@ -62,7 +60,7 @@ public class Program implements Describable {
      * @param instructionIndex index of instruction to be removed
      */
     public void removeInstructionAt(int instructionIndex) {
-        List instructions = getProcessorInstructions();
+        List<ProcessorInstruction> instructions = getProcessorInstructions();
         if (instructionIndex < instructions.size()) {
             instructions.remove(instructionIndex);
         }
@@ -85,19 +83,15 @@ public class Program implements Describable {
         return ("PROGRAM size " + getProcessorInstructions().size()); //$NON-NLS-1$ 
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "XML Program"); //$NON-NLS-1$
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("XML Program"); //$NON-NLS-1$
         
         if(this.processorInstructions != null) {
-            List children = new ArrayList();
-            Iterator iter = this.processorInstructions.iterator();
-            while(iter.hasNext()) {
-                ProcessorInstruction inst = (ProcessorInstruction) iter.next();
-                Map childProps = inst.getDescriptionProperties();
-                children.add(childProps);
+        	for (int i = 0; i < processorInstructions.size(); i++) {
+                ProcessorInstruction inst = processorInstructions.get(i);
+                PlanNode childProps = inst.getDescriptionProperties();
+                props.addProperty("Instruction " + i, childProps); //$NON-NLS-1$
             }
-            props.put(PROP_CHILDREN, children);
         }
         return props;
     }
@@ -115,15 +109,15 @@ public class Program implements Describable {
     private ProcessorInstruction getInstructionAtIndex(int instructionIndex){
         if (processorInstructions != null){
             if (instructionIndex < getProcessorInstructions().size()){ 
-                return (ProcessorInstruction)getProcessorInstructions().get(instructionIndex);
+                return getProcessorInstructions().get(instructionIndex);
             }
         }
         return null;
     }
 
-    List getProcessorInstructions(){
+    List<ProcessorInstruction> getProcessorInstructions(){
         if (processorInstructions == null){
-            processorInstructions = new ArrayList();
+            processorInstructions = new ArrayList<ProcessorInstruction>();
         }
         return processorInstructions;
     }

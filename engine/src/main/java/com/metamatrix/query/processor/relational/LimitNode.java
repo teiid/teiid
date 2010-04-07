@@ -22,9 +22,12 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -32,6 +35,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.symbol.Expression;
+
 
 public class LimitNode extends RelationalNode {
     
@@ -137,11 +141,10 @@ public class LimitNode extends RelationalNode {
         }
     }
 
-    public Map getDescriptionProperties() {
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Limit"); //$NON-NLS-1$
-        props.put(PROP_ROW_OFFSET, offsetExpr);
-        props.put(PROP_ROW_LIMIT, limitExpr);
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
+        props.addProperty(PROP_ROW_OFFSET, String.valueOf(offsetExpr));
+        props.addProperty(PROP_ROW_LIMIT, String.valueOf(limitExpr));
         return props;
     }
     

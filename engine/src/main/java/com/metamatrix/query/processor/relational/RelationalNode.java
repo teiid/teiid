@@ -22,11 +22,15 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -36,15 +40,14 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.processor.Describable;
-import com.metamatrix.query.processor.DescribableUtil;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
-public abstract class RelationalNode implements Cloneable, Describable, BatchProducer {
+public abstract class RelationalNode implements Cloneable, BatchProducer {
 
     // External context and state
     private CommandContext context;
@@ -464,9 +467,7 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
 	 * @return Just the last part which is the class name
 	 */
 	protected String getClassName() {
-		String fullClassName = this.getClass().getName();
-		int index = fullClassName.lastIndexOf("."); //$NON-NLS-1$
-		return fullClassName.substring(index+1);
+		return this.getClass().getSimpleName();
 	}
 
 	/**
@@ -494,34 +495,24 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
         }
 	}
     
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
+    public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
-        Map props = new HashMap();
+        PlanNode result = new PlanNode(getClassName());
+        result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.elements));
         if(this.context != null && this.context.getCollectNodeStatistics()) {
             this.nodeStatistics.setStatisticsList();
-            props.put(PROP_NODE_STATS_LIST, this.nodeStatistics.getStatisticsList());
+            result.addProperty(PROP_NODE_STATS_LIST, this.nodeStatistics.getStatisticsList());
         }
-        List costEstimates = this.getCostEstimates();
+        List<String> costEstimates = this.getCostEstimates();
         if(costEstimates != null) {
-            props.put(PROP_NODE_COST_ESTIMATES, costEstimates);
+        	result.addProperty(PROP_NODE_COST_ESTIMATES, costEstimates);
         }
-        props.put(PROP_TYPE, "Relational"); //$NON-NLS-1$
-        props.put(PROP_CHILDREN, getChildDescriptionProperties());
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(this.elements));
-        return props;
-    }
-
-    protected List getChildDescriptionProperties() {
-        ArrayList childrenProps = new ArrayList(children.length);
         for(int i=0; i<children.length; i++) {
             if(children[i] != null) {
-                childrenProps.add(this.children[i].getDescriptionProperties());
+                result.addProperty("Child " + i, this.children[i].getDescriptionProperties()); //$NON-NLS-1$
             }
         }
-        return childrenProps;
+        return result;
     }
 
     /** 
@@ -552,8 +543,8 @@ public abstract class RelationalNode implements Cloneable, Describable, BatchPro
         this.estimateJoinCost = estimateJoinCost;
     }
     
-    private List getCostEstimates() {
-        List costEstimates = new ArrayList();
+    private List<String> getCostEstimates() {
+        List<String> costEstimates = new ArrayList<String>();
         if(this.estimateNodeCardinality != null) {
             costEstimates.add("Estimated Node Cardinality: "+ this.estimateNodeCardinality); //$NON-NLS-1$
         }

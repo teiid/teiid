@@ -37,7 +37,7 @@ public class RelationalNodeStatistics {
     static final int BATCHCOMPLETE_STOP = 0;
     static final int BLOCKEDEXCEPTION_STOP = 1;
     
-    private List statisticsList;
+    private List<String> statisticsList = new ArrayList<String>();
     private boolean setNodeStartTime;
     
     // The total amount of rows output by this node
@@ -67,7 +67,6 @@ public class RelationalNodeStatistics {
     private int nodeBlocks;
     
     public RelationalNodeStatistics() {
-        this.statisticsList = new ArrayList();
         this.setNodeStartTime = false;
     }
     
@@ -126,7 +125,7 @@ public class RelationalNodeStatistics {
         this.statisticsList.add("Node Blocks: " + this.nodeBlocks); //$NON-NLS-1$
     }
     
-    public List getStatisticsList() {
+    public List<String> getStatisticsList() {
         return this.statisticsList;
     }
     

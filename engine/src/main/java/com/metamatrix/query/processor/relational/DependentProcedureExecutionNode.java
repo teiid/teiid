@@ -51,15 +51,6 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
         this.inputReferences = references;
     }
 
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Dependent Procedure Execution"); //$NON-NLS-1$
-        return props;
-    }
-
     /**
      * @see com.metamatrix.query.processor.relational.PlanExecutionNode#clone()
      */

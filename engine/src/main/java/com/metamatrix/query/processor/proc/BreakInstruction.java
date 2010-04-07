@@ -24,10 +24,10 @@
  */
 package com.metamatrix.query.processor.proc;
 
-import java.util.*;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.query.processor.program.*;
+import com.metamatrix.query.processor.program.ProgramInstruction;
 
 /**
  * <p>This {@link ProgramInstruction} break from a loop when processed</p>.
@@ -43,11 +43,8 @@ public class BreakInstruction extends ContinueInstruction {
         env.incrementProgramCounter();
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "BREAK"); //$NON-NLS-1$
-
-        return props;
+    public PlanNode getDescriptionProperties() {
+        return new PlanNode("BREAK"); //$NON-NLS-1$
     }
 
 }

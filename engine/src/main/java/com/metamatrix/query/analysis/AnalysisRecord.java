@@ -22,14 +22,26 @@
 
 package com.metamatrix.query.analysis;
 
-import java.io.*;
-import java.util.*;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.ListIterator;
 
 import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
  * <p>The AnalysisRecord holds all debug/analysis information for 
@@ -42,6 +54,53 @@ import com.metamatrix.core.log.MessageLevel;
  * </ul>
  */
 public class AnalysisRecord implements Serializable {
+	
+    // Common 
+    public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
+    
+    // Relational
+    public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
+    public static final String PROP_SELECT_COLS = "Select Columns"; //$NON-NLS-1$
+    public static final String PROP_GROUP_COLS = "Grouping Columns"; //$NON-NLS-1$
+    public static final String PROP_SQL = "Query"; //$NON-NLS-1$
+    public static final String PROP_MODEL_NAME = "Model Name"; //$NON-NLS-1$
+    public static final String PROP_DEPENDENT = "Dependent Join"; //$NON-NLS-1$
+    public static final String PROP_JOIN_STRATEGY = "Join Strategy"; //$NON-NLS-1$
+    public static final String PROP_JOIN_TYPE = "Join Type"; //$NON-NLS-1$
+    public static final String PROP_JOIN_CRITERIA = "Join Criteria"; //$NON-NLS-1$
+    public static final String PROP_EXECUTION_PLAN = "Execution Plan"; //$NON-NLS-1$
+    public static final String PROP_INTO_GROUP = "Into Target"; //$NON-NLS-1$
+    public static final String PROP_SORT_COLS = "Sort Columns"; //$NON-NLS-1$
+    public static final String PROP_SORT_MODE = "Sort Mode"; //$NON-NLS-1$
+    public static final String PROP_NODE_STATS_LIST = "Statistics"; //$NON-NLS-1$
+    public static final String PROP_NODE_COST_ESTIMATES = "Cost Estimates";  //$NON-NLS-1$
+    public static final String PROP_ROW_OFFSET = "Row Offset";  //$NON-NLS-1$
+    public static final String PROP_ROW_LIMIT = "Row Limit";  //$NON-NLS-1$
+    
+    // XML
+    public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$
+    public static final String PROP_TAG = "Tag"; //$NON-NLS-1$
+    public static final String PROP_NAMESPACE = "Namespace"; //$NON-NLS-1$
+    public static final String PROP_DATA_COL = "Data Column"; //$NON-NLS-1$
+    public static final String PROP_NAMESPACE_DECL = "Namespace Declarations"; //$NON-NLS-1$
+    public static final String PROP_OPTIONAL = "Optional Flag"; //$NON-NLS-1$
+    public static final String PROP_DEFAULT = "Default Value"; //$NON-NLS-1$
+    public static final String PROP_RECURSE_DIR = "Recursion Direction";  //$NON-NLS-1$
+    public static final String PROP_BINDINGS = "Bindings"; //$NON-NLS-1$
+    public static final String PROP_IS_STAGING = "Is Staging Flag"; //$NON-NLS-1$
+    public static final String PROP_IN_MEMORY = "Source In Memory Flag"; //$NON-NLS-1$
+    public static final String PROP_CONDITION = "Condition"; //$NON-NLS-1$
+    public static final String PROP_DEFAULT_PROGRAM = "Default Program"; //$NON-NLS-1$
+    public static final String PROP_ENCODING = "Encoding"; //$NON-NLS-1$
+    public static final String PROP_FORMATTED = "Formatted Flag"; //$NON-NLS-1$
+    
+    // Procedure
+    public static final String PROP_EXPRESSION = "Expression"; //$NON-NLS-1$
+    public static final String PROP_RESULT_SET = "Result Set"; //$NON-NLS-1$
+    public static final String PROP_PROGRAM = "Program";  //$NON-NLS-1$
+    public static final String PROP_VARIABLE = "Variable"; //$NON-NLS-1$
+    public static final String PROP_THEN = "Then"; //$NON-NLS-1$
+    public static final String PROP_ELSE = "Else"; //$NON-NLS-1$
 
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
@@ -49,7 +108,7 @@ public class AnalysisRecord implements Serializable {
     private boolean logDebug;
     
     // Query plan
-    private Map queryPlan;
+    private PlanNode queryPlan;
     
     // Annotations
     private Collection<Annotation> annotations;
@@ -109,7 +168,7 @@ public class AnalysisRecord implements Serializable {
      * Set the query plan that was created
      * @param queryPlan The plan
      */
-    public void setQueryPlan(Map queryPlan) {
+    public void setQueryPlan(PlanNode queryPlan) {
         this.queryPlan = queryPlan;
     }
     
@@ -117,7 +176,7 @@ public class AnalysisRecord implements Serializable {
      * Get the query plan that was created
      * @return The plan
      */
-    public Map getQueryPlan() {
+    public PlanNode getQueryPlan() {
         return this.queryPlan;
     }
     
@@ -158,4 +217,36 @@ public class AnalysisRecord implements Serializable {
         }
         return null;
     }
+
+	/**
+	 * Helper method to turn a list of projected symbols into a suitable list of
+	 * output column strings with name and type.
+	 * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
+	 * @return List of output columns for sending to the client as part of the plan
+	 */                
+	public static List<String> getOutputColumnProperties(List<SingleElementSymbol> projectedSymbols) {
+	    if(projectedSymbols != null) {
+	        List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
+	        for(int i=0; i<projectedSymbols.size() ; i++) {
+	            SingleElementSymbol symbol = projectedSymbols.get(i);
+	            outputCols.add(symbol.getShortName() + " (" + DataTypeManager.getDataTypeName(symbol.getType()) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+	        }
+	        return outputCols;
+	    }
+	    return Collections.emptyList();
+	}
+	
+	public static void addLanaguageObjects(PlanNode node, String key, List<? extends LanguageObject> objects) {
+		List<String> values = new ArrayList<String>();
+		int index = 0;
+		for (LanguageObject languageObject : objects) {
+			values.add(languageObject.toString());
+			List<SubqueryContainer> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objects);
+			for (ListIterator<SubqueryContainer> iterator = subqueries.listIterator(); iterator.hasNext();) {
+				SubqueryContainer subqueryContainer = iterator.next();
+				node.addProperty(key + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
+			}
+		}
+		node.addProperty(key, values);
+	}
 }

@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.proc;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.teiid.client.plan.PlanNode;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
@@ -42,12 +46,12 @@ import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.processor.BatchIterator;
 import com.metamatrix.query.processor.CollectionTupleSource;
-import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
@@ -367,12 +371,10 @@ public class ProcedurePlan extends ProcessorPlan {
         return batch;
     }
 
-    public Map getDescriptionProperties() {
-        Map props = this.originalProgram.getDescriptionProperties();
-        props.put(PROP_TYPE, "Procedure Plan"); //$NON-NLS-1$
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
-
-        return props;
+    public PlanNode getDescriptionProperties() {
+    	PlanNode node = this.originalProgram.getDescriptionProperties();
+    	node.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
+    	return node;
     }
     
     public void setMetadata( QueryMetadataInterface metadata ) {

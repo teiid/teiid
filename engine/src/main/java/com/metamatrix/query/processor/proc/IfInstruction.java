@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.processor.proc;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -129,13 +130,12 @@ public class IfInstruction extends ProgramInstruction {
         return "IF INSTRUCTION:"; //$NON-NLS-1$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "IF"); //$NON-NLS-1$
-        props.put(PROP_CRITERIA, this.condition.toString());
-        props.put(PROP_THEN, this.ifProgram.getDescriptionProperties());
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("IF"); //$NON-NLS-1$
+        props.addProperty(PROP_CRITERIA, this.condition.toString());
+        props.addProperty(PROP_THEN, this.ifProgram.getDescriptionProperties());
         if(elseProgram != null) {
-            props.put(PROP_ELSE, this.elseProgram.getDescriptionProperties());
+        	props.addProperty(PROP_ELSE, this.elseProgram.getDescriptionProperties());
         }
         return props;
     }

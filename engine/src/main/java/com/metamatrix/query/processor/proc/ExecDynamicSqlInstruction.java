@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.proc;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.plan.PlanNode;
 import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -75,20 +78,6 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class ExecDynamicSqlInstruction extends ProgramInstruction {
     
-    private static class PopCallInstruction extends ProgramInstruction {
-
-        /** 
-         * @see com.metamatrix.query.processor.program.ProgramInstruction#process(ProcedurePlan)
-         */
-        public void process(ProcedurePlan procEnv) throws MetaMatrixComponentException,
-                                                   MetaMatrixProcessingException {
-            procEnv.getContext().popCall();
-        }
-
-    }
-    
-    private static PopCallInstruction POP_CALL_INSTRUCTION = new PopCallInstruction();
-
 	// the DynamicCommand
 	private DynamicCommand dynamicCommand;
 
@@ -200,11 +189,18 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan);
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan) {
+				@Override
+				public void process(ProcedurePlan procEnv)
+						throws BlockedException, MetaMatrixComponentException,
+						MetaMatrixProcessingException {
+					super.process(procEnv);
+					procEnv.getContext().popCall();
+				}
+			};
 
             dynamicProgram = new Program();
             dynamicProgram.addInstruction(inst);
-            dynamicProgram.addInstruction(POP_CALL_INSTRUCTION);
 
             if (dynamicCommand.getIntoGroup() != null) {
                 String groupName = dynamicCommand.getIntoGroup().getCanonicalName();
@@ -332,13 +328,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		return "ExecDynamicSqlInstruction"; //$NON-NLS-1$
 	}
 
-	public Map getDescriptionProperties() {
-		Map props = new HashMap();
-		props.put(PROP_TYPE, "SQL"); //$NON-NLS-1$
-		props.put(PROP_SQL, CreateCursorResultSetInstruction.RS_NAME); 
-		if (dynamicCommand.getIntoGroup() != null) {
-			props.put(PROP_GROUP, dynamicCommand.getIntoGroup().toString());
-		}
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = new PlanNode("ExecDynamicSqlInstruction"); //$NON-NLS-1$
+		props.addProperty(PROP_SQL, dynamicCommand.toString()); 
 		return props;
 	}
 

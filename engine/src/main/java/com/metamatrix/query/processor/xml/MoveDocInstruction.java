@@ -22,9 +22,7 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.teiid.client.plan.PlanNode;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -88,15 +86,11 @@ public class MoveDocInstruction extends ProcessorInstruction {
         return "LAST"; //$NON-NLS-1$
     }
 
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
+    public PlanNode getDescriptionProperties() {
         if(direction == UP) {
-            props.put(PROP_TYPE, "UP IN DOCUMENT"); //$NON-NLS-1$            
-        } else {
-            props.put(PROP_TYPE, "NEXT IN DOCUMENT"); //$NON-NLS-1$
-        }
-
-        return props;
+            return new PlanNode("UP IN DOCUMENT"); //$NON-NLS-1$            
+        } 
+        return new PlanNode("NEXT IN DOCUMENT"); //$NON-NLS-1$
     }
 
 }

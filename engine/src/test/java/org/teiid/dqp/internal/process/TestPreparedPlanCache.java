@@ -25,8 +25,6 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -78,7 +76,7 @@ public class TestPreparedPlanCache {
     	assertNotNull("Unable to get prepared plan from cache", pPlan); //$NON-NLS-1$
     	assertEquals("Error getting plan from cache", new RelationalPlan(new ProjectNode(12)).toString(), pPlan.getPlan().toString()); //$NON-NLS-1$
     	assertEquals("Error getting command from cache", EXAMPLE_QUERY + 12, pPlan.getCommand().toString()); //$NON-NLS-1$
-    	assertNotNull("Error getting plan description from cache", pPlan.getAnalysisRecord().getQueryPlan()); //$NON-NLS-1$
+    	assertNotNull("Error getting plan description from cache", pPlan.getAnalysisRecord()); //$NON-NLS-1$
     	assertEquals("Error gettting reference from cache", "ref12", pPlan.getReferences().get(0)); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -153,10 +151,7 @@ public class TestPreparedPlanCache {
     		cache.put(id, true, pPlan);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
-            Map props = new HashMap();
-            props.put("desc", "desc"+i); //$NON-NLS-1$ //$NON-NLS-2$
             AnalysisRecord analysisRecord = new AnalysisRecord(true, false);
-            analysisRecord.setQueryPlan(props);
     		pPlan.setAnalysisRecord(analysisRecord);
     		ArrayList refs = new ArrayList();
     		refs.add("ref"+i); //$NON-NLS-1$

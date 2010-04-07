@@ -25,6 +25,8 @@ package com.metamatrix.query.processor.xml;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.plan.PlanNode;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -137,9 +139,7 @@ public class JoinedWhileInstruction extends WhileInstruction {
         return "JOINED " + originalResultSet + " " + super.toString(); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
 
-    public Map getDescriptionProperties() {
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "JOINED LOOP"); //$NON-NLS-1$ 
-        return props;
+    public PlanNode getDescriptionProperties() {
+        return new PlanNode("JOINED LOOP"); //$NON-NLS-1$ 
     }
 }

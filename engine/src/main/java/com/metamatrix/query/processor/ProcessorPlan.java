@@ -22,8 +22,12 @@
 
 package com.metamatrix.query.processor;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -31,6 +35,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.BatchCollector.BatchProducer;
 import com.metamatrix.query.util.CommandContext;
 
@@ -47,7 +52,7 @@ import com.metamatrix.query.util.CommandContext;
  * the call to {@link #close}.
  * </p>
  */
-public abstract class ProcessorPlan implements Cloneable, Describable, BatchProducer {
+public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 	
     private List warnings = null;
     
@@ -148,5 +153,14 @@ public abstract class ProcessorPlan implements Cloneable, Describable, BatchProd
 	public boolean requiresTransaction(boolean transactionalReads) {
 		return transactionalReads;
 	}
+	
+    /**
+     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
+     */
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode(this.getClass().getSimpleName());
+        props.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
+        return props;
+    }
     
 }

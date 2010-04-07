@@ -29,9 +29,9 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -49,7 +49,7 @@ public class ResultsMessage implements Externalizable {
 	private String[] dataTypes = null;
 
     /** A description of planning that occurred as requested in the request. */
-    private Map planDescription;
+    private PlanNode planDescription;
 
     /** An exception that occurred. */
     private MetaMatrixException exception;
@@ -155,7 +155,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @return
      */
-    public Map getPlanDescription() {
+    public PlanNode getPlanDescription() {
         return planDescription;
     }
 
@@ -201,7 +201,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @param object
      */
-    public void setPlanDescription(Map object) {
+    public void setPlanDescription(PlanNode object) {
         planDescription = object;
     }
 
@@ -249,7 +249,7 @@ public class ResultsMessage implements Externalizable {
         results = BatchSerializer.readBatch(in, dataTypes);
 
         // Plan Descriptions
-        planDescription = ExternalizeUtil.readMap(in);
+        planDescription = (PlanNode)in.readObject();
 
         ExceptionHolder holder = (ExceptionHolder)in.readObject();
         if (holder != null) {
@@ -281,7 +281,7 @@ public class ResultsMessage implements Externalizable {
         BatchSerializer.writeBatch(out, dataTypes, results);
 
         // Plan descriptions
-        ExternalizeUtil.writeMap(out, planDescription);
+        out.writeObject(this.planDescription);
 
         if (exception != null) {
         	out.writeObject(new ExceptionHolder(exception));

@@ -24,10 +24,12 @@
  */
 package com.metamatrix.query.processor.proc;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -43,8 +45,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     // the loop block
     private Program loopProgram;
     
-    //list of ElementSymbols theat represents all the possible
-    //cursor columns
     private List elements;
     
     public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan) {
@@ -79,14 +79,14 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     }
     
     public String toString() {
-        return "LOOP INSTRUCTION:"; //$NON-NLS-1$
+        return "LOOP INSTRUCTION: " + this.rsName; //$NON-NLS-1$
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "LOOP"); //$NON-NLS-1$
-        props.put(PROP_RESULT_SET, this.rsName);
-        props.put(PROP_PROGRAM, this.loopProgram.getDescriptionProperties());
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode("LOOP"); //$NON-NLS-1$
+        props.addProperty(PROP_SQL, this.plan.getDescriptionProperties());
+        props.addProperty(PROP_RESULT_SET, this.rsName);
+        props.addProperty(PROP_PROGRAM, this.loopProgram.getDescriptionProperties());
         return props;
     }
 

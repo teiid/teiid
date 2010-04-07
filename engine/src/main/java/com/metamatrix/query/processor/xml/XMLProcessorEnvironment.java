@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -62,8 +61,6 @@ public class XMLProcessorEnvironment {
     private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
     private CommandContext commandContext;
-    
-    private Collection childPlans;
     
     protected XMLProcessorEnvironment(){
     }
@@ -221,11 +218,11 @@ public class XMLProcessorEnvironment {
     public PlanExecutor createResultExecutor(String resultSetName, ResultSetInfo info) 
         throws MetaMatrixComponentException{
     
-        // this cloning code is here beacuse, cloning the plan inside the resultset is not possible
-        // becuse of the dependencies.
+        // cloning the plan inside the resultset is not possible
+        // because of the dependencies.
         ResultSetInfo clone = (ResultSetInfo)info.clone();
-        ProcessorPlan plan = (ProcessorPlan)clone.getPlan();
-        plan = (ProcessorPlan)plan.clone();
+        ProcessorPlan plan = clone.getPlan();
+        plan = plan.clone();
         clone.setPlan(plan);
         
         return new RelationalPlanExecutor(clone, this.commandContext, this.dataMgr, this.bufferMgr);
@@ -275,13 +272,6 @@ public class XMLProcessorEnvironment {
     
     
     /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getChildPlans()
-     */
-    public Collection getChildPlans() {
-        return this.childPlans;
-    }
- 
-    /**
      * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#clone()
      */
     public Object clone() {
@@ -325,7 +315,4 @@ public class XMLProcessorEnvironment {
         this.loadedStagingTables.put(tableName, Boolean.TRUE);
     }
     
-    public void setChildPlans(Collection childPlans){
-    	this.childPlans = childPlans;
-    }
 }

@@ -112,6 +112,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		if (!state.done) {
 			if (state.processor == null) {
 				CommandContext subContext = (CommandContext) context.clone();
+				state.plan.reset();
 		        state.processor = new QueryProcessor(state.plan, subContext, manager, this.dataMgr);
 		        if (container.getCommand().getCorrelatedReferences() != null) { 
 		            VariableContext currentContext = new VariableContext();
@@ -123,7 +124,6 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		        state.collector = state.processor.createBatchCollector();
 			}
 			state.done = true;
-			state.plan.reset();
 		}
 		return new DependentValueSource(state.collector.collectTuples()).getValueIterator(ref.getValueExpression());
 	}

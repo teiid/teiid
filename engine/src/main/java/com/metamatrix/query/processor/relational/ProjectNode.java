@@ -22,12 +22,15 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -36,9 +39,9 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -254,16 +257,9 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     /*
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */
-    public Map getDescriptionProperties() {
-        // Default implementation - should be overridden
-        Map props = super.getDescriptionProperties();
-        props.put(PROP_TYPE, "Project"); //$NON-NLS-1$
-        List selectCols = new ArrayList(selectSymbols.size());
-        for(int i=0; i<this.selectSymbols.size(); i++) {
-            selectCols.add(this.selectSymbols.get(i).toString());
-        }
-        props.put(PROP_SELECT_COLS, selectCols);
-
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
+    	AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);
         return props;
     }
     

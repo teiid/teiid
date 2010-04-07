@@ -884,19 +884,15 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>Supported options:
         </para>
         <listitem>
-          <para>SHOWPLAN - returns the query plan along with the results
+          <para>MAKEDEP table [(,table)*] - specifies source tables that should be made dependent in the join
           </para>
-        </listitem><listitem>
-          <para>PLANONLY - returns the query plan, but does not execute the command
+        </listitem>
+        <listitem>
+          <para>MAKENOTDEP table [(,table)*] - prevents a dependent join from being used
           </para>
-        </listitem><listitem>
-          <para>MAKEDEP [table, (table)*] - specifies source tables that should be made dependent in the join
-          </para>
-        </listitem><listitem>
-          <para>MAKENOTDEP [table, (table)*] - prevents a dependent join from being used
-          </para>
-        </listitem><listitem>
-          <para>DEBUG - prints query planner debug information in the log and returns it through the JDBC API
+        </listitem>
+        <listitem>
+          <para>NOCACHE [table (,table)*] - prevents cache from being used for all tables or for the given tables
           </para>
         </listitem>
       </itemizedlist>
@@ -904,12 +900,15 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>Examples:
         </para>
         <listitem>
-          <para>LIMIT 100 - returns the first 100 records (rows 1-100)</para>
+          <para>OPTION MAKEDEP table1</para>
         </listitem>
         <listitem>
-          <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
+          <para>OPTION NOCACHE</para>
         </listitem>
       </itemizedlist>
+      <para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
+      Please see the <link linkend="other_commands">other commands</link> chapter for using these options.
+      </para>
     </sect2>
   </sect1>
   <sect1 id="set_operations">

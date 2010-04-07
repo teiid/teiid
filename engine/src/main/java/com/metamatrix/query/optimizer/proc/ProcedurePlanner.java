@@ -36,7 +36,6 @@ import com.metamatrix.query.optimizer.CommandPlanner;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.proc.AbstractAssignmentInstruction;
 import com.metamatrix.query.processor.proc.AssignmentInstruction;
 import com.metamatrix.query.processor.proc.BreakInstruction;
 import com.metamatrix.query.processor.proc.ContinueInstruction;
@@ -60,9 +59,11 @@ import com.metamatrix.query.sql.proc.CommandStatement;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
 import com.metamatrix.query.sql.proc.IfStatement;
 import com.metamatrix.query.sql.proc.LoopStatement;
+import com.metamatrix.query.sql.proc.RaiseErrorStatement;
 import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.proc.WhileStatement;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -167,7 +168,6 @@ public final class ProcedurePlanner implements CommandPlanner {
 		// plan each statement in the block
         for (Statement statement : block.getStatements()) {
 			Object instruction = planStatement(parentProcCommand, statement, metadata, debug, idGenerator, capFinder, analysisRecord, context);
-			//childIndex = ((Integer) array[0]).intValue();
             if(instruction instanceof ProgramInstruction){
                 programBlock.addInstruction((ProgramInstruction)instruction);
             }else{
@@ -207,37 +207,43 @@ public final class ProcedurePlanner implements CommandPlanner {
 		// program instr resulting in planning this statement
 		Object instruction = null;
 		switch(stmtType) {
-            case Statement.TYPE_ERROR: 
 			case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
             {
-                AbstractAssignmentInstruction assignInstr = null;
-				if (stmtType == Statement.TYPE_ERROR) {
-                    assignInstr = new ErrorInstruction();
-                } else {
-                    assignInstr = new AssignmentInstruction();
-                }
+                AssignmentInstruction assignInstr = new AssignmentInstruction();
                 instruction = assignInstr;
                 
                 AssignmentStatement assignStmt = (AssignmentStatement)statement;
                 
                 assignInstr.setVariable(assignStmt.getVariable());
                 
-                ProcessorPlan assignPlan = null;
 				if(assignStmt.hasCommand()) {
-					assignPlan = assignStmt.getCommand().getProcessorPlan();                   
-                    assignInstr.setProcessPlan(assignPlan);
+					assignInstr.setExpression(new ScalarSubquery(assignStmt.getCommand()));
 				} else if (assignStmt.hasExpression()) {
 					Expression asigExpr = assignStmt.getExpression();
                     assignInstr.setExpression(asigExpr);
 				}
                 if(debug) {
-                	analysisRecord.println("\t"+instruction.toString()+"\n" + statement); //$NON-NLS-1$ //$NON-NLS-2$
-                    if (assignPlan != null) {
-                    	analysisRecord.println("\t\tASSIGNMENT COMMAND PROCESS PLAN:\n " + assignPlan); //$NON-NLS-1$
-                    }
+                	analysisRecord.println("\tASSIGNMENT\n" + statement); //$NON-NLS-1$
                 }
 				break;
+            }
+            case Statement.TYPE_ERROR:
+            {
+            	ErrorInstruction error = new ErrorInstruction();
+            	instruction = error;
+            	RaiseErrorStatement res = (RaiseErrorStatement)statement;
+                
+				if(res.hasCommand()) {
+					error.setExpression(new ScalarSubquery(res.getCommand()));
+				} else if (res.hasExpression()) {
+					Expression asigExpr = res.getExpression();
+					error.setExpression(asigExpr);
+				}
+                if(debug) {
+                	analysisRecord.println("\tERROR STATEMENT:\n" + statement); //$NON-NLS-1$ 
+                }
+            	break;
             }
 			case Statement.TYPE_COMMAND:
             {

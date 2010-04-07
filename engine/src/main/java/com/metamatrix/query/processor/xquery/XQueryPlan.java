@@ -24,9 +24,7 @@ package com.metamatrix.query.processor.xquery;
 
 import java.sql.SQLXML;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -38,7 +36,6 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.xml.XMLUtil;
@@ -164,18 +161,6 @@ public class XQueryPlan extends ProcessorPlan {
      * @see com.metamatrix.query.processor.ProcessorPlan#close()
      */
     public void close() throws MetaMatrixComponentException {
-    }
-
-    /**
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "XQuery Plan"); //$NON-NLS-1$
-        List children = new ArrayList();
-        props.put(PROP_CHILDREN, children);
-        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
-        return props;
     }
 
     public String toString() {

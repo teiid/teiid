@@ -24,8 +24,9 @@
  */
 package com.metamatrix.query.processor.proc;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -66,11 +67,10 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         return "WHILE INSTRUCTION:"; //$NON-NLS-1$
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "WHILE"); //$NON-NLS-1$
-        props.put(PROP_CRITERIA, this.condition.toString());
-        props.put(PROP_PROGRAM, this.whileProgram.getDescriptionProperties());
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode("WHILE"); //$NON-NLS-1$
+        props.addProperty(PROP_CRITERIA, this.condition.toString());
+        props.addProperty(PROP_PROGRAM, this.whileProgram.getDescriptionProperties());
         return props;
     }
     

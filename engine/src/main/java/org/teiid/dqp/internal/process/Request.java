@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
@@ -78,7 +79,6 @@ import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Limit;
-import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SetQuery;
@@ -240,8 +240,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(),
                 props,
-                useProcDebug(userCommand), 
-                collectNodeStatistics(userCommand));
+                useProcDebug(), 
+                this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
         this.context.setStreamingBatchSize(chunkSize);
@@ -366,27 +366,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager, tempTableStore));
     }
 
-    private boolean useProcDebug(Command command) {
+    private boolean useProcDebug() {
         if(this.procDebugAllowed) {
-            Option option = command.getOption();
-            if(option != null) {
-                return option.getDebug();
-            }
+            return requestMsg.getShowPlan() == ShowPlan.DEBUG;
         }
         return false;
     }
     
-    private boolean collectNodeStatistics(Command command) {
-        if(this.requestMsg.getShowPlan()) {
-            return true;
-        }
-        Option option = command.getOption();
-        if(option != null) {
-            return (option.getDebug() || option.getShowPlan());
-        }
-        return false;
-    }
-
     /**
      * state side effects:
      *      creates the analysis record
@@ -409,7 +395,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         //there should be no reference (?) for query/update executed as statement
         checkReferences(references);
         
-        createAnalysisRecord(command);
+        this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
                 
         resolveCommand(command);
         
@@ -461,18 +447,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         } catch (QueryMetadataException e) {
             throw new QueryPlannerException(e, DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", requestId)); //$NON-NLS-1$
         }
-    }
-
-    private void createAnalysisRecord(Command command) {
-        Option option = command.getOption();
-        boolean getPlan = requestMsg.getShowPlan();
-        boolean debug = false;
-        if (option != null) {
-            getPlan = getPlan || option.getShowPlan() || option.getPlanOnly();          
-            debug = option.getDebug();
-        }
-        
-        this.analysisRecord = new AnalysisRecord(getPlan, debug);
     }
 
     public void processRequest() 

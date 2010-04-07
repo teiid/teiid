@@ -22,11 +22,12 @@
 
 package com.metamatrix.query.processor.xml;
 
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -204,28 +205,24 @@ public class IfInstruction extends ProcessorInstruction {
         return "IF BLOCK:"; //$NON-NLS-1$
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "CHOICE"); //$NON-NLS-1$
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = new PlanNode("CHOICE"); //$NON-NLS-1$
 
-        List conditions = new ArrayList(thenBlocks.size());
-        List programs = new ArrayList(thenBlocks.size());
-        
-        Iterator iter = this.thenBlocks.iterator();
-        while(iter.hasNext()) {
-            Condition condition = (Condition) iter.next();
-            conditions.add(condition.toString());
+        for (int i = 0; i < this.thenBlocks.size(); i++) {
+            Condition condition = (Condition) thenBlocks.get(i);
+            PlanNode node = null;
             if(condition instanceof RecurseProgramCondition) {
-                programs.add(new HashMap());
+                node = new PlanNode("RECURSIVE"); //$NON-NLS-1$
+                node.addProperty(PROP_CONDITION, condition.toString());
             } else {
-                programs.add(condition.getThenProgram().getDescriptionProperties());
+                node = condition.getThenProgram().getDescriptionProperties();
+                node.addProperty(PROP_CONDITION, ((CriteriaCondition)condition).criteria.toString());
             }
+            props.addProperty("Condition " + i, node); //$NON-NLS-1$
         }
         
-        props.put(PROP_CONDITIONS, conditions);
-        props.put(PROP_PROGRAMS, programs);
         if (defaultCondition != null && defaultCondition.getThenProgram() != null){
-            props.put(PROP_DEFAULT_PROGRAM, defaultCondition.getThenProgram().getDescriptionProperties());
+            props.addProperty(PROP_DEFAULT_PROGRAM, defaultCondition.getThenProgram().getDescriptionProperties());
         }
                 
         return props;

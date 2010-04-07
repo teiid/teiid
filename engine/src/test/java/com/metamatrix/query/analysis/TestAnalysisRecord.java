@@ -22,14 +22,15 @@
 
 package com.metamatrix.query.analysis;
 
-import java.util.*;
+import java.util.Collection;
+
+import junit.framework.TestCase;
 
 import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.plan.Annotation.Priority;
 
 import com.metamatrix.core.util.StringUtil;
-
-import junit.framework.TestCase;
 
 /**
  */
@@ -47,8 +48,8 @@ public class TestAnalysisRecord extends TestCase {
         AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordQueryPlan());
         
-        Map plan = new HashMap();
-        plan.put("node", "value"); //$NON-NLS-1$ //$NON-NLS-2$
+        PlanNode plan = new PlanNode("test"); //$NON-NLS-1$
+        plan.addProperty("node", "value"); //$NON-NLS-1$ //$NON-NLS-2$
         rec.setQueryPlan(plan);
         assertEquals(rec.getQueryPlan(), plan);
     }

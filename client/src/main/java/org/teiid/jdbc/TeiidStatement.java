@@ -42,6 +42,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * Get the execution property value.
      * @param name Execution property name
      * @return Execution property value or null if not set
+     * @deprecated
      */
     String getExecutionProperty(String name);
 
@@ -49,6 +50,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * Set the execution property value.
      * @param name Execution property name
      * @param value Execution property value 
+     * @deprecated use set property value
      */
     void setExecutionProperty(String name, String value);
 

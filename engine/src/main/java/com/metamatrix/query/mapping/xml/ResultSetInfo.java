@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -47,7 +48,7 @@ public class ResultSetInfo {
     private List boundReferences;
 
     // The processor plan output for the result set 
-    private Object rsPlan;
+    private ProcessorPlan rsPlan;
     
     // Row limit, may be null if no limit
     private int userRowLimit = -1;
@@ -92,11 +93,11 @@ public class ResultSetInfo {
         this.rsCommand = cmd;
     }
         
-    public Object getPlan() {
+    public ProcessorPlan getPlan() {
         return rsPlan;
     }
     
-    public void setPlan(Object plan) {
+    public void setPlan(ProcessorPlan plan) {
         this.rsPlan = plan;
     }
     

@@ -22,12 +22,14 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.metamatrix.query.analysis.AnalysisRecord.*;
+
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 
 /**
@@ -56,7 +58,7 @@ public class AddCommentInstruction extends ProcessorInstruction {
         DocumentInProgress doc = env.getDocumentInProgress();
         
         doc.addComment(this.commentText);         
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_XML_PLAN, "COMMENT"); //$NON-NLS-1$
         
         env.incrementCurrentProgramCounter();
         return context;
@@ -68,11 +70,9 @@ public class AddCommentInstruction extends ProcessorInstruction {
         return str.toString();
     }
     
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        props.put(PROP_TYPE, "ADD COMMENT"); //$NON-NLS-1$        
-        props.put(PROP_MESSAGE, this.commentText);
-
+    public PlanNode getDescriptionProperties() {
+    	PlanNode props = new PlanNode("COMMENT"); //$NON-NLS-1$        
+        props.addProperty(PROP_MESSAGE, this.commentText);
         return props;
     }
     

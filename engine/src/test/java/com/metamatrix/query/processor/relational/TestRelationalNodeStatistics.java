@@ -86,7 +86,7 @@ public class TestRelationalNodeStatistics extends TestCase {
         assertEquals("The NodeComulativeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeCumulativeBlocks, 0, this.actualNodeCumulativeBlocks); //$NON-NLS-1$
     }
 
-    public void testDescriptionProperties() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    public void testDescriptionProperties() throws Exception {
         List[] data = createData(1000);
         FakeRelationalNode fakeNode = this.createFakeNode(data);
         
@@ -97,17 +97,10 @@ public class TestRelationalNodeStatistics extends TestCase {
                 break;
             } 
         }
-        List statsList = (List) fakeNode.getDescriptionProperties().get("nodeStatistics"); //$NON-NLS-1$
-//            Iterator statsIterator = statsList.iterator();
-//            while(statsIterator.hasNext()) {
-//                String stat = (String) statsIterator.next();
-//                System.out.println(stat);
-//            }
-        
-        assertEquals("The Number of Statistic was Inccorrect. Correct: 6 Actual: "+ statsList.size(), 6, statsList.size()); //$NON-NLS-1$
+        assertEquals("FakeRelationalNode", fakeNode.getDescriptionProperties().getName()); //$NON-NLS-1$
     }
     
-    private FakeRelationalNode createFakeNode(List[] data) throws MetaMatrixComponentException {
+    private FakeRelationalNode createFakeNode(List[] data) {
         // setup 
         ElementSymbol element = new ElementSymbol("a"); //$NON-NLS-1$
         element.setType(DataTypeManager.DefaultDataClasses.INTEGER);

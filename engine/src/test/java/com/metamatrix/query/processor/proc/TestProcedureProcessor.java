@@ -516,7 +516,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(false, plan, dataMgr, "Error Code:ERR.015.006.0019 Message:Error processing the AssignmentStatement in stored procedure language, expected to get a single row of data to be assigned to the variable ROWS_UPDATED but got more."); //$NON-NLS-1$ 
+        helpTestProcessFailure(false, plan, dataMgr, "Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT pm1.g1.e2 FROM pm1.g1): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$ 
     }
 
     // error statement

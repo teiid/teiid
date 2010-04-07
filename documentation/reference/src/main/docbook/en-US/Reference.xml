@@ -52,9 +52,9 @@
   <xi:include href="content/datatypes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/scalar_functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/procedures.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="content/other_commands.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/transaction_support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/system_schema.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="content/connectors.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/federated_planning.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/grammar.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

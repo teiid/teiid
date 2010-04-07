@@ -47,7 +47,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.xml.BlockInstruction;
 import com.metamatrix.query.processor.xml.EndBlockInstruction;
 import com.metamatrix.query.processor.xml.ExecSqlInstruction;
@@ -918,14 +917,6 @@ public class TestXMLPlanner extends TestCase {
         // Create the facade from the store
         return new FakeMetadataFacade(store);
     }
-
-    public void testGetDescriptionProperties() throws Exception {
-        XMLPlan plan = helpPlan(
-            "SELECT * FROM vm1.doc1 ORDER BY vm1.doc1.a0.a1.c1", //$NON-NLS-1$
-            example1());
-        assertEquals("[{formatted=false, encoding=UTF-8, type=START DOCUMENT}, {tag=a0, type=ADD ELEMENT, namespaceDeclarations=[], namespace=}, {type=NEXT IN DOCUMENT}, {isStaging=true, resultSet=tm1.g1, type=Staging Table}, {sql=VM1.G1_1, isStaging=false, resultSet=VM1.G1_1, type=EXECUTE SQL}, {resultSet=VM1.G1_1, type=BLOCK}, {resultSet=VM1.G1_1, type=NEXT ROW}, {program={children=[{tag=a1, type=ADD ELEMENT, namespaceDeclarations=[], namespace=}, {type=NEXT IN DOCUMENT}, {tag=a1, dataCol=VM1.G1_1.e1, type=ADD ELEMENT, namespaceDeclarations=[], namespace=}, {tag=b1, dataCol=VM1.G1_1.e2, type=ADD ELEMENT, namespaceDeclarations=[], namespace=}, {tag=c1, dataCol=VM1.G1_1.e3, type=ADD ELEMENT, namespaceDeclarations=[], namespace=}, {type=UP IN DOCUMENT}, {resultSet=VM1.G1_1, type=NEXT ROW}], type=XML Program}, resultSet=VM1.G1_1, type=LOOP}, {resultSet=VM1.G1_1, type=CLOSE RESULTSET}, {type=UP IN DOCUMENT}, {type=END DOCUMENT}, {isStaging=true, resultSet=unload_tm1.g1, type=Staging Table}, {children=[{removeDups=SORT, sortCols=[#TM1_G1.E3 ASC], nodeCostEstimates=[Estimated Node Cardinality: -1.0], children=[{nodeCostEstimates=[Estimated Node Cardinality: -1.0], children=[{modelName=__TEMP__, sql=SELECT #TM1_G1.E1, #TM1_G1.E2, #TM1_G1.E3, #TM1_G1.E4 FROM #TM1_G1, nodeCostEstimates=[Estimated Node Cardinality: -1.0], children=[], type=Access, outputCols=[E1 (string), E2 (integer), E3 (boolean), E4 (double)]}], selectCols=[#TM1_G1.E1, #TM1_G1.E2, #TM1_G1.E3, #TM1_G1.E4], type=Project, outputCols=[E1 (string), E2 (integer), E3 (boolean), E4 (double)]}], type=Sort, outputCols=[E1 (string), E2 (integer), E3 (boolean), E4 (double)]}], type=Relational Plan, outputCols=[E1 (string), E2 (integer), E3 (boolean), E4 (double)]}]", plan.getDescriptionProperties().get(Describable.PROP_CHILDREN).toString());//$NON-NLS-1$
-    }
-    // ################################## TEST SUITE ################################
 
     private static final boolean DEBUG = false;
 }

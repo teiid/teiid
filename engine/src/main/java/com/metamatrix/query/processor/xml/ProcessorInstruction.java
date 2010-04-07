@@ -22,18 +22,16 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.processor.Describable;
 
 /**
  * <p>Abstract superclass of all XML Processor Instructions.</p>
  */
-public abstract class ProcessorInstruction implements Describable {
+public abstract class ProcessorInstruction {
 
     public ProcessorInstruction() {
     } 
@@ -54,12 +52,7 @@ public abstract class ProcessorInstruction implements Describable {
      */
     public abstract XMLContext process(XMLProcessorEnvironment env, XMLContext context) 
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException;
+
+	public abstract PlanNode getDescriptionProperties();
         
-    /* 
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
-    public Map getDescriptionProperties() {
-        Map props = new HashMap();
-        return props;        
-    }
 }

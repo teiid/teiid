@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.RequestMessage.StatementType;
 
 import junit.framework.TestCase;
@@ -65,7 +66,7 @@ public class TestRequestMessage extends TestCase {
 
         message.setValidationMode(true);
         message.setXMLFormat("xMLFormat"); //$NON-NLS-1$
-        message.setShowPlan(true);
+        message.setShowPlan(ShowPlan.ON);
         message.setRowLimit(1313);
         return message;
     }
@@ -88,7 +89,7 @@ public class TestRequestMessage extends TestCase {
         assertEquals(RequestMessage.TXN_WRAP_ON, copy.getTxnAutoWrapMode());
         assertTrue(copy.getValidationMode());
         assertEquals("xMLFormat", copy.getXMLFormat()); //$NON-NLS-1$
-        assertTrue(copy.getShowPlan());
+        assertEquals(ShowPlan.ON, copy.getShowPlan());
         assertEquals(1313, copy.getRowLimit());
         
     }

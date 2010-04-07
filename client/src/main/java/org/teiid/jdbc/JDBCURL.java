@@ -55,7 +55,8 @@ public class JDBCURL {
         ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
         ExecutionProperties.RESULT_SET_CACHE_MODE,
         ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
-        ExecutionProperties.PROP_SQL_OPTIONS,
+        ExecutionProperties.SQL_OPTION_SHOWPLAN,
+        ExecutionProperties.NOEXEC,
         ExecutionProperties.PROP_FETCH_SIZE,
         ExecutionProperties.PROP_XML_FORMAT,
         ExecutionProperties.PROP_XML_VALIDATION,
@@ -250,10 +251,6 @@ public class JDBCURL {
     
     public String getAnsiQuotedIdentifiers() {
         return properties.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
-    }
-    
-    public String getSQLOptions() {
-        return properties.getProperty(ExecutionProperties.PROP_SQL_OPTIONS);
     }
     
     public String getFetchSize() {

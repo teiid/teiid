@@ -69,9 +69,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     // constant value giving extra name characters used in Identifiers
     private final static String EXTRA_CHARS = ".@"; //$NON-NLS-1$
     // constant value giving the key words not in SQL-92
-    final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG, BIGDECIMAL"+ //$NON-NLS-1$
-	", BIGDECIMAL, BIGINTEGER, BREAK, BYTE, CRITERIA, ERROR, FN, LONG, LOOP, MAKEDEP, MAKENOTDEP"+ //$NON-NLS-1$
-	", NOCACHE, OJ, PLANONLY, SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH"+ //$NON-NLS-1$
+    final static String KEY_WORDS = "OPTION, BIGDECIMAL"+ //$NON-NLS-1$
+	", BIGDECIMAL, BIGINTEGER, BREAK, BYTE, CRITERIA, ERROR, FN, LIMIT, LONG, LOOP, MAKEDEP, MAKENOTDEP"+ //$NON-NLS-1$
+	", NOCACHE, OJ, SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH"+ //$NON-NLS-1$
     ", SQL_TSI_QUARTER, SQL_TSI_YEAR, STRING, VIRTUAL, WHILE"; //$NON-NLS-1$
     // constant value giving preferred name for a procedure
     private final static String PROCEDURE_TERM = "StoredProcedure"; //$NON-NLS-1$
