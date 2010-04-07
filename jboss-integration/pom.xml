@@ -75,11 +75,6 @@
     </dependency>    
 
     <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-client</artifactId>
-    </dependency>
-            
-    <dependency>
         <groupId>org.jboss.naming</groupId>
         <artifactId>jnp-client</artifactId>
         <version>5.0.3.GA</version>
