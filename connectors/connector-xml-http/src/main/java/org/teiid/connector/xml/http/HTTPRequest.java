@@ -172,7 +172,7 @@ public class HTTPRequest extends BaseRequest {
     		Credentials defCred = new UsernamePasswordCredentials(this.config.getHttpBasicAuthUserName(), this.config.getHttpBasicAuthPassword());
 			client.getState().setCredentials(authScope, defCred);
 		} else {
-			throw new ConnectorException(org.teiid.connector.xml.http.Messages.getString("HTTPExecutor.bad.security.configuration"));
+			//throw new ConnectorException(org.teiid.connector.xml.http.Messages.getString("HTTPExecutor.bad.security.configuration"));
 		}
     }
 
@@ -292,17 +292,15 @@ public class HTTPRequest extends BaseRequest {
                 }
             } else if (accessMethod.equals(HTTPConnectorState.GET)){
                 method = requestor.generateMethod(bindingURI);
-                if (pairs == null) {
-                    throw new ConnectorException(
-                            org.teiid.connector.xml.http.Messages
-                                    .getString("HTTPExecutor.parameter.name.required.for.get")); //$NON-NLS-1$
-                }
+                if (pairs != null) {
                 if(null != bindingQueryString){
                     NameValuePair[] bindingPairs = getPairsFromQueryString(xmlDoc, bindingQueryString);
                     pairs = combinePairArrays(pairs, bindingPairs);
                 }
                 addGetValues(pairs, method);
-                attemptConditionalLog("XML Connector Framework: request paramters -\n " + generatePairString(pairs)); //$NON-NLS-1$
+                attemptConditionalLog("XML Connector Framework: request paramters -\n " + generatePairString(pairs)); //$NON-NLS-1$    
+                }
+                
 
             }
             request = method;

@@ -116,7 +116,7 @@ public class HTTPRequestor {
         final String cType = "text/xml; charset=utf-8"; //$NON-NLS-1$
 
         final String userAgentHeader = "User-Agent"; //$NON-NLS-1$
-        final String uAgent = "MetaMatrix Server"; //$NON-NLS-1$    	
+        final String uAgent = "Teiid Server"; //$NON-NLS-1$    	
 
         Header contentType = new Header(contentTypeHeader, cType);
         method.addRequestHeader(contentType);

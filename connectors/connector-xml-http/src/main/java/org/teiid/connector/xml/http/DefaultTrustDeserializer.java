@@ -60,6 +60,7 @@ public class DefaultTrustDeserializer extends TrustedPayloadBridge implements HT
 
 	@Override
 	public void processPayloads() throws Exception {
-		throw new MetaMatrixRuntimeException("A custom trust payload processor needed based on the subject.");
+		// do nothing
+		//throw new MetaMatrixRuntimeException("A custom trust payload processor needed based on the subject.");
 	}
 }

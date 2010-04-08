@@ -101,7 +101,7 @@
                 <description>{$display:"Request Timeout (in Milliseconds)",$required:"true"}</description>
                 <config-property-name>RequestTimeout</config-property-name>
                 <config-property-type>java.lang.Integer</config-property-type>
-                <config-property-value>-1</config-property-value>
+                <config-property-value>10000</config-property-value>
             </config-property>
             
             <config-property>
