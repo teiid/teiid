@@ -32,7 +32,7 @@ import java.util.List;
  */
 public interface Model extends AdminObject {
 	
-	enum Type {PHYSICAL, VIRTUAL, FUNCTION};
+	enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
 	
 	/**
 	 * Description about the model

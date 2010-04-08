@@ -39,8 +39,6 @@ import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
 
-import com.metamatrix.core.vdb.ModelType;
-
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = "", propOrder = {
@@ -102,7 +100,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	@Override
 	@ManagementProperty(description = "Is Model Source model")
     public boolean isSource() {
-		return ModelType.parseString(modelType.toUpperCase()) == ModelType.PHYSICAL;
+		return getModelType() == Model.Type.PHYSICAL;
 	}
 
 	@Override
@@ -114,7 +112,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	@Override
 	@ManagementProperty(description = "Model Type")
 	public Type getModelType() {
-		return Type.valueOf(modelType);
+		try {
+			return Type.valueOf(modelType.toUpperCase());
+		} catch(IllegalArgumentException e) {
+			return Type.OTHER;
+		}
 	}
 	
 	@ManagementProperty(description = "Path to model file inside the archive")
