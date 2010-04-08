@@ -326,7 +326,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         AtomicRequestMessage aqr = new AtomicRequestMessage(request, workItem.getDqpWorkContext(), nodeID);
         aqr.setCommand(command);
         aqr.setModelName(modelName);
-        aqr.setUseResultSetCache(request.useResultSetCache());
         aqr.setPartialResults(request.supportsPartialResults());
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());

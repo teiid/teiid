@@ -27,7 +27,6 @@ import java.util.Collection;
 import junit.framework.TestCase;
 
 import org.teiid.client.plan.Annotation;
-import org.teiid.client.plan.PlanNode;
 import org.teiid.client.plan.Annotation.Priority;
 
 import com.metamatrix.core.util.StringUtil;
@@ -44,16 +43,6 @@ public class TestAnalysisRecord extends TestCase {
         super(name);
     }
 
-    public void testQueryPlan() {
-        AnalysisRecord rec = new AnalysisRecord(true, false);
-        assertTrue(rec.recordQueryPlan());
-        
-        PlanNode plan = new PlanNode("test"); //$NON-NLS-1$
-        plan.addProperty("node", "value"); //$NON-NLS-1$ //$NON-NLS-2$
-        rec.setQueryPlan(plan);
-        assertEquals(rec.getQueryPlan(), plan);
-    }
-    
     public void testAnnotations() {
         AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordAnnotations());

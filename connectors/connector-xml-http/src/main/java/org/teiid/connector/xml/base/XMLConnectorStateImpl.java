@@ -25,7 +25,6 @@ package org.teiid.connector.xml.base;
 
 import java.io.InputStream;
 
-import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.xml.XMLConnectorState;
@@ -61,8 +60,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     private SAXFilterProvider provider;
 
-    private ConnectorCapabilities capabilites;
-
     public XMLConnectorStateImpl() {
         setPreprocess(true);
         setLogRequestResponse(false);
@@ -77,8 +74,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         }
         setLogRequestResponse(env.getLogRequestResponseDocs());
 
-        setCapabilites(loadConnectorCapabilities(env.getCapabilitiesClass()));
-        
         String provider = env.getSaxFilterProviderClass();
         if (provider != null && !provider.equals(SAX_FILTER_PROVIDER_CLASS_DEFAULT)) {
             setSaxProviderClass(provider);
@@ -95,19 +90,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         if(streamFilter != null && !streamFilter.equals(INPUT_STREAM_FILTER_CLASS_DEFAULT)) {
         	setPluggableInputStreamFilterClass(streamFilter);
         }
-    }
-
-	private ConnectorCapabilities loadConnectorCapabilities(
-            String connectorCapabilitiesClass) throws ConnectorException {
-        ConnectorCapabilities caps = null;
-        try {
-        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(connectorCapabilitiesClass);
-            caps = (ConnectorCapabilities) clazz.newInstance();
-        } catch (Exception e) {
-            logger.logError(e.getMessage(), e);
-            throw new ConnectorException(e);
-        }
-        return caps;
     }
 
     /*
@@ -144,20 +126,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     public boolean isPreprocess() {
         return m_preprocess;
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getConnectorCapabilities()
-     */
-    public ConnectorCapabilities getConnectorCapabilities() {
-        return capabilites;
-    }
-
-    private void setCapabilites(ConnectorCapabilities capabilities) {
-        this.capabilites = capabilities;
-    }
-
 
     private void setLogRequestResponse(boolean logRequestResponse) {
         m_logRequestResponse = logRequestResponse;

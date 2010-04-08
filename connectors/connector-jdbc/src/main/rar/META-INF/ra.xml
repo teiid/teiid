@@ -51,7 +51,6 @@
                <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
                <config-property-name>CapabilitiesClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>org.teiid.connector.basic.BasicConnectorCapabilities</config-property-value>
             </config-property>
             
             <config-property>
@@ -95,7 +94,7 @@
                <description>{$display:"fetch size used from the connector to its underlying source.",$advanced:"true"}</description>
                <config-property-name>FetchSize</config-property-name>
                <config-property-type>java.lang.Integer</config-property-type>
-               <config-property-value>2000</config-property-value>
+               <config-property-value>1024</config-property-value>
             </config-property>
             
             <config-property>

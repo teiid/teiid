@@ -74,8 +74,8 @@
         
         <!-- Name of the process that uniquely identifies this process -->
         <property name="processName">localhost</property>
-        <!-- Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8. -->
-        <property name="maxThreads">16</property>
+        <!-- Process pool maximum thread count. (default 32) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8. -->
+        <property name="maxThreads">32</property>
         <!-- Query processor time slice, in milliseconds. (default 2000) -->
         <property name="timeSliceInMilli">2000</property>
         <!-- Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480) -->

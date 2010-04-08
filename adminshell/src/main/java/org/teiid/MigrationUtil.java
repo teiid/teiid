@@ -66,7 +66,9 @@ public class MigrationUtil {
 					"\n      create underlying DataSource connection pools." +
 					"\n      You will need to manually create one -ds.xml for each JDBC DataSource " +
 					"\n      with a JNDI name of <connector binding name>DS, " +
-					"\n      where any spaces in the name are replace by _"); 
+					"\n      where any spaces in the name are replace by _" +
+					"\n\nNode: depending upon the connectors used, you may need to manually edit the " +
+					"        -bindings.xml file."); 
 			System.exit(-1);
 		}
 		File file = new File(args[0]);
@@ -99,7 +101,7 @@ public class MigrationUtil {
 					manifest.delete();
 				}
 				transformConfig(config, "/vdb.xsl", new StreamResult(new File(metainf, "vdb.xml")));
-				transformConfig(config, "/connector.xsl", new StreamResult(new File(metainf, "bindings-ds.xml")));
+				transformConfig(config, "/connector.xsl", new StreamResult(new File(file.getParentFile(), fileName + "-bindings-ds.xml")));
 				config.delete();
 				FileOutputStream out = new FileOutputStream(new File(file.getParent(), fileName + "_70.vdb"));
 				ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(out));

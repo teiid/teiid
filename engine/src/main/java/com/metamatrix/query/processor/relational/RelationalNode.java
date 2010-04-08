@@ -500,7 +500,6 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         PlanNode result = new PlanNode(getClassName());
         result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.elements));
         if(this.context != null && this.context.getCollectNodeStatistics()) {
-            this.nodeStatistics.setStatisticsList();
             result.addProperty(PROP_NODE_STATS_LIST, this.nodeStatistics.getStatisticsList());
         }
         List<String> costEstimates = this.getCostEstimates();

@@ -22,18 +22,16 @@
 
 package org.teiid.connector.xml.http;
 
-import java.util.Properties;
-
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  *
  */
+@SuppressWarnings("nls")
 public class TestHTTPConnectorState extends TestCase {
 
     /**
@@ -94,28 +92,20 @@ public class TestHTTPConnectorState extends TestCase {
     	assertEquals(paramName, state.getXmlParameterName());
     }
     
-    public void testHostnameVerifier() {
-        Properties props = FakeHttpProperties.getDefaultXMLRequestProps();
-        props.put("HostnameVerifier", "org.teiid.connector.xml.http.MockHostnameVerifier");
+    public void testHostnameVerifier() throws ConnectorException {
         HTTPConnectorState state = new HTTPConnectorState();
-        try {
-        	HTTPManagedConnectionFactory env = new HTTPManagedConnectionFactory();
-        	PropertiesUtils.setBeanProperties(env, props, null);
-           	state.setLogger(new SysLogger(false));
-           	state.setState(env);
-        } catch (ConnectorException ce) {
-        	fail(ce.getMessage());
-        }
+    	HTTPManagedConnectionFactory env = FakeHttpProperties.getDefaultXMLRequestProps();
+    	env.setHostnameVerifier("org.teiid.connector.xml.http.MockHostnameVerifier");
+       	state.setLogger(new SysLogger(false));
+       	state.setState(env);
     }
     
     public void testBadHostnameVerifier() {
-        Properties props = FakeHttpProperties.getDefaultXMLRequestProps();
-        props.put("HostnameVerifier", "com.metamatrix.connector.xml.BogusHostnameVerifier");
         HTTPConnectorState state = new HTTPConnectorState();
         try {
            	state.setLogger(new SysLogger(false));
-        	HTTPManagedConnectionFactory env = new HTTPManagedConnectionFactory();
-        	PropertiesUtils.setBeanProperties(env, props, null);
+        	HTTPManagedConnectionFactory env = FakeHttpProperties.getDefaultXMLRequestProps();
+        	env.setHostnameVerifier("com.metamatrix.connector.xml.BogusHostnameVerifier");
            	state.setState(env);
         } catch (ConnectorException ce) {
         	return;

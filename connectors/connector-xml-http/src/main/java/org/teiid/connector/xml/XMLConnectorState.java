@@ -23,10 +23,7 @@
 
 package org.teiid.connector.xml;
 
-import java.sql.SQLXML;
-
 import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.xml.http.HTTPManagedConnectionFactory;
@@ -39,8 +36,6 @@ public interface XMLConnectorState {
 	public static final String STATE_CLASS_PROP = "ConnectorStateClass"; //$NON-NLS-1$
 
 	public abstract boolean isPreprocess();
-
-	public abstract ConnectorCapabilities getConnectorCapabilities();
 
 	public abstract boolean isLogRequestResponse();
 

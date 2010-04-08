@@ -73,9 +73,6 @@ public class AtomicRequestMessage implements Serializable {
 	// The time when command begins processing on the server.
 	private long processingTimestamp = System.currentTimeMillis();
 
-	// whether to use ResultSet cache if there is one
-	private boolean useResultSetCache;
-    
     private boolean partialResultsFlag;
     
     private RequestID requestID;
@@ -153,16 +150,6 @@ public class AtomicRequestMessage implements Serializable {
         return processingTimestamp;
     }
 
-	public boolean useResultSetCache() {
-		//not use caching when there is a txn 
-		return useResultSetCache 
-			&& !isTransactional();
-	}
-
-	public void setUseResultSetCache(boolean useResultSetCacse) {
-		this.useResultSetCache = useResultSetCacse;
-	}
-	
     public boolean supportsPartialResults() {
         return partialResultsFlag;
     }

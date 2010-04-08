@@ -377,9 +377,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
 			this.transactionState = TransactionState.ACTIVE;
 		}
-	    if (analysisRecord.recordQueryPlan()) {
-	        analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
-	    }
 		if (requestMsg.isNoExec()) {
 		    doneProducingBatches = true;
             resultsBuffer.close();
@@ -440,7 +437,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     		}
 	        int finalRowCount = this.resultsBuffer.isFinal()?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
-	        response = createResultsMessage(requestMsg, batch.getAllTuples(), this.originalCommand.getProjectedSymbols(), analysisRecord);
+	        response = createResultsMessage(batch.getAllTuples(), this.originalCommand.getProjectedSymbols());
 	        response.setFirstRow(batch.getBeginRow());
 	        response.setLastRow(batch.getEndRow());
 	        response.setUpdateResult(this.returnsUpdateCount);
@@ -479,7 +476,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         return result;
 	}
     
-    public static ResultsMessage createResultsMessage(RequestMessage message, List[] batch, List columnSymbols, AnalysisRecord analysisRecord) {
+    public ResultsMessage createResultsMessage(List[] batch, List columnSymbols) {
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
@@ -488,16 +485,15 @@ public class RequestWorkItem extends AbstractWorkItem {
             columnNames[i] = SingleElementSymbol.getShortName(symbol.getOutputName());
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
         }
-        
-        ResultsMessage result = new ResultsMessage(message, batch, columnNames, dataTypes);
-        setAnalysisRecords(message, result, analysisRecord);
+        ResultsMessage result = new ResultsMessage(requestMsg, batch, columnNames, dataTypes);
+        setAnalysisRecords(result);
         return result;
     }
     
-	private static void setAnalysisRecords(RequestMessage requestMsg, ResultsMessage response, AnalysisRecord analysisRecord) {
+	private void setAnalysisRecords(ResultsMessage response) {
         if(analysisRecord != null) {
         	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
-	            response.setPlanDescription(analysisRecord.getQueryPlan());
+	            response.setPlanDescription(processor.getProcessorPlan().getDescriptionProperties());
 	            response.setAnnotations(analysisRecord.getAnnotations());
         	}
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
@@ -516,7 +512,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
         response.setException(processingException);
-        setAnalysisRecords(this.requestMsg, response, analysisRecord);
+        setAnalysisRecords(response);
         resultsReceiver.receiveResults(response);
     }
 

@@ -243,7 +243,6 @@ public class RequestMessage implements Externalizable {
     }
 
 	public boolean useResultSetCache() {
-		//not use caching when there is a txn 
 		return useResultSetCache;
 	}
 

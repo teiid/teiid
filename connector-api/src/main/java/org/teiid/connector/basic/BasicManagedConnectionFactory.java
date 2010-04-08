@@ -56,7 +56,7 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	
 	// Properties set by ra.xml 
 	private String connectorClass;
-	private String capabilitiesClass = BasicConnectorCapabilities.class.getName();
+	private String capabilitiesClass;
 	private boolean immutable = false;
 	private boolean exceptionOnMaxRows = false;
 	private int maxResultRows = -1;

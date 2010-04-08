@@ -37,7 +37,6 @@ public class RelationalNodeStatistics {
     static final int BATCHCOMPLETE_STOP = 0;
     static final int BLOCKEDEXCEPTION_STOP = 1;
     
-    private List<String> statisticsList = new ArrayList<String>();
     private boolean setNodeStartTime;
     
     // The total amount of rows output by this node
@@ -115,18 +114,15 @@ public class RelationalNodeStatistics {
         }
     }
     
-    public void setStatisticsList() {
-        this.statisticsList.clear();
-        this.statisticsList.add("Node Output Rows: " + this.nodeOutputRows); //$NON-NLS-1$
-        this.statisticsList.add("Node Process Time: " + this.nodeProcessingTime); //$NON-NLS-1$
-        this.statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
-        this.statisticsList.add("Node Cumulative Next Batch Process Time: " + this.nodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
-        this.statisticsList.add("Node Next Batch Calls: " + this.nodeNextBatchCalls); //$NON-NLS-1$
-        this.statisticsList.add("Node Blocks: " + this.nodeBlocks); //$NON-NLS-1$
-    }
-    
     public List<String> getStatisticsList() {
-        return this.statisticsList;
+    	ArrayList<String> statisticsList = new ArrayList<String>(6);
+    	statisticsList.add("Node Output Rows: " + this.nodeOutputRows); //$NON-NLS-1$
+        statisticsList.add("Node Process Time: " + this.nodeProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Cumulative Next Batch Process Time: " + this.nodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Next Batch Calls: " + this.nodeNextBatchCalls); //$NON-NLS-1$
+        statisticsList.add("Node Blocks: " + this.nodeBlocks); //$NON-NLS-1$
+        return statisticsList;
     }
     
     /** 
