@@ -31,9 +31,9 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
 
 /**
  */
-public class SqlServerCapabilities extends JDBCCapabilities {
+public class SQLServerCapabilities extends JDBCCapabilities {
 
-    public SqlServerCapabilities() {
+    public SQLServerCapabilities() {
     }
     
     /**

@@ -243,10 +243,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 	}
 
 	protected void processMore() throws BlockedException, MetaMatrixCoreException {
-		if (this.processor != null) {
-			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
-		}
 		if (!doneProducingBatches) {
+			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
 			collector.collectTuples();
 		    doneProducingBatches = this.resultsBuffer.isFinal();
@@ -287,25 +285,21 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void attemptClose() {
 		int rowcount = -1;
 		if (this.resultsBuffer != null) {
-			if (this.processor != null) {
-				this.processor.closeProcessing();
-			}
+			this.processor.closeProcessing();
 			
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
 		    }
 			rowcount = resultsBuffer.getRowCount();
-			if (this.processor != null) {
-				if (this.cid == null || !this.doneProducingBatches) {
-					resultsBuffer.remove();
-				} else {
-	            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
-	            	CachedResults cr = new CachedResults();
-	            	cr.setCommand(originalCommand);
-	                cr.setAnalysisRecord(analysisRecord);
-	                cr.setResults(this.resultsBuffer);
-	                dqpCore.getRsCache().put(cid, sessionScope, cr);
-				}
+			if (this.cid == null || !this.doneProducingBatches) {
+				resultsBuffer.remove();
+			} else {
+            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
+            	CachedResults cr = new CachedResults();
+            	cr.setCommand(originalCommand);
+                cr.setAnalysisRecord(analysisRecord);
+                cr.setResults(this.resultsBuffer);
+                dqpCore.getRsCache().put(cid, sessionScope, cr);
 			}
 			
 			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
@@ -313,7 +307,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 		    }
 
 			this.resultsBuffer = null;
-			this.processor = null;
 			
 			for (LobWorkItem lobWorkItem : this.lobStreams.values()) {
 				lobWorkItem.close();
@@ -381,7 +374,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 		    doneProducingBatches = true;
             resultsBuffer.close();
             this.cid = null;
-            this.processor = null;
 		}
 	    this.returnsUpdateCount = request.returnsUpdateCount;
 		request = null;
@@ -446,12 +438,10 @@ public class RequestWorkItem extends AbstractWorkItem {
 	
 	        // send any warnings with the response object
 	        List<Throwable> responseWarnings = new ArrayList<Throwable>();
-	        if (this.processor != null) {
-				List<Exception> currentWarnings = processor.getAndClearWarnings();
-			    if (currentWarnings != null) {
-			    	responseWarnings.addAll(currentWarnings);
-			    }
-	        }
+			List<Exception> currentWarnings = processor.getAndClearWarnings();
+		    if (currentWarnings != null) {
+		    	responseWarnings.addAll(currentWarnings);
+		    }
 		    synchronized (warnings) {
 	        	responseWarnings.addAll(this.warnings);
 	        	this.warnings.clear();

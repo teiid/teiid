@@ -60,10 +60,11 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 		if (this.sqlTranslator == null) {
 	        try {
 	        	String className = getExtensionTranslationClassName();
-	        	if (StringUtil.isValid(className)) {
-	        		className = Translator.class.getName();
+	        	if (!StringUtil.isValid(className)) {
+	        		this.sqlTranslator = new Translator();
+	        	} else { 
+	        		this.sqlTranslator = (Translator)ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
 	        	}
-	            this.sqlTranslator = (Translator)ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
 	            sqlTranslator.initialize(this);
 	        } catch (MetaMatrixCoreException e) {
 	            throw new ConnectorException(e);

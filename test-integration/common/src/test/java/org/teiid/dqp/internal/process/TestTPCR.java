@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.jdbc.oracle.OracleCapabilities;
-import org.teiid.connector.jdbc.sqlserver.SqlServerCapabilities;
+import org.teiid.connector.jdbc.sqlserver.SQLServerCapabilities;
 import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
 
 import com.metamatrix.core.util.UnitTestUtil;
@@ -113,7 +113,7 @@ public class TestTPCR extends BaseQueryTest {
     public void testQueryCase3047() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
-        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
@@ -153,7 +153,7 @@ public class TestTPCR extends BaseQueryTest {
     public void testQueryCase3047workaround() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
-        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
@@ -197,7 +197,7 @@ public class TestTPCR extends BaseQueryTest {
     
     public void testDefect22475() throws Exception {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT from (SELECT SUPPLIER.S_ACCTBAL, SUPPLIER.S_NAME, NATION.N_NAME, PART.P_PARTKEY, PART.P_MFGR, SUPPLIER.S_ADDRESS, SUPPLIER.S_PHONE, SUPPLIER.S_COMMENT FROM PART, SUPPLIER, PARTSUPP, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (P_SIZE = 15) AND (P_TYPE LIKE '%BRASS') AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE') AND (PS_SUPPLYCOST = (SELECT MIN(PS_SUPPLYCOST) FROM PARTSUPP, SUPPLIER, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE'))) ORDER BY SUPPLIER.S_ACCTBAL DESC, NATION.N_NAME, SUPPLIER.S_NAME, PART.P_PARTKEY) as x", //$NON-NLS-1$
         		METADATA, null, finder,

@@ -38,7 +38,7 @@ import org.teiid.connector.language.LanguageObject;
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
  */
-public class SqlServerSQLTranslator extends SybaseSQLTranslator {
+public class SQLServerSQLTranslator extends SybaseSQLTranslator {
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	
@@ -54,7 +54,7 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
 	
     @Override
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-    	return SqlServerCapabilities.class;
+    	return SQLServerCapabilities.class;
     }
     
     @Override

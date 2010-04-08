@@ -46,7 +46,7 @@ import com.metamatrix.query.unittest.RealMetadataFactory;
  */
 public class TestSqlServerConversionVisitor {
 
-    private static SqlServerSQLTranslator trans = new SqlServerSQLTranslator();
+    private static SQLServerSQLTranslator trans = new SQLServerSQLTranslator();
     
     @BeforeClass
     public static void setup() throws ConnectorException {
