@@ -110,12 +110,6 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 					public InputStream getInputStream() throws IOException {
 						return new BufferedInputStream(new FileInputStream(f)) {
 							@Override
-							public void close() throws IOException {
-								super.close();
-								f.delete();
-							}
-							
-							@Override
 							protected void finalize() throws Throwable {
 								super.finalize();
 								f.delete();
