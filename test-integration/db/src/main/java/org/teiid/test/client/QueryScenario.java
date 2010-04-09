@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.teiid.test.client.TestProperties.RESULT_MODES;
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -91,6 +92,7 @@ public abstract class QueryScenario {
 
 	validateResultsMode(this.props);
 	
+	// TODO:  deployprops.loc not needed in remote testing
 	try {
 		setupVDBs(this.getProperties());
 	} catch (IOException e) {
@@ -106,6 +108,12 @@ public abstract class QueryScenario {
 	// property containing the location of
 	// all the vdbs
 
+	
+	// if disabled, no configuration of the vdb is needed
+	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
+	    return;
+	}
+	
 	String deployPropLoc = props.getProperty("deployprops.loc");
 	Properties deployProperties = PropertiesUtils.load(deployPropLoc);
 

@@ -118,7 +118,13 @@ public class TestResultsSummary  {
 	    throw new IOException(
 		    "Summary file already exists: " + summaryFile.getName()); //$NON-NLS-1$
 	}
+	try { 
 	summaryFile.createNewFile();
+	} catch (IOException ioe) {
+	    TestLogger.log("Error creating new summary file: " + summaryFile.getAbsolutePath());
+	    throw ioe;
+	}
+	
 	OutputStream os = new FileOutputStream(summaryFile);
 	os = new BufferedOutputStream(os);
 	return new PrintStream(os);
@@ -390,20 +396,21 @@ public class TestResultsSummary  {
     }
     
     public void printTotals(QueryScenario scenario ) throws Exception {
-	    String outputDir = scenario.getResultsGenerator().getOutputDir(); 
+//	    String outputDir = scenario.getResultsGenerator().getOutputDir(); 
 	    String scenario_name = scenario.getQueryScenarioIdentifier();
 	    String querysetname = scenario.getQuerySetName();
 
 	
 	String summarydir = ConfigPropertyLoader.getInstance().getProperty(PROP_SUMMARY_PRT_DIR);
-	if (summarydir != null) {
-	    outputDir = summarydir;
-	}
+//	if (summarydir != null) {
+//	    outputDir = summarydir;
+//	}
 
 	    PrintStream outputStream = null;
 	    try {
-		outputStream = getSummaryStream(outputDir, "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
+		outputStream = getSummaryStream(summarydir, "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
 	    } catch (IOException e) {
+		e.printStackTrace();
 		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
 		throw e;
 	    }
