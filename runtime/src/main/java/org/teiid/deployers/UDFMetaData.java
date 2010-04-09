@@ -57,4 +57,8 @@ public class UDFMetaData {
 	public Collection <FunctionMethod> getFunctions(){
 		return this.methods;
 	}
+	
+	public void addFunctions(Collection <FunctionMethod> funcs){
+		this.methods.addAll(funcs);
+	}
 }

@@ -150,6 +150,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         this.modelType = modelType.name();
     }
     
+    public void setModelType(String modelType) {
+        this.modelType = modelType;
+    }    
+    
     public String toString() {
 		return getName() + this.sources;
     }

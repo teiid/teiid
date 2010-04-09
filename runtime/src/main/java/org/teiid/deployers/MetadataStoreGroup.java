@@ -19,25 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.adminapi.impl;
+package org.teiid.deployers;
 
-import java.util.Collection;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.adminapi.AdminException;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 
-
-public interface DQPManagement {
-    List<RequestMetadata> getRequestsForSession(long sessionId) ;
-    List<RequestMetadata> getRequests();
-    WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier);
-    void terminateSession(long terminateeId);
-    boolean cancelRequest(long sessionId, long requestId) throws AdminException;
-    Collection<String> getCacheTypes();
-    void clearCache(String cacheType);
-    Collection<SessionMetadata> getActiveSessions() throws AdminException;
-    int getActiveSessionsCount() throws AdminException;
-    Collection<org.teiid.adminapi.Transaction> getTransactions();
-    void terminateTransaction(String xid) throws AdminException ;
-    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
+public class MetadataStoreGroup implements Serializable{
+	private static final long serialVersionUID = -3702321839716725121L;
+	
+	List<MetadataStore> stores = new ArrayList<MetadataStore>();
+	
+	public void addStores(List<MetadataStore> stores) {
+		this.stores.addAll(stores);
+	}
+	
+	public void addStore(MetadataStore store) {
+		this.stores.add(store);
+	}
+	
+	public List<MetadataStore> getStores(){
+		return this.stores;
+	}
 }

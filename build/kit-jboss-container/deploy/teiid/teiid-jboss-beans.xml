@@ -71,6 +71,7 @@
         <property name="bufferService"><inject bean="BufferService"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
+        <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         
         <!-- Name of the process that uniquely identifies this process -->
         <property name="processName">localhost</property>

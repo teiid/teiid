@@ -49,6 +49,20 @@ void exportVDB(String vdbName, int vdbVersion, String fileName){
 }
 
 /**
+ * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to
+ * succeed. The changes will not be persistent between server restarts.
+ * @param sourceVDBName
+ * @param sourceVDBVersion
+ * @param targetVDBName
+ * @param targetVDBVersion
+ */
+void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) {
+    debug("Merging VDB " + sourceVDBName+"."+sourceVDBVersion + " into " + targetVDBName+"."+targetVDBVersion);
+    checkAdmin();    
+    internalAdmin.mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
+}
+
+/**
  * Deploy a {@link ConnectionFactory} to Configuration
  *
  * @param deployedName  Connection Factory name that will be added to Configuration

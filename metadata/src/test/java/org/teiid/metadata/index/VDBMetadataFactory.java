@@ -56,6 +56,15 @@ public class VDBMetadataFactory {
 		}
     }
 	
+	public static MetadataStore getSystemVDBMetadataStore() {
+		try {
+			IndexMetadataFactory imf = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB));
+			return imf.getMetadataStore();
+		} catch (Exception e) {
+			throw new MetaMatrixRuntimeException("System VDB not found");
+		}
+    }
+	
 	public static TransformationMetadata getVDBMetadata(URL vdbURL, URL udfFile) throws IOException {
 		TransformationMetadata vdbmetadata = VDB_CACHE.get(vdbURL);
 		if (vdbmetadata != null) {
@@ -78,7 +87,7 @@ public class VDBMetadataFactory {
 		}
     }
 
-	private static IndexMetadataFactory loadMetadata(URL vdbURL)
+	public static IndexMetadataFactory loadMetadata(URL vdbURL)
 			throws IOException, MalformedURLException, URISyntaxException {
 		//vfs has a problem with vdbs embedded in jars in the classpath, so we'll create a temp version
 		if (vdbURL.getProtocol().equals("jar")) {

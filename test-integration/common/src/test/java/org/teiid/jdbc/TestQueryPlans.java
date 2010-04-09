@@ -39,7 +39,9 @@ public class TestQueryPlans {
 	private Connection conn;
 	
 	@Before public void setUp() throws Exception {
-    	conn = TestMMDatabaseMetaData.createConnection("jdbc:teiid:test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+    	FakeServer server = new FakeServer();
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
 	
 	@Test public void testNoExec() throws Exception {

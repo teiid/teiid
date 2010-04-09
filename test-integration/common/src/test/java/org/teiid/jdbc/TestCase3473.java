@@ -40,7 +40,9 @@ public class TestCase3473 {
     ////////////////////Query Related Methods///////////////////////////
 
     @Before public void setUp() throws Exception {
-    	Connection conn = TestMMDatabaseMetaData.createConnection("jdbc:teiid:test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+    	FakeServer server = new FakeServer();
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
     	dbmd = conn.getMetaData();
     }
     

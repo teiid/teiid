@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
-import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.jdbc.FakeServer;
 
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -44,8 +44,10 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
     @Before public void setUp() throws Exception {
-    	this.internalConnection = TestMMDatabaseMetaData.createConnection("jdbc:teiid:" + VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-    }
+    	FakeServer server = new FakeServer();
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	
+   	}
 
     @Ignore("ODBC support to be readded")
 	@Test public void testDefect23534() {
@@ -68,7 +70,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     }
     
 	@Test public void testModels() throws Exception {
-		checkResult("testSchemas", "select* from SYS.Schemas"); //$NON-NLS-1$ //$NON-NLS-2$
+		checkResult("testSchemas", "select* from SYS.Schemas order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testKeys() throws Exception {

@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 import com.metamatrix.core.util.UnitTestUtil;
@@ -45,7 +46,9 @@ public class TestPartsDatabaseMetadata {
     static final String VDB = "PartsSupplier";
     
 	@Before public void setUp() throws Exception {
-    	connection  = TestMMDatabaseMetaData.createConnection("jdbc:teiid:" + VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    	FakeServer server = new FakeServer();
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     	dbMetadata = connection.getMetaData();
     }
     

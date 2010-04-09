@@ -373,14 +373,14 @@ public interface Admin {
     void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
     
     
-//    /**
-//     * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to
-//     * succeed. The changes will not be persistent between server restarts.
-//     * @param sourceVDBName
-//     * @param sourceVDBVersion
-//     * @param targetVDBName
-//     * @param targetVDBVersion
-//     */
-//    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
+    /**
+     * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to
+     * succeed. The changes will not be persistent between server restarts.
+     * @param sourceVDBName
+     * @param sourceVDBVersion
+     * @param targetVDBName
+     * @param targetVDBVersion
+     */
+    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
 
 }

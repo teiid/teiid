@@ -52,6 +52,7 @@ import org.teiid.adminapi.jboss.AdminProvider;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -93,6 +94,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient ILogon logon;
 	private transient Admin admin;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
+	private transient VDBRepository vdbRepository;
 
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
@@ -230,6 +232,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.csr.setSecurityHelper(helper);
 	}
 	
+	public void setVDBRepository(VDBRepository repo) {
+		this.vdbRepository = repo;
+	}
+	
 	@Override
     @ManagementOperation(description="Requests for perticular session", impact=Impact.ReadOnly,params={@ManagementParameter(name="sessionId",description="The session Identifier")})
     public List<RequestMetadata> getRequestsForSession(long sessionId) {
@@ -313,5 +319,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@ManagementOperation(description="Clear the caches in the system", impact=Impact.ReadOnly)
 	public void terminateTransaction(String xid) throws AdminException {
 		this.dqpCore.terminateTransaction(xid);
+	}
+
+	@Override
+    @ManagementOperation(description="Merge Two VDBs",params={@ManagementParameter(name="sourceVDBName"),@ManagementParameter(name="sourceVDBName"), @ManagementParameter(name="targetVDBName"), @ManagementParameter(name="targetVDBVersion")})
+	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion,
+			String targetVDBName, int targetVDBVersion) throws AdminException {
+		this.vdbRepository.mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
 	}	
 }

@@ -26,7 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
-import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.jdbc.FakeServer;
 
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -46,7 +46,9 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     }
     
     @Before public void setUp() throws Exception {
-    	this.internalConnection = TestMMDatabaseMetaData.createConnection("jdbc:teiid:" + VDB, UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp_1.vdb");
+    	FakeServer server = new FakeServer();
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp_1.vdb");
+    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	    	
     }
     
     @After public void tearDown() {

@@ -154,9 +154,10 @@ public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<Manage
 	
 	public void connectorAdded(String connectorName) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
-			if (vdb.getStatus() == VDB.Status.ACTIVE) {
+			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
 			}
+			
 			for (Model m:vdb.getModels()) {
 				ModelMetaData model = (ModelMetaData)m;
 				if (model.getErrors().isEmpty()) {
@@ -206,6 +207,9 @@ public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<Manage
 
 	public void connectorRemoved(String connectorName) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
+			if (vdb.isPreview()) {
+				continue;
+			}
 			for (Model m:vdb.getModels()) {
 				ModelMetaData model = (ModelMetaData)m;
 				for (String sourceName:model.getSourceNames()) {

@@ -44,7 +44,6 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
@@ -141,15 +140,16 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				unit.addAttachment(IndexMetadataFactory.class, imf);
 								
 				// add the cached store.
-				CompositeMetadataStore store = null;
+				MetadataStoreGroup stores = null;
 				File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 				if (cacheFileName.exists()) {
-					store = this.serializer.loadAttachment(cacheFileName, CompositeMetadataStore.class);
+					stores = this.serializer.loadAttachment(cacheFileName, MetadataStoreGroup.class);
 				}
 				else {
-					store = new CompositeMetadataStore(imf.getMetadataStore());
+					stores = new MetadataStoreGroup();
+					stores.addStore(imf.getMetadataStore());
 				}
-				unit.addAttachment(CompositeMetadataStore.class, store);				
+				unit.addAttachment(MetadataStoreGroup.class, stores);				
 			}
 		}
 		

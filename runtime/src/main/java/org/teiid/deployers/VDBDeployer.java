@@ -23,8 +23,6 @@ package org.teiid.deployers;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -45,8 +43,6 @@ import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
-import org.teiid.metadata.CompositeMetadataStore;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
@@ -55,8 +51,6 @@ import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private VDBRepository vdbRepository;
@@ -77,25 +71,28 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
 		}
 		
-		List<String> errors = deployment.getValidityErrors();
-		if (errors != null && !errors.isEmpty()) {
-			throw new DeploymentException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
+		boolean preview = deployment.isPreview();
+		
+		if (!preview) {
+			List<String> errors = deployment.getValidityErrors();
+			if (errors != null && !errors.isEmpty()) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("validity_errors_in_vdb", deployment)); //$NON-NLS-1$
+			}
 		}
 		
 		// get the metadata store of the VDB (this is build in parse stage)
-		CompositeMetadataStore store = unit.getAttachment(CompositeMetadataStore.class);
+		MetadataStoreGroup store = unit.getAttachment(MetadataStoreGroup.class);
 		
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
-			ArrayList<MetadataStore> stores = new ArrayList<MetadataStore>();
+			MetadataStoreGroup dynamicStore = new MetadataStoreGroup();
 			for (Model model:deployment.getModels()) {
 				if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
 					continue;
 				}
-				stores.add(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, (ModelMetaData)model));
+				dynamicStore.addStore(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, (ModelMetaData)model));
 			}
-			store = new CompositeMetadataStore(stores);
-			unit.addAttachment(CompositeMetadataStore.class, store);			
+			store = dynamicStore;		
 		}
 		
 		if (store == null) {
@@ -103,42 +100,40 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
-		TransformationMetadata metadata = null;
-		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);
 		UDFMetaData udf = unit.getAttachment(UDFMetaData.class);
+		
+		LinkedHashMap<String, Resource> visibilityMap = null;
+		IndexMetadataFactory indexFactory = unit.getAttachment(IndexMetadataFactory.class);		
 		if (indexFactory != null) {
-			LinkedHashMap<String, Resource> visibilityMap = indexFactory.getEntriesPlusVisibilities();
-			metadata = buildTransformationMetaData(deployment, visibilityMap, store, udf);
-		}
-		else {
-			// this dynamic VDB
-			metadata = buildTransformationMetaData(deployment, null, store, udf);
+			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
 				
 		// add the metadata objects as attachments
 		deployment.removeAttachment(IndexMetadataFactory.class);
 		deployment.removeAttachment(UDFMetaData.class);
-		deployment.addAttchment(QueryMetadataInterface.class, metadata);
-		deployment.addAttchment(TransformationMetadata.class, metadata);
 		
 		// add transformation metadata to the repository.
-		this.vdbRepository.addMetadata(deployment, metadata);
-		this.vdbRepository.addMetadataStore(deployment, store);
-		this.vdbRepository.addVDB(deployment);
+		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf);
 		
 		try {
-			saveMetadataStore((VFSDeploymentUnit)unit, deployment, metadata.getMetadataStore());
+			saveMetadataStore((VFSDeploymentUnit)unit, deployment, store);
 		} catch (IOException e1) {
 			LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
 		}
 				
-		boolean valid = validateSources(deployment);
-		
-		// Check if the VDB is fully configured.
-		if (valid) {
+		boolean valid = true;
+		if (!preview) {
+			valid = validateSources(deployment);
+			
+			// Check if the VDB is fully configured.
+			if (valid) {
+				deployment.setStatus(VDB.Status.ACTIVE);
+			} else {
+				deployment.setStatus(VDB.Status.INACTIVE);
+			}			
+		}
+		else {
 			deployment.setStatus(VDB.Status.ACTIVE);
-		} else {
-			deployment.setStatus(VDB.Status.INACTIVE);
 		}
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
@@ -166,28 +161,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		return valid;
 	}
 
-
-	// does this need to be synchronized? 
-	private TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, CompositeMetadataStore store, UDFMetaData udf) throws DeploymentException {
-		
-		// get the system VDB metadata store
-		MetadataStore systemStore = this.vdbRepository.getMetadataStore(CoreConstants.SYSTEM_VDB, 1);
-		if (systemStore == null) {
-			throw new DeploymentException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
-		}
-		
-		store.addMetadataStore(systemStore);
-		
-		Collection <FunctionMethod> methods = null;
-		if (udf != null) {
-			methods = udf.getFunctions();
-		}
-		
-		TransformationMetadata metadata =  new TransformationMetadata(vdb, store, visibilityMap, methods);
-				
-		return metadata;
-	}	
-	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
 	}
@@ -226,7 +199,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		this.connectorManagerRepository = repo;
 	}  
 	
-	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, CompositeMetadataStore store) throws IOException {
+	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
 		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 		if (!cacheFileName.exists()) {
 			this.serializer.saveAttachment(cacheFileName,store);

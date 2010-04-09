@@ -24,22 +24,23 @@ package org.teiid.deployers;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.deployers.spi.DeploymentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
@@ -48,24 +49,36 @@ import com.metamatrix.vdb.runtime.VDBKey;
 public class VDBRepository implements Serializable{
 	private static final long serialVersionUID = 312177538191772674L;
 	
-	private Map<VDBKey, VDBMetaData> vdbRepo = new ConcurrentHashMap<VDBKey, VDBMetaData>();
-	private Map<VDBKey, MetadataStore> metadataStoreRepo = new ConcurrentHashMap<VDBKey, MetadataStore>();
-	private Map<VDBKey, TransformationMetadata> vdbToQueryMetadata = Collections.synchronizedMap(new HashMap<VDBKey, TransformationMetadata>());
+	private Map<VDBKey, CompositeVDB> vdbRepo = new ConcurrentHashMap<VDBKey, CompositeVDB>();
+	private MetadataStore systemStore;
 	
-	
-	public void addVDB(VDBMetaData vdb) throws DeploymentException {
+	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
 			throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 		}
-		this.vdbRepo.put(vdbId(vdb), vdb);
+		
+		// get the system VDB metadata store
+		if (this.systemStore == null) {
+			throw new DeploymentException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
+		}		
+		
+		this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore));
 	}
 	
 	public VDBMetaData getVDB(String name, int version) {
-		return this.vdbRepo.get(new VDBKey(name, version));
+		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
+		if (v != null) {
+			return v.getVDB();
+		}
+		return null;
 	}
 	
 	public List<VDBMetaData> getVDBs(){
-		return new ArrayList(this.vdbRepo.values());
+		ArrayList<VDBMetaData> vdbs = new ArrayList<VDBMetaData>();
+		for(CompositeVDB cVDB:this.vdbRepo.values()) {
+			vdbs.add(cVDB.getVDB());
+		}
+		return vdbs;
 	}
 
     protected VDBKey vdbId(VDBMetaData vdb) {
@@ -76,7 +89,7 @@ public class VDBRepository implements Serializable{
     	int latestVersion = 0;
         for (VDBKey key:this.vdbRepo.keySet()) {
             if(key.getName().equalsIgnoreCase(vdbName)) {
-            	VDBMetaData vdb = this.vdbRepo.get(key);
+            	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
                 if (vdb.getStatus() == VDB.Status.ACTIVE_DEFAULT) {
                 	latestVersion = vdb.getVersion();
                 	break;
@@ -96,32 +109,22 @@ public class VDBRepository implements Serializable{
         throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, latestVersion)); //$NON-NLS-1$
 	}
 	
-
-	public TransformationMetadata getMetadata(String vdbName, int vdbVersion) {
-		return this.vdbToQueryMetadata.get(new VDBKey(vdbName, vdbVersion));
-	}
-	
-	public void addMetadata(VDBMetaData vdb, TransformationMetadata metadata) {
-		this.vdbToQueryMetadata.put(vdbId(vdb), metadata);
-	}
-
-	public void addMetadataStore(VDBMetaData vdb, MetadataStore store) {
-		this.metadataStoreRepo.put(vdbId(vdb), store);
-	}	
-	
-	public MetadataStore getMetadataStore(String vdbName, int vdbVersion) {
-		return this.metadataStoreRepo.get(new VDBKey(vdbName, vdbVersion));
+	public void setSystemStore(MetadataStore store) {
+		this.systemStore = store;
 	}
 	
 	public synchronized void removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		this.vdbRepo.remove(key);
-		this.metadataStoreRepo.remove(key);
-		this.vdbToQueryMetadata.remove(key);
+		
+		// if this VDB was part of another VDB; then remove them.
+		for (CompositeVDB other:this.vdbRepo.values()) {
+			other.removeChild(key);
+		}
 	}	
 	
 	public Map<String, Datatype> getBuiltinDatatypes() {
-		Collection<Datatype> datatypes = getMetadataStore(CoreConstants.SYSTEM_VDB, 1).getDatatypes();
+		Collection<Datatype> datatypes = this.systemStore.getDatatypes();
 		Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
 		for (Class<?> typeClass : DataTypeManager.getAllDataTypeClasses()) {
 			for (Datatype datatypeRecordImpl : datatypes) {
@@ -132,5 +135,20 @@ public class VDBRepository implements Serializable{
 			}
 		}
 		return datatypeMap;
+	}
+	
+	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException{
+		CompositeVDB source = this.vdbRepo.get(new VDBKey(sourceVDBName, sourceVDBVersion));
+		if (source == null) {
+			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion));
+		}
+		
+		CompositeVDB target = this.vdbRepo.get(new VDBKey(targetVDBName, targetVDBVersion));
+		if (target == null) {
+			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion));
+		}		
+		
+		// merge them
+		target.addChild(source);
 	}
 }

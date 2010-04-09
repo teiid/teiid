@@ -263,4 +263,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public DataPolicyMetadata getDataPolicy(String policyName) {
 		return this.dataPolicies.getMap().get(policyName);
 	}
+	
+	public boolean isPreview() {
+		return Boolean.valueOf(getPropertyValue("preview")); //$NON-NLS-1$
+	}
 }

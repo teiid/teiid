@@ -540,7 +540,7 @@ public class Admin extends TeiidAdmin {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(ManagedUtil.getSimpleValue(managedModel, "name", String.class));//$NON-NLS-1$
 		model.setVisible(ManagedUtil.getSimpleValue(managedModel, "visible", Boolean.class));//$NON-NLS-1$
-		model.setModelType(Model.Type.valueOf(ManagedUtil.getSimpleValue(managedModel, "modelType", String.class)));//$NON-NLS-1$
+		model.setModelType(ManagedUtil.getSimpleValue(managedModel, "modelType", String.class));//$NON-NLS-1$
 
 		ManagedProperty prop = managedModel.getProperty("JAXBProperties"); //$NON-NLS-1$
 		List<ManagedObject> properties = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(prop.getValue());
@@ -1060,17 +1060,17 @@ public class Admin extends TeiidAdmin {
 		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, false);
 	}	
 
-//	@Override
-//	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException {
-//		try {
-//			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
-//			ManagedUtil.executeOperation(mc, "mergeVDBs", 
-//					SimpleValueSupport.wrap(sourceVDBName), 
-//					SimpleValueSupport.wrap(sourceVDBVersion), 
-//					SimpleValueSupport.wrap(targetVDBName), 
-//					SimpleValueSupport.wrap(targetVDBVersion));//$NON-NLS-1$
-//		} catch (Exception e) {
-//			throw new AdminComponentException(e.getMessage(), e);
-//		}   		
-//	}
+	@Override
+	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException {
+		try {
+			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
+			ManagedUtil.executeOperation(mc, "mergeVDBs", 
+					SimpleValueSupport.wrap(sourceVDBName), 
+					SimpleValueSupport.wrap(sourceVDBVersion), 
+					SimpleValueSupport.wrap(targetVDBName), 
+					SimpleValueSupport.wrap(targetVDBVersion));//$NON-NLS-1$
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		}   		
+	}
 }

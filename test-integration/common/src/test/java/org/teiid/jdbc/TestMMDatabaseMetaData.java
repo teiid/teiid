@@ -22,7 +22,8 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,7 +56,9 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
+import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
@@ -63,7 +66,6 @@ import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.jdbc.util.ResultSetUtil;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.net.TeiidURL;
 import org.teiid.services.SessionServiceImpl;
@@ -77,7 +79,6 @@ import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
@@ -86,56 +87,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 @SuppressWarnings("nls")
 public class TestMMDatabaseMetaData {
 	
-    public static ConnectionImpl createConnection(String embeddedURL, final String vdbPath) throws Exception {
-    	final Properties p = new Properties();
-    	EmbeddedProfile.parseURL(embeddedURL, p);
-        return new ConnectionImpl(new LocalServerConnection(p) {
-			@Override
-        	protected ClientServiceRegistry getClientServiceRegistry() {
-        		ClientServiceRegistryImpl impl = new ClientServiceRegistryImpl();
-        		SessionServiceImpl sessionService = new SessionServiceImpl();
-        		LogonImpl logon = new LogonImpl(sessionService, null);
-        		impl.registerClientService(ILogon.class, logon, null);
-        		DQPCore dqp = new DQPCore();
-        		sessionService.setDqp(dqp);
-                TransformationMetadata metadata = VDBMetadataFactory.getVDBMetadata(vdbPath);
-                VDBRepository repo = new VDBRepository();
-                VDBMetaData vdbMetaData = new VDBMetaData();
-                vdbMetaData.setName(p.getProperty(TeiidURL.JDBC.VDB_NAME));
-                vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
-                vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
-                vdbMetaData.setStatus(VDB.Status.ACTIVE);
-                repo.addMetadata(vdbMetaData, metadata);
-                for (Schema schema : metadata.getMetadataStore().getSchemas().values()) {
-                	ModelMetaData model = new ModelMetaData();
-                    model.setName(schema.getName());
-                    vdbMetaData.addModel(model);
-                    model.addSourceMapping("source", "jndi:source"); 
-                }
-                ConnectorManagerRepository cmr = Mockito.mock(ConnectorManagerRepository.class);
-                Mockito.stub(cmr.getConnectorManager("jndi:source")).toReturn(new ConnectorManager("x") {
-                	@Override
-                	public SourceCapabilities getCapabilities()
-                			throws ConnectorException {
-                		return new BasicSourceCapabilities();
-                	}
-                });
-                try {
-					repo.addVDB(vdbMetaData);
-				} catch (DeploymentException e) {
-					throw new RuntimeException(e);
-				}
-                sessionService.setVDBRepository(repo);
-                dqp.setWorkManager(new FakeWorkManager());
-                dqp.setBufferService(new FakeBufferService());
-                dqp.setTransactionService(new FakeTransactionService());
-                dqp.setConnectorManagerRepository(cmr);
-                dqp.start(new DQPConfiguration());
-        		impl.registerClientService(DQP.class, dqp, null);
-        		return impl;
-        	}
-        }, p, embeddedURL);
-    }
+ 
     
     private static final boolean REPLACE_EXPECTED = false;
     private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
@@ -226,7 +178,9 @@ public class TestMMDatabaseMetaData {
     
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-        conn = createConnection("jdbc:teiid:QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+    	FakeServer server = new FakeServer();
+    	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
+        conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /** Test all the non-query methods */
