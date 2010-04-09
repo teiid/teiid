@@ -74,4 +74,21 @@ public class TestExtendedPropertyMetadata {
 		Assert.assertEquals(true , metadata.isEditable());		
 		Assert.assertEquals(allowed , metadata.getAllowed());
 	}	
+	
+	@Test
+	public void testBlankProperties() {
+		ArrayList<String> allowed =  new ArrayList<String>();
+		allowed.add("get");
+		allowed.add("post");
+		
+		ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("{$display:\"Is Immutable\",$description:\"\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}");
+		
+		Assert.assertEquals("Is Immutable", metadata.getDisplayName());
+		Assert.assertEquals("", metadata.getDescription());
+		Assert.assertEquals(true, metadata.isAdvanced());
+		Assert.assertEquals(true, metadata.isRequired());
+		Assert.assertEquals(false, metadata.isMasked());
+		Assert.assertEquals(true , metadata.isEditable());		
+		Assert.assertEquals(allowed , metadata.getAllowed());
+	}	
 }

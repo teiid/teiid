@@ -70,6 +70,9 @@ public class ExtendedPropertyMetadata {
 					if (inQuotesStart+1 != index) {
 						values.add(encodedData.substring(inQuotesStart+1, index));
 					}
+					else {
+						values.add("");
+					}
 					inQuotesStart = -1;
 				}
 			}
