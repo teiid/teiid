@@ -10,6 +10,8 @@
 	
 	<target name="main" depends="init, is.config.file, set.default.config.file, set.config.file" 
 		if="" unless="" description="create all property files">
+		<echo>PROJECT DIRECTORY: ${proj_dir}</echo>
+		
 		<antcall target="run.all.test" inheritall="true" />
 		<antcall target="run.single.test" inheritall="true" />
 		
@@ -30,21 +32,11 @@
 		<available file="${queryset.artifacts.dir}" type="dir" property="queryset.dir.exist"/>
 		<fail unless="queryset.dir.exist" message="QuerySet directory ${queryset.artifacts.dir} does not exist or was not specified." />
 		
-		<available file="${vdb.artifacts.dir}" type="dir" property="vdb.dir.exist"/>
-		<fail unless="vdb.dir.exist" message="VDB artifacts directory ${vdb.artifacts.dir} does not exist or was not specified." />
-
 		<condition property="single">
 			<available file="${scenario.dir}/${scenario.file}"  />
 		</condition>
 		
 		<delete file="${ERROR_FILE}"/>
-		
-		  <copy todir="${proj_dir}/lib" failonerror="false">
-		    <fileset dir="${third.party.jars.dir}"/>
-		  </copy>
-
-		
-
 
 	</target>
 	
@@ -57,13 +49,13 @@
 		   		<path location="${proj.dir}"/>
 			 </pathconvert>
 		
-		<property name="root_output" value="${proj_dir}/target/bulk-query-tests" />
+		<property name="root_output" value="${proj_dir}/bulk-query-tests" />
 
 	</target>
 	
 	<target name="set.linux"
 		if="UnixOS">
-		<property name="root_output" value="${proj.dir}/target/bulk-query-tests" />
+		<property name="root_output" value="${proj.dir}/bulk-query-tests" />
 		<property name="proj_dir" value="${proj.dir}" />
 
 	</target>
@@ -82,7 +74,7 @@
 	
 	<target name="set.default.config.file"
 		if="set.config.default">
-		<property name="use.config.file" value="${proj_dir}/src/main/resources/ctc_tests/ctc-test.properties" />
+		<property name="use.config.file" value="${proj_dir}/resources/ctc_tests/ctc-test.properties" />
 		<echo>DEFAULT CONFIG: ${use.config.file}</echo>
 	
 	</target>
@@ -164,10 +156,14 @@
 			  	<jvmarg value="-Dconfig=${use.config.file}" />
 			  	<jvmarg value="-Dscenariofile=${scenario_file}" />
 			  	<jvmarg value="-Dqueryset.artifacts.dir=${queryset_artifacts_dir}" />
-				<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
 		       	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
 				<jvmarg value="-Dusedatasources=${usedatasources}" />
 				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
+				<jvmarg value="-Dproj.dir=${proj_dir}" /> 
+			  	
+			  	<!--
+			  					<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
+			  	-->
 
 			</java>
 
@@ -178,11 +174,14 @@
 		<echo>Scenario property file ${scenario.file}</echo>
 		<echo>Config property file ${use.config.file}</echo>
 		<echo>Query Artifacts ${queryset.artifacts.dir}</echo>
+		<echo>Classpath ${proj_dir}/lib</echo>
 
-
+<!--
+<pathelement path="${maven.runtime.classpath}" />
+-->
           <java classname="org.teiid.test.client.TestClient" fork="true" >
           	<classpath>
-        		<pathelement path="${maven.runtime.classpath}" />
+        		
                 <fileset dir="${proj_dir}/lib">
                   <include name="**/*.jar"/>
                 </fileset>
@@ -191,11 +190,15 @@
            	<jvmarg value="-Dconfig=${use.config.file}" />
           	<jvmarg value="-Dscenariofile=${scenario.file}" />
           	<jvmarg value="-Dqueryset.artifacts.dir=${queryset.artifacts.dir}" />
-        	<jvmarg value="-Dvdb.artifacts.dir=${vdb.artifacts.dir}" />
         	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
 			<jvmarg value="-Dusedatasources=${usedatasources}" />
-			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />            	
+			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />   
+          	<jvmarg value="-Dproj.dir=${proj_dir}" /> 
 
+		  	<!--
+		  					<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
+		  	-->
+          	
       	  </java>
 		
 		<!--

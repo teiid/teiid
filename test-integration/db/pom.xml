@@ -49,6 +49,8 @@
 			<type>test-jar</type>
 			<scope>compile</scope>
 		</dependency>
+
+
      
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -66,15 +68,21 @@
 		</dependency> 
 
 		<dependency>
-			<groupId>ant-contrib</groupId>
-			<artifactId>cpptasks</artifactId>
-			<version>1.0b3</version>
+			<groupId>org.apache.ant</groupId>
+			<artifactId>ant</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.ant</groupId>
+			<artifactId>ant-launcher</artifactId>
+			<version>1.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>ant-contrib</groupId>
 			<artifactId>ant-contrib</artifactId>
 			<version>1.0b3</version>
- 			<exclusions>
+			<exclusions>
                             <exclusion>
                                 <groupId>ant</groupId>
                                 <artifactId>ant</artifactId>
@@ -82,6 +90,19 @@
     		</exclusions>
 
 		</dependency>
+
+		<dependency>
+			<groupId>ant-contrib</groupId>
+			<artifactId>cpptasks</artifactId>
+			<version>1.0b3</version>
+			<exclusions>
+                            <exclusion>
+                                <groupId>ant</groupId>
+                                <artifactId>ant</artifactId>
+                            </exclusion>
+    		</exclusions>
+		</dependency>
+
 
 	<!-- DBUnit dependencies -->
 		
@@ -417,8 +438,7 @@
 								<!-- optional properties -->
 								<property name="config.file"  value="${config.file}"></property>
 								<property name="query.scenario.classname"  value="${query.scenario.classname}"></property>
-								<property name="third.party.jars.dir"  value="${third.party.jars.dir}"></property>
-								<property name="proj.dir" value="${project.basedir}" />
+								<property name="proj.dir" value="${project.basedir}/target/" />
 								<property name="usedatasources"  value="${usedatasources}"></property>
 								<property name="datasourceloc"  value="${datasourceloc}"></property>
 
