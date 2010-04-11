@@ -26,6 +26,7 @@ import java.lang.reflect.Proxy;
 import javax.resource.spi.LocalTransaction;
 import javax.transaction.xa.XAResource;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -70,11 +71,10 @@ public class WrappedConnection implements Connection, MetadataProvider {
 	@Override
 	public ConnectorCapabilities getCapabilities() throws ConnectorException {
 		if (this.caps == null) {
-			ConnectorCapabilities caps = conn.getCapabilities();
+			this.caps = conn.getCapabilities();
 			if (caps != null && this.env.getOverrideCapabilities() != null) {
 				caps = (ConnectorCapabilities) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.env.getOverrideCapabilities()));
 			}
-			this.caps = caps;
 		}
 		return this.caps;
 	}
@@ -99,7 +99,7 @@ public class WrappedConnection implements Connection, MetadataProvider {
 		if (this.conn instanceof MetadataProvider) {
 			((MetadataProvider) this.conn).getConnectorMetadata(metadataFactory);
 		} else {
-			throw new ConnectorException("Connector is not capable of providing metadata. Extend connector with MetadataProvider interface");	
+			throw new ConnectorException(DataPlugin.Util.getString("WrappedConnection.no_metadata"));	//$NON-NLS-1$
 		}
 	}
 	

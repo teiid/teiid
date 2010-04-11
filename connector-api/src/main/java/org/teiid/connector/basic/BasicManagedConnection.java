@@ -136,4 +136,8 @@ public class BasicManagedConnection implements ManagedConnection {
 			l.connectionClosed(ce);
 		}
 	}
+	
+	public boolean isValid() {
+		return this.conn.isAlive();
+	}
 }

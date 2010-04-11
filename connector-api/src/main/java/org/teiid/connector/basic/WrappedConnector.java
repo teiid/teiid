@@ -76,9 +76,6 @@ public class WrappedConnector implements Connector, Referenceable, Serializable 
 		if (this.caps == null) {
 			try {
 				Object o = ReflectionHelper.create(this.mcf.getCapabilitiesClass(), null, Thread.currentThread().getContextClassLoader());
-				if(!(o instanceof ConnectorCapabilities)) {
-					throw new ConnectorException("Invalid Connector Capabilities class specified="+this.mcf.getCapabilitiesClass());
-				}
 				this.caps = (ConnectorCapabilities)o;
 			} catch (MetaMatrixCoreException e) {
 				throw new ConnectorException(e);

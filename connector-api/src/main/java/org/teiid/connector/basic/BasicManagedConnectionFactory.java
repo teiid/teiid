@@ -24,6 +24,7 @@ package org.teiid.connector.basic;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ResourceAdapter;
 import javax.resource.spi.ResourceAdapterAssociation;
+import javax.resource.spi.ValidatingManagedConnectionFactory;
 import javax.security.auth.Subject;
 
 import org.teiid.connector.api.Connector;
@@ -46,7 +48,7 @@ import org.teiid.connector.language.LanguageFactory;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
 
-public class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ConnectorEnvironment {
+public class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ConnectorEnvironment, ValidatingManagedConnectionFactory {
 
 	private static final long serialVersionUID = -7302713800883776790L;
 	private static final TypeFacility TYPE_FACILITY = new TypeFacilityImpl();
@@ -210,5 +212,19 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 		} catch(InstantiationException e) {
 			throw new ConnectorException(e);
 		}    	
-    }	
+    }
+
+	@Override
+	public Set<BasicManagedConnection> getInvalidConnections(Set arg0) throws ResourceException {
+		HashSet<BasicManagedConnection> result = new HashSet<BasicManagedConnection>();
+		for (Object object : arg0) {
+			if (object instanceof BasicManagedConnection) {
+				BasicManagedConnection bmc = (BasicManagedConnection)object;
+				if (!bmc.isValid()) {
+					result.add(bmc);
+				}
+			}
+		}
+		return result;
+	}	
 }
