@@ -140,17 +140,19 @@ public class FileStorageManager implements StorageManager {
 	            storageFiles.put(fileOffset, newFileInfo);
 	            fileInfo = newFileInfo;
 	        }
-	        try {
-	        	RandomAccessFile fileAccess = fileInfo.open();
-	            long pointer = fileAccess.length();
-	            fileAccess.setLength(pointer + length);
-	            fileAccess.seek(pointer);
-	            fileAccess.write(bytes, offset, length);
-	        } catch(IOException e) {
-	            throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
-	        } finally {
-	        	fileInfo.close();
-	        }
+			synchronized (fileInfo) {
+		        try {
+		        	RandomAccessFile fileAccess = fileInfo.open();
+		            long pointer = fileAccess.length();
+		            fileAccess.setLength(pointer + length);
+		            fileAccess.seek(pointer);
+		            fileAccess.write(bytes, offset, length);
+		        } catch(IOException e) {
+		            throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
+		        } finally {
+		        	fileInfo.close();
+		        }
+			}
 		}
 		
 		public synchronized void removeDirect() {
