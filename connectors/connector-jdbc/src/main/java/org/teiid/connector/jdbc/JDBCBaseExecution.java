@@ -68,7 +68,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 
     protected JDBCBaseExecution(Connection connection, ExecutionContext context, JDBCManagedConnectionFactory env) throws ConnectorException {
         this.connection = connection;
-        this.sqlTranslator = env.getExtensionTranslationClass();
+        this.sqlTranslator = env.getTranslator();
         this.logger = env.getLogger();
         this.context = context;
         this.env = env;

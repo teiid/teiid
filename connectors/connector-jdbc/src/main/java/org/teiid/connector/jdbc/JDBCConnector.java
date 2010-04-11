@@ -65,7 +65,7 @@ public class JDBCConnector extends BasicConnector {
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_jndi_1")); //$NON-NLS-1$
         }
         
-        capabilities = config.getExtensionTranslationClass().getConnectorCapabilities();
+        capabilities = config.getTranslator().getConnectorCapabilities();
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_started._4")); //$NON-NLS-1$
     }

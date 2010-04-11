@@ -56,7 +56,7 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 		return extensionTranslationClassName;
 	}
 	
-	public Translator getExtensionTranslationClass() throws ConnectorException {
+	public Translator getTranslator() throws ConnectorException {
 		if (this.sqlTranslator == null) {
 	        try {
 	        	String className = getExtensionTranslationClassName();

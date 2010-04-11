@@ -54,7 +54,7 @@ public class JDBCSourceConnection extends BasicConnection implements MetadataPro
     public JDBCSourceConnection(java.sql.Connection connection, JDBCManagedConnectionFactory environment) throws ConnectorException {
         this.physicalConnection = connection;
         this.environment = environment;
-        this.sqlTranslator = environment.getExtensionTranslationClass();
+        this.sqlTranslator = environment.getTranslator();
         this.sqlTranslator.afterConnectionCreation(connection);
     }
     

@@ -48,7 +48,7 @@ public class TestJDBCProcedureExecution {
 		Translator sqlTranslator = new Translator();
 		
 		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
-		Mockito.stub(config.getExtensionTranslationClass()).toReturn(sqlTranslator);
+		Mockito.stub(config.getTranslator()).toReturn(sqlTranslator);
 		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  config);
@@ -66,7 +66,7 @@ public class TestJDBCProcedureExecution {
 		Translator sqlTranslator = new Translator();
 
 		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
-		Mockito.stub(config.getExtensionTranslationClass()).toReturn(sqlTranslator);
+		Mockito.stub(config.getTranslator()).toReturn(sqlTranslator);
 		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config );

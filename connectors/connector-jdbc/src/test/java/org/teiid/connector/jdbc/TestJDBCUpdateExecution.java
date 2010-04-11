@@ -54,7 +54,7 @@ public class TestJDBCUpdateExecution {
 		Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, ?)")).toReturn(p); //$NON-NLS-1$
 		
 		JDBCManagedConnectionFactory config = Mockito.mock(JDBCManagedConnectionFactory.class);
-		Mockito.stub(config.getExtensionTranslationClass()).toReturn(new Translator());
+		Mockito.stub(config.getTranslator()).toReturn(new Translator());
 		Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
 		
 		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
