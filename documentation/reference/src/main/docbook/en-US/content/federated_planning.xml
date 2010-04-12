@@ -301,24 +301,13 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           default for all queries in a Connection with either
           setPartialResultsMode("true") on a DataSource or
           partialResultsMode=true on a JDBC URL. In either case, partial
-          results mode may be overridden on a per-query basis by setting
-          the execution property on the Statement. To set this property,
-          cast to the Teiid Statement JDBC API extension interface
-          <classname>org.teiid.jdbc.TeiidStatement
-          </classname>
+          results mode may be overridden with a set statement.
         </para>
         <example>
           <title>Example - Setting Partial Results Mode</title>
           <programlisting>Statement statement = ...obtain statement from Connection... 
-
-TeiidStatement mmStatement = statement.unWrap(TeiidStatement.class);
-  
-mmStatement.setExecutionProperty( 
-  ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, "true");</programlisting>
+statement.execute("set partialResultsMode true");</programlisting>
         </example>
-        <para>This property can be set before each execution (via an
-          execute method) on a Statement (or PreparedStatement or
-          CallableStatement).</para>
       </sect3>
       <sect3>
         <title>Source Unavailability</title>
@@ -354,7 +343,7 @@ mmStatement.setExecutionProperty(
         <example>
           <title>Example - Printing List of Failed Sources
           </title>
-          <programlisting>statement.setExecutionProperty( PROP_PARTIAL_RESULTS_MODE, "true"); 
+          <programlisting>statement.execute("set partialResultsMode true");
 ResultSet results = statement.executeQuery("SELECT Name FROM Accounts"); 
 SQLWarning warning = statement.getWarnings(); 
 if(warning instanceof PartialResultsWarning) { 
@@ -404,19 +393,12 @@ if(warning instanceof PartialResultsWarning) {
       </para>
       <example>
         <title>Retrieving a Query Plan</title>
-        <programlisting>TeiidStatement mmstatement = statement.unWrap(TeiidStatement.class);
-String sql = "select ...";
-
-mmstatement.setExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS, ExecutionProperties.SQL_OPTION_SHOWPLAN);
-//or
-//sql += " OPTION SHOWPLAN";
-//or
-//sql += " OPTION PLANONLY";
-
-ResultSet rs = statement.executeQuery(sql);
-
-PlanNode queryPlan = mmstatement.getPlanDescription();
-System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
+        <programlisting>
+statement.execute("set showplan on");
+ResultSet rs = statement.executeQuery("select ...");
+TeiidStatement tstatement = statement.unWrap(TeiidStatement.class);
+PlanNode queryPlan = tstatement.getPlanDescription();
+System.out.println(queryPlan);</programlisting>
       </example>
       <para>The query plan is made available automatically in several
         of Teiid's tools.</para>
