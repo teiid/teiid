@@ -36,5 +36,7 @@ public interface ChannelListener {
 	
 	void exceptionOccurred(Throwable t);
 	
+	void disconnected();
+	
 	void onConnection() throws CommunicationException;
 }

@@ -217,6 +217,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
 			LogManager.logDetail(LogConstants.CTX_TRANSPORT, NetPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
+			listener.disconnected();
 		}
 	}
 

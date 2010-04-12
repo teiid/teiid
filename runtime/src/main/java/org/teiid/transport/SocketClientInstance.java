@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+import org.teiid.client.security.ILogon;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.NetPlugin;
@@ -105,6 +106,22 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             handshake.setPublicKey(publicKey);
         } 
         this.objectSocket.write(handshake);
+	}
+	
+	@Override
+	public void disconnected() {
+		if (workContext.getSessionId() != -1) {
+			workContext.runInContext(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						csr.getClientService(ILogon.class).logoff();
+					} catch (Exception e) {
+						LogManager.logDetail(LogConstants.CTX_TRANSPORT, e, "Exception closing client instance"); //$NON-NLS-1$
+					}
+				}
+			});
+		}
 	}
 
 	private void receivedHahdshake(Handshake handshake) throws CommunicationException {
