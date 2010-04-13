@@ -29,7 +29,8 @@ import java.util.Properties;
 import java.util.Set;
 
 public interface Admin {
-	
+
+	public enum DataSourceType {XA, LOCAL};
 	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
@@ -327,18 +328,27 @@ public interface Admin {
     
     /**
      * Adds JDBC XA Data Source in the container.
-     * @param dsName - name of the source
+     * @param deploymentName - name of the source
+     * @param type - type of data source
      * @param properties - properties
      * @throws AdminException
      */
-    void addDataSource(String deploymentName, Properties properties) throws AdminException;
+    void addDataSource(String deploymentName, DataSourceType type, Properties properties) throws AdminException;
     
     /**
      * Delete data source. 
-     * @param dsName
+     * @param deployedName
      * @throws AdminException
      */
-    void deleteDataSource(String deploymentName) throws AdminException;
+    void deleteDataSource(String deployedName) throws AdminException;
+    
+    /**
+     * Export the data source in "-ds.xml" file format. 
+     * @param deployedName
+     * @return
+     * @throws AdminException
+     */
+    Reader exportDataSource(String deployedName) throws AdminException;
     
     /**
      * Get the property definitions for creating the JDBC data source.

@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -127,6 +128,28 @@ public class ObjectConverterUtil {
         f.delete();
 
         write(is, f);
+    }
+    
+    public static void write(final Reader reader, final String fileName) throws IOException {
+        File f = new File(fileName);
+        f.delete();
+
+        write(reader, f);
+    }    
+    
+    public static void write(final Reader reader, final File f) throws IOException {
+        FileWriter fw = new FileWriter(f);        
+        try {
+		    char[] buff = new char[2048];
+		    int bytesRead;
+		
+		    // Simple read/write loop.
+		    while (-1 != (bytesRead = reader.read(buff, 0, buff.length))) {
+		        fw.write(buff, 0, bytesRead);
+		    }
+        } finally {
+        	fw.close();
+        }   
     }
 
     public static void write(final InputStream is, final File f) throws IOException {

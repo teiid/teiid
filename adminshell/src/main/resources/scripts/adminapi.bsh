@@ -12,7 +12,7 @@ currentContext().internalVerbose = true;
  * @return the {@link VDB} representing the current property values and runtime state.
  */
 VDB deployVDB(String vdbFile) {
-    debug("Adding VDB " + name + " from " + vdbFile);
+    debug("Adding VDB " + vdbFile);
     checkAdmin();    
     return internalAdmin.deployVDB(vdbFile, new FileInputStream(new File(vdbFile)));
 }
@@ -44,7 +44,7 @@ void exportVDB(String vdbName, int vdbVersion, String fileName){
     	ObjectConverterUtil.write(contents, fileName);
     }
     else {
-    	throw new AdminProcessingException("VDB with name "+ name + " is not found to export");
+    	throw new AdminProcessingException("VDB with name "+ vdbName + " is not found to export");
     }
 }
 
@@ -104,7 +104,7 @@ void exportConnectionFactory(String deployedName, String fileName){
     	ObjectConverterUtil.write(contents, fileName);	
     }
     else {
-    	throw new AdminProcessingException("Connector Binding "+ bindingName + " not found for exporting");
+    	throw new AdminProcessingException("Connector Binding "+ deployedName + " not found for exporting");
     }
 }
 
@@ -128,13 +128,14 @@ void assignConnectionFactoryToModel(String vdbName, int vdbVersion, String model
 /**
  * Adds JDBC XA Data Source in the container.
  * @param dsName - name of the source
+ * @param type - type of data source
  * @param properties - properties
  * @throws AdminException
  */
-void addDataSource(String dsName, Properties properties) {
+void addDataSource(String dsName, DataSourceType type,Properties properties) {
     debug("Adding Datasource " + dsName);
     checkAdmin();    
-    return internalAdmin.addDataSource(dsName, properties);	
+    return internalAdmin.addDataSource(dsName, type, properties);	
 }
 
 /**
@@ -148,6 +149,24 @@ void deleteDataSource(String dsName) {
     return internalAdmin.deleteDataSource(dsName);	
 }
 
+/**
+ * Export the data source in "-ds.xml" file format. 
+ * @param dsName - name of the data source
+ * @param fileName
+ * @return
+ * @throws AdminException
+ */
+void exportDataSource(String dsName, String fileName) {
+    debug("Exporting Data source " + dsName + " to file " + fileName);
+    checkAdmin();
+    contents = internalAdmin.exportDataSource(dsName);
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);	
+    }
+    else {
+    	throw new AdminProcessingException("Data Source "+ dsName + " not found for exporting");
+    }	
+}
 
 /**
  * Get the property definitions for creating the JDBC data source.

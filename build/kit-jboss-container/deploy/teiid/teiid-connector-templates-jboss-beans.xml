@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deployment xmlns="urn:jboss:bean-deployer:2.0">
-    <!-- This file defines the connector templates for Teiid based connectors -->
+
+    <!-- This file defines the connector templates for Teiid based connectors -->  
+   <bean name="export-template" class="org.jboss.resource.deployers.management.DsDataSourceTemplate">
+      <property name="info"><inject bean="export-templateinfo"/></property>
+   </bean>
+   <bean name="export-templateinfo" class="org.teiid.templates.connector.ExportConnectorTypeTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.ExportConnectorTypeTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">export-template</parameter>
+         <parameter class="java.lang.String">Teiid Export Template</parameter>
+      </constructor>
+   </bean>     
+    
    <bean name="connector-jdbc-${project.version}" class="org.teiid.templates.connector.ConnectorTypeTemplate">
       <property name="info"><inject bean="connector-jdbc-templateinfo"/></property>
       <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>

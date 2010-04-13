@@ -27,8 +27,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -47,6 +47,7 @@ import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.ManagedDeployment;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
@@ -66,8 +67,8 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.ConnectionFactory;
+import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -76,8 +77,8 @@ import org.teiid.adminapi.TeiidAdmin;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
-import org.teiid.adminapi.impl.ConnectionPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.ConnectionFactoryMetaData;
+import org.teiid.adminapi.impl.ConnectionPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
@@ -90,18 +91,26 @@ import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
+import org.teiid.templates.connector.ExportConnectorTypeTemplateInfo;
+
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class Admin extends TeiidAdmin {
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
-	
+
 	private static final String XA_DATA_SOURCE_TEMPLATE = "XADataSourceTemplate"; //$NON-NLS-1$
+	private static final String LOCAL_DATA_SOURCE_TEMPLATE = "LocalTxDataSourceTemplateInfo";  //$NON-NLS-1$	
 	private static final long serialVersionUID = 7081309086056911304L;
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ComponentType NOTXTYPE = new ComponentType("ConnectionFactory", "NoTx");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ComponentType TXTYPE = new ComponentType("ConnectionFactory", "Tx");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ComponentType DSTYPE = new ComponentType("DataSource", "XA");//$NON-NLS-1$ //$NON-NLS-2$
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
+	private static ExtendedComponentType NOTXTYPE = new ExtendedComponentType("ConnectionFactory", "NoTx", "no-tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ExtendedComponentType TXTYPE = new ExtendedComponentType("ConnectionFactory", "Tx", "tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$	
+	private static ExtendedComponentType DS_LOCAL_TX = new ExtendedComponentType("DataSource", "LocalTx", "local-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ExtendedComponentType DS_XA_TX = new ExtendedComponentType("DataSource", "XA", "xa-datasource");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ExtendedComponentType DS_NO_TX = new ExtendedComponentType("DataSource", "NoTx", "no-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ExtendedComponentType[] DS_TYPES = new ExtendedComponentType[] {DS_XA_TX, DS_LOCAL_TX, DS_NO_TX};
+	private static ExtendedComponentType[] CF_TYPES = new ExtendedComponentType[] {NOTXTYPE, TXTYPE};
 	
 	private ManagementView view;
 	private DeploymentManager deploymentMgr;
@@ -178,11 +187,71 @@ public class Admin extends TeiidAdmin {
 
 	@Override
 	public Reader exportConnectionFactory(String deployedName) throws AdminException {
-		ManagedComponent mc = getConnectorBindingComponent(deployedName);
-		if (mc != null) {
-			return new InputStreamReader(exportDeployment(mc.getDeployment().getName()));
+		ManagementView view = getView();
+		try {
+			for (ExtendedComponentType type:CF_TYPES) {
+				ManagedComponent mc = view.getComponent(deployedName, type);
+				if (mc != null) {
+					return exportJCAConnection(deployedName, mc, type);
+				}				
+			}	
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", deployedName)); //$NON-NLS-1$
+		} catch (Exception e) {
+			throw new AdminComponentException(e);			
 		}
-		return null;
+	}
+		
+	private Reader exportJCAConnection(String deployedName, ManagedComponent mc, ExtendedComponentType type) throws AdminException {		
+		try {
+			DeploymentTemplateInfo info = getView().getTemplate("export-template");
+			if(info == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", "export-template")); //$NON-NLS-1$
+			}
+			
+			for (ManagedProperty infoProperty:info.getProperties().values()) {
+				if (infoProperty != null) {
+					ManagedProperty mp = mc.getProperty(infoProperty.getName());
+					if (mp != null) {
+						infoProperty.setValue(mp.getValue());
+					}
+				}
+			}			
+			
+			ManagedProperty dsType = info.getProperties().get("dsType");
+			dsType.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, type.getDsType()));
+			
+			File dsXml = File.createTempFile(deployedName, "-ds.xml");
+			ExportConnectorTypeTemplateInfo.writeTemplate(dsXml, info);
+			Reader r  = new StringReader(ObjectConverterUtil.convertFileToString(dsXml));
+			dsXml.delete();
+			return r;
+		} catch (NoSuchDeploymentException e) {
+			throw new AdminComponentException(e);
+		} catch (IOException e) {
+			throw new AdminComponentException(e);
+		} catch(Exception e) {
+			throw new AdminComponentException(e);
+		}
+	}
+	
+	@Override
+	public Reader exportDataSource(String deployedName) throws AdminException {
+		if (deployedName.startsWith("java:")) { //$NON-NLS-1$
+			deployedName = deployedName.substring(5);
+		}
+		try {
+			ManagedComponent mc = null;
+			ManagementView view = getView();
+			for (ExtendedComponentType type:DS_TYPES) {
+				mc = view.getComponent(deployedName, type);
+				if (mc != null) {
+					return exportJCAConnection(deployedName, mc, type);
+				}
+			}
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("datasource_not_found", deployedName)); //$NON-NLS-1$
+		} catch (Exception e) {
+			throw new AdminComponentException(e);
+		}
 	}
 
 	private InputStream exportDeployment(String url) throws AdminComponentException {
@@ -202,19 +271,14 @@ public class Admin extends TeiidAdmin {
 				deployedName = deployedName.substring(5);
 			}
 			ManagementView view = getView();
-			ManagedComponent mc = view.getComponent(deployedName, NOTXTYPE);
-			if (mc != null) {
-				if (isConnectorBinding(mc)) {
-					return mc;	
-				}
-			}
-	
-			mc = view.getComponent(deployedName, TXTYPE);
-			if (mc != null) {
-				if (isConnectorBinding(mc)) {
-					return mc;	
-				}
-			}			
+			for (ExtendedComponentType type:CF_TYPES) {
+				ManagedComponent mc = view.getComponent(deployedName, type);
+				if (mc != null) {
+					if (isConnectorBinding(mc)) {
+						return mc;	
+					}
+				}				
+			}	
 		} catch(Exception e) {
 			throw new AdminProcessingException(e.getMessage(), e);
 		}
@@ -374,14 +438,19 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public Set<String> getConnectorNames() throws AdminException{
-		Set<String> names = getView().getTemplateNames();
-		HashSet<String> matched = new HashSet<String>();
-		for(String name:names) {
-			if (name.startsWith("connector-")) {//$NON-NLS-1$
-				matched.add(name);
+		try {
+			Set<ManagedDeployment> rarFiles = getView().getDeploymentsForType("rar");//$NON-NLS-1$ 
+			HashSet<String> matched = new HashSet<String>();
+			for(ManagedDeployment md:rarFiles) {
+				String name = md.getSimpleName();
+				if (name.startsWith("connector-") && name.endsWith(".rar")) {//$NON-NLS-1$ //$NON-NLS-2$
+					matched.add(name.substring(0, name.length()-4));
+				}
 			}
+			return matched;
+		} catch(Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
 		}
-		return matched;
 	}
 	
     boolean matches(String regEx, String value) {
@@ -848,8 +917,13 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-    public void addDataSource(String deploymentName, Properties properties) throws AdminException {
-		addConnectionfactory(deploymentName, XA_DATA_SOURCE_TEMPLATE, properties);
+    public void addDataSource(String deploymentName, DataSourceType type, Properties properties) throws AdminException {
+		if (type == DataSourceType.XA) { 
+			addConnectionfactory(deploymentName, XA_DATA_SOURCE_TEMPLATE, properties);
+		}
+		else if (type == DataSourceType.LOCAL) {
+			addConnectionfactory(deploymentName, LOCAL_DATA_SOURCE_TEMPLATE, properties);
+		}
 	}
 	
     private void addConnectionfactory(String deploymentName, String typeName, Properties properties) throws AdminException {	
@@ -899,10 +973,13 @@ public class Admin extends TeiidAdmin {
     public void deleteDataSource(String deployedName) throws AdminException {
 		try {
 			ManagementView view = getView();
-			ManagedComponent mc = view.getComponent(deployedName, DSTYPE);
-			if (mc != null) {
-				ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
-			}
+			for (ExtendedComponentType type:DS_TYPES) {
+				ManagedComponent mc = view.getComponent(deployedName, type);
+				if (mc != null) {
+					ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
+					break;
+				}
+			}			
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}

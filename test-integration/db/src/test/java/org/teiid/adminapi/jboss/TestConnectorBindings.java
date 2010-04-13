@@ -389,4 +389,12 @@ public class TestConnectorBindings extends BaseConnection {
 		// remove non-existent role name
 		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
 	}	
+	
+	@Test public void testExportConnectionFactory() throws Exception {
+		ObjectConverterUtil.write(admin.exportConnectionFactory("products-cf"), "cf.xml");
+	}	
+	
+	@Test public void testExportDataSource() throws Exception {
+		ObjectConverterUtil.write(admin.exportDataSource("CustomersDS"), "ds.xml");
+	}
 }
