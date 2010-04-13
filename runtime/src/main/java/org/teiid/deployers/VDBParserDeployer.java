@@ -140,12 +140,9 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				unit.addAttachment(IndexMetadataFactory.class, imf);
 								
 				// add the cached store.
-				MetadataStoreGroup stores = null;
-				File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
-				if (cacheFileName.exists()) {
-					stores = this.serializer.loadAttachment(cacheFileName, MetadataStoreGroup.class);
-				}
-				else {
+				File cacheFile = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
+				MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
+				if (stores == null) {
 					stores = new MetadataStoreGroup();
 					stores.addStore(imf.getMetadataStore());
 				}

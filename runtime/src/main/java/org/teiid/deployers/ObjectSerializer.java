@@ -30,14 +30,17 @@ import java.io.ObjectOutputStream;
 
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
+import org.teiid.runtime.RuntimePlugin;
 
+import com.metamatrix.common.log.LogConstants;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.FileUtils;
 
 public class ObjectSerializer {
 	
 	private static final Logger log = Logger.getLogger(ObjectSerializer.class);
 
-	private static final String ATTACHMENT_SUFFIX = ".ser";
+	private static final String ATTACHMENT_SUFFIX = ".ser"; //$NON-NLS-1$
 
 	private String storagePath;
 	
@@ -45,10 +48,9 @@ public class ObjectSerializer {
 		this.storagePath = path;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> T loadAttachment(File attachmentsStore, Class<T> expected) throws IOException, ClassNotFoundException {
 		if (log.isTraceEnabled()) {
-			log.trace("loadAttachment, attachmentsStore=" + attachmentsStore);
+			log.trace("loadAttachment, attachmentsStore=" + attachmentsStore); //$NON-NLS-1$
 		}
 
 		ObjectInputStream ois = null;
@@ -64,7 +66,7 @@ public class ObjectSerializer {
 
 	public void saveAttachment(File attachmentsStore, Object attachment) throws IOException {
 		if (log.isTraceEnabled()) {
-			log.trace("saveAttachment, attachmentsStore=" + attachmentsStore + ", attachment=" + attachment);
+			log.trace("saveAttachment, attachmentsStore=" + attachmentsStore + ", attachment=" + attachment); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		ObjectOutputStream oos = null;
@@ -100,4 +102,17 @@ public class ObjectSerializer {
 		String dirName = this.storagePath + File.separator + fileName + File.separator;
 		return dirName;
 	}
+	
+	public <T> T loadSafe(File cacheFile, Class<T> clazz) {
+		try {
+			if (cacheFile.exists()) {
+				return clazz.cast(loadAttachment(cacheFile, clazz));
+			}
+			return null;
+		} catch (Exception e) {
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
+		}
+		cacheFile.delete();
+		return null;
+	}	
 }

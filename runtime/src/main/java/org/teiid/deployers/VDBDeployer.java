@@ -223,18 +223,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
     	File cacheFile = null;
     	if (cache) {
-    		 try {
-    			cacheFile = buildCachedFileName(unit, vdb,model.getName());
-    			if (cacheFile.exists()) {
-    				return this.serializer.loadAttachment(cacheFile, MetadataStore.class);
-    			}
-			} catch (IOException e) {
-				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
-			} catch (ClassNotFoundException e) {
-				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invalid_metadata_file", cacheFile.getAbsolutePath())); //$NON-NLS-1$
-			} 
+    		cacheFile = buildCachedFileName(unit, vdb,model.getName());
+			MetadataStore store = this.serializer.loadSafe(cacheFile, MetadataStore.class);
+			if (store != null) {
+				return store;
+			}
     	}
-    	
     	
     	Exception exception = null;
     	for (String sourceName: model.getSourceNames()) {
