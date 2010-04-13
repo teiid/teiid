@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedProperty;
-import org.jboss.profileservice.management.FilteredDeploymentTemplateInfo;
 import org.jboss.resource.deployers.management.DsDataSourceTemplate;
 import org.jboss.resource.deployers.management.DsDataSourceTemplateInfo;
 
@@ -49,8 +48,7 @@ public class ExportConnectorTypeTemplateInfo extends DsDataSourceTemplateInfo{
 	public static class ExportConnectionFactoryTemplate extends DsDataSourceTemplate {
 		@Override
 		public void writeTemplate(File dsXml, DeploymentTemplateInfo values) throws Exception {
-			FilteredDeploymentTemplateInfo filterInfo = new FilteredDeploymentTemplateInfo(values);
-			super.writeTemplate(dsXml, filterInfo);
+			super.writeTemplate(dsXml, values);
 		}
 	}		
 
