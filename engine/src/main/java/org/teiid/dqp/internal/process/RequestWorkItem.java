@@ -214,6 +214,9 @@ public class RequestWorkItem extends AbstractWorkItem {
         } finally {
         	if (this.state == ProcessingState.CLOSE && !isClosed) {
         		attemptClose();
+        		if (this.processingException != null) {
+        			sendError();
+        		}
         	} else if (isClosed) {
         		/*
         		 * since there may be a client waiting notify them of a problem
@@ -248,6 +251,14 @@ public class RequestWorkItem extends AbstractWorkItem {
 			sendResultsIfNeeded(null);
 			collector.collectTuples();
 		    doneProducingBatches = this.resultsBuffer.isFinal();
+		    if (doneProducingBatches && cid != null) {
+		    	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
+            	CachedResults cr = new CachedResults();
+            	cr.setCommand(originalCommand);
+                cr.setAnalysisRecord(analysisRecord);
+                cr.setResults(this.resultsBuffer);
+                dqpCore.getRsCache().put(cid, sessionScope, cr);
+		    }
 		}
 		if (doneProducingBatches) {
 			if (this.transactionState == TransactionState.ACTIVE) {
@@ -285,26 +296,21 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void attemptClose() {
 		int rowcount = -1;
 		if (this.resultsBuffer != null) {
-			this.processor.closeProcessing();
+			if (this.processor != null) {
+				this.processor.closeProcessing();
 			
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-		        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
-		    }
-			rowcount = resultsBuffer.getRowCount();
-			if (this.cid == null || !this.doneProducingBatches) {
-				resultsBuffer.remove();
-			} else {
-            	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
-            	CachedResults cr = new CachedResults();
-            	cr.setCommand(originalCommand);
-                cr.setAnalysisRecord(analysisRecord);
-                cr.setResults(this.resultsBuffer);
-                dqpCore.getRsCache().put(cid, sessionScope, cr);
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+			        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+			    }
+				rowcount = resultsBuffer.getRowCount();
+				if (this.cid == null || !this.doneProducingBatches) {
+					resultsBuffer.remove();
+				}
+				
+				for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+					connectorRequest.fullyCloseSource();
+			    }
 			}
-			
-			for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
-				connectorRequest.fullyCloseSource();
-		    }
 
 			this.resultsBuffer = null;
 			
@@ -366,6 +372,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		resultsBuffer = collector.getTupleBuffer();
 		resultsBuffer.setForwardOnly(isForwardOnly());
 		analysisRecord = request.analysisRecord;
+		analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
 		transactionContext = request.transactionContext;
 		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
 			this.transactionState = TransactionState.ACTIVE;
@@ -438,10 +445,12 @@ public class RequestWorkItem extends AbstractWorkItem {
 	
 	        // send any warnings with the response object
 	        List<Throwable> responseWarnings = new ArrayList<Throwable>();
-			List<Exception> currentWarnings = processor.getAndClearWarnings();
-		    if (currentWarnings != null) {
-		    	responseWarnings.addAll(currentWarnings);
-		    }
+	        if (this.processor != null) {
+				List<Exception> currentWarnings = processor.getAndClearWarnings();
+			    if (currentWarnings != null) {
+			    	responseWarnings.addAll(currentWarnings);
+			    }
+	        }
 		    synchronized (warnings) {
 	        	responseWarnings.addAll(this.warnings);
 	        	this.warnings.clear();
@@ -481,9 +490,12 @@ public class RequestWorkItem extends AbstractWorkItem {
     }
     
 	private void setAnalysisRecords(ResultsMessage response) {
-        if(analysisRecord != null) {
+		if(analysisRecord != null) {
         	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
-	            response.setPlanDescription(processor.getProcessorPlan().getDescriptionProperties());
+        		if (processor != null) {
+        			analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
+        		}
+        		response.setPlanDescription(analysisRecord.getQueryPlan());
 	            response.setAnnotations(analysisRecord.getAnnotations());
         	}
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {

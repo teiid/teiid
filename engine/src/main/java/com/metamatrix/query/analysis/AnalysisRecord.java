@@ -106,6 +106,7 @@ public class AnalysisRecord implements Serializable {
     private boolean recordQueryPlan;
     private boolean recordDebug;
     
+    private PlanNode queryPlan;
     // Annotations
     private Collection<Annotation> annotations;
     
@@ -130,6 +131,14 @@ public class AnalysisRecord implements Serializable {
     public static AnalysisRecord createNonRecordingRecord() {
         return new AnalysisRecord(false, false);
     }
+    
+    public PlanNode getQueryPlan() {
+		return queryPlan;
+	}
+    
+    public void setQueryPlan(PlanNode queryPlan) {
+		this.queryPlan = queryPlan;
+	}
 
     /**
      * Determine whether query plan should be recorded
