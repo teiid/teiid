@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
@@ -66,7 +67,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
 	@Override
 	@ManagementProperty(description="Policy Name")
-	//@ManagementObjectID(type="policy")
+	@ManagementObjectID(type="policy")
     public String getName() {
         return name;
     }

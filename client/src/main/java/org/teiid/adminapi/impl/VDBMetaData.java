@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
@@ -88,6 +89,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 
 	@ManagementProperty(description="Name of the VDB")
+	@ManagementObjectID(type="vdb")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();

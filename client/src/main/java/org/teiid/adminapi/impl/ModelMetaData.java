@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
@@ -78,6 +79,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
 	@ManagementProperty(description="Model Name")
 	@XmlAttribute(name = "name", required = true)
+	@ManagementObjectID(type="models")
 	public String getName() {
 		return super.getName();
 	}    
