@@ -73,8 +73,6 @@
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         
-        <!-- Name of the process that uniquely identifies this process -->
-        <property name="processName">localhost</property>
         <!-- Process pool maximum thread count. (default 32) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8. -->
         <property name="maxThreads">32</property>
         <!-- Query processor time slice, in milliseconds. (default 2000) -->
@@ -102,7 +100,7 @@
     <!-- JDBC Socket connection properties (SSL see below) -->
     <bean name="JdbcSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
-        <property name="bindAddress">localhost</property>
+        <!-- property name="bindAddress">localhost</property-->
         <property name="portNumber">31000</property>
         <!-- Max number of threads dedicated to initial request processing (default 15) -->
         <property name="maxSocketThreads">15</property>
@@ -130,7 +128,7 @@
     <!-- Admin Socket connection settings (SSL see below) -->
     <bean name="AdminSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
-        <property name="bindAddress">localhost</property>
+        <!-- property name="bindAddress">localhost</property-->
         <property name="portNumber">31443</property>
         <!-- Max number of threads dedicated to Admin and initial request processing (default 4) -->
         <property name="maxSocketThreads">4</property>

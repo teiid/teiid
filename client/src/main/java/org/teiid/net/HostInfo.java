@@ -25,7 +25,6 @@ package org.teiid.net;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.HashCodeUtil;
 
@@ -43,7 +42,7 @@ public class HostInfo {
     	if (inetAddress != null) {
     		return inetAddress;
     	}
-    	return NetUtils.resolveHostByName(hostName);
+    	return InetAddress.getByName(this.hostName);
     }
     
     public HostInfo (String host, int port) {
@@ -53,8 +52,8 @@ public class HostInfo {
     	
     	//only cache inetaddresses if they represent the ip. 
     	try {
-			InetAddress addr = NetUtils.resolveHostByName(hostName);
-			if (addr.getHostAddress().equalsIgnoreCase(hostName)) {
+			InetAddress addr = InetAddress.getByName(this.hostName);
+			if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
 				this.inetAddress = addr;
 			}
 		} catch (UnknownHostException e) {

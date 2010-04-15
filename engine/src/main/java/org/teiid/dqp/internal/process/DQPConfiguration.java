@@ -38,7 +38,6 @@ public class DQPConfiguration{
     public static final int DEFAULT_MAX_PROCESS_WORKERS = 16;
 	
     
-	private String processName = "localhost"; //$NON-NLS-1$
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private boolean processDebugAllowed;
@@ -52,15 +51,6 @@ public class DQPConfiguration{
 	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
 	private boolean useEntitlements = false;
 	
-	@ManagementProperty (description="Name of the process that uniquely identifies this process")
-	public String getProcessName() {
-		return processName;
-	}
-
-	public void setProcessName(String processName) {
-		this.processName = processName;
-	}
-
 	@ManagementProperty(description="Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8")
 	public int getMaxThreads() {
 		return maxThreads;

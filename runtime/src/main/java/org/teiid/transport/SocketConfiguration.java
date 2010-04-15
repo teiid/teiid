@@ -29,11 +29,13 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SocketConfiguration {
+	private static final String ANY = "0.0.0.0"; //$NON-NLS-1$
+	private static final String JBOSS_SERVER_BIND_ADDRESS = "jboss.bind.address";
+	
 	private int outputBufferSize;
 	private int inputBufferSize;
 	private int maxSocketThreads;
@@ -41,12 +43,11 @@ public class SocketConfiguration {
 	private InetAddress hostAddress;
 	private SSLConfiguration sslConfiguration;
 	private boolean enabled;
-	private String hostName; 
+	private String hostName;
 	
 	
 	public void setBindAddress(String addr) {
 		this.hostName = addr;
-		this.hostAddress = resolveHostAddress(addr);
 	}
 	
 	public void setPortNumber(int port) {
@@ -69,12 +70,17 @@ public class SocketConfiguration {
 		this.sslConfiguration = value;
 	}	
  	
- 	private InetAddress resolveHostAddress(String bindAddress) {
+	private void resolveHostName() {
 		try {
-			if (bindAddress == null) {
-				return NetUtils.getInstance().getInetAddress();
+			// if host name not specified try to get it from the JBoss configuration
+			if (this.hostName == null) {
+				this.hostName = System.getProperty(JBOSS_SERVER_BIND_ADDRESS);
 			}
-			return NetUtils.resolveHostByName(bindAddress);	
+			
+			// if not defined then see if can bind to local address; if supplied resolve it by name
+			if (this.hostName == null || ANY.equals(this.hostName)) {
+				this.hostName = InetAddress.getLocalHost().getHostName();
+			}
 		} catch (UnknownHostException e) {
 			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
 		}
@@ -110,11 +116,25 @@ public class SocketConfiguration {
 	}
 
 	public InetAddress getHostAddress() {
-		return hostAddress;
+		resolveHostName();
+		if (this.hostAddress != null) {
+			return hostAddress;
+		}
+    	try {
+    		//only cache inetaddresses if they represent the ip. 
+			InetAddress addr = InetAddress.getByName(this.hostName);
+			if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
+				this.hostAddress = addr;
+			}
+			return addr;
+		} catch (UnknownHostException e) {
+			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+		}		
 	}
 	
 	@ManagementProperty(description="Host Name",readOnly=true)
 	public String getHostName() {
+		resolveHostName();
 		return this.hostName;
 	}
 

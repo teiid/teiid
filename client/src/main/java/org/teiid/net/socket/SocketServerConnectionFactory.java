@@ -45,10 +45,9 @@ import org.teiid.client.security.ILogon;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
-import org.teiid.net.TeiidURL;
 import org.teiid.net.ServerConnectionFactory;
+import org.teiid.net.TeiidURL;
 
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -264,7 +263,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 
 	static void updateConnectionProperties(Properties connectionProperties) {
 		try {
-			InetAddress addr = NetUtils.getInstance().getInetAddress();
+			InetAddress addr = InetAddress.getLocalHost();
 			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, addr.getHostAddress());
 			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
         } catch (UnknownHostException err1) {

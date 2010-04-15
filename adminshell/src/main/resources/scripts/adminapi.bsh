@@ -1,5 +1,5 @@
 import org.teiid.adminapi.*;
-
+import org.teiid.adminapi.Admin.DataSourceType;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 
