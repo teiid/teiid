@@ -9,12 +9,12 @@ currentContext().internalVerbose = true;
  * Deploy a {@link VDB} file.
  * @param vdbFile - VDB File Name
  * @throws AdminException
- * @return the {@link VDB} representing the current property values and runtime state.
  */
-VDB deployVDB(String vdbFile) {
+void deployVDB(String vdbFile) {
     debug("Adding VDB " + vdbFile);
     checkAdmin();    
-    return internalAdmin.deployVDB(vdbFile, new FileInputStream(new File(vdbFile)));
+    f = new File(vdbFile);
+    internalAdmin.deployVDB(f.getName(), new FileInputStream(f));
 }
 
 /**
@@ -183,13 +183,13 @@ Collection getDataSourcePropertyDefinitions(){
  * Add Connector Type, will import Connector Type from a file
  *
  * @param name  of the Connector to add
- * @param rarFile RAR file to be added
  * @throws AdminException
  */
-void addConnector(String name, String rarFile) {
-    debug("Adding Connector " + name + " from " + rarFile);
+void addConnector(String rarFile) {
+    debug("Adding Connector " + rarFile);
     checkAdmin();    
-    internalAdmin.addConnector(name, new FileInputStream(new File(rarFile)));
+    f = new File(rarFile);
+    internalAdmin.addConnector(f.getName(), new FileInputStream(f));
 }
 
 
