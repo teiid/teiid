@@ -1,7 +1,0 @@
-import bsh.NameSpace;
-Object sourceInto( URL url, NameSpace nameSpace ) {
-    return this.interpreter.eval( 
-        new InputStreamReader(url.openStream()), nameSpace,  
-        "URL: "+url.toString()
-    );
-}

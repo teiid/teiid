@@ -5,39 +5,29 @@
  * to Red Hat, Inc. under one or more contributor license agreements.
  * 
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
+ * modify it under the terms of the GNU Lesser General public static
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * Lesser General public static License for more details.
  * 
- * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU Lesser General public static
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
 
-package com.metamatrix.script.shell;
+package org.teiid.adminshell;
 
-import bsh.Interpreter;
+import org.codehaus.groovy.tools.shell.Main;
 
-/** 
- * An interface used for replacing/or Hijacking the Beanshell parser
- * @author Ramesh Reddy
- * @since 4.3
- */
-public interface CustomParser {
-    /**
-     * Convert the command entered on the command line to bean shell
-     * specific command. 
-     * @param strEntered
-     * @return bean shell understandable command
-     * @since 4.3
-     */
-    String convert(String strEntered);
-    
-    void setInterpreter(Interpreter i);
+public class GroovyAdminShell {
+	
+	public static void main(String[] args) {
+		Main.main(args);
+	}
+
 }

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid;
+package org.teiid.adminshell;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -47,7 +47,6 @@ import com.metamatrix.core.util.ObjectConverterUtil;
 @SuppressWarnings("nls")
 public class MigrationUtil {
 
-	//TODO: sys out info on what ds needs creating
 	public static void main(String[] args) throws IOException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		if (args.length != 1) {
 			System.err.println(

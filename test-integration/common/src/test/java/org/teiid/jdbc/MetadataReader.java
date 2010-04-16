@@ -20,11 +20,13 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.script.io;
+package org.teiid.jdbc;
 
 import java.io.IOException;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+
+import org.teiid.script.io.StringLineReader;
 
 
 public class MetadataReader extends StringLineReader {

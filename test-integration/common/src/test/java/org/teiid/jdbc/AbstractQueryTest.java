@@ -41,9 +41,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.After;
-import org.teiid.script.io.MetadataReader;
 import org.teiid.script.io.ResultSetReader;
-import org.teiid.script.io.StringArrayReader;
 
 
 

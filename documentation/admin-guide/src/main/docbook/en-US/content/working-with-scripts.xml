@@ -3,81 +3,49 @@
 <chapter id="working_with_scripts">
   <title>Working with Scripts</title>
   <sect1>
-    <title>How to write your own scripts</title>
-    <para>Open up a text editor, and enter all the commands in a editor and save the file “.bsh” extension and
-      place it in the distribution where Admin Shell tool can access it. Take  a look at the “samples” directory for
-      example scripts. For example:</para>
-    <programlisting><![CDATA[
-// foo.bsh
-importCommands("commands");
-load("server");
-
-connect();
-execute("select * from pm1.g1");
-printResults();
-disconnect();
-exit();
-    ]]></programlisting>
-    <para>and execute this script file using instructions in Executing script file in non-interactive mode
-      section.</para>
-    <para>All script files that need to be executed in the non-interactive mode must have the following two
-      lines at the beginning of the script file before execution. These two commands will load all the necessary
-      libraries into the shell before execution.</para>
-    <programlisting><![CDATA[
-importCommands("commands");
-load("server");
-        ]]></programlisting>
-  </sect1>
-  <sect1>
     <title>Executing script file in interactive mode</title>
-    <para>To execute a script file "foo.bsh" in a directory "some/directory" in interactive mode, execute as
+    <para>To execute a script file "foo.groovy" in a directory "some/directory" in the shell tool, execute as
       following</para>
     <programlisting><![CDATA[
-admin $ source ("some/directory/foo.bsh");
+. some/directory/foo.groovy
     ]]></programlisting>
-    <para>"foo.bsh" is read into current context of the shell as if you typed in the whole document. If
+    <para>"foo.groovy" is read into current context of the shell as if you typed in the whole document. If
       your script only contained method calls, you can explicitly invoke the call to execute.</para>
+    <para>Full execute syntax may also be used, and is required outside of the Shell tool:</para>
+    <programlisting><![CDATA[
+evaluate("some/directory/foo.groovy" as File)
+    ]]></programlisting>
   </sect1>
   <sect1>
     <title>Executing script file in non-interactive mode</title>
-    <para>To execute a script file "foo.bsh" in a directory "some/directory" in non-interactive mode, execute as
+    <para>To execute a script file "foo.groovy" in a directory "some/directory" in non-interactive mode, execute as
       following command at the command prompt</para>
     <programlisting><![CDATA[
-admin.sh some/directory/foo.bsh
+adminshell.sh . some/directory/foo.groovy
     ]]></programlisting>
-    <para>Note that, in the script mode it is NOT possible to pass in the command line parameters as</para>
+    <para>Parameters can be passed in as Java System properties. For example</para>
     <programlisting><![CDATA[
-admin.sh some/directory/foo.bsh One Two
+adminshell.sh -Dparam=value . some/directory/foo.groovy
     ]]></programlisting>
-    <para>The parameters can be passed in as Java system properties. For example</para>
+    <para>Inside the script file, you can access these properties using System.getProperty</para>
     <programlisting><![CDATA[
-admin.sh some/directory/foo.bsh input1=One input2=Two
-    ]]></programlisting>
-    <para>Inside the script file, you can access these properties using Java system property semantics</para>
-    <programlisting><![CDATA[
-value = System.getProperty(“input1”); // will return "One"
+value = System.getProperty(“param”); // will return "value"
     ]]></programlisting>
   </sect1>
   <sect1>
     <title>Log File and Recorded Script file</title>
-    <para>During the interactive mode, all the commands executed by the user are recorded in
-      "adminscript.txt" file.  This file can be found in the root installation directory. This file later can serve
-      as reference to commands that are executed or  will aid in converting commands executed in the interactive
-      mode into a standalone script, that can be run at a later time.</para>
+    <para>During the interactive mode, input is recorded in a history file. This file can be accessed via the up arrow in the interactive shell.
+    </para>
     <para>User can also capture the commands entered during a interactive session to their own script file by
       using “startRecording” and “stopRecording” commands. For example,</para>
     <para />
     <programlisting><![CDATA[
-admin $ startRecording (“directory/filename.bsh”);
-admin $ <commands..>
-admin $ stopRecording()    
+record start directory/filename.txt
+<commands and script ..>
+record stop    
     ]]></programlisting>
-    <para>in this case all the commands executed after the “startRecording” and before the “stopRecording” are
-      captured in the “directory/filename.bsh” file. This gives the user an option to capture only certain portions
-      of the interactive session tat they are interested in and ignore the rest of it.</para>
+    <para>All input and output between the start and stop are captured in the “directory/filename.txt” file. 
+      This gives the user an option to capture only certain portions of the interactive session and to later refine a script out of recorded file.</para>
     <para />
-    <para>Also note that all the output during the interactive mode is sent to "adminshell.log" file. In the
-      script mode, no such files are created.  In script mode, user can capture the standard out and redirect to a
-      file if they need the log file.</para>
   </sect1>
 </chapter>

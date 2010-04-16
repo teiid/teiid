@@ -79,4 +79,4 @@ echo ""
 echo "======================================================================"
 echo ""
 
-$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.adminshell.GroovyAdminShell $*
+$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.adminshell.GroovyAdminConsole $*

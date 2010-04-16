@@ -49,10 +49,8 @@
     <xi:include href="content/getting-started.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/working-with-scripts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connection-management.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/writing-tests.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-b.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/appendix-c.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     
 </book>
 

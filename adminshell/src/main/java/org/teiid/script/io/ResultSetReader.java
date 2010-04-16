@@ -100,7 +100,7 @@ public class ResultSetReader extends StringLineReader {
                 for (int i = 0; i < columnCount; i++) {
                     columnTypes[i] = metadata.getColumnType(i+1);
                 }
-                return firstLine(metadata);
+                return resultSetMetaDataToString(metadata, delimiter);
             }
             
             // if you get here then we are ready to read the results.
@@ -146,8 +146,9 @@ public class ResultSetReader extends StringLineReader {
      * @return 
      * @throws SQLException
      */
-    String firstLine(ResultSetMetaData metadata) throws SQLException{
+    public static String resultSetMetaDataToString(ResultSetMetaData metadata, String delimiter) throws SQLException{
         StringBuffer sb = new StringBuffer();
+        int columnCount = metadata.getColumnCount();
         for (int col = 1; col <= columnCount; col++) {
             sb.append(metadata.getColumnName(col))
                 .append("[")          //$NON-NLS-1$
@@ -161,7 +162,7 @@ public class ResultSetReader extends StringLineReader {
         return sb.toString();        
     }
     
-	String prettyPrint(SQLXML xml) throws SQLException {
+	public static String prettyPrint(SQLXML xml) throws SQLException {
 		try {
 			TransformerFactory transFactory = TransformerFactory.newInstance();
 			transFactory.setAttribute("indent-number", new Integer(2)); //$NON-NLS-1$

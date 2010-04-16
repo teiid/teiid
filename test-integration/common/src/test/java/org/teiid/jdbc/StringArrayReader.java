@@ -20,9 +20,11 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.script.io;
+package org.teiid.jdbc;
 
 import java.io.IOException;
+
+import org.teiid.script.io.StringLineReader;
 
 
 /** 

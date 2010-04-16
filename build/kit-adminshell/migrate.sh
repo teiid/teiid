@@ -67,4 +67,4 @@ TEIID_CLASSPATH="$TEIID_HOME/lib/patches/*:$TEIID_HOME/lib/*"
 JAVA_OPTS="$JAVA_OPTS -Xms128m -Xmx256m -XX:MaxPermSize=256m"
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=log.properties"
 
-$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.MigrationUtil $*
+$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.adminshell.MigrationUtil $*

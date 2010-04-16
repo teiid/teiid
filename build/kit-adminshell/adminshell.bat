@@ -76,4 +76,4 @@ echo.
 
 "%JAVA%" %JAVA_OPTS% ^
    -classpath "%TEIID_CLASSPATH%" ^
-   org.teiid.AdminShell %*
+   org.teiid.adminshell.GroovyAdminShell %*

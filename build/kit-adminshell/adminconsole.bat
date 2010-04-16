@@ -59,6 +59,21 @@ rem JVM memory allocation pool parameters. Modify as appropriate.
 set JAVA_OPTS=%JAVA_OPTS% -Xms128m -Xmx256m -XX:MaxPermSize=256m
 set JAVA_OPTS=%JAVA_OPTS% -Djava.util.logging.config.file=log.properties
 
+echo ===============================================================================
+echo.
+echo   Teiid AdminShell Bootstrap Environment
+echo.
+echo   TEIID_HOME: %TEIID_HOME%
+echo.
+echo   JAVA: %JAVA%
+echo.
+echo   JAVA_OPTS: %JAVA_OPTS%
+echo.
+echo   CLASSPATH: %TEIID_CLASSPATH%
+echo.
+echo ===============================================================================
+echo.
+
 "%JAVA%" %JAVA_OPTS% ^
    -classpath "%TEIID_CLASSPATH%" ^
-   org.teiid.adminshell.MigrationUtil %*
+   org.teiid.adminshell.GroovyAdminConsole %*
