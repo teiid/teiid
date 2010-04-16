@@ -108,7 +108,7 @@
 		   <config-property name="ExtensionTranslationClassName">org.teiid.connector.jdbc.sqlserver.SQLServerSQLTranslator</config-property>
 		  	</xsl:when>
 			<xsl:when test="starts-with(@ComponentType,'DB2')">
-		   <config-property name="ExtensionTranslationClassName">org.teiid.connector.jdbc.sqlserver.DB2SQLTranslator</config-property>
+		   <config-property name="ExtensionTranslationClassName">org.teiid.connector.jdbc.db2.DB2SQLTranslator</config-property>
 		  	</xsl:when>
 			<xsl:when test="starts-with(@ComponentType,'H2')">
 		   <config-property name="ExtensionTranslationClassName">org.teiid.connector.jdbc.h2.H2Translator</config-property>
