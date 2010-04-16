@@ -306,16 +306,16 @@ public class TestConnectorBindings extends BaseConnection {
 	}
 	
 	@Test
-	public void testTemplate() throws Exception{
+	public void testConnectorAddDelete() throws Exception{
 		File f = new File(UnitTestUtil.getTestDataPath()+"/connector-loopback.rar"); //$NON-NLS-1$
 		FileInputStream fis = new FileInputStream(f);
-		admin.addConnector("connector-loopy", fis); //$NON-NLS-1$
+		admin.addConnector("connector-loopy.rar", fis); //$NON-NLS-1$
 		fis.close();
 		
 		Set<String> names = admin.getConnectorNames();
-		assertTrue(names.contains("connector-loopy")); //$NON-NLS-1$
+		assertTrue(names.contains("connector-loopy.rar")); //$NON-NLS-1$
 		
-		admin.deleteConnector("connector-loopy"); //$NON-NLS-1$
+		admin.deleteConnector("connector-loopy.rar"); //$NON-NLS-1$
 		
 		names = admin.getConnectorNames();
 		//assertTrue(!names.contains("connector-loopy")); //$NON-NLS-1$

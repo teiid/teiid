@@ -96,8 +96,9 @@ import org.teiid.templates.connector.ExportConnectorTypeTemplateInfo;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class Admin extends TeiidAdmin {
+	private static final String CONNECTOR_PREFIX = "connector-";
+	private static final String RAR = ".rar"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
-
 	private static final String XA_DATA_SOURCE_TEMPLATE = "XADataSourceTemplate"; //$NON-NLS-1$
 	private static final String LOCAL_DATA_SOURCE_TEMPLATE = "LocalTxDataSourceTemplateInfo";  //$NON-NLS-1$	
 	private static final long serialVersionUID = 7081309086056911304L;
@@ -195,7 +196,7 @@ public class Admin extends TeiidAdmin {
 					return exportJCAConnection(deployedName, mc, type);
 				}				
 			}	
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", deployedName)); //$NON-NLS-1$
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connectionfactory_not_found", deployedName)); //$NON-NLS-1$
 		} catch (Exception e) {
 			throw new AdminComponentException(e);			
 		}
@@ -443,8 +444,8 @@ public class Admin extends TeiidAdmin {
 			HashSet<String> matched = new HashSet<String>();
 			for(ManagedDeployment md:rarFiles) {
 				String name = md.getSimpleName();
-				if (name.startsWith("connector-") && name.endsWith(".rar")) {//$NON-NLS-1$ //$NON-NLS-2$
-					matched.add(name.substring(0, name.length()-4));
+				if (name.startsWith(CONNECTOR_PREFIX) && name.endsWith(RAR)) {
+					matched.add(md.getSimpleName());
 				}
 			}
 			return matched;
@@ -722,21 +723,17 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public void addConnector(String connectorName, InputStream rar) throws AdminException{
-		if (!connectorName.startsWith("connector-")) {//$NON-NLS-1$
+	public void addConnector(String connectorName, InputStream contents) throws AdminException{
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
-		
-		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
-			connectorName = connectorName + ".rar";//$NON-NLS-1$
-		}
-		
+				
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName != null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_exists", deployerName)); //$NON-NLS-1$
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_exists", connectorName)); //$NON-NLS-1$
 		}
 		
-		ManagedUtil.deployArchive(getDeploymentManager(), connectorName, rar, false);
+		ManagedUtil.deployArchive(getDeploymentManager(), connectorName, contents, false);
 		
 		//also need to add a template for the properties
 		try {
@@ -751,29 +748,32 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public void deleteConnector(String connectorName) throws AdminException {
-		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
-			connectorName = connectorName + ".rar";//$NON-NLS-1$
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
+		
 		String deployerName = getRarDeployerName(connectorName);
-		if (deployerName != null) {
-			//also need to delete template for the properties
-			String connectorNameWithoutExt = connectorName.substring(0, connectorName.length()-4);
-			ManagedUtil.removeArchive(getDeploymentManager(), connectorNameWithoutExt+"-template.jar");//$NON-NLS-1$
-			
-			ManagedUtil.removeArchive(getDeploymentManager(), deployerName);
+		if (deployerName == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName));
 		}
+
+		//also need to delete template for the properties
+		String connectorNameWithoutExt = connectorName.substring(0, connectorName.length()-4);
+		ManagedUtil.removeArchive(getDeploymentManager(), connectorNameWithoutExt+"-template.jar");//$NON-NLS-1$
+		ManagedUtil.removeArchive(getDeploymentManager(), deployerName);
 	}
 	
 	@Override
 	public InputStream exportConnector(String connectorName) throws AdminException {
-		if (!connectorName.endsWith(".rar")) {//$NON-NLS-1$
-			connectorName = connectorName + ".rar";//$NON-NLS-1$
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
+		
 		String deployerName = getRarDeployerName(connectorName);
-		if (deployerName != null) {
-			return exportDeployment(deployerName);			
+		if (deployerName == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName));
 		}
-		return null;
+		return exportDeployment(deployerName);
 	}
 	
 	@Override
@@ -1003,7 +1003,7 @@ public class Admin extends TeiidAdmin {
         "  <factory bean=\"DSDeploymentTemplateInfoFactory\"/>\n" + //$NON-NLS-1$
         "    <parameter class=\"java.lang.Class\">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>\n" + //$NON-NLS-1$
         "    <parameter class=\"java.lang.Class\">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>\n" + //$NON-NLS-1$
-        "    <parameter class=\"java.lang.String\">${name}</parameter>\n" + //$NON-NLS-1$
+        "    <parameter class=\"java.lang.String\">${name}.rar</parameter>\n" + //$NON-NLS-1$
         "    <parameter class=\"java.lang.String\">${name}</parameter>\n"+ //$NON-NLS-1$
         "  </constructor>\n" + //$NON-NLS-1$
         "</bean>\n"+ //$NON-NLS-1$
