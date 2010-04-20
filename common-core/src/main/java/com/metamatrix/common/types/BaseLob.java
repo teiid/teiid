@@ -1,17 +1,23 @@
 package com.metamatrix.common.types;
 
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Reader;
-import java.io.Serializable;
 import java.sql.SQLException;
 
 import com.metamatrix.common.types.InputStreamFactory.StreamFactoryReference;
 
-public class BaseLob implements Serializable, StreamFactoryReference {
+public class BaseLob implements Externalizable, StreamFactoryReference {
 	
 	private static final long serialVersionUID = -1586959324208959519L;
 	private InputStreamFactory streamFactory;
+	
+	public BaseLob() {
+		
+	}
 	
 	protected BaseLob(InputStreamFactory streamFactory) {
 		this.streamFactory = streamFactory;
@@ -59,6 +65,17 @@ public class BaseLob implements Serializable, StreamFactoryReference {
 			ex.initCause(e);
 			throw ex;
 		}
+    }
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	streamFactory = (InputStreamFactory)in.readObject();
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	out.writeObject(streamFactory);
     }
 
 }

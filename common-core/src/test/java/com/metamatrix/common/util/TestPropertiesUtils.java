@@ -36,7 +36,6 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.PropertiesUtils.InvalidPropertyException;
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -123,31 +122,10 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties)}
 	 */
-	public void testSimpleUnmodifiableClone(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-	    a = PropertiesUtils.clone(a);
-	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties)}
-	 */
 	public void testSimpleModifiableClone(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
-	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties)}
-	 */
-	public void testSimpleUnmodifiableCloneWithUnmodifiableDefaults(){
-	    Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), UNMODIFIABLE);
-	    ab = PropertiesUtils.clone(ab);
-	    assertTrue(verifyProps(ab, LIST_AB));
-	    assertTrue(ab instanceof UnmodifiableProperties);
 	}
 
 	/**
@@ -157,17 +135,6 @@ public class TestPropertiesUtils extends TestCase {
 	    Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), !UNMODIFIABLE);
 	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
-	    assertTrue(!(ab instanceof UnmodifiableProperties));
-	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties)}
-	 */
-	public void testSimpleUnmodifiableCloneWithModifiableDefaults(){
-	    Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), UNMODIFIABLE);
-	    ab = PropertiesUtils.clone(ab);
-	    assertTrue(verifyProps(ab, LIST_AB));
-	    assertTrue(ab instanceof UnmodifiableProperties);
 	}
 
 	/**
@@ -177,38 +144,17 @@ public class TestPropertiesUtils extends TestCase {
 	    Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
 	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
-	    assertTrue(!(ab instanceof UnmodifiableProperties));
 	}
 
-
-
-
-
-
-
-
-
 	// ##################### clone(Properties, boolean) ##########################
-
 
 	/**
 	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, boolean)}
 	 */
 	public void testCloneModifiableAsModifiable(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-	    a = PropertiesUtils.clone(a, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
-	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, boolean)}
-	 */
-	public void testCloneModifiableAsUnmodifiable(){
-	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-	    a = PropertiesUtils.clone(a, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(a instanceof UnmodifiableProperties);
 	}
 
 	/**
@@ -216,33 +162,18 @@ public class TestPropertiesUtils extends TestCase {
 	 */
 	public void testCloneUnmodifiableAsModifiable(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-	    a = PropertiesUtils.clone(a, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, boolean)}
-	 */
-	public void testCloneUnmodifiableAsUnmodifiable(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-	    a = PropertiesUtils.clone(a, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_A));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-
 
 	/**
 	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, boolean)}
 	 */
 	public void testCloneModifiableWithModifiableAsModifiable(){
 	    Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
-	    ab = PropertiesUtils.clone(ab, !UNMODIFIABLE);
+	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
-	    assertTrue(!(ab instanceof UnmodifiableProperties));
 	}
-	
-
 
 	// ######## clone(Properties, Properties, boolean, boolean) ##################
 	
@@ -252,9 +183,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testCloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
 	
 	/**
@@ -263,31 +193,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testDeepcloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testCloneModAndModAsUnmod(){
-	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testDeepcloneModAndModAsUnmod(){
-	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
 	}
 	
 	/**
@@ -296,9 +203,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testCloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
 	
 	/**
@@ -307,31 +213,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testDeepcloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testCloneModAndUnmodAsUnmod(){
-	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testDeepcloneModAndUnmodAsUnmod(){
-	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
 	}
 	
 	/**
@@ -340,9 +223,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testCloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
 	
 	/**
@@ -351,31 +233,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testDeepcloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testCloneUnmodAndModAsUnmod(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testDeepcloneUnmodAndModAsUnmod(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
 	}
 	
 	/**
@@ -384,9 +243,8 @@ public class TestPropertiesUtils extends TestCase {
 	public void testCloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
 	
 	/**
@@ -395,60 +253,11 @@ public class TestPropertiesUtils extends TestCase {
 	public void testDeepcloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, !UNMODIFIABLE);
+	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(!(a instanceof UnmodifiableProperties));
 	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testCloneUnmodAndUnmodAsUnmod(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testDeepcloneUnmodAndUnmodAsUnmod(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, b, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_AB));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-
 
 	// ########################## ADVANCED #######################################
-
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testAdvanced(){
-	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties bc = make(MAP_B, make(MAP_C, null, UNMODIFIABLE), UNMODIFIABLE); 
-	    a = PropertiesUtils.clone(a, bc, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(a, LIST_ABC));
-	    assertTrue(a instanceof UnmodifiableProperties);
-	}
-	
-	/**
-	 * Tests {@link com.metamatrix.common.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-	 */
-	public void testAdvanced2(){
-	    Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), UNMODIFIABLE);
-		Properties c = make(MAP_C, null, UNMODIFIABLE); 
-	    ab = PropertiesUtils.clone(ab, c, DEEP_CLONE, UNMODIFIABLE);
-	    assertTrue(verifyProps(ab, LIST_ABC));
-	    assertTrue(ab instanceof UnmodifiableProperties);
-	}
-
-    
-    
 
     //===================================================================
     //TESTS HELPERS
@@ -550,9 +359,6 @@ public class TestPropertiesUtils extends TestCase {
             Map.Entry anEntry = (Map.Entry) i.next();
             props.setProperty((String)anEntry.getKey(),(String)anEntry.getValue());
         }
-	    if (makeUnmodifiable){
-	        props = new UnmodifiableProperties(props);
-	    }
 	    return props;
 	}
 

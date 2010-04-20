@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.api.exception.query;
+package org.teiid.client;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 

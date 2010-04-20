@@ -43,10 +43,7 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 
 	private static final long serialVersionUID = 2753412502127824104L;
     
-    /**
-     * Can't construct
-     */
-    ClobType() {
+    public ClobType() {
     }
     
     public ClobType(Clob clob) {

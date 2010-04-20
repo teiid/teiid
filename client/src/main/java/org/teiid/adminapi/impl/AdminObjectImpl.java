@@ -41,6 +41,8 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private String name;
 		
 	private ListOverMap<PropertyMetadata> properties = new ListOverMap<PropertyMetadata>(new KeyBuilder<PropertyMetadata>() {
+		private static final long serialVersionUID = 3687928367250819142L;
+
 		@Override
 		public String getKey(PropertyMetadata entry) {
 			return entry.getName();

@@ -35,7 +35,7 @@ import com.metamatrix.core.util.ExternalizeUtil;
 
 public final class ServiceInvocationStruct implements Externalizable {
 	private static final long serialVersionUID = 1207674062670068350L;
-	public String targetClass;
+	public Class<?> targetClass;
 	public String methodName;
 	public Object[] args;
 	
@@ -49,12 +49,12 @@ public final class ServiceInvocationStruct implements Externalizable {
 		ArgCheck.isNotNull(targetClass);
 		this.args = args;
 		this.methodName = methodName;
-		this.targetClass = targetClass.getName();
+		this.targetClass = targetClass;
 	}
 
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		this.targetClass = (String)in.readObject();
+		this.targetClass = (Class<?>)in.readObject();
 		this.methodName = (String)in.readObject();
 		this.args = ExternalizeUtil.readArray(in, Object.class);
 	}

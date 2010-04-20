@@ -46,7 +46,7 @@ public class TestBlobValue extends TestCase {
     }
 
     
-    public void testClobValuePersistence() throws Exception {
+    public void testBlobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialBlob blob = new SerialBlob(testString.getBytes());
         

@@ -460,6 +460,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     private ResultSet createResultSet(List records, ResultSetMetaData rsmd) throws SQLException {
+    	rsmd.getScale(1); //force the load of the metadata
         ResultsMessage resultsMsg = createDummyResultsMessage(null, null, records);
         StatementImpl stmt = StatementImpl.newInstance(this.driverConnection, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         return new ResultSetImpl(resultsMsg, stmt, rsmd, 0);
@@ -616,18 +617,22 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             // get the metadata for the results
             rmetadata = results.getMetaData();
 
+            // logging
+            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_success", columnNamePattern, tableNamePattern); //$NON-NLS-1$
+            logger.fine(logMsg);
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_error", columnNamePattern, tableNamePattern, e.getMessage()); //$NON-NLS-1$
             throw TeiidSQLException.create(e, logMsg);
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_success", columnNamePattern, tableNamePattern); //$NON-NLS-1$
-        logger.fine(logMsg);
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     /**
@@ -671,9 +676,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             foreignTable = PERCENT; 
         }
 
-        ResultSetImpl results = null;
+        ResultSet results = null;
+        PreparedStatement prepareQuery = null;
         try {
-            PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_CROSS_REFERENCES);
+            prepareQuery = driverConnection.prepareStatement(QUERY_CROSS_REFERENCES);
             prepareQuery.setObject(1, primaryCatalog.toUpperCase());
             prepareQuery.setObject(2, foreignCatalog.toUpperCase());
             prepareQuery.setObject(3, primarySchema.toUpperCase());
@@ -682,20 +688,23 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             prepareQuery.setObject(6, foreignTable.toUpperCase());
 
             // make a query against runtimemetadata and get results
-            results = (ResultSetImpl) prepareQuery.executeQuery();
+            results = prepareQuery.executeQuery();
+            
+            ResultSet resultSet = getReferenceKeys(results);
+
+            // logging
+            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_success", primaryTable, foreignTable); //$NON-NLS-1$
+            logger.fine(logMsg);
+            return resultSet;
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_error", primaryTable, foreignTable, e.getMessage()); //$NON-NLS-1$
             throw TeiidSQLException.create(e, logMsg);
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        ResultSet resultSet = getReferenceKeys(results);
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_success", primaryTable, foreignTable); //$NON-NLS-1$
-        logger.fine(logMsg);
-
-        return resultSet;
     }
 
     /**
@@ -810,26 +819,30 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             table = PERCENT; 
         }
 
-        ResultSetImpl results = null;
+        ResultSet results = null;
+        PreparedStatement prepareQuery = null;
         try {
-            PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_EXPORTED_KEYS);
+            prepareQuery = driverConnection.prepareStatement(QUERY_EXPORTED_KEYS);
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schema.toUpperCase());
             prepareQuery.setObject(3, table.toUpperCase());
 
             // make a query against runtimemetadata and get results
-            results = (ResultSetImpl) prepareQuery.executeQuery();
+            results = prepareQuery.executeQuery();
+            ResultSet resultSet = getReferenceKeys(results);
+
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
+
+            return resultSet;
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_error", table, e.getMessage()); //$NON-NLS-1$
             throw TeiidSQLException.create(e, logMsg);
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+    		}
         }
-
-        ResultSet resultSet = getReferenceKeys(results);
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
-
-        return resultSet;
     }
 
     /**
@@ -876,26 +889,31 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             table = PERCENT; 
         }
 
-        ResultSetImpl results = null;
+        ResultSet results = null;
+        PreparedStatement prepareQuery = null;
         try {
-            PreparedStatement prepareQuery = driverConnection.prepareStatement(QUERY_IMPORTED_KEYS);
+            prepareQuery = driverConnection.prepareStatement(QUERY_IMPORTED_KEYS);
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schema.toUpperCase());
             prepareQuery.setObject(3, table.toUpperCase());
 
 
             // make a query against runtimemetadata and get results
-            results = (ResultSetImpl) prepareQuery.executeQuery();
+            results = prepareQuery.executeQuery();
+            
+            ResultSet resultSet = getReferenceKeys(results);
+
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table)); //$NON-NLS-1$
+
+            return resultSet;
         } catch(Exception e) {
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_error", table, e.getMessage()); //$NON-NLS-1$
             throw TeiidSQLException.create(e, logMsg);
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        ResultSet resultSet = getReferenceKeys(results);
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table)); //$NON-NLS-1$
-
-        return resultSet;
     }
 
     /**
@@ -955,15 +973,17 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
             // get the metadata for the results
             rmetadata = results.getMetaData();
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table)); //$NON-NLS-1$
 
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch (Exception e) {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_error", table, e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table)); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     /**
@@ -1178,14 +1198,17 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             // get the metadata for the results
             rmetadata = results.getMetaData();
 
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success")); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch (Exception e) {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_error", table, e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success")); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern) throws SQLException {
@@ -1236,14 +1259,17 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             }// end of while
             rmetadata = results.getMetaData();
 
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern)); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch (Exception e) {
            throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_error", columnNamePattern, e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern)); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern) throws SQLException {
@@ -1294,14 +1320,17 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             // get the metadata for the results
             rmetadata = results.getMetaData();
 
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern)); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch (Exception e) {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_error", procedureNamePattern, e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern)); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     public String getProcedureTerm() throws SQLException {
@@ -1536,23 +1565,18 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
             // get the metadata for the results
             rmetadata = results.getMetaData();
-        } catch (SQLException e) {
-            throw e;
+
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern)); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch (Exception e) {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_error", tableNamePattern, e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        // close the results (need to close case results exceed cursor size)
-        //results.close();
-
-        // close the PreparedStatement, too. Because of the way of closing request in current framework,
-        // manually send out a close request is very necessary for PreparedStatement.
-        //prepareQuery.close();
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern)); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
     }
 
     public ResultSet getTableTypes() throws SQLException {
@@ -2253,7 +2277,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * @return ResultSet object giving the reference key info.
      * @throws SQLException if there is an accesing server results
      */
-    private ResultSet getReferenceKeys(ResultSetImpl results) throws SQLException {
+    private ResultSet getReferenceKeys(ResultSet results) throws SQLException {
 
         // list which represent records containing reference key info
         List records = new ArrayList ();
@@ -2402,13 +2426,16 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             // Get the metadata for the results
             rmetadata = results.getMetaData();
 
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return createResultSet(records, rmetadata);
         } catch(Exception e) {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
         }
-
-        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
-
-        // construct results object from column values and their metadata
-        return createResultSet(records, rmetadata);
 	}
 }

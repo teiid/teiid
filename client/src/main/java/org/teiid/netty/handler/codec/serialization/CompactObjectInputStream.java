@@ -79,8 +79,12 @@ public class CompactObjectInputStream extends ObjectInputStream {
             } else {
                 clazz = Class.forName(className, true, classLoader);
             }
-            return ObjectStreamClass.lookup(clazz);
+            return ObjectStreamClass.lookupAny(clazz);
         default:
+        	clazz = CompactObjectOutputStream.KNOWN_CODES.get(type);
+        	if (clazz != null) {
+                return ObjectStreamClass.lookupAny(clazz);
+        	}
             throw new StreamCorruptedException(
                     "Unexpected class descriptor type: " + type); //$NON-NLS-1$
         }

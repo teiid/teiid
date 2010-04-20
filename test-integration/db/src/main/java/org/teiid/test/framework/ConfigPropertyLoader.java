@@ -146,7 +146,7 @@ public class ConfigPropertyLoader {
 	public Properties getProperties() {
     
 	    
-	    Properties p = PropertiesUtils.clone(System.getProperties(), false);
+	    Properties p = PropertiesUtils.clone(System.getProperties());
 	    if (props != null) {
 		p.putAll(props);
 	    }

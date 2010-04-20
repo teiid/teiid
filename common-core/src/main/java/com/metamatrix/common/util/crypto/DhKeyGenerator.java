@@ -23,6 +23,7 @@
 package com.metamatrix.common.util.crypto;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.AlgorithmParameterGenerator;
 import java.security.AlgorithmParameters;
@@ -45,23 +46,31 @@ import javax.crypto.spec.DHParameterSpec;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
- * Helper class that supports anonymous ephemeral Diffie-Hellmen
+ * Helper class that supports anonymous ephemeral Diffie-Hellman
  * 
  * Parameters are stored in the dh.properties file
  */
 public class DhKeyGenerator {
 
-	private static String ALGORITHM = "DH"; //$NON-NLS-1$
+	private static String ALGORITHM = "DiffieHellman"; //$NON-NLS-1$
 	private static String DIGEST = "SHA-256"; //$NON-NLS-1$
 	private static DHParameterSpec DH_SPEC;
 
 	static {
 		Properties props = new Properties();
+		InputStream is = null;
 		try {
-			props.load(DhKeyGenerator.class
-					.getResourceAsStream("dh.properties")); //$NON-NLS-1$
+			is = DhKeyGenerator.class.getResourceAsStream("dh.properties"); //$NON-NLS-1$
+			props.load(is); 
 		} catch (IOException e) {
 			throw new MetaMatrixRuntimeException(e);
+		} finally {
+			try {
+				if (is != null) {
+					is.close();
+				}
+			} catch (IOException e) {
+			}
 		}
 		BigInteger p = new BigInteger(props.getProperty("p")); //$NON-NLS-1$
 		BigInteger g = new BigInteger(props.getProperty("g")); //$NON-NLS-1$

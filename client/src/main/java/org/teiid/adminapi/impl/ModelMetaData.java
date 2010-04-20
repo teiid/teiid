@@ -55,7 +55,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	private static final long serialVersionUID = 3714234763056162230L;
 		
 	@XmlElement(name = "source")
-	protected ListOverMap<SourceMappingMetadata> sources = new ListOverMap(new KeyBuilder<SourceMappingMetadata>() {
+	protected ListOverMap<SourceMappingMetadata> sources = new ListOverMap<SourceMappingMetadata>(new KeyBuilder<SourceMappingMetadata>() {
+		private static final long serialVersionUID = 2273673984691112369L;
+
 		@Override
 		public String getKey(SourceMappingMetadata entry) {
 			return entry.getName();

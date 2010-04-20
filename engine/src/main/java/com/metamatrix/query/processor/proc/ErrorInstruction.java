@@ -24,11 +24,11 @@ package com.metamatrix.query.processor.proc;
 
 import static com.metamatrix.query.analysis.AnalysisRecord.*;
 
+import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.ProcedureErrorInstructionException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.symbol.Expression;

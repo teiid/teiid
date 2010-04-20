@@ -29,10 +29,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-
-
 public class TestEmbeddedProfile {
-    EmbeddedProfile EmbeddedProfile = new EmbeddedProfile();
     
     /*
      * Test method for 'com.metamatrix.jdbc.EmbeddedEmbeddedProfile.acceptsURL(String)'

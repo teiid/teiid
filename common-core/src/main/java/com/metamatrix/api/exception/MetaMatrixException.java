@@ -41,7 +41,9 @@ import com.metamatrix.core.util.MetaMatrixExceptionUtil;
  */
 public class MetaMatrixException extends MetaMatrixCoreException {
 
-    /**
+	private static final long serialVersionUID = -7601629097382531311L;
+
+	/**
      * No-arg Constructor
      */
     public MetaMatrixException() {

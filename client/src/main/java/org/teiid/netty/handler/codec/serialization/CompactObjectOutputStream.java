@@ -37,16 +37,46 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import org.teiid.client.DQP;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
+import org.teiid.client.lob.LobChunk;
+import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.MetaMatrixSecurityException;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.xa.XATransactionException;
+import org.teiid.client.xa.XidImpl;
+import org.teiid.net.socket.Handshake;
+import org.teiid.net.socket.Message;
+import org.teiid.net.socket.ServiceInvocationStruct;
+
+import com.metamatrix.api.exception.ExceptionHolder;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.BlobImpl;
+import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobImpl;
+import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.types.InputStreamFactory.StreamFactoryReference;
 import com.metamatrix.common.util.ReaderInputStream;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * @author The Netty Project (netty-dev@lists.jboss.org)
@@ -60,8 +90,57 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
     static final int TYPE_PRIMITIVE = 0;
     static final int TYPE_NON_PRIMITIVE = 1;
     
+    public static final Map<Class<?>, Integer> KNOWN_CLASSES = new HashMap<Class<?>, Integer>();
+    public static final Map<Integer, Class<?>> KNOWN_CODES = new HashMap<Integer, Class<?>>();
+    
     private List<InputStream> streams = new LinkedList<InputStream>();
     private List<StreamFactoryReference> references = new LinkedList<StreamFactoryReference>();
+    
+    public static void addKnownClass(Class<?> clazz, byte code) {
+    	KNOWN_CLASSES.put(clazz, Integer.valueOf(code));
+    	if (KNOWN_CODES.put(Integer.valueOf(code), clazz) != null) {
+    		throw new MetaMatrixRuntimeException("Duplicate class"); //$NON-NLS-1$
+    	}
+    }
+    
+    static {
+    	addKnownClass(ServiceInvocationStruct.class, (byte)2);
+    	addKnownClass(Handshake.class, (byte)3);
+    	addKnownClass(Message.class, (byte)4);
+    	addKnownClass(SerializableReader.class, (byte)5);
+    	addKnownClass(SerializableInputStream.class, (byte)6);
+    	
+    	addKnownClass(DQP.class, (byte)10);
+    	addKnownClass(LobChunk.class, (byte)11);
+    	addKnownClass(RequestMessage.class, (byte)12);
+    	addKnownClass(ResultsMessage.class, (byte)13);
+    	addKnownClass(PlanNode.class, (byte)14);
+    	addKnownClass(PlanNode.Property.class, (byte)15);
+    	addKnownClass(Annotation.class, (byte)16);
+    	addKnownClass(MetadataResult.class, (byte)17);
+    	addKnownClass(ParameterInfo.class, (byte)18);
+    	addKnownClass(XidImpl.class, (byte)19);
+    	addKnownClass(BlobImpl.class, (byte)20);
+    	addKnownClass(ClobImpl.class, (byte)21);
+    	addKnownClass(SQLXMLImpl.class, (byte)22);
+    	addKnownClass(BlobType.class, (byte)23);
+    	addKnownClass(ClobType.class, (byte)24);
+    	addKnownClass(XMLType.class, (byte)25);
+    	addKnownClass(XATransactionException.class, (byte)26);
+    	
+    	addKnownClass(ILogon.class, (byte)30);
+    	addKnownClass(LogonResult.class, (byte)31);
+    	addKnownClass(SessionToken.class, (byte)32);
+    	addKnownClass(LogonException.class, (byte)33);
+    	addKnownClass(MetaMatrixSecurityException.class, (byte)34);
+    	addKnownClass(InvalidSessionException.class, (byte)35);
+    	
+    	addKnownClass(ExceptionHolder.class, (byte)40);
+    	addKnownClass(MetaMatrixRuntimeException.class, (byte)41);
+    	addKnownClass(MetaMatrixComponentException.class, (byte)42);
+    	addKnownClass(MetaMatrixException.class, (byte)43);
+    	addKnownClass(MetaMatrixProcessingException.class, (byte)44);
+    }
     
     public CompactObjectOutputStream(OutputStream out) throws IOException {
         super(out);
@@ -83,12 +162,18 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
 
     @Override
     protected void writeClassDescriptor(ObjectStreamClass desc) throws IOException {
-        if (desc.forClass().isPrimitive()) {
+        if (desc.forClass().isPrimitive() 
+        		|| !(Externalizable.class.isAssignableFrom(desc.forClass()))) {
             write(TYPE_PRIMITIVE);
             super.writeClassDescriptor(desc);
         } else {
-            write(TYPE_NON_PRIMITIVE);
-            writeUTF(desc.getName());
+        	Integer b = KNOWN_CLASSES.get(desc.forClass());
+        	if (b != null) {
+        		write(b.intValue());
+        	} else {
+	            write(TYPE_NON_PRIMITIVE);
+	            writeUTF(desc.getName());
+        	}
         }
     }
         
@@ -110,17 +195,17 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
 	    		return sfr;
 	    	} else if (obj instanceof SQLXML) {
 				streams.add(new ReaderInputStream(((SQLXML)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
-	    		StreamFactoryReference sfr = new SQLXMLImpl((InputStreamFactory)null);
+	    		StreamFactoryReference sfr = new SQLXMLImpl();
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof Clob) {
 	    		streams.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
-	    		StreamFactoryReference sfr = new ClobImpl(null, -1);
+	    		StreamFactoryReference sfr = new ClobImpl();
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof Blob) {
 	    		streams.add(((Blob)obj).getBinaryStream());
-	    		StreamFactoryReference sfr = new BlobImpl(null);
+	    		StreamFactoryReference sfr = new BlobImpl();
 	    		references.add(sfr);
 	    		return sfr;
 	    	}

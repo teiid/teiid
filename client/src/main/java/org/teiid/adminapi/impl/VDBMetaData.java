@@ -63,6 +63,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	 */
 	@XmlElement(name = "model", required = true, type = ModelMetaData.class)
 	protected ListOverMap<ModelMetaData> models = new ListOverMap<ModelMetaData>(new KeyBuilder<ModelMetaData>() {
+		private static final long serialVersionUID = 846247100420118961L;
+
 		@Override
 		public String getKey(ModelMetaData entry) {
 			return entry.getName();

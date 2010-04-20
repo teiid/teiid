@@ -1,23 +1,3 @@
-package com.metamatrix.api.exception;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.metamatrix.core.CorePlugin;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.ObjectInputStreamWithClassloader;
-import com.metamatrix.core.util.ReflectionHelper;
-
 /*
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
@@ -40,6 +20,27 @@ import com.metamatrix.core.util.ReflectionHelper;
  * 02110-1301 USA.
  */
 
+package com.metamatrix.api.exception;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.ExternalizeUtil;
+import com.metamatrix.core.util.ObjectInputStreamWithClassloader;
+import com.metamatrix.core.util.ReflectionHelper;
+
 public class ExceptionHolder implements Externalizable {
 	
 	private Throwable exception;
@@ -57,21 +58,21 @@ public class ExceptionHolder implements Externalizable {
 		this.nested = nested;
 	}
 	
-	
 	//## JDBC4.0-begin ##
 	@Override
 	//## JDBC4.0-end ##
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		List<String> classNames = (List<String>)in.readObject();;
+		List<String> classNames = ExternalizeUtil.readList(in, String.class);
 		String message = (String)in.readObject();
 		StackTraceElement[] stackTrace = (StackTraceElement[])in.readObject();
+		String code = (String)in.readObject();
 		ExceptionHolder causeHolder = (ExceptionHolder)in.readObject();
 		byte[] serializedException = (byte[])in.readObject();
 		
 		this.exception = readFromByteArray(serializedException);
 
 		if (this.exception == null) {
-			Throwable t = buildException(classNames, message, stackTrace);
+			Throwable t = buildException(classNames, message, stackTrace, code);
 			if (t == null) {
 				if (causeHolder != null) {
 					this.exception = causeHolder.exception;
@@ -88,7 +89,7 @@ public class ExceptionHolder implements Externalizable {
 		if (this.exception == null) {
 			this.exception = new MetaMatrixRuntimeException(message);
 			this.exception.setStackTrace(stackTrace);
-		}
+		}		
 	}
 	
 	//## JDBC4.0-begin ##
@@ -104,9 +105,14 @@ public class ExceptionHolder implements Externalizable {
 			classNames.add(clazz.getName());
 			clazz = clazz.getSuperclass();
 		}
-		out.writeObject(classNames);
+		ExternalizeUtil.writeList(out, classNames);
 		out.writeObject(exception.getMessage());
 		out.writeObject(exception.getStackTrace());
+		if (exception instanceof MetaMatrixCoreException) {
+			out.writeObject(((MetaMatrixCoreException)exception).getCode());
+		} else {
+			out.writeObject(null);
+		}
 		
 		// specify that this cause is nested exception; not top level
 		if (this.exception.getCause() != null && this.exception.getCause() != this.exception) {
@@ -129,7 +135,7 @@ public class ExceptionHolder implements Externalizable {
 		return exception;
 	}
 		
-	private Throwable buildException(List<String> classNames, String message, StackTraceElement[] stackTrace) {
+	private Throwable buildException(List<String> classNames, String message, StackTraceElement[] stackTrace, String code) {
 		List<String> args = Arrays.asList(CorePlugin.Util.getString("ExceptionHolder.converted_exception", message, classNames)); //$NON-NLS-1$
 		
 		Throwable result = null;
@@ -142,6 +148,12 @@ public class ExceptionHolder implements Externalizable {
 				//
 			}
 		}
+		
+		if (result instanceof MetaMatrixCoreException) {
+			((MetaMatrixCoreException)result).setCode(code);
+			((MetaMatrixCoreException)result).setOriginalType(classNames.get(0));
+		}
+		
 		return result;
 	}
 	
@@ -169,7 +181,7 @@ public class ExceptionHolder implements Externalizable {
 	}
 	
 	public static List<ExceptionHolder> toExceptionHolders(List<? extends Throwable> throwables){
-    	List<ExceptionHolder> list = new ArrayList();
+    	List<ExceptionHolder> list = new ArrayList<ExceptionHolder>();
     	for (Throwable t: throwables) {
     		list.add(new ExceptionHolder(t));
     	}
@@ -177,7 +189,7 @@ public class ExceptionHolder implements Externalizable {
 	}
 	
     public static List<Throwable> toThrowables(List<ExceptionHolder> exceptionHolders) {
-    	List<Throwable> list = new ArrayList();
+    	List<Throwable> list = new ArrayList<Throwable>();
     	for(ExceptionHolder e: exceptionHolders) {
     		list.add(e.getException());
     	}

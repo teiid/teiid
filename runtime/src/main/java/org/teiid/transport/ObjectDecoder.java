@@ -71,6 +71,8 @@ import com.metamatrix.core.util.ExternalizeUtil;
  * @apiviz.landmark
  */
 public class ObjectDecoder extends FrameDecoder {
+	
+	public static final long MAX_LOB_SIZE = 1l << 32;
 
     private final int maxObjectSize;
     private final ClassLoader classLoader;
@@ -80,6 +82,7 @@ public class ObjectDecoder extends FrameDecoder {
     private OutputStream stream;
     private List<StreamFactoryReference> streams;
     private StorageManager storageManager;
+    private FileStore store;
 
     /**
      * Creates a new decoder with the specified maximum object size.
@@ -140,14 +143,14 @@ public class ObjectDecoder extends FrameDecoder {
 	        buffer.skipBytes(2);
 	        
 	        if (stream == null) {
-	        	final FileStore store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
+	        	store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
 		        store.setCleanupReference(sfr);
 		        sfr.setStreamFactory(new InputStreamFactory(Streamable.ENCODING) {
-					
+					FileStore fs = store;
 					@Override
 					public InputStream getInputStream() throws IOException {
-						return new BufferedInputStream(store.createInputStream(0));
+						return new BufferedInputStream(fs.createInputStream(0));
 					}
 				});
 		        this.stream = new BufferedOutputStream(store.createOutputStream());
@@ -158,12 +161,17 @@ public class ObjectDecoder extends FrameDecoder {
 	        	streamIndex++;
 		        continue;
 	        }
+	        if (store.getLength() + dataLen > MAX_LOB_SIZE) {
+	        	throw new StreamCorruptedException(
+	                    "lob too big: " + store.getLength() + dataLen + " (max: " + MAX_LOB_SIZE + ')');
+	        }
 	        buffer.readBytes(this.stream, dataLen);
     	}
         Object toReturn = result;
         result = null;
         streams = null;
         stream = null;
+        store = null;
         return toReturn;
     }
 }

@@ -39,11 +39,7 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 
 	private static final long serialVersionUID = 1294191629070433450L;
     
-    /**
-     * Can't construct
-     */
-    BlobType() {
-        super();
+    public BlobType() {
     }
 
     public BlobType(Blob blob) {

@@ -54,7 +54,6 @@ import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.DataTypeManager;
@@ -105,7 +104,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     // error message cached to avoid i18n lookup each time
     public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+DQPPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
 
-    private static UnmodifiableProperties EMPTY_PROPS = new UnmodifiableProperties(new Properties());
+    private static Properties EMPTY_PROPS = new Properties();
     
     private final CompositeMetadataStore store;
     private Map<String, Resource> vdbEntries;

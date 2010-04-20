@@ -39,7 +39,7 @@ public class StringToCharacterTransform extends Transform {
 		String s = (String) value;
 		
 		if (s.length() == 0) {
-			return new Character(' '); 
+			return Character.valueOf(' '); 
 		}
 		
         return Character.valueOf(s.charAt(0));

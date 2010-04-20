@@ -43,6 +43,10 @@ import com.metamatrix.core.CorePlugin;
  */
 public class BlobImpl extends BaseLob implements Blob, StreamProvider {
     
+	public BlobImpl() {
+		
+	}
+	
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
      * @param valueID reference to value chunk in data source.

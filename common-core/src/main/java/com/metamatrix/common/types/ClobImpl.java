@@ -65,7 +65,11 @@ public class ClobImpl extends BaseLob implements Clob {
 		}
 	}
 
-	private long len;
+	private long len = -1;
+	
+	public ClobImpl() {
+		
+	}
 	
 	/**
 	 * Creates a new ClobImpl.  Note that the length is not taken from the {@link InputStreamFactory} since

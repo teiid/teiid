@@ -288,7 +288,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.driverConnection.closeStatement(this);
 
         logger.fine(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
-        driverConnection = null;
     }
 
     /**

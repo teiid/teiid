@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
@@ -152,23 +151,7 @@ public final class PropertiesUtils {
      * copy of the underlying Properties object.
      */
     public static Properties clone( Properties props ) {
-        boolean makeUnmodifiable = false;
-        if ( props instanceof UnmodifiableProperties ) {
-            makeUnmodifiable = true;
-        }
-        return clone(props, makeUnmodifiable);
-    }
-
-    /**
-     * Performs a correct deep clone of the properties object by capturing
-     * all properties in the default(s) and placing them directly into the
-     * new Properties object.  If an unmodifiable properties object is sought
-     * this method returns an
-     * <code>UnmodifiableProperties</code> instance around a new (flattened)
-     * copy of the underlying Properties object.
-     */
-    public static Properties clone( Properties props, boolean makeUnmodifiable ) {
-        return clone(props, null, false, makeUnmodifiable);
+        return clone(props, null, false);
     }
 
     /**
@@ -180,30 +163,10 @@ public final class PropertiesUtils {
      * copy of the underlying Properties object.
      */
     public static Properties clone( Properties props, Properties defaults, boolean deepClone ) {
-        boolean makeUnmodifiable = false;
-        if ( props instanceof UnmodifiableProperties ) {
-            makeUnmodifiable = true;
-        }
-        return clone(props,defaults,deepClone, makeUnmodifiable);
-    }
-
-    /**
-     * Performs a correct deep clone of the properties object by capturing
-     * all properties in the default(s) and placing them directly into the
-     * new Properties object.  If an unmodifiable properties object is sought
-     * this method returns an
-     * <code>UnmodifiableProperties</code> instance around a new (flattened)
-     * copy of the underlying Properties object.
-     */
-    public static Properties clone( Properties props, Properties defaults, boolean deepClone, boolean makeUnmodifiable ) {
         Properties result = null;
         if ( defaults != null ) {
             if ( deepClone ) {
-                if ( defaults instanceof UnmodifiableProperties ) {
-                    defaults = clone(defaults,true);
-                } else {
-                    defaults = clone(defaults,false);
-                }
+                defaults = clone(defaults);
             }
             result = new Properties(defaults);
         } else {
@@ -211,10 +174,6 @@ public final class PropertiesUtils {
         }
         
         putAll(result, props);
-        
-        if ( makeUnmodifiable ) {
-            result = new UnmodifiableProperties(result);
-        }
         
         return result;
     }
@@ -441,7 +400,7 @@ public final class PropertiesUtils {
             fr = new FileReader(fileName);
             br = new BufferedReader(fr);
             String header = br.readLine();
-            if (header.indexOf('#') == 0) {
+            if (header != null && header.indexOf('#') == 0) {
                 header = header.substring(1);
             }
             return header;
@@ -887,7 +846,7 @@ public final class PropertiesUtils {
         //  First ensure the pattern is safe to work with.
         //  If the pattern is an empty string, set it to '*',
         //  which means anything passes.
-        pattern.trim();
+        pattern = pattern.trim();
         if ( pattern.length() == 0 )
             pattern = "*"; //$NON-NLS-1$
 

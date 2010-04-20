@@ -22,14 +22,16 @@
 
 package org.teiid.client.plan;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * Annotation describing a decision made during query execution.
  */
-public class Annotation implements Serializable {
+public class Annotation implements Externalizable {
     
-	private static final long serialVersionUID = 7389738177788185542L;
 	public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
     public static final String HINTS = "Hints"; //$NON-NLS-1$
     
@@ -43,6 +45,10 @@ public class Annotation implements Serializable {
     private String annotation;
     private String resolution;
     private Priority priority = Priority.LOW;
+    
+    public Annotation() {
+    	
+    }
     
     public Annotation(String category, String annotation, String resolution, Priority priority) {
         this.category = category;
@@ -69,5 +75,22 @@ public class Annotation implements Serializable {
     
     public String toString() {
         return "QueryAnnotation<" + getCategory() + ", " + getAnnotation() + ">";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	annotation = (String)in.readObject();
+    	category = (String)in.readObject();
+    	resolution = (String)in.readObject();
+    	priority = Priority.values()[in.readByte()];
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	out.writeObject(annotation);
+    	out.writeObject(category);
+    	out.writeObject(resolution);
+    	out.writeByte(priority.ordinal());
     }
 }

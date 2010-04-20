@@ -44,6 +44,10 @@ import com.metamatrix.core.util.ObjectConverterUtil;
  */
 public class SQLXMLImpl extends BaseLob implements SQLXML {
     
+	public SQLXMLImpl() {
+		
+	}
+	
     /**
      * Constructs a SQLXML from bytes that are already encoded in {@link Streamable#ENCODING}
      * @param bytes

@@ -33,7 +33,9 @@ import java.sql.SQLException;
  */
 public class MetaMatrixCoreException extends Exception {
 	
+	private static final long serialVersionUID = -3033427629587497938L;
 	protected String code;
+	private transient String originalType;
 	
     public MetaMatrixCoreException() {
     }
@@ -46,7 +48,6 @@ public class MetaMatrixCoreException extends Exception {
         super(message);
         this.code = errorCode;
     }
-    
 
     public MetaMatrixCoreException(Throwable e) {
         this(e, e.getMessage());        
@@ -65,6 +66,18 @@ public class MetaMatrixCoreException extends Exception {
     public String getCode() {
         return this.code;
     }    
+    
+    public void setCode(String code) {
+    	this.code = code;
+    }
+    
+    public String getOriginalType() {
+		return originalType;
+	}
+    
+    public void setOriginalType(String originalType) {
+		this.originalType = originalType;
+	}
     
     private void setCode(Throwable e) {
         if (e instanceof MetaMatrixCoreException) {

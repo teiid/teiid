@@ -47,7 +47,6 @@ import com.sforce.soap.partner.InvalidFieldFault;
 import com.sforce.soap.partner.InvalidIdFault;
 import com.sforce.soap.partner.LoginFault;
 import com.sforce.soap.partner.LoginResult;
-import com.sforce.soap.partner.LoginScopeHeader;
 import com.sforce.soap.partner.MalformedQueryFault;
 import com.sforce.soap.partner.MruHeader;
 import com.sforce.soap.partner.ObjectFactory;

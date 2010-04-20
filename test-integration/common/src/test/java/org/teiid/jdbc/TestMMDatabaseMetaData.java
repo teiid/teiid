@@ -22,8 +22,7 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,45 +41,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import org.jboss.deployers.spi.DeploymentException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.client.DQP;
-import org.teiid.client.security.ILogon;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.Schema;
-import org.teiid.deployers.MetadataStoreGroup;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
-import org.teiid.dqp.internal.process.DQPConfiguration;
-import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.jdbc.util.ResultSetUtil;
-import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.net.TeiidURL;
-import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
 
-import com.metamatrix.common.queue.FakeWorkManager;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 /**
  */

@@ -31,15 +31,14 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 
-import org.teiid.jdbc.TeiidSQLException;
+import junit.framework.TestCase;
+
+import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.ProcedureErrorInstructionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 

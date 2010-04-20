@@ -134,7 +134,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	if (!sourceRequest()) {
     		return sessionId == value.sessionId && executionId == value.executionId;
     	}
-		return sessionId == value.sessionId && executionId == value.executionId && nodeID == value.nodeID;
+		return sessionId == value.sessionId && executionId == value.executionId && nodeID.equals(value.nodeID);
 	}
     
     public int hashCode() {

@@ -28,7 +28,9 @@ package com.metamatrix.api.exception;
  */
 public class ComponentNotFoundException extends MetaMatrixComponentException {
 
-    /**
+	private static final long serialVersionUID = 8484545412724259223L;
+
+	/**
      * No-Arg Constructor
      */
     public ComponentNotFoundException(  ) {

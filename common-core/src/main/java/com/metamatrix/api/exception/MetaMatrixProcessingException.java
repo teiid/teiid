@@ -29,8 +29,9 @@ package com.metamatrix.api.exception;
  */
 public class MetaMatrixProcessingException extends MetaMatrixException {
 
+	private static final long serialVersionUID = -4013536109023540872L;
 
-    /**
+	/**
      * No-arg Constructor
      */
     public MetaMatrixProcessingException() {

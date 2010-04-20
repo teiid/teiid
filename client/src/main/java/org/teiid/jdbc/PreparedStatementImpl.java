@@ -319,7 +319,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException, if parameter type/datatype do not match
      */
     public void setBoolean (int parameterIndex, boolean value) throws SQLException {
-        setObject(parameterIndex, new Boolean(value));
+        setObject(parameterIndex, value);
     }
 
     /**
@@ -473,9 +473,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
             // transform the object to a BigDecimal
             BigDecimal bigDecimalObject = DataTypeTransformer.getBigDecimal(value);
             // set scale on the BigDecimal
-            bigDecimalObject.setScale(scale);
-
-            setObject(parameterIndex, bigDecimalObject);
+            setObject(parameterIndex, bigDecimalObject.setScale(scale));
         }
     }
     

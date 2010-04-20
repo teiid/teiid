@@ -216,12 +216,15 @@ public class SocketUtil {
                 IOException exception = new IOException(NetPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
                 exception.initCause(e);
                 throw exception;
-            }
+            } 
         }
                 
         KeyStore ks = KeyStore.getInstance(type);        
-        
-        ks.load(stream, password != null ? password.toCharArray() : null);
+        try {
+        	ks.load(stream, password != null ? password.toCharArray() : null);
+        } finally {
+    		stream.close();
+        }
         return ks;
     }
 

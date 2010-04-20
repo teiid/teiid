@@ -22,7 +22,10 @@
 
 package com.metamatrix.common.types;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import com.metamatrix.core.CorePlugin;
 
@@ -34,7 +37,7 @@ import com.metamatrix.core.CorePlugin;
  * object is in buffer manager, but the contents will never be written to disk;
  * this is the ID that client needs to reference to get the chunk of data.
  */
-public abstract class Streamable<T> implements Serializable {
+public abstract class Streamable<T> implements Externalizable {
 
 	private static final long serialVersionUID = -8252488562134729374L;
 	
@@ -84,20 +87,16 @@ public abstract class Streamable<T> implements Serializable {
     }
     
     @Override
-    public boolean equals(Object obj) {
-    	if (this == obj) {
-    		return true;
-    	}
-    	if (!(obj instanceof Streamable<?>)) {
-    		return false;
-    	}
-    	Streamable<?> other = (Streamable<?>)obj;
-    	
-    	if (this.reference != null) {
-    		return this.reference.equals(other.reference);
-    	}
-    	
-    	return this.referenceStreamId == other.referenceStreamId;
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	length = in.readLong();
+    	referenceStreamId = (String)in.readObject();
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	out.writeLong(length);
+    	out.writeObject(referenceStreamId);
     }
 
 }

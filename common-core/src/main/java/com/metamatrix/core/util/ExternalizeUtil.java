@@ -155,15 +155,4 @@ public class ExternalizeUtil {
         return map;
     }
     
-    /*
-     * Serializing CoreException and subclasses.
-     */
-    public static void writeThrowable(ObjectOutput out, Throwable t) throws IOException {
-        out.writeObject(t);
-    }
-    
-    public static Throwable readThrowable(ObjectInput in) throws IOException, ClassNotFoundException {
-        return (Throwable)in.readObject();
-    }
-    
 }

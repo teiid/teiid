@@ -115,10 +115,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         BigDecimal bigDecimalParam = DataTypeTransformer.getBigDecimal(getObject(parameterIndex));
 
         // set scale on the param value
-        bigDecimalParam.setScale(scale);
-
-        // return param value
-        return bigDecimalParam;
+        return bigDecimalParam.setScale(scale);
     }
     
     /**

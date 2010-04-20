@@ -22,7 +22,10 @@
 
 package org.teiid.client.security;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.UUID;
 
 /**
@@ -33,7 +36,7 @@ import java.util.UUID;
  * transit if sent to the client.  Also it should only be sent to the client 
  * who creates the session.
  */
-public class SessionToken implements Serializable, Cloneable {
+public class SessionToken implements Externalizable, Cloneable {
 	public final static long serialVersionUID = -2853708320435636107L;
 
 	/** The session ID */
@@ -145,6 +148,21 @@ public class SessionToken implements Serializable, Cloneable {
 		} catch (CloneNotSupportedException e) {
 		}
 		return null;
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		secret = (UUID)in.readObject();
+		sessionID = in.readLong();
+		userName = (String)in.readObject();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(secret);
+		out.writeLong(sessionID);
+		out.writeObject(userName);
 	}
 
 }

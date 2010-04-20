@@ -22,7 +22,10 @@
 
 package org.teiid.client.security;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.TimeZone;
 
 
@@ -33,7 +36,7 @@ import java.util.TimeZone;
  * 
  * Analogous to the server side SessionToken
  */
-public class LogonResult implements Serializable {
+public class LogonResult implements Externalizable {
         
 	private static final long serialVersionUID = 4481443514871448269L;
 	private TimeZone timeZone = TimeZone.getDefault();
@@ -84,6 +87,25 @@ public class LogonResult implements Serializable {
 
 	public int getVdbVersion() {
 		return vdbVersion;
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		vdbName = (String)in.readObject();
+		sessionToken = (SessionToken)in.readObject();
+		timeZone = (TimeZone)in.readObject();
+		clusterName = (String)in.readObject();
+		vdbVersion = in.readInt();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(vdbName);
+		out.writeObject(sessionToken);
+		out.writeObject(timeZone);
+		out.writeObject(clusterName);
+		out.writeInt(vdbVersion);
 	}
     
 }

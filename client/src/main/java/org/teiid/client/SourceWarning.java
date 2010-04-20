@@ -82,9 +82,9 @@ public class SourceWarning extends MetaMatrixException {
 	public String toString() {
 		StringBuffer warningBuf = new StringBuffer();
 		if (partialResults) {
-			warningBuf.append("Error ");
+			warningBuf.append("Error "); //$NON-NLS-1$
 		} else {
-			warningBuf.append("Warning ");
+			warningBuf.append("Warning "); //$NON-NLS-1$
 		}
 		warningBuf.append("querying the connector with binding name "); //$NON-NLS-1$
 		warningBuf.append(connectorBindingName);

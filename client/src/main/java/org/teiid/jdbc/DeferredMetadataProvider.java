@@ -40,6 +40,7 @@ import com.metamatrix.core.util.StringUtil;
 public class DeferredMetadataProvider extends MetadataProvider {
     private StatementImpl statement;
     private long requestID;
+    private boolean loaded;
 
     public DeferredMetadataProvider(String[] columnNames, String[] columnTypes, StatementImpl statement, long requestID) {
         super(loadPartialMetadata(columnNames, columnTypes));
@@ -47,16 +48,16 @@ public class DeferredMetadataProvider extends MetadataProvider {
         this.requestID = requestID;
     }
     
-    static Map[] loadPartialMetadata(String[] columnNames, String[] columnTypes) {
+    static Map<Integer, String>[] loadPartialMetadata(String[] columnNames, String[] columnTypes) {
     	if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
             Object[] params = new Object[] { 
                 StringUtil.toString(columnNames), StringUtil.toString(columnTypes)
             };
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("DeferredMetadataProvider.Invalid_data", params)); //$NON-NLS-1$
         }
-        Map[] columnMetadata = new Map[columnNames.length];
+        Map<Integer, String>[] columnMetadata = new Map[columnNames.length];
         for(int i=0; i<columnNames.length; i++) {
-            columnMetadata[i] = new HashMap();
+            columnMetadata[i] = new HashMap<Integer, String>();
             columnMetadata[i].put(ResultsMetadataConstants.ELEMENT_NAME, columnNames[i]);
             columnMetadata[i].put(ResultsMetadataConstants.DATA_TYPE, columnTypes[i]);
         }
@@ -77,14 +78,12 @@ public class DeferredMetadataProvider extends MetadataProvider {
 
     @Override
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-        Object value = super.getValue(columnIndex, metadataPropertyKey);
-        
-        if(value == null) {
+        if(!loaded && !(metadataPropertyKey == ResultsMetadataConstants.ELEMENT_NAME || metadataPropertyKey == ResultsMetadataConstants.DATA_TYPE)) {
             loadFullMetadata();
-            value = super.getValue(columnIndex, metadataPropertyKey);          
+            loaded = true;
         }
-        
-        return value;
+
+        return super.getValue(columnIndex, metadataPropertyKey);          
     }
 
 }

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 
@@ -67,7 +68,7 @@ public class ResultsMessage implements Externalizable {
     private int finalRow = -1;
 
     /** The parameters of a Stored Procedure */
-    private List parameters;
+    private List<ParameterInfo> parameters;
 
     /** OPTION DEBUG log if OPTION DEBUG was used */
     private String debugLog;
@@ -265,7 +266,7 @@ public class ResultsMessage implements Externalizable {
         finalRow = in.readInt();
 
         //Parameters
-        parameters = ExternalizeUtil.readList(in);
+        parameters = ExternalizeUtil.readList(in, ParameterInfo.class);
 
         debugLog = (String)in.readObject();
         annotations = ExternalizeUtil.readList(in, Annotation.class);

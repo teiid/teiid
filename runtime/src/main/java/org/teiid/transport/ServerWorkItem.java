@@ -73,7 +73,7 @@ public class ServerWorkItem implements Runnable {
 				throw new AssertionError("unknown message contents"); //$NON-NLS-1$
 			}
 			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
-			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass);			
+			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass.getName());			
 			loggingContext = clientService.getLoggingContext();
 			Method m = clientService.getReflectionHelper().findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 			Object methodResult;
