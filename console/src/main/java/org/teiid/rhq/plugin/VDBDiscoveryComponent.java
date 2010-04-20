@@ -23,10 +23,13 @@ package org.teiid.rhq.plugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +43,7 @@ import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.core.domain.configuration.Configuration;
@@ -50,6 +54,7 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.teiid.adminapi.Request;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -97,7 +102,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					vdbVersion.toString(), // Version
 					PluginConstants.ComponentType.VDB.DESCRIPTION, // Description
 					discoveryContext.getDefaultPluginConfiguration(), // Plugin
-																		// Config
+					// Config
 					null // Process info from a process scan
 			);
 
@@ -113,8 +118,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 			getModels(mcVdb, configuration);
 
-			// Get VDB errors/warnings
-			// getErrors(mcVdb, configuration);
+		//	getProperties(mcVdb, configuration);
 
 			detail.setPluginConfiguration(configuration);
 
@@ -141,13 +145,16 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		PropertyList sourceModelsList = new PropertyList("sourceModels");
 		configuration.put(sourceModelsList);
+		
+		PropertyList multiSourceModelsList = new PropertyList("multisourceModels");
+		configuration.put(multiSourceModelsList);
 
 		PropertyList logicalModelsList = new PropertyList("logicalModels");
 		configuration.put(logicalModelsList);
 
 		PropertyList errorList = new PropertyList("errorList");
 		configuration.put(errorList);
-	
+
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
 			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
@@ -177,10 +184,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
 			String visibility = ((SimpleValueSupport) managedObject
 					.getProperty("visible").getValue()).getValue().toString();
-			String type = ((EnumValueSupport) managedObject
-					.getProperty("modelType").getValue()).getValue().toString();
+			String type = ((EnumValueSupport) managedObject.getProperty(
+					"modelType").getValue()).getValue().toString();
 
-			
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
 			if (errors != null) {
@@ -195,7 +201,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					String message = ((SimpleValue) errorMo
 							.getProperty("value").getValue()).getValue()
 							.toString();
-					PropertyMap errorMap = new PropertyMap("errorMap", new PropertySimple("severity", severity), new PropertySimple("message", message));
+					PropertyMap errorMap = new PropertyMap("errorMap",
+							new PropertySimple("severity", severity),
+							new PropertySimple("message", message));
 					errorList.add(errorMap);
 				}
 			}
@@ -205,7 +213,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 				if (isSource) {
 					String sourceName = (String) sourceMap.get("name");
 					String jndiName = (String) sourceMap.get("jndiName");
-
+					
 					PropertyMap model = new PropertyMap("model",
 							new PropertySimple("name", modelName),
 							new PropertySimple("sourceName", sourceName),
@@ -252,6 +260,46 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		} else {
 			throw new IllegalStateException(pValue
 					+ " is not a Collection type");
+		}
+	}
+
+	/**
+	 * @param mc
+	 * @param configuration
+	 * @throws Exception
+	 */
+	private void getProperties(ManagedComponent mcVdb,
+			Configuration configuration) {
+
+		ManagedProperty mp = mcVdb.getProperty("JAXBProperties");
+		Collection<Object> list = new ArrayList<Object>();
+		getRequestCollectionValue(mp.getValue(), list);
+		PropertyMap vdbPropertyMap = new PropertyMap("vdbProperties");
+		configuration.put(vdbPropertyMap);
+		setProperties(mp, vdbPropertyMap);
+
+	}
+
+	/**
+	 * @param mcMap
+	 * @param propertyMap
+	 */
+	private void setProperties(ManagedProperty mProp, PropertyMap propertyMap) {
+		//String value = ProfileServiceUtil.stringValue(mProp.getValue());
+		PropertySimple prop = new PropertySimple(mProp.getName(), "test");
+		propertyMap.put(prop);
+
+	}
+	
+	public static <T> void getRequestCollectionValue(MetaValue pValue,
+			Collection<Object> list) {
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				SimpleValueSupport property = (SimpleValueSupport)value;
+					list.add(property);
+			}
 		}
 	}
 

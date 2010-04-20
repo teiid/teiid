@@ -64,59 +64,32 @@ public class ModelDiscoveryComponent implements ResourceDiscoveryComponent {
 			throws InvalidPluginConfigurationException, Exception {
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
 
-		PropertyList list = discoveryContext.getParentResourceContext().getPluginConfiguration().getList("models");
+		for (int i = 0; i < 3; i++) {
+			String modelName = "myModel" + i;
 
-		Iterator<Property> listIter = list.getList().iterator();
-		
-		while(listIter.hasNext()){
-			PropertyMap propertyMap = (PropertyMap)listIter.next();
-			
-			String modelName = ((PropertySimple)propertyMap.getMap().get("name")).getStringValue();
-		
-			ManagedComponent model = ProfileServiceUtil
-			.getManagedComponent(new ComponentType(
-					PluginConstants.ComponentType.Model.TYPE,
-					PluginConstants.ComponentType.Model.SUBTYPE),
-					modelName);
-	
-			/**
-			 * 
-			 * A discovered resource must have a unique key, that must stay the same
-			 * when the resource is discovered the next time
-			 */
 			DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 					discoveryContext.getResourceType(), // ResourceType
 					modelName, // Resource Key
 					modelName, // Resource Name
 					null, // Version TODO can we get that from discovery ?
 					PluginConstants.ComponentType.Model.DESCRIPTION, // Description
-					discoveryContext.getDefaultPluginConfiguration(), // Plugin Config
+					discoveryContext.getDefaultPluginConfiguration(), // Plugin
+					// Config
 					null // Process info from a process scan
 			);
-					
-			// modelURI, connectorBindingNames, source, visible, modelType, visibility, supportsMultiSourceBindings, 
-			// name, path, uuid, properties
-			String name = ((SimpleValueSupport)model.getProperty("name").getValue()).getValue().toString();
-			String path = ((SimpleValueSupport)model.getProperty("path").getValue()).getValue().toString();
-			String modelURI = ((SimpleValueSupport)model.getProperty("modelURI").getValue()).getValue().toString();
-			String source = ((SimpleValueSupport)model.getProperty("source").getValue()).getValue().toString();
-			String visible = ((SimpleValueSupport)model.getProperty("visible").getValue()).getValue().toString();
-			String modelType = ((SimpleValueSupport)model.getProperty("modelType").getValue()).getValue().toString();
-			String supportsMultiSourceBindings = ((SimpleValueSupport)model.getProperty("supportsMultiSourceBindings").getValue()).getValue().toString();
+
+			Configuration c = detail.getPluginConfiguration();
+			c.put(new PropertySimple(modelName, "name"));
+
+			PropertyList list = new PropertyList("multisourceModels");
+			PropertyMap map = new PropertyMap("model",
+					new PropertySimple("oraclesource", "sourceName"),
+					new PropertySimple("JNDINameOracle", "jndiName"),
+					new PropertySimple("MySQLsource", "sourceName"),
+					new PropertySimple("JNDINameMySQL", "jndiName"));
+			list.add(map);
 			
-			Configuration c = detail.getPluginConfiguration(); 
-			
-			getConnectors(model, c);
-			
-			c.put(new PropertySimple("name", name));
-			c.put(new PropertySimple("path", path));
-			c.put(new PropertySimple("modelURI", modelURI));
-			c.put(new PropertySimple("source", source));
-			c.put(new PropertySimple("visible", visible));
-			c.put(new PropertySimple("modelType", modelType));
-			c.put(new PropertySimple("supportsMultiSourceBindings", supportsMultiSourceBindings));	
-			
-			
+			detail.setPluginConfiguration(c);
 			// Add to return values
 			discoveredResources.add(detail);
 			log.info("Discovered Teiid Model: " + modelName);
@@ -124,27 +97,30 @@ public class ModelDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		return discoveredResources;
 	}
-	
+
 	/**
 	 * @param mcVdb
 	 * @param configuration
 	 */
-	private void getConnectors(ManagedComponent model, Configuration configuration) {
-		//Get Connector(s) from Model
+	private void getConnectors(ManagedComponent model,
+			Configuration configuration) {
+		// Get Connector(s) from Model
 		ManagedProperty property = model.getProperty("connectorBindingNames");
-		CollectionValueSupport valueSupport = (CollectionValueSupport) property.getValue();
+		CollectionValueSupport valueSupport = (CollectionValueSupport) property
+				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
- 
+
 		PropertyList connectorsList = new PropertyList("connectors");
 		configuration.put(connectorsList);
-				
+
 		for (MetaValue value : metaValues) {
 			SimpleValueSupport simpleValueSupport = (SimpleValueSupport) value;
-			String connectorName = (String)simpleValueSupport.getValue();
-			
-			PropertyMap connector = new PropertyMap("connector", new PropertySimple("name", connectorName));
+			String connectorName = (String) simpleValueSupport.getValue();
+
+			PropertyMap connector = new PropertyMap("connector",
+					new PropertySimple("name", connectorName));
 			connectorsList.add(connector);
 		}
-	}	
-	
+	}
+
 }

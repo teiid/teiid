@@ -111,6 +111,7 @@ public interface PluginConstants {
 
 				public final static String STATUS = "status"; //$NON-NLS-1$ 
 				public final static String QUERY_COUNT = "queryCount"; //$NON-NLS-1$            
+				public final static String ERROR_COUNT = "errorCount"; //$NON-NLS-1$
 				public final static String SESSION_COUNT = "sessionCount"; //$NON-NLS-1$
 				public final static String LONG_RUNNING_QUERIES = "longRunningQueries"; //$NON-NLS-1$     
 
