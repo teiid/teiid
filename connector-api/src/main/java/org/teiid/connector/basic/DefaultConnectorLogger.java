@@ -32,7 +32,6 @@ import org.teiid.connector.api.ConnectorLogger;
  * DefaultConnectorLogger.
  */
 public class DefaultConnectorLogger implements ConnectorLogger {
-	public static final String CTX_CONNECTOR = "CONNECTOR"; //$NON-NLS-1$
 	@Override
     public void logError(String message) {
         //LogManager.logError(CTX_CONNECTOR, message);

@@ -22,21 +22,20 @@
 
 package com.metamatrix.common.log;
 
-import org.teiid.connector.basic.DefaultConnectorLogger;
 
 public interface LogConstants {
 	// add the new contexts to the Log4JUtil.java class, for configuration purpose
-	public static final String CTX_SECURITY = "SECURITY"; //$NON-NLS-1$
-	public static final String CTX_TRANSPORT = "TRANSPORT"; //$NON-NLS-1$
-	public static final String CTX_QUERY_PLANNER = "PLANNER"; //$NON-NLS-1$
-	public static final String CTX_DQP = "PROCESSOR"; //$NON-NLS-1$
-	public static final String CTX_CONNECTOR = DefaultConnectorLogger.CTX_CONNECTOR;
-	public static final String CTX_BUFFER_MGR = "BUFFER_MGR"; //$NON-NLS-1$
-	public static final String CTX_TXN_LOG = "TXN_LOG"; //$NON-NLS-1$
-	public static final String CTX_COMMANDLOGGING = "COMMAND_LOG"; //$NON-NLS-1$
-	public static final String CTX_AUDITLOGGING = "AUDIT_LOG"; //$NON-NLS-1$
-	public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
-	public static final String CTX_RUNTIME = "RUNTIME"; //$NON-NLS-1$
+	public static final String CTX_SECURITY = "org.teiid.SECURITY"; //$NON-NLS-1$
+	public static final String CTX_TRANSPORT = "org.teiid.TRANSPORT"; //$NON-NLS-1$
+	public static final String CTX_QUERY_PLANNER = "org.teiid.PLANNER"; //$NON-NLS-1$
+	public static final String CTX_DQP = "org.teiid.PROCESSOR"; //$NON-NLS-1$
+	public static final String CTX_CONNECTOR = "org.teiid.CONNECTOR"; //$NON-NLS-1$
+	public static final String CTX_BUFFER_MGR = "org.teiid.BUFFER_MGR"; //$NON-NLS-1$
+	public static final String CTX_TXN_LOG = "org.teiid.TXN_LOG"; //$NON-NLS-1$
+	public static final String CTX_COMMANDLOGGING = "org.teiid.COMMAND_LOG"; //$NON-NLS-1$
+	public static final String CTX_AUDITLOGGING = "org.teiid.AUDIT_LOG"; //$NON-NLS-1$
+	public static final String CTX_ADMIN_API = "org.teiid.ADMIN_API"; //$NON-NLS-1$
+	public static final String CTX_RUNTIME = "org.teiid.RUNTIME"; //$NON-NLS-1$
 	// Query contexts
 	public static final String CTX_FUNCTION_TREE = CTX_QUERY_PLANNER + ".FUNCTION_TREE"; //$NON-NLS-1$
 	public static final String CTX_QUERY_RESOLVER = CTX_QUERY_PLANNER + ".RESOLVER"; //$NON-NLS-1$

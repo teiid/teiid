@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.core.log;
+package com.metamatrix.common.log;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,23 +29,27 @@ import java.util.logging.Logger;
  * Write to Java logging
  */
 public class JavaLogWriter implements LogListener {
+	
+	@Override
+	public boolean isEnabled(String context, int msgLevel) {
+		Logger logger = Logger.getLogger(context);
+    	
+    	Level javaLevel = convertLevel(msgLevel);
+    	return logger.isLoggable(javaLevel);
+	}
 
     public void log(int level, String context, Object msg) {
-    	Logger logger = Logger.getLogger("org.teiid." + context); //$NON-NLS-1$
+    	Logger logger = Logger.getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
-    	if (logger.isLoggable(javaLevel)) {
-    		logger.log(javaLevel, msg.toString());
-    	}
+		logger.log(javaLevel, msg.toString());
     }
     
     public void log(int level, String context, Throwable t, Object msg) {
-    	Logger logger = Logger.getLogger("org.teiid." + context); //$NON-NLS-1$
+    	Logger logger = Logger.getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
-    	if (logger.isLoggable(javaLevel)) {
-    		logger.log(javaLevel, msg.toString(), t);
-    	}
+		logger.log(javaLevel, msg.toString(), t);
     }
     
     public Level convertLevel(int level) {

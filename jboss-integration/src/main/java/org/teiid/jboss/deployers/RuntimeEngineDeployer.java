@@ -59,8 +59,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 import org.teiid.jboss.IntegrationPlugin;
-import org.teiid.logging.LogConfigurationProvider;
-import org.teiid.logging.LogListernerProvider;
+import org.teiid.logging.Log4jListener;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -72,8 +71,8 @@ import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.SessionServiceException;
@@ -98,8 +97,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
-		LogManager.setLogConfiguration(new LogConfigurationProvider().get());
-		LogManager.setLogListener(new LogListernerProvider().get());
+		LogManager.setLogListener(new Log4jListener());
     }
 	
 	@Override

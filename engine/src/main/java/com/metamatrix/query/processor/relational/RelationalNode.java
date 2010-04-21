@@ -38,7 +38,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.ProcessorDataManager;

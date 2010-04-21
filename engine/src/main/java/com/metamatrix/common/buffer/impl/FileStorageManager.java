@@ -35,7 +35,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 

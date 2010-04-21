@@ -27,10 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import com.metamatrix.core.log.JavaLogWriter;
-import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.LogMessage;
-import com.metamatrix.core.log.MessageLevel;
 
 
 /**
@@ -134,11 +130,7 @@ public final class LogManager {
 		}
 	}
 
-
-	static LogConfiguration configuration = new LogConfigurationImpl(MessageLevel.DETAIL); // either injected or manually set using the set methods
-    
     static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
-
 
     /**
      * Send a critical message to the log.  This level of message is generally
@@ -362,22 +354,6 @@ public final class LogManager {
     	logListener.log(msgLevel, context, e, message);
     }
 
-    /**
-     * Utility method to obtain the a modifiable log configuration for the LogManager.
-     * <p>After modifying the log config, user must call {@link #setLogConfiguration(LogConfiguration)} to
-     * affect the logging configuration.</p>
-     * @return a modifiable copy of the current log configuration
-     */
-    public static LogConfiguration getLogConfigurationCopy() {
-    	return LogConfigurationImpl.makeCopy(configuration); 
-    }
-    
-    public static void setLogConfiguration(LogConfiguration config ) {
-		if ( config != null ) {
-            configuration = LogConfigurationImpl.makeCopy(config);
-        }
-    }
-    
     public static void setLogListener(LogListener listener) {
     	logListener.shutdown();
     	if (listener != null) {
@@ -397,8 +373,8 @@ public final class LogManager {
      * or false if it would be discarded by the LogManager.
      */
     public static boolean isMessageToBeRecorded(String context, int msgLevel) {
-    	if (configuration != null) {
-    		return configuration.isEnabled(context, msgLevel);
+    	if (logListener != null) {
+    		return logListener.isEnabled(context, msgLevel);
     	}
     	return true;
     }

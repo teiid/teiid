@@ -46,7 +46,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;

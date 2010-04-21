@@ -25,7 +25,7 @@ package org.teiid.logging;
 import org.apache.commons.logging.Log;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 
 /**
  * This class is bridge for hooking LogManager into systems that use apache commons logging. In the Teiid

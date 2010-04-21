@@ -39,7 +39,7 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;

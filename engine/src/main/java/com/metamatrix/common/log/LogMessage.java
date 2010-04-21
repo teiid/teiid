@@ -20,27 +20,43 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.core.log;
+package com.metamatrix.common.log;
+
+import java.io.Serializable;
 
 
-/**
- * Logger
- */
-public interface Logger {
-    
-    /**
-     * Logs the given message with the supplied severity.  
-     * @param severity
-     * @param message the message to be logged
-     */
-    public void log( int severity, String message );
-    
-    /**
-     * Logs the given message and {@link Throwable} with the supplied severity.  
-     * @param severity the severity
-     * @param message the message to be logged
-     * @param t the exception; may be null
-     */
-    public void log( int severity, Throwable t, String message );
-        
+public class LogMessage implements Serializable{
+
+	private Object[] msgParts;
+
+	public LogMessage(Object[] msgParts) {
+        this.msgParts = msgParts;
+	}
+
+	public Object[] getMessageParts() {
+		return this.msgParts;
+	}
+
+	public String getText() {
+		StringBuffer text = null;
+		if(msgParts != null) {
+			text = new StringBuffer();
+		    for(int i=0; i<msgParts.length; i++) {
+		        if (i>0) text.append(" "); //$NON-NLS-1$
+                Object omsg = msgParts[i];
+                if ( omsg != null ) {
+		            text.append(omsg.toString());
+                }
+		    }
+		}
+
+        if (text == null) {
+        	return "NULL"; //$NON-NLS-1$
+        } 
+        return text.toString();
+	}
+	
+	public String toString() {
+		return getText();
+	}
 }

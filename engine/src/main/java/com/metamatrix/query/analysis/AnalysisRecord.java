@@ -36,8 +36,8 @@ import org.teiid.client.plan.PlanNode;
 
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;

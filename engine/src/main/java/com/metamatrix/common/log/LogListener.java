@@ -20,19 +20,32 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.core.log;
+package com.metamatrix.common.log;
 
-public class SysOutLogger implements com.metamatrix.core.log.Logger {
 
-	public void log(int arg0, String arg1) {
-		System.out.println("Status = " + arg0 + " Message = " + arg1);
+/**
+ * LogListener
+ */
+public interface LogListener {
+	
+    /**
+     * Is the logging for the given context at the specified message level enabled. 
+     * @param context
+     * @param msgLevel
+     * @return
+     */
+    boolean isEnabled(String context, int msgLevel);
 
-	}
+    void log(int level, String context, Object msg);
+    
+    void log(int level, String context, Throwable t, Object msg);
 
-	public void log(int arg0, Throwable arg1, String arg2) {
-		System.out.println("Status = " + arg0 + " Message = " +
-				arg2 + " Throwable Info: Type = " + arg1.getClass() + 
-				" Message = " + arg1.getMessage());
-	}
+    /**
+     * Shut down this listener, requesting it clean up and release any resources it
+     * may have acquired during its use.  The listener is free to ignore this
+     * request if it is not responsible for managing the resources it uses or if
+     * there are no resources.
+     */
+    void shutdown(); 
 
 }

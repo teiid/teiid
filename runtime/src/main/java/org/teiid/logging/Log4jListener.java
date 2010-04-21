@@ -19,19 +19,43 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.logging;
 
-import java.util.HashSet;
-import java.util.Set;
+package org.teiid.logging;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.LogListener;
+import com.metamatrix.common.log.MessageLevel;
 
-class Log4JUtil {
-	private static final String ROOT_CONTEXT = LogConfiguration.ROOT_CONTEXT;
+/**
+ * Log4J Listener
+ */
+public class Log4jListener implements LogListener{
+	
+	@Override
+	public boolean isEnabled(String context, int level) {
+    	if ( context == null ) {
+            return false;
+        }
+    	Level logLevel = convert2Log4JLevel(level);
+        if ( logLevel == Level.OFF) {
+            return false;
+        }
+        Logger log = getLogger(context);
+        return log.isEnabledFor(logLevel);
+	}
+
+	@Override
+	public void log(int level, String context, Object msg) {
+		Logger log4j = getLogger(context);
+		log4j.log(convert2Log4JLevel(level), msg);
+	}
+
+	public void log(int level, String context, Throwable t, Object msg) {
+		Logger log4j = getLogger(context);
+		log4j.log(convert2Log4JLevel(level), msg, t);
+	}
 	
 	/**
 	 * Convert {@link MessageLevel} to {@link Level}
@@ -86,38 +110,11 @@ class Log4JUtil {
      * @return
      */
 	public static Logger getLogger(String context) {
-		Logger log4j = null;
-		if (context.indexOf('.') == -1) {
-			log4j = Logger.getLogger(ROOT_CONTEXT+context);
-		}
-		else {
-			log4j = Logger.getLogger(context);
-		}
-		return log4j;
-	}    
-	
-	public static Set<String> getContexts(){
-		HashSet<String> contexts = new HashSet<String>();
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_DQP);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_CONNECTOR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_TXN_LOG);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_COMMANDLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_AUDITLOGGING);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_SECURITY);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_TRANSPORT);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_ADMIN_API);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_QUERY_PLANNER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_RUNTIME);
-		
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_FUNCTION_TREE);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_QUERY_RESOLVER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_XML_PLANNER);
-		contexts.add(ROOT_CONTEXT+com.metamatrix.common.log.LogConstants.CTX_XML_PLAN);
-		
-		contexts.add("com.arjuna"); //$NON-NLS-1$
-		contexts.add("org.jboss"); //$NON-NLS-1$
-		contexts.add("org.teiid"); //$NON-NLS-1$
-		return contexts;
+		return Logger.getLogger(context);
+	}  
+					
+	@Override
+	public void shutdown() {
 	}
+
 }

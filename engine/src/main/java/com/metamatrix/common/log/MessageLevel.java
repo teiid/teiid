@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.core.log;
+package com.metamatrix.common.log;
 
 import java.util.*;
 

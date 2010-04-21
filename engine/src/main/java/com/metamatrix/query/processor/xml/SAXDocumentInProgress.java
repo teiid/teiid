@@ -37,7 +37,7 @@ import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
 
 /**

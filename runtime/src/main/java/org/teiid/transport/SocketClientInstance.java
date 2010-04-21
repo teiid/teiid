@@ -36,11 +36,11 @@ import org.teiid.net.socket.ObjectChannel;
 
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.core.log.MessageLevel;
 
 /**
  * Sockets implementation of the communication framework class representing the server's view of a client connection.
