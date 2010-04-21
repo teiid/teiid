@@ -39,7 +39,7 @@
   <fileSets>
       
     <fileSet>
-        <directory>build/kit-adminshell</directory>
+        <directory>build/target/kits/adminshell</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
           <include>**/*.sh</include>
@@ -48,7 +48,7 @@
     </fileSet> 
           
     <fileSet>
-        <directory>build/kit-adminshell</directory>
+        <directory>build/target/kits/adminshell</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>

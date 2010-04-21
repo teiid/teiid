@@ -63,7 +63,7 @@ fi
 # JPDA options. Uncomment and modify as appropriate to enable remote debugging.
 # JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n"
 
-TEIID_CLASSPATH="$TEIID_HOME/lib/patches/*:$TEIID_HOME/lib/*"
+TEIID_CLASSPATH="$TEIID_HOME/lib/patches/*:$TEIID_HOME/lib/teiid-adminshell-${pom.version}.jar:$TEIID_HOME/lib/*"
 JAVA_OPTS="$JAVA_OPTS -Xms128m -Xmx256m -XX:MaxPermSize=256m"
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=log.properties"
 
@@ -79,4 +79,4 @@ echo ""
 echo "======================================================================"
 echo ""
 
-$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.adminshell.GroovyAdminShell $*
+$JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.adminshell.GroovyAdminConsole $*

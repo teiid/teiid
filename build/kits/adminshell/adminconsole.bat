@@ -53,7 +53,7 @@ if "x%JAVA_HOME%" == "x" (
   )
 )
 
-set TEIID_CLASSPATH=%TEIID_HOME%\lib\patches\*;%TEIID_HOME%\lib\*;
+set TEIID_CLASSPATH=%TEIID_HOME%\lib\patches\*;%TEIID_HOME%\lib\teiid-adminshell-${pom.version}.jar;%TEIID_HOME%\lib\*;
 
 rem JVM memory allocation pool parameters. Modify as appropriate.
 set JAVA_OPTS=%JAVA_OPTS% -Xms128m -Xmx256m -XX:MaxPermSize=256m

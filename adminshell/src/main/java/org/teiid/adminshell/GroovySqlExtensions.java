@@ -43,7 +43,7 @@ public class GroovySqlExtensions {
 	
 	private static Help help = new Help(GroovySqlExtensions.class);
 	
-	@Help.Doc(text = "Get a Teiid connection - using connection.properties")
+	@Help.Doc(text = "Get a Teiid connection with a URL")
 	public static TeiidSql connect(
 			@Help.Doc(text = "url") String url) throws SQLException {
 		return connect(url, null, null);
@@ -76,8 +76,8 @@ public class GroovySqlExtensions {
 				AdminShell.p.getProperty("jdbc.user", "admin"), AdminShell.p.getProperty("jdbc.password", "teiid"));
 	}
 	
-	@Help.Doc(text = "Alternate row to String method that pretty prints SQL/XML," +
-	" \ne.g. sql.eachRow(\"select * from tables\", {row -> println rowToString(row) })")
+	@Help.Doc(text = "Alternate row to String method that pretty prints SQL/XML",
+		moreText = "e.g. sql.eachRow(\"select * from tables\", {row -> println rowToString(row) })")
 	public static String rowToString(ResultSet results) throws SQLException {
 		StringBuilder sb = new StringBuilder();
 		//alternative toString - see GroovyResultSetExtension
@@ -103,17 +103,19 @@ public class GroovySqlExtensions {
 		return sb.toString();
 	}
 	
-	@Help.Doc(text = "Pretty prints the ResultSetMetadata")
+	@Help.Doc(text = "Pretty prints the ResultSetMetadata",
+			moreText = {"e.g. sql.eachRow(\"select * from tables\", {rsmd -> println resultSetMetaDataToString(rsmd)},",
+					    "                {row -> println rowToString(row) })"})
 	public static String resultSetMetaDataToString(ResultSetMetaData rsmd) throws SQLException {
 		return ResultSetReader.resultSetMetaDataToString(rsmd, "    "); //$NON-NLS-1$
 	}
 	
-	@Help.Doc(text = "Show help for all Sql methods")
+	@Help.Doc(text = "Show help for all SQL Extension methods")
 	public static void sqlHelp() {
 		help.help();
 	}
 	
-	@Help.Doc(text = "Show help for the given Sql method")
+	@Help.Doc(text = "Show help for the given SQL Extension method")
 	public static void sqlHelp(
 			@Help.Doc(text = "method name") String method) {
 		help.help(method);

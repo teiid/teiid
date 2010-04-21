@@ -36,9 +36,9 @@ import org.teiid.adminapi.Admin;
 
 public class GroovyAdminConsole {
 	
-	public static final String IMPORTS = "import static " + AdminShell.class.getName() + ".*\n" +  //$NON-NLS-1$ //$NON-NLS-2$
-			"import static " + GroovySqlExtensions.class.getName() + ".*\n" + //$NON-NLS-1$ //$NON-NLS-2$
-			"import " + Admin.class.getPackage().getName() + ".*\n"; //$NON-NLS-1$ //$NON-NLS-2$
+	public static final String IMPORTS = "import static " + AdminShell.class.getName() + ".*;\n" +  //$NON-NLS-1$ //$NON-NLS-2$
+			"import static " + GroovySqlExtensions.class.getName() + ".*;\n" + //$NON-NLS-1$ //$NON-NLS-2$
+			"import " + Admin.class.getPackage().getName() + ".*;\n"; //$NON-NLS-1$ //$NON-NLS-2$
 	
 	public static void main(String[] args) throws Exception {
         // allow the full stack traces to bubble up to the root logger

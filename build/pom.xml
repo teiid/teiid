@@ -10,20 +10,26 @@
   <name>Build</name>
   <description>Teiid Build</description>
     <build>
-        <outputDirectory>target/kit-jboss-container</outputDirectory>
+        <outputDirectory>target/kits</outputDirectory>
         <resources>
             <resource>
-                <directory>kit-jboss-container</directory>
+                <directory>kits</directory>
                 <filtering>true</filtering>
                 <includes>
                     <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                    <include>**/*.sh</include>
+                    <include>**/*.bat</include>
                 </includes>
             </resource>
             <resource>
-                <directory>kit-jboss-container</directory>
+                <directory>kits</directory>
                 <filtering>false</filtering>
                 <excludes>
                     <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.sh</exclude>
+                    <exclude>**/*.bat</exclude>
                 </excludes>
             </resource>
         </resources>

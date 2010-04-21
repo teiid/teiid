@@ -13,7 +13,7 @@
   <fileSets>
           
     <fileSet>
-        <directory>build/target/kit-jboss-container</directory>       
+        <directory>build/target/kits/jboss-container</directory>       
         <outputDirectory>/</outputDirectory>     
     </fileSet>
                     
