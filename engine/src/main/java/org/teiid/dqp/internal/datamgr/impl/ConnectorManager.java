@@ -52,7 +52,7 @@ import org.teiid.security.SecurityHelper;
 
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
