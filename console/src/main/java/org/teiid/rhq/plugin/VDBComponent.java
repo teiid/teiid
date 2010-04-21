@@ -77,6 +77,7 @@ public class VDBComponent extends Facet {
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
 				"name", null));
+		this.resourceConfiguration=context.getPluginConfiguration();
 		super.start(context);
 	}
 
