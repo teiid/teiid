@@ -1,6 +1,16 @@
 <appendix id="faq">
   <title>Frequently Asked Questions</title>
   <qandaset>
+  
+    <qandaentry>
+      <question>
+        <para>Why won't the adminhelp command work in the Console tool?</para>
+      </question>
+      <answer>
+        <para>The Console environment does not understand Shell commands (load, help, adminhelp, etc.), since they are not directly supported by Groovy.  In the Console you should use the equivalent functional form / Groovy, e.g. instead of adminhelp, adminHelp()</para>
+      </answer>
+    </qandaentry>
+  
     <qandaentry>
       <question>
         <para>Are there any pre-built scripts available?</para>
@@ -21,7 +31,7 @@
 
     <qandaentry>
       <question>
-        <para>What is different between "connectAsAdmin()" and "connect()" ?</para>
+        <para>What is different between "connectAsAdmin()" and "connect()"?</para>
       </question>
       <answer>
         <para>The connectAsAdmin methods create a contextual connection to the AdminAPI of the Teiid Server.  The connect methods return an extension of the Groovy Sql object to be used for Sql calls to the Teiid Server.</para>
@@ -33,7 +43,7 @@
         <para>Is IDE support available for writing the scripts?</para>
       </question>
       <answer>
-        <para>The AdminConsole tool is a light IDE.  Full IDE support is available for Groovy, but requires manual manipulation of the class path and script imports.  See <link linkend="other_environments">using AdminShell methods in other environments</link>.</para>
+        <para>The Admin Console tool is a light-weight IDE.  Full IDE support is available for Groovy, but requires manual manipulation of the class path and script imports.  See <link linkend="other_environments">using AdminShell methods in other environments</link>.</para>
       </answer>
     </qandaentry>
 
