@@ -130,4 +130,11 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
+    public void testCodeTableResponseDataNotAvailable() throws Exception {
+    	helpSetup(3);
+    	this.connectorManager.dataNotAvailable = 5;
+        
+        assertNull(dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
+    
 }

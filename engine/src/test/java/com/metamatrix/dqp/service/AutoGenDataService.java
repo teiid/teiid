@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
@@ -50,6 +51,7 @@ public class AutoGenDataService extends ConnectorManager{
     private int rows = 10;
     private SourceCapabilities caps;
 	public boolean throwExceptionOnExecute;
+	public int dataNotAvailable = -1;
     
     public AutoGenDataService() {
     	super("FakeConnector");
@@ -84,6 +86,11 @@ public class AutoGenDataService extends ConnectorManager{
 			
 			@Override
 			public AtomicResultsMessage execute() throws ConnectorException {
+				if (dataNotAvailable > -1) {
+					int delay = dataNotAvailable;
+					dataNotAvailable = -1;
+					throw new DataNotAvailableException(delay);
+				}
 				return msg;
 			}
 			

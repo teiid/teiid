@@ -24,6 +24,8 @@ package com.metamatrix.query.processor;
 
 import java.util.List;
 
+import org.teiid.connector.api.DataNotAvailableException;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -99,22 +101,29 @@ public class QueryProcessor implements BatchProducer {
 		throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
 		
 	    while (true) {
+	    	long wait = DEFAULT_WAIT;
 	    	try {
 	    		return nextBatchDirect();
 	    	} catch (ExpiredTimeSliceException e) {
 	    		if (!nonBlocking) {
 	    			throw e;
 	    		}
+	    		continue;
+	    	} catch (DataNotAvailableException e) {
+	    		if (!nonBlocking) {
+	    			throw e;
+	    		}
+	    		wait = e.getRetryDelay();
 	    	} catch (BlockedException e) {
 	    		if (!nonBlocking) {
 	    			throw e;
 	    		}
-	    		try {
-	                Thread.sleep(DEFAULT_WAIT);
-	            } catch (InterruptedException err) {
-	                throw new MetaMatrixComponentException(err);
-	            }
 	    	}
+    		try {
+                Thread.sleep(wait);
+            } catch (InterruptedException err) {
+                throw new MetaMatrixComponentException(err);
+            }
 	    }
 	}
 	
