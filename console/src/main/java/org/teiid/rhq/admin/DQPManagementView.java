@@ -14,22 +14,14 @@ import javax.naming.NamingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ManagedComponent;
-import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedOperation;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
-import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
-import org.jboss.metatype.api.values.SimpleValue;
-import org.jboss.metatype.api.values.SimpleValueSupport;
-import org.rhq.core.domain.configuration.Configuration;
-import org.rhq.core.domain.configuration.PropertyList;
-import org.rhq.core.domain.configuration.PropertyMap;
-import org.rhq.core.domain.configuration.PropertySimple;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
@@ -225,14 +217,14 @@ public class DQPManagementView implements PluginConstants {
 		} else if (operationName.equals(VDB.Operations.GET_SESSIONS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue sessionMetaValue = getSessions();
-			getSessionCollectionValue(sessionMetaValue,
-					activeSessionsCollection);
+			getSessionCollectionValueForVDB(sessionMetaValue,
+					activeSessionsCollection, (String)valueMap.get(PluginConstants.ComponentType.VDB.NAME));
 			operationResult.setContent(createReportResultList(fieldNameList,
 					activeSessionsCollection.iterator()));
 		} else if (operationName.equals(VDB.Operations.GET_REQUESTS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue requestMetaValue = getRequests();
-			getRequestCollectionValue(requestMetaValue, resultObject);
+			getRequestCollectionValueForVDB(requestMetaValue, resultObject, (String)valueMap.get(PluginConstants.ComponentType.VDB.NAME));
 			operationResult.setContent(createReportResultList(fieldNameList,
 					resultObject.iterator()));
 		}
@@ -507,6 +499,26 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 	
+	public static <T> void getRequestCollectionValueForVDB(MetaValue pValue,
+			Collection<Request> list, String vdbName) {
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				if (value.getMetaType().isComposite()) {
+					Request request = (Request) MetaValueFactory.getInstance()
+							.unwrap(value);
+					if (request.getName().equals(vdbName)){
+						list.add(request);	
+					}
+				} else {
+					throw new IllegalStateException(pValue
+							+ " is not a Composite type");
+				}
+			}
+		}
+	}
+	
 	public static <T> void getTransactionCollectionValue(MetaValue pValue,
 			Collection<Transaction> list) {
 		MetaType metaType = pValue.getMetaType();
@@ -536,6 +548,26 @@ public class DQPManagementView implements PluginConstants {
 					Session Session = (Session) MetaValueFactory.getInstance()
 							.unwrap(value);
 					list.add(Session);
+				} else {
+					throw new IllegalStateException(pValue
+							+ " is not a Composite type");
+				}
+			}
+		}
+	}
+	
+	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,
+			Collection<Session> list, String vdbName) {
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				if (value.getMetaType().isComposite()) {
+					Session session = (Session) MetaValueFactory.getInstance()
+							.unwrap(value);
+					if (session.getName().equals(vdbName)){
+						list.add(session);	
+					}
 				} else {
 					throw new IllegalStateException(pValue
 							+ " is not a Composite type");
