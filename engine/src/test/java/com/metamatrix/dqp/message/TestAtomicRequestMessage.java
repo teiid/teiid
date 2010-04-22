@@ -43,7 +43,7 @@ public class TestAtomicRequestMessage extends TestCase {
     public static AtomicRequestMessage example() {
         RequestMessage rm = new RequestMessage();
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.getSession().setSessionId(2);
+        workContext.getSession().setSessionId(String.valueOf(2));
         AtomicRequestMessage message = new AtomicRequestMessage(rm, workContext, 1000);
         message.setCommand(TestQueryImpl.helpExample(true));
         message.setFetchSize(100);
@@ -64,7 +64,7 @@ public class TestAtomicRequestMessage extends TestCase {
 
         assertEquals(example.getProcessingTimestamp(), copy.getProcessingTimestamp());
         assertEquals(new RequestID(5000L), copy.getRequestID());
-        assertEquals("2", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
+        assertEquals("2", copy.getWorkContext().getSessionId()); //$NON-NLS-1$
         //AtomicRequestMessage-specific stuff
         assertEquals("connectorBindingID", copy.getConnectorName()); //$NON-NLS-1$
         assertEquals(1000, copy.getAtomicRequestID().getNodeID());

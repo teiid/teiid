@@ -50,7 +50,7 @@ public class TestLogonImpl extends TestCase {
 		SessionMetadata session = new SessionMetadata();
 		session.setUserName(userName);
 		session.setApplicationName(applicationName);
-		session.setSessionId(1);
+		session.setSessionId(String.valueOf(1));
 		session.setSessionToken(new SessionToken(1, userName));
 
 		Mockito.stub(ssi.createSession(userName, null, applicationName,p, false)).toReturn(session);
@@ -59,7 +59,7 @@ public class TestLogonImpl extends TestCase {
 
 		LogonResult result = impl.logon(p);
 		assertEquals(userName, result.getUserName());
-		assertEquals(1, result.getSessionID());
+		assertEquals(String.valueOf(1), result.getSessionID());
 	}
 	
 	

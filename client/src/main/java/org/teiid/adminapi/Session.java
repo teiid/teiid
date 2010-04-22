@@ -52,7 +52,7 @@ public interface Session extends  AdminObject {
      * 
      * @return String of the Session ID
      */
-    public long getSessionId();
+    public String getSessionId();
 
     /**
      * Get User Name for this Session

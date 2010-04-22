@@ -105,7 +105,7 @@ public class SessionAwareCache<T> {
 			this.sql = sql;
 			this.vdbInfo = new VDBKey(context.getVdbName(), context.getVdbVersion());
 			this.pi = pi;
-			this.originalSessionId = context.getConnectionID();
+			this.originalSessionId = context.getSessionId();
 		}
 		
 		private void setSessionId(String sessionId) {

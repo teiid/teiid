@@ -224,12 +224,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
     	// Create command context, used in rewriting, planning, and processing
         // Identifies a "group" of requests on a per-connection basis to allow later
         // cleanup of all resources in the group on connection shutdown
-        String groupName = workContext.getConnectionID();
+        String groupName = workContext.getSessionId();
 
         RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
         
         Properties props = new Properties();
-        props.setProperty(ContextProperties.SESSION_ID, workContext.getConnectionID());
+        props.setProperty(ContextProperties.SESSION_ID, workContext.getSessionId());
         
         this.context =
             new CommandContext(
@@ -336,7 +336,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
     private void createProcessor() throws MetaMatrixComponentException {
         
-        TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getConnectionID());
+        TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
         
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 

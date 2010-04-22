@@ -244,7 +244,7 @@ public class TestPreparedStatement {
         }
        
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, vdb);
-        workContext.getSession().setSessionId(conn); 
+        workContext.getSession().setSessionId(String.valueOf(conn)); 
         
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache);
         

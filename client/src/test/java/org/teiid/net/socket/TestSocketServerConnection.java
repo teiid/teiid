@@ -84,7 +84,7 @@ public class TestSocketServerConnection extends TestCase {
 				Properties connectionProperties)
 				throws LogonException,
 				MetaMatrixComponentException {
-			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$
+			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		//## JDBC4.0-begin ##
@@ -148,7 +148,7 @@ public class TestSocketServerConnection extends TestCase {
 	
 	public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
-		assertEquals(1, connection.getLogonResult().getSessionID()); //$NON-NLS-1$
+		assertEquals(String.valueOf(1), connection.getLogonResult().getSessionID()); 
 	}
 	
 	/**

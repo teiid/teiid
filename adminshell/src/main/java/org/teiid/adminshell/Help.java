@@ -68,9 +68,9 @@ public class Help {
 			shortSb.append(")"); //$NON-NLS-1$
 			String shortHelpStr = String.format("  %-25s", shortSb.toString()); //$NON-NLS-1$ 
 			if (doc != null) {
-				sb.append("/*\n *").append(doc.text()); //$NON-NLS-1$ 
+				sb.append("/*\n  ").append(doc.text()); //$NON-NLS-1$ 
 				for (String string : doc.moreText()) {
-					sb.append("\n *").append(string); //$NON-NLS-1$
+					sb.append("\n  ").append(string); //$NON-NLS-1$
 				}
 				sb.append("\n */\n"); //$NON-NLS-1$
 				shortHelpStr += " -- " + doc.text(); //$NON-NLS-1$ 

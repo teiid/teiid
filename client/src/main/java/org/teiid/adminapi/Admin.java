@@ -244,7 +244,7 @@ public interface Admin {
      * @return Collection of {@link Request}
      * @throws AdminException 
      */
-    Collection<Request> getRequestsForSession(long sessionId) throws AdminException;
+    Collection<Request> getRequestsForSession(String sessionId) throws AdminException;
     
 
     /**
@@ -307,7 +307,7 @@ public interface Admin {
      * No wild cards currently supported, must be explicit
      * @throws AdminException  
      */
-    void terminateSession(long sessionId) throws AdminException;
+    void terminateSession(String sessionId) throws AdminException;
 
     /**
      * Cancel Request
@@ -317,7 +317,7 @@ public interface Admin {
      * 
      * @throws AdminException  
      */
-    void cancelRequest(long sessionId, long requestId) throws AdminException;
+    void cancelRequest(String sessionId, long requestId) throws AdminException;
   
     /**
      * Mark the given global transaction as rollback only.

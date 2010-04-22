@@ -96,7 +96,7 @@ import org.teiid.templates.connector.ExportConnectorTypeTemplateInfo;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class Admin extends TeiidAdmin {
-	private static final String CONNECTOR_PREFIX = "connector-";
+	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
 	private static final String RAR = ".rar"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
 	private static final String XA_DATA_SOURCE_TEMPLATE = "XADataSourceTemplate"; //$NON-NLS-1$
@@ -105,11 +105,11 @@ public class Admin extends TeiidAdmin {
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
-	private static ExtendedComponentType NOTXTYPE = new ExtendedComponentType("ConnectionFactory", "NoTx", "no-tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ExtendedComponentType TXTYPE = new ExtendedComponentType("ConnectionFactory", "Tx", "tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$	
-	private static ExtendedComponentType DS_LOCAL_TX = new ExtendedComponentType("DataSource", "LocalTx", "local-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ExtendedComponentType DS_XA_TX = new ExtendedComponentType("DataSource", "XA", "xa-datasource");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ExtendedComponentType DS_NO_TX = new ExtendedComponentType("DataSource", "NoTx", "no-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ExtendedComponentType NOTXTYPE = new ExtendedComponentType("ConnectionFactory", "NoTx", "no-tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static ExtendedComponentType TXTYPE = new ExtendedComponentType("ConnectionFactory", "Tx", "tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$	//$NON-NLS-3$
+	private static ExtendedComponentType DS_LOCAL_TX = new ExtendedComponentType("DataSource", "LocalTx", "local-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static ExtendedComponentType DS_XA_TX = new ExtendedComponentType("DataSource", "XA", "xa-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static ExtendedComponentType DS_NO_TX = new ExtendedComponentType("DataSource", "NoTx", "no-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static ExtendedComponentType[] DS_TYPES = new ExtendedComponentType[] {DS_XA_TX, DS_LOCAL_TX, DS_NO_TX};
 	private static ExtendedComponentType[] CF_TYPES = new ExtendedComponentType[] {NOTXTYPE, TXTYPE};
 	
@@ -204,9 +204,9 @@ public class Admin extends TeiidAdmin {
 		
 	private Reader exportJCAConnection(String deployedName, ManagedComponent mc, ExtendedComponentType type) throws AdminException {		
 		try {
-			DeploymentTemplateInfo info = getView().getTemplate("export-template");
+			DeploymentTemplateInfo info = getView().getTemplate("export-template"); //$NON-NLS-1$
 			if(info == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", "export-template")); //$NON-NLS-1$
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", "export-template")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			
 			for (ManagedProperty infoProperty:info.getProperties().values()) {
@@ -218,10 +218,10 @@ public class Admin extends TeiidAdmin {
 				}
 			}			
 			
-			ManagedProperty dsType = info.getProperties().get("dsType");
+			ManagedProperty dsType = info.getProperties().get("dsType"); //$NON-NLS-1$
 			dsType.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, type.getDsType()));
 			
-			File dsXml = File.createTempFile(deployedName, "-ds.xml");
+			File dsXml = File.createTempFile(deployedName, "-ds.xml"); //$NON-NLS-1$
 			ExportConnectorTypeTemplateInfo.writeTemplate(dsXml, info);
 			Reader r  = new StringReader(ObjectConverterUtil.convertFileToString(dsXml));
 			dsXml.delete();
@@ -582,20 +582,20 @@ public class Admin extends TeiidAdmin {
             		
             		permission.setResourceName(ManagedUtil.getSimpleValue(mo, "resourceName", String.class));//$NON-NLS-1$
             		
-            		if (ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class) != null) {
-            			permission.setAllowCreate(ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class));
+            		if (ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class) != null) { //$NON-NLS-1$
+            			permission.setAllowCreate(ManagedUtil.getSimpleValue(mo, "allowCreate", Boolean.class)); //$NON-NLS-1$
             		}
             		
-            		if (ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class) != null) {
-            			permission.setAllowRead(ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class));
+            		if (ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class) != null) { //$NON-NLS-1$
+            			permission.setAllowRead(ManagedUtil.getSimpleValue(mo, "allowRead", Boolean.class)); //$NON-NLS-1$
             		}
             		
-            		if (ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class) != null) {
-            			permission.setAllowUpdate(ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class));
+            		if (ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class) != null) { //$NON-NLS-1$
+            			permission.setAllowUpdate(ManagedUtil.getSimpleValue(mo, "allowUpdate", Boolean.class)); //$NON-NLS-1$
             		}
             		
-            		if (ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class) != null) {
-            			permission.setAllowDelete(ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class));
+            		if (ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class) != null) { //$NON-NLS-1$
+            			permission.setAllowDelete(ManagedUtil.getSimpleValue(mo, "allowDelete", Boolean.class)); //$NON-NLS-1$
             		}            		
             		
             		policy.addPermission(permission);
@@ -657,7 +657,7 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public void terminateSession(long sessionId) throws AdminException {
+	public void terminateSession(String sessionId) throws AdminException {
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
 			ManagedUtil.executeOperation(mc, "terminateSession", SimpleValueSupport.wrap(sessionId));//$NON-NLS-1$
@@ -683,7 +683,7 @@ public class Admin extends TeiidAdmin {
     }
     
 	@Override
-    public Collection<Request> getRequestsForSession(long sessionId) throws AdminException {
+    public Collection<Request> getRequestsForSession(String sessionId) throws AdminException {
 		try {
 			Collection<Request> requestList = new ArrayList<Request>();
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
@@ -699,7 +699,7 @@ public class Admin extends TeiidAdmin {
     }
 	
 	@Override
-	public void cancelRequest(long sessionId, long requestId) throws AdminException{
+	public void cancelRequest(String sessionId, long requestId) throws AdminException{
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
 			ManagedUtil.executeOperation(mc, "cancelRequest", SimpleValueSupport.wrap(sessionId), SimpleValueSupport.wrap(requestId));//$NON-NLS-1$
@@ -724,7 +724,7 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public void addConnector(String connectorName, InputStream contents) throws AdminException{
-		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
 				
@@ -748,13 +748,13 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public void deleteConnector(String connectorName) throws AdminException {
-		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
 		
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName));
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName)); //$NON-NLS-1$
 		}
 
 		//also need to delete template for the properties
@@ -765,13 +765,13 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public InputStream exportConnector(String connectorName) throws AdminException {
-		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {//$NON-NLS-1$
+		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
 		}
 		
 		String deployerName = getRarDeployerName(connectorName);
 		if (deployerName == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName));
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName)); //$NON-NLS-1$
 		}
 		return exportDeployment(deployerName);
 	}
@@ -1109,7 +1109,7 @@ public class Admin extends TeiidAdmin {
 	        }
         }
         else {
-        	roleCollection = new CollectionValueSupport(new CollectionMetaType("java.util.List", SimpleMetaType.STRING));
+        	roleCollection = new CollectionValueSupport(new CollectionMetaType("java.util.List", SimpleMetaType.STRING)); //$NON-NLS-1$
         	mappedRoleNames.setValue(roleCollection);
         }
         
@@ -1141,11 +1141,11 @@ public class Admin extends TeiidAdmin {
 	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException {
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
-			ManagedUtil.executeOperation(mc, "mergeVDBs", 
+			ManagedUtil.executeOperation(mc, "mergeVDBs",  //$NON-NLS-1$
 					SimpleValueSupport.wrap(sourceVDBName), 
 					SimpleValueSupport.wrap(sourceVDBVersion), 
 					SimpleValueSupport.wrap(targetVDBName), 
-					SimpleValueSupport.wrap(targetVDBVersion));//$NON-NLS-1$
+					SimpleValueSupport.wrap(targetVDBVersion));
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}   		

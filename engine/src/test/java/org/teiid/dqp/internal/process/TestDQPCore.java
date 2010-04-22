@@ -206,7 +206,7 @@ public class TestDQPCore {
 
     private ResultsMessage helpExecute(String sql, String userName, int sessionid, boolean txnAutoWrap) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql);
-        DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
+        DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
         if (txnAutoWrap) {
         	reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_ON);

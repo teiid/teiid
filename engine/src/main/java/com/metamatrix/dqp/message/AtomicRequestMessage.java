@@ -87,7 +87,7 @@ public class AtomicRequestMessage implements Serializable {
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
     	this.executionPayload = requestMessage.getExecutionPayload();
     	this.workContext = parent;
-    	this.requestID = new RequestID(parent.getConnectionID(), requestMessage.getExecutionId());
+    	this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
         this.atomicRequestId = new AtomicRequestID(this.requestID, nodeId, EXECUTION_COUNT.getAndIncrement());
     }
 

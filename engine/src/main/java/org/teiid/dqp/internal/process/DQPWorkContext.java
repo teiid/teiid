@@ -114,11 +114,7 @@ public class DQPWorkContext implements Serializable {
         return session.getVDBVersion();
     }
 
-	public String getConnectionID() {
-		return String.valueOf(getSessionId());
-	}
-	
-	public long getSessionId() {
+	public String getSessionId() {
 		return this.session.getSessionId();
 	}
 
@@ -127,7 +123,7 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public RequestID getRequestID(long exeuctionId) {
-		return new RequestID(this.getConnectionID(), exeuctionId);
+		return new RequestID(this.getSessionId(), exeuctionId);
 	}
 	
 	public SessionToken getSessionToken() {

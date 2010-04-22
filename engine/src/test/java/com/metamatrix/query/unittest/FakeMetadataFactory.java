@@ -87,7 +87,7 @@ public class FakeMetadataFactory {
 		workContext.setSession(session);
 		session.setVDBName(vdb.getName()); 
 		session.setVDBVersion(vdb.getVersion()); 
-		session.setSessionId(1);
+		session.setSessionId(String.valueOf(1));
 		session.setUserName("foo"); //$NON-NLS-1$
 		session.setVdb(vdb);
         workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);

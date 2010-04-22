@@ -78,7 +78,7 @@ public interface SessionService {
      * session
      * @throws SessionServiceException
      */
-    void closeSession(long sessionID) throws InvalidSessionException;
+    void closeSession(String sessionID) throws InvalidSessionException;
 
     /**
      * Terminates the specified session.  This is an administrative action.
@@ -91,7 +91,7 @@ public interface SessionService {
      * does not have authority to terminate the <code>terminatedSessionID</code> session
      * @throws SessionServiceException
      */
-    boolean terminateSession(long terminatedSessionID, long adminSessionID);
+    boolean terminateSession(String terminatedSessionID, String adminSessionID);
 
     /**
      * Get the collection of active user sessions on the system.
@@ -115,7 +115,7 @@ public interface SessionService {
      * session
      * @throws SessionServiceException
      */
-    SessionMetadata validateSession(long sessionID)
+    SessionMetadata validateSession(String sessionID)
     throws InvalidSessionException, SessionServiceException;
     
     /**
@@ -133,9 +133,9 @@ public interface SessionService {
      *
      * @param sessionID - identifies the client
      */
-    public void pingServer(long sessionID) throws InvalidSessionException;
+    public void pingServer(String sessionID) throws InvalidSessionException;
     
-    SessionMetadata getActiveSession(long sessionID);
+    SessionMetadata getActiveSession(String sessionID);
     
 	void setDqp(DQPCore dqp);
 

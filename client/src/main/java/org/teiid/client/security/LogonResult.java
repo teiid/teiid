@@ -60,7 +60,7 @@ public class LogonResult implements Externalizable {
      * @return
      * @since 4.3
      */
-    public long getSessionID() {
+    public String getSessionID() {
         return this.sessionToken.getSessionID();
     }
 

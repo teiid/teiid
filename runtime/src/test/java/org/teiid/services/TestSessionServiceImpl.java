@@ -18,7 +18,7 @@ import org.teiid.security.Credentials;
 import org.teiid.services.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
 
-
+@SuppressWarnings("nls")
 public class TestSessionServiceImpl {
 	
 	public void validateSession(boolean securityEnabled) throws Exception {
@@ -40,7 +40,7 @@ public class TestSessionServiceImpl {
 		ssi.setSecurityDomains("somedomain");
 		
 		try {
-			ssi.validateSession(1);
+			ssi.validateSession(String.valueOf(1));
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (InvalidSessionException e) {
 			
@@ -48,14 +48,14 @@ public class TestSessionServiceImpl {
 		
 		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), false); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
-			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains);
+			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains); 
 		}
 		
-		long id1 = info.getSessionId();
+		String id1 = info.getSessionId();
 		ssi.validateSession(id1);
 		
 		assertEquals(1, ssi.getActiveSessionsCount());
-		assertEquals(0, ssi.getSessionsLoggedInToVDB("a", 1).size()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(0, ssi.getSessionsLoggedInToVDB("a", 1).size()); //$NON-NLS-1$ 
 		
 		ssi.closeSession(id1);
 		

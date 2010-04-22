@@ -55,7 +55,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 		metaType.addItem(CLIENT_HOST_NAME, CLIENT_HOST_NAME, SimpleMetaType.STRING);
 		metaType.addItem(IP_ADDRESS, IP_ADDRESS, SimpleMetaType.STRING);
 		metaType.addItem(LAST_PING_TIME, LAST_PING_TIME, SimpleMetaType.LONG_PRIMITIVE);
-		metaType.addItem(SESSION_ID, SESSION_ID, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(SESSION_ID, SESSION_ID, SimpleMetaType.STRING);
 		metaType.addItem(USER_NAME, USER_NAME, SimpleMetaType.STRING);
 		metaType.addItem(VDB_NAME, VDB_NAME, SimpleMetaType.STRING);
 		metaType.addItem(VDB_VERSION, VDB_VERSION, SimpleMetaType.INTEGER_PRIMITIVE);
@@ -111,7 +111,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			session.setClientHostName((String) metaValueFactory.unwrap(compositeValue.get(CLIENT_HOST_NAME)));
 			session.setIPAddress((String) metaValueFactory.unwrap(compositeValue.get(IP_ADDRESS)));
 			session.setLastPingTime((Long) metaValueFactory.unwrap(compositeValue.get(LAST_PING_TIME)));
-			session.setSessionId((Long) metaValueFactory.unwrap(compositeValue.get(SESSION_ID)));
+			session.setSessionId((String) metaValueFactory.unwrap(compositeValue.get(SESSION_ID)));
 			session.setUserName((String) metaValueFactory.unwrap(compositeValue.get(USER_NAME)));
 			session.setVDBName((String) metaValueFactory.unwrap(compositeValue.get(VDB_NAME)));
 			session.setVDBVersion((Integer) metaValueFactory.unwrap(compositeValue.get(VDB_VERSION)));

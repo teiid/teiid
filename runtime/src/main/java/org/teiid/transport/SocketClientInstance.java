@@ -110,7 +110,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 	
 	@Override
 	public void disconnected() {
-		if (workContext.getSessionId() != -1) {
+		if (workContext.getSessionId() != null) {
 			workContext.runInContext(new Runnable() {
 				@Override
 				public void run() {

@@ -260,10 +260,10 @@ public class ConnectorManager  {
         
         CommandLogMessage message = null;
         if (cmdStatus == Event.NEW) {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, sqlStr, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
         } 
         else {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, finalRowCnt, cmdStatus, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context);
         }         
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }

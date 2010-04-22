@@ -42,7 +42,7 @@ public class TestDQPWorkContext extends TestCase {
 		message.getSession().setVDBName("vdbName"); //$NON-NLS-1$
 		message.getSession().setVDBVersion(1); 
 		message.getSession().setApplicationName("querybuilder"); //$NON-NLS-1$
-		message.getSession().setSessionId(5);
+		message.getSession().setSessionId(String.valueOf(5));
 		message.getSession().setUserName("userName"); //$NON-NLS-1$
 		return message;
 	}
@@ -50,7 +50,7 @@ public class TestDQPWorkContext extends TestCase {
 	public void testSerialize() throws Exception {
 		DQPWorkContext copy = UnitTestUtil.helpSerialize(example());
 
-		assertEquals("5", copy.getConnectionID()); //$NON-NLS-1$
+		assertEquals("5", copy.getSessionId()); //$NON-NLS-1$
 		assertEquals("userName", copy.getUserName()); //$NON-NLS-1$
 		assertEquals("vdbName", copy.getVdbName()); //$NON-NLS-1$
 		assertEquals(1, copy.getVdbVersion());

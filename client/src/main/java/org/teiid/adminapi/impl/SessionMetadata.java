@@ -48,7 +48,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private String userName;
     private String vdbName;
     private int vdbVersion;
-    private long sessionId = -1; // invalid session
+    private String sessionId;
     private String securityDomain;
     
     //server session state
@@ -110,11 +110,11 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	@Override
 	@ManagementProperty(description="Session ID", readOnly=true)
-	public long getSessionId() {
+	public String getSessionId() {
 		return this.sessionId;
 	}
 
-	public void setSessionId(long sessionId) {
+	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
 	}
 

@@ -37,7 +37,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	private static final long serialVersionUID = -2779106368517784259L;
 	
 	private long executionId;
-	private long sessionId;
+	private String sessionId;
     private String command;
     private long startTime;
     private boolean sourceRequest;
@@ -67,11 +67,11 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     
     @Override
     @ManagementProperty(description="Session ID", readOnly=true)
-    public long getSessionId() {
+    public String getSessionId() {
         return this.sessionId;
     }
     
-    public void setSessionId(long session) {
+    public void setSessionId(String session) {
         this.sessionId = session;
     }
     
@@ -111,7 +111,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
         return this.nodeID;
     }
     
-    public void setNodeId(int nodeID) {
+    public void setNodeId(Integer nodeID) {
         this.nodeID = nodeID;
     }
     
@@ -138,7 +138,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	}
     
     public int hashCode() {
-    	return HashCodeUtil.hashCode((int)executionId, (int)sessionId);
+    	return HashCodeUtil.hashCode((int)executionId, sessionId);
     }    
     
     @SuppressWarnings("nls")
@@ -146,7 +146,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	StringBuilder str = new StringBuilder();
     	str.append("Request: sessionid=").append(sessionId);
     	str.append("; executionId=").append(executionId);
-    	if (nodeID != Integer.MIN_VALUE) {
+    	if (nodeID != null) {
     		str.append("; nodeId=").append(nodeID);
     	}
     	if (transactionId != null) {

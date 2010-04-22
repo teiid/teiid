@@ -51,9 +51,9 @@ public interface Request extends AdminObject {
     /**
      * Get the SessionID for a Request
      * 
-     * @return long SessionID
+     * @return String SessionID
      */
-    public long getSessionId();
+    public String getSessionId();
 
     /**
      * Get the SQL Command sent to the Server for a Request

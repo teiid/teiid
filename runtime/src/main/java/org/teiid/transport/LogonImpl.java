@@ -83,8 +83,8 @@ public class LogonImpl implements ILogon {
 		}
 	}
 
-	private long updateDQPContext(SessionMetadata s) {
-		long sessionID = s.getSessionId();
+	private String updateDQPContext(SessionMetadata s) {
+		String sessionID = s.getSessionId();
 		
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		workContext.setSession(s);
@@ -93,15 +93,15 @@ public class LogonImpl implements ILogon {
 		
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
-		DQPWorkContext.getWorkContext().getSession().setSessionId(-1);
+		DQPWorkContext.getWorkContext().getSession().setSessionId(null);
 		return ResultsFuture.NULL_FUTURE;
 	}
 
 	public ResultsFuture<?> ping() throws InvalidSessionException,MetaMatrixComponentException {
 		// ping is double used to alert the aliveness of the client, as well as check the server instance is 
 		// alive by socket server instance, so that they can be cached.
-		long id = DQPWorkContext.getWorkContext().getSessionId();
-		if (id != -1) {
+		String id = DQPWorkContext.getWorkContext().getSessionId();
+		if (id != null) {
 			this.service.pingServer(id);
 		}
 		LogManager.logTrace(LogConstants.CTX_SECURITY, "Ping", id); //$NON-NLS-1$

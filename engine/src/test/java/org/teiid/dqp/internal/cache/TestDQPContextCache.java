@@ -44,7 +44,7 @@ public class TestDQPContextCache extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.getSession().setVDBName("MyVDB"); //$NON-NLS-1$
         workContext.getSession().setVDBVersion(1);
-		workContext.getSession().setSessionId(1);
+		workContext.getSession().setSessionId(String.valueOf(1));
 		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
         return workContext;
 	}
@@ -55,17 +55,17 @@ public class TestDQPContextCache extends TestCase {
 		Cache cache = this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString());
 		cache.put("key", "request-value"); //$NON-NLS-1$ //$NON-NLS-2$
 
-		cache = this.cacheContext.getSessionScopedCache(context.getConnectionID());		
+		cache = this.cacheContext.getSessionScopedCache(context.getSessionId());		
 		cache.put("key", "session-value"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		assertEquals("request-value", this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getConnectionID()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getSessionId()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	
 		// close the request
 		this.cacheContext.removeRequestScopedCache(context.getRequestID(12L).toString());
 		
 		assertNull(this.cacheContext.getRequestScopedCache(context.getRequestID(12L).toString()).get("key")); //$NON-NLS-1$ 
-		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getConnectionID()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("session-value", this.cacheContext.getSessionScopedCache(context.getSessionId()).get("key")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 		
 	

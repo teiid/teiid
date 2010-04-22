@@ -119,7 +119,7 @@ public class MetaDataProcessor {
         TempTableStore tempTableStore = null;
         if(requestManager != null) {
             if (workItem != null) {
-                ClientState state = requestManager.getClientState(workContext.getConnectionID(), false);
+                ClientState state = requestManager.getClientState(workContext.getSessionId(), false);
                 if (state != null) {
                 	tempTableStore = state.tempTableStoreImpl;
                 }

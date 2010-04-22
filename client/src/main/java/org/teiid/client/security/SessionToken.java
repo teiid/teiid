@@ -26,7 +26,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.UUID;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
+import com.metamatrix.core.util.Base64;
 
 /**
  * This class is an immutable identifier for a unique session that also
@@ -36,49 +39,64 @@ import java.util.UUID;
  * transit if sent to the client.  Also it should only be sent to the client 
  * who creates the session.
  */
-public class SessionToken implements Externalizable, Cloneable {
+public class SessionToken implements Externalizable {
 	public final static long serialVersionUID = -2853708320435636107L;
 
+	private static final SecureRandom random = new SecureRandom();
+	
 	/** The session ID */
-	private long sessionID;
+	private String sessionID;
 	private String userName;
-	private UUID secret;
-
-	/**
-	 * Fake SessionToken representing a trusted user
-	 */
+	private byte[] secret = new byte[16];
+	
 	public SessionToken() {
-		this.sessionID = -1L;
-		this.userName = "trusted"; //$NON-NLS-1$
-		this.secret = new UUID(1,1);
 	}
 
 	/**
-	 * The primary constructor that specifies the id, userName, and product info
-	 * for the session represented by this token.
+	 * Used by tests to control the session id
 	 * 
 	 * @param id
-	 * 		(long) the unique identifier for the session
 	 * @param userName
-	 * 		(String) the userName for this session
-	 * @throws IllegalArgumentException
-	 */	
+	 */
 	public SessionToken(long id, String userName) {
-		this.sessionID = id;
+		this.sessionID = Long.toString(id);
 		this.userName = userName;
-		this.secret = UUID.randomUUID();
 	}	
 
-	public UUID getSecret() {
-		return secret;
+	/**
+	 * The primary constructor that specifies userName
+	 * 
+	 * @param userName
+	 * 		(String) the userName for this session
+	 */	
+	public SessionToken(String userName) {
+		byte[] bytes = new byte[9]; //9 bytes fits evenly into base64 and should be sufficiently cluster unique
+		random.nextBytes(bytes);
+		this.sessionID = Base64.encodeBytes(bytes);
+		this.userName = userName;
+		random.nextBytes(secret);
 	}
-
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof SessionToken)) {
+			return false;
+		}
+		SessionToken other = (SessionToken)obj;
+		return userName.equals(other.userName) 
+			&& sessionID.equals(other.sessionID)
+			&& Arrays.equals(secret, other.secret);
+	}
+	
 	/**
 	 * Returns unique session identifier
 	 * 
 	 * @return the session ID
 	 */
-	public long getSessionID() {
+	public String getSessionID() {
 		return this.sessionID;
 	}
 
@@ -92,76 +110,24 @@ public class SessionToken implements Externalizable, Cloneable {
 	}
 
 	/**
-	 * Returns true if the specified object is semantically equal to this
-	 * instance. Note: this method is consistent with <code>compareTo()</code>.
-	 * <p>
-	 * 
-	 * @param obj
-	 * 		the object that this instance is to be compared to.
-	 * @return whether the object is equal to this object.
-	 */
-	public boolean equals(Object obj) {
-		// Check if instances are identical ...
-		if (this == obj) {
-			return true;
-		}
-
-		// Check if object can be compared to this one
-		// (this includes checking for null ) ...
-		if (!(obj instanceof SessionToken)) {
-			return false;
-		}
-		SessionToken that = (SessionToken) obj;
-		return (this.sessionID == that.sessionID)
-				&& this.userName.equals(that.userName)
-				&& this.secret.equals(that.secret);
-	}
-
-	/**
-	 * Overrides Object hashCode method.
-	 * 
-	 * @return a hash code value for this object.
-	 * @see Object#hashCode()
-	 * @see Object#equals(Object)
-	 */
-	public int hashCode() {
-		return new Long(this.sessionID).hashCode();
-	}
-
-	/**
 	 * Returns a string representing the current state of the object.
 	 */
 	public String toString() {
 		return "SessionToken[" + getUsername() + "," + this.sessionID + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	/**
-	 * Return a cloned instance of this object.
-	 * 
-	 * @return the object that is the clone of this instance.
-	 */
-	public Object clone() {
-		try {
-			// Everything is immutable, so bit-wise copy (of references) is okay
-			// !
-			return super.clone();
-		} catch (CloneNotSupportedException e) {
-		}
-		return null;
-	}
-	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		secret = (UUID)in.readObject();
-		sessionID = in.readLong();
+		secret = (byte[])in.readObject();
+		sessionID = (String)in.readObject();
 		userName = (String)in.readObject();
 	}
 	
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(secret);
-		out.writeLong(sessionID);
+		out.writeObject(sessionID);
 		out.writeObject(userName);
 	}
 

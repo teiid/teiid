@@ -244,7 +244,7 @@ public class DQPCore implements DQP {
             	RequestMetadata req = new RequestMetadata();
             	
             	req.setExecutionId(holder.requestID.getExecutionID());
-            	req.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
+            	req.setSessionId(holder.requestID.getConnectionID());
             	req.setCommand(holder.requestMsg.getCommandString());
             	req.setStartTime(holder.getProcessingTimestamp());
             	req.setState(holder.isCanceled()?State.CANCELED:holder.isDoneProcessing()?State.DONE:State.PROCESSING);
@@ -264,7 +264,7 @@ public class DQPCore implements DQP {
                 	RequestMetadata info = new RequestMetadata();
                 	
                 	info.setExecutionId(arm.getRequestID().getExecutionID());
-                	info.setSessionId(Long.parseLong(holder.requestID.getConnectionID()));
+                	info.setSessionId(holder.requestID.getConnectionID());
                 	info.setCommand(arm.getCommand().toString());
                 	info.setStartTime(arm.getProcessingTimestamp());
                 	info.setSourceRequest(true);
@@ -288,7 +288,7 @@ public class DQPCore implements DQP {
 	    } else {
 	    	request = new Request();
 	    }
-	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
+	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, processorDebugAllowed,
 				state.tempTableStoreImpl, workContext,
@@ -322,7 +322,7 @@ public class DQPCore implements DQP {
     
     void removeRequest(final RequestWorkItem workItem) {
     	this.requests.remove(workItem.requestID);
-    	ClientState state = getClientState(workItem.getDqpWorkContext().getConnectionID(), false);
+    	ClientState state = getClientState(workItem.getDqpWorkContext().getSessionId(), false);
     	if (state != null) {
     		state.removeRequest(workItem.requestID);
     	}
@@ -423,9 +423,7 @@ public class DQPCore implements DQP {
         return processWorkerPool.getStats();
     }
            
-    public void terminateSession(long terminateeId) {
-    	String sessionId = String.valueOf(terminateeId);
-    	
+    public void terminateSession(String sessionId) {
         // sometimes there will not be any atomic requests pending, in that
         // situation we still need to clear the master request from our map
         ClientState state = getClientState(sessionId, false);
@@ -447,8 +445,8 @@ public class DQPCore implements DQP {
         contextCache.removeSessionScopedCache(sessionId);
     }
 
-    public boolean cancelRequest(long sessionId, long requestId) throws MetaMatrixComponentException {
-    	RequestID requestID = new RequestID(String.valueOf(sessionId), requestId);
+    public boolean cancelRequest(String sessionId, long requestId) throws MetaMatrixComponentException {
+    	RequestID requestID = new RequestID(sessionId, requestId);
     	return cancelRequest(requestID);
     }
     
@@ -551,7 +549,7 @@ public class DQPCore implements DQP {
     	
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
+        RequestID rID = new RequestID(workContext.getSessionId(), msg.getExecutionId());
     	String txnID = null;
 		TransactionContext tc = workItem.getTransactionContext();
 		if (tc != null && tc.getTransactionType() != Scope.NONE) {
@@ -561,9 +559,9 @@ public class DQPCore implements DQP {
         // Log to request log
         CommandLogMessage message = null;
         if (status == Event.NEW) {
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString());
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString());
         } else {
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status);
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status);
         }
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
@@ -658,14 +656,14 @@ public class DQPCore implements DQP {
 	
 	// local txn
 	public ResultsFuture<?> begin() throws XATransactionException {
-    	String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+    	String threadId = DQPWorkContext.getWorkContext().getSessionId();
     	this.getTransactionService().begin(threadId);
     	return ResultsFuture.NULL_FUTURE;
 	}
 	
 	// local txn
 	public ResultsFuture<?> commit() throws XATransactionException {
-		final String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		final String threadId = DQPWorkContext.getWorkContext().getSessionId();
 		Callable<Void> processor = new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
@@ -678,7 +676,7 @@ public class DQPCore implements DQP {
 	
 	// local txn
 	public ResultsFuture<?> rollback() throws XATransactionException {
-		final String threadId = DQPWorkContext.getWorkContext().getConnectionID();
+		final String threadId = DQPWorkContext.getWorkContext().getSessionId();
 		Callable<Void> processor = new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
@@ -695,7 +693,7 @@ public class DQPCore implements DQP {
 			@Override
 			public Void call() throws Exception {
 				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-				getTransactionService().commit(workContext.getConnectionID(), xid, onePhase, workContext.getSession().isEmbedded());
+				getTransactionService().commit(workContext.getSessionId(), xid, onePhase, workContext.getSession().isEmbedded());
 				return null;
 			}
 		};
@@ -704,13 +702,13 @@ public class DQPCore implements DQP {
 	// global txn
 	public ResultsFuture<?> end(XidImpl xid, int flags) throws XATransactionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		this.getTransactionService().end(workContext.getConnectionID(), xid, flags, workContext.getSession().isEmbedded());
+		this.getTransactionService().end(workContext.getSessionId(), xid, flags, workContext.getSession().isEmbedded());
 		return ResultsFuture.NULL_FUTURE;
 	}
 	// global txn
 	public ResultsFuture<?> forget(XidImpl xid) throws XATransactionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		this.getTransactionService().forget(workContext.getConnectionID(), xid, workContext.getSession().isEmbedded());
+		this.getTransactionService().forget(workContext.getSessionId(), xid, workContext.getSession().isEmbedded());
 		return ResultsFuture.NULL_FUTURE;
 	}
 		
@@ -720,7 +718,7 @@ public class DQPCore implements DQP {
 			@Override
 			public Integer call() throws Exception {
 				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-				return getTransactionService().prepare(workContext.getConnectionID(),xid, workContext.getSession().isEmbedded());
+				return getTransactionService().prepare(workContext.getSessionId(),xid, workContext.getSession().isEmbedded());
 			}
 		};
 		return addWork(processor);
@@ -749,7 +747,7 @@ public class DQPCore implements DQP {
 			@Override
 			public Void call() throws Exception {
 				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-				getTransactionService().rollback(workContext.getConnectionID(),xid, workContext.getSession().isEmbedded());
+				getTransactionService().rollback(workContext.getSessionId(),xid, workContext.getSession().isEmbedded());
 				return null;
 			}
 		};
@@ -762,7 +760,7 @@ public class DQPCore implements DQP {
 			@Override
 			public Void call() throws Exception {
 				DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-				getTransactionService().start(workContext.getConnectionID(), xid, flags, timeout, workContext.getSession().isEmbedded());
+				getTransactionService().start(workContext.getSessionId(), xid, flags, timeout, workContext.getSession().isEmbedded());
 				return null;
 			}
 		};

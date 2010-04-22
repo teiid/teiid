@@ -19,25 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.adminapi.impl;
 
-import java.util.Collection;
-import java.util.List;
+import static org.junit.Assert.*;
 
-import org.teiid.adminapi.AdminException;
+import org.jboss.metatype.api.values.MetaValue;
+import org.junit.Test;
 
+@SuppressWarnings("nls")
+public class TestSessionMetadata {
+	
+	@Test public void testMapping() {
+		SessionMetadata session = new SessionMetadata();
+		session.setSessionId("test");
+		
+		SessionMetadataMapper smm = new SessionMetadataMapper();
+		MetaValue mv = smm.createMetaValue(smm.getMetaType(), session);
+		
+		SessionMetadata session1 = smm.unwrapMetaValue(mv);
+		
+		assertEquals(session.getSessionId(), session1.getSessionId());
+	}
 
-public interface DQPManagement {
-    List<RequestMetadata> getRequestsForSession(long sessionId) ;
-    List<RequestMetadata> getRequests();
-    WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier);
-    void terminateSession(String terminateeId);
-    boolean cancelRequest(String sessionId, long requestId) throws AdminException;
-    Collection<String> getCacheTypes();
-    void clearCache(String cacheType);
-    Collection<SessionMetadata> getActiveSessions() throws AdminException;
-    int getActiveSessionsCount() throws AdminException;
-    Collection<org.teiid.adminapi.Transaction> getTransactions();
-    void terminateTransaction(String xid) throws AdminException ;
-    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
 }

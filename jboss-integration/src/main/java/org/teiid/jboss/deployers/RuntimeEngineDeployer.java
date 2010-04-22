@@ -261,13 +261,13 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	@Override
     @ManagementOperation(description="Terminate a Session",params={@ManagementParameter(name="terminateeId",description="The session to be terminated")})
-    public void terminateSession(long terminateeId) {
+    public void terminateSession(String terminateeId) {
 		this.sessionService.terminateSession(terminateeId, DQPWorkContext.getWorkContext().getSessionId());
     }
     
 	@Override
     @ManagementOperation(description="Cancel a Request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="requestId",description="The request Identifier")})    
-    public boolean cancelRequest(long sessionId, long requestId) throws AdminException {
+    public boolean cancelRequest(String sessionId, long requestId) throws AdminException {
     	try {
 			return this.dqpCore.cancelRequest(sessionId, requestId);
 		} catch (MetaMatrixComponentException e) {

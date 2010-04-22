@@ -146,7 +146,7 @@ public class AdminShell {
 
 	@Doc(text = "Cancel a request")
 	public static void cancelRequest(
-			@Doc(text = "session id") long sessionId, 
+			@Doc(text = "session id") String sessionId, 
 			@Doc(text = "request id") long requestId)
 			throws AdminException {
 		getAdmin().cancelRequest(sessionId, requestId);
@@ -246,7 +246,7 @@ public class AdminShell {
 
 	@Doc(text = "Get all Request instances for the given session")
 	public static Collection<Request> getRequestsForSession(
-			@Doc(text = "session id") long sessionId)
+			@Doc(text = "session id") String sessionId)
 			throws AdminException {
 		return getAdmin().getRequestsForSession(sessionId);
 	}
@@ -323,7 +323,7 @@ public class AdminShell {
 
 	@Doc(text = "Terminate a session and associated requests")
 	public static void terminateSession(
-			@Doc(text = "session id") long sessionId) throws AdminException {
+			@Doc(text = "session id") String sessionId) throws AdminException {
 		getAdmin().terminateSession(sessionId);
 	}
 

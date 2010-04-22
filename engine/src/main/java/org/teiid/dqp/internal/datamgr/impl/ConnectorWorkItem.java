@@ -97,7 +97,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
                 requestMsg.getWorkContext().getVdbVersion(),                
                 requestMsg.getExecutionPayload(),                                                                       
-                requestMsg.getWorkContext().getConnectionID(),                                                                      
+                requestMsg.getWorkContext().getSessionId(),                                                                      
                 requestMsg.getConnectorName(),
                 requestMsg.getRequestID().toString(),
                 Integer.toString(requestID.getNodeID()),

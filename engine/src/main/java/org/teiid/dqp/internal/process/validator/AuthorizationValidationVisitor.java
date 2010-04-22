@@ -290,7 +290,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 // is not authorized in the exception message
                 
                 handleValidationError(
-                    DQPPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getConnectionID(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
+                    DQPPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getSessionId(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
                     inaccessibleSymbols);
             }
         }

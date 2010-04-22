@@ -215,7 +215,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
      * @throws SQLException 
      */
     public String getConnectionId() {
-    	return String.valueOf(this.serverConn.getLogonResult().getSessionID());
+    	return this.serverConn.getLogonResult().getSessionID();
     }
     
     long currentRequestId() {

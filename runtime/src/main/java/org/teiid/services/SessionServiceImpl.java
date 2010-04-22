@@ -32,7 +32,6 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
@@ -48,8 +47,8 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.net.TeiidURL;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.TeiidURL;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
@@ -81,9 +80,8 @@ public class SessionServiceImpl implements SessionService {
 
     private DQPCore dqp;
 
-    private Map<Long, SessionMetadata> sessionCache = new ConcurrentHashMap<Long, SessionMetadata>();
+    private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
-    private AtomicLong idSequence = new AtomicLong();
     private LinkedList<String> securityDomains = new LinkedList<String>();
     private LinkedList<String> adminSecurityDomains = new LinkedList<String>();
     
@@ -110,7 +108,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public void closeSession(long sessionID) throws InvalidSessionException {
+	public void closeSession(String sessionID) throws InvalidSessionException {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		SessionMetadata info = this.sessionCache.remove(sessionID);
 		if (info == null) {
@@ -183,9 +181,9 @@ public class SessionServiceImpl implements SessionService {
         long creationTime = System.currentTimeMillis();
 
         // Return a new session info object
-        long id = idSequence.getAndIncrement();
         SessionMetadata newSession = new SessionMetadata();
-        newSession.setSessionId(id);
+        newSession.setSessionToken(new SessionToken(userName));
+        newSession.setSessionId(newSession.getSessionToken().getSessionID());
         newSession.setUserName(userName);
         newSession.setCreatedTime(creationTime);
         newSession.setApplicationName(applicationName);
@@ -201,8 +199,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setLoginContext(loginContext);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
-        newSession.setSessionToken(new SessionToken(id, userName));
-        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + id, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
@@ -220,7 +217,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public SessionMetadata getActiveSession(long sessionID) {
+	public SessionMetadata getActiveSession(String sessionID) {
 		return this.sessionCache.get(sessionID);
 	}	
 
@@ -245,14 +242,14 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public void pingServer(long sessionID) throws InvalidSessionException {
+	public void pingServer(String sessionID) throws InvalidSessionException {
 		SessionMetadata info = getSessionInfo(sessionID);
 		info.setLastPingTime(System.currentTimeMillis());
 		this.sessionCache.put(sessionID, info);
 	}
 
 	@Override
-	public boolean terminateSession(long terminatedSessionID, long adminSessionID) {
+	public boolean terminateSession(String terminatedSessionID, String adminSessionID) {
 		Object[] params = {adminSessionID, terminatedSessionID};
 		LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
@@ -265,12 +262,12 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public SessionMetadata validateSession(long sessionID) throws InvalidSessionException, SessionServiceException {
+	public SessionMetadata validateSession(String sessionID) throws InvalidSessionException, SessionServiceException {
 		SessionMetadata info = getSessionInfo(sessionID);
 		return info;
 	}
 
-	private SessionMetadata getSessionInfo(long sessionID)
+	private SessionMetadata getSessionInfo(String sessionID)
 			throws InvalidSessionException {
 		SessionMetadata info = this.sessionCache.get(sessionID);
 		if (info == null) {

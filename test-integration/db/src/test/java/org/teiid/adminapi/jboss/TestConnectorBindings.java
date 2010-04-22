@@ -178,7 +178,7 @@ public class TestConnectorBindings extends BaseConnection {
 			t.join();
 		}
 		
-		long sessionId = 0;
+		String sessionId = null;
 		Collection<Session> sessions = admin.getSessions();
 		for (Session s:sessions) {
 			sessionId = s.getSessionId();

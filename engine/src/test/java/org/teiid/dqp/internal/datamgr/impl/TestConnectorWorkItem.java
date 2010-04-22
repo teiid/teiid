@@ -67,7 +67,7 @@ public class TestConnectorWorkItem {
 		RequestMessage rm = new RequestMessage();
 		
 		DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(EXAMPLE_BQT, FakeMetadataFactory.exampleBQTVDB());
-		workContext.getSession().setSessionId(1);
+		workContext.getSession().setSessionId(String.valueOf(1));
 		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
 		
 		AtomicRequestMessage request = new AtomicRequestMessage(rm, workContext, nodeid);

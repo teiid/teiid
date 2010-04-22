@@ -141,7 +141,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
      
     	if (workContext == null) {
 	    	workContext = new DQPWorkContext();
-	    	workContext.getSession().setSessionId(Long.valueOf(id.getConnectionID()));
+	    	workContext.getSession().setSessionId(id.getConnectionID());
 	    	workContext.getSession().setUserName("foo"); //$NON-NLS-1$
     	}
         RequestWorkItem workItem = new RequestWorkItem(rm, requestMsg, null, null, id, workContext);
