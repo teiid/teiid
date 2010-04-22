@@ -31,7 +31,9 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.dqp.internal.process.AbstractWorkItem;
 
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
@@ -46,7 +48,7 @@ public final class TestConnectorManager extends TestCase {
 	static ConnectorManager getConnectorManager(ConnectorEnvironment env) throws Exception {
 		final FakeConnector c = new FakeConnector();
 		c.setConnectorEnvironment(env);		
-		ConnectorManager cm = new ConnectorManager("FakeConnector") { //$NON-NLS-1$
+		ConnectorManager cm = new ConnectorManager("FakeConnector", 1) { //$NON-NLS-1$
 			Connector getConnector() {
 				return c;
 			}
@@ -70,7 +72,7 @@ public final class TestConnectorManager extends TestCase {
     }
 
     void helpAssureOneState() throws Exception {
-    	csm.executeRequest(request);
+    	csm.executeRequest(request, Mockito.mock(AbstractWorkItem.class));
     	ConnectorWork state = csm.getState(request.getAtomicRequestID());
     	assertEquals(state, csm.getState(request.getAtomicRequestID()));
     }
@@ -101,6 +103,35 @@ public final class TestConnectorManager extends TestCase {
         csm.removeState(new AtomicRequestID(new RequestID("ZZZZ", 3210), 5, 5)); //$NON-NLS-1$
 
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
+    }
+    
+    public void testQueuing() throws Exception {
+    	ConnectorWork workItem = csm.executeRequest(request, Mockito.mock(AbstractWorkItem.class));
+    	workItem.execute();
+    	
+    	AbstractWorkItem awi1 = Mockito.mock(AbstractWorkItem.class);
+    	ConnectorWork workItem1 = csm.executeRequest(TestConnectorWorkItem.createNewAtomicRequestMessage(2, 1), awi1);
+    	
+    	AbstractWorkItem awi2 = Mockito.mock(AbstractWorkItem.class);
+    	ConnectorWork workItem2 = csm.executeRequest(TestConnectorWorkItem.createNewAtomicRequestMessage(3, 1), awi2);
+
+    	try {
+    		workItem1.execute();
+    		fail("expected exception"); //$NON-NLS-1$
+    	} catch (BlockedException e) {
+    		
+    	}
+    	workItem.close();
+    	
+    	try {
+    		workItem2.execute(); //ensure that another item cannot jump in the queue
+    		fail("expected exception"); //$NON-NLS-1$
+    	} catch (BlockedException e) {
+    		
+    	}
+
+    	Mockito.verify(awi1).moreWork();
+    	workItem1.execute();
     }
         
 }

@@ -101,7 +101,7 @@ public class DataTierTupleSource implements TupleSource {
     void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         try {
 	        if (this.cwi == null) {
-	        	this.cwi = this.dataMgr.executeRequest(aqr, this.connectorName);
+	        	this.cwi = this.dataMgr.executeRequest(aqr, this.workItem, this.connectorName);
 	        	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
 	            workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
 	        }

@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import org.teiid.connector.api.ConnectorException;
 
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 
 /**
@@ -37,6 +38,6 @@ public interface ConnectorWork {
 
 	void close();
 
-	AtomicResultsMessage execute() throws ConnectorException;
+	AtomicResultsMessage execute() throws ConnectorException, BlockedException;
 
 }

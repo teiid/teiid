@@ -95,7 +95,7 @@ public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<Manage
 
 
     ConnectorManager createConnectorManger(String deployedConnectorName, int maxThreads) {
-        ConnectorManager mgr = new ConnectorManager(deployedConnectorName, maxThreads, securityHelper);       
+        ConnectorManager mgr = new ConnectorManager(deployedConnectorName, maxThreads);       
         return mgr;
     }
     

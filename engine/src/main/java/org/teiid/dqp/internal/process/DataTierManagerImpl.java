@@ -346,8 +346,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return aqr;
 	}
 	
-	ConnectorWork executeRequest(AtomicRequestMessage aqr, String connectorName) throws ConnectorException {
-		return getCM(connectorName).executeRequest(aqr);
+	ConnectorWork executeRequest(AtomicRequestMessage aqr, AbstractWorkItem awi, String connectorName) throws ConnectorException {
+		return getCM(connectorName).executeRequest(aqr, awi);
 	}
 
     /** 

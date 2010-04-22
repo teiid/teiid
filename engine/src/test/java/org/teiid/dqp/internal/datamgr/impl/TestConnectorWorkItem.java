@@ -38,6 +38,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.language.Call;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
+import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -116,7 +117,8 @@ public class TestConnectorWorkItem {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
-		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager(Mockito.mock(ConnectorEnvironment.class)));
+		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, Mockito.mock(AbstractWorkItem.class), 
+				TestConnectorManager.getConnectorManager(Mockito.mock(ConnectorEnvironment.class)));
 		return synchConnectorWorkItem.execute();
 	}
 	
@@ -150,7 +152,7 @@ public class TestConnectorWorkItem {
 				return Mockito.mock(Xid.class);
 			}} );
 		
-		new ConnectorWorkItem(requestMsg, cm);
+		new ConnectorWorkItem(requestMsg, Mockito.mock(AbstractWorkItem.class), cm);
     }
     
 	@Ignore
@@ -178,7 +180,7 @@ public class TestConnectorWorkItem {
 				return Mockito.mock(Xid.class);
 			}} );
 		
-		new ConnectorWorkItem(requestMsg, cm);
+		new ConnectorWorkItem(requestMsg, Mockito.mock(AbstractWorkItem.class), cm);
     }
 
 }

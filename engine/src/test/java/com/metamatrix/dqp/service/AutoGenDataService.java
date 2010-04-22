@@ -33,6 +33,7 @@ import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
+import org.teiid.dqp.internal.process.AbstractWorkItem;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -67,7 +68,7 @@ public class AutoGenDataService extends ConnectorManager{
     }
 
     @Override
-    public ConnectorWork executeRequest(AtomicRequestMessage message)
+    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi)
     		throws ConnectorException {
     	if (throwExceptionOnExecute) {
     		throw new ConnectorException("Connector Exception"); //$NON-NLS-1$

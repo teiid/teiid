@@ -26,6 +26,7 @@
  */
 package org.teiid.dqp.internal.datamgr.impl;
 
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,10 +47,12 @@ import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem.PermitMode;
+import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.logging.api.CommandLogMessage;
 import org.teiid.logging.api.CommandLogMessage.Event;
-import org.teiid.security.SecurityHelper;
 
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.log.MessageLevel;
@@ -70,17 +73,9 @@ import com.metamatrix.query.sql.lang.Command;
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="connectormanager"), properties=ManagementProperties.EXPLICIT)
 public class ConnectorManager  {
 	
-	public enum ConnectorStatus {
-		NOT_INITIALIZED, INIT_FAILED, OPEN, DATA_SOURCE_UNAVAILABLE, CLOSED, UNABLE_TO_CHECK;
-	}
-	
 	public static final int DEFAULT_MAX_THREADS = 20;
 	private String connectorName;
 	    
-    private SecurityHelper securityHelper;
-    
-    private volatile ConnectorStatus state = ConnectorStatus.NOT_INITIALIZED;
-
     //services acquired in start
     private BufferService bufferService;
     
@@ -88,25 +83,42 @@ public class ConnectorManager  {
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 	
 	private SourceCapabilities cachedCapabilities;
+	
+	private int currentConnections;
+	private int maxConnections;
+	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
+	
+	private volatile boolean stopped;
 
     public ConnectorManager(String name) {
-    	this(name, DEFAULT_MAX_THREADS, null);
+    	this(name, DEFAULT_MAX_THREADS);
     }
 	
-    public ConnectorManager(String name, int maxThreads, SecurityHelper securityHelper) {
+    public ConnectorManager(String name, int maxThreads) {
     	if (name == null) {
     		throw new IllegalArgumentException("Connector name can not be null"); //$NON-NLS-1$
     	}
     	if (maxThreads <= 0) {
     		maxThreads = DEFAULT_MAX_THREADS;
     	}
+    	this.maxConnections = maxThreads;
     	this.connectorName = name;
-    	this.securityHelper = securityHelper;
     }
     
-    SecurityHelper getSecurityHelper() {
-		return securityHelper;
-	}
+    public synchronized void acquireConnectionLock(ConnectorWorkItem item) throws BlockedException {
+    	switch (item.getPermitMode()) {
+    	case NOT_ACQUIRED: 
+    		if (currentConnections < maxConnections) {
+	    		currentConnections++;
+	    		item.setPermitMode(PermitMode.ACQUIRED);
+	    		return;
+	    	}
+	    	queuedRequests.add(item);
+	    	item.setPermitMode(PermitMode.BLOCKED);	
+    	case BLOCKED:
+    		throw BlockedException.INSTANCE;
+    	}
+    }
     
     public String getName() {
         return this.connectorName;
@@ -128,7 +140,6 @@ public class ConnectorManager  {
     	}		
     	return factory.getMetadataStore();
 	}    
-    
     
     public SourceCapabilities getCapabilities() throws ConnectorException {
     	if (cachedCapabilities != null) {
@@ -161,13 +172,13 @@ public class ConnectorManager  {
         }
     }
     
-    public ConnectorWork executeRequest(AtomicRequestMessage message) throws ConnectorException {
+    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws ConnectorException {
         // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
 
-    	ConnectorWorkItem item = new ConnectorWorkItem(message, this);
+    	ConnectorWorkItem item = new ConnectorWorkItem(message, awi, this);
         Assertion.isNull(requestStates.put(atomicRequestId, item), "State already existed"); //$NON-NLS-1$
         return item;
     }
@@ -182,7 +193,18 @@ public class ConnectorManager  {
      */
     void removeState(AtomicRequestID id) {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
-        requestStates.remove(id);    
+        ConnectorWorkItem cwi = requestStates.remove(id);
+        if (cwi != null && cwi.getPermitMode() == PermitMode.ACQUIRED) {
+        	synchronized (this) {
+	        	ConnectorWorkItem next = queuedRequests.pollFirst();
+	        	if (next == null) {
+	        		currentConnections--;
+	        		return;
+	        	}
+	        	next.setPermitMode(PermitMode.ACQUIRED);
+	        	next.getParent().moreWork();
+        	}
+        }
     }
 
     int size() {
@@ -196,28 +218,15 @@ public class ConnectorManager  {
     /**
      * initialize this <code>ConnectorManager</code>.
      */
-    public synchronized void start() {
-    	if (this.state != ConnectorStatus.NOT_INITIALIZED) {
-    		return;
-    	}
-    	this.state = ConnectorStatus.INIT_FAILED;
-        
+    public void start() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
-
-    	this.state = ConnectorStatus.OPEN;
     }
     
     /**
      * Stop this connector.
      */
-    public void stop() {        
-        synchronized (this) {
-        	if (this.state == ConnectorStatus.CLOSED) {
-        		return;
-        	}
-            this.state= ConnectorStatus.CLOSED;
-		}
-        
+    public void stop() {    
+    	stopped = true;
         //ensure that all requests receive a response
         for (ConnectorWork workItem : this.requestStates.values()) {
     		workItem.cancel();
@@ -289,12 +298,8 @@ public class ConnectorManager  {
     	return null;
     }
     
-    public ConnectorStatus getStatus() {
-    	return this.state;
-    }
-    
     private void checkStatus() throws ConnectorException {
-    	if (this.state != ConnectorStatus.OPEN) {
+    	if (stopped) {
     		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.connectorName)); //$NON-NLS-1$
     	}
     }

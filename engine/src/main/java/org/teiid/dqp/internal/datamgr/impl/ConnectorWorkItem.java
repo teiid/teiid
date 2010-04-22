@@ -42,9 +42,11 @@ import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.logging.api.CommandLogMessage.Event;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
@@ -64,12 +66,18 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
+	enum PermitMode {
+		BLOCKED, ACQUIRED, NOT_ACQUIRED
+	}
+	
 	/* Permanent state members */
 	private AtomicRequestID id;
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
     private Connector connector;
     private QueryMetadataInterface queryMetadata;
+    private PermitMode permitMode = PermitMode.NOT_ACQUIRED;
+    private AbstractWorkItem awi;
     
     /* Created on new request */
     private Connection connection;
@@ -89,7 +97,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
     
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws ConnectorException {
+    ConnectorWorkItem(AtomicRequestMessage message, AbstractWorkItem awi, ConnectorManager manager) throws ConnectorException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -116,10 +124,23 @@ public class ConnectorWorkItem implements ConnectorWork {
         if (requestMsg.isTransactional() &&  this.connectorEnv.isXaCapable()) {
     		this.securityContext.setTransactional(true);
         }
+        this.awi = awi;
     }
     
     public AtomicRequestID getId() {
 		return id;
+	}
+    
+    public PermitMode getPermitMode() {
+		return permitMode;
+	}
+    
+    public void setPermitMode(PermitMode permitMode) {
+		this.permitMode = permitMode;
+	}
+    
+    public AbstractWorkItem getParent() {
+		return awi;
 	}
 
     public void cancel() {
@@ -196,10 +217,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return new ConnectorException(t);
     }
     
-	public AtomicResultsMessage execute() throws ConnectorException {
+	public AtomicResultsMessage execute() throws ConnectorException, BlockedException {
         if(isCancelled()) {
     		throw new ConnectorException("Request canceled"); //$NON-NLS-1$
     	}
+        
+        if (!this.securityContext.isTransactional()) {
+        	this.manager.acquireConnectionLock(this);
+        }
 
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
