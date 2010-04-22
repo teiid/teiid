@@ -73,8 +73,10 @@ public interface PluginConstants {
 				public final static String GET_LONGRUNNINGQUERIES = "listLongRunningQueries"; //$NON-NLS-1$
 				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
 				public final static String KILL_SESSION = "terminateSession"; //$NON-NLS-1$
+				public final static String KILL_TRANSACTION = "terminateTransaction"; //$NON-NLS-1$
 				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
 				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
+				public final static String GET_TRANSACTIONS = "getTransactions"; //$NON-NLS-1$
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
 
 			}
@@ -207,7 +209,7 @@ public interface PluginConstants {
 			public final static String LONG_RUNNING_QUERY_LIMIT = "longRunningQueryLimit"; //$NON-NLS-1$
 
 			public final static String FIELD_LIST = "fieldList"; //$NON-NLS-1$
-
+			public final static String TRANSACTION_ID = "transactionID"; //$NON-NLS-1$
 			public final static String REQUEST_ID = "requestID"; //$NON-NLS-1$
 			public final static String SESSION_ID = "sessionID"; //$NON-NLS-1$
 

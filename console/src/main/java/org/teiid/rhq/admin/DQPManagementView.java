@@ -32,6 +32,7 @@ import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
+import org.teiid.adminapi.Transaction;
 import org.teiid.rhq.comm.ExecutedResult;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -144,6 +145,8 @@ public class DQPManagementView implements PluginConstants {
 			final String operationName, final Map<String, Object> valueMap) {
 		Collection<Request> resultObject = new ArrayList<Request>();
 		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
+		Collection<Transaction> transactionsCollection = new ArrayList<Transaction>();
+
 
 		if (operationName.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
 			Integer longRunningValue = (Integer) valueMap
@@ -165,6 +168,23 @@ public class DQPManagementView implements PluginConstants {
 			getRequestCollectionValue(requestMetaValue, resultObject);
 			operationResult.setContent(createReportResultList(fieldNameList,
 					resultObject.iterator()));
+		} else if (operationName.equals(Platform.Operations.GET_TRANSACTIONS)) {
+			List<String> fieldNameList = operationResult.getFieldNameList();
+			MetaValue transactionMetaValue = getTransactions();
+			getTransactionCollectionValue(transactionMetaValue, transactionsCollection);
+			operationResult.setContent(createReportResultList(fieldNameList,
+					resultObject.iterator()));
+		} else if (operationName.equals(Platform.Operations.KILL_TRANSACTION)) {
+			Long sessionID = (Long) valueMap.get(Operation.Value.TRANSACTION_ID);
+			MetaValue[] args = new MetaValue[] { metaValueFactory
+					.create(sessionID) };
+			try {
+				executeManagedOperation(mc, Platform.Operations.KILL_TRANSACTION,
+						args);
+			} catch (Exception e) {
+				final String msg = "Exception executing operation: " + Platform.Operations.KILL_TRANSACTION; //$NON-NLS-1$
+				LOG.error(msg, e);
+			}
 		} else if (operationName.equals(Platform.Operations.KILL_SESSION)) {
 			Long sessionID = (Long) valueMap.get(Operation.Value.SESSION_ID);
 			MetaValue[] args = new MetaValue[] { metaValueFactory
@@ -257,6 +277,24 @@ public class DQPManagementView implements PluginConstants {
 
 	}
 
+	protected MetaValue getTransactions() {
+
+		MetaValue transactionsCollection = null;
+		MetaValue args = null;
+
+		try {
+			transactionsCollection = executeManagedOperation(mc,
+					Platform.Operations.GET_TRANSACTIONS, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + Platform.Operations.GET_TRANSACTIONS; //$NON-NLS-1$
+			LOG.error(msg, e);
+		}
+
+		return transactionsCollection;
+
+	}
+
+	
 	public MetaValue getSessions() {
 
 		MetaValue sessionCollection = null;
@@ -468,6 +506,25 @@ public class DQPManagementView implements PluginConstants {
 			}
 		}
 	}
+	
+	public static <T> void getTransactionCollectionValue(MetaValue pValue,
+			Collection<Transaction> list) {
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				if (value.getMetaType().isComposite()) {
+					Transaction transaction = (Transaction) MetaValueFactory.getInstance()
+							.unwrap(value);
+					list.add(transaction);
+				} else {
+					throw new IllegalStateException(pValue
+							+ " is not a Composite type");
+				}
+			}
+		}
+	}
+
 
 	public static <T> void getSessionCollectionValue(MetaValue pValue,
 			Collection<Session> list) {
