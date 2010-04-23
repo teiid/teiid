@@ -856,12 +856,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         File f = new File(tableRecord.getResourcePath());
         String path = f.getParent();
-        
+        if (File.separatorChar != '/') {
+        	path = path.replace(File.separatorChar, '/');
+        }
         for (String string : schemaPaths) {
         	SQLXMLImpl schema = getVDBResourceAsSQLXML(string);
         	
         	if (schema == null) {
-        		schema = getVDBResourceAsSQLXML(path + File.separator + string);
+        		schema = getVDBResourceAsSQLXML(path + '/' + string);
         	}
         	
         	if (schema == null) {

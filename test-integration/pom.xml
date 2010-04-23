@@ -37,11 +37,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-client</artifactId>
-			<type>test-jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-connector-api</artifactId>
 		</dependency>
 		<dependency>
