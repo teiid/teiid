@@ -8,7 +8,7 @@
 			<xs:sequence>
 				<xs:element name="description" type="xs:string" minOccurs="0"/>
 				<xs:element name="property" type="property" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element name="model" maxOccurs="unbounded">
+				<xs:element name="model" maxOccurs="unbounded" minOccurs="0">
 					<xs:complexType>
 						<xs:sequence>
                             <xs:element name="description" type="xs:string" minOccurs="0"/>
@@ -31,6 +31,7 @@
 													</xs:restriction>
 												</xs:simpleType>
 											</xs:attribute>
+                                            <xs:attribute name="path" type="xs:string"/>
 										</xs:extension>
 									</xs:simpleContent>
 								</xs:complexType>
