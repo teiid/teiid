@@ -159,11 +159,9 @@
 		       	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
 				<jvmarg value="-Dusedatasources=${usedatasources}" />
 				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
+				<jvmarg value="-Dserver.host.name=${server.host.name}" />   
 				<jvmarg value="-Dproj.dir=${proj_dir}" /> 
 			  	
-			  	<!--
-			  					<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
-			  	-->
 
 			</java>
 
@@ -193,11 +191,8 @@
         	<jvmarg value="-Dquery.scenario.classname=${query.scenario.classname}" />
 			<jvmarg value="-Dusedatasources=${usedatasources}" />
 			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />   
+			<jvmarg value="-Dserver.host.name=${server.host.name}" />   
           	<jvmarg value="-Dproj.dir=${proj_dir}" /> 
-
-		  	<!--
-		  					<jvmarg value="-Dvdb.artifacts.dir=${vdb_artifacts_dir}" />
-		  	-->
           	
       	  </java>
 		

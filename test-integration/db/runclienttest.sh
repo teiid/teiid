@@ -5,14 +5,12 @@
 #============================
 #	REQUIRED PROPERTIES
 #
-#	-	USEDATASOURCES   -	indicates the datasource(s) (common separated) to use, this is the directory located inside directory datasourceloc 
-$
 
 #============================
 #	OPTIONAL PROPERTIES
 #
 #  (if not set, will default to files within the db project)
-#	-	QUERYSETDIR	-	directory location where the test querties can be found]
+#	-	QUERYSETDIR	-	directory location where the test querties can be found
 #	-	SCENARIODIR	-	directory location where the scenario files found and determine which query sets and vdbs to use, 
 #	-	DATASOURCEDIR	-	root directory location to find the various datasources to use
 #	-	CONFIGFILE	-	specify the configuration file to use (override ctc-test.properties)
@@ -24,26 +22,6 @@ $
 #                 
 # JBEDSP_DEBUG=true
 #
-
-
-# the property that defines which datasources to use.  these names must exist as directories within the datasource loc.
-if [ -z "$USEDATASOURCES" ] 
-	then
-	
-		echo ""
-		echo "Property <USEDATASOURCES> must be specified"
-		echo "Exit"
-		exit
-fi
-
-
-
-#if [ -z "${vdb.artifacts.dir}" ] 
-#	then
-#	
-#	vdb.artifacts.dir='./src/main/resources/transactions'
-#	
-#fi
 
 if [ -z "${QUERYSETDIR}" ] 
 	then
@@ -66,7 +44,7 @@ if [ -z "${DATASOURCEDIR}" ]
 	DATASOURCEDIR='./src/main/resources/datasources'
 fi
 
-echo "Use Datasources: ${USEDATASOURCES} loc: ${DATASOURCEDIR}"
+echo "Use Datasource directory: ${DATASOURCEDIR}"
 
 #--------------------
 
@@ -106,6 +84,17 @@ ANT_ARGS="${ANT_ARGS} -Dqueryset.artifacts.dir=${QUERYSETDIR}"
 #ANT_ARGS="${ANT_ARGS} -Dvdb.artifacts.dir=${vdb.artifacts.dir}"
 ANT_ARGS="${ANT_ARGS} -Dproj.dir=${PRGDIR}"
 
+# default to the ip address used to start the server
+SVRNAME="0.0.0.0"
+
+if [ ! -z "${SERVERNAME}" ] 
+	then
+	
+	SVRNAME=${SERVERNAME}
+
+fi
+
+ANT_ARGS="${ANT_ARGS} -Dserver.host.name=${SVRNAME}"
 
 
 if [ ! -z "${XMLCLZZ}" ] 
