@@ -101,9 +101,7 @@ else
 fi
 
 
-ANT_ARGS=" -Dusedatasources=${USEDATASOURCES} "
-ANT_ARGS="${ANT_ARGS} -Ddatasourceloc=${DATASOURCEDIR}"
-ANT_ARGS="${ANT_ARGS} -Dscenario.dir=${SCENARIODIR}"
+ANT_ARGS=" -Dscenario.dir=${SCENARIODIR}"
 ANT_ARGS="${ANT_ARGS} -Dqueryset.artifacts.dir=${QUERYSETDIR}"
 #ANT_ARGS="${ANT_ARGS} -Dvdb.artifacts.dir=${vdb.artifacts.dir}"
 ANT_ARGS="${ANT_ARGS} -Dproj.dir=${PRGDIR}"

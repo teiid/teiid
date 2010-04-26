@@ -59,11 +59,32 @@
   </dependencySets>
 
   <fileSets>
+
+    <fileSet>
+        <directory>install_scripts</directory>
+        <outputDirectory>.</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>      
+    </fileSet> 
+          
+    <fileSet>
+        <directory>install_scripts</directory>
+        <outputDirectory>.</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
+    </fileSet> 
+
+
+
     <fileSet>
 
       <includes>
-        <include>runclienttest.*</include>
+        <include>runclienttest.sh</include>
       </includes>
+	  <fileMode>755</fileMode>     
     </fileSet>
 
     <fileSet>
