@@ -42,7 +42,8 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.Request.State;
+import org.teiid.adminapi.Request.ProcessingState;
+import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
@@ -247,7 +248,19 @@ public class DQPCore implements DQP {
             	req.setSessionId(holder.requestID.getConnectionID());
             	req.setCommand(holder.requestMsg.getCommandString());
             	req.setStartTime(holder.getProcessingTimestamp());
-            	req.setState(holder.isCanceled()?State.CANCELED:holder.isDoneProcessing()?State.DONE:State.PROCESSING);
+            	req.setState(holder.isCanceled()?ProcessingState.CANCELED:holder.isDoneProcessing()?ProcessingState.DONE:ProcessingState.PROCESSING);
+            	switch (holder.getThreadState()) {
+            	case DONE:
+            	case IDLE:
+            		req.setThreadState(ThreadState.IDLE);
+            		break;
+            	default:
+            		if (holder.isProcessing()) {
+            			req.setThreadState(ThreadState.RUNNING);
+            		} else {
+            			req.setThreadState(ThreadState.QUEUED);
+            		}
+            	}
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().getTransactionType() != Scope.NONE) {
             		req.setTransactionId(holder.getTransactionContext().getTransactionId());
             	}
@@ -262,14 +275,20 @@ public class DQPCore implements DQP {
                     // add all the subrequest messages
                 	AtomicRequestMessage arm = conInfo.getAtomicRequestMessage();
                 	RequestMetadata info = new RequestMetadata();
-                	
+                	if (conInfo.isQueued()) {
+                		info.setThreadState(ThreadState.QUEUED);
+                	} else if (conInfo.isRunning()) {
+                		info.setThreadState(ThreadState.RUNNING);
+                	} else {
+                		info.setThreadState(ThreadState.IDLE);
+                	}
                 	info.setExecutionId(arm.getRequestID().getExecutionID());
                 	info.setSessionId(holder.requestID.getConnectionID());
                 	info.setCommand(arm.getCommand().toString());
                 	info.setStartTime(arm.getProcessingTimestamp());
                 	info.setSourceRequest(true);
                 	info.setNodeId(arm.getAtomicRequestID().getNodeID());
-                	info.setState(conInfo.isCanceled()?State.CANCELED:conInfo.isDone()?State.DONE:State.PROCESSING);
+                	info.setState(conInfo.isCanceled()?ProcessingState.CANCELED:conInfo.isDone()?ProcessingState.DONE:ProcessingState.PROCESSING);
         			results.add(info);
                 }
                 results.add(req);

@@ -104,6 +104,11 @@ public class AutoGenDataService extends ConnectorManager{
 			public void cancel() {
 				
 			}
+			
+			@Override
+			public boolean isQueued() {
+				return false;
+			}
 		};
     }
     

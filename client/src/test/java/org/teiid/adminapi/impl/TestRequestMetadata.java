@@ -26,13 +26,13 @@ import static org.junit.Assert.*;
 
 import org.jboss.metatype.api.values.MetaValue;
 import org.junit.Test;
-import org.teiid.adminapi.Request.State;
+import org.teiid.adminapi.Request.ProcessingState;
 
 public class TestRequestMetadata {
 	
 	@Test public void testMapping() {
 		RequestMetadata request = new RequestMetadata();
-		request.setState(State.PROCESSING);
+		request.setState(ProcessingState.PROCESSING);
 		
 		RequestMetadataMapper rmm = new RequestMetadataMapper();
 		MetaValue mv = rmm.createMetaValue(rmm.getMetaType(), request);

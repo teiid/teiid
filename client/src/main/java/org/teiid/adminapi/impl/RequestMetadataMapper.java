@@ -36,7 +36,7 @@ import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
 import org.jboss.metatype.spi.values.MetaMapper;
 import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Request.State;
+import org.teiid.adminapi.Request.ProcessingState;
 
 public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 	private static final String TRANSACTION_ID = "transactionId"; //$NON-NLS-1$
@@ -46,7 +46,8 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 	private static final String START_TIME = "startTime"; //$NON-NLS-1$
 	private static final String SESSION_ID = "sessionId"; //$NON-NLS-1$
 	private static final String EXECUTION_ID = "executionId"; //$NON-NLS-1$
-	private static final String STATE = "state"; //$NON-NLS-1$
+	private static final String STATE = "processingState"; //$NON-NLS-1$
+	private static final String THREAD_STATE = "threadState"; //$NON-NLS-1$
 	private static final MutableCompositeMetaType metaType;
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 	
@@ -59,8 +60,8 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 		metaType.addItem(SOURCE_REQUEST, SOURCE_REQUEST, SimpleMetaType.BOOLEAN_PRIMITIVE);
 		metaType.addItem(NODE_ID, NODE_ID, SimpleMetaType.INTEGER);
 		metaType.addItem(TRANSACTION_ID, TRANSACTION_ID, SimpleMetaType.STRING);
-		EnumMetaType emt = new EnumMetaType(Request.State.values());
-		metaType.addItem(STATE, STATE, emt);
+		metaType.addItem(STATE, STATE, new EnumMetaType(Request.ProcessingState.values()));
+		metaType.addItem(THREAD_STATE, THREAD_STATE, new EnumMetaType(Request.ThreadState.values()));
 		metaType.freeze();
 	}
 	
@@ -91,6 +92,7 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			request.set(TRANSACTION_ID,SimpleValueSupport.wrap(object.getTransactionId()));
 			EnumMetaType emt = (EnumMetaType)composite.getType(STATE);
 			request.set(STATE, new EnumValueSupport(emt, object.getState()));
+			request.set(THREAD_STATE, new EnumValueSupport((EnumMetaType)composite.getType(THREAD_STATE), object.getThreadState()));
 			return request;
 		}
 		throw new IllegalArgumentException("Cannot convert RequestMetadata " + object); //$NON-NLS-1$
@@ -112,7 +114,7 @@ public class RequestMetadataMapper extends MetaMapper<RequestMetadata> {
 			request.setSourceRequest((Boolean) metaValueFactory.unwrap(compositeValue.get(SOURCE_REQUEST)));
 			request.setNodeId((Integer) metaValueFactory.unwrap(compositeValue.get(NODE_ID)));
 			request.setTransactionId((String) metaValueFactory.unwrap(compositeValue.get(TRANSACTION_ID)));
-			request.setState((State) metaValueFactory.unwrap(compositeValue.get(STATE)));
+			request.setState((ProcessingState) metaValueFactory.unwrap(compositeValue.get(STATE)));
 			return request;
 		}
 		throw new IllegalStateException("Unable to unwrap RequestMetadata " + metaValue); //$NON-NLS-1$

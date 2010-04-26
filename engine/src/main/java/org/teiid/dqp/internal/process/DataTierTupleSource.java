@@ -57,6 +57,8 @@ public class DataTierTupleSource implements TupleSource {
     private boolean closed;
     private volatile boolean canceled;
     
+    private volatile boolean running;
+    
     /**
      * Constructor for DataTierTupleSource.
      */
@@ -87,11 +89,18 @@ public class DataTierTupleSource implements TupleSource {
 	    		return null;
 	    	}
 	    	try {
+	    		running = true;
 				receiveResults(this.cwi.more());
 			} catch (ConnectorException e) {
 	        	exceptionOccurred(e, true);
+			} finally {
+				running = false;
 			}
     	}
+    }
+    
+    public boolean isQueued() {
+    	return this.cwi != null && this.cwi.isQueued();
     }
 
 	public boolean isDone() {
@@ -105,11 +114,18 @@ public class DataTierTupleSource implements TupleSource {
 	        	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
 	            workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
 	        }
+	        running = true;
 	        receiveResults(this.cwi.execute());
         } catch (ConnectorException e) {
         	exceptionOccurred(e, true);
+        } finally {
+        	running = false;
         }
     }
+    
+    public boolean isRunning() {
+		return running;
+	}
     
     public void fullyCloseSource() {
     	if (!closed) {

@@ -36,10 +36,16 @@ package org.teiid.adminapi;
  */
 public interface Request extends AdminObject {
 	
-	public enum State {
+	public enum ProcessingState {
 		PROCESSING,
 		DONE,
 		CANCELED
+	}
+	
+	public enum ThreadState {
+		RUNNING, 
+		QUEUED, 
+		IDLE
 	}
 
     /**
@@ -86,8 +92,13 @@ public interface Request extends AdminObject {
     public Integer getNodeId();
 
     /**  
-     * @return In the case that this is a source request this represents the node id. Otherwise blank
+     * @return The request state
      */
-	State getState();
+	ProcessingState getState();
+
+    /**  
+     * @return The thread state
+     */
+	ThreadState getThreadState();
     
 }

@@ -40,7 +40,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     }
     
     private ThreadState threadState = ThreadState.MORE_WORK;
-    private volatile boolean release;
+    private volatile boolean isProcessing;
     
     public void run() {
 		startProcessing();
@@ -55,7 +55,12 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     	return this.threadState;
     }
     
+    public boolean isProcessing() {
+		return isProcessing;
+	}
+    
     private synchronized void startProcessing() {
+    	isProcessing = true;
     	logTrace("start processing"); //$NON-NLS-1$
 		if (this.threadState != ThreadState.MORE_WORK) {
 			throw new IllegalStateException("Must be in MORE_WORK"); //$NON-NLS-1$
@@ -64,6 +69,7 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 	}
     
     private synchronized void endProcessing() {
+    	isProcessing = false;
     	logTrace("end processing"); //$NON-NLS-1$
     	switch (this.threadState) {
 	    	case WORKING:
@@ -131,15 +137,11 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     public abstract String toString();
     
-	@Override
-	public void release() {
-		this.release = true;
-	}
-	
-	public boolean shouldAbortProcessing() {
-		return this.release;
-	}
-	
+    @Override
+    public void release() {
+    	
+    }
+    
 	@Override
 	public void workAccepted(WorkEvent arg0) {
 	}

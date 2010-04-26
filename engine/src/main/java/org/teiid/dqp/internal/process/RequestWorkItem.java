@@ -568,7 +568,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 	                try {
 	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
 	                } catch (XATransactionException err) {
-	                    LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + requestID.getConnectionID()); //$NON-NLS-1$
 	                    throw new MetaMatrixComponentException(err);
 	                }
 	            }
@@ -680,6 +679,15 @@ public class RequestWorkItem extends AbstractWorkItem {
 	
 	public long getProcessingTimestamp() {
 		return processingTimestamp;
+	}
+	
+	@Override
+	public void release() {
+		try {
+			requestCancel();
+		} catch (MetaMatrixComponentException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to cancel " + requestID); //$NON-NLS-1$
+		}
 	}
 	
 }

@@ -43,7 +43,8 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     private boolean sourceRequest;
 	private Integer nodeID;
     private String transactionId;
-    private State state;
+    private ProcessingState processingState = ProcessingState.PROCESSING;
+    private ThreadState threadState = ThreadState.RUNNING;
     
     @Override
     @ManagementProperty(description="Unique Identifier for Request", readOnly=true)
@@ -57,12 +58,21 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     
     @Override
     @ManagementProperty(description="State of the Request", readOnly=true)
-    public State getState() {
-		return state;
+    public ProcessingState getState() {
+		return processingState;
 	}
     
-    public void setState(State state) {
-		this.state = state;
+    public void setState(ProcessingState state) {
+		this.processingState = state;
+	}
+    
+	@Override
+	public ThreadState getThreadState() {
+		return threadState;
+	}
+	
+	public void setThreadState(ThreadState threadState) {
+		this.threadState = threadState;
 	}
     
     @Override

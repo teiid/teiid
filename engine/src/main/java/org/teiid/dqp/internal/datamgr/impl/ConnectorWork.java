@@ -39,5 +39,7 @@ public interface ConnectorWork {
 	void close();
 
 	AtomicResultsMessage execute() throws ConnectorException, BlockedException;
-
+	
+	boolean isQueued();
+	
 }

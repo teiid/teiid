@@ -142,6 +142,11 @@ public class ConnectorWorkItem implements ConnectorWork {
     public AbstractWorkItem getParent() {
 		return awi;
 	}
+    
+    @Override
+    public boolean isQueued() {
+    	return this.permitMode == PermitMode.BLOCKED;
+    }
 
     public void cancel() {
     	try {
