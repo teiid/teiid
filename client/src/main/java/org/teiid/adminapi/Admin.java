@@ -23,14 +23,12 @@
 package org.teiid.adminapi;
 
 import java.io.InputStream;
-import java.io.Reader;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
 
 public interface Admin {
 
-	public enum DataSourceType {XA, LOCAL};
 	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
@@ -72,15 +70,6 @@ public interface Admin {
     void deleteConnector(String name) throws AdminException;
     
     /**
-     * Export Connector RAR file
-     *
-     * @param name  of the Connector
-     * @return InputStream of contents of the rar file
-     * @throws AdminException 
-     */
-    InputStream exportConnector(String name) throws AdminException;    
-
-    /**
      * Deploy a {@link ConnectionFactory} to Configuration
      *
      * @param deployedName  Connection Factory name that will be added to Configuration
@@ -99,16 +88,6 @@ public interface Admin {
      */
     void deleteConnectionFactory(String deployedName) throws AdminException;
     
-    /**
-     * Export a {@link ConnectionFactory} to character Array in XML format
-     *
-     * @param deployedName the unique identifier for a {@link ConnectionFactory}.
-     * @return Reader in XML format
-     * @throws AdminException
-     *             
-     */
-    Reader exportConnectionFactory(String deployedName) throws AdminException;    
-
     /**
      * Deploy a {@link VDB} file.
      * @param name  Name of the VDB file to save under
@@ -146,12 +125,12 @@ public interface Admin {
     void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Get the Connectors  available in the configuration.
+     * Get the Connector Template  available in the configuration.
      *
-     * @return Set of connector names.
+     * @return Set of connector template names.
      * @throws AdminException 
      */
-    Set<String> getConnectorNames() throws AdminException;
+    Set<String> getConnectorTemplateNames() throws AdminException;
 
     /**
      * Get the VDBs that currently deployed in the system
@@ -205,17 +184,7 @@ public interface Admin {
      */
     WorkerPoolStatistics getWorkManagerStats(String identifier) throws AdminException;
     
-    
-    /**
-     * Get the Connection Pool Stats that correspond to the specified identifier pattern.
-     * If the {@link ConnectionPoolStatistics ConnectionPool} represents an XA connection, there
-     * will be 2 {@link ConnectionPoolStatistics ConnectionPool}s.  
-     *
-     * @param deployedName - an identifier that corresponds to the connection factory Name
-     * @return {@link ConnectionPoolStatistics}
-     * @throws AdminException 
-     */
-    ConnectionPoolStatistics getConnectionFactoryStats(String deployedName) throws AdminException;
+
         
 
     /**
@@ -249,11 +218,11 @@ public interface Admin {
 
     /**
      * Get all of the available configuration Properties for the specified connector
-     * @param connectorName - Name of the connector
+     * @param templateName - Name of the connector
      * @return
      * @throws AdminException
      */
-    Collection<PropertyDefinition> getConnectorPropertyDefinitions(String connectorName) throws AdminException;
+    Collection<PropertyDefinition> getConnectorTemplatePropertyDefinitions(String templateName) throws AdminException;
     
     
     /**
@@ -325,37 +294,6 @@ public interface Admin {
      * @throws AdminException
      */
     void terminateTransaction(String transactionId) throws AdminException;
-    
-    /**
-     * Adds JDBC XA Data Source in the container.
-     * @param deploymentName - name of the source
-     * @param type - type of data source
-     * @param properties - properties
-     * @throws AdminException
-     */
-    void addDataSource(String deploymentName, DataSourceType type, Properties properties) throws AdminException;
-    
-    /**
-     * Delete data source. 
-     * @param deployedName
-     * @throws AdminException
-     */
-    void deleteDataSource(String deployedName) throws AdminException;
-    
-    /**
-     * Export the data source in "-ds.xml" file format. 
-     * @param deployedName
-     * @return
-     * @throws AdminException
-     */
-    Reader exportDataSource(String deployedName) throws AdminException;
-    
-    /**
-     * Get the property definitions for creating the JDBC data source.
-     * @return
-     * @throws AdminException
-     */
-    Collection<PropertyDefinition> getDataSourcePropertyDefinitions() throws AdminException;
     
     /**
      * Closes the admin connection

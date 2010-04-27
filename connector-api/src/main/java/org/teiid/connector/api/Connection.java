@@ -56,13 +56,13 @@ public interface Connection {
      * Release the connection.  This will be called when system has completed 
      * using the connection for an execution.
      */
-    void close();
+    void close() throws ConnectorException;
     
     /**
      * Called to determine whether the connection is open
      * @return true if open, false if there is a source error.
      */    
-    boolean isAlive();
+    boolean isAlive() throws ConnectorException;
          
     /**
      * Get the local transaction for the connector.

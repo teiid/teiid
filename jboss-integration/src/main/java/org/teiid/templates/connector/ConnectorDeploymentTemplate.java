@@ -22,6 +22,7 @@
 package org.teiid.templates.connector;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.deployers.spi.management.DeploymentTemplate;
@@ -32,8 +33,9 @@ import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.jboss.ManagedUtil;
+import org.teiid.connector.api.Connector;
+import org.teiid.jboss.IntegrationPlugin;
 
 /**
  * The connection factory template implementation. Here the idea is "targetTemplate" is the actual template we store 
@@ -44,19 +46,19 @@ import org.teiid.adminapi.jboss.ManagedUtil;
  * When the properties are written to target template, and source has a new property that is not defined in target, that
  * property will be written as "config-property" 
  */
-public class ConnectorTypeTemplate implements DeploymentTemplate {
+public class ConnectorDeploymentTemplate implements DeploymentTemplate {
 
 	/** The deployment template info. */
 	private DeploymentTemplateInfo info;
 	private DeploymentTemplate targetTemplate;
   
 	/** The file suffix. */
-   private static final String FILE_SUFFIX = "-ds.xml";
+   private static final String FILE_SUFFIX = "-ds.xml";//$NON-NLS-1$	
 
     
 	public String getDeploymentName(String deploymentBaseName) {
 		if (deploymentBaseName == null)
-			throw new IllegalArgumentException("Null base name.");
+			throw new IllegalArgumentException("Null base name.");//$NON-NLS-1$	
 		
 	    if(deploymentBaseName.endsWith(FILE_SUFFIX) == false)
 	        deploymentBaseName = deploymentBaseName + FILE_SUFFIX;
@@ -67,19 +69,17 @@ public class ConnectorTypeTemplate implements DeploymentTemplate {
 	public VirtualFile applyTemplate(DeploymentTemplateInfo sourceInfo) throws Exception {
 		try {
 			
-			ManagedProperty rar = sourceInfo.getProperties().get("rar-name");
-			String rarName = ManagedUtil.stringValue(rar.getValue());
-			if (!isValidRar(rarName)) {
-				throw new AdminProcessingException("Invalid RAR specified; please supply correct RAR file. "+rarName);
-			}
-			
 			DeploymentTemplateInfo targetInfo = this.targetTemplate.getInfo();
 
 			// override these properties always. 
-			targetInfo.getProperties().get("connection-definition").setValue(SimpleValueSupport.wrap("org.teiid.connector.api.Connector"));
+			targetInfo.getProperties().get("connection-definition").setValue(SimpleValueSupport.wrap(Connector.class.getName()));//$NON-NLS-1$	
+			targetInfo.getProperties().get("rar-name").setValue(SimpleValueSupport.wrap(((ConnectorTemplateInfo)getInfo()).getRarName()));//$NON-NLS-1$
+			
 			
 			//config-properties list
-			Map<String, String> configProps = new HashMap<String, String>();
+			List<String> connectorPropNames = RaXmlPropertyConverter.getPropertyNames(((ConnectorTemplateInfo)getInfo()).getRarName());
+			Map<String, String> configProps = ConnectorDeploymentTemplate.propertiesAsMap(sourceInfo, connectorPropNames.toArray(new String[connectorPropNames.size()]), info.getName());		
+			configProps.put(ConnectorTemplateInfo.TEMPLATE_NAME, getInfo().getName());
 			
 			// template properties specific to the template
 			Map<String, ManagedProperty> propertyMap = targetInfo.getProperties();
@@ -109,14 +109,14 @@ public class ConnectorTypeTemplate implements DeploymentTemplate {
 					
 					if (mp.getValue() != null) {
 						configProps.put(key, ManagedUtil.stringValue(mp.getValue()));
-						configProps.put(key+".type", mp.getValue().getMetaType().getClassName());
+						configProps.put(key+".type", mp.getValue().getMetaType().getClassName());//$NON-NLS-1$	
 					}
 				}
 			}
 			
 			if (configProps.size() > 0) {
 				MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
-				targetInfo.getProperties().get("config-property").setValue(metaValue);				
+				targetInfo.getProperties().get("config-property").setValue(metaValue);//$NON-NLS-1$					
 			}
 			return this.targetTemplate.applyTemplate(targetInfo);
 
@@ -127,10 +127,6 @@ public class ConnectorTypeTemplate implements DeploymentTemplate {
 		}		
 	}
 
-	private boolean isValidRar(String rarName) {
-		return rarName != null;
-	}
-		
 	@Override
 	public DeploymentTemplateInfo getInfo() {
 		return info;
@@ -143,4 +139,38 @@ public class ConnectorTypeTemplate implements DeploymentTemplate {
 	public void setTargetTemplate(DeploymentTemplate target) {
 		this.targetTemplate = target;
 	}
+	
+	/**
+	 * Check to make sure supplied names are extracted from original list. If a mandatory property is missing fail
+	 * @param values
+	 * @param names
+	 * @param templateName
+	 * @return
+	 * @throws Exception
+	 */
+	static Map<String, String> propertiesAsMap(DeploymentTemplateInfo values, String[] names, String templateName) throws Exception {
+		Map<String, String> props = new HashMap<String, String>();
+		
+		Map<String, ManagedProperty> sourceProperties = values.getProperties();
+		
+		for (String name:names) {
+			ManagedProperty mp = sourceProperties.remove(name);
+			if (mp != null) {
+				if (mp.getValue() != null) {
+					props.put(name, ManagedUtil.stringValue(mp.getValue()));
+				}
+				else {
+					if (mp.isMandatory()) {
+						if( mp.getDefaultValue() != null) {
+							props.put(name, ManagedUtil.stringValue(mp.getDefaultValue()));
+						}
+						else {
+							throw new AdminComponentException(IntegrationPlugin.Util.getString("property_required_not_found", mp.getName(), templateName));//$NON-NLS-1$	
+						}
+					}
+				}
+			}
+		}
+		return props;
+	}	
 }

@@ -34,9 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.jboss.managed.api.annotation.ManagementComponent;
-import org.jboss.managed.api.annotation.ManagementObject;
-import org.jboss.managed.api.annotation.ManagementProperties;
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorCapabilities;
@@ -70,11 +67,13 @@ import com.metamatrix.query.sql.lang.Command;
  * The <code>ConnectorManager</code> manages a {@link org.teiid.connector.basic.BasicConnector Connector}
  * and its associated workers' state.
  */
-@ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="connectormanager"), properties=ManagementProperties.EXPLICIT)
 public class ConnectorManager  {
 	
 	public static final int DEFAULT_MAX_THREADS = 20;
 	private String connectorName;
+	
+	// stateful connector supplied to the cm; does not do the lookup
+	private Connector statefulConnector;	
 	    
     //services acquired in start
     private BufferService bufferService;
@@ -93,8 +92,12 @@ public class ConnectorManager  {
     public ConnectorManager(String name) {
     	this(name, DEFAULT_MAX_THREADS);
     }
-	
+
     public ConnectorManager(String name, int maxThreads) {
+    	this(name, null, maxThreads);
+    }
+    
+    public ConnectorManager(String name, Connector connector, int maxThreads) {
     	if (name == null) {
     		throw new IllegalArgumentException("Connector name can not be null"); //$NON-NLS-1$
     	}
@@ -103,6 +106,7 @@ public class ConnectorManager  {
     	}
     	this.maxConnections = maxThreads;
     	this.connectorName = name;
+    	this.statefulConnector = connector;
     }
     
     public synchronized void acquireConnectionLock(ConnectorWorkItem item) throws BlockedException {
@@ -234,16 +238,6 @@ public class ConnectorManager  {
     }
 
     /**
-     * Returns a list of QueueStats objects that represent the queues in
-     * this service.
-     * If there are no queues, an empty Collection is returned.
-     */
-   /* @ManagementProperty(description="Get Runtime workmanager statistics", use={ViewUse.STATISTIC}, readOnly=true)
-    public WorkerPoolStatisticsMetadata getWorkManagerStatistics() {
-        return workManager.getStats();
-    }*/
-
-    /**
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
@@ -284,6 +278,9 @@ public class ConnectorManager  {
      */
     Connector getConnector() throws ConnectorException {
 		try {
+			if (this.statefulConnector != null) {
+				return this.statefulConnector;
+			}
 			InitialContext ic  = new InitialContext();
 			return (Connector)ic.lookup(this.connectorName);    			
 		} catch (NamingException e) {

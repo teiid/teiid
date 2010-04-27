@@ -70,7 +70,44 @@ public class TestConnectorBindings extends BaseConnection {
 		admin.close();
 	}
 
-	@Test public void testConnectorBinding() throws Exception {
+	@Test public void testLoopbackConnectorBinding() throws Exception {
+		ConnectionFactory binding = admin.getConnectionFactory("loopy"); //$NON-NLS-1$
+		
+		if (binding != null) {
+			admin.deleteConnectionFactory("loopy"); //$NON-NLS-1$
+		}
+		
+		Properties p = new Properties();
+		p.setProperty("jndi-name", "loopy"); //$NON-NLS-1$ //$NON-NLS-2$
+		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.loopback.LoopbackCapabilities"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		ConnectionFactory cf = admin.addConnectionFactory("loopy","connector-loopback-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
+		System.out.println(cf.getProperties());
+		
+//		admin.setConnectionFactoryProperty("loopy", "CapabilitiesClass", "org.teiid.connector.BasicCapabilities");
+//		cf = admin.getConnectionFactory("loopy");
+//		System.out.println(cf.getProperties());
+	}
+	
+	@Test public void testLoopbackUpdate() throws Exception {
+		ConnectionFactory cf = admin.getConnectionFactory("loopy"); //$NON-NLS-1$
+		System.out.println(cf.getProperties());
+		
+		admin.setConnectionFactoryProperty("loopy", "CapabilitiesClass", "org.teiid.connector.LoopyCapabilities");
+		cf = admin.getConnectionFactory("loopy");
+		System.out.println(cf.getProperties());
+	}	
+	
+	@Test public void testGetConnectorFactories() throws Exception {
+		Collection<ConnectionFactory> cfs = admin.getConnectionFactories();
+		for(ConnectionFactory cf:cfs) {
+			System.out.println(cf.getName());
+		}
+		ConnectionFactory cf = admin.getConnectionFactory("products-cf"); //$NON-NLS-1$
+		System.out.println(cf.getName());
+	}
+	
+	@Test public void testDSConnectorBinding() throws Exception {
 		ConnectionFactory binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		if (binding != null) {
@@ -79,33 +116,40 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		Properties p = new Properties();
 		p.setProperty("jndi-name", "test-mysql-cb"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("rar-name", "connector-jdbc-7.0.0-SNAPSHOT.rar"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.derby.DerbyCapabilities"); //$NON-NLS-1$ //$NON-NLS-2$
+		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.mysql.MySQL5Capabilities"); //$NON-NLS-1$ //$NON-NLS-2$
 		p.setProperty("XaCapable", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("SourceJNDIName", "java:DerbyDS"); //$NON-NLS-1$ //$NON-NLS-2$
-		admin.addConnectionFactory("test-mysql-cb","connector-jdbc-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
+
+		p.setProperty("DatabaseName", "txntest");
+		p.setProperty("PortNumber", "3306");
+		p.setProperty("ServerName", "localhost");
+		p.setProperty("addtional-ds-properties", "foo=bar, t= x");
+		p.setProperty("user-name", "rareddy");
+		p.setProperty("password", "mm");
+		p.setProperty("xa-datasource-class", "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource");
 		
+		admin.addConnectionFactory("test-mysql-cb","connector-jdbc-xa-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
+
 		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
 		assertNotNull(binding);	
 		
-		assertEquals("java:DerbyDS", binding.getPropertyValue("SourceJNDIName")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("org.teiid.connector.jdbc.mysql.MySQL5Capabilities", binding.getPropertyValue("CapabilitiesClass")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		admin.stopConnectionFactory("test-mysql-cb");
 		
 		admin.startConnectionFactory("test-mysql-cb");
 		
-		admin.setConnectionFactoryProperty("test-mysql-cb", "SourceJNDIName", "DummyDS"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		admin.setConnectionFactoryProperty("test-mysql-cb", "XaCapable", "false"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
-		assertEquals("DummyDS", binding.getPropertyValue("SourceJNDIName")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("false", binding.getPropertyValue("XaCapable")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
+		//admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
-		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
+		//binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
 		
-		assertNull(binding);		
+		//assertNull(binding);		
 	}
 	
 	@Test public void testVDBDeploy() throws Exception {
@@ -245,27 +289,13 @@ public class TestConnectorBindings extends BaseConnection {
 	}
 	
 	@Test
-	public void testWorkmanagerStats() throws Exception {
-		WorkerPoolStatistics stats = admin.getWorkManagerStats("runtime"); //$NON-NLS-1$
-		System.out.println(stats);
-		assertNotNull(stats);
-	}
-	
-	@Test
-	public void testConnectionPool() throws Exception {
-		ConnectionPoolStatistics stats = admin.getConnectionFactoryStats("mysql-connector-binding"); //$NON-NLS-1$
-		System.out.println(stats);
-		assertNotNull(stats);
-	}
-	
-	@Test
 	public void testConnectorTypeProperties() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getConnectorPropertyDefinitions("connector-jdbc-7.0.0-SNAPSHOT"); //$NON-NLS-1$
+		Collection<PropertyDefinition> defs = admin.getConnectorTemplatePropertyDefinitions("connector-jdbc-xa-7.0.0-SNAPSHOT"); //$NON-NLS-1$
 		for (PropertyDefinition pd:defs) {
-			System.out.println(pd.getName());
+			System.out.println(pd.getName()+":"+pd.getPropertyTypeClassName());
 			if (pd.getName().equals("ExtensionTranslationClassName")) { //$NON-NLS-1$
 				assertEquals("Extension SQL Translation Class", pd.getDisplayName()); //$NON-NLS-1$
-				assertEquals(true, pd.isAdvanced());
+				assertEquals(false, pd.isAdvanced());
 				assertEquals(true, pd.isRequired());
 				assertEquals(false, pd.isMasked());
 				assertEquals(true, pd.isModifiable());
@@ -288,22 +318,15 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testConnectorTypes() throws Exception {
-		Set<String> defs = admin.getConnectorNames();
-		assertTrue(defs.contains("connector-salesforce-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-		assertTrue(defs.contains("connector-jdbc-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-		assertTrue(defs.contains("connector-text-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-		assertTrue(defs.contains("connector-loopback-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-		assertTrue(defs.contains("connector-ldap-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+		Set<String> defs = admin.getConnectorTemplateNames();
+//		assertTrue(defs.contains("connector-salesforce-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+//		assertTrue(defs.contains("connector-jdbc-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+//		assertTrue(defs.contains("connector-text-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+//		assertTrue(defs.contains("connector-loopback-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+//		assertTrue(defs.contains("connector-ldap-7.0.0-SNAPSHOT")); //$NON-NLS-1$
 		System.out.println(defs);
 	}
-	
-	@Test
-	public void testPropertyDefsForDS() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getDataSourcePropertyDefinitions();		
-		System.out.println(defs);
-		assertNotNull(defs);
-		assertTrue(defs.size() > 1);
-	}
+
 	
 	@Test
 	public void testConnectorAddDelete() throws Exception{
@@ -312,12 +335,13 @@ public class TestConnectorBindings extends BaseConnection {
 		admin.addConnector("connector-loopy.rar", fis); //$NON-NLS-1$
 		fis.close();
 		
-		Set<String> names = admin.getConnectorNames();
-		assertTrue(names.contains("connector-loopy.rar")); //$NON-NLS-1$
+		Set<String> names = admin.getConnectorTemplateNames();
+		System.out.println(names);
+		assertTrue(names.contains("connector-loopy")); //$NON-NLS-1$
 		
 		admin.deleteConnector("connector-loopy.rar"); //$NON-NLS-1$
 		
-		names = admin.getConnectorNames();
+		names = admin.getConnectorTemplateNames();
 		//assertTrue(!names.contains("connector-loopy")); //$NON-NLS-1$
 	}
 	
@@ -390,11 +414,4 @@ public class TestConnectorBindings extends BaseConnection {
 		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
 	}	
 	
-	@Test public void testExportConnectionFactory() throws Exception {
-		ObjectConverterUtil.write(admin.exportConnectionFactory("products-cf"), "cf.xml");
-	}	
-	
-	@Test public void testExportDataSource() throws Exception {
-		ObjectConverterUtil.write(admin.exportDataSource("CustomersDS"), "ds.xml");
-	}
 }

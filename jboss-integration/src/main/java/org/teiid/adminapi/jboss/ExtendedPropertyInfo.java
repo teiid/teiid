@@ -19,22 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.adminapi.jboss;
 
-package org.teiid.jboss.deployers;
+import org.jboss.managed.api.ManagedComponent;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
-
-public class ConnectorManagerGroup {
-	private List<ConnectorManager> mgrs = new ArrayList<ConnectorManager>();
-	
-	public void addConnectorManager(ConnectorManager cm) {
-		this.mgrs.add(cm);
-	}
-	
-	public List<ConnectorManager> getConnectorManagers(){
-		return this.mgrs;
-	}
+public interface ExtendedPropertyInfo {
+	void updateProperty(String name, String value, ManagedComponent mc);
 }

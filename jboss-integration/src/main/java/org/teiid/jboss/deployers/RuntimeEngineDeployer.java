@@ -314,7 +314,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-	@ManagementOperation(description="Clear the caches in the system", impact=Impact.ReadOnly)
+	@ManagementOperation(description="Terminate the transaction", impact=Impact.ReadOnly)
 	public void terminateTransaction(String xid) throws AdminException {
 		this.dqpCore.terminateTransaction(xid);
 	}

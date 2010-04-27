@@ -35,8 +35,6 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.basic.BasicConnector;
 
-import com.metamatrix.core.util.StringUtil;
-
 /**
  * JDBC implementation of Connector interface.
  */
@@ -56,15 +54,6 @@ public class JDBCConnector extends BasicConnector {
 		
 		logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
 		
-        
-        // Get the JNDI name for the underlying JDBC source
-        String dataSourceName = this.config.getSourceJNDIName();
-        
-        // Verify required items
-        if (!StringUtil.isValid(dataSourceName)) {
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_jndi_1")); //$NON-NLS-1$
-        }
-        
         capabilities = config.getTranslator().getConnectorCapabilities();
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_started._4")); //$NON-NLS-1$

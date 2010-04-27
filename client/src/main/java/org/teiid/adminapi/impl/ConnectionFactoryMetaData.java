@@ -21,20 +21,25 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.util.List;
+
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.ConnectionFactory;
 
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="connector"))
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="connection-factory"))
 public class ConnectionFactoryMetaData extends AdminObjectImpl implements ConnectionFactory {
 
+	private static final String TEMPLATE_NAME = "template-name"; //$NON-NLS-1$
 	private static final long serialVersionUID = -4865836616882247016L;
 	private transient Object type;
 	private String rarFileName;
 	private String jndiName;
 
 	@ManagementProperty(description="Connector Binding Name")
+	@ManagementObjectID(type="cf-name")
 	public String getName() {
 		return super.getName();
 	}    
@@ -65,6 +70,22 @@ public class ConnectionFactoryMetaData extends AdminObjectImpl implements Connec
 	
 	public Object getComponentType() {
 		return this.type;
+	}
+	
+	@Override
+	@ManagementProperty(description="Template name for this connector")
+	public String getTemplateName() {
+		return getPropertyValue(TEMPLATE_NAME);
+	}
+
+	public void setTemplateName(String templateName) {
+		addProperty(TEMPLATE_NAME, templateName);
+	}
+	
+	@Override
+	@ManagementProperty(description = "Connection Factory Properties", managed=true)
+	public List<PropertyMetadata> getJAXBProperties(){
+		return super.getJAXBProperties();
 	}
 	
 	public String toString() {

@@ -55,11 +55,23 @@
     </bean>      
              
     <bean name="ConnectionFactoryDeployer" class="org.teiid.jboss.deployers.ConnectionFactoryDeployer">
-        <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+        <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
         <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
+    </bean>
+        
+    <bean name="AutoConnectionFactoryDeployer" class="org.teiid.jboss.deployers.AutoConnectionFactoryDeployer">
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+        <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
+        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
+    </bean>
+    
+    <bean name="VDBStatusChecker" class="org.teiid.deployers.VDBStatusChecker">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
     </bean>
+     
+    <bean name="AutoConnectionFactoryParserDeployer" class="org.teiid.jboss.deployers.AutoConnectionFactoryParserDeployer">
+    </bean>        
     
     <!-- Persistence class for the VDB deployment file -->
    <bean name="VDBMetadataComponentMapper" class="org.teiid.jboss.deployers.VDBMetadataComponentMapper">

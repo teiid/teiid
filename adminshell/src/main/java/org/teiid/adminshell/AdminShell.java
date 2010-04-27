@@ -49,7 +49,6 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
-import org.teiid.adminapi.Admin.DataSourceType;
 import org.teiid.adminshell.Help.Doc;
 
 import com.metamatrix.common.util.ReaderInputStream;
@@ -171,12 +170,6 @@ public class AdminShell {
 		getAdmin().deleteConnector(name);
 	}
 
-	@Doc(text = "Delete a DataSource")
-	public static void deleteDataSource(
-			@Doc(text = "deployed name") String deploymentName) throws AdminException {
-		getAdmin().deleteDataSource(deploymentName);
-	}
-
 	@Doc(text = "Delete a VDB")
 	public static void deleteVDB(
 			@Doc(text = "vdb name") String vdbName, 
@@ -209,27 +202,15 @@ public class AdminShell {
 		return getAdmin().getConnectionFactory(deployedName);
 	}
 
-	@Doc(text = "Get the ConnectionPoolStatistics for the given ConnectionFactory")
-	public static ConnectionPoolStatistics getConnectionFactoryStats(
-			@Doc(text = "deployed name") String deployedName) throws AdminException {
-		return getAdmin().getConnectionFactoryStats(deployedName);
-	}
-
 	@Doc(text = "Get all connector name Strings")
 	public static Set<String> getConnectorNames() throws AdminException {
-		return getAdmin().getConnectorNames();
+		return getAdmin().getConnectorTemplateNames();
 	}
 
 	@Doc(text = "Get all PropertyDefinition instances for the given connector")
 	public static Collection<PropertyDefinition> getConnectorPropertyDefinitions(
 			@Doc(text = "connector name") String connectorName) throws AdminException {
-		return getAdmin().getConnectorPropertyDefinitions(connectorName);
-	}
-
-	@Doc(text = "Get all ProperyDefinition instances for a DataSource")
-	public static Collection<PropertyDefinition> getDataSourcePropertyDefinitions()
-			throws AdminException {
-		return getAdmin().getDataSourcePropertyDefinitions();
+		return getAdmin().getConnectorTemplatePropertyDefinitions(connectorName);
 	}
 
 	@Doc(text = "Get the ProcessObject instances for the given identifier")
@@ -359,7 +340,7 @@ public class AdminShell {
 	@Doc(text = "Checks if a Connector exists")
 	public static boolean hasConnector(
 			@Doc(text = "type name") String typeName) throws AdminException {
-	    Collection<String> types = getAdmin().getConnectorNames();
+	    Collection<String> types = getAdmin().getConnectorTemplateNames();
 
 	    for (String type:types) {
 	        if (type.equals(typeName)) {
@@ -392,22 +373,6 @@ public class AdminShell {
 	        }
 	    }
 	    return false;
-	}
-
-	@Doc(text = "Export a Connector RAR to file")
-	public static void exportConnector(
-			@Doc(text = "connector name") String name, 
-			@Doc(text = "file name") String fileName) throws AdminException, IOException {
-	    InputStream contents = getAdmin().exportConnector(name);
-	    writeFile(name, fileName, contents);
-	}
-
-	@Doc(text = "Export a ConnectionFactory to an XML file")
-	public static void exportConnectionFactory(
-			@Doc(text = "deployed name") String deployedName, 
-			@Doc(text = "file name") String fileName) throws AdminException, IOException{
-	    Reader contents = getAdmin().exportConnectionFactory(deployedName);
-	    writeFile(deployedName, fileName, contents);
 	}
 
 	private static void writeFile(String deployedName, String fileName,
@@ -464,22 +429,6 @@ public class AdminShell {
 		}
 	}
 
-	@Doc(text = "Add a DataSource")
-	public static void addDataSource(
-			@Doc(text = "deployed name") String deploymentName, 
-			DataSourceType type,
-			Properties properties) throws AdminException {
-		getAdmin().addDataSource(deploymentName, type, properties);
-	}
-
-	@Doc(text = "Export the DataSource XML to file")
-	public static void exportDataSource(
-			@Doc(text = "deployed name") String deployedName,
-			@Doc(text = "file name") String fileName) throws AdminException, IOException {
-		Reader contents = getAdmin().exportDataSource(deployedName);
-		writeFile(deployedName, fileName, contents);
-	}
-	
 	@Doc(text = "Get the current Admin connection")
 	public static Admin getAdmin() {
 		if (internalAdmin == null) {

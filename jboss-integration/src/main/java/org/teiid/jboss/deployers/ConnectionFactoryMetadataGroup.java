@@ -19,21 +19,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.adminapi.jboss;
 
-import org.jboss.managed.api.ComponentType;
+package org.teiid.jboss.deployers;
 
-public class ExtendedComponentType extends ComponentType {
-	private static final long serialVersionUID = 5526223504408812809L;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.teiid.adminapi.impl.ConnectionFactoryMetaData;
+
+public class ConnectionFactoryMetadataGroup {
+	private List<ConnectionFactoryMetaData> mgrs = new ArrayList<ConnectionFactoryMetaData>();
 	
-	private String dsType;
-	
-	public ExtendedComponentType(String type, String subtype, String dsType) {
-		super(type, subtype);
-		this.dsType = dsType;
+	public void addConnectionFactory(ConnectionFactoryMetaData cm) {
+		this.mgrs.add(cm);
 	}
 	
-	public String getDsType() {
-		return this.dsType;
+	public List<ConnectionFactoryMetaData> getConnectionFactories(){
+		return this.mgrs;
+	}
+	
+	public ConnectionFactoryMetaData getConnectionFactory(String name) {
+		for(ConnectionFactoryMetaData cf: this.mgrs) {
+			if (cf.getName().equals(name)) {
+				return cf;
+			}
+		}
+		return null;
 	}
 }

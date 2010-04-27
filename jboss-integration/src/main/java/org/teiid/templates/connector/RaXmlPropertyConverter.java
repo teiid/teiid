@@ -21,9 +21,10 @@
  */
 package org.teiid.templates.connector;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
@@ -36,55 +37,51 @@ import javax.management.ReflectionException;
 
 import org.jboss.managed.api.Fields;
 import org.jboss.managed.api.ManagedProperty;
-import org.jboss.managed.plugins.BasicDeploymentTemplateInfo;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
 import org.jboss.managed.plugins.ManagedPropertyImpl;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.resource.metadata.ConfigPropertyMetaData;
 import org.jboss.resource.metadata.ConnectionDefinitionMetaData;
 import org.jboss.resource.metadata.ConnectorMetaData;
 import org.jboss.resource.metadata.DescriptionMetaData;
 import org.teiid.adminapi.jboss.ManagedUtil;
+import org.teiid.connector.api.Connector;
 
-/**
- * This class some magic in it. First off all through the configuration it extends the
- * NoTxConnectionFactoryTemplate. Then using the JMX adds the properties defined inside a connector
- * RAR file's ra.xml dynamically the above template. The RAR file name is supplied in the "description" 
- * field of the configuration. Also, it uses the NoTxConnectionFactoryTemplate "applyTemplate" to write
- * the custom properties that have been added thru JMX as "config-property" in the eventual "-ds.xml" file.
- */
-public class ConnectorTypeTemplateInfo extends BasicDeploymentTemplateInfo {
+public class RaXmlPropertyConverter {
 
-	private static final long serialVersionUID = 9066758787789280783L;
-
-	public ConnectorTypeTemplateInfo(String arg0, String arg1, Map<String, ManagedProperty> arg2) {
-		super(arg0, arg1, arg2);
+	
+	public static List<String> getPropertyNames(String rarName){
+		ArrayList<String> names = new ArrayList<String>();
+		Collection<ConfigPropertyMetaData> props = getRarProperties(rarName);
+		if (props != null) {
+			for (ConfigPropertyMetaData p:props) {
+				names.add(p.getName());
+			}
+		}
+		return names;
 	}
-
-	public void start() {
-		populate();
-	}
-
-	@Override
-	public ConnectorTypeTemplateInfo copy() {
-		ConnectorTypeTemplateInfo copy = new ConnectorTypeTemplateInfo(getName(), getDescription(), getProperties());
-		super.copy(copy);
-		copy.populate();
-		return copy;
+	
+	public static List<ManagedProperty> getAsManagedProperties(String rarName){
+		ArrayList<ManagedProperty> managedProperties = new ArrayList<ManagedProperty>();
+		Collection<ConfigPropertyMetaData> props = getRarProperties(rarName);
+		if (props != null) {
+			for (ConfigPropertyMetaData p:props) {
+				managedProperties.add(createConnectorProperty(p));
+			}
+		}
+		return managedProperties;
 	}
 	
 	
-	private void populate() {
+	private static Collection<ConfigPropertyMetaData> getRarProperties(String rarName){
 		try {
 			MBeanServer server = MBeanServerFactory.findMBeanServer(null).get(0);
-			ObjectName on = new ObjectName("jboss.jca:service=RARDeployment,name='"+getName()+".rar'");
-			ConnectorMetaData obj = (ConnectorMetaData)server.getAttribute(on, "MetaData");
-			ConnectionDefinitionMetaData metadata = obj.getConnectionDefinition("org.teiid.connector.api.Connector");
-			Collection<ConfigPropertyMetaData> props = metadata.getProperties();
-			for (ConfigPropertyMetaData p:props) {
-				addConnectorProperty(p);
-			}
+			ObjectName on = new ObjectName("jboss.jca:service=RARDeployment,name='"+rarName+"'");//$NON-NLS-1$	//$NON-NLS-2$	
+			ConnectorMetaData obj = (ConnectorMetaData)server.getAttribute(on, "MetaData");//$NON-NLS-1$	
+			ConnectionDefinitionMetaData metadata = obj.getConnectionDefinition(Connector.class.getName());
+			return metadata.getProperties();
 		} catch (MalformedObjectNameException e) {
 			//ignore
 		} catch (AttributeNotFoundException e) {
@@ -96,9 +93,10 @@ public class ConnectorTypeTemplateInfo extends BasicDeploymentTemplateInfo {
 		} catch (ReflectionException e) {
 			//ignore
 		}		
+		return null;
 	}
-
-	private void addConnectorProperty(ConfigPropertyMetaData metadata) {
+	
+	private static ManagedProperty createConnectorProperty(ConfigPropertyMetaData metadata) {
 		SimpleMetaType metaType = SimpleMetaType.resolve(metadata.getType());
 		
 		DefaultFieldsImpl fields = new DefaultFieldsImpl(metadata.getName());
@@ -123,8 +121,9 @@ public class ConnectorTypeTemplateInfo extends BasicDeploymentTemplateInfo {
 			}
 			fields.setField(Fields.MANDATORY, ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(extended.isRequired())));
 			fields.setField(Fields.READ_ONLY,  ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(!extended.isEditable())));
-			fields.setField("advanced",  ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(extended.isAdvanced())));
-			fields.setField("masked",  ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(extended.isMasked())));
+			fields.setField("advanced",  ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(extended.isAdvanced())));//$NON-NLS-1$	
+			fields.setField("masked",  ManagedUtil.wrap(SimpleMetaType.BOOLEAN_PRIMITIVE, String.valueOf(extended.isMasked())));//$NON-NLS-1$
+			fields.setField("teiid-property", SimpleValueSupport.wrap(true)); //$NON-NLS-1$
 		}
 		
 		fields.setMetaType(metaType);		
@@ -133,6 +132,6 @@ public class ConnectorTypeTemplateInfo extends BasicDeploymentTemplateInfo {
 		}
 		
 		ManagedPropertyImpl dsTypeMP = new ManagedPropertyImpl(fields);
-		addProperty(dsTypeMP);
-	}
+		return dsTypeMP;
+	}	
 }

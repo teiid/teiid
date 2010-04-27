@@ -27,8 +27,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -47,16 +45,13 @@ import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedComponent;
-import org.jboss.managed.api.ManagedDeployment;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
 import org.jboss.managed.plugins.WritethroughManagedPropertyImpl;
 import org.jboss.metatype.api.types.CollectionMetaType;
-import org.jboss.metatype.api.types.MapCompositeMetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
-import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValueSupport;
@@ -68,7 +63,6 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ConnectionFactory;
-import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -78,7 +72,6 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.ConnectionFactoryMetaData;
-import org.teiid.adminapi.impl.ConnectionPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
@@ -88,30 +81,25 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
-import org.teiid.templates.connector.ExportConnectorTypeTemplateInfo;
-
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class Admin extends TeiidAdmin {
 	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
 	private static final String RAR = ".rar"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
-	private static final String XA_DATA_SOURCE_TEMPLATE = "XADataSourceTemplate"; //$NON-NLS-1$
-	private static final String LOCAL_DATA_SOURCE_TEMPLATE = "LocalTxDataSourceTemplateInfo";  //$NON-NLS-1$	
 	private static final long serialVersionUID = 7081309086056911304L;
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ComponentType CONNECTION_FACTORY_TYPE = new ComponentType("teiid", "connection-factory");//$NON-NLS-1$ //$NON-NLS-2$
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
-	private static ExtendedComponentType NOTXTYPE = new ExtendedComponentType("ConnectionFactory", "NoTx", "no-tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static ExtendedComponentType TXTYPE = new ExtendedComponentType("ConnectionFactory", "Tx", "tx-connection-factory");//$NON-NLS-1$ //$NON-NLS-2$	//$NON-NLS-3$
-	private static ExtendedComponentType DS_LOCAL_TX = new ExtendedComponentType("DataSource", "LocalTx", "local-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static ExtendedComponentType DS_XA_TX = new ExtendedComponentType("DataSource", "XA", "xa-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static ExtendedComponentType DS_NO_TX = new ExtendedComponentType("DataSource", "NoTx", "no-tx-datasource");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	private static ExtendedComponentType[] DS_TYPES = new ExtendedComponentType[] {DS_XA_TX, DS_LOCAL_TX, DS_NO_TX};
-	private static ExtendedComponentType[] CF_TYPES = new ExtendedComponentType[] {NOTXTYPE, TXTYPE};
+	private static ComponentType NOTXTYPE = new ComponentType("ConnectionFactory", "NoTx");//$NON-NLS-1$ //$NON-NLS-2$ 
+	private static ComponentType TXTYPE = new ComponentType("ConnectionFactory", "Tx");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ComponentType DS_LOCAL_TX = new ComponentType("DataSource", "LocalTx");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ComponentType DS_XA_TX = new ComponentType("DataSource", "XA");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ComponentType DS_NO_TX = new ComponentType("DataSource", "NoTx");//$NON-NLS-1$ //$NON-NLS-2$
+	private static ComponentType[] DS_TYPES = {DS_XA_TX,DS_LOCAL_TX,TXTYPE,DS_NO_TX,NOTXTYPE};
+	
 	
 	private ManagementView view;
 	private DeploymentManager deploymentMgr;
@@ -171,90 +159,44 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public Collection<ConnectionFactory> getConnectionFactories() throws AdminException {
-		ArrayList<ConnectionFactory> bindings = new ArrayList<ConnectionFactory>();
-		findConnectorBindings(bindings, "NoTx"); //$NON-NLS-1$			
-		findConnectorBindings(bindings, "Tx"); //$NON-NLS-1$
-		return bindings;
+		ArrayList<ConnectionFactory> factories = new ArrayList<ConnectionFactory>();
+		try {
+			Set<ManagedComponent> mcSet = getView().getComponentsForType(CONNECTION_FACTORY_TYPE);
+			for (ManagedComponent mc:mcSet) {
+				factories.add(AdminObjectBuilder.buildAO(mc, ConnectionFactoryMetaData.class));
+			}
+		} catch (Exception e) {
+			throw new AdminComponentException(e);
+		}
+		return factories;
 	}
 
 	@Override
 	public ConnectionFactory getConnectionFactory(String deployedName) throws AdminException {
-		ManagedComponent mc = getConnectorBindingComponent(deployedName);
-		if (mc != null) {
-			return buildConnectorBinding(mc);
+		try {
+			ManagedComponent mc = getConnectionFactoryComponent(deployedName);
+			if (mc != null) {
+				return AdminObjectBuilder.buildAO(mc, ConnectionFactoryMetaData.class);
+			}
+			return null;
+		} catch(Exception e) {
+			throw new AdminProcessingException(e.getMessage(), e);
 		}
-		return null;
 	}
 
-	@Override
-	public Reader exportConnectionFactory(String deployedName) throws AdminException {
-		ManagementView view = getView();
-		try {
-			for (ExtendedComponentType type:CF_TYPES) {
-				ManagedComponent mc = view.getComponent(deployedName, type);
-				if (mc != null) {
-					return exportJCAConnection(deployedName, mc, type);
-				}				
-			}	
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connectionfactory_not_found", deployedName)); //$NON-NLS-1$
-		} catch (Exception e) {
-			throw new AdminComponentException(e);			
-		}
-	}
-		
-	private Reader exportJCAConnection(String deployedName, ManagedComponent mc, ExtendedComponentType type) throws AdminException {		
-		try {
-			DeploymentTemplateInfo info = getView().getTemplate("export-template"); //$NON-NLS-1$
-			if(info == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", "export-template")); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			
-			for (ManagedProperty infoProperty:info.getProperties().values()) {
-				if (infoProperty != null) {
-					ManagedProperty mp = mc.getProperty(infoProperty.getName());
-					if (mp != null) {
-						infoProperty.setValue(mp.getValue());
-					}
-				}
-			}			
-			
-			ManagedProperty dsType = info.getProperties().get("dsType"); //$NON-NLS-1$
-			dsType.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, type.getDsType()));
-			
-			File dsXml = File.createTempFile(deployedName, "-ds.xml"); //$NON-NLS-1$
-			ExportConnectorTypeTemplateInfo.writeTemplate(dsXml, info);
-			Reader r  = new StringReader(ObjectConverterUtil.convertFileToString(dsXml));
-			dsXml.delete();
-			return r;
-		} catch (NoSuchDeploymentException e) {
-			throw new AdminComponentException(e);
-		} catch (IOException e) {
-			throw new AdminComponentException(e);
-		} catch(Exception e) {
-			throw new AdminComponentException(e);
-		}
-	}
-	
-	@Override
-	public Reader exportDataSource(String deployedName) throws AdminException {
+	private ManagedComponent getConnectionFactoryComponent(String deployedName)
+			throws Exception {
 		if (deployedName.startsWith("java:")) { //$NON-NLS-1$
 			deployedName = deployedName.substring(5);
 		}
-		try {
-			ManagedComponent mc = null;
-			ManagementView view = getView();
-			for (ExtendedComponentType type:DS_TYPES) {
-				mc = view.getComponent(deployedName, type);
-				if (mc != null) {
-					return exportJCAConnection(deployedName, mc, type);
-				}
-			}
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("datasource_not_found", deployedName)); //$NON-NLS-1$
-		} catch (Exception e) {
-			throw new AdminComponentException(e);
+		
+		if (!deployedName.startsWith("teiid-cf/")) { //$NON-NLS-1$
+			deployedName = "teiid-cf/"+deployedName; //$NON-NLS-1$
 		}
+		ManagedComponent mc = view.getComponent(deployedName, CONNECTION_FACTORY_TYPE);
+		return mc;
 	}
-
+	
 	private InputStream exportDeployment(String url) throws AdminComponentException {
 		try {
 			URL contentURL = new URL(url);
@@ -264,112 +206,96 @@ public class Admin extends TeiidAdmin {
 		} catch (IOException e) {
 			throw new AdminComponentException(e);
 		}
-	}
+	}	
 	
-	private ManagedComponent getConnectorBindingComponent(String deployedName) throws AdminProcessingException {
+	private ManagedComponent getManagedConnectionFactoryComponent(String deployedName) throws AdminProcessingException {
 		try {
 			if (deployedName.startsWith("java:")) { //$NON-NLS-1$
 				deployedName = deployedName.substring(5);
 			}
-			ManagementView view = getView();
-			for (ExtendedComponentType type:CF_TYPES) {
+			for (ComponentType type:DS_TYPES) {
 				ManagedComponent mc = view.getComponent(deployedName, type);
 				if (mc != null) {
-					if (isConnectorBinding(mc)) {
-						return mc;	
-					}
-				}				
-			}	
+					return mc;
+				}
+			}
 		} catch(Exception e) {
 			throw new AdminProcessingException(e.getMessage(), e);
 		}
 		return null;
-	}
+	}	
 	
-	private ConnectionFactory buildConnectorBinding(ManagedComponent mc) {
-		ConnectionFactoryMetaData connector = new ConnectionFactoryMetaData();
-		connector.setName(mc.getName());
-		connector.setComponentType(mc.getType());
-		connector.addProperty("deployer-name", mc.getDeployment().getName());//$NON-NLS-1$	
-		
-		for (String key:mc.getProperties().keySet()) {
-			ManagedProperty property = mc.getProperty(key);
-			MetaValue value = property.getValue();
-			
-			//TODO: All properties need to be added
-			if (value != null) {
-				if(value.getMetaType().isSimple()) {
-					connector.addProperty(key, ManagedUtil.stringValue(value));
-				}
-				else if (key.equals("config-property")) { //$NON-NLS-1$	
-					MapCompositeValueSupport v1 = (MapCompositeValueSupport)value;
-					MapCompositeMetaType metaType = v1.getMetaType();
-					for (String configProperty:metaType.keySet()) {
-						if (!configProperty.endsWith(".type")) { //$NON-NLS-1$	
-							connector.addProperty(configProperty, ManagedUtil.stringValue(v1.get(configProperty)));
-						}
-					}
-				}
-				else {
-					//log.info(key+" property is not added to connector properties");
-				}
-			}
-		}
-		return connector;
-	}
+//	private ConnectionFactory buildConnectionFactory(ManagedComponent mc) {
+//		
+//		ConnectionFactoryMetaData connector = new ConnectionFactoryMetaData();
+//		connector.setName(mc.getName());
+//		connector.setComponentType(mc.getType());
+//		connector.setJNDIName(ManagedUtil.getSimpleValue(mc, "jndi-name", String.class)); //$NON-NLS-1$
+//		connector.setRARFileName(ManagedUtil.getSimpleValue(mc, "rar-name", String.class)); //$NON-NLS-1$
+//		
+//		connector.addProperty("deployer-name", mc.getDeployment().getName());//$NON-NLS-1$	
+//		
+//		for (String key:mc.getProperties().keySet()) {
+//			ManagedProperty property = mc.getProperty(key);
+//			MetaValue value = property.getValue();
+//			
+//			//TODO: All properties need to be added
+//			if (value != null) {
+//				if(value.getMetaType().isSimple()) {
+//					connector.addProperty(key, ManagedUtil.stringValue(value));
+//				}
+//				else if (key.equals("config-property")) { //$NON-NLS-1$	
+//					MapCompositeValueSupport v1 = (MapCompositeValueSupport)value;
+//					MapCompositeMetaType metaType = v1.getMetaType();
+//					for (String configProperty:metaType.keySet()) {
+//						if (!configProperty.endsWith(".type")) { //$NON-NLS-1$	
+//							connector.addProperty(configProperty, ManagedUtil.stringValue(v1.get(configProperty)));
+//						}
+//					}
+//				}
+//				else {
+//					//log.info(key+" property is not added to connector properties");
+//				}
+//			}
+//		}
+//		return connector;
+//	}
 	
-	private boolean isConnectorBinding(ManagedComponent mc) {
-	    String connectionDefinition = ManagedUtil.getSimpleValue(mc, "connection-definition", String.class); //$NON-NLS-1$	
-	    return Connector.class.getName().equals(connectionDefinition);
-	}
-	
-	private void findConnectorBindings(ArrayList<ConnectionFactory> bindings, String subType) throws AdminException {
-		try {
-			ComponentType type = new ComponentType("ConnectionFactory", subType); //$NON-NLS-1$	
-			Set<ManagedComponent> jcaConnectors = getView().getComponentsForType(type);
-			
-			for(ManagedComponent mc:jcaConnectors) {
-			    ManagedProperty mp = mc.getProperty("connection-definition"); //$NON-NLS-1$	
-				SimpleValueSupport v = (SimpleValueSupport)mp.getValue();
-				if (v.getValue().equals(Connector.class.getName())){
-					bindings.add(buildConnectorBinding(mc));
-			    }
-			}
-		}catch(Exception e) {
-			throw new AdminComponentException(e);
-		}
-	}
+
 	
 	@Override
 	public ConnectionFactory addConnectionFactory(String deploymentName, String typeName, Properties properties) throws AdminException {
-		if (getConnectionFactory(deploymentName) != null) {
+		if (getManagedConnectionFactoryComponent(deploymentName) != null) {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deploymentName)); //$NON-NLS-1$;
-		}
-		properties.setProperty("connection-definition", Connector.class.getName()); //$NON-NLS-1$	
+		}			
 		addConnectionfactory(deploymentName, typeName, properties);
-		
 		return getConnectionFactory(deploymentName);
 	}
 	
 	@Override
 	public void setConnectionFactoryProperty(String deployedName, String propertyName, String propertyValue) throws AdminException{
-		ManagedComponent mc = getConnectorBindingComponent(deployedName);
-		if (mc == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deployedName)); //$NON-NLS-1$;
-		}
-		if (mc.getProperty(propertyName) != null) {
-			mc.getProperty(propertyName).setValue(SimpleValueSupport.wrap(propertyValue));
-		}
-		else {
-			Map<String, String> configProps = new HashMap<String, String>();
-			configProps.put(propertyName, propertyValue);
-			configProps.put(propertyValue+".type", "java.lang.String"); //$NON-NLS-1$	//$NON-NLS-2$	
-			MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
-			mc.getProperty("config-property").setValue(metaValue); //$NON-NLS-1$	
-		}
 		try {
-			getView().updateComponent(mc);
-			getView().load();
+			ManagementView localView = getView();
+			ManagedComponent mc = getManagedConnectionFactoryComponent(deployedName);
+			if (mc == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_binding_exists",deployedName)); //$NON-NLS-1$;
+			}
+			if (mc.getProperty(propertyName) != null) {
+				mc.getProperty(propertyName).setValue(SimpleValueSupport.wrap(propertyValue));
+			}
+			else {
+				// since this is not in the regular properties list; must be teiid specific property
+				// handle this by template properties
+				ConnectionFactory cf = getConnectionFactory(deployedName);
+				DeploymentTemplateInfo template = localView.getTemplate(cf.getTemplateName());
+				if (template instanceof ExtendedPropertyInfo) {
+					ExtendedPropertyInfo extendedTemplate = (ExtendedPropertyInfo)template;
+					extendedTemplate.updateProperty(propertyName, propertyValue, mc);
+				}
+			}
+
+			localView.updateComponent(mc);
+			localView.load();
 		} catch (Exception e) {
 			throw new AdminComponentException(e);
 		}
@@ -377,7 +303,7 @@ public class Admin extends TeiidAdmin {
 		
 	@Override
 	public void deleteConnectionFactory(String deployedName) throws AdminException {
-		ManagedComponent mc = getConnectorBindingComponent(deployedName);
+		ManagedComponent mc = getManagedConnectionFactoryComponent(deployedName);
 		if (mc != null) {
 			ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
 		}
@@ -386,15 +312,8 @@ public class Admin extends TeiidAdmin {
 	@Override
 	public void startConnectionFactory(String deployedName) throws AdminException {
 		try {
-			ConnectionFactory factory = getConnectionFactory(deployedName);
-			if (factory == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
-			}
-			String deployerName = factory.getPropertyValue("deployer-name"); //$NON-NLS-1$
-			if (deployerName == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
-			}
-			ManagedUtil.execute(getDeploymentManager().start(deployerName), IntegrationPlugin.Util.getString("failed_to_start_connector", factory.getName())); //$NON-NLS-1$
+			String deploymentName = getDeploymentName(deployedName);
+			ManagedUtil.execute(getDeploymentManager().start(deploymentName), IntegrationPlugin.Util.getString("failed_to_start_connector", deployedName)); //$NON-NLS-1$
 		} catch (Exception e) {
 			ManagedUtil.handleException(e);
 		}
@@ -403,18 +322,23 @@ public class Admin extends TeiidAdmin {
 	@Override
 	public void stopConnectionFactory(String deployedName) throws AdminException {
 		try {
-			ConnectionFactory factory = getConnectionFactory(deployedName);
-			if (factory == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
-			}			
-			String deployerName = factory.getPropertyValue("deployer-name");//$NON-NLS-1$
-			if (deployerName == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_connector_deployer")); //$NON-NLS-1$
-			}			
-			ManagedUtil.execute(getDeploymentManager().stop(deployerName), IntegrationPlugin.Util.getString("failed_to_stop_connector", factory.getName())); //$NON-NLS-1$
+			String deploymentName = getDeploymentName(deployedName);			
+			ManagedUtil.execute(getDeploymentManager().stop(deploymentName), IntegrationPlugin.Util.getString("failed_to_stop_connector", deployedName)); //$NON-NLS-1$
 		} catch (Exception e) {
 			ManagedUtil.handleException(e);
 		}
+	}
+
+	private String getDeploymentName(String deployedName) throws AdminProcessingException {
+		ManagedComponent mc = getManagedConnectionFactoryComponent(deployedName);
+		if (mc == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_find_connector", deployedName)); //$NON-NLS-1$
+		}
+		String deploymentName = mc.getDeployment().getName();
+		if (deploymentName == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("failed_to_find_connector")); //$NON-NLS-1$
+		}
+		return deploymentName;
 	}	
 	
 	@Override
@@ -438,20 +362,15 @@ public class Admin extends TeiidAdmin {
 	
 	
 	@Override
-	public Set<String> getConnectorNames() throws AdminException{
-		try {
-			Set<ManagedDeployment> rarFiles = getView().getDeploymentsForType("rar");//$NON-NLS-1$ 
-			HashSet<String> matched = new HashSet<String>();
-			for(ManagedDeployment md:rarFiles) {
-				String name = md.getSimpleName();
-				if (name.startsWith(CONNECTOR_PREFIX) && name.endsWith(RAR)) {
-					matched.add(md.getSimpleName());
-				}
+	public Set<String> getConnectorTemplateNames() throws AdminException{
+		Set<String> names = getView().getTemplateNames();
+		HashSet<String> matched = new HashSet<String>();
+		for(String name:names) {
+			if (name.startsWith(CONNECTOR_PREFIX)) {
+				matched.add(name);
 			}
-			return matched;
-		} catch(Exception e) {
-			throw new AdminComponentException(e.getMessage(), e);
 		}
+		return matched;
 	}
 	
     boolean matches(String regEx, String value) {
@@ -764,19 +683,6 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public InputStream exportConnector(String connectorName) throws AdminException {
-		if (!connectorName.startsWith(CONNECTOR_PREFIX) || !connectorName.endsWith(RAR)) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("bad_connector_type_name")); //$NON-NLS-1$
-		}
-		
-		String deployerName = getRarDeployerName(connectorName);
-		if (deployerName == null) {
-			throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_not_found", connectorName)); //$NON-NLS-1$
-		}
-		return exportDeployment(deployerName);
-	}
-	
-	@Override
 	public Collection<String> getCacheTypes() throws AdminException {
 		try {
 			Collection<String> requestList = new ArrayList<String>();
@@ -839,41 +745,22 @@ public class Admin extends TeiidAdmin {
 		}
 	}	
 	
-	@Override
-	public ConnectionPoolStatistics getConnectionFactoryStats(String deployedName) throws AdminException {
-		ManagedComponent mc = getConnectorBindingComponent(deployedName);
-		if (mc != null) {
-			return buildConnectorConnectionPool(mc);
-		}
-		return null;
-	}
-
-	private ConnectionPoolStatistics buildConnectorConnectionPool(ManagedComponent mc) {
-		ConnectionPoolStatisticsMetadata stats = new ConnectionPoolStatisticsMetadata();
-		stats.setName(mc.getName());
-		stats.setAvailableConnectionCount(ManagedUtil.getSimpleValue(mc, "availableConnectionCount", Long.class));//$NON-NLS-1$
-		stats.setConnectionCount(ManagedUtil.getSimpleValue(mc, "connectionCount", Integer.class));//$NON-NLS-1$
-		stats.setConnectionCreatedCount(ManagedUtil.getSimpleValue(mc, "connectionCreatedCount", Integer.class));//$NON-NLS-1$
-		stats.setConnectionDestroyedCount(ManagedUtil.getSimpleValue(mc, "connectionDestroyedCount", Integer.class));//$NON-NLS-1$
-		stats.setInUseConnectionCount(ManagedUtil.getSimpleValue(mc, "inUseConnectionCount", Long.class));//$NON-NLS-1$
-		stats.setMaxConnectionsInUseCount(ManagedUtil.getSimpleValue(mc, "maxConnectionsInUseCount", Long.class));//$NON-NLS-1$
-		stats.setMaxSize(ManagedUtil.getSimpleValue(mc, "maxSize", Integer.class));//$NON-NLS-1$
-		stats.setMinSize(ManagedUtil.getSimpleValue(mc, "minSize", Integer.class));//$NON-NLS-1$
-		return stats;
-	}	
 	
 	@Override
-	public Collection<PropertyDefinition> getConnectorPropertyDefinitions(String typeName) throws AdminException {
+	public Collection<PropertyDefinition> getConnectorTemplatePropertyDefinitions(String templateName) throws AdminException {
 		try {
-			DeploymentTemplateInfo info = getView().getTemplate(typeName);
+			DeploymentTemplateInfo info = getView().getTemplate(templateName);
 			if(info == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", typeName)); //$NON-NLS-1$
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", templateName)); //$NON-NLS-1$
 			}
 			
 			ArrayList<PropertyDefinition> props = new ArrayList<PropertyDefinition>();
 			Map<String, ManagedProperty> propertyMap = info.getProperties();
 			
 			for (ManagedProperty mp:propertyMap.values()) {
+					if (!includeInTemplate(mp)) {
+						continue;
+					}
 					PropertyDefinitionMetadata p = new PropertyDefinitionMetadata();
 					p.setName(mp.getName());
 					p.setDescription(mp.getDescription());
@@ -916,25 +803,25 @@ public class Admin extends TeiidAdmin {
 		}
 	}	
 	
-	@Override
-    public void addDataSource(String deploymentName, DataSourceType type, Properties properties) throws AdminException {
-		if (type == DataSourceType.XA) { 
-			addConnectionfactory(deploymentName, XA_DATA_SOURCE_TEMPLATE, properties);
+    private boolean includeInTemplate(ManagedProperty mp) {
+    	Boolean teiidProperty = mp.getField("teiid-property", Boolean.class);//$NON-NLS-1$
+		if ( teiidProperty != null && teiidProperty.booleanValue()) {
+			return true;
 		}
-		else if (type == DataSourceType.LOCAL) {
-			addConnectionfactory(deploymentName, LOCAL_DATA_SOURCE_TEMPLATE, properties);
+		if (mp.isMandatory() && mp.getDefaultValue() == null) {
+			return true;
 		}
+		return false;
 	}
-	
-    private void addConnectionfactory(String deploymentName, String typeName, Properties properties) throws AdminException {	
+
+	private void addConnectionfactory(String deploymentName, String typeName, Properties properties) throws AdminException {	
 		try {
 			DeploymentTemplateInfo info = getView().getTemplate(typeName);
 			if(info == null) {
 				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", typeName)); //$NON-NLS-1$
 			}
-		
-			//config-properties list
-			Map<String, String> configProps = new HashMap<String, String>();
+			
+//			Map<String, String> configProps = new HashMap<String, String>();
 			
 			// template properties specific to the template
 			Map<String, ManagedProperty> propertyMap = info.getProperties();
@@ -949,16 +836,16 @@ public class Admin extends TeiidAdmin {
 						mp.setValue(SimpleValueSupport.wrap(value));
 					}
 				}
-				else {
-					configProps.put(key, properties.getProperty(key));
-					configProps.put(key+".type", "java.lang.String");//$NON-NLS-1$ //$NON-NLS-2$
-				}
+//				else {
+//					configProps.put(key, properties.getProperty(key));
+//					configProps.put(key+".type", "java.lang.String");//$NON-NLS-1$ //$NON-NLS-2$
+//				}
 			}
 			
-			if (configProps.size() > 0) {
-				MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
-				info.getProperties().get("config-property").setValue(metaValue);//$NON-NLS-1$				
-			}
+//			if (configProps.size() > 0) {
+//				MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
+//				info.getProperties().get("config-property").setValue(metaValue);//$NON-NLS-1$				
+//			}
 			
 			getView().applyTemplate(deploymentName, info);
 	
@@ -969,43 +856,23 @@ public class Admin extends TeiidAdmin {
 		}    	
     }
     
-	@Override
-    public void deleteDataSource(String deployedName) throws AdminException {
-		try {
-			ManagementView view = getView();
-			for (ExtendedComponentType type:DS_TYPES) {
-				ManagedComponent mc = view.getComponent(deployedName, type);
-				if (mc != null) {
-					ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
-					break;
-				}
-			}			
-		} catch (Exception e) {
-			throw new AdminComponentException(e.getMessage(), e);
-		}
-    }
-    
-	@Override
-    public Collection<PropertyDefinition> getDataSourcePropertyDefinitions() throws AdminException {
-		return getConnectorPropertyDefinitions(XA_DATA_SOURCE_TEMPLATE);
-	}
-	
 	private static final String connectorTemplate = 
 		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+ //$NON-NLS-1$
         "<deployment xmlns=\"urn:jboss:bean-deployer:2.0\">\n" + //$NON-NLS-1$
 		"<!-- This is Teiid connector type template - DO NOT DELETE -->\n"+ //$NON-NLS-1$
-		"<bean name=\"${name}\" class=\"org.teiid.templates.connector.ConnectorTypeTemplate\">\n" + //$NON-NLS-1$
+		"<bean name=\"${name}\" class=\"org.teiid.templates.connector.ConnectorDeploymentTemplate\">\n" + //$NON-NLS-1$
 		"    <property name=\"info\"><inject bean=\"${name}-templateinfo\"/></property>\n" + //$NON-NLS-1$
         "    <property name=\"targetTemplate\"><inject bean=\"NoTxConnectionFactoryTemplate\"/></property>\n" + //$NON-NLS-1$
         "</bean>\n" + //$NON-NLS-1$
-        "<bean name=\"${name}-templateinfo\" class=\"org.teiid.templates.connector.ConnectorTypeTemplateInfo\">\n" + //$NON-NLS-1$
+        "<bean name=\"${name}-templateinfo\" class=\"org.teiid.templates.connector.ConnectorTemplateInfo\">\n" + //$NON-NLS-1$
         "  <constructor factoryMethod=\"createTemplateInfo\">\n" + //$NON-NLS-1$
         "  <factory bean=\"DSDeploymentTemplateInfoFactory\"/>\n" + //$NON-NLS-1$
-        "    <parameter class=\"java.lang.Class\">org.teiid.templates.connector.ConnectorTypeTemplateInfo</parameter>\n" + //$NON-NLS-1$
+        "    <parameter class=\"java.lang.Class\">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>\n" + //$NON-NLS-1$
         "    <parameter class=\"java.lang.Class\">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>\n" + //$NON-NLS-1$
-        "    <parameter class=\"java.lang.String\">${name}.rar</parameter>\n" + //$NON-NLS-1$
+        "    <parameter class=\"java.lang.String\">${name}</parameter>\n" + //$NON-NLS-1$
         "    <parameter class=\"java.lang.String\">${name}</parameter>\n"+ //$NON-NLS-1$
         "  </constructor>\n" + //$NON-NLS-1$
+        "  <property name=\"rarName\">${name}.rar</property>" + //$NON-NLS-1$
         "</bean>\n"+ //$NON-NLS-1$
         "</deployment>"; //$NON-NLS-1$
 	

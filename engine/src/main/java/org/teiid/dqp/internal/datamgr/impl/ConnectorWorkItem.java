@@ -189,7 +189,11 @@ public class ConnectorWorkItem implements ConnectorWork {
         } finally {
             manager.removeState(this.id);
             if (connection != null) {
-                connection.close();
+                try {
+					connection.close();
+				} catch (ConnectorException e) {
+					LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());
+				}
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
             }
         } 

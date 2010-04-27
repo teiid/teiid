@@ -40,6 +40,7 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private boolean trimStrings=false;
 	private boolean useCommentsInSourceQuery = false;
 	private int fetchSize = -1;
+	private String connectionFactoryClass;
 		
 	// derived
 	private Translator sqlTranslator;
@@ -73,6 +74,7 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 		return this.sqlTranslator;
 	}	
 
+	@Override
 	public String getSourceJNDIName() {
 		return sourceJNDIName;
 	}
@@ -97,6 +99,7 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 		this.extensionTranslationClassName = arg0;
 	}
 	
+	@Override
 	public void setSourceJNDIName(String arg0) {
 		this.sourceJNDIName = arg0;
 	}
@@ -115,5 +118,13 @@ public class JDBCManagedConnectionFactory extends BasicManagedConnectionFactory 
 	
 	public int getFetchSize() {
 		return this.fetchSize;
+	}	
+	
+	public String getConnectionFactoryClass() {
+		return connectionFactoryClass;
+	}
+
+	public void setConnectionFactoryClass(String connectionFactoryClass) {
+		this.connectionFactoryClass = connectionFactoryClass;
 	}	
 }

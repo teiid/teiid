@@ -24,6 +24,8 @@ package org.teiid.connector.basic;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
@@ -35,16 +37,22 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 
+import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectionContext;
+import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorException;
 
 public class BasicManagedConnection implements ManagedConnection {
 	protected PrintWriter log;
 	protected final Collection<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
-	protected WrappedConnection conn;
 	private BasicManagedConnectionFactory mcf;
+	private Connection physicalConnection;
+	private final Set<WrappedConnection> handles = new HashSet<WrappedConnection>();
+	private Connector cf;
 	
-	public BasicManagedConnection(BasicManagedConnectionFactory mcf) {
+	public BasicManagedConnection(Connector connectionFactory, BasicManagedConnectionFactory mcf) throws ResourceException  {
+		this.cf = connectionFactory;
+		this.physicalConnection = this.cf.getConnection();
 		this.mcf = mcf;
 	}
 
@@ -53,15 +61,19 @@ public class BasicManagedConnection implements ManagedConnection {
 		if (!(handle instanceof WrappedConnection)) {
 			throw new ConnectorException("Wrong connection supplied to assosiate");
 		}
-		this.conn = (WrappedConnection)handle;
-		this.conn.setManagedConnection(this);
+		((WrappedConnection)handle).setManagedConnection(this);
+		synchronized (this.handles) {
+			this.handles.add((WrappedConnection)handle);
+		}
 	}
 
 	@Override
 	public void cleanup() throws ResourceException {
-		if (this.conn != null) {
-			this.conn.close();
-			this.conn = null;
+		synchronized (this.handles) {
+			for (WrappedConnection wc:this.handles) {
+				wc.setManagedConnection(null);
+			}
+			handles.clear();
 		}
 		ConnectionContext.setSubject(null);
 	}
@@ -69,6 +81,9 @@ public class BasicManagedConnection implements ManagedConnection {
 	@Override
 	public void destroy() throws ResourceException {
 		cleanup();
+		
+		this.physicalConnection.close();
+		this.physicalConnection = null;
 	}
 	
 	@Override
@@ -81,21 +96,26 @@ public class BasicManagedConnection implements ManagedConnection {
 		if(!(arg1 instanceof ConnectionRequestInfoWrapper)) {
 			throw new ConnectorException("Un recognized Connection Request Info object received");
 		}
-		ConnectionRequestInfoWrapper criw = (ConnectionRequestInfoWrapper)arg1;
 		ConnectionContext.setSubject(arg0);
-		this.conn = new WrappedConnection(criw.actualConnector.getConnection(), mcf);
-		this.conn.setManagedConnection(this);
-		return this.conn;
+		if (this.physicalConnection == null) {
+			this.physicalConnection = this.cf.getConnection();
+		}
+		
+		WrappedConnection wc = new WrappedConnection(this, mcf); 
+		synchronized(this.handles) {
+			this.handles.add(wc);
+		}
+		return wc; 
 	}
 
 	@Override
 	public LocalTransaction getLocalTransaction() throws ResourceException {
-		return this.conn.getLocalTransaction();
+		return this.physicalConnection.getLocalTransaction();
 	}
 
 	@Override
 	public XAResource getXAResource() throws ResourceException {
-		return this.conn.getXAResource();
+		return this.physicalConnection.getXAResource();
 	}
 	
 	@Override
@@ -123,9 +143,14 @@ public class BasicManagedConnection implements ManagedConnection {
 	}
 
 	// called by the wrapped connection to notify the close of the connection.
-	void connectionClosed() {
+	void connectionClosed(WrappedConnection wc) throws ConnectorException {
+		
+		synchronized (this.handles) {
+			handles.remove(wc);
+		}
+		
 		ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_CLOSED);
-		ce.setConnectionHandle(this.conn);
+		ce.setConnectionHandle(wc);
 		
 		ArrayList<ConnectionEventListener> copy = null;
 		synchronized (this.listeners) {
@@ -135,9 +160,23 @@ public class BasicManagedConnection implements ManagedConnection {
 		for(ConnectionEventListener l: copy) {
 			l.connectionClosed(ce);
 		}
+		
+		// check if connector is a facade for another; in which case release it to the pool
+		if (this.mcf.getSourceJNDIName() != null) {
+			synchronized(this.physicalConnection) {
+				this.physicalConnection.close();
+				this.physicalConnection = null;
+			}
+		}
 	}
 	
-	public boolean isValid() {
-		return this.conn.isAlive();
+	public boolean isValid() throws ConnectorException {
+		return this.physicalConnection.isAlive();
 	}
+	
+   Connection getConnection() throws ConnectorException {
+      if (this.physicalConnection == null)
+         throw new ConnectorException("Connection has been destroyed!!!");
+      return this.physicalConnection;
+   }	
 }

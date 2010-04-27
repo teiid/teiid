@@ -41,14 +41,22 @@
             <managedconnectionfactory-class>org.teiid.connector.jdbc.JDBCManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-               <description>{$display:"Connector Class",$advanced:"true"}</description>
+                <!-- This property is for the auto creation of the Connector from DS -->
+               <description>{$display:"Connection Factory Class",$required:"true"}</description>
+               <config-property-name>ConnectionFactoryClass</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>org.teiid.connector.jdbc.JDBCManagedConnectionFactory</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Connector Class"}</description>
                <config-property-name>ConnectorClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>org.teiid.connector.jdbc.JDBCConnector</config-property-value>
             </config-property>
 
             <config-property>
-               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
+               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities"}</description>
                <config-property-name>CapabilitiesClass</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
@@ -61,7 +69,7 @@
             </config-property>
             
             <config-property>
-               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions",$advanced:"true"}</description>
+               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions"}</description>
                <config-property-name>XaCapable</config-property-name>
                <config-property-type>java.lang.Boolean</config-property-type>
                <config-property-value>false</config-property-value>
@@ -104,17 +112,10 @@
             </config-property>
             
             <config-property>
-               <description>{$display:"Extension SQL Translation Class",$required:"true",$advanced:"true",$allowed:["org.teiid.connector.jdbc.translator.Translator","org.teiid.connector.jdbc.oracle.OracleSQLTranslator","org.teiid.connector.jdbc.db2.DB2SQLTranslator", "org.teiid.connector.jdbc.sqlserver.SqlServerSQLTranslator", "org.teiid.connector.jdbc.mysql.MySQLTranslator","org.teiid.connector.jdbc.mysql.MySQL5Translator", "org.teiid.connector.jdbc.postgresql.PostgreSQLTranslator", "org.teiid.connector.jdbc.derby.DerbySQLTranslator", "org.teiid.connector.jdbc.access.AccessSQLTranslator","org.teiid.connector.jdbc.h2.H2Translator","org.teiid.connector.jdbc.h2.H2Translator"]}</description>
+               <description>{$display:"Extension SQL Translation Class",$required:"true",$allowed:["org.teiid.connector.jdbc.translator.Translator","org.teiid.connector.jdbc.oracle.OracleSQLTranslator","org.teiid.connector.jdbc.db2.DB2SQLTranslator", "org.teiid.connector.jdbc.sqlserver.SqlServerSQLTranslator", "org.teiid.connector.jdbc.mysql.MySQLTranslator","org.teiid.connector.jdbc.mysql.MySQL5Translator", "org.teiid.connector.jdbc.postgresql.PostgreSQLTranslator", "org.teiid.connector.jdbc.derby.DerbySQLTranslator", "org.teiid.connector.jdbc.access.AccessSQLTranslator","org.teiid.connector.jdbc.h2.H2Translator","org.teiid.connector.jdbc.h2.H2Translator"]}</description>
                <config-property-name>ExtensionTranslationClassName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>org.teiid.connector.jdbc.translator.Translator</config-property-value>
-            </config-property>
-
-            <config-property>
-               <description>{$display:"Source Connection JNDI Name",$required:"true"}</description>
-               <description>JNDI Name of the physical resource.</description>
-               <config-property-name>SourceJNDIName</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
             </config-property>
 
             <config-property>

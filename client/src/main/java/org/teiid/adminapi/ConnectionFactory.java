@@ -39,4 +39,10 @@ public interface ConnectionFactory extends  AdminObject {
      * @return
      */
     String getJNDIName();
+    
+    /**
+     * Get the template name for the Connection Factory
+     * @return
+     */
+    String getTemplateName();
 }

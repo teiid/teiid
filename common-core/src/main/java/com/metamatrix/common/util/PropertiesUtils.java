@@ -970,6 +970,37 @@ public final class PropertiesUtils {
 	        }
 	    }
 	}
+    
+    public static void setBeanProperty(Object bean, String name, Object value) {
+    	if (value == null) {
+    		return;
+    	}
+    	name = name.toLowerCase();
+	    final Method[] methods = bean.getClass().getMethods();
+	    for (int i = 0; i < methods.length; i++) {
+	        final Method method = methods[i];
+	        final String methodName = method.getName();
+	        // If setter ...
+	        if ( methodName.startsWith("set") && method.getParameterTypes().length == 1 ) { //$NON-NLS-1$
+	            // Get the property name
+	            final String propertyName = methodName.substring(3);    // remove the "set"
+	            String shortName = propertyName.toLowerCase();
+	            if (!shortName.equals(name)) {
+	            	continue;
+	            }
+                final Class<?> argType = method.getParameterTypes()[0];
+                try {
+                	Object[] params = new Object[] {value};
+                	if (!argType.isAssignableFrom(value.getClass())) {
+                		params = new Object[] {StringUtil.valueOf(value.toString(), argType)};
+                	}
+                    method.invoke(bean, params);
+                } catch (Throwable e) {
+                	throw new InvalidPropertyException(propertyName, value.toString(), argType, e);
+                }
+	        }
+	    }
+	}    
 
 	private static Properties lowerCaseAllPropNames(final Properties connectionProps) {
 	    final Properties lcProps = new Properties();

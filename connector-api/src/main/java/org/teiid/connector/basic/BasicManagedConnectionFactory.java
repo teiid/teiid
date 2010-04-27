@@ -63,6 +63,7 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	private boolean exceptionOnMaxRows = false;
 	private int maxResultRows = -1;
 	private boolean xaCapable;
+	private String sourceJNDIName;
 	
 	private String overrideCapabilitiesFile;
 	
@@ -71,11 +72,6 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	
 	@Override
 	public Object createConnectionFactory() throws ResourceException {
-		return new ResourceException("Resource Adapter does not currently support running in a non-managed environment.");
-	}
-
-	@Override
-	public Object createConnectionFactory(ConnectionManager arg0) throws ResourceException {
 		try {
 			Object o = ReflectionHelper.create(this.connectorClass, null, Thread.currentThread().getContextClassLoader());
 			if(!(o instanceof Connector)) {
@@ -83,15 +79,21 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 			}
 			Connector connector = (Connector)o;
 			connector.initialize(this);
-			return new WrappedConnector(connector, arg0, this);
+			return connector;
 		} catch (MetaMatrixCoreException e) {
 			throw new ResourceException(e);
 		} 
 	}
 
 	@Override
+	public Object createConnectionFactory(ConnectionManager arg0) throws ResourceException {
+		return new WrappedConnector((Connector)createConnectionFactory(), arg0, this);
+	}
+
+	@Override
 	public ManagedConnection createManagedConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
-		return new BasicManagedConnection(this);
+		ConnectionRequestInfoWrapper criw = (ConnectionRequestInfoWrapper)arg1;
+		return new BasicManagedConnection(criw.actualConnector, this);
 	}
 
 	@Override
@@ -178,6 +180,14 @@ public class BasicManagedConnectionFactory implements ManagedConnectionFactory, 
 	public TypeFacility getTypeFacility() {
 		return TYPE_FACILITY;
 	}
+	
+	public void setSourceJNDIName(String arg0) {
+		this.sourceJNDIName = arg0;
+	}
+	
+	public String getSourceJNDIName() {
+		return sourceJNDIName;
+	}	
 
 	@Override
 	public Properties getOverrideCapabilities() throws ConnectorException {

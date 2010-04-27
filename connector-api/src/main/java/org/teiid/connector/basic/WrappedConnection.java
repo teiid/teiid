@@ -41,23 +41,21 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 public class WrappedConnection implements Connection, MetadataProvider {
 
-	private Connection conn;
 	private ConnectorEnvironment env;
 	private ConnectorCapabilities caps;
 	private BasicManagedConnection mc;
 	boolean closed = false;
 	
-	public WrappedConnection(Connection conn, ConnectorEnvironment env) {
-		this.conn = conn;
+	public WrappedConnection(BasicManagedConnection mc, ConnectorEnvironment env) {
+		this.mc = mc;
 		this.env = env;
 	}
 	
 	@Override
-	public void close() {
+	public void close() throws ConnectorException {
 		if (!this.closed && this.mc != null) {
 			this.closed = true;
-			this.conn.close();
-			this.mc.connectionClosed();
+			this.mc.connectionClosed(this);
 			this.mc = null;
 		}
 	}
@@ -65,13 +63,13 @@ public class WrappedConnection implements Connection, MetadataProvider {
 	@Override
 	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		return conn.createExecution(command, executionContext, metadata);
+		return this.mc.getConnection().createExecution(command, executionContext, metadata);
 	}
 
 	@Override
 	public ConnectorCapabilities getCapabilities() throws ConnectorException {
 		if (this.caps == null) {
-			this.caps = conn.getCapabilities();
+			this.caps = this.mc.getConnection().getCapabilities();
 			if (caps != null && this.env.getOverrideCapabilities() != null) {
 				caps = (ConnectorCapabilities) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.env.getOverrideCapabilities()));
 			}
@@ -81,23 +79,23 @@ public class WrappedConnection implements Connection, MetadataProvider {
 
 	@Override
 	public LocalTransaction getLocalTransaction() throws ConnectorException {
-		return conn.getLocalTransaction();
+		return this.mc.getConnection().getLocalTransaction();
 	}
 
 	@Override
-	public boolean isAlive() {
-		return conn.isAlive();
+	public boolean isAlive() throws ConnectorException {
+		return this.mc.getConnection().isAlive();
 	}
 
 	@Override
 	public XAResource getXAResource() throws ConnectorException {
-		return conn.getXAResource();
+		return this.mc.getConnection().getXAResource();
 	}
 	
 	@Override
 	public void getConnectorMetadata(MetadataFactory metadataFactory) throws ConnectorException {
-		if (this.conn instanceof MetadataProvider) {
-			((MetadataProvider) this.conn).getConnectorMetadata(metadataFactory);
+		if (this.mc.getConnection() instanceof MetadataProvider) {
+			((MetadataProvider) this.mc.getConnection()).getConnectorMetadata(metadataFactory);
 		} else {
 			throw new ConnectorException(DataPlugin.Util.getString("WrappedConnection.no_metadata"));	//$NON-NLS-1$
 		}
