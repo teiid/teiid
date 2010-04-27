@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.teiid.client.lob.LobChunk;
 import org.teiid.client.plan.PlanNode;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
@@ -59,15 +57,11 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -95,14 +89,9 @@ public class XMLPlan extends ProcessorPlan {
 	// State initialized by processor
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
-    private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
 
     private int nextBatchCount = 1;
         
-    // is document in progress currently?
-    boolean docInProgress = false;
-    private FileStore docInProgressStore;
-    
     // Post-processing
 	private Collection<SQLXML> xmlSchemas;
 
@@ -119,9 +108,6 @@ public class XMLPlan extends ProcessorPlan {
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         setContext(context);
-        if(context.getStreamingBatchSize() != 0){
-        	this.chunkSize = context.getStreamingBatchSize();
-        }
         TempTableStore tempTableStore = new TempTableStoreImpl(bufferMgr, context.getConnectionID(), (TempTableStore)context.getTempTableStore());
         //this.dataMgr = new StagingTableDataManager(new TempTableDataManager(dataMgr, tempTableStore), env);
         this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
@@ -165,136 +151,47 @@ public class XMLPlan extends ProcessorPlan {
         throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
         
         while(true){
-            LobChunk chunk = getNextXMLChunk(this.chunkSize);  
-            
-            if (chunk == null) {
-            	Assertion.assertTrue(!this.docInProgress);
-            	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
-	        	batch.setTerminationFlag(true);
-	        	return batch;
-            }
-	                    
-            XMLType doc = processXML(chunk);
-            
-            if (doc != null) {
-    	        TupleBatch batch = new TupleBatch(nextBatchCount++, Arrays.asList(Arrays.asList(doc)));
-    	        return batch;
-            }
-        }
-    }
-    
-    /**
-     * <p>Process the XML, using the stack of Programs supplied by the
-     * ProcessorEnvironment.  With each pass through the loop, the
-     * current Program is gotten off the top of the stack, and the
-     * current instruction is gotten from that program; each call
-     * to an instruction's process method may alter the Program
-     * Stack and/or the current instruction pointer of a Program,
-     * so it's important that this method's loop refer to the
-     * call stack of the ProcessorEnvironment each time, and not
-     * cache things in local variables.  If the current Program's
-     * current instruction is null, then it's time to pop that
-     * Program off the stack.</p>
-     *
-     * <p>This method will return a single tuple (List) for
-     * each XML document chunk in the result sets. There may be
-     * many XML documents, if the root of the document model has
-     * a mapping class (i.e. result set) associated with it.</p>
-     *
-     */
-    private XMLType processXML(LobChunk chunk)
-        throws MetaMatrixComponentException, BlockedException {
+        	// do the xml processing.
+            ProcessorInstruction inst = env.getCurrentInstruction();
+            while (inst != null){
+            	LogManager.logTrace(LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
+                this.context = inst.process(this.env, this.context);
 
-        // Note that we need to stream the document right away, as multiple documents
-        // results are generated from the same "env" object. So the trick here is either
-        // post process will stream it, or save to buffer manager to stream the document
-        // right away so that we give way to next batch call. (this due to bad design of xml model)
-        // also note that there could be "inst" object alive but no more chunks; that is reason
-        // for "if" null block
-        XMLType xml = null;            
-        
-        // if the chunk size is less than one chunk unit then send this as string based xml.
-        if (!this.docInProgress && chunk.isLast()) {
-            xml = new XMLType(new SQLXMLImpl(chunk.getBytes()));
-        }
-        else {
-            
-            // if this is the first chunk, then create a tuple source id for this sequence of chunks
-            if (!this.docInProgress) {
-                this.docInProgress = true;
-                this.docInProgressStore = this.bufferMgr.createFileStore("xml"); //$NON-NLS-1$
-            }
-            
-            // now save the chunk of data to the buffer manager and move on.
-            this.docInProgressStore.write(chunk.getBytes());
-            // now document is finished, so create a xml object and return to the client.
-            if (chunk.isLast()) {
-                // we want this to be naturally feed by chunks whether inside
-                // or out side the processor
-                xml = new XMLType(XMLUtil.createSQLXML(this.docInProgressStore));
-                //reset current document state.
-                this.docInProgress = false;
-                this.docInProgressStore = null;
-            } else {
-            	return null; //need to continue processing
-            }
-        }
-
-        // check to see if we need to do any post validation on the document.
-        if (getContext().validateXML()){
-        	Reader reader;
-			try {
-				reader = xml.getCharacterStream();
-			} catch (SQLException e) {
-				throw new MetaMatrixComponentException(e);
-			}
-        	try {
-        		validateDoc(reader);
-        	} finally {
-        		try {
-					reader.close();
-				} catch (IOException e) {
-				}
-        	}
-        }
-                                
-        return xml;
-    }
-        
-    
-    /**
-     * This methods gets the next XML chunk object from the document in progree object. Thi used by the 
-     * DocInProgressXMLTranslator to tuen this into a reader. 
-     * @return char[] of data of given size; if less than size is returned, it will be treated as
-     * document is finished or null if no chunk is available, just like blocked exception.
-     */
-    LobChunk getNextXMLChunk(int size) throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
-
-        // do the xml processing.
-        ProcessorInstruction inst = env.getCurrentInstruction();
-        while (inst != null){
-        	LogManager.logTrace(LogConstants.CTX_XML_PLAN, "Executing instruction", inst); //$NON-NLS-1$
-            this.context = inst.process(this.env, this.context);
-
-            //code to check for end of document, set current doc
-            //to null, and return the finished doc as a single tuple
-            DocumentInProgress doc = env.getDocumentInProgress();
-            if (doc != null) {            
-                //chunk size 0 mean no limit; get the whole document
-                char[] chunk = doc.getNextChunk(size);
-                if (chunk != null) {
-                    if (doc.isFinished()) {
-                        this.env.setDocumentInProgress(null);
+                //code to check for end of document, set current doc
+                //to null, and return the finished doc as a single tuple
+                DocumentInProgress doc = env.getDocumentInProgress();
+                if (doc != null && doc.isFinished()) {
+                    this.env.setDocumentInProgress(null);
+                    XMLType xml = new XMLType(XMLUtil.createSQLXML(doc.getFileStore()));
+                    // check to see if we need to do any post validation on the document.
+                    if (getContext().validateXML()){
+                    	Reader reader;
+            			try {
+            				reader = xml.getCharacterStream();
+            			} catch (SQLException e) {
+            				throw new MetaMatrixComponentException(e);
+            			}
+                    	try {
+                    		validateDoc(reader);
+                    	} finally {
+                    		try {
+            					reader.close();
+            				} catch (IOException e) {
+            				}
+                    	}
                     }
-                    byte[] bytes = new String(chunk).getBytes(Charset.forName(Streamable.ENCODING));
-                    return new LobChunk(bytes, doc.isFinished()); 
-                }                
+        	        TupleBatch batch = new TupleBatch(nextBatchCount++, Arrays.asList(Arrays.asList(xml)));
+        	        return batch;
+                }
+                inst = env.getCurrentInstruction();
             }
-            inst = env.getCurrentInstruction();
+            
+        	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
+        	batch.setTerminationFlag(true);
+        	return batch;
         }
-        return null;
     }
-        
+    
     /**
      * Sets the XML schema
      * @param xmlSchema
@@ -518,19 +415,19 @@ public class XMLPlan extends ProcessorPlan {
 	 * any errors that occur during XML processing
 	 */
 	private static class MMErrorHandler implements ErrorHandler{
-		ArrayList exceptionList = null;
+		ArrayList<MetaMatrixException> exceptionList = null;
 		
 		/**
 		 * Keep track of all the exceptions
 		 */
 		private void addException(MetaMatrixException me) {
 		    if (exceptionList == null) {
-		        exceptionList = new ArrayList();
+		        exceptionList = new ArrayList<MetaMatrixException>();
 		    }
 		    exceptionList.add(me);
 		}
 		
-		public List getExceptionList() {
+		public List<MetaMatrixException> getExceptionList() {
 		    return exceptionList;
 		}
 		

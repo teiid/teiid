@@ -24,6 +24,8 @@ package com.metamatrix.query.processor.xml;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
 
 public class TestSAXDocumentInProgress extends TestCase {
@@ -34,7 +36,8 @@ public class TestSAXDocumentInProgress extends TestCase {
 	}
     
     public void testLargeDocument()throws Exception{
-    	SAXDocumentInProgress doc = new SAXDocumentInProgress();
+		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test"); //$NON-NLS-1$
+    	SAXDocumentInProgress doc = new SAXDocumentInProgress(fs);
     	//long startTime = System.currentTimeMillis();
     	doc.setDocumentFormat(true);
         NodeDescriptor descriptor = NodeDescriptor.createNodeDescriptor("Root", null, true, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$
@@ -44,20 +47,9 @@ public class TestSAXDocumentInProgress extends TestCase {
     	doc.addAttribute(descriptor, "test1");//$NON-NLS-1$ 
         descriptor = NodeDescriptor.createNodeDescriptor("a1", null, false, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$
     	doc.addAttribute(descriptor, "test2");//$NON-NLS-1$ 
-    	int j=1;
-    	int i=0;
         descriptor = NodeDescriptor.createNodeDescriptor("Child", null, true, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$ 
-    	while(true){
+    	for (int i = 0; i < 50; i++) {
     		doc.addElement(descriptor, "test content");//$NON-NLS-1$ 
-    		char[] chunk = doc.getNextChunk(100);
-    		if(chunk != null){
-                j++;
-    			//System.out.println("Got chunk " + (j++) + " length="+chunk.length);//$NON-NLS-1$ //$NON-NLS-2$
-    		}
-    		if(j==51){
-    			break;
-    		}
-    		i++;
     	}
     	doc.moveToParent();
     	doc.markAsFinished();

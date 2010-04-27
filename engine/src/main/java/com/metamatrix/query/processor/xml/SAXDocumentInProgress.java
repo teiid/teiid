@@ -22,7 +22,7 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.io.CharArrayWriter;
+import java.io.BufferedOutputStream;
 import java.util.Iterator;
 
 import javax.xml.transform.OutputKeys;
@@ -36,6 +36,7 @@ import net.sf.saxon.TransformerFactoryImpl;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
@@ -52,17 +53,17 @@ public class SAXDocumentInProgress implements DocumentInProgress {
     private boolean finished;
     private String documentEncoding = MappingNodeConstants.Defaults.DEFAULT_DOCUMENT_ENCODING;
     private boolean isFormatted = MappingNodeConstants.Defaults.DEFAULT_FORMATTED_DOCUMENT.booleanValue();
-    private CharArrayWriter streamResultHolder = new CharArrayWriter();
+    private FileStore store;
     
-    
-    public SAXDocumentInProgress() throws MetaMatrixComponentException{
+    public SAXDocumentInProgress(FileStore store) throws MetaMatrixComponentException{
+        this.store = store;
         SAXTransformerFactory factory = new TransformerFactoryImpl();
     	//TODO use standard jaxp to create factory 
         //SAXTransformerFactory factory = (SAXTransformerFactory)TransformerFactory.newInstance();
         try {
 			//SAX2.0 ContentHandler
 			handler = factory.newTransformerHandler();
-			handler.setResult(new StreamResult(streamResultHolder));
+			handler.setResult(new StreamResult(new BufferedOutputStream(store.createOutputStream())));
 		} catch (Exception e) {
 			throw new MetaMatrixComponentException(e);
 		}
@@ -269,27 +270,6 @@ public class SAXDocumentInProgress implements DocumentInProgress {
 		finished = true;
 	}
 
-	/**
-	 * @see com.metamatrix.query.processor.xml.DocumentInProgress#getNextChunk(int)
-	 */
-	public char[] getNextChunk(int sizeInBytes) {
-        if(sizeInBytes == 0 && !finished) {
-            return null;
-        }
-        
-		//the unit of the size is Kb
-		if(finished || streamResultHolder.size() >= sizeInBytes){
-			char[] chunk = streamResultHolder.toCharArray();
-			if(finished){
-				streamResultHolder.close();
-			}else{
-				streamResultHolder.reset();
-			}
-			return chunk;
-		}
-		return null;
-	}
-	
 	private Element makeElement(NodeDescriptor descripter) {
         showState( "makeElement - TOP" );   //$NON-NLS-1$
         Element element = new Element(descripter, handler);
@@ -358,6 +338,11 @@ public class SAXDocumentInProgress implements DocumentInProgress {
                 LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): is NULL "}); //$NON-NLS-1$ 
             }
         }
+    }
+    
+    @Override
+    public FileStore getFileStore() {
+    	return this.store;
     }
 
 }

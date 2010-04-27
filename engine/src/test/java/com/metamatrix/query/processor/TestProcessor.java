@@ -284,6 +284,10 @@ public class TestProcessor {
                     record = new ArrayList(record);
                     record.set(0, actualDoc);
             	}
+            	if (expectedResults[i].size() == 1) {
+                    assertEquals("Row " + i + " does not match expected: ", expectedResults[i].get(0), record.get(0));                 //$NON-NLS-1$ //$NON-NLS-2$
+                    continue;
+            	}
             }
             
             assertEquals("Row " + i + " does not match expected: ", expectedResults[i], record);                 //$NON-NLS-1$ //$NON-NLS-2$

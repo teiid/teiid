@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 
 /**
@@ -56,5 +58,10 @@ public class FakeXMLProcessorEnvironment extends XMLProcessorEnvironment {
         clone.dataMap = this.dataMap;
         clone.schemaMap = this.schemaMap;
         return clone;
+    }
+    
+    @Override
+    public BufferManager getBufferManager() {
+    	return BufferManagerFactory.getStandaloneBufferManager();
     }
 }

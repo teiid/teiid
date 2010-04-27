@@ -24,9 +24,7 @@ package com.metamatrix.query.processor.xml;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
@@ -34,7 +32,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.types.DataTypeManager;
@@ -42,6 +39,8 @@ import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.parser.QueryParser;
+import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -133,61 +132,10 @@ public class TestInstructions extends TestCase {
         return crit;        
     }
 
-	private void compareDocuments(String expectedDoc, String actualDoc) {
-		StringTokenizer tokens1 = new StringTokenizer(expectedDoc, "\r\n"); //$NON-NLS-1$
-		StringTokenizer tokens2 = new StringTokenizer(actualDoc, "\n");//$NON-NLS-1$
-		while(tokens1.hasMoreTokens()){
-			String token1 = tokens1.nextToken().trim();
-			if(!tokens2.hasMoreTokens()){
-				fail("XML doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
-			}
-			String token2 = tokens2.nextToken().trim();
-			assertEquals("XML doc mismatch: ", token1, token2); //$NON-NLS-1$
-		}
-		if(tokens2.hasMoreTokens()){
-			fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
-		}
-	}
-	
-    public List helpProcessInstructions(Program prog, XMLProcessorEnvironment env) throws Exception {
-        int counter = 0;
-        XMLContext context = new XMLContext();
+    public void helpProcessInstructions(Program prog, XMLProcessorEnvironment env, String expected) throws Exception {
         env.pushProgram(prog);
-
-        DocumentInProgress doc = null;
-        
-        LinkedList resultDocs = new LinkedList();
-        
-        ProcessorInstruction inst = env.getCurrentInstruction();
-        while (inst != null){
-
-            try {
-                
-                context = inst.process(env, context);
-
-                //code to check for end of document, start new one,
-                doc = env.getDocumentInProgress();
-                if (doc != null){
-                    if (doc.isFinished()){
-                        env.setDocumentInProgress(null);
-                        String docString = new String(doc.getNextChunk(10));
-                        resultDocs.addLast(docString);
-                    }
-                }                    
-                
-            } catch(BlockedException e) {
-                
-            }
-            
-            // Catch run away processes
-            if(counter++ > 100) {
-                break;
-            }
-
-            inst = env.getCurrentInstruction();
-        }
-        
-        return resultDocs;
+    	XMLPlan plan = new XMLPlan(env);
+    	TestProcessor.doProcess(plan, new FakeDataManager(), new List[] {Arrays.asList(expected)}, new CommandContext());
     }
     
     public Program exampleProgram(FakeMetadataFacade metadata, XMLProcessorEnvironment env) throws Exception{
@@ -361,33 +309,26 @@ public class TestInstructions extends TestCase {
                     Arrays.asList( new Object[] { "002", "Screwdriver", new Integer(100) } ),         //$NON-NLS-1$ //$NON-NLS-2$
                     Arrays.asList( new Object[] { "003", "Goat", new Integer(4) } )         //$NON-NLS-1$ //$NON-NLS-2$
                     } );            
-        List resultDocs = helpProcessInstructions(program, env);
-        
-        String actualDoc = (String)resultDocs.iterator().next();
-        
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<Catalogs>\r\n" + //$NON-NLS-1$
-            "    <Catalog>\r\n" +  //$NON-NLS-1$
-            "        <Items>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"001\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>5</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>100</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>4</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "        </Items>\r\n" +  //$NON-NLS-1$
-            "    </Catalog>\r\n" +  //$NON-NLS-1$
-            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        
-        //assertEquals("XML doc mismatch: ", expectedDoc, actualDoc); //$NON-NLS-1$
-        compareDocuments(expectedDoc, actualDoc);
+        helpProcessInstructions(program, env,  
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +  //$NON-NLS-1$
+            "<Catalogs>\n" + //$NON-NLS-1$
+            "   <Catalog>\n" +  //$NON-NLS-1$
+            "      <Items>\n" +  //$NON-NLS-1$
+            "         <Item ItemID=\"001\">\n" +  //$NON-NLS-1$
+            "            <Name>Lamp</Name>\n" +  //$NON-NLS-1$
+            "            <Quantity>5</Quantity>\n" +  //$NON-NLS-1$
+            "         </Item>\n" +  //$NON-NLS-1$
+            "         <Item ItemID=\"002\">\n" +  //$NON-NLS-1$
+            "            <Name>Screwdriver</Name>\n" +  //$NON-NLS-1$
+            "            <Quantity>100</Quantity>\n" +  //$NON-NLS-1$
+            "         </Item>\n" +  //$NON-NLS-1$
+            "         <Item ItemID=\"003\">\n" +  //$NON-NLS-1$
+            "            <Name>Goat</Name>\n" +  //$NON-NLS-1$
+            "            <Quantity>4</Quantity>\n" +  //$NON-NLS-1$
+            "         </Item>\n" +  //$NON-NLS-1$
+            "      </Items>\n" +  //$NON-NLS-1$
+            "   </Catalog>\n" +  //$NON-NLS-1$
+            "</Catalogs>"); //$NON-NLS-1$
     }
     
     public void testProcess2() throws Exception {
@@ -412,24 +353,17 @@ public class TestInstructions extends TestCase {
                     Arrays.asList( new Object[] { "003", "Goat", new Integer(4) } )         //$NON-NLS-1$ //$NON-NLS-2$
                     } );            
 
-        List resultDocs = helpProcessInstructions(program, env);
-        
-        String actualDoc = (String)resultDocs.iterator().next();
-
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<Catalogs>\r\n" + //$NON-NLS-1$
-            "    <Catalog>\r\n" +  //$NON-NLS-1$
-            "        <Items>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>100</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "        </Items>\r\n" +  //$NON-NLS-1$
-            "    </Catalog>\r\n" +  //$NON-NLS-1$
-            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        
-        //assertEquals("XML doc mismatch: ", expectedDoc, actualDoc); //$NON-NLS-1$
-        compareDocuments(expectedDoc, actualDoc);
+        helpProcessInstructions(program, env, 
+        	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +  //$NON-NLS-1$
+            "<Catalogs>\n" + //$NON-NLS-1$
+            "   <Catalog>\n" +  //$NON-NLS-1$
+            "      <Items>\n" +  //$NON-NLS-1$
+            "         <Item ItemID=\"002\">\n" +  //$NON-NLS-1$
+            "            <Name>Screwdriver</Name>\n" +  //$NON-NLS-1$
+            "            <Quantity>100</Quantity>\n" +  //$NON-NLS-1$
+            "         </Item>\n" +  //$NON-NLS-1$
+            "      </Items>\n" +  //$NON-NLS-1$
+            "   </Catalog>\n" +  //$NON-NLS-1$
+            "</Catalogs>"); //$NON-NLS-1$
     }
 }

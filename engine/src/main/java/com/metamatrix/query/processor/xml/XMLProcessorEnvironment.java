@@ -23,10 +23,10 @@
 package com.metamatrix.query.processor.xml;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
@@ -48,9 +48,9 @@ public class XMLProcessorEnvironment {
     public static final String JDOM_DOCUMENT_RESULT = "JDOM Document"; //$NON-NLS-1$
     
     /* Stack <ProgramState> */
-    private LinkedList programStack = new LinkedList();
+    private LinkedList<ProgramState> programStack = new LinkedList<ProgramState>();
     
-    private Map loadedStagingTables = Collections.synchronizedMap(new HashMap());
+    private Set<String> loadedStagingTables = Collections.synchronizedSet(new HashSet<String>());
 
     private DocumentInProgress documentInProgress;
     
@@ -101,7 +101,7 @@ public class XMLProcessorEnvironment {
     public Program getCurrentProgram() {
         // jh case 5266
         if ( this.programStack.size() > 0 ) {
-            ProgramState programState = (ProgramState)this.programStack.getFirst();
+            ProgramState programState = this.programStack.getFirst();
             return programState.program;
         }
         return null;
@@ -127,7 +127,7 @@ public class XMLProcessorEnvironment {
      * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#incrementCurrentProgramCounter()
      */
     public void incrementCurrentProgramCounter() {
-        ProgramState programState = (ProgramState)this.programStack.getFirst();
+        ProgramState programState = this.programStack.getFirst();
         programState.programCounter++;
         
         // Always leave one Program in the Program stack, even if it is finished
@@ -137,7 +137,7 @@ public class XMLProcessorEnvironment {
             if(LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
                 LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Processor Environment popped program w/ recursion count " + programState.recursionCount, "; " + this.programStack.size(), " programs left."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
-            programState = (ProgramState)this.programStack.getFirst();
+            programState = this.programStack.getFirst();
         }        
     }
     
@@ -171,14 +171,14 @@ public class XMLProcessorEnvironment {
      * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getCurrentInstruction()
      */
     public ProcessorInstruction getCurrentInstruction() {
-        ProgramState programState = (ProgramState)this.programStack.getFirst();
+        ProgramState programState = this.programStack.getFirst();
         
         //Case 5266: account for an empty program on to the stack; 
         //this is needed to handle an empty sequence or an excluded Choice properly.
         if (programState != null && programState.program.getProcessorInstructions().isEmpty()) {
             incrementCurrentProgramCounter();
             
-            programState = (ProgramState)this.programStack.getFirst();
+            programState = this.programStack.getFirst();
         }
         
         if (programState == null) {
@@ -202,9 +202,9 @@ public class XMLProcessorEnvironment {
     
     private ProgramState getProgramState(Program program) {
         ProgramState result = null;
-        Iterator stackedPrograms = this.programStack.iterator();
+        Iterator<ProgramState> stackedPrograms = this.programStack.iterator();
         while (stackedPrograms.hasNext()) {
-            ProgramState programState = (ProgramState) stackedPrograms.next();
+            ProgramState programState = stackedPrograms.next();
             Program stackedProgram = programState.program;
             if (stackedProgram == program) {
                 result = programState;
@@ -287,7 +287,7 @@ public class XMLProcessorEnvironment {
      */
     protected void copyIntoClone(XMLProcessorEnvironment clone) {
         // Programs - just get the one at the bottom of the stack
-        ProgramState initialProgramState = (ProgramState)this.programStack.getLast();
+        ProgramState initialProgramState = this.programStack.getLast();
         ProgramState newState = new ProgramState();
         newState.program = initialProgramState.program;
         newState.programCounter = 0;
@@ -308,11 +308,15 @@ public class XMLProcessorEnvironment {
     
     
     boolean isStagingTableLoaded(String tableName) {
-        return Boolean.TRUE.equals(this.loadedStagingTables.get(tableName));
+        return this.loadedStagingTables.contains(tableName);
     }
     
     void markStagingTableAsLoaded(String tableName) {
-        this.loadedStagingTables.put(tableName, Boolean.TRUE);
+        this.loadedStagingTables.add(tableName);
     }
+    
+    public BufferManager getBufferManager() {
+		return bufferMgr;
+	}
     
 }

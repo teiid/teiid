@@ -25,6 +25,7 @@ package com.metamatrix.query.processor.xml;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.FileStore;
 
 /**
  * <p>This represents a document in construction.  It maintains a reference 
@@ -110,13 +111,6 @@ public interface DocumentInProgress {
      */
     public void markAsFinished() throws MetaMatrixComponentException;
     
-    /**
-     * Retrieve the next chunk of document.
-     * @param sizeInBytes size of the chunk in bytes. No limit if it is 0.
-     * @return character array containing the specfied number of characters, or less if 
-     * it has reached the end of the document. Return null if there is not enough characters
-     * and it has not reached the end of the document. 
-     */	
-    public char[] getNextChunk(int sizeInBytes);
-		
+    public FileStore getFileStore();
+    
 }

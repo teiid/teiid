@@ -27,6 +27,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.FileStore;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -405,7 +408,8 @@ public class TestAddNodeInstruction extends TestCase {
         
 		env.pushProgram(program);
         
-        DocumentInProgress doc = new SAXDocumentInProgress();
+		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test"); //$NON-NLS-1$
+        DocumentInProgress doc = new SAXDocumentInProgress(fs);
         env.setDocumentInProgress(doc);
         
         //add fake root, move to child
@@ -419,7 +423,7 @@ public class TestAddNodeInstruction extends TestCase {
         doc.moveToParent();
         doc.markAsFinished();
         
-        String actualDoc = new String(env.getDocumentInProgress().getNextChunk(1));
+        String actualDoc = new String(ObjectConverterUtil.convertToByteArray(fs.createInputStream(0)));
         return actualDoc;    
     }
 
