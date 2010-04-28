@@ -130,6 +130,12 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
+    public void testNoRowsException() throws Exception {
+    	helpSetup(3);
+    	this.connectorManager.setRows(0);
+    	assertNull(info.nextTuple());
+    }
+    
     public void testCodeTableResponseDataNotAvailable() throws Exception {
     	helpSetup(3);
     	this.connectorManager.dataNotAvailable = 5;

@@ -104,7 +104,7 @@ public class DataTierTupleSource implements TupleSource {
     }
 
 	public boolean isDone() {
-		return this.arm != null && this.arm.getFinalRow() > 0;
+		return this.arm != null && this.arm.getFinalRow() >= 0;
 	}
     
     void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
