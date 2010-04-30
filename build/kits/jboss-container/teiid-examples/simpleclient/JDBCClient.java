@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.teiid.jdbc.TeiidDataSource;
+import org.teiid.jdbc.TeiidStatement;
 
 public class JDBCClient {
 	public static void main(String[] args) throws Exception {
@@ -44,20 +45,23 @@ public class JDBCClient {
 		execute(getDataSourceConnection(args[0], args[1], args[2]), args[3]);
 	}
 	
-	static Connection getDriverConnection(String vdb, String host, String port) throws Exception {
-		String url = "jdbc:metamatrix:"+vdb+"@mm://"+host+":"+port;
+	static Connection getDriverConnection(String host, String port, String vdb) throws Exception {
+		String url = "jdbc:teiid:"+vdb+"@mm://"+host+":"+port+";showplan=on"; //note showplan setting
 		Class.forName("org.teiid.jdbc.TeiidDriver");
 		
 		return DriverManager.getConnection(url,"admin", "teiid");		
 	}
 	
-	static Connection getDataSourceConnection(String vdb, String host, String port) throws Exception {
+	static Connection getDataSourceConnection(String host, String port, String vdb) throws Exception {
 		TeiidDataSource ds = new TeiidDataSource();
 		ds.setDatabaseName(vdb);
 		ds.setUser("admin");
 		ds.setPassword("teiid");
 		ds.setServerName(host);
 		ds.setPortNumber(Integer.valueOf(port));
+		
+		ds.setShowPlan("on"); //turn show plan on
+		
 		return ds.getConnection();
 	}
 	
@@ -77,6 +81,10 @@ public class JDBCClient {
 				}
 				System.out.println("");
 			}
+			
+			System.out.println("Query Plan");
+			System.out.println(statement.unwrap(TeiidStatement.class).getPlanDescription());
+			
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
