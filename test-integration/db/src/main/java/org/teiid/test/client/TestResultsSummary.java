@@ -186,7 +186,7 @@ public class TestResultsSummary {
 
 	try {
 	    overallsummary.write("================== \n"); //$NON-NLS-1$
-	    overallsummary.write("Test Summary"); //$NON-NLS-1$
+	    overallsummary.write("Test Summary \n"); //$NON-NLS-1$
 	    overallsummary.write("================== \n"); //$NON-NLS-1$
 
 	    overallsummary
