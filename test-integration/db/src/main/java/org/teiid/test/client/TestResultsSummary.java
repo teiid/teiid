@@ -23,11 +23,14 @@
 package org.teiid.test.client;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,16 +45,15 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.util.StringUtil;
 
+public class TestResultsSummary {
 
-public class TestResultsSummary  {
-    
-    private static final String PROP_SUMMARY_PRT_DIR="summarydir";
+    private static final String OVERALL_SUMMARY_FILE = "Summary.txt";
+    private static final String PROP_SUMMARY_PRT_DIR = "summarydir";
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
 
-
     private static final String NL = System.getProperty("line.separator"); //$NON-NLS-1$
-    
+
     // totals for scenario
     private String resultMode = "NotSet";
     private int total_queries = 0;
@@ -61,13 +63,14 @@ public class TestResultsSummary  {
     private long total_seconds = 0;
     private List<String> failed_queries = new ArrayList<String>();
     private List<String> query_sets = new ArrayList<String>(10);
-    
-    private Map<String, Collection<TestResult>> testResults = Collections.synchronizedMap(new HashMap<String, Collection<TestResult>>());
-    
+
+    private Map<String, Collection<TestResult>> testResults = Collections
+	    .synchronizedMap(new HashMap<String, Collection<TestResult>>());
+
     public TestResultsSummary(String resultMode) {
 	this.resultMode = resultMode;
     }
-   
+
     public void cleanup() {
 	failed_queries.clear();
 	query_sets.clear();
@@ -83,16 +86,13 @@ public class TestResultsSummary  {
 	    this.testResults.put(querySetID, results);
 	}
 	results.add(result);
-	
+
     }
-
-
 
     public Collection<TestResult> getTestResults(String querySetID) {
 	return this.testResults.get(querySetID);
     }
-    
- 
+
     private static PrintStream getSummaryStream(String outputDir,
 	    String summaryName) throws IOException {
 	File summaryFile = createSummaryFile(outputDir, summaryName);
@@ -100,7 +100,12 @@ public class TestResultsSummary  {
 	os = new BufferedOutputStream(os);
 	return new PrintStream(os);
     }
-
+    
+    private static Writer getOverallSummaryStream(String outputDir) throws IOException {
+	return createOverallSummaryFile(outputDir);
+	
+    }
+    
     /**
      * Overloaded to overwrite the already existing files
      */
@@ -118,13 +123,14 @@ public class TestResultsSummary  {
 	    throw new IOException(
 		    "Summary file already exists: " + summaryFile.getName()); //$NON-NLS-1$
 	}
-	try { 
-	summaryFile.createNewFile();
+	try {
+	    summaryFile.createNewFile();
 	} catch (IOException ioe) {
-	    TestLogger.log("Error creating new summary file: " + summaryFile.getAbsolutePath());
+	    TestLogger.log("Error creating new summary file: "
+		    + summaryFile.getAbsolutePath());
 	    throw ioe;
 	}
-	
+
 	OutputStream os = new FileOutputStream(summaryFile);
 	os = new BufferedOutputStream(os);
 	return new PrintStream(os);
@@ -151,22 +157,66 @@ public class TestResultsSummary  {
 	return summaryFile;
     }
 
+    private static Writer createOverallSummaryFile(String outputDir)
+	    throws IOException {
+	boolean exists = false;
+	File summaryFile = new File(outputDir, OVERALL_SUMMARY_FILE); //$NON-NLS-1$
+	exists = summaryFile.exists();
+	  FileWriter fstream = new FileWriter(summaryFile,true);
+	        BufferedWriter out = new BufferedWriter(fstream);
+
+	if (!exists) {
+
+        	try {
+        	    summaryFile.createNewFile();
+        	} catch (IOException e) {
+        	    System.err
+        		    .println("Failed to create overall summary file at: " + summaryFile.getAbsolutePath()); //$NON-NLS-1$
+        	    throw new IOException(
+        		    "Failed to create overall summary file at: " + summaryFile.getAbsolutePath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+        	}
+        	printOverallSummaryHeadings(out);
+	}
+	
+
+	return out;
+    }
+    
+    private static void printOverallSummaryHeadings(Writer overallsummary) {
+
+	try {
+	    overallsummary.write("================== \n"); //$NON-NLS-1$
+	    overallsummary.write("Test Summary"); //$NON-NLS-1$
+	    overallsummary.write("================== \n"); //$NON-NLS-1$
+
+	    overallsummary
+		    .write("Scenario \t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total \n"); //$NON-NLS-1$
+
+	    overallsummary.flush();
+
+	} catch (IOException ioe) {
+	    ioe.printStackTrace();
+	}
+
+    }
+    
+
     private void printQueryTestResults(PrintStream outputStream,
 	    Date testStartTS, Date endTS, Date length, int numberOfClients,
 	    SimpleDateFormat formatter, Collection results) {
-	outputStream.println("Query Test Results [" + this.resultMode  + "]"); //$NON-NLS-1$
+	outputStream.println("Query Test Results [" + this.resultMode + "]"); //$NON-NLS-1$
 	outputStream.println("=================="); //$NON-NLS-1$
 	outputStream.println("Start        Time: " + testStartTS); //$NON-NLS-1$
 	outputStream.println("End          Time: " + endTS); //$NON-NLS-1$
 	outputStream
 		.println("Elapsed      Time: " + (length.getTime() / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
-	
-//	outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
-//	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
-//	outputStream
-//		.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
-//	
-	
+
+	//	outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
+	//	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
+	// outputStream
+	//		.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+	//	
+
 	outputStream.println("Number of Clients: " + numberOfClients); //$NON-NLS-1$
 
 	Map passFailGenMap = getPassFailGen(results);
@@ -176,7 +226,7 @@ public class TestResultsSummary  {
 		.println("Number Passed    : " + passFailGenMap.get("pass")); //$NON-NLS-1$ //$NON-NLS-2$
 	outputStream
 		.println("Number Failed    : " + passFailGenMap.get("fail")); //$NON-NLS-1$ //$NON-NLS-2$
-//	outputStream.println("Number Generated : " + passFailGenMap.get("gen")); //$NON-NLS-1$ //$NON-NLS-2$
+	//	outputStream.println("Number Generated : " + passFailGenMap.get("gen")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	ResponseTimes responseTimes = calcQueryResponseTimes(results);
 	outputStream.println("QPS              : " + responseTimes.qps); //$NON-NLS-1$
@@ -221,29 +271,31 @@ public class TestResultsSummary  {
 	//       passFailGenMap.put("gen", Integer.toString(gen)); //$NON-NLS-1$
 	return passFailGenMap;
     }
-    
-    private void addTotalPassFailGen(String scenario_name, Collection results, Date testStartTS, Date endTS, Date lengthTime) {
+
+    private void addTotalPassFailGen(String scenario_name, Collection results,
+	    Date testStartTS, Date endTS, Date lengthTime) {
 	int queries = 0;
 	int pass = 0;
 	int fail = 0;
-	
+
 	String queryset = null;
 
 	total_querysets++;
 	for (Iterator resultsItr = results.iterator(); resultsItr.hasNext();) {
 	    TestResult stat = (TestResult) resultsItr.next();
-	    
-	    if (queryset == null){
+
+	    if (queryset == null) {
 		queryset = stat.getQuerySetID();
 	    }
-	    
+
 	    ++queries;
 	    switch (stat.getStatus()) {
 	    case TestResult.RESULT_STATE.TEST_EXCEPTION:
 		++fail;
-		
-		String msg = StringUtil.removeChars(stat.getExceptionMsg(), new char[] {'\r', '\n'});  
-		
+
+		String msg = StringUtil.removeChars(stat.getExceptionMsg(),
+			new char[] { '\r', '\n' });
+
 		this.failed_queries.add(stat.getQueryID() + "~" + msg);
 		break;
 	    case TestResult.RESULT_STATE.TEST_SUCCESS:
@@ -254,28 +306,26 @@ public class TestResultsSummary  {
 		break;
 	    }
 	}
-	
-	this.query_sets.add("\t" + queryset + "\t\t" + pass + "\t" + fail + "\t" + queries + "\t" + (lengthTime.getTime() / 1000) );
-	
+
+	this.query_sets.add("\t" + queryset + "\t\t" + pass + "\t" + fail
+		+ "\t" + queries + "\t" + (lengthTime.getTime() / 1000));
+
 	total_fail = total_fail + fail;
 	total_pass = total_pass + pass;
 	total_queries = total_queries + queries;
 
     }
-    
-    public void printResults(QueryScenario scenario, String querySetID,
-	    long beginTS,
-	    long endTS) throws Exception {
 
-    
-            TestLogger.logDebug("Print results for Query Set [" + querySetID
-        	    + "]");
-        
-            try {
-        	printResults(scenario, querySetID, beginTS, endTS, 1, 1);
-            } catch (Exception e) {
-        	e.printStackTrace();
-            }
+    public void printResults(QueryScenario scenario, String querySetID,
+	    long beginTS, long endTS) throws Exception {
+
+	TestLogger.logDebug("Print results for Query Set [" + querySetID + "]");
+
+	try {
+	    printResults(scenario, querySetID, beginTS, endTS, 1, 1);
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
     /**
@@ -288,14 +338,14 @@ public class TestResultsSummary  {
      * @throws Exception
      */
     public void printResults(QueryScenario scenario, String querySetID,
-	    long testStartTS,
-	    long endTS, int numberOfClients, int runNumber) throws Exception {
-	
+	    long testStartTS, long endTS, int numberOfClients, int runNumber)
+	    throws Exception {
+
 	String testname = scenario.getQueryScenarioIdentifier();
 	Collection<TestResult> testResults = getTestResults(querySetID);
-//	Properties props = scenario.getProperties();
+	// Properties props = scenario.getProperties();
 	String outputDir = scenario.getResultsGenerator().getOutputDir();
-	
+
 	//       CombinedTestClient.log("Calculating and printing result statistics"); //$NON-NLS-1$
 	if (testResults.size() > 0) {
 	    // Create output file
@@ -311,29 +361,29 @@ public class TestResultsSummary  {
 		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
 		throw e;
 	    }
-	    
+
 	    Date starttest = new Date(testStartTS);
 	    Date endtest = new Date(endTS);
 	    long diff = endtest.getTime() - starttest.getTime();
-	    
+
 	    total_seconds = total_seconds + diff;
 
-	    Date diffdate =  new Date( diff);
-		
-//		endtest - starttest;
-//	    
-//		outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
-//		outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
-//		outputStream
-//			.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+	    Date diffdate = new Date(diff);
 
-	    
-	    addTotalPassFailGen(testname, testResults, starttest, endtest, diffdate);
+	    // endtest - starttest;
+	    //	    
+	    //		outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
+	    //		outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
+	    // outputStream
+	    //			.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
+
+	    addTotalPassFailGen(testname, testResults, starttest, endtest,
+		    diffdate);
 	    // Text File output
 	    printQueryTestResults(outputStream, starttest, endtest, diffdate,
 		    numberOfClients, TestClient.TSFORMAT, testResults);
-	    printQueryTestResults(overwriteStream, starttest, endtest, diffdate,
-		    numberOfClients, TestClient.TSFORMAT, testResults);
+	    printQueryTestResults(overwriteStream, starttest, endtest,
+		    diffdate, numberOfClients, TestClient.TSFORMAT, testResults);
 
 	    // HTML Vesion of output
 	    PrintStream htmlStream = getSummaryStream(outputDir, querySetID
@@ -394,84 +444,100 @@ public class TestResultsSummary  {
 	    //          logError("No results to print."); //$NON-NLS-1$
 	}
     }
-    
-    public void printTotals(QueryScenario scenario ) throws Exception {
-//	    String outputDir = scenario.getResultsGenerator().getOutputDir(); 
-	    String scenario_name = scenario.getQueryScenarioIdentifier();
-	    String querysetname = scenario.getQuerySetName();
 
-	
-	String summarydir = ConfigPropertyLoader.getInstance().getProperty(PROP_SUMMARY_PRT_DIR);
-//	if (summarydir != null) {
-//	    outputDir = summarydir;
-//	}
+    public void printTotals(QueryScenario scenario) throws Exception {
+	// String outputDir = scenario.getResultsGenerator().getOutputDir();
+	String scenario_name = scenario.getQueryScenarioIdentifier();
+	String querysetname = scenario.getQuerySetName();
 
-	    PrintStream outputStream = null;
-	    try {
-		outputStream = getSummaryStream(summarydir, "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
-	    } catch (IOException e) {
-		e.printStackTrace();
-		//              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
-		throw e;
-	    }
+	String summarydir = ConfigPropertyLoader.getInstance().getProperty(
+		PROP_SUMMARY_PRT_DIR);
+	// if (summarydir != null) {
+	// outputDir = summarydir;
+	// }
+
+	PrintStream outputStream = null;
+	Writer overallsummary = null;
+	try {
+	    outputStream = getSummaryStream(summarydir,
+		    "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
 	    
-	    	
-		outputStream.println("Scenario " + scenario_name + " Summary [" + this.resultMode  + "]"); //$NON-NLS-1$
-		outputStream.println("Query Set Name " + querysetname); //$NON-NLS-1$
-		outputStream.println("=================="); //$NON-NLS-1$
-		
-		outputStream
-		.println("Number of Test Query Sets: " + total_querysets); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		outputStream.println("=================="); //$NON-NLS-1$
-		outputStream.println("Test Query Set"); //$NON-NLS-1$
-		outputStream.println("\t" + "Name" + "\t\t\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total" + "\t" + "Time(sec)"); //$NON-NLS-1$
+	    overallsummary = getOverallSummaryStream(summarydir);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	    //              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
+	    throw e;
+	}
 
-		if (!this.query_sets.isEmpty()) {
-		    // sort so that like failed queries are show together
-			Collections.sort(this.query_sets);
+	outputStream
+		.println("Scenario " + scenario_name + " Summary [" + this.resultMode + "]"); //$NON-NLS-1$
+	outputStream.println("Query Set Name " + querysetname); //$NON-NLS-1$
+	outputStream.println("=================="); //$NON-NLS-1$
 
-			
-			for (Iterator<String> it=this.query_sets.iterator(); it.hasNext();) {
-				outputStream
-				.println(it.next()); //$NON-NLS-1$ //$NON-NLS-2$
-		    
-			}
+	outputStream.println("Number of Test Query Sets: " + total_querysets); //$NON-NLS-1$ //$NON-NLS-2$
 
-		}	
-		outputStream.println("=================="); //$NON-NLS-1$
-		
-		
-		outputStream
-		.println("\t" + "Totals" + "\t\t\t\t" + total_pass + "\t" + total_fail + "\t" + total_queries+ "\t" + total_seconds / 1000 );
-		
-//		outputStream
-//			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
-//		outputStream
-//			.println("Number Passed    : " + total_pass); //$NON-NLS-1$ //$NON-NLS-2$
-//		outputStream
-//			.println("Number Failed    : " + total_fail); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		if (!this.failed_queries.isEmpty()) {
-		    // sort so that like failed queries are show together
-			Collections.sort(this.failed_queries);
-		    
-			outputStream.println("\n\n=================="); //$NON-NLS-1$
-			outputStream.println("Failed Queries"); //$NON-NLS-1$		    
-			
-			for (Iterator<String> it=this.failed_queries.iterator(); it.hasNext();) {
-				outputStream
-				.println("\t - " + it.next()); //$NON-NLS-1$ //$NON-NLS-2$
-		    
-			}
-				    
-			outputStream.println("=================="); //$NON-NLS-1$
-		    
-		}
+	outputStream.println("=================="); //$NON-NLS-1$
+	outputStream.println("Test Query Set"); //$NON-NLS-1$
+	outputStream
+		.println("\t" + "Name" + "\t\t\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total" + "\t" + "Time(sec)"); //$NON-NLS-1$
 
-		    outputStream.close();
+	if (!this.query_sets.isEmpty()) {
+	    // sort so that like failed queries are show together
+	    Collections.sort(this.query_sets);
 
+	    for (Iterator<String> it = this.query_sets.iterator(); it.hasNext();) {
+		outputStream.println(it.next()); //$NON-NLS-1$ //$NON-NLS-2$
+
+	    }
+
+	}
+	outputStream.println("=================="); //$NON-NLS-1$
+
+	outputStream.println("\t" + "Totals" + "\t\t\t\t" + total_pass + "\t"
+		+ total_fail + "\t" + total_queries + "\t" + total_seconds
+		/ 1000);
 	
+	overallsummary.write(scenario_name + " \t" + total_pass + "\t" + total_fail + "\t" + total_queries + "\n");
+	try {
+	    overallsummary.flush();
+
+	    overallsummary.close();
+    } catch (IOException ioe) {
+	 ioe.printStackTrace();
+     } finally {                       // always close the file
+	 try {
+	     overallsummary.close();
+	 } catch (IOException ioe2) {
+	    // just ignore it
+	 }
+     } // 
+
+	// outputStream
+	//			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
+	// outputStream
+	//			.println("Number Passed    : " + total_pass); //$NON-NLS-1$ //$NON-NLS-2$
+	// outputStream
+	//			.println("Number Failed    : " + total_fail); //$NON-NLS-1$ //$NON-NLS-2$
+
+	if (!this.failed_queries.isEmpty()) {
+	    // sort so that like failed queries are show together
+	    Collections.sort(this.failed_queries);
+
+	    outputStream.println("\n\n=================="); //$NON-NLS-1$
+	    outputStream.println("Failed Queries"); //$NON-NLS-1$		    
+
+	    for (Iterator<String> it = this.failed_queries.iterator(); it
+		    .hasNext();) {
+		outputStream.println("\t - " + it.next()); //$NON-NLS-1$ //$NON-NLS-2$
+
+	    }
+
+	    outputStream.println("=================="); //$NON-NLS-1$
+
+	}
+
+	outputStream.close();
+
     }
 
     private static String generateFileName(String configName, long timestamp,
@@ -556,10 +622,11 @@ public class TestResultsSummary  {
 	    addTableData(htmlCode, stat.getResultStatusString(),
 		    "fail".equalsIgnoreCase(stat.getResultStatusString())); //$NON-NLS-1$
 	    addTableData(htmlCode, new Date(stat.getBeginTS()).toString());
-		    
-	//	    Long.toString(stat.getBeginTS()));
-	    addTableData(htmlCode, Long.toString(  (stat.getEndTS() - stat.getBeginTS() / 1000 )));
-		    //Long.toString(stat.getEndTS()));
+
+	    // Long.toString(stat.getBeginTS()));
+	    addTableData(htmlCode, Long.toString((stat.getEndTS() - stat
+		    .getBeginTS() / 1000)));
+	    // Long.toString(stat.getEndTS()));
 	    if (stat.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		addTableData(htmlCode, stat.getExceptionMsg());
 		if (stat.getErrorfile() != null
