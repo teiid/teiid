@@ -28,6 +28,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,10 +42,20 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.metamatrix.core.util.ExternalizeUtil;
 
+/**
+ * A PlanNode represents part of processing plan tree.  For relational plans 
+ * child PlanNodes may be either subqueries or nodes that feed tuples into the
+ * parent. For procedure plans child PlanNodes will be processing instructions,
+ * which can in turn contain other relational or procedure plans.
+ */
 @XmlType
 @XmlRootElement(name="node")
 public class PlanNode implements Externalizable {
 
+	/**
+	 * A Property is a named value of a {@link PlanNode} that may be
+	 * another {@link PlanNode} or a non-null list of values.
+	 */
 	@XmlType(name = "property")
 	public static class Property implements Externalizable {
 		@XmlAttribute
@@ -138,6 +149,9 @@ public class PlanNode implements Externalizable {
     
     public void addProperty(String pname, List<String> value) {
     	Property p = new Property(pname);
+    	if (value == null) {
+    		value = Collections.emptyList();
+    	}
     	p.setValues(value);
     	this.properties.add(p);
     }
@@ -148,6 +162,11 @@ public class PlanNode implements Externalizable {
     	this.properties.add(p);
     }
     
+    /**
+     * Converts this PlanNode to XML. See the JAXB bindings for the
+     * document form.
+     * @return an XML document of this PlanNode
+     */
     public String toXml() throws JAXBException {
     	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
 		Marshaller marshaller = jc.createMarshaller();
@@ -164,9 +183,6 @@ public class PlanNode implements Externalizable {
     	return builder.toString();
     }
     
-    /* 
-     * @see com.metamatrix.jdbc.plan.PlanVisitor#visitNode(com.metamatrix.jdbc.plan.PlanNode)
-     */
     protected void visitNode(PlanNode node, int nodeLevel, StringBuilder text) {
         for(int i=0; i<nodeLevel; i++) {
             text.append("  "); //$NON-NLS-1$
@@ -203,9 +219,11 @@ public class PlanNode implements Externalizable {
             	text.append(p.getValues().get(i));
                 text.append("\n"); //$NON-NLS-1$
 			}
-        } else {
+        } else if (p.getValues().size() == 1) {
         	text.append(":"); //$NON-NLS-1$
         	text.append(p.getValues().get(0));
+        	text.append("\n"); //$NON-NLS-1$
+        } else {
         	text.append("\n"); //$NON-NLS-1$
         }
     }
