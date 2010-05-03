@@ -74,9 +74,6 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
     int returnIndex = 0;
     private Select query;
 
-    private String previousHttpProxyHost;
-    private String previousHttpProxyPort;
-
     /**
      * 
      */
@@ -145,8 +142,6 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
         BufferedReader buffReader = null;
         
         try {
-            setProxy();
-            
             // create the URL object
             URL url = new URL(yahooUrl);
             
@@ -179,7 +174,6 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
         } finally {
             buffReader = null;
             inSR = null; 
-            resetProxy();
         }
         
         return rows;
@@ -301,29 +295,4 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
 
     }
 
-    private void setProxy() {
-        String proxyHost = this.config.getHttpProxyHost();
-        String proxyPort = this.config.getHttpProxyPort();
-       
-        previousHttpProxyHost = System.getProperty(JAVA_PROP_HTTP_PROXY_HOST);
-        previousHttpProxyPort = System.getProperty(JAVA_PROP_HTTP_PROXY_PORT);
-                 
-        if(proxyHost != null) {
-            System.setProperty(JAVA_PROP_HTTP_PROXY_HOST, proxyHost);
-            if(proxyPort == null) {
-                this.config.getLogger().logWarning(YahooPlugin.Util.getString("YahooConnector.proxyPortNotSet"));//$NON-NLS-1$
-            }else {
-                System.setProperty(JAVA_PROP_HTTP_PROXY_PORT, proxyPort);
-            }
-        }
-    }
-    
-    private void resetProxy() {
-        if(previousHttpProxyHost != null) {
-            System.setProperty(JAVA_PROP_HTTP_PROXY_HOST, previousHttpProxyHost);
-        }
-        if(previousHttpProxyPort != null) {
-            System.setProperty(JAVA_PROP_HTTP_PROXY_PORT, previousHttpProxyPort);
-        }
-    }
 }

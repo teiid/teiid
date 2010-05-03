@@ -27,24 +27,4 @@ public class YahooManagedConnectionFactory extends BasicManagedConnectionFactory
 
 	private static final long serialVersionUID = -8938107803750844843L;
 
-	private String httpProxyHost;
-	private String httpProxyPort;
-	
-	public String getHttpProxyHost() {
-		return httpProxyHost;
-	}
-	
-	public void setHttpProxyHost(String httpProxyHost) {
-		this.httpProxyHost = httpProxyHost;
-	}
-	
-	public String getHttpProxyPort() {
-		return httpProxyPort;
-	}
-	
-	public void setHttpProxyPort(String httpProxyPort) {
-		this.httpProxyPort = httpProxyPort;
-	}
-	
-	
 }
