@@ -140,6 +140,17 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    /**
+     * here we use the date form of the conversion
+     */
+    @Test public void testConversion6a() throws Exception {
+        String input = "SELECT convert(timestampvalue, string) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT to_char(SmallishA.timestampvalue, 'YYYY-MM-DD HH24:MI:SS') FROM SmallishA";  //$NON-NLS-1$
+
+        helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, output);
+    }
+    
     @Test public void testConversion8() throws Exception {
         String input = "SELECT nvl(INTNUM, 'otherString') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT nvl(to_char(SmallA.IntNum), 'otherString') FROM SmallA";  //$NON-NLS-1$
@@ -705,14 +716,17 @@ public class TestOracleTranslator {
         String[] elemNames = new String[] {
             "DoubleNum",  //$NON-NLS-1$ 
             "ID", //$NON-NLS-1$
+            "timestampvalue", //$NON-NLS-1$
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.DOUBLE,
             DataTypeManager.DefaultDataTypes.INTEGER,
+            DataTypeManager.DefaultDataTypes.TIMESTAMP,
         };
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         cols.get(1).setAutoIncremented(true);
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
+        cols.get(2).setNativeType("date"); //$NON-NLS-1$
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
@@ -757,9 +771,15 @@ public class TestOracleTranslator {
         String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
         String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0 NULLS FIRST"; //$NON-NLS-1$
                
-        CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+		CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
 		this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
+    }
+    
+    @Test public void testCot() throws Exception {
+    	String sql = "select cot(doublenum) from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT (1 / tan(SmallA.DoubleNum)) FROM SmallA"; //$NON-NLS-1$
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
 
 }

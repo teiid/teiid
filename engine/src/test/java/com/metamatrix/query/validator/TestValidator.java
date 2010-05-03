@@ -487,6 +487,11 @@ public class TestValidator {
                      new String[] {"MAX(ObjectValue)"}, FakeMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
     }
     
+    @Test public void testInvalidAggregate9() {
+        helpValidate("SELECT count(distinct ObjectValue) FROM BQT1.SmallA GROUP BY StringKey", //$NON-NLS-1$
+                     new String[] {"COUNT(DISTINCT ObjectValue)"}, FakeMetadataFactory.exampleBQTCached() ); //$NON-NLS-1$
+    }
+    
     @Test public void testInvalidAggregateIssue190644() {
         helpValidate("SELECT e3 + 1 from pm1.g1 GROUP BY e2 + 1 HAVING e2 + 1 = 5", new String[] {"e3"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }

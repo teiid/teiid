@@ -39,6 +39,7 @@ import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.JDBCManagedConnectionFactory;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
@@ -50,10 +51,12 @@ import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.Command;
 import org.teiid.connector.language.DerivedColumn;
+import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.ExpressionValueSource;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.Insert;
 import org.teiid.connector.language.Limit;
+import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.language.Select;
@@ -103,7 +106,14 @@ public class OracleSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				function.setName(SourceSystemFunctions.TAN);
+				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
+			}
+		});
         
         //spatial functions
         registerFunctionModifier(RELATE, new OracleSpatialFunctionModifier());
@@ -130,7 +140,22 @@ public class OracleSQLTranslator extends Translator {
 		});
     	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.FF")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				//if column and type is date, just use date format
+				Expression ex = function.getParameters().get(0);
+				String format = "YYYY-MM-DD HH24:MI:SS.FF"; //$NON-NLS-1$
+				if (ex instanceof ColumnReference) {
+					if ("date".equals(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
+						format = "YYYY-MM-DD HH24:MI:SS"; //$NON-NLS-1$
+					}
+				} else if (!(ex instanceof Function)) {
+					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
+				}
+				return Arrays.asList("to_char(", ex, ", '"+format+"')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", "YYYY-MM-DD HH24:MI:SS.FF")); //$NON-NLS-1$ //$NON-NLS-2$

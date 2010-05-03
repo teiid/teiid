@@ -26,6 +26,7 @@ package org.teiid.connector.jdbc.oracle;
 
 import java.util.*;
 
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCCapabilities;
 
 
@@ -48,6 +49,7 @@ public class OracleCapabilities extends JDBCCapabilities {
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN2"); //$NON-NLS-1$
         supportedFunctions.add("COS"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.COT); 
         supportedFunctions.add("EXP"); //$NON-NLS-1$
         supportedFunctions.add("FLOOR"); //$NON-NLS-1$
         supportedFunctions.add("CEILING"); //$NON-NLS-1$

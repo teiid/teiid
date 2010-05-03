@@ -75,7 +75,7 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         if((aggregateFunction.equals(SQLReservedWords.SUM) || aggregateFunction.equals(SQLReservedWords.AVG)) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
         }
-        if((aggregateFunction.equals(SQLReservedWords.MIN) || aggregateFunction.equals(SQLReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+        if((obj.isDistinct() || aggregateFunction.equals(SQLReservedWords.MIN) || aggregateFunction.equals(SQLReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
         validateBelow = false;
