@@ -87,7 +87,6 @@ public class XMLSystemFunctions {
         }
     }
     
-    @SuppressWarnings("unchecked")
 	public static ClobType xslTransform(CommandContext context, XMLType xmlResults, XMLType styleSheet) throws Exception {
     	Reader styleSheetReader = styleSheet.getCharacterStream();
     	final Source styleSource = new StreamSource(styleSheetReader);

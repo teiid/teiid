@@ -27,12 +27,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -172,37 +167,25 @@ public class DataTypeManager {
 	}
 
 	public static final class DefaultDataClasses {
-		/*
-		 * Here we explicitly instantiate the classes, so that JRE loads the
-		 * class files using the default class loader and initializes the static
-		 * modifiers correctly.
-		 * 
-		 * Using JDK 1.4, referring to Class as "STRING = String.class" was
-		 * yeilding a null, rather than a String class, however using as below
-		 * did not show that side effect.
-		 */
-		public static final Class STRING = "".getClass(); //$NON-NLS-1$
-		public static final Class BOOLEAN = (Boolean.TRUE).getClass();
-		public static final Class BYTE = (new Byte((byte) 0)).getClass();
-		public static final Class SHORT = (new Short((short) 0)).getClass();
-		public static final Class CHAR = (new Character('a')).getClass();
-		public static final Class INTEGER = (new Integer(0)).getClass();
-		public static final Class LONG = (new Long(0)).getClass();
-		public static final Class BIG_INTEGER = (new java.math.BigInteger("0")).getClass(); //$NON-NLS-1$
-		public static final Class FLOAT = (new Float(0)).getClass();
-		public static final Class DOUBLE = (new Double(0)).getClass();
-		public static final Class BIG_DECIMAL = (new java.math.BigDecimal("0")).getClass(); //$NON-NLS-1$
-		public static final Class DATE = (new java.sql.Date(System
-				.currentTimeMillis())).getClass();
-		public static final Class TIME = (new java.sql.Time(System
-				.currentTimeMillis())).getClass();
-		public static final Class TIMESTAMP = (new java.sql.Timestamp(System
-				.currentTimeMillis())).getClass();
-		public static final Class OBJECT = (new Object()).getClass();
-		public static final Class NULL = (new NullType()).getClass();
-		public static final Class BLOB = (new BlobType()).getClass();
-		public static final Class CLOB = (new ClobType()).getClass();
-		public static final Class XML = (new XMLType()).getClass();
+		public static final Class<String> STRING = String.class;
+		public static final Class<Boolean> BOOLEAN = Boolean.class;
+		public static final Class<Byte> BYTE = Byte.class;
+		public static final Class<Short> SHORT = Short.class;
+		public static final Class<Character> CHAR = Character.class;
+		public static final Class<Integer> INTEGER = Integer.class;
+		public static final Class<Long> LONG = Long.class;
+		public static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
+		public static final Class<Float> FLOAT = Float.class;
+		public static final Class<Double> DOUBLE = Double.class;
+		public static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
+		public static final Class<java.sql.Date> DATE = java.sql.Date.class;
+		public static final Class<Time> TIME = Time.class;
+		public static final Class<Timestamp> TIMESTAMP = Timestamp.class;
+		public static final Class<Object> OBJECT = Object.class;
+		public static final Class<NullType> NULL = NullType.class;
+		public static final Class<BlobType> BLOB = BlobType.class;
+		public static final Class<ClobType> CLOB = ClobType.class;
+		public static final Class<XMLType> XML = XMLType.class;
 	}
 
 	/**
