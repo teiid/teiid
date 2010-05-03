@@ -54,7 +54,7 @@ public class TestFileStorageManager {
     
     @Test public void testAddGetBatch1() throws Exception {
         StorageManager sm = getStorageManager(null, null, null);        
-        String tsID = "local1:0";     //$NON-NLS-1$
+        String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
@@ -64,7 +64,7 @@ public class TestFileStorageManager {
             
     @Test public void testCreatesSpillFiles() throws Exception {
         FileStorageManager sm = getStorageManager(1024, null, null); // 1KB
-        String tsID = "local1:0";     //$NON-NLS-1$
+        String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);

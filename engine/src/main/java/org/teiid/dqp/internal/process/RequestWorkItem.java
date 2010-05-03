@@ -250,15 +250,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
 			collector.collectTuples();
-		    doneProducingBatches = this.resultsBuffer.isFinal();
-		    if (doneProducingBatches && cid != null) {
-		    	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
-            	CachedResults cr = new CachedResults();
-            	cr.setCommand(originalCommand);
-                cr.setAnalysisRecord(analysisRecord);
-                cr.setResults(this.resultsBuffer);
-                dqpCore.getRsCache().put(cid, sessionScope, cr);
-		    }
 		}
 		if (doneProducingBatches) {
 			if (this.transactionState == TransactionState.ACTIVE) {
@@ -390,6 +381,17 @@ public class RequestWorkItem extends AbstractWorkItem {
 	 * Send results if they have been requested.  This should only be called from the processing thread.
 	 */
 	protected boolean sendResultsIfNeeded(TupleBatch batch) throws MetaMatrixComponentException {
+		if (batch != null) {
+			doneProducingBatches = batch.getTerminationFlag();
+			if (doneProducingBatches && cid != null) {
+		    	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
+            	CachedResults cr = new CachedResults();
+            	cr.setCommand(originalCommand);
+                cr.setAnalysisRecord(analysisRecord);
+                cr.setResults(this.resultsBuffer);
+                dqpCore.getRsCache().put(cid, sessionScope, cr);
+		    }
+		}
 		ResultsMessage response = null;
 		ResultsReceiver<ResultsMessage> receiver = null;
 		boolean result = true;
