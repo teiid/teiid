@@ -11874,33 +11874,6 @@ public class TestXMLProcessor {
             "        </Items>\r\n" +  //$NON-NLS-1$
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        
-        ProcessorPlan plan = helpTestProcess("exec xmltest.vsp1()", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
-        plan.reset();
-        XMLPostProcessor postProcessor = new XMLPostProcessor(plan);
-        postProcessor.setXMLFormat(XMLFormatConstants.XML_TREE_FORMAT);
-        postProcessor.setStylesheet("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>");
-        expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
-            "    <Catalog>\r\n" +  //$NON-NLS-1$
-            "        <Items>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"001\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
-            " \r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
-            " \r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
-            " \r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
-            "        </Items>\r\n" +  //$NON-NLS-1$
-            "    </Catalog>\r\n" +  //$NON-NLS-1$
-            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        helpTestProcess(new String[] {expectedDoc}, dataMgr, postProcessor); //$NON-NLS-1$
     }
     
     /**

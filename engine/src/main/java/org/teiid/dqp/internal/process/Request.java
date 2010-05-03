@@ -72,7 +72,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TempTableDataManager;
 import com.metamatrix.query.processor.xml.XMLPlan;
-import com.metamatrix.query.processor.xml.XMLPostProcessor;
 import com.metamatrix.query.processor.xquery.XQueryPlan;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -86,7 +85,6 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
@@ -268,6 +266,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(this);
         context.setMetadata(this.metadata);
+        context.setBufferManager(this.bufferManager);
     }
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
@@ -466,26 +465,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
 	private void postProcessXML() {
-		boolean alreadyFormatted = false;
         if (requestMsg.getXMLFormat() != null) {
 	        if(processPlan instanceof XQueryPlan) {
 	            ((XQueryPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-	            alreadyFormatted = true;
 	        } else if (processPlan instanceof XMLPlan) {
 	        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-	        	alreadyFormatted = true;
 	        }
-        }
-        boolean xml = alreadyFormatted 
-        	|| (processPlan.getOutputElements().size() == 1 && DataTypeManager.DefaultDataClasses.XML.equals(((SingleElementSymbol)processPlan.getOutputElements().get(0)).getType()));
-        
-        if (xml && ((!alreadyFormatted && requestMsg.getXMLFormat() != null) || requestMsg.getStyleSheet() != null)) {
-        	XMLPostProcessor postProcessor = new XMLPostProcessor(processPlan);
-        	postProcessor.setStylesheet(requestMsg.getStyleSheet());
-        	if (!alreadyFormatted) {
-        		postProcessor.setXMLFormat(requestMsg.getXMLFormat());
-        	}
-        	this.processPlan = postProcessor;
         }
         this.context.setValidateXML(requestMsg.getValidationMode());
 	}

@@ -57,9 +57,6 @@ public class FunctionLibrary {
     // Special environment variable lookup function
     public static final String ENV = "env"; //$NON-NLS-1$
     
-    // Special xpathvalue function
-    public static final String XPATHVALUE = "xpathvalue"; //$NON-NLS-1$
-
     // Special pseudo-functions only for XML queries
     public static final String CONTEXT = "context"; //$NON-NLS-1$
     public static final String ROWLIMIT = "rowlimit"; //$NON-NLS-1$

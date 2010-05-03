@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.language.SQLReservedWords.Tokens;
 
@@ -1245,6 +1246,22 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             parts.add(")"); //$NON-NLS-1$
 
+		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XSLTRANSFORM)){
+			parts.add(name);
+			parts.add("("); //$NON-NLS-1$
+
+			parts.add(registerNode(args[0]));
+			parts.add(SPACE);
+			parts.add(SQLReservedWords.USING); 
+			parts.add(SPACE);
+			parts.add(registerNode(args[1]));
+			if (args.length > 2) {
+				parts.add(SPACE);
+				parts.add(SQLReservedWords.AS); 
+				parts.add(SPACE);
+				parts.add(((Constant)args[2]).getValue());
+			}
+			parts.add(")"); //$NON-NLS-1$
 		} else {
 			parts.add(name);
 			parts.add("("); //$NON-NLS-1$

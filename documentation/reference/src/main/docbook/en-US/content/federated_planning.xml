@@ -396,7 +396,7 @@ if(warning instanceof PartialResultsWarning) {
         <programlisting>
 statement.execute("set showplan on");
 ResultSet rs = statement.executeQuery("select ...");
-TeiidStatement tstatement = statement.unWrap(TeiidStatement.class);
+TeiidStatement tstatement = statement.unwrap(TeiidStatement.class);
 PlanNode queryPlan = tstatement.getPlanDescription();
 System.out.println(queryPlan);</programlisting>
       </example>

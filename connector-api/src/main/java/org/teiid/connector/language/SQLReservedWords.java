@@ -72,6 +72,8 @@ public class SQLReservedWords {
     public static final String SQL_TSI_QUARTER = "SQL_TSI_QUARTER"; //$NON-NLS-1$
     public static final String SQL_TSI_YEAR = "SQL_TSI_YEAR"; //$NON-NLS-1$
     public static final String STRING = "STRING"; //$NON-NLS-1$
+    public static final String TIMESTAMPADD = "TIMESTAMPADD"; //$NON-NLS-1$
+    public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF"; //$NON-NLS-1$
     public static final String VIRTUAL = "VIRTUAL"; //$NON-NLS-1$
     public static final String WHILE = "WHILE"; //$NON-NLS-1$
     
@@ -260,8 +262,6 @@ public class SQLReservedWords {
     public static final String THEN = "THEN"; //$NON-NLS-1$
     public static final String TIME = "TIME"; //$NON-NLS-1$
 	public static final String TIMESTAMP = "TIMESTAMP"; //$NON-NLS-1$
-    public static final String TIMESTAMPADD = "TIMESTAMPADD"; //$NON-NLS-1$
-    public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF"; //$NON-NLS-1$
     public static final String TIMEZONE_HOUR = "TIMEZONE_HOUR"; //$NON-NLS-1$
     public static final String TIMEZONE_MINUTE = "TIMEZONE_MINUTE"; //$NON-NLS-1$
     public static final String TO = "TO"; //$NON-NLS-1$

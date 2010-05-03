@@ -30,6 +30,20 @@ import com.metamatrix.query.util.CommandContext;
 
 public class SecuritySystemFunctions {
 
+    public static boolean hasRole(CommandContext context, Object roleName) throws FunctionExecutionException {
+        SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
+        
+        if (eval == null) {
+            return true;
+        }
+        
+        try {
+            return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, (String)roleName);
+        } catch (MetaMatrixComponentException err) {
+            throw new FunctionExecutionException(err, err.getMessage());
+        }
+    }
+	
     public static boolean hasRole(CommandContext context, Object roleType, Object roleName) throws FunctionExecutionException {
         
         SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();

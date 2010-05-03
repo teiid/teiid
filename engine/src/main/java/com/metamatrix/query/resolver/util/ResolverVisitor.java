@@ -31,6 +31,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+
 import net.sf.saxon.trans.XPathException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -440,7 +442,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.XPATHVALUE)) {
+	    } else if(fd.getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
 	        // Validate the xpath value is valid
 	        if(args[1] != null && args[1] instanceof Constant) {
 	            Constant xpathConst = (Constant) args[1];

@@ -25,14 +25,29 @@ package com.metamatrix.query.function.source;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.trans.XPathException;
 
 import com.metamatrix.api.exception.query.FunctionExecutionException;
+import com.metamatrix.common.types.ClobType;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.XMLTranslator;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.internal.core.xml.XPathHelper;
 import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.processor.xml.XMLUtil;
+import com.metamatrix.query.util.CommandContext;
 
 
 
@@ -70,6 +85,36 @@ public class XMLSystemFunctions {
         } catch(XPathException e) {
             throw new FunctionExecutionException(QueryPlugin.Util.getString("XMLSystemFunctions.wrap_exception", xpathStr, e.getMessage())); //$NON-NLS-1$
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+	public static ClobType xslTransform(CommandContext context, XMLType xmlResults, XMLType styleSheet) throws Exception {
+    	Reader styleSheetReader = styleSheet.getCharacterStream();
+    	final Source styleSource = new StreamSource(styleSheetReader);
+		Reader reader = xmlResults.getCharacterStream();
+		final Source xmlSource = new StreamSource(reader);
+		try {
+			SQLXML result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+				
+				@Override
+				public void translate(Writer writer) throws TransformerException {
+	                TransformerFactory factory = TransformerFactory.newInstance();
+	                Transformer transformer = factory.newTransformer(styleSource);
+	                // Feed the resultant I/O stream into the XSLT processor
+					transformer.transform(xmlSource, new StreamResult(writer));
+				}
+			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
+			return DataTypeManager.transformValue(new XMLType(result), DataTypeManager.DefaultDataClasses.CLOB);
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+			}
+			try {
+				styleSheetReader.close();
+			} catch (IOException e) {
+			}
+		}
     }
     
 }

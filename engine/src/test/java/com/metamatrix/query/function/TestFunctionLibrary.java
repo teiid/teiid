@@ -22,12 +22,7 @@
 
 package com.metamatrix.query.function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,12 +42,18 @@ import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.language.SQLReservedWords;
 
 import com.metamatrix.api.exception.query.FunctionExecutionException;
+import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.TimestampWithTimezone;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.unittest.TimestampUtil;
 import com.metamatrix.query.util.CommandContext;
 
+@SuppressWarnings("nls")
 public class TestFunctionLibrary {
 
 	// These are just used as shorthand convenience to make unit tests more readable below
@@ -1326,6 +1327,17 @@ public class TestFunctionLibrary {
     
     @Test public void testInvokeNull1() throws Exception {
         helpInvokeMethod(SourceSystemFunctions.CONCAT, new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null, String.valueOf(1) }, null, null);  
-    }    
+    }  
+    
+	@Test public void testInvokeXslTransform() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        ClobType result = (ClobType)helpInvokeMethod("xsltransform", new Class[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
+        		new Object[] {new XMLType(new SQLXMLImpl("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>")), 
+        		new XMLType(new SQLXMLImpl("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>"))}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name></Item></Items></Catalog></Catalogs>", xml);
+    }
     
 }

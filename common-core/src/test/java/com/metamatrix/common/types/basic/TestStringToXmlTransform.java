@@ -23,21 +23,19 @@
 package com.metamatrix.common.types.basic;
 
 //## JDBC4.0-begin ##
-import java.sql.SQLXML;
-//## JDBC4.0-end ##
+import static org.junit.Assert.*;
 
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
+import java.sql.SQLXML;
+
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.metamatrix.common.types.TransformationException;
 
-import junit.framework.TestCase;
+@SuppressWarnings("nls")
+public class TestStringToXmlTransform {
 
-
-public class TestStringToXmlTransform extends TestCase {
-
-    public void testGoodXML() throws Exception {
+	@Test public void testGoodXML() throws Exception {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
@@ -49,7 +47,7 @@ public class TestStringToXmlTransform extends TestCase {
        assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
     }
     
-    public void testBadXML() {
+    @Test(expected=TransformationException.class) public void testBadXML() throws Exception {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
@@ -57,10 +55,17 @@ public class TestStringToXmlTransform extends TestCase {
         
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
        
-       try {
-           transform.transformDirect(xml);
-           fail("exception expected"); //$NON-NLS-1$           
-        } catch (TransformationException e) {        
-        }        
+       transform.transformDirect(xml);
     }    
+    
+    @Ignore("TODO: allow for fragments in the xml type")
+    @Test public void testXMLFragment() throws Exception {
+        String xml = "<name>ABC</name>" + //$NON-NLS-1$
+                     "<age>32</age>"; //$NON-NLS-1$
+                     
+       StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
+       
+       transform.transformDirect(xml);
+    }    
+
 }

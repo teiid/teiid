@@ -101,6 +101,8 @@ public class CommandContext implements Cloneable {
 	    private QueryMetadataInterface metadata; 
 	    
 	    private boolean validateXML;
+	    
+	    private BufferManager bufferManager;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -446,5 +448,13 @@ public class CommandContext implements Cloneable {
     public boolean validateXML() {
 		return globalState.validateXML;
 	}
+    
+    public BufferManager getBufferManager() {
+    	return globalState.bufferManager;
+    }
+    
+    public void setBufferManager(BufferManager bm) {
+    	globalState.bufferManager = bm;
+    }
 	
 }

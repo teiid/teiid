@@ -24,6 +24,7 @@ package com.metamatrix.common.types.basic;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
@@ -62,8 +63,10 @@ public class ClobToSQLXMLTransform extends Transform {
     public Object transformDirect(Object value) throws TransformationException {
         final ClobType source = (ClobType)value;
         
+        Reader reader = null;
         try {
-            StringToSQLXMLTransform.isXml(source.getCharacterStream());
+        	reader = source.getCharacterStream();
+            StringToSQLXMLTransform.isXml(reader);
             if (source.getReference() instanceof ClobImpl) {
             	ClobImpl clob = (ClobImpl)source.getReference();
             	return new XMLType(new SQLXMLImpl(clob.getStreamFactory()));
@@ -80,7 +83,14 @@ public class ClobToSQLXMLTransform extends Transform {
             }));
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
-        } 
+        } finally {
+        	if (reader != null) {
+        		try {
+					reader.close();
+				} catch (IOException e) {
+				}
+        	}
+        }
     }
 
     /** 

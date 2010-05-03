@@ -167,6 +167,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         
         // xml functions
         addXpathFunction();
+        addXslTransformFunction();
         
         addSecurityFunctions();
         
@@ -184,6 +185,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                             new FunctionParameter("roleType", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                             new FunctionParameter("roleName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                                         new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.SESSION_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod("hasRole", QueryPlugin.Util.getString("SystemSource.hasRole_description"), SECURITY, FunctionMethod.CANNOT_PUSHDOWN, SECURITY_FUNCTION_CLASS, "hasRole", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                new FunctionParameter[] { 
+                    new FunctionParameter("roleName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.SESSION_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     private void addFormatNumberFunctions() {
@@ -888,6 +894,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                              new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
+    }
+    
+    private void addXslTransformFunction() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
+                            new FunctionParameter[] { 
+                                new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTimeZoneFunctions() {

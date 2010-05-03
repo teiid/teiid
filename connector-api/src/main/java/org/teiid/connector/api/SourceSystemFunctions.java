@@ -136,5 +136,6 @@ public class SourceSystemFunctions {
 	
 	//xml
 	public static final String XPATHVALUE = "xpathvalue"; //$NON-NLS-1$
+	public static final String XSLTRANSFORM = "xsltransform"; //$NON-NLS-1$
 
 }

@@ -1944,6 +1944,19 @@
               </para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para><code>XSLTRANSFORM(doc, xsl)</code></para>
+            </entry>
+            <entry>
+              <para>Takes a document and an xsl stylesheet and returns a
+                clob of the result.</para>
+            </entry>
+            <entry>
+              <para>Doc, xsl in {xml}. Return value is a clob.
+              </para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </informaltable>
@@ -1970,16 +1983,29 @@
         <tbody>
           <row>
             <entry>
+              <para><code>hasRole(roleName)</code>
+              </para>
+            </entry>
+            <entry>
+              <para>Whether the current caller has the role
+                roleName.</para>
+            </entry>
+            <entry>
+              <para>roleName must be a string, the return
+                type is Boolean.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para><code>hasRole(roleType, roleName)</code>
               </para>
             </entry>
             <entry>
               <para>Whether the current caller has the role
-                roleName of roleType.</para>
+                roleName of roleType.  See the 1 argument version above.</para>
             </entry>
             <entry>
-              <para>roleType must be one of ('data','admin' ,
-                'repository') and roleName must be a string, the return
+              <para>roleType must be 'data' and roleName must be a string, the return
                 type is Boolean.</para>
             </entry>
           </row>

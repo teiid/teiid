@@ -22,8 +22,6 @@
 
 package org.teiid.jdbc;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -79,21 +77,6 @@ public interface TeiidStatement extends java.sql.Statement {
      */
     Collection<Annotation> getAnnotations();
      
-    /**
-     * Attach a stylesheet to be applied on the server for XML queries 
-     * executed with this Statement.
-     * @param reader Reader for reading a stylesheet in XML
-     * @throws IOException If an error occurs reading the stylesheet
-     * @deprecated
-     */
-    void attachStylesheet(Reader reader) throws IOException;    
-
-    /**
-     * Clear any previously attached stylesheet for this Statement object.
-     * @deprecated
-     */
-    void clearStylesheet();    
-
     /**
      * Get ID for last execution which can be used for matching up executions
      * on the client side with executions in the server logs.

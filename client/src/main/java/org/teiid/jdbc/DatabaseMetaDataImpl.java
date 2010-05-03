@@ -72,7 +72,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     final static String KEY_WORDS = "OPTION, BIGDECIMAL"+ //$NON-NLS-1$
 	", BIGDECIMAL, BIGINTEGER, BREAK, BYTE, CRITERIA, ERROR, FN, LIMIT, LONG, LOOP, MAKEDEP, MAKENOTDEP"+ //$NON-NLS-1$
 	", NOCACHE, OJ, SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH"+ //$NON-NLS-1$
-    ", SQL_TSI_QUARTER, SQL_TSI_YEAR, STRING, VIRTUAL, WHILE"; //$NON-NLS-1$
+    ", SQL_TSI_QUARTER, SQL_TSI_YEAR, STRING, TIMESTAMPADD, TIMESTAMPDIFF, VIRTUAL, WHILE"; //$NON-NLS-1$
     // constant value giving preferred name for a procedure
     private final static String PROCEDURE_TERM = "StoredProcedure"; //$NON-NLS-1$
     // constant value giving the names of numeric functions supported
