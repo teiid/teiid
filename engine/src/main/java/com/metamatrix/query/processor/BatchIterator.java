@@ -83,7 +83,7 @@ public class BatchIterator implements IndexedTupleSource {
                 }
             }
 
-            if (currentBatch.getEndRow() >= currentRow) {
+            if (currentBatch.containsRow(currentRow)) {
                 this.currentTuple = currentBatch.getTuple(currentRow++);
             } else {
                 done = currentBatch.getTerminationFlag();
@@ -135,7 +135,10 @@ public class BatchIterator implements IndexedTupleSource {
     	if (this.bufferedTs != null) {
     		mark = false;
     		this.bufferedTs.reset();
-    		this.currentRow = this.bufferedTs.getCurrentIndex();
+    		if (this.currentRow != this.bufferedTs.getCurrentIndex()) {
+    			this.currentRow = this.bufferedTs.getCurrentIndex();
+    			this.currentTuple = null;
+    		}
     		return;
     	}
         throw new UnsupportedOperationException();
