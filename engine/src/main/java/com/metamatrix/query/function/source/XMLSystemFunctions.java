@@ -29,6 +29,14 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import javax.xml.stream.EventFilter;
+import javax.xml.stream.XMLEventFactory;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLEventWriter;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -38,19 +46,18 @@ import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.trans.XPathException;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.internal.core.xml.XPathHelper;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.processor.xml.XMLUtil;
 import com.metamatrix.query.util.CommandContext;
-
-
-
 
 /** 
  * This class contains scalar system functions supporting for XML manipulation.
@@ -60,10 +67,6 @@ import com.metamatrix.query.util.CommandContext;
 public class XMLSystemFunctions {
 
     public static Object xpathValue(Object document, Object xpathStr) throws FunctionExecutionException {
-        if(document == null || xpathStr == null) {
-            return null;
-        }
-        
         Reader stream = null;
         
         if (document instanceof SQLXML) {
@@ -93,6 +96,7 @@ public class XMLSystemFunctions {
 		Reader reader = xmlResults.getCharacterStream();
 		final Source xmlSource = new StreamSource(reader);
 		try {
+			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
 			SQLXML result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 				
 				@Override
@@ -115,5 +119,67 @@ public class XMLSystemFunctions {
 			}
 		}
     }
-    
+	
+	/**
+	 * Basic support for xmlelement.  Attributes are not yet supported.
+	 * @param context
+	 * @param name
+	 * @param contents
+	 * @return
+	 * @throws MetaMatrixComponentException
+	 */
+	public static XMLType xmlElement(CommandContext context, final String name, final Object... contents) throws MetaMatrixComponentException {
+		return new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+			
+			@Override
+			public void translate(Writer writer) throws TransformerException,
+					IOException {
+				try {
+					XMLOutputFactory factory = XMLOutputFactory.newInstance();
+					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
+					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+					eventWriter.add(eventFactory.createStartElement("", null, name)); //$NON-NLS-1$
+					for (Object object : contents) {
+						if (object == null) {
+							continue;
+						}
+						if (object instanceof XMLType) {
+							Reader r = null;
+							try {
+								r = ((XMLType)object).getCharacterStream();
+								XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+								XMLEventReader xmlEventReader = inputFactory.createFilteredReader(inputFactory.createXMLEventReader(r), new EventFilter() {
+									
+									@Override
+									public boolean accept(XMLEvent event) {
+										return !event.isStartDocument() && !event.isEndDocument();
+									}
+								});
+								eventWriter.add(xmlEventReader);
+							} catch (SQLException e) {
+								throw new IOException(e);
+							} finally {
+								if (r != null) {
+									r.close();
+								}
+							}
+						} else {
+							try {
+								String result = DataTypeManager.transformValue(object, DataTypeManager.DefaultDataClasses.STRING);
+								eventWriter.add(eventFactory.createCharacters(result));
+							} catch (TransformationException e) {
+								throw new TransformerException(e);
+							}
+						}
+					}
+					eventWriter.add(eventFactory.createEndElement("", null, name)); //$NON-NLS-1$
+				} catch (XMLStreamException e) {
+					throw new TransformerException(e);
+				} finally {
+					
+				}
+			}
+		}, context.getStreamingBatchSize()));
+	}
+	
 }

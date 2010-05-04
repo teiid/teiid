@@ -2904,7 +2904,7 @@ Function function(ParseInfo info) :
 	(
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
-		                    | funcToken = <MINUTE> | funcToken = <SECOND>)
+		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLELEMENT>)
 		<LPAREN>
 		[
 			expression = expression(info)

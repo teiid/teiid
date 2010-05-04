@@ -194,12 +194,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            break;
 		    }
 		    default: {
-	            GroupSymbol intoGroup = (GroupSymbol)root.getProperty(NodeConstants.Info.INTO_GROUP);
-	            if (intoGroup != null) { //if this is a project into, treat the nodes under the source as a new plan root
-	                PlanNode intoRoot = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
-	                execute(intoRoot.getFirstChild(), metadata, capFinder, rules, analysisRecord, context);
-	                return;
-	            }
+		    	if (root.getType() == NodeConstants.Types.PROJECT) {
+		    		GroupSymbol intoGroup = (GroupSymbol)root.getProperty(NodeConstants.Info.INTO_GROUP);
+		            if (intoGroup != null) { //if this is a project into, treat the nodes under the source as a new plan root
+		                PlanNode intoRoot = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
+		                execute(intoRoot.getFirstChild(), metadata, capFinder, rules, analysisRecord, context);
+		                return;
+		            }
+	            	root.setProperty(NodeConstants.Info.PROJECT_COLS, outputElements);
+		    	}
 	            
 	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
 	            

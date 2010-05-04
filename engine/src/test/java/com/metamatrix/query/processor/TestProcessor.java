@@ -302,6 +302,7 @@ public class TestProcessor {
 		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
+        context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
 		return context;
 	}   
     	
@@ -7482,6 +7483,25 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-
+    @Test public void testXmlElement() {
+        String sql = "SELECT xmlelement(e1, e2) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList(new String[] {null}),
+        		Arrays.asList("<a>0</a>"),
+        		Arrays.asList("<a>0</a>"),
+        		Arrays.asList("<a>3</a>"),
+        		Arrays.asList("<b>2</b>"),
+                Arrays.asList("<c>1</c>"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }

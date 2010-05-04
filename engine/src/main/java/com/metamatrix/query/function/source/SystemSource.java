@@ -168,6 +168,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         // xml functions
         addXpathFunction();
         addXslTransformFunction();
+        addXmlElement();
         
         addSecurityFunctions();
         
@@ -902,6 +903,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    private void addXmlElement() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLELEMENT, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xmlElement", //$NON-NLS-1$ //$NON-NLS-2$  
+                            new FunctionParameter[] { 
+                                new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlelement_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.xmlelement_param2"), true)}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlement_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTimeZoneFunctions() {
