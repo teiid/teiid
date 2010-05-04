@@ -150,10 +150,11 @@ public class OracleSQLTranslator extends Translator {
 					if ("date".equals(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
 						format = "YYYY-MM-DD HH24:MI:SS"; //$NON-NLS-1$
 					}
-				} else if (!(ex instanceof Function)) {
+				} else if (!(ex instanceof Function) && !(ex instanceof Literal)) {
+					//this isn't needed in every case, but it's simpler than inspecting the expression more
 					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
 				}
-				return Arrays.asList("to_char(", ex, ", '"+format+"')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
