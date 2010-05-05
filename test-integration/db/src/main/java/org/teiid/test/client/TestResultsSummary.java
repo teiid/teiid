@@ -33,6 +33,7 @@ import java.io.PrintStream;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -47,7 +48,8 @@ import org.teiid.test.util.StringUtil;
 
 public class TestResultsSummary {
 
-    private static final String OVERALL_SUMMARY_FILE = "Summary.txt";
+    private static final String OVERALL_SUMMARY_FILE = "Summary_totals.txt";
+    private static final String OVERALL_SUMMARY_ERROR_FILE = "Summary_errors.txt";
     private static final String PROP_SUMMARY_PRT_DIR = "summarydir";
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
@@ -101,10 +103,13 @@ public class TestResultsSummary {
 	return new PrintStream(os);
     }
     
-    private static Writer getOverallSummaryStream(String outputDir) throws IOException {
-	return createOverallSummaryFile(outputDir);
-	
-    }
+//    private static Writer getOverallSummaryStream(String outputDir) throws IOException {
+//	return createOverallSummaryFile(outputDir);
+//	
+//    }
+    
+    
+
     
     /**
      * Overloaded to overwrite the already existing files
@@ -157,7 +162,7 @@ public class TestResultsSummary {
 	return summaryFile;
     }
 
-    private static Writer createOverallSummaryFile(String outputDir)
+    private static Writer getOverallSummaryStream(String outputDir)
 	    throws IOException {
 	boolean exists = false;
 	File summaryFile = new File(outputDir, OVERALL_SUMMARY_FILE); //$NON-NLS-1$
@@ -190,7 +195,52 @@ public class TestResultsSummary {
 	    overallsummary.write("================== \n"); //$NON-NLS-1$
 
 	    overallsummary
-		    .write("Scenario \t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total \n"); //$NON-NLS-1$
+		    .write("Scenario \t\t\t" + "Pass" + "\t" + "Fail" + "\t" + "Total \n"); //$NON-NLS-1$
+
+	    overallsummary.flush();
+
+	} catch (IOException ioe) {
+	    ioe.printStackTrace();
+	}
+
+    }
+    
+    
+    
+    private static Writer getOverallSummaryErrorsStream(String outputDir)
+    throws IOException {
+	boolean exists = false;
+	File summaryFile = new File(outputDir, OVERALL_SUMMARY_ERROR_FILE); //$NON-NLS-1$
+	exists = summaryFile.exists();
+	FileWriter fstream = new FileWriter(summaryFile,true);
+        BufferedWriter out = new BufferedWriter(fstream);
+
+        if (!exists) {
+
+            try {
+        	summaryFile.createNewFile();
+            } catch (IOException e) {
+        	System.err
+		    .println("Failed to create overall summary error file at: " + summaryFile.getAbsolutePath()); //$NON-NLS-1$
+        	throw new IOException(
+		    "Failed to create overall summary error file at: " + summaryFile.getAbsolutePath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            printOverallSummaryErrorHeadings(out);
+        }
+
+
+        return out;
+    }
+    
+    private static void printOverallSummaryErrorHeadings(Writer overallsummary) {
+
+	try {
+	    overallsummary.write("================== \n"); //$NON-NLS-1$
+	    overallsummary.write("Test Summary Errors \n"); //$NON-NLS-1$
+	    overallsummary.write("================== \n"); //$NON-NLS-1$
+
+	    overallsummary
+		    .write("Scenario \t" + "Error \n"); //$NON-NLS-1$
 
 	    overallsummary.flush();
 
@@ -458,11 +508,13 @@ public class TestResultsSummary {
 
 	PrintStream outputStream = null;
 	Writer overallsummary = null;
+	Writer overallsummaryerrors = null;
 	try {
 	    outputStream = getSummaryStream(summarydir,
 		    "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
 	    
 	    overallsummary = getOverallSummaryStream(summarydir);
+	    overallsummaryerrors = getOverallSummaryErrorsStream(summarydir);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	    //              logError("Unable to get output stream for file: " + outputFileName); //$NON-NLS-1$
@@ -484,10 +536,9 @@ public class TestResultsSummary {
 	if (!this.query_sets.isEmpty()) {
 	    // sort so that like failed queries are show together
 	    Collections.sort(this.query_sets);
-
+	    
 	    for (Iterator<String> it = this.query_sets.iterator(); it.hasNext();) {
 		outputStream.println(it.next()); //$NON-NLS-1$ //$NON-NLS-2$
-
 	    }
 
 	}
@@ -497,20 +548,20 @@ public class TestResultsSummary {
 		+ total_fail + "\t" + total_queries + "\t" + total_seconds
 		/ 1000);
 	
-	overallsummary.write(scenario_name + " \t" + total_pass + "\t" + total_fail + "\t" + total_queries + "\n");
+	
 	try {
+	    overallsummary.write( pad(scenario_name, 30, ' ') + " \t" + total_pass + "\t" + total_fail + "\t" + total_queries + "\n");
 	    overallsummary.flush();
 
-	    overallsummary.close();
-    } catch (IOException ioe) {
-	 ioe.printStackTrace();
-     } finally {                       // always close the file
-	 try {
-	     overallsummary.close();
-	 } catch (IOException ioe2) {
+	} catch (IOException ioe) {
+	    ioe.printStackTrace();
+	} finally {                       // always close the file
+	    try {
+		overallsummary.close();
+	    } catch (IOException ioe2) {
 	    // just ignore it
-	 }
-     } // 
+	    }
+	} // 
 
 	// outputStream
 	//			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
@@ -524,13 +575,33 @@ public class TestResultsSummary {
 	    Collections.sort(this.failed_queries);
 
 	    outputStream.println("\n\n=================="); //$NON-NLS-1$
-	    outputStream.println("Failed Queries"); //$NON-NLS-1$		    
+	    outputStream.println("Failed Queries"); //$NON-NLS-1$	
+	    
+	    overallsummaryerrors.write("\n" + scenario_name + "\n");
+
 
 	    for (Iterator<String> it = this.failed_queries.iterator(); it
 		    .hasNext();) {
-		outputStream.println("\t - " + it.next()); //$NON-NLS-1$ //$NON-NLS-2$
+		String error = it.next();
+		outputStream.println("\t - " + error); //$NON-NLS-1$ //$NON-NLS-2$
+		// write all errors to the summary file
+		overallsummaryerrors.write("\t\t" + error + "\n");
+
 
 	    }
+	    
+		try {
+		    overallsummaryerrors.flush();
+
+		} catch (IOException ioe) {
+		    ioe.printStackTrace();
+		} finally {                       // always close the file
+		    try {
+			overallsummaryerrors.close();
+		    } catch (IOException ioe2) {
+		    // just ignore it
+		    }
+		} // 
 
 	    outputStream.println("=================="); //$NON-NLS-1$
 
@@ -539,6 +610,21 @@ public class TestResultsSummary {
 	outputStream.close();
 
     }
+    
+         private static String pad(String src, int padTo, char padChar) {  
+	         int numPad = padTo - src.length();  
+	         if (numPad > 0) {  
+	             StringBuffer sb = new StringBuffer();  
+	             char[] pad = new char[numPad] ;
+	             Arrays.fill(pad, padChar);  
+	             sb.append(src);  
+	             sb.append(pad);  
+	             return sb.toString();  
+	         } 
+	         
+	         return src;  
+	           
+	     } 
 
     private static String generateFileName(String configName, long timestamp,
 	    int runNumber) {
