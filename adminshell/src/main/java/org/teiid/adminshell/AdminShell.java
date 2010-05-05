@@ -41,7 +41,6 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ConnectionFactory;
-import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -442,8 +441,8 @@ public class AdminShell {
 	    if (internalAdmin != null) {
 	    	internalAdmin.close();
 	    	internalAdmin = null;
-	    	currentName = null;
 	    	connections.remove(currentName);
+	    	currentName = null;
 	    }  
 	}
 	
