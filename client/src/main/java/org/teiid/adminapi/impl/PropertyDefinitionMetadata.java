@@ -49,17 +49,17 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
      */
     public String toString() {
         StringBuffer result = new StringBuffer();
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Display_name")).append(getDisplayName()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Description")).append(getDescription()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Property_type_class_name")).append(getPropertyTypeClassName()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Default_value")).append(getDefaultValue()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Constrained_to_allow_values")).append(isConstrainedToAllowedValues()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Allowed_values")).append(getAllowedValues()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Required")).append(isRequired()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Expert")).append(isAdvanced()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Masked")).append(isMasked()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Modifiable")).append(isModifiable()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.RequiresRestart")).append(getRequiresRestart()); //$NON-NLS-1$
+        result.append("Display Name:").append(getDisplayName()); //$NON-NLS-1$
+        result.append("Description:").append(getDescription()); //$NON-NLS-1$
+        result.append("Property Type Classname:").append(getPropertyTypeClassName()); //$NON-NLS-1$
+        result.append("Default Value:").append(getDefaultValue()); //$NON-NLS-1$
+        result.append("Constrained To Allow Values:").append(isConstrainedToAllowedValues()); //$NON-NLS-1$
+        result.append("Allowed Values:").append(getAllowedValues()); //$NON-NLS-1$
+        result.append("Required:").append(isRequired()); //$NON-NLS-1$
+        result.append("Expert:").append(isAdvanced()); //$NON-NLS-1$
+        result.append("Masked:").append(isMasked()); //$NON-NLS-1$
+        result.append("Modifiable:").append(isModifiable()); //$NON-NLS-1$
+        result.append("RequiresRestart:").append(getRequiresRestart()); //$NON-NLS-1$
         return result.toString();
     }
     

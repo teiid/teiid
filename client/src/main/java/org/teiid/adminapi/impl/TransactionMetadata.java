@@ -81,10 +81,10 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	@Override
 	public String toString() {
         StringBuffer result = new StringBuffer();
-        result.append(AdminPlugin.Util.getString("TransactionImpl.associatedSession")).append(associatedSession); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("TransactionImpl.scope")).append(scope); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("TransactionImpl.id")).append(id); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("TransactionImpl.createdTime")).append(new Date(createdTime)); //$NON-NLS-1$
+        result.append("Associated Session:").append(associatedSession); //$NON-NLS-1$
+        result.append("Scope:").append(scope); //$NON-NLS-1$
+        result.append("Id:").append(id); //$NON-NLS-1$
+        result.append("CreatedTime:").append(new Date(createdTime)); //$NON-NLS-1$
         return result.toString();
 	}
 
