@@ -28,11 +28,9 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -80,7 +78,7 @@ public class TestXMLPlanner extends TestCase {
         return preparePlan(command, md, TestOptimizer.getGenericFinder(), null);
     }
 
-    private void helpPlanException(String sql, QueryMetadataInterface md) throws QueryMetadataException, MetaMatrixComponentException, QueryParserException, QueryResolverException, QueryValidatorException {
+    private void helpPlanException(String sql, QueryMetadataInterface md) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         Command command = TestXMLProcessor.helpGetCommand(sql, md);
 
         try {

@@ -7487,12 +7487,64 @@ public class TestProcessor {
         String sql = "SELECT xmlelement(e1, e2) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
         
         List[] expected = new List[] {
-        		Arrays.asList(new String[] {null}),
-        		Arrays.asList("<a>0</a>"),
-        		Arrays.asList("<a>0</a>"),
-        		Arrays.asList("<a>3</a>"),
-        		Arrays.asList("<b>2</b>"),
-                Arrays.asList("<c>1</c>"),
+        		Arrays.asList("<e1>1</e1>"),
+        		Arrays.asList("<e1>0</e1>"),
+        		Arrays.asList("<e1>0</e1>"),
+        		Arrays.asList("<e1>3</e1>"),
+        		Arrays.asList("<e1>2</e1>"),
+                Arrays.asList("<e1>1</e1>"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testXmlElementWithConcat() {
+        String sql = "SELECT xmlelement(e1, e2, xmlconcat(xmlelement(x), xmlelement(y, e3))) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("<e1>1<x></x><y>false</y></e1>"),
+        		Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
+        		Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
+        		Arrays.asList("<e1>3<x></x><y>true</y></e1>"),
+        		Arrays.asList("<e1>2<x></x><y>false</y></e1>"),
+                Arrays.asList("<e1>1<x></x><y>true</y></e1>"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testXmlElementWithForest() {
+        String sql = "SELECT xmlelement(x, xmlforest(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("<x><e2>1</e2><val>1</val></x>"), //note e1 is not present, because it's null
+        		Arrays.asList("<x><e1>a</e1><e2>0</e2><val>1</val></x>"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testXmlElementWithAttributes() {
+        String sql = "SELECT xmlelement(x, xmlattributes(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("<x e2=\"1\" val=\"1\"></x>"), //note e1 is not present, because it's null
+        		Arrays.asList("<x e1=\"a\" e2=\"0\" val=\"1\"></x>"),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();

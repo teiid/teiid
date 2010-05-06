@@ -16,7 +16,6 @@ package com.metamatrix.query.parser;
 import java.math.BigInteger;
 import java.util.*;
 import com.metamatrix.common.types.*;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.*;
@@ -1595,47 +1594,62 @@ Select select(ParseInfo info) :
 
 SelectSymbol selectSymbol(ParseInfo info) :
 {
+	SelectSymbol symbol = null;	
+}
+{
+	(
+		symbol = selectExpression(info)
+		|
+		symbol = allInGroupSymbol()
+	)
+	{
+		return symbol;
+	}
+}
+
+SingleElementSymbol selectExpression(ParseInfo info) :
+{
 	Expression expression = null;
     String alias = null;
-    Token allInGroupToken = null;	
 }
 {
 	(	
-        // Group.*
-        (
-            allInGroupToken = <ALL_IN_GROUP>    
-        ) 
-      | 
-        (
-			// Expression
-			expression=expression(info)	
-		)
+		// Expression
+		expression=expression(info)	
 		[[<AS>] ( alias=id() )
 		]
 	)
-	{
-		// Validate alias
-        if(alias != null) { 
-            alias = validateAlias(alias);
-        }    
-	
-		if(allInGroupToken != null) {
-			// Group.*
-			return new AllInGroupSymbol(normalizeId(allInGroupToken.image));
-		} 
+	{		
 		SingleElementSymbol es = null;
 		if(expression instanceof ElementSymbol) {
 			es = (ElementSymbol) expression;
-		} else if(expression instanceof AggregateSymbol) {
-		    es = (AggregateSymbol)expression;
 		} else {
-			String functionName = generateFunctionName(info, null);
-			es = new ExpressionSymbol(functionName, expression);
+			String func = null;
+			if(expression instanceof AggregateSymbol) {
+		    	es = (AggregateSymbol)expression;
+		    	func = ((AggregateSymbol)expression).getAggregateFunction();
+			} else {
+				String functionName = generateFunctionName(info, null);
+				es = new ExpressionSymbol(functionName, expression);
+			}
 		}
-		if(alias != null) { 
+		if(alias != null) {
+			alias = validateAlias(alias); 
 			return new AliasSymbol(alias, es);
 		}
 		return es;
+	}
+}
+
+AllInGroupSymbol allInGroupSymbol() :
+{
+	Token allInGroupToken = null;
+	
+}
+{
+   	allInGroupToken = <ALL_IN_GROUP>    
+    {
+		return new AllInGroupSymbol(normalizeId(allInGroupToken.image));
 	}
 }
 
@@ -2836,7 +2850,7 @@ SearchedCaseExpression searchedCaseExpression(ParseInfo info) :
  * @return Parsed function
  * @throws ParseException if parsing failed
  */
-Function function(ParseInfo info) :
+Expression function(ParseInfo info) :
 {
 	String funcName = null;
     
@@ -2904,7 +2918,7 @@ Function function(ParseInfo info) :
 	(
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
-		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLELEMENT>)
+		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>)
 		<LPAREN>
 		[
 			expression = expression(info)
@@ -2962,6 +2976,39 @@ Function function(ParseInfo info) :
 		]
 		<RPAREN>
 	)  			
+	| ( funcToken = <XMLELEMENT>
+		<LPAREN>
+		(
+		 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> expression = idExpression()
+		 |
+		 expression = idExpression()
+		)
+		{
+			args.add(expression);	
+			expression = null;
+		}
+		[
+			LOOKAHEAD(2) <COMMA> expression = sqlXmlFunction(info)
+			{
+				args.add(expression);	
+				expression = null;
+			}	
+		]
+		(<COMMA> expression=expression(info)
+		{
+			args.add(expression);
+			expression = null;
+		}
+		)*
+		<RPAREN>
+	)
+	|
+	LOOKAHEAD(<XMLFOREST>) (
+		expression = sqlXmlFunction(info)
+		{
+			return expression;
+		}
+	)  				
 	|
 	(	funcName = id()
 		{ 
@@ -2989,13 +3036,47 @@ Function function(ParseInfo info) :
 			funcName = funcToken.image;
 		}
 			
-		Expression[] expressions = new Expression[args.size()];
-		for(int i=0; i<args.size(); i++) {
-			expressions[i] = (Expression) args.get(i);
-		}	
-		return new Function(funcName, expressions);
+		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
 	}
 }	
+
+SQLXMLFunction sqlXmlFunction(ParseInfo info) :
+{
+	Expression expression = null;
+	ArrayList args = new ArrayList();
+	Token funcToken = null;
+}
+{
+ 	(funcToken = <XMLFOREST> | funcToken = <XMLATTRIBUTES>)
+	<LPAREN>
+	expression = selectExpression(info)
+	{
+		args.add(expression);
+		expression = null;
+	}
+	(<COMMA> expression=selectExpression(info)
+	 {
+		args.add(expression);
+		expression = null;
+	 }
+	)*
+	<RPAREN>  		
+	{
+		return new SQLXMLFunction(funcToken.image, args);
+	}
+}
+
+Constant idExpression() :
+{
+	String id = null;
+}
+{
+	id = id()
+	{
+		return new Constant(id);
+	}
+}
+
 
 /**
  * Parse a data type name - used only in conversion.

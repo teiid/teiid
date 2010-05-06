@@ -45,6 +45,7 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 
 /**
@@ -171,6 +172,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
 	}
 
 	public static final boolean isEvaluatable(LanguageObject obj, EvaluationLevel target) {
+		if (obj instanceof SQLXMLFunction && (FunctionLibrary.XMLATTRIBUTES.equalsIgnoreCase(((SQLXMLFunction)obj).getName()))) {
+			return false; //we want to preserve xmlattributes unless the parent xmlelement can be evaluated
+		}
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.targetLevel = target;
         PreOrderNavigator.doVisit(obj, visitor);

@@ -27,10 +27,8 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
@@ -55,7 +53,7 @@ public class TestCalculateCostUtil {
     // HELPERS
     // =====================================================================
     
-    private static Criteria helpGetCriteria(String critString, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, QueryMetadataException, MetaMatrixComponentException, QueryValidatorException{
+    private static Criteria helpGetCriteria(String critString, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException{
 
         Criteria result = QueryParser.getQueryParser().parseCriteria(critString);
         QueryResolver.resolveCriteria(result, metadata);

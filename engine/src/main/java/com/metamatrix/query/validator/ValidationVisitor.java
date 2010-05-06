@@ -94,6 +94,7 @@ import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -1112,6 +1113,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         } else if (limitExpr instanceof Reference) {
         	((Reference)limitExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badlimit2")); //$NON-NLS-1$
         }
+    }
+    
+    @Override
+    public void visit(SQLXMLFunction obj) {
+    	for (SingleElementSymbol arg : obj.getArgs()) {
+    		if (arg instanceof ExpressionSymbol) {
+    			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$
+    		}
+		}
     }
         
 }

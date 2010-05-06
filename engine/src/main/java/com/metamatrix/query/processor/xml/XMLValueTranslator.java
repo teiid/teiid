@@ -24,23 +24,23 @@ package com.metamatrix.query.processor.xml;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.query.function.FunctionMethods;
+import com.metamatrix.query.function.source.XMLSystemFunctions;
 
 
 /**
  * This class will make a minimal effort to output xsd formatted values for a given
- * builtin type.  It will not attempt to narrrow or otherwise fit most values into
+ * built-in type.  It will not attempt to narrow or otherwise fit most values into
  * their output space (months can be greater than 12, nonNegative numbers can be 
  * negative, etc.)
  */
-final class XMLValueTranslator {
+public final class XMLValueTranslator {
 
     private static String NEGATIVE_INFINITY = "-INF"; //$NON-NLS-1$
     private static String POSITIVE_INFINITY = "INF"; //$NON-NLS-1$
@@ -48,21 +48,6 @@ final class XMLValueTranslator {
     private static String GMONTHDAY_FORMAT = "--MM-dd"; //$NON-NLS-1$
     private static String GYEAR_FORMAT = "0000"; //$NON-NLS-1$
     private static String GYEARMONTH_FORMAT = "yyyy-MM"; //$NON-NLS-1$
-    private static String DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
-    
-    //YEAR 0 in the server timezone. used to determine negative years
-    private static long YEAR_ZERO;
-    
-    static {
-        Calendar cal = Calendar.getInstance();
-    
-        for (int i = 0; i <= Calendar.MILLISECOND; i++) {
-            cal.set(i, 0);
-        }
-        YEAR_ZERO = cal.getTimeInMillis();
-    }
-    
-    private static String TIMESTAMP_MICROZEROS = "000000000"; //$NON-NLS-1$
     
     public static final String DATETIME    = "dateTime"; //$NON-NLS-1$
     public static final String DOUBLE      = "double"; //$NON-NLS-1$
@@ -75,7 +60,7 @@ final class XMLValueTranslator {
     
     public static final String STRING = "string"; //$NON-NLS-1$
     
-    private static final Map TYPE_CODE_MAP;
+    private static final Map<String, Integer> TYPE_CODE_MAP;
     
     private static final int DATETIME_CODE = 0;
     private static final int DOUBLE_CODE = 1;
@@ -87,7 +72,7 @@ final class XMLValueTranslator {
     private static final int GYEARMONTH_CODE = 7;
         
     static {
-        TYPE_CODE_MAP = new HashMap(20);
+        TYPE_CODE_MAP = new HashMap<String, Integer>(20);
         TYPE_CODE_MAP.put(DATETIME, new Integer(DATETIME_CODE));
         TYPE_CODE_MAP.put(DOUBLE, new Integer(DOUBLE_CODE));
         TYPE_CODE_MAP.put(FLOAT, new Integer(FLOAT_CODE));
@@ -112,14 +97,15 @@ final class XMLValueTranslator {
      * @param builtInType The design-time atomic built-in type (or null if none)
      * @return String representing the value
      * @throws FunctionExecutionException 
+     * @throws TransformationException 
      * @since 5.0
      */
-    static String translateToXMLValue(Object value, Class runtimeType, String builtInType) throws MetaMatrixComponentException, FunctionExecutionException {
+    public static String translateToXMLValue(Object value, Class<?> runtimeType, String builtInType) throws FunctionExecutionException, TransformationException {
         if (value == null) {
             return null;
         }
         
-        Integer typeCode = (Integer)TYPE_CODE_MAP.get(builtInType);
+        Integer typeCode = TYPE_CODE_MAP.get(builtInType);
         
         String valueStr = null;
         
@@ -131,7 +117,7 @@ final class XMLValueTranslator {
             
             switch (type) {
                 case DATETIME_CODE:
-                    valueStr = timestampToDateTime((Timestamp)value);
+                    valueStr = XMLSystemFunctions.timestampToDateTime((Timestamp)value);
                     break;
                 case DOUBLE_CODE:
                     valueStr = doubleToDouble((Double)value);
@@ -178,49 +164,11 @@ final class XMLValueTranslator {
     private static String timestampTogYearMonth(Object value) throws FunctionExecutionException {
         String valueStr;
         Timestamp time = (Timestamp)value;
-        valueStr = (String)FunctionMethods.format(time, GYEARMONTH_FORMAT);
-        if (time.getTime() < YEAR_ZERO) {
+        valueStr = FunctionMethods.format(time, GYEARMONTH_FORMAT);
+        if (time.getTime() < XMLSystemFunctions.YEAR_ZERO) {
             valueStr = "-" + valueStr; //$NON-NLS-1$
         }
         return valueStr;
-    }
-    
-    /**
-     * Formats a timestamp to an xs:dateTime.  This uses DATETIME_FORMAT
-     * with a trailing string for nanoseconds (without right zeros). 
-     */
-    static String timestampToDateTime(Timestamp time) throws FunctionExecutionException {
-        String result = (String)FunctionMethods.format(time, DATETIME_FORMAT);
-        int nanos = time.getNanos();
-        if (nanos == 0) {
-            return result;
-        }
-        
-        StringBuffer resultBuffer = new StringBuffer();
-        boolean first = true;
-        int i = 0;
-        for (; i < 9 && nanos > 0; i++) {
-            int digit = nanos%10;
-            if (first) {
-                if (digit > 0) {
-                    resultBuffer.insert(0, digit);
-                    first = false;
-                }
-            } else {
-                resultBuffer.insert(0, digit);
-            }
-            nanos /= 10;
-        }
-        if (i < 9) {
-            resultBuffer.insert(0, TIMESTAMP_MICROZEROS.substring(i));
-        }
-        resultBuffer.insert(0, "."); //$NON-NLS-1$
-        resultBuffer.insert(0, result);
-        if (time.getTime() < YEAR_ZERO) {
-            resultBuffer.insert(0, "-"); //$NON-NLS-1$
-        }
-        return resultBuffer.toString();
-        
     }
     
     /**
@@ -230,10 +178,11 @@ final class XMLValueTranslator {
      *   
      * @param value Value returned from a mapping class
      * @return String content to put in XML output
+     * @throws TransformationException 
      * @since 5.0
      */
-    static String defaultTranslation(Object value) {
-        return value.toString();
+    static String defaultTranslation(Object value) throws TransformationException {
+        return DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.STRING);
     }
     
     /**
@@ -243,9 +192,10 @@ final class XMLValueTranslator {
      *  
      * @param f Runtime float
      * @return String representing xs:float
+     * @throws TransformationException 
      * @since 5.0
      */
-    static String floatToFloat(Float f) {
+    static String floatToFloat(Float f) throws TransformationException {
         if(f.floatValue() == Float.NEGATIVE_INFINITY) {
             return NEGATIVE_INFINITY;
         } else if(f.floatValue() == Float.POSITIVE_INFINITY) {
@@ -261,9 +211,10 @@ final class XMLValueTranslator {
      *  
      * @param d Runtime double
      * @return String representing xs:double
+     * @throws TransformationException 
      * @since 5.0
      */
-    static String doubleToDouble(Double d) {
+    static String doubleToDouble(Double d) throws TransformationException {
         if(d.doubleValue() == Double.NEGATIVE_INFINITY) {
             return NEGATIVE_INFINITY;
         } else if(d.doubleValue() == Double.POSITIVE_INFINITY) {

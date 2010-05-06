@@ -29,9 +29,9 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.types.DataTypeManager;
@@ -112,7 +112,7 @@ public class TestInstructions extends TestCase {
         return new FakeMetadataFacade(store);
     }
     
-    private Command helpGetCommand(String sql, FakeMetadataFacade metadata) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
+    private Command helpGetCommand(String sql, FakeMetadataFacade metadata) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         // parse
         QueryParser parser = new QueryParser();
         Command command = parser.parseCommand(sql);

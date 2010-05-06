@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 
 import java.sql.SQLXML;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.metamatrix.common.types.TransformationException;
@@ -58,14 +57,4 @@ public class TestStringToXmlTransform {
        transform.transformDirect(xml);
     }    
     
-    @Ignore("TODO: allow for fragments in the xml type")
-    @Test public void testXMLFragment() throws Exception {
-        String xml = "<name>ABC</name>" + //$NON-NLS-1$
-                     "<age>32</age>"; //$NON-NLS-1$
-                     
-       StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
-       
-       transform.transformDirect(xml);
-    }    
-
 }

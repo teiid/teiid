@@ -41,6 +41,7 @@ import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.SQLXMLImpl;
 
 
 /** 
@@ -94,7 +95,7 @@ public class FileProcedureExecution extends BasicExecution implements ProcedureE
         
         String encoding = this.config.getCharacterEncodingScheme();
         
-        returnValue = (SQLXML)this.config.getTypeFacility().convertToRuntimeType(new InputStreamFactory(encoding) {
+        returnValue = new SQLXMLImpl(new InputStreamFactory(encoding) {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {

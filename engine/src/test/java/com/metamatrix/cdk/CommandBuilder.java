@@ -29,10 +29,7 @@ import java.util.List;
 import org.teiid.connector.language.LanguageFactory;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.AliasGenerator;
@@ -77,15 +74,9 @@ public class CommandBuilder {
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
             return new LanguageBridgeFactory(metadata).translate(command);
-        } catch (QueryParserException e) {
+        } catch (MetaMatrixException e) {
             throw new MetaMatrixRuntimeException(e);
-        } catch (QueryResolverException e) {
-            throw new MetaMatrixRuntimeException(e);
-        } catch (MetaMatrixComponentException e) {
-            throw new MetaMatrixRuntimeException(e);
-        } catch (QueryValidatorException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
+		}
     }
     
     /**

@@ -26,7 +26,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.TestResolver;
@@ -43,7 +44,7 @@ public class TestAliasGenerator {
     private Command helpTest(String sql,
                           String expected, 
                           boolean aliasGroups,
-                          QueryMetadataInterface metadata) throws QueryValidatorException {
+                          QueryMetadataInterface metadata) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         Command command = TestResolver.helpResolve(sql, metadata, null);
         command = QueryRewriter.rewrite(command, metadata, null);
         command.acceptVisitor(new AliasGenerator(aliasGroups));

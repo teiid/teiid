@@ -31,11 +31,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.mapping.relational.QueryNode;
@@ -112,13 +112,14 @@ public class QueryUtil {
      * @param query The query to rewrite
      * @param planEnv The planner environment
      * @throws QueryPlannerException
+     * @throws MetaMatrixComponentException 
      * @since 4.3
      */
     static Command rewriteQuery(Command query, QueryMetadataInterface metadata, CommandContext context) 
-        throws QueryPlannerException {
+        throws QueryPlannerException, MetaMatrixComponentException {
         try {
             return QueryRewriter.rewrite(query, metadata, context);
-        } catch(QueryValidatorException e) {
+        } catch(MetaMatrixProcessingException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }
     }

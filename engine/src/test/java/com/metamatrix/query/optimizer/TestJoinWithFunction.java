@@ -62,7 +62,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws QueryResolverException 
 	 * @throws QueryParserException 
 	 */
-	public void testNonDeterministicPostJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testNonDeterministicPostJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -124,7 +124,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws QueryResolverException 
 	 * @throws QueryParserException 
 	 */
-	public void testNonDeterministicPreJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testNonDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -181,7 +181,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @see #testNonDeterministicPostJoin
 	 * @see #testNonDeterministicPreJoin
 	 */
-	public void testNonDeterministicPrePostJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testNonDeterministicPrePostJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -237,7 +237,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws QueryResolverException 
 	 * @throws QueryParserException 
 	 */
-	public void testDeterministicPostJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testDeterministicPostJoin()  throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -308,7 +308,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @throws QueryResolverException 
 	 * @throws QueryParserException 
 	 */
-	public void testDeterministicPreJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, SQRT(100) AS SqrtLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
@@ -375,7 +375,7 @@ public class TestJoinWithFunction extends TestCase {
 	 * @see #testDeterministicPostJoin
 	 * @see #testDeterministicPreJoin
 	 */
-	public void testDeterministicPrePostJoin() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public void testDeterministicPrePostJoin() throws Exception {
 		// sub-query for one side of a JOIN
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, SQRT(100) AS SqrtLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$

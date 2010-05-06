@@ -44,8 +44,14 @@ import javax.xml.transform.Source;
  * only SQLXML interface on top of this.
  */
 public final class XMLType extends Streamable<SQLXML> implements SQLXML {
-
+	
+	public enum Type {
+		UNKNOWN, DOCUMENT, FRAGMENT, SIBLINGS
+	}
+	
 	private static final long serialVersionUID = -7922647237095135723L;
+	
+	private transient Type type = Type.UNKNOWN;
     
     public XMLType(){
         
@@ -90,5 +96,14 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {
 		return this.reference.setResult(resultClass);
-	}      
+	} 
+	
+	public Type getType() {
+		return type;
+	}
+	
+	public void setType(Type type) {
+		this.type = type;
+	}
+	
 }

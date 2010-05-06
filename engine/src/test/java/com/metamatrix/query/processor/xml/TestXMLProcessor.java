@@ -39,10 +39,7 @@ import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBuffer;
@@ -84,7 +81,6 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.XMLFormatConstants;
 
 /**
  * Tests XML processing, which involves XMLPlanner making a ProcessorPlan
@@ -2927,7 +2923,7 @@ public class TestXMLProcessor {
         return dataMgr;
     }                    
 
-    public static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException { 
+    public static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws MetaMatrixComponentException, MetaMatrixProcessingException { 
         QueryParser parser = new QueryParser();
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);

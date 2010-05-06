@@ -1957,5 +1957,9 @@ public class TestValidator {
 	@Test public void testValidateCompareInHaving1() {        
         helpValidate("SELECT e1 FROM test.group GROUP BY e1 HAVING convert(e1, clob) = 'a'", new String[] {"convert(e1, clob) = 'a'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+	@Test public void testValidateNoExpressionName() {        
+        helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 }

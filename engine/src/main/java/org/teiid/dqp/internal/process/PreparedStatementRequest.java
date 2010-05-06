@@ -30,9 +30,9 @@ import java.util.List;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
@@ -123,13 +123,10 @@ public class PreparedStatementRequest extends Request {
     
     /** 
      * @throws MetaMatrixComponentException 
-     * @throws QueryValidatorException 
-     * @throws QueryResolverException 
-     * @throws QueryParserException 
-     * @throws QueryPlannerException 
+     * @throws MetaMatrixProcessingException 
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
-    protected void generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+    protected void generatePlan() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     	String sqlQuery = requestMsg.getCommands()[0];
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.get(id);

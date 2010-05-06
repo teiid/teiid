@@ -497,7 +497,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            setDesiredType(args[i], newType, function);
 	                                
 	            //only currently typed expressions need conversions
-	            if (types[i] != null) {
+	            if (types[i] != null && newType != DataTypeManager.DefaultDataClasses.OBJECT) {
 	                function.insertConversion(i, conversions[i]);
 	            }
 	        } 

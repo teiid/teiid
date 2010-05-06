@@ -139,8 +139,9 @@ public class XQueryPlan extends ProcessorPlan {
      * memory "atomically" (from the XQueryEngine layer).
      * @param rawResults
      * @return
+     * @throws MetaMatrixProcessingException 
      */
-    private TupleBatch packResultsIntoBatch(XMLTranslator translator) throws MetaMatrixComponentException{
+    private TupleBatch packResultsIntoBatch(XMLTranslator translator) throws MetaMatrixComponentException, MetaMatrixProcessingException{
         List rows = new ArrayList(1);
         List row = new ArrayList(1);
 

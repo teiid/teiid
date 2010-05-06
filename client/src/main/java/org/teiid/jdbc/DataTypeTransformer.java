@@ -68,10 +68,10 @@ final class DataTypeTransformer {
     
     private static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType, String typeName) throws SQLException {
     	if (value == null || targetType.isAssignableFrom(value.getClass())) {
-    		return (T)value;
+    		return targetType.cast(value);
     	}
     	try {
-    		return (T)DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), runtimeType);
+    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), runtimeType));
     	} catch (TransformationException e) {
     		String valueStr = value.toString();
     		if (valueStr.length() > 20) {

@@ -1950,27 +1950,55 @@
             </entry>
             <entry>
               <para>Takes a document and an xsl stylesheet and returns a
-                clob of the result.</para>
+                clob of the result.  If either argument is null, the result is null.</para>
             </entry>
             <entry>
-              <para>Doc, xsl in {xml}. Return value is a clob.
+              <para>Doc, xsl in {string, xml}. Return value is a clob.
               </para>
             </entry>
           </row>
           <row>
             <entry>
-              <para><code>XMLELEMENT(name [, content]*)</code></para>
+              <para><code>XMLELEMENT([NAME] name [, &lt;ATTR&gt;][, exp]*)</code>
+               		ATTR:=<code>XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</code></para>
             </entry>
             <entry>
-              <para>Returns an XML element with the given name and conent.  If the content value is of a type other than xml, 
+              <para>Returns an XML element with the given name and content.  If the content value is of a type other than xml, 
               it will be escaped when added to the parent element.  Null content values are ignored.  
               Whitespace in XML or the string values of the content is preserved, but no whitespace is added between content values.</para>
-              <para>Example: with an xml_value of &lt;doc/&gt;, <code>xmlelement('myelement', 1, '&lt;2/&gt;', xml_value)</code>
-              		Returns: <code>&lt;myelement&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&gt;</code>
+              <para>If a attribute name is not supplied, the expression must be a column reference, in which case the attribute name will be the column name. Null attribute values are ignored.</para>
+              <para>Example: with an xml_value of &lt;doc/&gt;, <code>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</code>
+              		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
               </para>
             </entry>
             <entry>
-              <para>Name in {string}.  Content can be any type. Return value is xml.
+              <para>Name is an identifier.  exp can be any type. Return value is xml.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XMLCONCAT(xml [, other]*)</code></para>
+            </entry>
+            <entry>
+              <para>Returns an XML with the concatination of the given xml types.  If a value is null, it will be ignored.
+              </para>
+            </entry>
+            <entry>
+              <para>Name is an identifier.  Content can be any type. Return value is xml.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XMLFOREST(exp [AS name], [exp [AS name]]*)</code></para>
+            </entry>
+            <entry>
+              <para>Returns an concatination of an XML element for each non-null expression exp.  If a name is not supplied, the expression must be a column reference, in which case the element name will be the column name.
+              </para>
+            </entry>
+            <entry>
+              <para>Name is an identifier.  exp can be any type. Return value is xml.
               </para>
             </entry>
           </row>

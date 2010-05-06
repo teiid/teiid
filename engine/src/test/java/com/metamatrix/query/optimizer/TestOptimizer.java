@@ -36,10 +36,8 @@ import org.teiid.connector.api.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.api.exception.query.QueryParserException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -170,11 +168,11 @@ public class TestOptimizer {
 	public static ProcessorPlan helpPlan(String sql,
 			QueryMetadataInterface md, String[] expected,
 			CapabilitiesFinder capFinder,
-			ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+			ComparisonMode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		return helpPlan(sql, md, null, capFinder, expected, mode);
 	}    
 	
-	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic, ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic, ComparisonMode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, mode);
     }
 	
@@ -189,14 +187,14 @@ public class TestOptimizer {
         return helpPlanCommand(command, md, capFinder, null, expectedAtomic, shouldSucceed ? ComparisonMode.CORRECTED_COMMAND_STRING : ComparisonMode.FAILED_PLANNING);
     } 
     
-    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         Command command = helpGetCommand(sql, md, bindings);
 
         return helpPlanCommand(command, md, capFinder, null, expectedAtomic, mode);
     } 
 
     
-    public static Command helpGetCommand(String sql, QueryMetadataInterface md, List bindings) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException { 
+    public static Command helpGetCommand(String sql, QueryMetadataInterface md, List bindings) throws MetaMatrixComponentException, MetaMatrixProcessingException { 
 		if(DEBUG) System.out.println("\n####################################\n" + sql);	 //$NON-NLS-1$
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		

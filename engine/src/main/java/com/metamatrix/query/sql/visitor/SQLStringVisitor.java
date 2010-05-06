@@ -109,6 +109,7 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 
 /**
  * <p>The SQLStringVisitor will visit a set of language objects and return the
@@ -1238,44 +1239,30 @@ public class SQLStringVisitor extends LanguageVisitor {
 
             if(args != null && args.length > 0) {
                 parts.add(((Constant)args[0]).getValue());
-
-                for(int i=1; i<args.length; i++) {
-                    parts.add(", "); //$NON-NLS-1$
-                    parts.add(registerNode(args[i]));
-                }
+                registerNodes(args, 1);
             }
             parts.add(")"); //$NON-NLS-1$
 
-		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XSLTRANSFORM)){
+		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XMLELEMENT)){
 			parts.add(name);
-			parts.add("("); //$NON-NLS-1$
-
-			parts.add(registerNode(args[0]));
-			parts.add(SPACE);
-			parts.add(SQLReservedWords.USING); 
-			parts.add(SPACE);
-			parts.add(registerNode(args[1]));
-			if (args.length > 2) {
-				parts.add(SPACE);
-				parts.add(SQLReservedWords.AS); 
-				parts.add(SPACE);
-				parts.add(((Constant)args[2]).getValue());
-			}
+			parts.add("(NAME "); //$NON-NLS-1$
+			outputDisplayName((String)((Constant)args[0]).getValue());
+			registerNodes(args, 1);
 			parts.add(")"); //$NON-NLS-1$
 		} else {
 			parts.add(name);
 			parts.add("("); //$NON-NLS-1$
-
-			if(args.length > 0) {
-				for(int i=0; i<args.length; i++) {
-					parts.add(registerNode(args[i]));
-					if(i < (args.length-1)) {
-						parts.add(", "); //$NON-NLS-1$
-					}
-				}
-			}
-
+			registerNodes(args, 0);
 			parts.add(")"); //$NON-NLS-1$
+		}
+    }
+    
+    private void registerNodes(LanguageObject[] objects, int begin) {
+    	for (int i = begin; i < objects.length; i++) {
+    		if (i > 0) {
+    			parts.add(", "); //$NON-NLS-1$
+    		}
+			parts.add(registerNode(objects[i]));
 		}
     }
 
@@ -1552,6 +1539,13 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(")"); //$NON-NLS-1$
     }
 
+    @Override
+    public void visit(SQLXMLFunction obj) {
+    	parts.add(obj.getName());
+    	parts.add("("); //$NON-NLS-1$
+    	registerNodes(obj.getArgs().toArray(new LanguageObject[obj.getArgs().size()]), 0);
+    	parts.add(")"); //$NON-NLS-1$
+    }
     
     public void visit(Limit obj) {
         parts.add(SQLReservedWords.LIMIT);

@@ -22,13 +22,13 @@
 
 package com.metamatrix.common.types;
 
-import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 
 /**
  * The exception is thrown when an error occurs during data transformation,
  * typically a formatting error or an invalid input type.
  */
-public class TransformationException extends MetaMatrixException {
+public class TransformationException extends MetaMatrixProcessingException {
 
     /**
      * No-Arg Constructor

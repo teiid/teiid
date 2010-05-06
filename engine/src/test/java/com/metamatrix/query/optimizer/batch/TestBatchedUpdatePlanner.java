@@ -29,11 +29,9 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
@@ -67,7 +65,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         super(name);
     }
     
-    public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException  { 
+    public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws MetaMatrixComponentException, MetaMatrixProcessingException  { 
         if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
         List<Command> commands = new ArrayList<Command>(sql.length);
         for (int i = 0; i < sql.length; i++) {
@@ -86,7 +84,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         return commands;
     }
     
-    private BatchedUpdateCommand helpGetCommand(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException { 
+    private BatchedUpdateCommand helpGetCommand(String[] sql, QueryMetadataInterface md) throws MetaMatrixComponentException, MetaMatrixProcessingException { 
         BatchedUpdateCommand command = new BatchedUpdateCommand(helpGetCommands(sql, md));
         return command;
     }
@@ -130,11 +128,11 @@ public class TestBatchedUpdatePlanner extends TestCase {
         return new DefaultCapabilitiesFinder(new FakeCapabilities(true));
     }
 
-    private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException, QueryPlannerException, QueryMetadataException {
+    private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md) throws MetaMatrixComponentException, QueryMetadataException, MetaMatrixProcessingException {
         return helpPlan(sql, md, getGenericFinder(), true);
     }
     
-    private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException, QueryPlannerException, QueryMetadataException {
+    private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) throws MetaMatrixComponentException, QueryMetadataException, MetaMatrixProcessingException {
         Command command = helpGetCommand(sql, md);
 
         if (capFinder == null){
@@ -156,7 +154,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         }
     }
     
-    private void helpTestPlanner(String[] sql, boolean[] expectedBatching) throws QueryParserException, QueryResolverException, QueryValidatorException, QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
+    private void helpTestPlanner(String[] sql, boolean[] expectedBatching) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         BatchedUpdatePlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached());
         List plans = plan.getUpdatePlans();
         assertEquals("Number of child plans did not match expected", expectedBatching.length, plans.size()); //$NON-NLS-1$
@@ -165,7 +163,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         }
     }    
     
-    private void helpTestPlanner(String[] sql, boolean[] expectedBatching, CapabilitiesFinder capFinder) throws QueryParserException, QueryResolverException, QueryValidatorException, QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
+    private void helpTestPlanner(String[] sql, boolean[] expectedBatching, CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         BatchedUpdatePlan plan = helpPlan(sql, FakeMetadataFactory.example1Cached(), capFinder, true);
         List plans = plan.getUpdatePlans();
         assertEquals("Number of child plans did not match expected", expectedBatching.length, plans.size()); //$NON-NLS-1$

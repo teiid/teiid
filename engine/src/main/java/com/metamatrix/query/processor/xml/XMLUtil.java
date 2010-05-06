@@ -31,6 +31,7 @@ import java.io.Writer;
 import javax.xml.transform.TransformerException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.FileStore.FileStoreOutputStream;
@@ -50,7 +51,7 @@ public class XMLUtil {
      * Documents less than the maxMemorySize will be held directly in memory
      */
     public static SQLXMLImpl saveToBufferManager(BufferManager bufferMgr, XMLTranslator translator, int maxMemorySize) 
-        throws MetaMatrixComponentException {        
+        throws MetaMatrixComponentException, MetaMatrixProcessingException {        
         boolean success = false;
         final FileStore lobBuffer = bufferMgr.createFileStore("xml"); //$NON-NLS-1$
         try{  
@@ -66,7 +67,7 @@ public class XMLUtil {
         } catch(IOException e) {
             throw new MetaMatrixComponentException(e);
         } catch(TransformerException e) {
-            throw new MetaMatrixComponentException(e);
+            throw new MetaMatrixProcessingException(e);
         } finally {
         	if (!success && lobBuffer != null) {
         		lobBuffer.remove();

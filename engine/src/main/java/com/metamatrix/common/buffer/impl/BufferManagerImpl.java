@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.xml.transform.Source;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BatchManager;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.FileStore;
@@ -364,6 +365,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
 	@Override
 	public void initialize() throws MetaMatrixComponentException {
+		//TODO: remove me - connectors should be able to do this statefully
 		DataTypeManager.addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
 			@Override
 			public XMLType transform(Source value) {
@@ -376,12 +378,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
 				} catch (MetaMatrixComponentException e) {
 					throw new MetaMatrixRuntimeException(e);
+				} catch (MetaMatrixProcessingException e) {
+					throw new MetaMatrixRuntimeException(e);
 				}
 				return new XMLType(sqlxml);
 			}
 		});
 	}
-    
+	
     @Override
     public void releaseBuffers(int count) {
     	if (count < 1) {

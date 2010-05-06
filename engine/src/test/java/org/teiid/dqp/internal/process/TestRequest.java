@@ -34,10 +34,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -128,11 +125,8 @@ public class TestRequest extends TestCase {
         assertEquals("1", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
     }
 
-    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws QueryValidatorException,
-                                                           QueryParserException,
-                                                           QueryResolverException,
-                                                           MetaMatrixComponentException,
-                                                           QueryPlannerException {
+    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws MetaMatrixComponentException,
+                                                           MetaMatrixProcessingException {
         Request request = null;
         if (cache != null) {
         	request = new PreparedStatementRequest(cache);

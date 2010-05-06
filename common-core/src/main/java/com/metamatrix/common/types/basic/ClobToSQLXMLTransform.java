@@ -37,6 +37,7 @@ import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.common.types.XMLType.Type;
 import com.metamatrix.common.util.ReaderInputStream;
 import com.metamatrix.core.CorePlugin;
 
@@ -66,21 +67,25 @@ public class ClobToSQLXMLTransform extends Transform {
         Reader reader = null;
         try {
         	reader = source.getCharacterStream();
-            StringToSQLXMLTransform.isXml(reader);
+        	XMLType result = null;
+            Type type = StringToSQLXMLTransform.isXml(reader);
             if (source.getReference() instanceof ClobImpl) {
             	ClobImpl clob = (ClobImpl)source.getReference();
-            	return new XMLType(new SQLXMLImpl(clob.getStreamFactory()));
-            } 
-            return new XMLType(new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
-            	@Override
-            	public InputStream getInputStream() throws IOException {
-            		try {
-						return new ReaderInputStream(source.getCharacterStream(), Charset.forName(Streamable.ENCODING));
-					} catch (SQLException e) {
-						throw new IOException(e);
-					}
-            	}
-            }));
+            	result = new XMLType(new SQLXMLImpl(clob.getStreamFactory()));
+            } else {
+            	result = new XMLType(new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
+	            	@Override
+	            	public InputStream getInputStream() throws IOException {
+	            		try {
+							return new ReaderInputStream(source.getCharacterStream(), Charset.forName(Streamable.ENCODING));
+						} catch (SQLException e) {
+							throw new IOException(e);
+						}
+	            	}
+            	}));
+            }
+            result.setType(type);
+            return result;
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
         } finally {

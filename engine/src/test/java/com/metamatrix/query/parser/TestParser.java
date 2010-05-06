@@ -103,9 +103,12 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 
+@SuppressWarnings("nls")
 public class TestParser {
 
     static void helpTest(String sql, String expectedString, Command expectedCommand) {
@@ -124,7 +127,15 @@ public class TestParser {
 		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
 		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
 	}
-    
+
+	static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
+		Expression	actual = QueryParser.getQueryParser().parseExpression(sql);
+		String actualString = actual.toString();
+
+		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+		assertEquals("Command objects do not match: ", expected, actual);				 //$NON-NLS-1$
+	}
+
     static void helpException(String sql) {
         helpException(sql, null);
     }
@@ -6705,6 +6716,26 @@ public class TestParser {
         columns.add(column);
         create.setColumns(columns);
         helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 string, c2 byte, c3 short, c4 float, c5 bigdecimal)", create); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testXmlElement() throws Exception {
+    	Function f = new Function("xmlelement", new Expression[] {new Constant("table"), new Constant("x")});
+    	helpTestExpression("xmlelement(name \"table\", 'x')", "xmlelement(NAME \"table\", 'x')", f);
+    }
+
+    @Test public void testXmlElement1() throws Exception {
+    	Function f = new Function("xmlelement", new Expression[] {new Constant("table"), new Constant("x")});
+    	helpTestExpression("xmlelement(\"table\", 'x')", "xmlelement(NAME \"table\", 'x')", f);
+    }
+    
+    @Test public void testXmlElementWithAttributes() throws Exception {
+    	Function f = new Function("xmlelement", new Expression[] {new Constant("y"), new SQLXMLFunction("xmlattributes", Arrays.asList((SingleElementSymbol)new AliasSymbol("val", new ExpressionSymbol("", new Constant("a")))))});
+    	helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "xmlelement(NAME y, xmlattributes('a' AS val))", f);
+    }
+    
+    @Test public void testXmlForest() throws Exception {
+    	SQLXMLFunction f = new SQLXMLFunction("xmlforest", Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
+    	helpTestExpression("xmlforest(a as \"table\")", "xmlforest(a AS \"table\")", f);
     }
 
 }

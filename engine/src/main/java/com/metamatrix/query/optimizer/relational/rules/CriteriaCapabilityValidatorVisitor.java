@@ -60,6 +60,7 @@ import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.util.SymbolMap;
@@ -92,6 +93,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         this.metadata = metadata;
         this.capFinder = capFinder;
         this.caps = caps;
+    }
+    
+    @Override
+    public void visit(SQLXMLFunction obj) {
+    	markInvalid();
     }
     
     public void visit(AggregateSymbol obj) {

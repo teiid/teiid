@@ -32,10 +32,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -282,8 +283,10 @@ public class FrameUtil {
         // Simplify criteria if possible
         try {
             return QueryRewriter.rewriteCriteria(criteria, null, null, metadata);
-        } catch(QueryValidatorException e) {
+        } catch(MetaMatrixProcessingException e) {
             throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0023, criteria));
+        } catch (MetaMatrixComponentException e) {
+        	throw new MetaMatrixRuntimeException(e);
         }
     }
 

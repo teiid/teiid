@@ -26,17 +26,16 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.InputSource;
-import org.xml.sax.helpers.DefaultHandler;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.events.XMLEvent;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.common.types.XMLType.Type;
 import com.metamatrix.core.CorePlugin;
 
 public class StringToSQLXMLTransform extends Transform {
@@ -52,15 +51,23 @@ public class StringToSQLXMLTransform extends Transform {
 	public Object transformDirect(Object value) throws TransformationException {
         String xml = (String)value;
         Reader reader = new StringReader(xml);
-        isXml(reader);
-        return new XMLType(new SQLXMLImpl(xml));
+        Type type = isXml(reader);
+        XMLType result = new XMLType(new SQLXMLImpl(xml));
+        result.setType(type);
+        return result;
 	}
 
-	static void isXml(Reader reader) throws TransformationException {
-		SAXParserFactory spf = SAXParserFactory.newInstance();
+	static Type isXml(Reader reader) throws TransformationException {
+		Type type = Type.FRAGMENT;
+		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         try{        
-             SAXParser sp = spf.newSAXParser();
-             sp.parse(new InputSource(reader), new DefaultHandler());
+             XMLEventReader xmlReader = inputFactory.createXMLEventReader(reader);
+             while (xmlReader.hasNext()) {
+            	 XMLEvent event = xmlReader.nextEvent();
+            	 if  (event.isStartDocument() && event.getLocation().getColumnNumber() != 1) {
+            		 type = Type.DOCUMENT;
+            	 }
+             }
         } catch (Exception e){
             throw new TransformationException(e, CorePlugin.Util.getString("invalid_string")); //$NON-NLS-1$
         } finally {
@@ -69,6 +76,7 @@ public class StringToSQLXMLTransform extends Transform {
 			} catch (IOException e) {
 			}
         }
+        return type;
 	}
 
 	/**

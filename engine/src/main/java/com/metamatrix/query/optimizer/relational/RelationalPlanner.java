@@ -36,11 +36,11 @@ import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.dqp.internal.process.Request;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.log.LogConstants;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.id.IDGenerator;
@@ -144,9 +144,7 @@ public class RelationalPlanner implements CommandPlanner {
         PlanNode plan;
 		try {
 			plan = generatePlan(command);
-		} catch (QueryResolverException e) {
-			throw new QueryPlannerException(e, e.getMessage());
-		} catch (QueryValidatorException e) {
+		} catch (MetaMatrixProcessingException e) {
 			throw new QueryPlannerException(e, e.getMessage());
 		}
 
@@ -371,7 +369,7 @@ public class RelationalPlanner implements CommandPlanner {
         return plan;
     }
 	
-	public PlanNode generatePlan(Command cmd) throws QueryPlannerException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public PlanNode generatePlan(Command cmd) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		//cascade the option clause nocache
 		Option savedOption = option;
 		option = cmd.getOption();
@@ -423,7 +421,7 @@ public class RelationalPlanner implements CommandPlanner {
         return result;
 	}
 
-	PlanNode createUpdatePlan(Command command) throws QueryPlannerException, MetaMatrixComponentException, QueryResolverException, QueryValidatorException {
+	PlanNode createUpdatePlan(Command command) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         // Create top project node - define output columns for stored query / procedure
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 
@@ -462,8 +460,7 @@ public class RelationalPlanner implements CommandPlanner {
 
 	private void addNestedProcedure(PlanNode sourceNode,
 			ProcedureContainer container) throws MetaMatrixComponentException,
-			QueryMetadataException, QueryResolverException,
-			QueryValidatorException, QueryPlannerException {
+			QueryMetadataException, MetaMatrixProcessingException {
 		//plan any subqueries in criteria/parameters/values
 		for (SubqueryContainer subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
     		ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
@@ -490,7 +487,7 @@ public class RelationalPlanner implements CommandPlanner {
 		}
 	}
 
-    PlanNode createStoredProcedurePlan(StoredProcedure storedProc) throws QueryPlannerException, QueryResolverException, QueryValidatorException, QueryMetadataException, MetaMatrixComponentException {
+    PlanNode createStoredProcedurePlan(StoredProcedure storedProc) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         // Create top project node - define output columns for stored query / procedure
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 
@@ -514,7 +511,7 @@ public class RelationalPlanner implements CommandPlanner {
     }
 
 	PlanNode createQueryPlan(QueryCommand command)
-		throws QueryPlannerException, MetaMatrixComponentException, QueryResolverException, QueryValidatorException {
+		throws MetaMatrixComponentException, MetaMatrixProcessingException {
         // Build canonical plan
     	PlanNode node = null;
         if(command instanceof Query) {
@@ -545,7 +542,7 @@ public class RelationalPlanner implements CommandPlanner {
     }
 
     private PlanNode createQueryPlan(Query query)
-		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException, QueryResolverException, QueryValidatorException {
+		throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
         PlanNode plan = null;
 
@@ -616,11 +613,10 @@ public class RelationalPlanner implements CommandPlanner {
      * as internal
      * @throws MetaMatrixComponentException 
      * @throws QueryMetadataException 
-     * @throws QueryValidatorException 
-     * @throws QueryResolverException 
+     * @throws MetaMatrixProcessingException 
      */
     void buildTree(FromClause clause, PlanNode parent)
-        throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException, QueryResolverException, QueryValidatorException {
+        throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
         PlanNode node = null;
         
@@ -694,9 +690,7 @@ public class RelationalPlanner implements CommandPlanner {
     }
 
 	private void addNestedCommand(PlanNode node,
-			GroupSymbol group, Command nestedCommand, Command toPlan, boolean merge) throws QueryPlannerException,
-			MetaMatrixComponentException, QueryResolverException,
-			QueryValidatorException, QueryMetadataException {
+			GroupSymbol group, Command nestedCommand, Command toPlan, boolean merge) throws MetaMatrixComponentException, QueryMetadataException, MetaMatrixProcessingException {
 		if (nestedCommand instanceof QueryCommand) {
 			//remove unnecessary order by
         	QueryCommand queryCommand = (QueryCommand)nestedCommand;
@@ -871,7 +865,7 @@ public class RelationalPlanner implements CommandPlanner {
     }
 	
     private Command resolveVirtualGroup(GroupSymbol virtualGroup)
-    throws QueryMetadataException, MetaMatrixComponentException, QueryResolverException, QueryValidatorException {
+    throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
     	
         QueryNode qnode = null;
         

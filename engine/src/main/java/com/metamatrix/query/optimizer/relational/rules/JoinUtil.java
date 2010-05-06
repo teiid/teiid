@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
@@ -140,7 +140,7 @@ public class JoinUtil {
         Criteria simplifiedCrit = (Criteria)replaceWithNullValues(innerGroups, crit);
         try {
             simplifiedCrit = QueryRewriter.rewriteCriteria(simplifiedCrit, null, null, metadata);
-        } catch (QueryValidatorException err) {
+        } catch (MetaMatrixException err) {
             //log the exception
             return true;
         }
@@ -153,7 +153,7 @@ public class JoinUtil {
         Expression simplifiedExpression = (Expression)replaceWithNullValues(innerGroups, expr);
         try {
             simplifiedExpression = QueryRewriter.rewriteExpression(simplifiedExpression, null, null, metadata);
-        } catch (QueryValidatorException err) {
+        } catch (MetaMatrixException err) {
             //log the exception
             return true;
         }

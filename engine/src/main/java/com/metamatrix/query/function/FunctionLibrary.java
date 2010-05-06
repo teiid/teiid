@@ -87,6 +87,9 @@ public class FunctionLibrary {
 
     public static final String SPACE = "space"; //$NON-NLS-1$
     
+    public static final String XMLFOREST = "xmlforest"; //$NON-NLS-1$
+    public static final String XMLATTRIBUTES = "xmlattributes"; //$NON-NLS-1$
+    
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
 

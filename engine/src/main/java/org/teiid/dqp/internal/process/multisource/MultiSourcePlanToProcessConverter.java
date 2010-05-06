@@ -31,7 +31,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.id.IDGenerator;
@@ -70,7 +70,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		if (node instanceof AccessNode) {
 			try {
 				return multiSourceModify((AccessNode)node);
-			} catch (CriteriaEvaluationException e) {
+			} catch (MetaMatrixProcessingException e) {
 				throw new QueryPlannerException(e, e.getMessage());
 			} 
 		}
@@ -78,7 +78,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		return node;
 	}
 	
-	private RelationalNode multiSourceModify(AccessNode accessNode) throws MetaMatrixComponentException, CriteriaEvaluationException {
+	private RelationalNode multiSourceModify(AccessNode accessNode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         String modelName = accessNode.getModelName();
 
 		if(!this.multiSourceModels.contains(modelName)) {

@@ -25,10 +25,10 @@ package com.metamatrix.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -40,8 +40,6 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
-
-import junit.framework.TestCase;
 
 
 public class TestDependentJoins extends TestCase {
@@ -512,8 +510,7 @@ public class TestDependentJoins extends TestCase {
     }
 
 	private HardcodedDataManager helpTestDependentJoin(boolean unlimitIn)
-			throws QueryParserException, QueryResolverException,
-			QueryValidatorException, MetaMatrixComponentException {
+			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);

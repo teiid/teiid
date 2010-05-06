@@ -449,7 +449,7 @@ public class DataTypeManager {
 	 * @param type
 	 * @return true if yes; false otherwise
 	 */
-	public static boolean isLOB(Class type) {
+	public static boolean isLOB(Class<?> type) {
 		return DataTypeManager.DefaultDataClasses.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.CLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.XML.equals(type);

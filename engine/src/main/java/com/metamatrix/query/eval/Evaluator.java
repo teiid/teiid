@@ -37,6 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
+import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
 import com.metamatrix.core.util.Assertion;
@@ -45,6 +46,8 @@ import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.metadata.FunctionMethod;
+import com.metamatrix.query.function.source.XMLSystemFunctions;
+import com.metamatrix.query.function.source.XMLSystemFunctions.NameValuePair;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
@@ -62,6 +65,7 @@ import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ContextReference;
@@ -69,6 +73,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -556,6 +561,27 @@ public class Evaluator {
 		   return internalEvaluate(ref.getExpression(), tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
+	   } else if (expression instanceof SQLXMLFunction){
+		   SQLXMLFunction function = (SQLXMLFunction)expression;
+		   List<SingleElementSymbol> args = function.getArgs();
+		   NameValuePair[] nameValuePairs = new NameValuePair[args.size()];
+		   for(int i=0; i < args.size(); i++) {
+			   SingleElementSymbol symbol = args.get(i);
+			   String name = symbol.getShortName();
+			   Expression ex = symbol;
+			   if (symbol instanceof AliasSymbol) {
+				   ex = ((AliasSymbol)symbol).getSymbol();
+			   }
+			   nameValuePairs[i] = new NameValuePair(name, internalEvaluate(ex, tuple));
+		   } 
+		   if (FunctionLibrary.XMLFOREST.equalsIgnoreCase(function.getName())) {
+			   try {
+				   return XMLSystemFunctions.xmlForest(context, nameValuePairs);
+			   } catch (MetaMatrixProcessingException e) {
+				   throw new FunctionExecutionException(e, e.getMessage());
+			   }
+		   } 
+		   return nameValuePairs;
 	   } else {
 	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
 	   }
@@ -636,7 +662,7 @@ public class Evaluator {
 			} catch (MetaMatrixProcessingException e) {
 				throw new ExpressionEvaluationException(e, e.getMessage());
 			}
-	    } 
+	    }
 	    
 		// Execute function
 		Object result = fd.invokeFunction(values);

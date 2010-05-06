@@ -11,10 +11,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.basic.TypeFacilityImpl;
 import org.teiid.connector.language.Select;
 
 import com.metamatrix.common.types.InputStreamFactory;
+import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 import com.metamatrix.connector.xml.base.QueryAnalyzer;
@@ -23,6 +23,7 @@ import com.metamatrix.connector.xml.streaming.ElementProcessor;
 import com.metamatrix.connector.xml.streaming.ReaderFactory;
 import com.metamatrix.connector.xml.streaming.StreamingRowCollector;
 
+@SuppressWarnings("nls")
 public class TestElementCollector extends TestCase {
 
 	StreamingRowCollector builder;
@@ -80,6 +81,6 @@ public class TestElementCollector extends TestCase {
 				return in;
 			}
 		};
-		return (SQLXML)new TypeFacilityImpl().convertToRuntimeType(isf);
+		return new SQLXMLImpl(isf);
 	}
 }

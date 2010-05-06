@@ -25,10 +25,8 @@ package com.metamatrix.query.optimizer.proc;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -57,18 +55,14 @@ public class TestProcedurePlanner extends TestCase {
 
 	// ################ getReplacementClause tests ################### 
 
-    private ProcessorPlan helpPlanProcedure(String procedure, String procedureType) throws QueryParserException, QueryResolverException, QueryValidatorException, QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
+    private ProcessorPlan helpPlanProcedure(String procedure, String procedureType) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         return helpPlanProcedure(null, procedure, procedureType);
     }
     
 	private ProcessorPlan helpPlanProcedure(String userQuery,
                                             String procedure,
-                                            String procedureType) throws QueryParserException,
-                                                                 QueryResolverException,
-                                                                 MetaMatrixComponentException,
-                                                                 QueryValidatorException,
-                                                                 QueryPlannerException,
-                                                                 QueryMetadataException {
+                                            String procedureType) throws MetaMatrixComponentException,
+                                                                 QueryMetadataException, MetaMatrixProcessingException {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         QueryParser parser = QueryParser.getQueryParser();

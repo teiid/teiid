@@ -37,6 +37,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
@@ -206,17 +207,13 @@ public class TestPreparedStatement {
     }
     
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, SessionAwareCache<PreparedPlan> prepPlanCache)
-			throws MetaMatrixComponentException, QueryParserException,
-			QueryResolverException, QueryValidatorException,
-			QueryPlannerException {    	
+			throws MetaMatrixComponentException, MetaMatrixProcessingException {    	
 		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, FakeMetadataFactory.example1VDB());
     }
 	
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			SessionAwareCache<PreparedPlan> prepPlanCache, int conn)
-			throws MetaMatrixComponentException, QueryParserException,
-			QueryResolverException, QueryValidatorException,
-			QueryPlannerException {
+			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		return helpGetProcessorPlan(preparedSql, values,
 				new DefaultCapabilitiesFinder(), FakeMetadataFactory
 						.example1Cached(), prepPlanCache, conn, false, false, FakeMetadataFactory.example1VDB());
@@ -224,9 +221,7 @@ public class TestPreparedStatement {
 
 	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults, VDBMetaData vdb)
-			throws MetaMatrixComponentException, QueryParserException,
-			QueryResolverException, QueryValidatorException,
-			QueryPlannerException {
+			throws MetaMatrixComponentException, MetaMatrixProcessingException {
         
         //Create Request
         RequestMessage request = new RequestMessage(preparedSql);

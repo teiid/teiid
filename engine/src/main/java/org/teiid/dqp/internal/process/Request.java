@@ -381,12 +381,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
      * 		sets the processor plan
      * 
      * @throws MetaMatrixComponentException
-     * @throws QueryPlannerException
-     * @throws QueryParserException
-     * @throws QueryResolverException
-     * @throws QueryValidatorException
+     * @throws MetaMatrixProcessingException 
      */
-    protected void generatePlan() throws MetaMatrixComponentException, QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException {
+    protected void generatePlan() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         Command command = parseCommand();
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
@@ -449,7 +446,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
     public void processRequest() 
-        throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryPlannerException {
+        throws MetaMatrixComponentException, MetaMatrixProcessingException {
                     
     	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	

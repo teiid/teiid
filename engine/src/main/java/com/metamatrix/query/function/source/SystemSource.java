@@ -169,6 +169,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addXpathFunction();
         addXslTransformFunction();
         addXmlElement();
+        addXmlConcat();
         
         addSecurityFunctions();
         
@@ -903,14 +904,39 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addXmlElement() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.XMLELEMENT, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xmlElement", //$NON-NLS-1$ //$NON-NLS-2$  
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLELEMENT, QueryPlugin.Util.getString("SystemSource.xmlelement_description"), XML, FunctionMethod.CAN_PUSHDOWN, XML_FUNCTION_CLASS, "xmlElement", //$NON-NLS-1$ //$NON-NLS-2$  
                             new FunctionParameter[] { 
                                 new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlelement_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("value", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.xmlelement_param2"), true)}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlement_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlement_result")), true, FunctionMethod.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    private void addXmlConcat() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLCONCAT, QueryPlugin.Util.getString("SystemSource.xmlconcat_description"), XML, FunctionMethod.CAN_PUSHDOWN, XML_FUNCTION_CLASS, "xmlConcat", //$NON-NLS-1$ //$NON-NLS-2$  
+                            new FunctionParameter[] { 
+                                new FunctionParameter("param1", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlconcat_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                new FunctionParameter("param2", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlconcat_param2"), true)}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlconcat_result")), true, FunctionMethod.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTimeZoneFunctions() {
@@ -970,7 +996,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      * @return Class reference  
      * @throws ClassNotFoundException If class could not be found
      */
-    public Class getInvocationClass(String className) throws ClassNotFoundException {
+    public Class<?> getInvocationClass(String className) throws ClassNotFoundException {
         return Class.forName(className);    
     }
 }

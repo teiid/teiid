@@ -92,6 +92,9 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
+import com.metamatrix.query.sql.symbol.SQLXMLFunction;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
 
 
 /** 
@@ -504,6 +507,16 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	preVisitVisitor(obj);
     	visitNode(obj.getSymbol());
     	visitNode(obj.getValue());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(SQLXMLFunction obj) {
+    	preVisitVisitor(obj);
+    	//we just want the underlying expressions, not the wrapping alias/expression symbols
+    	for (SingleElementSymbol symbol : obj.getArgs()) {
+        	visitNode(SymbolMap.getExpression(symbol));
+		}
         postVisitVisitor(obj);
     }
     

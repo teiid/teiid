@@ -37,16 +37,18 @@ import org.teiid.client.metadata.ParameterInfo;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
+import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -62,6 +64,7 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
@@ -74,6 +77,7 @@ import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ContextProperties;
 
+@SuppressWarnings("nls")
 public class TestQueryRewriter {
 
     private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
@@ -102,7 +106,7 @@ public class TestQueryRewriter {
         } 
     }   
     
-    private Criteria helpTestRewriteCriteria(String original, String expected, boolean rewrite) throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException, QueryValidatorException {
+    private Criteria helpTestRewriteCriteria(String original, String expected, boolean rewrite) throws QueryMetadataException, MetaMatrixComponentException, MetaMatrixProcessingException {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria expectedCrit = parseCriteria(expected, metadata);
         if (rewrite) {
@@ -120,22 +124,35 @@ public class TestQueryRewriter {
         try { 
             actual = QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
-        } catch(QueryValidatorException e) { 
+        } catch(MetaMatrixException e) { 
         	throw new RuntimeException(e);
         }
         return actual;
-    }    
+    }  
     
-	private String getRewritenProcedure(String procedure, String userUpdateStr, String procedureType) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
+    private Expression helpTestRewriteExpression(String original, String expected, QueryMetadataInterface metadata) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	Expression actualExp = QueryParser.getQueryParser().parseExpression(original);
+    	ResolverVisitor.resolveLanguageObject(actualExp, metadata);
+    	CommandContext context = new CommandContext();
+    	context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+    	actualExp = QueryRewriter.rewriteExpression(actualExp, null, context, metadata);
+    	if (expected != null) {
+	    	Expression expectedExp = QueryParser.getQueryParser().parseExpression(expected);
+	    	ResolverVisitor.resolveLanguageObject(expectedExp, metadata);
+	    	assertEquals(expectedExp, actualExp);
+    	}
+    	return actualExp;
+    }
+    
+	private String getRewritenProcedure(String procedure, String userUpdateStr, String procedureType) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         return getRewritenProcedure(userUpdateStr, metadata);
 	}
 
 	private String getRewritenProcedure(String userUpdateStr,
-			QueryMetadataInterface metadata) throws QueryParserException,
-			QueryResolverException, MetaMatrixComponentException,
-			QueryMetadataException, QueryValidatorException {
+			QueryMetadataInterface metadata) throws MetaMatrixComponentException,
+			QueryMetadataException, MetaMatrixProcessingException {
 		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr); 
         QueryResolver.resolveCommand(userCommand, metadata);
         CreateUpdateProcedureCommand proc = (CreateUpdateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, null);
@@ -399,7 +416,7 @@ public class TestQueryRewriter {
         try { 
             QueryRewriter.rewriteCriteria(origCrit, null, null, null);
             fail("Expected failure"); //$NON-NLS-1$
-        } catch(QueryValidatorException e) { 
+        } catch(MetaMatrixException e) { 
             assertEquals("Error Code:ERR.015.001.0003 Message:Error simplifying criteria: PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", e.getMessage());     //$NON-NLS-1$
         }
     }
@@ -1250,7 +1267,7 @@ public class TestQueryRewriter {
 	// elements being set in updates are dropped if INPUT var is not available, unless a default is supplied
     
     //this test fails because the default for E1 'xyz' cannot be converted into a integer
-    @Test(expected=QueryValidatorException.class) public void testRewriteProcedure21() throws Exception {
+    @Test(expected=ExpressionEvaluationException.class) public void testRewriteProcedure21() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e1=convert(Input.E1, integer)+INPUT.E2, e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1515,9 +1532,9 @@ public class TestQueryRewriter {
         try { 
             QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
-        } catch(QueryValidatorException e) {
+        } catch(MetaMatrixException e) {
         	// looks like message is being wrapped with another exception with same message
-            assertEquals("Error Code:ERR.015.001.0003 Message:Error Code:ERR.015.001.0003 Message:Unable to evaluate (5 / 0): Error Code:ERR.015.001.0003 Message:Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.001.0003 Message:Unable to evaluate (5 / 0): Error Code:ERR.015.001.0003 Message:Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
         }       
     }
     
@@ -1529,8 +1546,8 @@ public class TestQueryRewriter {
         try { 
             QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             fail("Expected QueryValidatorException due to invalid string"); //$NON-NLS-1$
-        } catch(QueryValidatorException e) {
-            assertEquals("Error Code:ERR.015.009.0004 Message:Unable to convert 'x' of type [string] to the expected type [integer].", e.getMessage()); //$NON-NLS-1$
+        } catch(MetaMatrixException e) {
+            assertEquals("Error Code:ERR.015.001.0003 Message:Unable to evaluate convert('x', integer): Error Code:ERR.015.001.0003 Message:Error while evaluating function convert", e.getMessage()); //$NON-NLS-1$
         }       
     }
     
@@ -1953,7 +1970,7 @@ public class TestQueryRewriter {
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING});
     }
 
-    private void verifyProjectedTypesOnUnionBranches(String unionQuery, Class<?>[] types) throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private void verifyProjectedTypesOnUnionBranches(String unionQuery, Class<?>[] types) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         SetQuery union = (SetQuery)QueryParser.getQueryParser().parseCommand(unionQuery);
         QueryResolver.resolveCommand(union, FakeMetadataFactory.example1Cached());
         
@@ -2248,4 +2265,11 @@ public class TestQueryRewriter {
     	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
     }
+    
+    @Test public void testRewriteXmlElement() throws Exception {
+    	String original = "convert(xmlelement(name a, xmlattributes('b' as c)), string)"; //$NON-NLS-1$
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
+    }
+    
 }

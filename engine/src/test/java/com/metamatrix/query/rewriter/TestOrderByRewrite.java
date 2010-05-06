@@ -32,9 +32,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.LanguageObject;
@@ -53,7 +51,7 @@ import com.metamatrix.query.unittest.FakeMetadataObject;
  */
 public class TestOrderByRewrite  {
     
-    private static Command getCommand(String sql) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
+    private static Command getCommand(String sql) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());

@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +46,7 @@ import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.SQLXMLImpl;
+import com.metamatrix.common.types.NullType;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ObjectConverterUtil;
@@ -57,17 +58,17 @@ import com.metamatrix.query.util.CommandContext;
 public class TestFunctionLibrary {
 
 	// These are just used as shorthand convenience to make unit tests more readable below
-	private static final Class T_STRING = DataTypeManager.DefaultDataClasses.STRING;
-	private static final Class T_INTEGER = DataTypeManager.DefaultDataClasses.INTEGER;
-	private static final Class T_BIG_INTEGER = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
-	private static final Class T_BIG_DECIMAL = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;		
-    private static final Class T_LONG = DataTypeManager.DefaultDataClasses.LONG;
-	private static final Class T_FLOAT = DataTypeManager.DefaultDataClasses.FLOAT;
-    private static final Class T_DOUBLE = DataTypeManager.DefaultDataClasses.DOUBLE;
-	private static final Class T_NULL = DataTypeManager.DefaultDataClasses.NULL;
-	private static final Class T_TIME = DataTypeManager.DefaultDataClasses.TIME;
-	private static final Class T_DATE = DataTypeManager.DefaultDataClasses.DATE;
-	private static final Class T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
+	private static final Class<String> T_STRING = DataTypeManager.DefaultDataClasses.STRING;
+	private static final Class<Integer> T_INTEGER = DataTypeManager.DefaultDataClasses.INTEGER;
+	private static final Class<BigInteger> T_BIG_INTEGER = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
+	private static final Class<BigDecimal> T_BIG_DECIMAL = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;		
+    private static final Class<Long> T_LONG = DataTypeManager.DefaultDataClasses.LONG;
+	private static final Class<Float> T_FLOAT = DataTypeManager.DefaultDataClasses.FLOAT;
+    private static final Class<Double> T_DOUBLE = DataTypeManager.DefaultDataClasses.DOUBLE;
+	private static final Class<NullType> T_NULL = DataTypeManager.DefaultDataClasses.NULL;
+	private static final Class<Time> T_TIME = DataTypeManager.DefaultDataClasses.TIME;
+	private static final Class<Date> T_DATE = DataTypeManager.DefaultDataClasses.DATE;
+	private static final Class<Timestamp> T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
 	
 	private FunctionLibrary library = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Collections.EMPTY_LIST)));
 
@@ -1333,8 +1334,8 @@ public class TestFunctionLibrary {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         ClobType result = (ClobType)helpInvokeMethod("xsltransform", new Class[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
-        		new Object[] {new XMLType(new SQLXMLImpl("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>")), 
-        		new XMLType(new SQLXMLImpl("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>"))}, c);
+        		new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML), 
+        		DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.XML)}, c);
         
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name></Item></Items></Catalog></Catalogs>", xml);
@@ -1344,10 +1345,39 @@ public class TestFunctionLibrary {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.DefaultDataClasses.OBJECT}, 
-        		new Object[] {"foo", "<bar>", new XMLType(new SQLXMLImpl("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>"))}, c);
+        		new Object[] {"foo", "<bar>", DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
         
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<foo>&lt;bar&gt;<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs></foo>", xml);
     }
 	
+	@Test public void testInvokeXmlElementWithFragment() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.DefaultDataClasses.OBJECT}, 
+        		new Object[] {"foo", "<bar>", DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<foo>&lt;bar&gt;<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs></foo>", xml);
+    }
+	
+	@Test public void testInvokeXmlElement2() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, 
+        		new Object[] {"foo", new Timestamp(0)}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<foo>1969-12-31T18:00:00</foo>", xml);
+    }
+	
+	@Test public void testInvokeXmlConcat() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        XMLType result = (XMLType)helpInvokeMethod("xmlconcat", new Class[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
+        		new Object[] {DataTypeManager.transformValue("<bar/>", DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<bar/><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", xml);
+    }
 }
