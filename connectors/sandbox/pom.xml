@@ -12,6 +12,6 @@
   <name>Sandbox</name>
   <description>Experimental connectors in progress</description>
   <modules>
-    <module>connector-yahoo</module>
+    <module>translator-yahoo</module>
   </modules>
 </project>
