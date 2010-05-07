@@ -75,16 +75,25 @@
   </dependencies>
   
   <modules>
-    <module>connector-jdbc</module>
-    <module>connector-loopback</module>
+    <module>translator-jdbc</module>
+    <module>translator-ldap</module>
+    
+    <module>translator-loopback</module>
+    <module>translator-text</module>
+    <module>translator-salesforce</module>
+    
     <module>connector-text</module>
-    <module>connector-ldap</module>
     <module>connector-salesforce</module>
+    <module>connector-ldap</module>
     <module>salesforce-api</module>
+
     <module>sandbox</module>
+    
+    <!--
     <module>connector-xml</module>
     <module>connector-xml-file</module>
     <module>connector-xml-soap</module>
     <module>connector-xml-http</module>
+    -->
   </modules>
 </project>
