@@ -28,28 +28,26 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.Connector;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.DataNotAvailableException;
-import org.teiid.connector.api.Execution;
-import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.api.ResultSetExecution;
-import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.language.Call;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
-import org.teiid.logging.api.CommandLogMessage.Event;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.resource.cci.Execution;
+import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.resource.cci.ProcedureExecution;
+import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.resource.cci.UpdateExecution;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.util.Assertion;
@@ -74,14 +72,13 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private AtomicRequestID id;
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
-    private Connector connector;
+    private ExecutionFactory connector;
     private QueryMetadataInterface queryMetadata;
     private PermitMode permitMode = PermitMode.NOT_ACQUIRED;
     private AbstractWorkItem awi;
     
     /* Created on new request */
-    private Connection connection;
-    private ConnectorEnvironment connectorEnv;
+    private Object connection;
     private ExecutionContextImpl securityContext;
     private volatile ResultSetExecution execution;
     private ProcedureBatchHandler procedureBatchHandler;
@@ -97,7 +94,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
     
-    ConnectorWorkItem(AtomicRequestMessage message, AbstractWorkItem awi, ConnectorManager manager) throws ConnectorException {
+    ConnectorWorkItem(AtomicRequestMessage message, AbstractWorkItem awi, ConnectorManager manager) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -115,13 +112,12 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setContextCache(manager.getContextCache());
         
-        this.connector = manager.getConnector();
-        this.connectorEnv = connector.getConnectorEnvironment();
+        this.connector = manager.getExecutionFactory();
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
     	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
         this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
         
-        if (requestMsg.isTransactional() &&  this.connectorEnv.isXaCapable()) {
+        if (requestMsg.isTransactional() &&  this.connector.isXaCapable()) {
     		this.securityContext.setTransactional(true);
         }
         this.awi = awi;
@@ -188,16 +184,11 @@ public class ConnectorWorkItem implements ConnectorWork {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
             manager.removeState(this.id);
-            if (connection != null) {
-                try {
-					connection.close();
-				} catch (ConnectorException e) {
-					LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());
-				}
-                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
-            }
+		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
     }
+
+
     
     private ConnectorException handleError(Throwable t) {
     	if (t instanceof DataNotAvailableException) {
@@ -237,7 +228,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
-	    	this.connection = this.connector.getConnection();
+	    	this.connection = this.manager.getConnectionFactory();
 	        
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
@@ -258,7 +249,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
 	        
 	        // Create the execution based on mode
-	        final Execution exec = connection.createExecution(this.translatedCommand, this.securityContext, rmd);
+	        final Execution exec = connector.createExecution(this.translatedCommand, this.securityContext, rmd, this.connection);
 	        if (this.translatedCommand instanceof Call) {
 	        	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "IProcedure Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
 	        	this.execution = (ProcedureExecution)exec;
@@ -338,13 +329,13 @@ public class ConnectorWorkItem implements ConnectorWork {
             	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
-	            if(this.connectorEnv.getMaxResultRows() > -1 && this.rowCount >= this.connectorEnv.getMaxResultRows()){
-	                if (this.rowCount == this.connectorEnv.getMaxResultRows() && !this.connectorEnv.isExceptionOnMaxRows()) {
-		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.connectorEnv.getMaxResultRows()}); //$NON-NLS-1$
+	            if(this.connector.getMaxResultRows() > -1 && this.rowCount >= this.connector.getMaxResultRows()){
+	                if (this.rowCount == this.connector.getMaxResultRows() && !this.connector.isExceptionOnMaxRows()) {
+		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.connector.getMaxResultRows()}); //$NON-NLS-1$
 		        		this.lastBatch = true;
 		        		break;
-	            	} else if (this.rowCount > this.connectorEnv.getMaxResultRows() && this.connectorEnv.isExceptionOnMaxRows()) {
-	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.connectorEnv.getMaxResultRows()); //$NON-NLS-1$
+	            	} else if (this.rowCount > this.connector.getMaxResultRows() && this.connector.isExceptionOnMaxRows()) {
+	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.connector.getMaxResultRows()); //$NON-NLS-1$
 	                    throw new ConnectorException(msg);
 	                }
 	            }

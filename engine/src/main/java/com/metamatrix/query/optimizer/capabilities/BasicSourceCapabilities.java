@@ -41,7 +41,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     }
 
     /**
-     * @see com.metamatrix.server.datatier.ConnectorCapabilities#supportsCapability(java.lang.String)
+     * @see org.teiid.resource.cci.server.datatier.ConnectorCapabilities#supportsCapability(java.lang.String)
      */
     public boolean supportsCapability(Capability capability) {
         Boolean supports = (Boolean) capabilityMap.get(capability);
@@ -49,7 +49,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     }
 
     /**
-     * @see com.metamatrix.server.datatier.ConnectorCapabilities#supportsFunction(java.lang.String)
+     * @see org.teiid.resource.cci.server.datatier.ConnectorCapabilities#supportsFunction(java.lang.String)
      */
     public boolean supportsFunction(String functionName) {
         Boolean supports = (Boolean) functionMap.get(functionName);

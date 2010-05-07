@@ -40,12 +40,12 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.ConnectionFactory;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminshell.Help.Doc;
@@ -112,13 +112,12 @@ public class AdminShell {
 	    p = props;
 	}
 	
-	@Doc(text = "Add a ConnectionFactory")
-	public static ConnectionFactory addConnectionFactory(
+	@Doc(text = "Add a Translator")
+	public static Translator addTranslator(
 			@Doc(text = "deployed name") String deployedName,
 			@Doc(text = "type name") String typeName, 
 			Properties properties) throws AdminException {
-		return getAdmin()
-				.addConnectionFactory(deployedName, typeName, properties);
+		return getAdmin().addTranslator(deployedName, typeName, properties);
 	}
 
 	@Doc(text = "Adds a role to the specified policy")
@@ -130,16 +129,16 @@ public class AdminShell {
 		getAdmin().addRoleToDataPolicy(vdbName, vdbVersion, policyName, role);
 	}
 
-	@Doc(text = "Assign a ConnectionFactory to a source Model")
-	public static void assignConnectionFactoryToModel(
+	@Doc(text = "Assign a translator and data source to a source Model")
+	public static void assignToModel(
 			@Doc(text = "vdb name") String vdbName,
 			@Doc(text = "vdb version") int vdbVersion,
 			@Doc(text = "model name") String modelName, 
-			@Doc(text = "source name") String sourceName, 
+			@Doc(text = "source name") String sourceName,
+			@Doc(text = "translator name") String translatorName,
 			@Doc(text = "jndi name") String jndiName)
 			throws AdminException {
-		getAdmin().assignConnectionFactoryToModel(vdbName, vdbVersion, modelName,
-				sourceName, jndiName);
+		getAdmin().assignToModel(vdbName, vdbVersion, modelName, sourceName, translatorName, jndiName);
 	}
 
 	@Doc(text = "Cancel a request")
@@ -156,17 +155,11 @@ public class AdminShell {
 		getAdmin().clearCache(cacheType);
 	}
 
-	@Doc(text = "Delete a ConnectionFactory")
-	public static void deleteConnectionFactory(
+	@Doc(text = "Delete a Translator")
+	public static void deleteTranslator(
 			@Doc(text = "deployed name") String deployedName)
 			throws AdminException {
-		getAdmin().deleteConnectionFactory(deployedName);
-	}
-
-	@Doc(text = "Delete a Connector")
-	public static void deleteConnector(
-			@Doc(text = "name") String name) throws AdminException {
-		getAdmin().deleteConnector(name);
+		getAdmin().deleteTranslator(deployedName);
 	}
 
 	@Doc(text = "Delete a VDB")
@@ -181,35 +174,28 @@ public class AdminShell {
 		return getAdmin().getCacheTypes();
 	}
 
-	@Doc(text = "Get all ConnectionFactory instances")
-	public static Collection<ConnectionFactory> getConnectionFactories()
+	@Doc(text = "Get all translator instances")
+	public static Collection<Translator> getTranslators()
 			throws AdminException {
-		return getAdmin().getConnectionFactories();
-	}
-
-	@Doc(text = "Get all ConnectionFactory instances in the VDB")
-	public static Collection<ConnectionFactory> getConnectionFactoriesInVDB(
-			@Doc(text = "vdb name") String vdbName, 
-			@Doc(text = "vdb version") int vdbVersion) throws AdminException {
-		return getAdmin().getConnectionFactoriesInVDB(vdbName, vdbVersion);
+		return getAdmin().getTranslators();
 	}
 
 	@Doc(text = "Get the specified ConnectionFactory")
-	public static ConnectionFactory getConnectionFactory(
+	public static Translator getTranslator(
 			@Doc(text = "deployed name") String deployedName)
 			throws AdminException {
-		return getAdmin().getConnectionFactory(deployedName);
+		return getAdmin().getTranslator(deployedName);
 	}
 
-	@Doc(text = "Get all connector name Strings")
-	public static Set<String> getConnectorNames() throws AdminException {
-		return getAdmin().getConnectorTemplateNames();
+	@Doc(text = "Get all translator name Strings")
+	public static Set<String> getTranslatorTemplateNames() throws AdminException {
+		return getAdmin().getTranslatorTemplateNames();
 	}
 
-	@Doc(text = "Get all PropertyDefinition instances for the given connector")
-	public static Collection<PropertyDefinition> getConnectorPropertyDefinitions(
-			@Doc(text = "connector name") String connectorName) throws AdminException {
-		return getAdmin().getConnectorTemplatePropertyDefinitions(connectorName);
+	@Doc(text = "Get all PropertyDefinitions for the given translator template")
+	public static Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(
+			@Doc(text = "template name") String templateName) throws AdminException {
+		return getAdmin().getTranslatorTemplatePropertyDefinitions(templateName);
 	}
 
 	@Doc(text = "Get the ProcessObject instances for the given identifier")
@@ -270,13 +256,12 @@ public class AdminShell {
 				.removeRoleFromDataPolicy(vdbName, vdbVersion, policyName, role);
 	}
 
-	@Doc(text = "Set a ConnectionFactory property")
-	public static void setConnectionFactoryProperty(
+	@Doc(text = "Set a Translator property")
+	public static void setTranslatorProperty(
 			@Doc(text = "deployed name") String deployedName,
 			@Doc(text = "propery name") String propertyName, 
 			@Doc(text = "value") String propertyValue) throws AdminException {
-		getAdmin().setConnectionFactoryProperty(deployedName, propertyName,
-				propertyValue);
+		getAdmin().setTranslatorProperty(deployedName, propertyName,propertyValue);
 	}
 
 	@Doc(text = "Set a runtime property")
@@ -285,20 +270,6 @@ public class AdminShell {
 			@Doc(text = "value") String propertyValue)
 			throws AdminException {
 		getAdmin().setRuntimeProperty(propertyName, propertyValue);
-	}
-
-	@Doc(text = "Start a ConnectionFactory")
-	public static void startConnectionFactory(
-			@Doc(text = "deployed name") String deployedName)
-			throws AdminException {
-		getAdmin().startConnectionFactory(deployedName);
-	}
-
-	@Doc(text = "Stop a ConnectionFactory")
-	public static void stopConnectionFactory(
-			@Doc(text = "deployed name") String deployedName)
-			throws AdminException {
-		getAdmin().stopConnectionFactory(deployedName);
 	}
 
 	@Doc(text = "Terminate a session and associated requests")
@@ -323,29 +294,15 @@ public class AdminShell {
 		getAdmin().mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
 	}
 	
-	@Doc(text = "Checks if a ConnectionFactory exists")
-	public static boolean hasConnectionFactory(
-			@Doc(text = "deployed name") String factoryName) throws AdminException {
-	    Collection<ConnectionFactory> bindings = getAdmin().getConnectionFactories();
+	@Doc(text = "Checks if a translator exists")
+	public static boolean hasTranslator(@Doc(text = "deployed name") String factoryName) throws AdminException {
+	    Collection<Translator> bindings = getAdmin().getTranslators();
 	    
-	    for (ConnectionFactory binding:bindings) {
+	    for (Translator binding:bindings) {
 	        if (binding.getName().equals(factoryName)) {
 	            return true;
 	        }        
 	    }            
-	    return false;
-	}
-
-	@Doc(text = "Checks if a Connector exists")
-	public static boolean hasConnector(
-			@Doc(text = "type name") String typeName) throws AdminException {
-	    Collection<String> types = getAdmin().getConnectorTemplateNames();
-
-	    for (String type:types) {
-	        if (type.equals(typeName)) {
-	            return true;
-	        }
-	    }
 	    return false;
 	}
 
@@ -388,21 +345,6 @@ public class AdminShell {
 	    	throw new AdminProcessingException(deployedName + " not found for exporting");
 	    }
 		ObjectConverterUtil.write(contents, fileName);	
-	}
-	
-	@Doc(text = "Add a connector from a RAR file")
-	public static void addConnector(
-			@Doc(text = "name of the Connector") String name, 
-			@Doc(text = "RAR file name") String rarFile) throws FileNotFoundException, AdminException {
-		FileInputStream fis = new FileInputStream(new File(rarFile));
-		try {
-			getAdmin().addConnector(name, fis);
-		} finally {
-			try {
-				fis.close();
-			} catch (IOException e) {
-			}
-		}
 	}
 	
 	@Doc(text = "Export a VDB to file")

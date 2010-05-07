@@ -27,25 +27,21 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.DataNotAvailableException;
-import org.teiid.connector.api.Execution;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.ResultSetExecution;
-import org.teiid.connector.api.UpdateExecution;
-import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.basic.BasicConnector;
-import org.teiid.connector.basic.BasicConnectorCapabilities;
-import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.language.Command;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.resource.adapter.BasicExecution;
+import org.teiid.resource.adapter.BasicExecutionFactory;
+import org.teiid.resource.cci.ConnectorCapabilities;
+import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.resource.cci.Execution;
+import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.resource.cci.UpdateExecution;
 
-
-public class FakeConnector extends BasicConnector {
+public class FakeConnector extends BasicExecutionFactory {
 	private static final int RESULT_SIZE = 5;
 	
 	private boolean executeBlocks;
@@ -58,8 +54,6 @@ public class FakeConnector extends BasicConnector {
     private int connectionCount;
     private int executionCount;
     
-    private ConnectorEnvironment env;
-    
     public int getConnectionCount() {
 		return connectionCount;
 	}
@@ -68,33 +62,25 @@ public class FakeConnector extends BasicConnector {
 		return executionCount;
 	}
     
-    public ConnectorEnvironment getConnectorEnvironment() {
-    	return this.env;
-    }
-    
-    public void setConnectorEnvironment(ConnectorEnvironment env) {
-    	this.env = env;
-    }
-    
     @Override
-    public Connection getConnection() throws ConnectorException {
+    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws ConnectorException {
+    	executionCount++;
+        return new FakeBlockingExecution(executionContext);
+    }
+    public ConnectorCapabilities getCapabilities() {
+    	return new BasicConnectorCapabilities();
+    }    
+    
+    public Object getConnection() {
         return new FakeConnection();
     }
 	
-    private class FakeConnection extends BasicConnection {
-    	
+    private class FakeConnection {
     	public FakeConnection() {
 			connectionCount++;
 		}
     	
         public boolean released = false;
-        public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
-        	executionCount++;
-            return new FakeBlockingExecution(executionContext);
-        }
-        public ConnectorCapabilities getCapabilities() {
-        	return new BasicConnectorCapabilities();
-        }
         public void close() {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;
@@ -191,10 +177,5 @@ public class FakeConnector extends BasicConnector {
 	
 	public void setClassloader(ClassLoader classloader) {
 		this.classloader = classloader;
-	}
-	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
 	}
 }

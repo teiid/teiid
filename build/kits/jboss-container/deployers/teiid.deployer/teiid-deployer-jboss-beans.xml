@@ -44,11 +44,10 @@
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>        
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>  
+         <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
         <depends>SystemVDBDeployer</depends>
     </bean>       
-    
-    
     
     <bean name="SystemVDBDeployer" class="org.teiid.deployers.SystemVDBDeployer">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
@@ -57,27 +56,29 @@
     <bean name="ConnectionFactoryDeployer" class="org.teiid.jboss.deployers.ConnectionFactoryDeployer">
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
-        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
     </bean>
         
-    <bean name="AutoConnectionFactoryDeployer" class="org.teiid.jboss.deployers.AutoConnectionFactoryDeployer">
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
+    <bean name="translatorRepository" class="org.teiid.dqp.internal.datamgr.impl.TranslatorRepository"/>   
+     
+    <bean name="TranslatorParserDeployer" class="org.teiid.deployers.TranslatorParserDeployer"/>
+    <bean name="TranslatorDeployer" class="org.teiid.deployers.TranslatorDeployer">
+        <property name="translatorRepository"><inject bean="translatorRepository"/></property>
         <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
-        <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
     </bean>
-    
+            
     <bean name="VDBStatusChecker" class="org.teiid.deployers.VDBStatusChecker">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
     </bean>
      
-    <bean name="AutoConnectionFactoryParserDeployer" class="org.teiid.jboss.deployers.AutoConnectionFactoryParserDeployer">
-    </bean>        
-    
     <!-- Persistence class for the VDB deployment file -->
    <bean name="VDBMetadataComponentMapper" class="org.teiid.jboss.deployers.VDBMetadataComponentMapper">
         <constructor><parameter><inject bean="PersistenceFactory" /></parameter></constructor>
    </bean>    
         
+    <!--  used for the translators -->
+   <bean name="TranslatorDeploymentTemplateInfoFactory" class="org.teiid.templates.TranslatorTemplateInfoFactory"/>
+           
    <!--  JBOSS Cache -->
    <!-- Uncomment for JBoss Cache -->
    <!-- 

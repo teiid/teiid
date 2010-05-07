@@ -41,9 +41,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-jdbc</artifactId>
+			<artifactId>translator-jdbc</artifactId>
 			<version>${project.version}</version>
-            <classifier>lib</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>

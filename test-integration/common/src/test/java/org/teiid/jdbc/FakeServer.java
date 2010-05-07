@@ -32,7 +32,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.deployers.MetadataStoreGroup;
@@ -44,6 +43,7 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.resource.ConnectorException;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -75,7 +75,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         this.dqp.setTransactionService(new FakeTransactionService());
         
         ConnectorManagerRepository cmr = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(cmr.getConnectorManager("jndi:source")).toReturn(new ConnectorManager("x") {
+        Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
         	@Override
         	public SourceCapabilities getCapabilities()
         			throws ConnectorException {
@@ -104,14 +104,14 @@ public class FakeServer extends ClientServiceRegistryImpl {
         	ModelMetaData model = new ModelMetaData();
             model.setName(schema.getName());
             vdbMetaData.addModel(model);
-            model.addSourceMapping("source", "jndi:source"); 
+            model.addSourceMapping("source", "translator", "jndi:source"); 
         }
         
         for (Schema schema : metadata.getSchemas().values()) {
         	ModelMetaData model = new ModelMetaData();
             model.setName(schema.getName());
             vdbMetaData.addModel(model);
-            model.addSourceMapping("source", "jndi:source"); 
+            model.addSourceMapping("source", "translator", "jndi:source"); 
         }
                         
         try {

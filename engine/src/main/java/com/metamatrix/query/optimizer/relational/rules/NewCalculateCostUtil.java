@@ -34,11 +34,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;

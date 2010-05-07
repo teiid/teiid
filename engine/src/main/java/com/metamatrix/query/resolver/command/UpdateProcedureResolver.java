@@ -30,12 +30,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.UnresolvedSymbolDescription;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -170,7 +171,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	private void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
                               TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
         //create a new variable and metadata context for this block so that discovered metadata is not visible else where
         TempMetadataStore store = new TempMetadataStore(new HashMap(metadata.getMetadataStore().getData()));
@@ -188,7 +189,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 
 	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
         switch(statement.getType()) {
             case Statement.TYPE_IF:

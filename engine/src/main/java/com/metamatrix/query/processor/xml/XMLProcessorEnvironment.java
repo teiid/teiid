@@ -28,10 +28,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -70,7 +71,7 @@ public class XMLProcessorEnvironment {
     }
     
     /**
-     * @see ProcessorEnvironment#initialize(XMLPlan)
+     * @see ProcessorEnvironment#start()
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         this.dataMgr = dataMgr;
@@ -134,8 +135,8 @@ public class XMLProcessorEnvironment {
         while (this.programStack.size() > 1 &&
                programState.programCounter >= programState.program.getProcessorInstructions().size()) {
             this.programStack.removeFirst();
-            if(LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Processor Environment popped program w/ recursion count " + programState.recursionCount, "; " + this.programStack.size(), " programs left."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            if(LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"Processor Environment popped program w/ recursion count " + programState.recursionCount, "; " + this.programStack.size(), " programs left."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             programState = this.programStack.getFirst();
         }        
@@ -159,10 +160,10 @@ public class XMLProcessorEnvironment {
             } else {
                 programState.recursionCount = ProgramState.NOT_RECURSIVE + 1;
             }
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
             
         } else {
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed non-recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"Pushed non-recursive program w/ recursion count " + programState.recursionCount}); //$NON-NLS-1$
         }
         this.programStack.addFirst(programState);
     }

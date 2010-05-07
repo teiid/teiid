@@ -22,7 +22,7 @@
 
 package org.teiid.connector.language;
 
-import org.teiid.connector.api.TypeFacility;
+import org.teiid.resource.cci.TypeFacility;
 
 /**
  * Represents criteria, which is also a boolean expression

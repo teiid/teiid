@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.CompareCriteria;

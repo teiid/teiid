@@ -28,12 +28,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.DataNotAvailableException;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -55,7 +55,7 @@ public class AutoGenDataService extends ConnectorManager{
 	public int dataNotAvailable = -1;
     
     public AutoGenDataService() {
-    	super("FakeConnector");
+    	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
         caps = new BasicSourceCapabilities();
     }
 

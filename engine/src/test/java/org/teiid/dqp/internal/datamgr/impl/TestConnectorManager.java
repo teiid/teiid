@@ -29,9 +29,8 @@ package org.teiid.dqp.internal.datamgr.impl;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
-import org.teiid.connector.api.Connector;
-import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
+import org.teiid.resource.cci.ExecutionFactory;
 
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -45,14 +44,17 @@ public final class TestConnectorManager extends TestCase {
     private AtomicRequestMessage request;
     private ConnectorManager csm;
     
-	static ConnectorManager getConnectorManager(ConnectorEnvironment env) throws Exception {
+	static ConnectorManager getConnectorManager() throws Exception {
 		final FakeConnector c = new FakeConnector();
-		c.setConnectorEnvironment(env);		
-		ConnectorManager cm = new ConnectorManager("FakeConnector", 1) { //$NON-NLS-1$
-			Connector getConnector() {
+		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+			protected ExecutionFactory getExecutionFactory() {
 				return c;
 			}
+			protected Object getConnectionFactory(){
+				return c.getConnection();
+			}
 		};
+		cm.setMaxConnections(1);
 		cm.start();
 		return cm;
 	}
@@ -68,7 +70,7 @@ public final class TestConnectorManager extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
-        csm = getConnectorManager(Mockito.mock(ConnectorEnvironment.class));
+        csm = getConnectorManager();
     }
 
     void helpAssureOneState() throws Exception {

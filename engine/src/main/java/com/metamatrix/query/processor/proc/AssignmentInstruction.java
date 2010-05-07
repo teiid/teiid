@@ -27,12 +27,12 @@ import static com.metamatrix.query.analysis.AnalysisRecord.*;
 import java.util.Arrays;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.symbol.ElementSymbol;

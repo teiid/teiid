@@ -31,11 +31,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
 import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 
@@ -223,8 +224,8 @@ public class FileStorageManager implements StorageManager {
     File createFile(String name, int fileNumber) throws MetaMatrixComponentException {
         try {
         	File storageFile = File.createTempFile(FILE_PREFIX + name + "_" + String.valueOf(fileNumber) + "_", null, this.dirFile); //$NON-NLS-1$ //$NON-NLS-2$
-            if (LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-                LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
+            if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+                LogManager.logDetail(org.teiid.logging.LogConstants.CTX_BUFFER_MGR, "Created temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
             }
             return storageFile;
         } catch(IOException e) {

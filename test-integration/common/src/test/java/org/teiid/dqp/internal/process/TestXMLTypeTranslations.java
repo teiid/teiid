@@ -31,8 +31,8 @@ import java.util.Set;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;

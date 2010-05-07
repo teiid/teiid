@@ -26,9 +26,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
@@ -38,23 +35,26 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.ExecutionFactory;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private VDBRepository vdbRepository;
 	private ConnectorManagerRepository connectorManagerRepository;
+	private TranslatorRepository translatorRepository;
 	private DQPContextCache contextCache;
 	private ObjectSerializer serializer;
 	
@@ -62,6 +62,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		super(VDBMetaData.class);
 		setInput(VDBMetaData.class);
 		setOutput(VDBMetaData.class);
+		setRelativeOrder(3001); // after the data sources
 	}
 
 	@Override
@@ -82,6 +83,9 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		
 		// get the metadata store of the VDB (this is build in parse stage)
 		MetadataStoreGroup store = unit.getAttachment(MetadataStoreGroup.class);
+		
+		// add required connector managers; if they are not already there
+		createConnectorManagers(deployment);
 		
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
@@ -138,6 +142,24 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
+	private void createConnectorManagers(VDBMetaData deployment) {
+		for (Model model:deployment.getModels()) {
+			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+				continue;
+			}
+			for (String source:model.getSourceNames()) {
+				if (this.connectorManagerRepository.getConnectorManager(source) == null) {
+					ConnectorManager cm = new ConnectorManager(model.getSourceTranslatorName(source), model.getSourceConnectionJndiName(source)) {
+						protected ExecutionFactory getExecutionFactory() {
+							return VDBDeployer.this.translatorRepository.getTranslator(getTranslatorName());
+						}
+					};
+					this.connectorManagerRepository.addConnectorManager(source, cm);
+				}
+			}
+		}
+	}
+
 	private boolean validateSources(VDBMetaData deployment) {
 		boolean valid = true;
 		for(Model m:deployment.getModels()) {
@@ -147,14 +169,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL)) {
 					continue;
 				}
-				try {
-					InitialContext ic = new InitialContext();
-					ic.lookup(mapping.getJndiName());
-				} catch (NamingException e) {
+				ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(mapping.getName());
+				String msg = cm.getStausMessage();
+				if (msg != null && msg.length() > 0) {
 					valid = false;
-					String msg = RuntimePlugin.Util.getString("jndi_not_found", deployment.getName(), deployment.getVersion(), mapping.getJndiName(),mapping.getName()); //$NON-NLS-1$
-					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), cm.getStausMessage());
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, cm.getStausMessage());
 				}
 			}
 		}
@@ -168,6 +188,19 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	@Override
 	public void undeploy(DeploymentUnit unit, VDBMetaData deployment) {
 		super.undeploy(unit, deployment);
+		
+		// there is chance that two different VDBs using the same source name, and their
+		// connector manager is removed. should we prefix vdb name??
+		for (Model model:deployment.getModels()) {
+			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+				continue;
+			}
+			for (String source:model.getSourceNames()) {
+				if (this.connectorManagerRepository.getConnectorManager(source) != null) {
+					this.connectorManagerRepository.removeConnectorManager(source);
+				}
+			}
+		}
 		
 		if (this.vdbRepository != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
@@ -232,7 +265,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	
     	Exception exception = null;
     	for (String sourceName: model.getSourceNames()) {
-    		ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(model.getSourceJndiName(sourceName));
+    		ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(sourceName);
     		if (cm == null) {
     			continue;
     		}
@@ -258,4 +291,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private File buildCachedFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
 		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName); //$NON-NLS-1$ //$NON-NLS-2$
 	}    
+	
+	public void setTranslatorRepository(TranslatorRepository repo) {
+		this.translatorRepository = repo;
+	}	
 }

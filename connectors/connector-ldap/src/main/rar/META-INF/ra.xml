@@ -34,62 +34,12 @@
       <license-required>true</license-required>
    </license>
    <resourceadapter>
-      <resourceadapter-class>org.teiid.connector.basic.BasicResourceAdapter</resourceadapter-class>
+      <resourceadapter-class>org.teiid.resource.spi.BasicResourceAdapter</resourceadapter-class>
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>com.metamatrix.connector.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.resource.cci.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
 
-            <config-property>
-               <description>{$display:"Connector Class",$advanced:"true"}</description>
-               <config-property-name>ConnectorClass</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.ldap.LDAPConnector</config-property-value>
-            </config-property>
-
-            <config-property>
-               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
-               <config-property-name>CapabilitiesClass</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.ldap.LDAPConnectorCapabilities</config-property-value>
-            </config-property>
-            
-            <config-property>
-               <description>{$display:"Is Immutable",$description:"Is Immutable, True if the source never changes.",$advanced:"true"}</description>
-               <config-property-name>Immutable</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>true</config-property-value>
-            </config-property>
-            
-            <config-property>
-               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions",$advanced:"true"}</description>
-               <config-property-name>XaCapable</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>false</config-property-value>
-            </config-property>            
-
-            <config-property>             
-               <description>{$display:"Exception on Exceeding Max Rows",$description:"Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",$advanced:"true"}</description>
-               <config-property-name>ExceptionOnMaxRows</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>true</config-property-value>
-            </config-property>
-
-            <config-property>
-               <description>{$display:"Maximum Result Rows",$description:"Maximum Result Rows allowed",$advanced:"true"}</description>
-               <config-property-name>MaxResultRows</config-property-name>
-               <config-property-type>java.lang.Integer</config-property-type>
-               <config-property-value>-1</config-property-value>
-            </config-property>
-
-            <!--  LDAP Specific properties -->
-
-            <config-property>
-               <description>{$display:"Default Search Base DN",$description:"Default Base DN for LDAP Searches",$advanced:"true"}</description>
-               <config-property-name>SearchDefaultBaseDN</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-            
             <config-property>
                <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.",$required:"true"}</description>
                <config-property-name>LdapAdminUserDN</config-property-name>
@@ -104,13 +54,6 @@
             </config-property>    
             
             <config-property>
-               <description>{$display:"Restrict Searches To Named Object Class",$description:"Restrict Searches to objectClass named in the Name field for a table",$advanced:"true"}</description>
-               <config-property-name>RestrictToObjectClass</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>false</config-property-value>
-            </config-property>   
-            
-            <config-property>
                <description>{$display:"Ldap Transaction Timeout (ms)",$description:"Timeout value for LDAP searches. Defaults to TCP timeout value."}</description>
                <config-property-name>LdapTxnTimeoutInMillis</config-property-name>
                <config-property-type>java.lang.Long</config-property-type>
@@ -122,19 +65,19 @@
                <config-property-name>LdapUrl</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>ldap://&lt;ldapServer&gt;:&lt;389&gt;</config-property-value>
-            </config-property>      
+            </config-property>    
             
             <config-property>
-               <description>{$display:"Default Search Scope",$description:"Default Scope for LDAP Searches",$allowed:["OBJECT_SCOPE","ONELEVEL_SCOPE","SUBTREE_SCOPE"],$required:"true"}</description>
-               <config-property-name>SearchDefaultScope</config-property-name>
+               <description>{$display:"Ldap Context Factory",$description:"LDAP Context factory Class",$required:"true", readOnly="true"}</description>
+               <config-property-name>LdapContextFactory</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>SUBTREE_SCOPE</config-property-value>
-            </config-property>                          
+               <config-property-value>com.sun.jndi.ldap.LdapCtxFactory</config-property-value>
+            </config-property>              
             
-            <connectionfactory-interface>org.teiid.connector.api.Connector</connectionfactory-interface>
-            <connectionfactory-impl-class>org.teiid.connector.basic.WrappedConnector</connectionfactory-impl-class>
-            <connection-interface>org.teiid.connector.api.Connection</connection-interface>
-            <connection-impl-class>org.teiid.connector.basic.WrappedConnection</connection-impl-class>
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>
 
          </connection-definition>
          

@@ -34,7 +34,6 @@ import java.util.Map;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
@@ -51,6 +50,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -339,7 +339,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	            // this should not happen, but it did occur when setting up the SystemAdmin models
 	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
 	        }
-	        connectorBindingId = model.getSourceJndiName(bindings.get(0)); 
+	        connectorBindingId = bindings.get(0); 
 	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$
         }
         aqr.setConnectorName(connectorBindingId);

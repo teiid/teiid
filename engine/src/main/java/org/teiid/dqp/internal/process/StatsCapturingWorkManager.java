@@ -43,10 +43,10 @@ import javax.resource.spi.work.WorkManager;
 import javax.resource.spi.work.WorkRejectedException;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 import com.metamatrix.query.QueryPlugin;
 

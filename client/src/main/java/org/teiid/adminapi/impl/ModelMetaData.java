@@ -173,7 +173,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
 	public void setSourceMappings(List<SourceMappingMetadata> sources){
 		for (SourceMappingMetadata source: sources) {
-			addSourceMapping(source.getName(), source.getJndiName());
+			addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 		}
 	}      
     
@@ -183,16 +183,25 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
     
     @Override
-    public String getSourceJndiName(String sourceName) {
+    public String getSourceConnectionJndiName(String sourceName) {
     	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
     	if (s == null) {
     		return null;
     	}
-    	return s.getJndiName();
+    	return s.getConnectionJndiName();
 	}
     
-	public void addSourceMapping(String name, String jndiName) {
-		this.sources.getMap().put(name, new SourceMappingMetadata(name, jndiName));
+    @Override
+    public String getSourceTranslatorName(String sourceName) {
+    	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
+    	if (s == null) {
+    		return null;
+    	}
+    	return s.getTranslatorName();
+	}    
+    
+	public void addSourceMapping(String name, String translatorName, String connJndiName) {
+		this.sources.getMap().put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
 	}    
 	
 	@ManagementProperty(description = "Model Validity Errors", readOnly=true, managed=true)
@@ -229,8 +238,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         
         @XmlAttribute(name = "severity", required = true)
         protected String severity;
-
-        public ValidationError() {};
+        
+        @XmlAttribute(name = "path")
+        protected String path;
+        
+		public ValidationError() {};
         
         public ValidationError(String severity, String msg) {
         	this.severity = severity;
@@ -253,6 +265,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 		public void setSeverity(String severity) {
 			this.severity = severity;
-		}        
+		}       
+		
+		@ManagementProperty (description="Path")
+        public String getPath() {
+			return path;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}		
     }    
 }

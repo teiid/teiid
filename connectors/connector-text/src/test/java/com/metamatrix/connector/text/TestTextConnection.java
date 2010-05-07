@@ -23,13 +23,14 @@
 package com.metamatrix.connector.text;
 
 import java.util.Map;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.text.TextConnectionFactory;
+import org.teiid.resource.cci.text.TextConnectionImpl;
+import org.teiid.resource.cci.text.TextManagedConnectionFactory;
 
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -45,20 +46,14 @@ public class TestTextConnection extends TestCase {
     }
     
     public void testDefect10371() throws Exception {    
-        Properties props = new Properties();
-        String descFile = UnitTestUtil.getTestDataPath() + "/EmployeeTestDataSalary.txt"; //$NON-NLS-1$
-        props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
-        
+    	String descFile = UnitTestUtil.getTestDataPath() + "/EmployeeTestDataSalary.txt"; //$NON-NLS-1$
         TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
         Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         
-        TextConnector txr = new TextConnector();
-        txr.initialize(config);
+        TextConnectionFactory tcf = new TextConnectionFactory(config);
+        TextConnectionImpl conn = (TextConnectionImpl)tcf.getConnection();
         
-        TextConnection conn = (TextConnection)txr.getConnection();
-        
-        Map actualProps = conn.metadataProps;
+        Map actualProps = conn.getMetadataProperties();
         assertNotNull(actualProps);
     }
 
@@ -66,33 +61,28 @@ public class TestTextConnection extends TestCase {
      * Test partial startup property - test default - should default to allow partial startup
      */
     public void testCase4284Default() throws Exception {        
-        Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
             
         TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
         Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
         
-        TextConnector txr = new TextConnector();
-        txr.initialize(config);
+        TextConnectionFactory tcf = new TextConnectionFactory(config);
+        assertNotNull(tcf.getConnection());
     }
 
     /**
      * Test partial startup property - disallow partial startup
      */
     public void testCase4284DisallowPartial() throws Exception {        
-        Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
             
         TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
         Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
         Mockito.stub(config.isPartialStartupAllowed()).toReturn(false);
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         
-        TextConnector txr = new TextConnector();
         try {
-        	txr.initialize(config);
+        	new TextConnectionFactory(config);
         	fail("expected exception"); //$NON-NLS-1$
         } catch (ConnectorException e) {
             String m1 = "Error parsing property string text.library2.location"; //$NON-NLS-1$
@@ -110,16 +100,14 @@ public class TestTextConnection extends TestCase {
      * Test partial startup property - allow partial startup
      */
     public void testCase4284AllowPartial() throws Exception {        
-        Properties props = new Properties();
         String descFile = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
         
         TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
         Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
         Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
         
-        TextConnector txr = new TextConnector();
-    	txr.initialize(config);
+        TextConnectionFactory tcf = new TextConnectionFactory(config);
+        assertNotNull(tcf.getConnection());
     }
 
 }

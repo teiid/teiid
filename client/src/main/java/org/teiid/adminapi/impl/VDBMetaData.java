@@ -198,7 +198,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     				return false;
     			}
     			for (String sourceName:resourceNames) {
-    				if (m.getSourceJndiName(sourceName) == null) {
+    				if (m.getSourceConnectionJndiName(sourceName) == null) {
     					return false;
     				}
     			}

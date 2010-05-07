@@ -79,5 +79,13 @@ public interface Model extends AdminObject {
      * @param sourceName - name of the source
      * @return null if none configured.
      */
-    String getSourceJndiName(String sourceName);
+    String getSourceConnectionJndiName(String sourceName);
+    
+
+    /**
+     * Get the configured translator name for the given source
+     * @param sourceName
+     * @return
+     */
+    String getSourceTranslatorName(String sourceName);
 }

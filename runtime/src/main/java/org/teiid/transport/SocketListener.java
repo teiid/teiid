@@ -30,14 +30,14 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
 import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.NamedThreadFactory;
 

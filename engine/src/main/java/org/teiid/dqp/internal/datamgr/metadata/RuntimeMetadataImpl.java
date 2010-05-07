@@ -24,8 +24,8 @@
  */
 package org.teiid.dqp.internal.datamgr.metadata;
 
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.*;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deployment xmlns="urn:jboss:bean-deployer:2.0">
-    
+    <!-- 
    <bean name="connector-jdbc-xa-${project.version}" class="org.teiid.templates.connector.XaJdbcConnectorTemplate">
       <property name="info"><inject bean="connector-jdbc-xa-templateinfo"/></property>
    </bean>   
@@ -15,7 +15,8 @@
       </constructor>
       <property name="rarName">connector-jdbc-${project.version}.rar</property>
    </bean> 
-   
+    -->
+    
    <bean name="connector-ldap-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
       <property name="info"><inject bean="connector-ldap-templateinfo"/></property>
       <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
@@ -29,21 +30,6 @@
          <parameter class="java.lang.String">Teiid LDAP Connector</parameter>
       </constructor>
       <property name="rarName">connector-ldap-${project.version}.rar</property>
-   </bean>    
-   
-   <bean name="connector-loopback-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
-      <property name="info"><inject bean="connector-loopback-templateinfo"/></property>
-      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
-   </bean>
-   <bean name="connector-loopback-templateinfo" class="org.teiid.templates.connector.ConnectorTemplateInfo">
-      <constructor factoryMethod="createTemplateInfo">
-         <factory bean="DSDeploymentTemplateInfoFactory"/>
-         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-loopback-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid Loopback Connector</parameter>         
-      </constructor>
-      <property name="rarName">connector-loopback-${project.version}.rar</property>
    </bean>    
    
    <bean name="connector-salesforce-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
@@ -76,6 +62,7 @@
       <property name="rarName">connector-text-${project.version}.rar</property>
    </bean>    
    
+   <!-- 
    <bean name="connector-xmlsource-file-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
       <property name="info"><inject bean="connector-xmlsource-file-templateinfo"/></property>
       <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
@@ -120,5 +107,6 @@
       </constructor>
       <property name="rarName">connector-xml-http-${project.version}.rar</property>
    </bean>   
+    -->
    
 </deployment>

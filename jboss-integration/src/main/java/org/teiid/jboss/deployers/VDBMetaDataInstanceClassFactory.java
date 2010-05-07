@@ -63,8 +63,9 @@ public class VDBMetaDataInstanceClassFactory extends AbstractInstanceClassFactor
 		            List<ManagedObject> mappings = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(sourceMappings.getValue());
 		            for (ManagedObject mo:mappings) {
 		                String name = ManagedUtil.getSimpleValue(mo, "name", String.class);//$NON-NLS-1$
-		                String jndiName = ManagedUtil.getSimpleValue(mo, "jndiName", String.class);//$NON-NLS-1$
-		                model.addSourceMapping(name, jndiName);
+		                String jndiName = ManagedUtil.getSimpleValue(mo, "connectionJndiName", String.class);//$NON-NLS-1$
+		                String translatorName = ManagedUtil.getSimpleValue(mo, "translatorName", String.class);//$NON-NLS-1$
+		                model.addSourceMapping(name, translatorName, jndiName);
 		            }
 		        }				
 			}						

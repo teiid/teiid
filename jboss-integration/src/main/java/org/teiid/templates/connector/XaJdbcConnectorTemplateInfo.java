@@ -37,6 +37,7 @@ import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.resource.deployers.management.DsDataSourceTemplateInfo;
 import org.teiid.adminapi.jboss.ExtendedPropertyInfo;
 import org.teiid.adminapi.jboss.ManagedUtil;
+import org.teiid.deployers.ManagedPropertyUtil;
 
 /**
  * This template is specific to XA data source combined with Teiid's JDBC connector.
@@ -89,12 +90,12 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 		
 		addProperty(ConnectorTemplateInfo.buildTemplateProperty(getName()));
 		
-		ConnectorTemplateInfo.markAsTeiidProperty(this.getProperties().get("user-name")); //$NON-NLS-1$
-		ConnectorTemplateInfo.markAsTeiidProperty(this.getProperties().get("password"));//$NON-NLS-1$
-		addProperty(ConnectorTemplateInfo.buildProperty(DATABASE_NAME, SimpleMetaType.STRING,"Database Name","Database Name", false, null));//$NON-NLS-1$ //$NON-NLS-2$
-		addProperty(ConnectorTemplateInfo.buildProperty(PORT_NUMBER, SimpleMetaType.INTEGER,"Database Port", "Database Port",false, null));//$NON-NLS-1$ //$NON-NLS-2$	
-		addProperty(ConnectorTemplateInfo.buildProperty(SERVER_NAME, SimpleMetaType.STRING,"Database Server Name", "Database Server Name", false, null));//$NON-NLS-1$ //$NON-NLS-2$
-		addProperty(ConnectorTemplateInfo.buildProperty(ADDITIONAL_DS_PROPS, SimpleMetaType.STRING,"Addtional Data Source Properties", "Addtional Data source properties. (comma separated name value pairs)", false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("user-name")); //$NON-NLS-1$
+		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("password"));//$NON-NLS-1$
+		addProperty(ManagedPropertyUtil.createProperty(DATABASE_NAME, SimpleMetaType.STRING,"Database Name","Database Name", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		addProperty(ManagedPropertyUtil.createProperty(PORT_NUMBER, SimpleMetaType.INTEGER,"Database Port", "Database Port",false, false, null));//$NON-NLS-1$ //$NON-NLS-2$	
+		addProperty(ManagedPropertyUtil.createProperty(SERVER_NAME, SimpleMetaType.STRING,"Database Server Name", "Database Server Name", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		addProperty(ManagedPropertyUtil.createProperty(ADDITIONAL_DS_PROPS, SimpleMetaType.STRING,"Addtional Data Source Properties", "Addtional Data source properties. (comma separated name value pairs)", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	static ManagedPropertyImpl buildConfigProperty() {

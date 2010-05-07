@@ -25,7 +25,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.resource.cci.ConnectorCapabilities;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;

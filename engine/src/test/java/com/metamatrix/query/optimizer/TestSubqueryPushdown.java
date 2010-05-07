@@ -25,7 +25,7 @@ package com.metamatrix.query.optimizer;
 import static com.metamatrix.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
-import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;

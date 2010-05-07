@@ -94,7 +94,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             // Create a new cloned version of the access node and set it's model name to be the bindingUUID
             AccessNode instanceNode = (AccessNode) accessNode.clone();
             instanceNode.setID(getID());
-            instanceNode.setConnectorBindingId(model.getSourceJndiName(sourceName));
+            instanceNode.setConnectorBindingId(sourceName);
             
             // Modify the command to pull the instance column and evaluate the criteria
             Command command = (Command)instanceNode.getCommand().clone();

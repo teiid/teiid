@@ -21,22 +21,46 @@
  */
 package org.teiid.deployers;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 
 public class VDBStatusChecker {
 	private VDBRepository vdbRepository;
+	private ConnectorManagerRepository connectorManagerRepository;
 	
-	public void connectorAdded(String connectorName) {
+	public void translatorAdded(String translatorName) {
+		resourceAdded(translatorName, true);
+	}
+	
+	public void translatorRemoved(String translatorName) {
+		resourceremoved(translatorName, true);
+	}
+	
+	public void dataSourceAdded(String dataSourceName) {
+		resourceAdded(dataSourceName, false);
+	}
+	
+	public void dataSourceRemoved(String dataSourceName) {
+		resourceremoved(dataSourceName, false);
+	}	
+	
+	public void setVDBRepository(VDBRepository repo) {
+		this.vdbRepository = repo;
+	}	
+	
+	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
+		this.connectorManagerRepository = repo;
+	}	
+	
+	public void resourceAdded(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
 			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
@@ -48,27 +72,15 @@ public class VDBStatusChecker {
 					continue;
 				}
 
-				boolean inUse = false;
-				for (String sourceName:model.getSourceNames()) {
-					if (connectorName.equals(model.getSourceJndiName(sourceName))) {
-						inUse = true;
-					}
-				}
-					
-				if (inUse) {
+				String sourceName = getSourceName(resourceName, model, translator);
+				if (sourceName != null) {
+					ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(sourceName);
 					model.clearErrors();
-					for (String sourceName:model.getSourceNames()) {
-						if (!connectorName.equals(model.getSourceJndiName(sourceName))) {
-							try {
-								InitialContext ic = new InitialContext();
-								ic.lookup(model.getSourceJndiName(sourceName));
-							} catch (NamingException e) {
-								String msg = RuntimePlugin.Util.getString("jndi_not_found", vdb.getName(), vdb.getVersion(), model.getSourceJndiName(sourceName), sourceName); //$NON-NLS-1$
-								model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-								LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
-							}								
-						}
-					}						
+					String status = cm.getStausMessage();
+					if (status != null && status.length() > 0) {
+						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
+					}					
 				}
 			}
 
@@ -85,31 +97,45 @@ public class VDBStatusChecker {
 				vdb.setStatus(VDB.Status.ACTIVE);
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 			}
-			
 		}
 	}
-
-	public void connectorRemoved(String connectorName) {
+	
+	public void resourceremoved(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
 			if (vdb.isPreview()) {
 				continue;
 			}
+			
 			for (Model m:vdb.getModels()) {
 				ModelMetaData model = (ModelMetaData)m;
-				for (String sourceName:model.getSourceNames()) {
-					if (connectorName.equals(model.getSourceJndiName(sourceName))) {
-						vdb.setStatus(VDB.Status.INACTIVE);
-						String msg = RuntimePlugin.Util.getString("jndi_not_found", vdb.getName(), vdb.getVersion(), model.getSourceJndiName(sourceName), sourceName); //$NON-NLS-1$
-						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
+				
+				String sourceName = getSourceName(resourceName, model, translator);
+				if (sourceName != null) {
+					vdb.setStatus(VDB.Status.INACTIVE);
+					String msg = null;
+					if (translator) {
+						msg = RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
 					}
+					else {
+						msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+					}
+					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
 				}
-			}
+			}			
 		}
 	}
-	
-	public void setVDBRepository(VDBRepository repo) {
-		this.vdbRepository = repo;
-	}	
+
+	private String getSourceName(String translatorName, ModelMetaData model, boolean translator) {
+		for (String sourceName:model.getSourceNames()) {
+			if (translator && translatorName.equals(model.getSourceTranslatorName(sourceName))) {
+				return sourceName;
+			}
+			else  if (translatorName.equals(model.getSourceConnectionJndiName(sourceName))) {
+				return sourceName;
+			}
+		}
+		return null;
+	}		
 }

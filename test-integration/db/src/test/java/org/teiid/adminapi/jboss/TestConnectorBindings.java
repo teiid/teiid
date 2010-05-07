@@ -16,7 +16,6 @@ import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import org.junit.After;
@@ -26,8 +25,6 @@ import org.junit.Test;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.ConnectionFactory;
-import org.teiid.adminapi.ConnectionPoolStatistics;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.PropertyDefinition;
@@ -35,11 +32,11 @@ import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.WorkerPoolStatistics;
 
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestConnectorBindings extends BaseConnection {
 	static ServerDatasourceConnection ds;
 	static Admin admin;
@@ -69,88 +66,6 @@ public class TestConnectorBindings extends BaseConnection {
 		}
 		admin.close();
 	}
-
-	@Test public void testLoopbackConnectorBinding() throws Exception {
-		ConnectionFactory binding = admin.getConnectionFactory("loopy"); //$NON-NLS-1$
-		
-		if (binding != null) {
-			admin.deleteConnectionFactory("loopy"); //$NON-NLS-1$
-		}
-		
-		Properties p = new Properties();
-		p.setProperty("jndi-name", "loopy"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.loopback.LoopbackCapabilities"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		ConnectionFactory cf = admin.addConnectionFactory("loopy","connector-loopback-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
-		System.out.println(cf.getProperties());
-		
-//		admin.setConnectionFactoryProperty("loopy", "CapabilitiesClass", "org.teiid.connector.BasicCapabilities");
-//		cf = admin.getConnectionFactory("loopy");
-//		System.out.println(cf.getProperties());
-	}
-	
-	@Test public void testLoopbackUpdate() throws Exception {
-		ConnectionFactory cf = admin.getConnectionFactory("loopy"); //$NON-NLS-1$
-		System.out.println(cf.getProperties());
-		
-		admin.setConnectionFactoryProperty("loopy", "CapabilitiesClass", "org.teiid.connector.LoopyCapabilities");
-		cf = admin.getConnectionFactory("loopy");
-		System.out.println(cf.getProperties());
-	}	
-	
-	@Test public void testGetConnectorFactories() throws Exception {
-		Collection<ConnectionFactory> cfs = admin.getConnectionFactories();
-		for(ConnectionFactory cf:cfs) {
-			System.out.println(cf.getName());
-		}
-		ConnectionFactory cf = admin.getConnectionFactory("products-cf"); //$NON-NLS-1$
-		System.out.println(cf.getName());
-	}
-	
-	@Test public void testDSConnectorBinding() throws Exception {
-		ConnectionFactory binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		
-		if (binding != null) {
-			admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		}
-		
-		Properties p = new Properties();
-		p.setProperty("jndi-name", "test-mysql-cb"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("CapabilitiesClass", "org.teiid.connector.jdbc.mysql.MySQL5Capabilities"); //$NON-NLS-1$ //$NON-NLS-2$
-		p.setProperty("XaCapable", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		p.setProperty("DatabaseName", "txntest");
-		p.setProperty("PortNumber", "3306");
-		p.setProperty("ServerName", "localhost");
-		p.setProperty("addtional-ds-properties", "foo=bar, t= x");
-		p.setProperty("user-name", "rareddy");
-		p.setProperty("password", "mm");
-		p.setProperty("xa-datasource-class", "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource");
-		
-		admin.addConnectionFactory("test-mysql-cb","connector-jdbc-xa-7.0.0-SNAPSHOT", p);	 //$NON-NLS-1$ //$NON-NLS-2$
-
-		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		
-		assertNotNull(binding);	
-		
-		assertEquals("org.teiid.connector.jdbc.mysql.MySQL5Capabilities", binding.getPropertyValue("CapabilitiesClass")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		admin.stopConnectionFactory("test-mysql-cb");
-		
-		admin.startConnectionFactory("test-mysql-cb");
-		
-		admin.setConnectionFactoryProperty("test-mysql-cb", "XaCapable", "false"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		
-		binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		
-		assertEquals("false", binding.getPropertyValue("XaCapable")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		//admin.deleteConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		
-		//binding = admin.getConnectionFactory("test-mysql-cb"); //$NON-NLS-1$
-		
-		//assertNull(binding);		
-	}
 	
 	@Test public void testVDBDeploy() throws Exception {
 		
@@ -165,9 +80,6 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		Set<VDB> vdbs = admin.getVDBs();
 		assertTrue(vdbs.size() >= 1);
-		
-		Collection<ConnectionFactory> bindings = admin.getConnectionFactoriesInVDB("TransactionsRevisited",1); //$NON-NLS-1$
-		assertEquals(2, bindings.size());
 		
 		admin.deleteVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		
@@ -290,7 +202,7 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testConnectorTypeProperties() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getConnectorTemplatePropertyDefinitions("connector-jdbc-xa-7.0.0-SNAPSHOT"); //$NON-NLS-1$
+		Collection<PropertyDefinition> defs = admin.getTranslatorTemplatePropertyDefinitions("connector-jdbc-xa-7.0.0-SNAPSHOT"); //$NON-NLS-1$
 		for (PropertyDefinition pd:defs) {
 			System.out.println(pd.getName()+":"+pd.getPropertyTypeClassName());
 			if (pd.getName().equals("ExtensionTranslationClassName")) { //$NON-NLS-1$
@@ -318,7 +230,7 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testConnectorTypes() throws Exception {
-		Set<String> defs = admin.getConnectorTemplateNames();
+		Set<String> defs = admin.getTranslatorTemplateNames();
 //		assertTrue(defs.contains("connector-salesforce-7.0.0-SNAPSHOT")); //$NON-NLS-1$
 //		assertTrue(defs.contains("connector-jdbc-7.0.0-SNAPSHOT")); //$NON-NLS-1$
 //		assertTrue(defs.contains("connector-text-7.0.0-SNAPSHOT")); //$NON-NLS-1$
@@ -327,24 +239,6 @@ public class TestConnectorBindings extends BaseConnection {
 		System.out.println(defs);
 	}
 
-	
-	@Test
-	public void testConnectorAddDelete() throws Exception{
-		File f = new File(UnitTestUtil.getTestDataPath()+"/connector-loopback.rar"); //$NON-NLS-1$
-		FileInputStream fis = new FileInputStream(f);
-		admin.addConnector("connector-loopy.rar", fis); //$NON-NLS-1$
-		fis.close();
-		
-		Set<String> names = admin.getConnectorTemplateNames();
-		System.out.println(names);
-		assertTrue(names.contains("connector-loopy")); //$NON-NLS-1$
-		
-		admin.deleteConnector("connector-loopy.rar"); //$NON-NLS-1$
-		
-		names = admin.getConnectorTemplateNames();
-		//assertTrue(!names.contains("connector-loopy")); //$NON-NLS-1$
-	}
-	
 	@Test
 	public void testExportVDB() throws Exception{
 		File f = new File(UnitTestUtil.getTestScratchPath()+"/TransactionsRevisited.vdb"); //$NON-NLS-1$
@@ -361,7 +255,7 @@ public class TestConnectorBindings extends BaseConnection {
 	}	
 	
 	@Test public void testAssignConnectorBinding() throws Exception {
-		admin.assignConnectionFactoryToModel("TransactionsRevisited", 1, "pm1", "mysql", "jndi:FOO"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		admin.assignToModel("TransactionsRevisited", 1, "pm1", "mysql", "mysql", "jndi:FOO"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		
 		boolean checked = false;
 		VDB vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
@@ -371,7 +265,7 @@ public class TestConnectorBindings extends BaseConnection {
 				List<String> sources = model.getSourceNames();
 				for (String source:sources) {
 					if (source.equals("mysql")) { //$NON-NLS-1$
-						assertEquals("jndi:FOO", model.getSourceJndiName(source)); //$NON-NLS-1$
+						assertEquals("jndi:FOO", model.getSourceConnectionJndiName(source)); //$NON-NLS-1$
 						checked = true;
 					}
 				}

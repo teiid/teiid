@@ -25,11 +25,11 @@ package com.metamatrix.query.processor.proc;
 import static com.metamatrix.query.analysis.AnalysisRecord.*;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -91,13 +91,13 @@ public class IfInstruction extends ProgramInstruction {
     	boolean evalValue = procEnv.evaluateCriteria(condition);
 
         if(evalValue) {
-	        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to true, processing the if block"}); //$NON-NLS-1$
 
             //push the "if" Program onto the stack
             procEnv.push(ifProgram);
         } else if(elseProgram != null) {
-	        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$            
             //push the "else" Program onto the stack
             procEnv.push(elseProgram);

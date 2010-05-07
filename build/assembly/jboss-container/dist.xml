@@ -70,14 +70,19 @@
         <includeSubModules>true</includeSubModules>
                
         <includes>
-            <include>org.jboss.teiid.connectors:connector-jdbc:rar</include>
-            <include>org.jboss.teiid.connectors:connector-loopback:rar</include>
+            <include>org.jboss.teiid.connectors:translator-jdbc</include>
+            <include>org.jboss.teiid.connectors:translator-loopback</include>
+            <include>org.jboss.teiid.connectors:translator-text</include>
             <include>org.jboss.teiid.connectors:connector-text:rar</include>
+            <include>org.jboss.teiid.connectors:translator-ldap</include>
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
+            <include>org.jboss.teiid.connectors:translator-salesforce</include>
             <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <!-- 
             <include>org.jboss.teiid.connectors:connector-xml-http:rar</include>
             <include>org.jboss.teiid.connectors:connector-xml-file:rar</include>
             <include>org.jboss.teiid.connectors:connector-xml-soap:rar</include>
+             -->
         </includes>
 
         <binaries>        

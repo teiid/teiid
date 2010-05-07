@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;

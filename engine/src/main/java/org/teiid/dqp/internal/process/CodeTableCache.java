@@ -29,9 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.query.util.CommandContext;
@@ -234,7 +235,7 @@ class CodeTableCache {
         // Clear the cacheKeyDone
         this.rowCount = 0;
         // Log status
-        LogManager.logInfo(com.metamatrix.common.log.LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
+        LogManager.logInfo(org.teiid.logging.LogConstants.CTX_DQP, DQPPlugin.Util.getString("CodeTableCache.Cleared_code_tables", removedTables, removedRecords)); //$NON-NLS-1$
     }
         
 	/**

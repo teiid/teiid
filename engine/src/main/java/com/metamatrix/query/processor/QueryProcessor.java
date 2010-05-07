@@ -24,7 +24,10 @@ package com.metamatrix.query.processor;
 
 import java.util.List;
 
-import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+import org.teiid.resource.cci.DataNotAvailableException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -34,9 +37,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;

@@ -43,6 +43,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.transform.Source;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BatchManager;
@@ -52,8 +55,6 @@ import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.BatchManager.ManagedBatch;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.InputStreamFactory;
 import com.metamatrix.common.types.SQLXMLImpl;

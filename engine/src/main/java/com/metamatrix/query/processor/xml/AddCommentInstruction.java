@@ -25,12 +25,12 @@ package com.metamatrix.query.processor.xml;
 import static com.metamatrix.query.analysis.AnalysisRecord.*;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 
 /**
  * Adds a comment to an element of the document in progress

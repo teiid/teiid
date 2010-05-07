@@ -35,8 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;

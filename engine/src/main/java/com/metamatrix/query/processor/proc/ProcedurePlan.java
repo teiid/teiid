@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -45,7 +46,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -173,7 +173,7 @@ public class ProcedurePlan extends ProcessorPlan {
         originalProgram.resetProgramCounter();
         programs.clear();
     	programs.push(originalProgram);
-		LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
+		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
     }
 
     public ProcessorDataManager getDataManager() {
@@ -272,23 +272,23 @@ public class ProcedurePlan extends ProcessorPlan {
             Program program = peek();
             inst = program.getCurrentInstruction();
 	        if (inst == null){
-	        	LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
+	        	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
                 this.pop();
                 continue;
             }
             if (inst instanceof RepeatedInstruction) {
-    	        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
+    	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
                 RepeatedInstruction loop = (RepeatedInstruction)inst;
                 if (loop.testCondition(this)) {
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
                     inst.process(this);
                     this.push(loop.getNestedProgram());
                     continue;
                 }
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
                 loop.postInstruction(this);
             } else {
-            	LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
+            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
                 inst.process(this);
             }
             program.incrementProgramCounter();

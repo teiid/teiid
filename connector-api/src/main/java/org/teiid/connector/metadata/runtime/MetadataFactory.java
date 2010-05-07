@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.TypeFacility;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.TypeFacility;
 
 import com.metamatrix.core.id.UUIDFactory;
 

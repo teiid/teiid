@@ -23,12 +23,12 @@
 package com.metamatrix.query.processor.xml;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -59,7 +59,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
 
         switch(this.direction) {
             case UP:
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, "UP in document"); //$NON-NLS-1$
                 try {
                     doc.moveToParent();
                 } catch (SAXException err) {
@@ -67,7 +67,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
                 }
                 break;
             case DOWN:
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, "LAST child in document"); //$NON-NLS-1$
                 doc.moveToLastChild();
                 break;
             default:

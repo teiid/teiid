@@ -34,55 +34,12 @@
       <license-required>true</license-required>
    </license>
    <resourceadapter>
-      <resourceadapter-class>org.teiid.connector.basic.BasicResourceAdapter</resourceadapter-class>
+      <resourceadapter-class>org.teiid.resource.spi.BasicResourceAdapter</resourceadapter-class>
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>com.metamatrix.connector.salesforce.SalesForceManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.resource.cci.salesforce.SalesForceManagedConnectionFactory</managedconnectionfactory-class>
 
-            <config-property>
-               <description>{$display:"Connector Class",$advanced:"true"}</description>
-               <config-property-name>ConnectorClass</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.salesforce.Connector</config-property-value>
-            </config-property>
-
-            <config-property>
-               <description>{$display:"Connector Capabilities",$description:"The class to use to provide the Connector Capabilities",$advanced:"true"}</description>
-               <config-property-name>CapabilitiesClass</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.salesforce.SalesforceCapabilities</config-property-value>
-            </config-property>
-            
-            <config-property>
-               <description>{$display:"Is Immutable",$description:"Is Immutable, True if the source never changes.",$advanced:"true"}</description>
-               <config-property-name>Immutable</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>false</config-property-value>
-            </config-property>
-            
-            <config-property>
-               <description>{$display:"Is XA Capable",$description:"True, if this connector supports XA Transactions",$advanced:"true"}</description>
-               <config-property-name>XaCapable</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>false</config-property-value>
-            </config-property>            
-
-            <config-property>             
-               <description>{$display:"Exception on Exceeding Max Rows",$description:"Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",$advanced:"true"}</description>
-               <config-property-name>ExceptionOnMaxRows</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>true</config-property-value>
-            </config-property>
-
-            <config-property>
-               <description>{$display:"Maximum Result Rows",$description:"Maximum Result Rows allowed",$advanced:"true"}</description>
-               <config-property-name>MaxResultRows</config-property-name>
-               <config-property-type>java.lang.Integer</config-property-type>
-               <config-property-value>-1</config-property-value>
-            </config-property>
-
-            <!--  Salesforce Specific properties -->
             <config-property>
                <description>{$display:"User Name",$description:"Name value for Salesforce authentication",$required:"true"}</description>
                <config-property-name>username</config-property-name>
@@ -93,13 +50,6 @@
                <description>{$display:"Password",$description:"Password value for Salesforce authentication",$required:"true",$masked:"true"}</description>
                <config-property-name>password</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-            
-            <config-property>
-               <description>{$display:"Connector State Class",$description:"",$required:"true",$advanced:"true"}</description>
-               <config-property-name>ConnectorStateClass</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>com.metamatrix.connector.salesforce.ConnectorState</config-property-value>
             </config-property>
             
             <config-property>
@@ -122,17 +72,10 @@
                <config-property-value>120000</config-property-value>
             </config-property>           
             
-            <config-property>
-               <description>{$display:"Audit Model Fields",$advanced:"true"}</description>
-               <config-property-name>ModelAuditFields</config-property-name>
-               <config-property-type>java.lang.Boolean</config-property-type>
-               <config-property-value>false</config-property-value>
-            </config-property>
-            
-            <connectionfactory-interface>org.teiid.connector.api.Connector</connectionfactory-interface>
-            <connectionfactory-impl-class>org.teiid.connector.basic.WrappedConnector</connectionfactory-impl-class>
-            <connection-interface>org.teiid.connector.api.Connection</connection-interface>
-            <connection-impl-class>org.teiid.connector.basic.WrappedConnection</connection-impl-class>
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>
 
          </connection-definition>
          

@@ -44,13 +44,13 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.vdb.VdbConstants;
 
@@ -171,7 +171,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		system.setName(CoreConstants.SYSTEM_MODEL);
 		system.setVisible(true);
 		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
+		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
 		system.setSupportsMultiSourceBindings(false);
 		vdb.addModel(system);		
 		
@@ -198,7 +198,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				}
 				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());
 				if (mo == null) {
-					throw new DeploymentException("could not create managed object");
+					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
 				}
 				managedObjects.put(mo.getName(), mo);
 			}

@@ -101,7 +101,7 @@ public class TestMultiSourcePlanToProcessConverter {
             ModelMetaData m = vdb.getModel(model);
             int x = m.getSourceNames().size();
             for(int i=x; i<sourceCount; i++, sourceID++) {
-            	 m.addSourceMapping("" + sourceID, null);
+            	 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         

@@ -162,7 +162,7 @@ public class FakeMetadataFactory {
     	}
     	model.setVisible(true);
     	model.setSupportsMultiSourceBindings(false);
-    	model.addSourceMapping(name, null);
+    	model.addSourceMapping(name, name, null);
     	
     	return model;
     }

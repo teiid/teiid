@@ -22,7 +22,7 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
-import org.teiid.connector.api.ConnectorException;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.dqp.message.AtomicResultsMessage;

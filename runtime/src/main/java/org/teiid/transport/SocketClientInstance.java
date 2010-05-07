@@ -28,15 +28,15 @@ import java.net.SocketAddress;
 
 import org.teiid.client.security.ILogon;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ObjectChannel;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;

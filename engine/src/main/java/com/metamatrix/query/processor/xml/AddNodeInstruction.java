@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Properties;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 
@@ -97,15 +97,15 @@ public class AddNodeInstruction extends ProcessorInstruction {
             if (defaultValue != null){
                 if(isElement) {
                     success = doc.addElement(descriptor, defaultValue);
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                 } else {
                     success = doc.addAttribute(descriptor, defaultValue);    
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"fixed value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             } else {
                 if(isElement) {
                     success = doc.addElement(descriptor, nillableDescriptor);
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName()}); //$NON-NLS-1$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName()}); //$NON-NLS-1$
                 } //else nothing gets outputted for attribute with no content
             } 
         } else {
@@ -115,24 +115,24 @@ public class AddNodeInstruction extends ProcessorInstruction {
             if (valueStr != null){
                 if(isElement) {
                     success = doc.addElement(descriptor, valueStr);         
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
                 } else {
                     success = doc.addAttribute(descriptor, valueStr);    
-                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"value",valueStr}); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             } else {
                 if (defaultValue != null){
                     if(isElement) {
                         success = doc.addElement(descriptor, defaultValue);         
-	                    LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+	                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                     } else {
                         success = doc.addAttribute(descriptor, defaultValue);    
-                        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
+                        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG attr",descriptor.getName(),"default value",defaultValue}); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                 } else {
                     if(isElement) {
                         success = doc.addElement(descriptor, nillableDescriptor);
-                        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"no value"}); //$NON-NLS-1$ //$NON-NLS-2$
+                        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"TAG elem",descriptor.getName(),"no value"}); //$NON-NLS-1$ //$NON-NLS-2$
                     } //else nothing gets outputted for attribute with no content
                 } 
             }

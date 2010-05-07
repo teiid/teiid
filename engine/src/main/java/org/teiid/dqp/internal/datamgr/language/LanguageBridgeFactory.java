@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.AggregateFunction;
 import org.teiid.connector.language.AndOr;
 import org.teiid.connector.language.Argument;
@@ -62,6 +61,7 @@ import org.teiid.connector.language.SubqueryComparison.Quantifier;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;

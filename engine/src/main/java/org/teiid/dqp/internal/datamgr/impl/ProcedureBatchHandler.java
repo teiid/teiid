@@ -30,11 +30,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.language.Argument;
 import org.teiid.connector.language.Call;
 import org.teiid.connector.language.Argument.Direction;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.ProcedureExecution;
 
 import com.metamatrix.dqp.DQPPlugin;
 
@@ -45,7 +45,7 @@ class ProcedureBatchHandler {
 	private int resultSetCols = 0;
 	private List filler;
     
-	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) throws ConnectorException {
+	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) {
 		this.proc = proc;
 		this.procExec = procExec;
         List<Argument> params = proc.getArguments();

@@ -34,13 +34,13 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
 import org.teiid.security.Credentials;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.service.SessionService;
 import com.metamatrix.dqp.service.SessionServiceException;

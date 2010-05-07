@@ -27,9 +27,9 @@ import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.core.CoreConstants;
@@ -72,9 +72,9 @@ public class CachedFinder implements CapabilitiesFinder {
         ModelMetaData model = vdb.getModel(modelName);
         for (String sourceName:model.getSourceNames()) {
         	try {
-        		ConnectorManager mgr = this.connectorRepo.getConnectorManager(model.getSourceJndiName(sourceName));
+        		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
         		if (mgr == null) {
-        			throw new ConnectorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", model.getSourceJndiName(sourceName), modelName, sourceName)); //$NON-NLS-1$
+        			throw new ConnectorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
         		}
         		caps = mgr.getCapabilities();
         		break;

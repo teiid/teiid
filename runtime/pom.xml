@@ -88,5 +88,10 @@
         <artifactId>jboss-deployers-vfs</artifactId>
         <scope>provided</scope>
     </dependency>    
+    <dependency>
+        <groupId>org.jboss.integration</groupId>
+        <artifactId>jboss-profileservice-spi</artifactId>
+        <scope>provided</scope>
+    </dependency>      
   </dependencies>
 </project>

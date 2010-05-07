@@ -22,7 +22,6 @@
 
 package org.teiid.connector.language;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

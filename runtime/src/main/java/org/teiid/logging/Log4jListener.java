@@ -25,8 +25,6 @@ package org.teiid.logging;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.metamatrix.common.log.LogListener;
-import com.metamatrix.common.log.MessageLevel;
 
 /**
  * Log4J Listener

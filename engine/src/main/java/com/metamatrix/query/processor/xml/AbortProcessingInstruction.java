@@ -23,11 +23,11 @@
 package com.metamatrix.query.processor.xml;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -59,7 +59,7 @@ public class AbortProcessingInstruction extends ProcessorInstruction {
     public XMLContext process(XMLProcessorEnvironment env, XMLContext context)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException{
 
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, "ABORT processing now."); //$NON-NLS-1$
         throw new MetaMatrixComponentException(DEFAULT_MESSAGE);
     }
 

@@ -30,12 +30,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.teiid.connector.api.ConnectorLogger;
-import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.resource.adapter.text.TextExecutionFactory;
+import org.teiid.resource.cci.MetadataProvider;
+import org.teiid.resource.cci.text.TextConnectionFactory;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -43,31 +43,11 @@ import com.metamatrix.core.util.UnitTestUtil;
 /**
  */
 public class TestTextConnector {
-    private static final String DESC_FILE = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
 
-    public TextConnector helpSetUp(String descFile) throws Exception {
-        Properties props = new Properties();
-        props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
-
-        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
-        Mockito.stub(config.getDescriptorFile()).toReturn(descFile);
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));
-        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
-        
-        TextConnector connector = new TextConnector();
-        connector.initialize(config);
-        return connector;
-    }
-    
-    // descriptor and data file both are files
-    @Test public void testGetConnection() throws Exception{
-        TextConnector connector = helpSetUp(DESC_FILE);
-        TextConnection conn = (TextConnection) connector.getConnection();
-        assertNotNull(conn);
-    }
-    
     @Test public void testGetMetadata() throws Exception{
-        TextConnector connector = helpSetUp(UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt"); //$NON-NLS-1$
+        TextConnectionFactory tcf = Util.createConnectionFactory(UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt"); //$NON-NLS-1$
+        TextExecutionFactory connector = new TextExecutionFactory();
+        
         Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new Datatype());
@@ -76,7 +56,7 @@ public class TestTextConnector {
         
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         
-        ((MetadataProvider)connector.getConnection()).getConnectorMetadata(metadata); 
+        ((MetadataProvider)connector).getConnectorMetadata(metadata, tcf); 
         
         assertEquals(0, metadata.getMetadataStore().getSchemas().values().iterator().next().getProcedures().size());
         Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata"); //$NON-NLS-1$

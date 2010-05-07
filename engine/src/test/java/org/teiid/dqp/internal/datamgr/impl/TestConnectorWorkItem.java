@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,13 +34,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.language.Call;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.ProcedureExecution;
 
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -118,7 +118,7 @@ public class TestConnectorWorkItem {
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
 		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, Mockito.mock(AbstractWorkItem.class), 
-				TestConnectorManager.getConnectorManager(Mockito.mock(ConnectorEnvironment.class)));
+				TestConnectorManager.getConnectorManager());
 		return synchConnectorWorkItem.execute();
 	}
 	
@@ -136,9 +136,9 @@ public class TestConnectorWorkItem {
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to TRUE, we should SUCCEED
     	 */
-    	ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
-    	Mockito.stub(env.isImmutable()).toReturn(true);
-		ConnectorManager cm = TestConnectorManager.getConnectorManager(env);
+		ConnectorManager cm = TestConnectorManager.getConnectorManager();
+		((FakeConnector)cm.getExecutionFactory()).setImmutable(true);
+		
 
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
@@ -164,9 +164,9 @@ public class TestConnectorWorkItem {
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to FALSE, and we should FAIL
     	 */
-    	ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
-    	Mockito.stub(env.isImmutable()).toReturn(false);
-		ConnectorManager cm = TestConnectorManager.getConnectorManager(env);
+		ConnectorManager cm = TestConnectorManager.getConnectorManager();
+		((FakeConnector)cm.getExecutionFactory()).setImmutable(false);
+		
         
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$

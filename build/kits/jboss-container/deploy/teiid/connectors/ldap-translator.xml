@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<translator>
+    <execution-factory-class>org.teiid.resource.adapter.ldap.LDAPExecutionFactory</execution-factory-class>
+    <translator-property name="SearchDefaultBaseDN" value="" />
+    <translator-property name="SearchDefaultScope" value="SUBTREE_SCOPE"/>
+    <translator-property name="RestrictToObjectClass" value="false"/>
+</translator>

@@ -26,10 +26,10 @@ import static com.metamatrix.query.analysis.AnalysisRecord.*;
 
 import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.symbol.Expression;
 
@@ -76,7 +76,7 @@ public class ErrorInstruction extends ProgramInstruction {
     public void process(ProcedurePlan env) throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
     	Object value = env.evaluateExpression(expression);
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
                             new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
         throw new ProcedureErrorInstructionException(ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
     }

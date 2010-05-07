@@ -29,9 +29,9 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CoreConstants;
 
 public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> {
@@ -54,7 +54,7 @@ public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> 
 		system.setName(CoreConstants.SYSTEM_MODEL);
 		system.setVisible(true);
 		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
+		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
 		system.setSupportsMultiSourceBindings(false);
 		vdb.addModel(system);		
 		

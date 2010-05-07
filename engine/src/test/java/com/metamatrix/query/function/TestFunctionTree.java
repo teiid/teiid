@@ -31,8 +31,8 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.logging.LogManager;
 
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;

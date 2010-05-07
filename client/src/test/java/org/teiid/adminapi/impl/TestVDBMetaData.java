@@ -54,7 +54,7 @@ public class TestVDBMetaData {
 		
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model-one"); //$NON-NLS-1$
-		modelOne.addSourceMapping("s1", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.addSourceMapping("s1", "translator", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setModelType(Model.Type.PHYSICAL); //$NON-NLS-1$
 		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -66,8 +66,8 @@ public class TestVDBMetaData {
 		
 		ModelMetaData modelTwo = new ModelMetaData();
 		modelTwo.setName("model-two"); //$NON-NLS-1$
-		modelTwo.addSourceMapping("s1", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelTwo.addSourceMapping("s2", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.addSourceMapping("s1", "translator", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.addSourceMapping("s2", "translator", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
 		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		

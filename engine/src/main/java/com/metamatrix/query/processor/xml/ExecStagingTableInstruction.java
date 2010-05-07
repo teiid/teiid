@@ -27,11 +27,11 @@ import static com.metamatrix.query.analysis.AnalysisRecord.*;
 import java.util.Map;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 
 
@@ -61,7 +61,7 @@ public class ExecStagingTableInstruction extends ProcessorInstruction {
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
         if (!env.isStagingTableLoaded(this.resultSetName)) {
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",resultSetName}); //$NON-NLS-1$
             
             PlanExecutor executor = context.getResultExecutor(resultSetName);
             if (executor == null) {

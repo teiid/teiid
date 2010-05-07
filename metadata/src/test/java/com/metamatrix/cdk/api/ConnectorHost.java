@@ -22,23 +22,23 @@
 
 package com.metamatrix.cdk.api;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.Connector;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.DataNotAvailableException;
-import org.teiid.connector.api.Execution;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.ResultSetExecution;
-import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.language.BatchedUpdates;
 import org.teiid.connector.language.Command;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.resource.cci.Execution;
+import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.resource.cci.UpdateExecution;
 
 /**
  * A simple test environment to execute commands on a connector.
@@ -47,63 +47,71 @@ import org.teiid.metadata.index.VDBMetadataFactory;
  */
 public class ConnectorHost {
 
-    private Connector connector;
+    private ExecutionFactory connector;
     private TranslationUtility util;
     private ExecutionContext executionContext;
     
-    public ConnectorHost(Connector connector, ConnectorEnvironment connectorEnvironment, String vdbFileName) throws ConnectorException {  
-        initialize(connector, connectorEnvironment, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
+    public ConnectorHost(ExecutionFactory connector, String vdbFileName) throws ConnectorException {  
+        initialize(connector, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
     }
     
-    public ConnectorHost(Connector connector, ConnectorEnvironment connectorEnvironment, TranslationUtility util) throws ConnectorException{
-        initialize(connector, connectorEnvironment, util);
+    public ConnectorHost(ExecutionFactory connector, TranslationUtility util) throws ConnectorException{
+        initialize(connector, util);
     }
     
-    private void initialize(Connector connector, final ConnectorEnvironment env, TranslationUtility util) throws ConnectorException {
+    private void initialize(ExecutionFactory connector, TranslationUtility util) throws ConnectorException {
         this.connector = connector;
         this.util = util;
-        this.connector.initialize(env);
+        this.connector.start();
     }
 
     public void setExecutionContext(ExecutionContext context) {
     	this.executionContext = context;
     }
     
-    public List executeCommand(String query) throws ConnectorException {
+    public List executeCommand(String query, Object connection) throws ConnectorException {
 
-        Connection connection = null;
         try {
-            connection = getConnection();
             Command command = getCommand(query);
             RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
             return executeCommand(connection, command, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.close();
+                close(connection);
             }
         }
     }
     
-    public List executeCommand(Command command) throws ConnectorException {
-
-        Connection connection = null;
+    public List executeCommand(Command command, Object connection) throws ConnectorException {
         try {
-            connection = getConnection();
             RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
-
             return executeCommand(connection, command, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.close();
+                close(connection);
             }
         }
     }
 
-    private List executeCommand(Connection connection, Command command, RuntimeMetadata runtimeMetadata)
+	private void close(Object connection) {
+		try {
+			Method m = connection.getClass().getMethod("close"); //$NON-NLS-1$
+			if (m != null) {
+				m.invoke(connection);
+			}
+		} catch (SecurityException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (NoSuchMethodException e) {
+		} catch (IllegalAccessException e) {
+		} catch (InvocationTargetException e) {
+		}
+	}
+
+    private List executeCommand(Object connection, Command command, RuntimeMetadata runtimeMetadata)
         throws ConnectorException {
 
-        Execution exec = connection.createExecution(command, this.executionContext, runtimeMetadata);
+        Execution exec = connector.createExecution(command, this.executionContext, runtimeMetadata, connection);
         exec.execute();
         List results = readResultsFromExecution(exec);
         exec.close();                
@@ -111,11 +119,8 @@ public class ConnectorHost {
         return results;
     }
 
-    public int[] executeBatchedUpdates(String[] updates) throws ConnectorException {
-
-        Connection connection = null;
+    public int[] executeBatchedUpdates(String[] updates, Object connection) throws ConnectorException {
         try {
-            connection = getConnection();
             RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
             Command[] commands = new Command[updates.length];
             for (int i = 0; i < updates.length; i++) {
@@ -125,12 +130,12 @@ public class ConnectorHost {
             return executeBatchedUpdates(connection, commands, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.close();
+            	close(connection);
             }
         }
     }
     
-    public int[] executeBatchedUpdates(Connection connection, Command[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
+    public int[] executeBatchedUpdates(Object connection, Command[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
     	List<List> result = executeCommand(connection, new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata);
     	int[] counts = new int[result.size()];
     	for (int i = 0; i < counts.length; i++) {
@@ -175,10 +180,4 @@ public class ConnectorHost {
     public Command getCommand(String query) {
     	return util.parseCommand(query);
     }
-
-    private Connection getConnection() throws ConnectorException {
-        Connection connection = connector.getConnection();
-        return connection;
-    }
-    
 }

@@ -30,10 +30,10 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
-import org.teiid.connector.api.CacheScope;
-import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.resource.cci.CacheScope;
+import org.teiid.resource.cci.ExecutionContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.common.buffer.BufferManager;

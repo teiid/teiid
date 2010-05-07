@@ -32,16 +32,17 @@ public interface Admin {
 	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
-     * Assign a {@link ConnectionFactory} to a {@link VDB}'s Model
+     * Assign a {@link Translator} and Data source to a {@link VDB}'s Model
      *
      * @param vdbName Name of the VDB
      * @param vdbVersion Version of the VDB
      * @param modelName  Name of the Model to map Connection Factory
      * @param sourceName sourceName for the model
-     * @param jndiName JNDI names to which the source name needs to map to
+     * @param translatorName 
+     * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
-    void assignConnectionFactoryToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String jndiName) throws AdminException;
+    void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
     
     /**
      * Set/update the property for the Connection Factory identified by the given deployed name.
@@ -50,43 +51,26 @@ public interface Admin {
      * @param propertyValue
      * @throws AdminException
      */
-    void setConnectionFactoryProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
+    void setTranslatorProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Add Connector, will import RAR from a file
+     * Deploy a {@link Translator} to Configuration
      *
-     * @param name  of the Connector to add
-     * @param rar RAR file
-     * @throws AdminException  
-     */
-    void addConnector(String name, InputStream rar) throws AdminException;
-
-    /**
-     * Delete Connector 
-     *
-     * @param name String name of the Connector to delete
-     * @throws AdminException 
-     */
-    void deleteConnector(String name) throws AdminException;
-    
-    /**
-     * Deploy a {@link ConnectionFactory} to Configuration
-     *
-     * @param deployedName  Connection Factory name that will be added to Configuration
-     * @param typeName Connector type name. 
+     * @param deployedName  Translator name that will be added to Configuration
+     * @param templateName template name 
      * @param properties Name & Value pair need to deploy the Connection Factory
 
      * @throws AdminException 
      */
-    ConnectionFactory addConnectionFactory(String deployedName, String typeName, Properties properties) throws AdminException;
+    Translator addTranslator(String deployedName, String templateName, Properties properties) throws AdminException;
 
     /**
-     * Delete the {@link ConnectionFactory} from the Configuration
+     * Delete the {@link Translator} from the Configuration
      *
      * @param deployedName - deployed name of the connection factory
      * @throws AdminException  
      */
-    void deleteConnectionFactory(String deployedName) throws AdminException;
+    void deleteTranslator(String deployedName) throws AdminException;
     
     /**
      * Deploy a {@link VDB} file.
@@ -125,12 +109,12 @@ public interface Admin {
     void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Get the Connector Template  available in the configuration.
+     * Get the translator templates  available in the configuration.
      *
      * @return Set of connector template names.
      * @throws AdminException 
      */
-    Set<String> getConnectorTemplateNames() throws AdminException;
+    Set<String> getTranslatorTemplateNames() throws AdminException;
 
     /**
      * Get the VDBs that currently deployed in the system
@@ -151,29 +135,20 @@ public interface Admin {
     VDB getVDB(String vdbName, int vbdVersion) throws AdminException;
 
     /**
-     * Get the Connection Factories that are available in the configuration
+     * Get the translators that are available in the configuration
      *
-     * @return Collection of {@link ConnectionFactory}
+     * @return Collection of {@link Translator}
      * @throws AdminException 
      */
-    Collection<ConnectionFactory> getConnectionFactories() throws AdminException;
+    Collection<Translator> getTranslators() throws AdminException;
     
     /**
-     * Get the Connection Factory by the given the deployed name.
-     * @param deployedName - name of the deployed Connection Factory
-     * @return null if not found a Connection Factory by the given name
+     * Get the translator by the given the deployed name.
+     * @param deployedName - name of the deployed translator
+     * @return null if not found
      * @throws AdminException 
      */
-    ConnectionFactory getConnectionFactory(String deployedName) throws AdminException;
-
-    /**
-     * Get all the Connection Factories for the given VDB identifier pattern
-	 * @param vdbName - Name of the VDB
-	 * @param vdbVersion - version of the VDB
-     * @return Collection of {@link ConnectionFactory}
-     * @throws AdminException 
-     */
-    Collection<ConnectionFactory> getConnectionFactoriesInVDB(String vdbName, int vdbVersion) throws AdminException;
+    Translator getTranslator(String deployedName) throws AdminException;
 
     /**
      * Get the Work Manager stats that correspond to the specified identifier pattern.
@@ -184,9 +159,6 @@ public interface Admin {
      */
     WorkerPoolStatistics getWorkManagerStats(String identifier) throws AdminException;
     
-
-        
-
     /**
      * Get the Caches that correspond to the specified identifier pattern
      * @return Collection of {@link String}
@@ -222,7 +194,7 @@ public interface Admin {
      * @return
      * @throws AdminException
      */
-    Collection<PropertyDefinition> getConnectorTemplatePropertyDefinitions(String templateName) throws AdminException;
+    Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(String templateName) throws AdminException;
     
     
     /**
@@ -243,23 +215,6 @@ public interface Admin {
      * @throws AdminException if there's a system error.
      */
     Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException;
-
-    
-    /**
-     * Start Connection Factory
-     *
-     @param deployedName - name of the deployed Connection Factory 
-     * @throws AdminException  
-     */
-    void startConnectionFactory(String deployedName) throws AdminException;
-
-    /**
-     * Stop Connection Factory
-     *
-     * @param deployedName - name of the deployed Connection Factory 
-     * @throws AdminException  
-     */
-    void stopConnectionFactory(String deployedName) throws AdminException;
 
     /**
      * Clear the cache or caches specified by the cacheIdentifier.

@@ -29,12 +29,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;

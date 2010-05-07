@@ -25,12 +25,13 @@ package com.metamatrix.query.processor.xml;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.logging.LogManager;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.mapping.xml.ResultSetInfo;
 import com.metamatrix.query.processor.BatchIterator;
@@ -153,7 +154,7 @@ class RelationalPlanExecutor implements PlanExecutor {
      */
     public void close() throws MetaMatrixComponentException {
 		this.internalProcessor.closeProcessing();
-        LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"closed executor", resultInfo.getResultSetName()}); //$NON-NLS-1$
     }
   
 }

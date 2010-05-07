@@ -26,7 +26,8 @@ import javax.resource.spi.work.Work;
 import javax.resource.spi.work.WorkEvent;
 import javax.resource.spi.work.WorkListener;
 
-import com.metamatrix.common.log.LogManager;
+import org.teiid.logging.LogManager;
+
 
 
 /**
@@ -118,12 +119,12 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
 				if (!ignoreDone) {
 					throw new IllegalStateException("More work is not valid once DONE"); //$NON-NLS-1$
 				}
-				LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] {this, "ignoring more work, since the work item is done"}); //$NON-NLS-1$
+				LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {this, "ignoring more work, since the work item is done"}); //$NON-NLS-1$
     	}
     }
     
 	private void logTrace(String msg) {
-		LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] {this, msg, this.threadState}); 
+		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {this, msg, this.threadState}); 
 	}
     
     protected abstract void process();

@@ -33,12 +33,12 @@ import java.util.Map;
 
 import org.teiid.client.plan.PlanNode;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
@@ -133,7 +133,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
 
-			LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
+			LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
@@ -230,7 +230,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
 				Object assignment = procEnv.evaluateExpression(setClause.getValue());
 
-				LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP,
+				LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(), assignment);

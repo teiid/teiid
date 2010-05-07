@@ -22,7 +22,7 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import org.teiid.connector.api.TypeFacility;
+import org.teiid.resource.cci.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
 	

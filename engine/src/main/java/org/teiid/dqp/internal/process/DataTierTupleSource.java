@@ -26,8 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.SourceWarning;
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;

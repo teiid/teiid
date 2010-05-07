@@ -34,6 +34,8 @@ import javax.crypto.SealedObject;
 
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.runtime.RuntimePlugin;
@@ -41,8 +43,6 @@ import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
 import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 

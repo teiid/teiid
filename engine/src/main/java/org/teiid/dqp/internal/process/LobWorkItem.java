@@ -30,9 +30,9 @@ import javax.resource.spi.work.Work;
 
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsReceiver;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
@@ -75,7 +75,7 @@ public class LobWorkItem implements Work {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
         } catch (MetaMatrixComponentException e) {            
-            LogManager.logWarning(com.metamatrix.common.log.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+            LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
         } catch (IOException e) {
 			ex = e;
@@ -102,7 +102,7 @@ public class LobWorkItem implements Work {
 				stream.close();
 			}
 		} catch (IOException e) {
-			LogManager.logWarning(com.metamatrix.common.log.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
 		}
 		parent.removeLobStream(streamRequestId);
 	}    

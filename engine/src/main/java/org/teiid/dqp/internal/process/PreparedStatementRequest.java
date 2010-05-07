@@ -28,6 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -36,7 +38,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
@@ -133,7 +134,7 @@ public class PreparedStatementRequest extends Request {
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
+            LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
         }
 
         ProcessorPlan cachedPlan = prepPlan.getPlan();
@@ -148,7 +149,7 @@ public class PreparedStatementRequest extends Request {
 		        this.prepPlanCache.put(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
         } else {
-        	LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
+        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
             processPlan = cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();

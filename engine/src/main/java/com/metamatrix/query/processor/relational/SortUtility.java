@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.TreeSet;
 
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -38,8 +41,6 @@ import com.metamatrix.common.buffer.TupleBuffer;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.BufferManager.BufferReserveMode;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -261,8 +262,8 @@ public class SortUtility {
             bufferManager.releaseBuffers(release);
             reserved -= release;
             try {
-	        	if (LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-	            	LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
+	        	if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
+	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	        	// initialize the sublists with the min value
 	            for(int i = 0; i<maxSortIndex; i++) { 

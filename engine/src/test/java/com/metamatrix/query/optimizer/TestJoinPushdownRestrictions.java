@@ -23,7 +23,7 @@
 package com.metamatrix.query.optimizer;
 
 import org.junit.Test;
-import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;

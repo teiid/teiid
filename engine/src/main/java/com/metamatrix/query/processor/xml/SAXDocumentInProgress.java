@@ -33,12 +33,12 @@ import javax.xml.transform.stream.StreamResult;
 
 import net.sf.saxon.TransformerFactoryImpl;
 
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.FileStore;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.query.mapping.xml.MappingNodeConstants;
 
 /**
@@ -154,7 +154,7 @@ public class SAXDocumentInProgress implements DocumentInProgress {
                 return true;
             }
         } catch (SAXException e) {
-            LogManager.logError(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, e, e.getMessage());
+            LogManager.logError(org.teiid.logging.LogConstants.CTX_XML_PLAN, e, e.getMessage());
             return false;
         }
         showState( "addElement(2) - BOT" );  //$NON-NLS-1$
@@ -323,19 +323,19 @@ public class SAXDocumentInProgress implements DocumentInProgress {
 
     private void showState( String sOccasion ) {
 
-        if (LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"\n [showState] State Vars at: " + sOccasion} ); //$NON-NLS-1$ 
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent: " + currentParent} ); //$NON-NLS-1$
-            LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject: " + currentObject} ); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_XML_PLAN, MessageLevel.TRACE)) {
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"\n [showState] State Vars at: " + sOccasion} ); //$NON-NLS-1$ 
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent: " + currentParent} ); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject: " + currentObject} ); //$NON-NLS-1$
 
             if ( currentObject != null ) { 
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject.getNillableDescriptor(): " + currentObject.getNillableDescriptor()}); //$NON-NLS-1$ 
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] workingElements: " + currentObject.getChildren()}); //$NON-NLS-1$ 
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentObject.getNillableDescriptor(): " + currentObject.getNillableDescriptor()}); //$NON-NLS-1$ 
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] workingElements: " + currentObject.getChildren()}); //$NON-NLS-1$ 
             }    
             if ( currentParent != null ) { 
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): " + currentParent.getParent()}); //$NON-NLS-1$
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): " + currentParent.getParent()}); //$NON-NLS-1$
             } else {
-                LogManager.logTrace(com.metamatrix.common.log.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): is NULL "}); //$NON-NLS-1$ 
+                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_XML_PLAN, new Object[]{"[showState] currentParent.getParent(): is NULL "}); //$NON-NLS-1$ 
             }
         }
     }

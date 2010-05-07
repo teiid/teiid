@@ -34,25 +34,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.Connector;
-import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.basic.WrappedConnection;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem.PermitMode;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
-import org.teiid.logging.api.CommandLogMessage;
-import org.teiid.logging.api.CommandLogMessage.Event;
+import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.resource.ConnectorException;
+import org.teiid.resource.cci.ConnectorCapabilities;
+import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.resource.cci.MetadataProvider;
 
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -64,17 +63,15 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Scope;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
- * The <code>ConnectorManager</code> manages a {@link org.teiid.connector.basic.BasicConnector Connector}
+ * The <code>ConnectorManager</code> manages a {@link org.teiid.resource.adapter.BasicExecutionFactory Connector}
  * and its associated workers' state.
  */
 public class ConnectorManager  {
 	
 	public static final int DEFAULT_MAX_THREADS = 20;
-	private String connectorName;
+	private String translatorName;
+	private String connectionName;
 	
-	// stateful connector supplied to the cm; does not do the lookup
-	private Connector statefulConnector;	
-	    
     //services acquired in start
     private BufferService bufferService;
     
@@ -84,29 +81,32 @@ public class ConnectorManager  {
 	private SourceCapabilities cachedCapabilities;
 	
 	private int currentConnections;
-	private int maxConnections;
+	private int maxConnections = DEFAULT_MAX_THREADS;
 	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
 	
 	private volatile boolean stopped;
 
-    public ConnectorManager(String name) {
-    	this(name, DEFAULT_MAX_THREADS);
-    }
-
-    public ConnectorManager(String name, int maxThreads) {
-    	this(name, null, maxThreads);
+	
+    public ConnectorManager(String translatorName, String connectionName) {
+    	this.translatorName = translatorName;
+    	this.connectionName = connectionName;
     }
     
-    public ConnectorManager(String name, Connector connector, int maxThreads) {
-    	if (name == null) {
-    		throw new IllegalArgumentException("Connector name can not be null"); //$NON-NLS-1$
+    public String getStausMessage() {
+    	StringBuilder sb = new StringBuilder();
+    	ExecutionFactory ef = getExecutionFactory();
+    	if(ef != null) {
+    		if (ef.isSourceRequired()) {
+    			Object conn = getConnectionFactory();
+    			if (conn == null) {
+    				sb.append(DQPPlugin.Util.getString("datasource_not_found", this.connectionName)); //$NON-NLS-1$
+    			}
+    		}
     	}
-    	if (maxThreads <= 0) {
-    		maxThreads = DEFAULT_MAX_THREADS;
+    	else {
+    		sb.append(DQPPlugin.Util.getString("translator_not_found", this.translatorName)); //$NON-NLS-1$
     	}
-    	this.maxConnections = maxThreads;
-    	this.connectorName = name;
-    	this.statefulConnector = connector;
+    	return sb.toString();
     }
     
     public synchronized void acquireConnectionLock(ConnectorWorkItem item) throws BlockedException {
@@ -123,25 +123,14 @@ public class ConnectorManager  {
     		throw BlockedException.INSTANCE;
     	}
     }
+        
     
-    public String getName() {
-        return this.connectorName;
-    }	
-	    
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws ConnectorException {
-    	
     	MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
-		
-		WrappedConnection conn = null;
-    	try {
-    		checkStatus();
-	    	conn = (WrappedConnection)getConnector().getConnection();
-	    	conn.getConnectorMetadata(factory);
-    	} finally {
-    		if (conn != null) {
-    			conn.close();
-    		}
-    	}		
+    	ExecutionFactory executionFactory = getExecutionFactory();
+    	if (executionFactory instanceof MetadataProvider) {
+    		((MetadataProvider)executionFactory).getConnectorMetadata(factory, getConnectionFactory());
+    	}
     	return factory.getMetadataStore();
 	}    
     
@@ -149,31 +138,14 @@ public class ConnectorManager  {
     	if (cachedCapabilities != null) {
     		return cachedCapabilities;
     	}
-        Connection conn = null;
-        try {
-        	checkStatus();
-        	Connector connector = getConnector();
-        	ConnectorCapabilities caps = connector.getCapabilities();
-            boolean global = true;
-            if (caps == null) {
-            	conn = connector.getConnection();
-            	caps = conn.getCapabilities();
-            	global = false;
-            }
-            
-            BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), connector.getConnectorEnvironment().isXaCapable());
-            if (global) {
-            	resultCaps.setScope(Scope.SCOPE_GLOBAL);
-            	cachedCapabilities = resultCaps;
-            } else {
-            	resultCaps.setScope(Scope.SCOPE_PER_USER);
-            }
-            return resultCaps;
-        } finally {
-        	if ( conn != null ) {
-                conn.close();
-            }
-        }
+
+    	checkStatus();
+    	ExecutionFactory connector = getExecutionFactory();
+    	ConnectorCapabilities caps = connector.getCapabilities();
+        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, this.translatorName, connector.isXaCapable());
+    	resultCaps.setScope(Scope.SCOPE_GLOBAL);
+    	cachedCapabilities = resultCaps;
+        return resultCaps;
     }
     
     public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws ConnectorException {
@@ -223,7 +195,7 @@ public class ConnectorManager  {
      * initialize this <code>ConnectorManager</code>.
      */
     public void start() {
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$
     }
     
     /**
@@ -263,30 +235,42 @@ public class ConnectorManager  {
         
         CommandLogMessage message = null;
         if (cmdStatus == Event.NEW) {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
         } 
         else {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context);
         }         
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     /**
-     * Get the <code>Connector</code> object managed by this
-     * manager.
-     * @return the <code>Connector</code>.
+     * Get the <code>Translator</code> object managed by this  manager.
+     * @return the <code>ExecutionFactory</code>.
      */
-    Connector getConnector() throws ConnectorException {
-		try {
-			if (this.statefulConnector != null) {
-				return this.statefulConnector;
-			}
-			InitialContext ic  = new InitialContext();
-			return (Connector)ic.lookup(this.connectorName);    			
+    protected ExecutionFactory getExecutionFactory() {
+    	try {
+			InitialContext ic = new InitialContext();
+			return (ExecutionFactory)ic.lookup(this.translatorName);
 		} catch (NamingException e) {
-			throw new ConnectorException(e, DQPPlugin.Util.getString("ConnectorManager.failed_to_lookup_connector", this.connectorName)); //$NON-NLS-1$
-		}
+		}  
+		return null;
     }
+    
+    /**
+     * Get the ConnectionFactory object required by this manager
+     * @return
+     */
+    protected Object getConnectionFactory() {
+    	if (this.connectionName != null) {
+	    	try {
+				InitialContext ic = new InitialContext();
+				return ic.lookup(this.connectionName);
+			} catch (NamingException e) {
+			}    		
+    	}
+    	return null;
+    }
+    
     
     DQPContextCache getContextCache() {
      	if (bufferService != null) {
@@ -297,7 +281,19 @@ public class ConnectorManager  {
     
     private void checkStatus() throws ConnectorException {
     	if (stopped) {
-    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.connectorName)); //$NON-NLS-1$
+    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
     	}
+    }
+    
+    public void setMaxConnections(int value) {
+    	this.maxConnections = value;
+    }
+    
+    public String getTranslatorName() {
+    	return this.translatorName;
+    }
+    
+    public String getConnectionName() {
+    	return this.connectionName;
     }
 }

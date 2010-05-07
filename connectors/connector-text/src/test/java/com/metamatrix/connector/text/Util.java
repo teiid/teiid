@@ -28,13 +28,17 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
-import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.resource.adapter.text.TextConnection;
+import org.teiid.resource.adapter.text.TextExecutionFactory;
+import org.teiid.resource.cci.text.TextConnectionFactory;
+import org.teiid.resource.cci.text.TextConnectionImpl;
+import org.teiid.resource.cci.text.TextManagedConnectionFactory;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
@@ -43,35 +47,33 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
 public class Util {
 
 	static void helpTestExecution(String vdb, String descriptorFile, String sql, int maxBatchSize, int expectedRowCount) throws Exception {
-		descriptorFile = UnitTestUtil.getTestDataPath() + File.separator + descriptorFile;
-	   
-        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
-        Mockito.stub(config.getDescriptorFile()).toReturn(descriptorFile);
-        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
-        Mockito.stub(config.getDateResultFormats()).toReturn("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy");
-        Mockito.stub(config.getDateResultFormatsDelimiter()).toReturn(",");
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));	    
+		TextExecutionFactory connector = new TextExecutionFactory();
+        connector.setDateResultFormats("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
+        connector.setDateResultFormatsDelimiter(",");
 	    
-	    ConnectorHost host = new ConnectorHost(new TextConnector(), config, UnitTestUtil.getTestDataPath() + File.separator + vdb);
-	    List results = host.executeCommand(sql);
+	    ConnectorHost host = new ConnectorHost(connector, UnitTestUtil.getTestDataPath() + File.separator + vdb);
+	    List results = host.executeCommand(sql, createConnectionFactory(descriptorFile));
 	    Assert.assertEquals("Total row count doesn't match expected size. ", expectedRowCount, results.size()); //$NON-NLS-1$
 	}
-
-	public static ConnectorHost getConnectorHostWithFakeMetadata(String descriptorFile) throws Exception {
+	
+	public static TextConnectionFactory createConnectionFactory(String descriptorFile) throws Exception {
         TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
         Mockito.stub(config.getDescriptorFile()).toReturn(descriptorFile);
         Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
-        Mockito.stub(config.getDateResultFormats()).toReturn("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy");
-        Mockito.stub(config.getDateResultFormatsDelimiter()).toReturn(",");
-        Mockito.stub(config.isEnforceColumnCount()).toReturn(true);
+        return new TextConnectionFactory(config);
+	}
+
+	public static ConnectorHost getConnectorHostWithFakeMetadata() throws Exception {
+  		TextExecutionFactory connector = new TextExecutionFactory();
+        connector.setDateResultFormats("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
+        connector.setDateResultFormatsDelimiter(","); 
+        connector.setEnforceColumnCount(true);
         
-        Mockito.stub(config.getLogger()).toReturn(Mockito.mock(ConnectorLogger.class));	
-	    
-	    
-	    ConnectorHost host = new ConnectorHost(new TextConnector(), config, new TranslationUtility(exampleText()));
+	    ConnectorHost host = new ConnectorHost(connector, new TranslationUtility(exampleText()));
 	    return host;
 	}
 	

@@ -33,10 +33,10 @@ import java.util.ListIterator;
 
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
-import com.metamatrix.common.log.LogConstants;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.SubqueryContainer;

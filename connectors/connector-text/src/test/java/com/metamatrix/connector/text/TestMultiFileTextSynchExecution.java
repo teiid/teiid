@@ -27,9 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.connector.api.ConnectorException;
-
 import junit.framework.TestCase;
+
+import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -46,7 +46,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
     public void testSubmitRequest() throws Exception {
         String sql = "SELECT ID FROM Library"; //$NON-NLS-1$
         try {
-        	Util.getConnectorHostWithFakeMetadata(BAD_COUNT_FILE).executeCommand(sql);
+        	Util.getConnectorHostWithFakeMetadata().executeCommand(sql, Util.createConnectionFactory(BAD_COUNT_FILE));
             fail("Should have failed due to extra column defined in .csv file");//$NON-NLS-1$
         } catch (ConnectorException e) {
             assertEquals("Expected input file to have 3 columns based on model, but found 4.  This could be caused by misplaced quotes, causing multiple columns to be treated as one.", e.getMessage()); //$NON-NLS-1$
@@ -56,7 +56,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
     public void testNextBatch3() throws Exception {
         String sql = "SELECT ID FROM Library WHERE Author = 'Blind'"; //$NON-NLS-1$
         try {
-        	Util.getConnectorHostWithFakeMetadata(BAD_COUNT_FILE).executeCommand(sql);
+        	Util.getConnectorHostWithFakeMetadata().executeCommand(sql, Util.createConnectionFactory(BAD_COUNT_FILE));
             fail("Should have failed due to extra column defined in .csv file");//$NON-NLS-1$
         } catch (ConnectorException e) {
             assertEquals("Expected input file to have 3 columns based on model, but found 4.  This could be caused by misplaced quotes, causing multiple columns to be treated as one.", e.getMessage()); //$NON-NLS-1$
@@ -65,9 +65,9 @@ public class TestMultiFileTextSynchExecution extends TestCase {
         
     public void testNextBatch2() throws Exception {
         String sql = "SELECT ID, PDate, Author FROM Library"; //$NON-NLS-1$
-        ConnectorHost host = Util.getConnectorHostWithFakeMetadata(DEFAULT_DESC_FILE);
+        ConnectorHost host = Util.getConnectorHostWithFakeMetadata();
         int expectedRows = 4;
-        List results = host.executeCommand(sql);
+        List results = host.executeCommand(sql, Util.createConnectionFactory(DEFAULT_DESC_FILE));
         assertEquals("Get batch size doesn't match expected one. ", expectedRows, results.size()); //$NON-NLS-1$
 
         // expected values
@@ -103,7 +103,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
      */
     public void testDefect13066() throws Exception {
         String sql = "SELECT TRADEID FROM SummitData.SUMMITDATA"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 500, 4139); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("summitData/TextFileTest_1.vdb", UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt", sql, 500, 4139); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -113,7 +113,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
      */
     public void testDefect13368() throws Exception {
         String sql = "SELECT RATE, DESK FROM SummitData.SUMMITDATA"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 5, 4139); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("summitData/TextFileTest_1.vdb", UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt", sql, 5, 4139); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -123,18 +123,18 @@ public class TestMultiFileTextSynchExecution extends TestCase {
      */
     public void testDefect13371() throws Exception {
         String sql = "  SELECT SUMMITEXTRACTCDM.START, SUMMITEXTRACTCDM.SUMMIT_ID, SUMMITEXTRACTCDM.CURRENCY, SUMMITEXTRACTCDM.AMOUNT, SUMMITEXTRACTCDM.MATURITY, SUMMITEXTRACTCDM.RATE, SUMMITEXTRACTCDM.DESK, SUMMITEXTRACTCDM.CDM_ID FROM SUMMITEXTRACTCDM"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFiles.vdb", "SummitExtractCDM_Descriptor.txt", sql, 500, 52); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("summitData/TextFiles.vdb", UnitTestUtil.getTestDataPath() + "/SummitExtractCDM_Descriptor.txt", sql, 500, 52); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDefect11402() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     /** test case 4151 */
     public void testCase4151() throws Exception {
         String sql = "SELECT COLA, COLB, COLC FROM ThreeColString_Text.testfile"; //$NON-NLS-1$
-        Util.helpTestExecution("case4151/MM_00004151.vdb", "testfile-descriptor.txt", sql, 15000, 5); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("case4151/MM_00004151.vdb", UnitTestUtil.getTestDataPath() + "/testfile-descriptor.txt", sql, 15000, 5); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

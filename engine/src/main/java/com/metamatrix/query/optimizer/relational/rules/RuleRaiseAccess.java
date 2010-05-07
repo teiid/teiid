@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;

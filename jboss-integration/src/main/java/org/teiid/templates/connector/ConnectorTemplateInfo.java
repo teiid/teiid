@@ -24,23 +24,21 @@ package org.teiid.templates.connector;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.managed.api.Fields;
+import javax.resource.cci.ConnectionFactory;
+
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.BasicDeploymentTemplateInfo;
-import org.jboss.managed.plugins.DefaultFieldsImpl;
-import org.jboss.managed.plugins.ManagedPropertyImpl;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.teiid.adminapi.jboss.ExtendedPropertyInfo;
-import org.teiid.connector.api.Connector;
+import org.teiid.deployers.ManagedPropertyUtil;
 
 /**
  * This class some magic in it. First off all through the configuration it extends the
  * NoTxConnectionFactoryTemplate. Then using the JMX adds the properties defined inside a connector
- * RAR file's ra.xml dynamically the above template. The RAR file name is supplied in the "description" 
- * field of the configuration. Also, it uses the NoTxConnectionFactoryTemplate "applyTemplate" to write
+ * RAR file's ra.xml dynamically the above template. Also, it uses the NoTxConnectionFactoryTemplate "applyTemplate" to write
  * the custom properties that have been added thru JMX as "config-property" in the eventual "-ds.xml" file.
  */
 public class ConnectorTemplateInfo extends BasicDeploymentTemplateInfo implements ExtendedPropertyInfo {
@@ -48,7 +46,6 @@ public class ConnectorTemplateInfo extends BasicDeploymentTemplateInfo implement
 	private static final long serialVersionUID = 9066758787789280783L;
 	private String rarName;
 	static final String TEMPLATE_NAME = "template-name"; //$NON-NLS-1$
-	private static final String TEIID_PROPERTY = "teiid-property"; //$NON-NLS-1$
 	
 	
 	public ConnectorTemplateInfo(String name, String description, Map<String, ManagedProperty> properties) {
@@ -67,7 +64,7 @@ public class ConnectorTemplateInfo extends BasicDeploymentTemplateInfo implement
 		copy.populate();
 		
 		ManagedProperty mp = copy.getProperties().get("connection-definition");//$NON-NLS-1$
-		mp.setValue(SimpleValueSupport.wrap(Connector.class.getName())); 
+		mp.setValue(SimpleValueSupport.wrap(ConnectionFactory.class.getName())); 
 		
 		mp = copy.getProperties().get("rar-name");//$NON-NLS-1$	
 		mp.setValue(SimpleValueSupport.wrap(getRarName()));
@@ -91,27 +88,8 @@ public class ConnectorTemplateInfo extends BasicDeploymentTemplateInfo implement
 	}
 	
 	static ManagedProperty buildTemplateProperty(String name) {
-		ManagedProperty mp = buildProperty(TEMPLATE_NAME, SimpleMetaType.STRING, "Template Name", "The Name of the Teiid Connector Template", true, name);//$NON-NLS-1$ //$NON-NLS-2$
-		mp.setField(Fields.READ_ONLY, SimpleValueSupport.wrap(true));
-		return mp;
+		return ManagedPropertyUtil.createProperty(TEMPLATE_NAME, SimpleMetaType.STRING, "Template Name", "The Name of the Teiid Connector Template", true, true, name);//$NON-NLS-1$ //$NON-NLS-2$
 	}	
-
-	static ManagedProperty buildProperty(String name, SimpleMetaType type, String displayName, String description, boolean mandatory, String value) {
-		DefaultFieldsImpl fields = new DefaultFieldsImpl(name);
-		fields.setDescription(description);
-		fields.setField(Fields.MAPPED_NAME,displayName);
-		fields.setMetaType(type);
-		fields.setField(Fields.MANDATORY, SimpleValueSupport.wrap(mandatory));
-		fields.setField(TEIID_PROPERTY, SimpleValueSupport.wrap(true));
-		if (value != null) {
-			fields.setField(Fields.DEFAULT_VALUE, SimpleValueSupport.wrap(value));
-		}
-		return  new ManagedPropertyImpl(fields);		
-	}	
-	
-	static void markAsTeiidProperty(ManagedProperty mp) {
-		mp.setField(TEIID_PROPERTY, SimpleValueSupport.wrap(true)); 
-	}
 	
 	@Override
 	public void updateProperty(String name, String value, ManagedComponent main) {

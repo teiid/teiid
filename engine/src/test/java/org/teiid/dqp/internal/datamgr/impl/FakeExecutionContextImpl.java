@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.connector.api.ExecutionContext;
+import org.teiid.resource.cci.ExecutionContext;
 
 /**
  */

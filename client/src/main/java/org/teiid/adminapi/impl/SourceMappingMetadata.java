@@ -44,15 +44,18 @@ public class SourceMappingMetadata implements Serializable {
 	@XmlAttribute(name = "name", required = true)
     private String name;
     
-    @XmlAttribute(name = "jndi-name")
+    @XmlAttribute(name = "connection-jndi-name")
     private String jndiName;
     
+    @XmlAttribute(name = "translator-name",required = true)
+    private String translatorName;
     
-    public SourceMappingMetadata() {}
+	public SourceMappingMetadata() {}
     
-    public SourceMappingMetadata(String name, String jndiName) {
+    public SourceMappingMetadata(String name, String translatorName, String connJndiName) {
     	this.name = name;
-    	this.jndiName = jndiName;
+    	this.translatorName = translatorName;
+    	this.jndiName = connJndiName;
     }
 
     @ManagementProperty (description="Source Name")
@@ -66,7 +69,7 @@ public class SourceMappingMetadata implements Serializable {
 	}
 
 	@ManagementProperty (description="JNDI Name of the resource to assosiate with Source name")
-	public String getJndiName() {
+	public String getConnectionJndiName() {
 		// this default could be controlled if needed.
 		if (this.jndiName == null) {
 			return "java:"+name; //$NON-NLS-1$
@@ -74,11 +77,20 @@ public class SourceMappingMetadata implements Serializable {
 		return jndiName;
 	}
 
-	public void setJndiName(String jndiName) {
+	public void setConnectionJndiName(String jndiName) {
 		this.jndiName = jndiName;
 	}
 	
+	@ManagementProperty (description="Translator Name")
+    public String getTranslatorName() {
+		return translatorName;
+	}
+
+	public void setTranslatorName(String translatorName) {
+		this.translatorName = translatorName;
+	}	
+	
 	public String toString() {
-		return getName()+":"+getJndiName(); //$NON-NLS-1$
+		return getName()+"/"+getTranslatorName()+"/"+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

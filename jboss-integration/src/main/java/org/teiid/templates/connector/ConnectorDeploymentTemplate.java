@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.resource.cci.ConnectionFactory;
+
 import org.jboss.deployers.spi.management.DeploymentTemplate;
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedProperty;
@@ -34,7 +36,6 @@ import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.jboss.ManagedUtil;
-import org.teiid.connector.api.Connector;
 import org.teiid.jboss.IntegrationPlugin;
 
 /**
@@ -72,7 +73,7 @@ public class ConnectorDeploymentTemplate implements DeploymentTemplate {
 			DeploymentTemplateInfo targetInfo = this.targetTemplate.getInfo();
 
 			// override these properties always. 
-			targetInfo.getProperties().get("connection-definition").setValue(SimpleValueSupport.wrap(Connector.class.getName()));//$NON-NLS-1$	
+			targetInfo.getProperties().get("connection-definition").setValue(SimpleValueSupport.wrap(ConnectionFactory.class.getName()));//$NON-NLS-1$	
 			targetInfo.getProperties().get("rar-name").setValue(SimpleValueSupport.wrap(((ConnectorTemplateInfo)getInfo()).getRarName()));//$NON-NLS-1$
 			
 			

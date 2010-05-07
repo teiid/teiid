@@ -22,7 +22,7 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import org.teiid.connector.api.ConnectorException;
+import org.teiid.resource.ConnectorException;
 
 /**
  * Helper methods that can be used to access runtime metadata.

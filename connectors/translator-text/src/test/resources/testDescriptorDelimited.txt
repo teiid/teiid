@@ -1,0 +1,6 @@
+text.library.location = src/test/resources/libraryDelimited.txt
+text.library.qualifier = "
+text.library.delimiter = ,
+text.library2.location = src/test/resources/libraryDelimited2.txt
+text.library2.qualifier = "
+text.library2.delimiter = ,

@@ -31,14 +31,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -385,7 +385,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @param batch Batch being sent
      */
     private void recordBatch(TupleBatch batch) {
-        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(com.metamatrix.common.log.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         	return;
         }
     	// Print summary
@@ -401,7 +401,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
         	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
-        LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, str.toString());
+        LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, str.toString());
     }
 
     // =========================================================================

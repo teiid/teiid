@@ -27,12 +27,12 @@ import static com.metamatrix.query.analysis.AnalysisRecord.*;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.logging.LogManager;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
@@ -141,7 +141,7 @@ public class PlanExecutionNode extends RelationalNode {
         try {
         	plan.close();
 		} catch (MetaMatrixComponentException e1){
-			LogManager.logDetail(com.metamatrix.common.log.LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
+			LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
 		}
 	}
 	

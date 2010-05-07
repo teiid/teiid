@@ -25,9 +25,9 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.jdbc.oracle.OracleCapabilities;
-import org.teiid.connector.jdbc.sqlserver.SQLServerCapabilities;
 import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
+import org.teiid.translator.jdbc.oracle.OracleCapabilities;
+import org.teiid.translator.jdbc.sqlserver.SQLServerCapabilities;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
