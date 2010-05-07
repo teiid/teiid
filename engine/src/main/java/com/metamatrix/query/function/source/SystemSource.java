@@ -170,6 +170,8 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addXslTransformFunction();
         addXmlElement();
         addXmlConcat();
+        addXmlComment();
+        addXmlPi();
         
         addSecurityFunctions();
         
@@ -929,6 +931,26 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                 new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlelement_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("value", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.xmlelement_param2"), true)}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlement_result")), true, FunctionMethod.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    private void addXmlComment() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLCOMMENT, QueryPlugin.Util.getString("SystemSource.xmlcomment_description"), XML, XML_FUNCTION_CLASS, "xmlComment", //$NON-NLS-1$ //$NON-NLS-2$  
+                            new FunctionParameter[] { 
+                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlcomment_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlcomment_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    private void addXmlPi() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLPI, QueryPlugin.Util.getString("SystemSource.xmlpi_description"), XML, XML_FUNCTION_CLASS, "xmlPi", //$NON-NLS-1$ //$NON-NLS-2$  
+                            new FunctionParameter[] { 
+					            new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlpi_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlpi_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod(SourceSystemFunctions.XMLPI, QueryPlugin.Util.getString("SystemSource.xmlpi_description"), XML, XML_FUNCTION_CLASS, "xmlPi", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+		            new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlpi_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+		            new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlpi_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlpi_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addXmlConcat() {

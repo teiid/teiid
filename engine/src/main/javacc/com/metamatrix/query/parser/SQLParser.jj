@@ -2918,7 +2918,8 @@ Expression function(ParseInfo info) :
 	(
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
-		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>)
+		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>
+		                    | funcToken = <XMLCOMMENT>)
 		<LPAREN>
 		[
 			expression = expression(info)
@@ -3000,6 +3001,26 @@ Expression function(ParseInfo info) :
 			expression = null;
 		}
 		)*
+		<RPAREN>
+	)
+	| ( funcToken = <XMLPI>
+		<LPAREN>
+		(
+		 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> expression = idExpression()
+		 |
+		 expression = idExpression()
+		)
+		{
+			args.add(expression);	
+			expression = null;
+		}
+		[
+			<COMMA> expression = expression(info)
+			{
+				args.add(expression);	
+				expression = null;
+			}	
+		]
 		<RPAREN>
 	)
 	|

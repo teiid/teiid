@@ -1998,7 +1998,33 @@
               </para>
             </entry>
             <entry>
-              <para>Name is an identifier.  exp can be any type. Return value is xml.
+              <para>Name is an identifier. Exp can be any type. Return value is xml.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XMLCOMMENT(comment)</code></para>
+            </entry>
+            <entry>
+              <para>Returns an xml comment.
+              </para>
+            </entry>
+            <entry>
+              <para>Comment is a string.  Return value is xml.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XMLPI([NAME] name [, content])</code></para>
+            </entry>
+            <entry>
+              <para>Returns an xml processing instruction.
+              </para>
+            </entry>
+            <entry>
+              <para>Name is an identifier. Content is a string. Return value is xml.
               </para>
             </entry>
           </row>

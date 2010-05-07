@@ -56,6 +56,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLTranslator;
@@ -276,6 +277,21 @@ public class XMLSystemFunctions {
 		return result;
 	}
 	
+	public static XMLType xmlPi(String name) {
+		return xmlPi(name, ""); //$NON-NLS-1$
+	}
+	
+	public static XMLType xmlPi(String name, String content) {
+		int start = 0;
+		char[] chars = content.toCharArray();
+		while (start < chars.length && chars[start] == ' ') {
+			start++;
+		}
+		XMLType result = new XMLType(new SQLXMLImpl("<?" + name + " " + content.substring(start) + "?>")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		result.setType(Type.PI);
+		return result;
+	}
+	
 	static String getStringValue(Object object) throws TransformerException {
 		if (object instanceof Timestamp) {
 			try {
@@ -307,7 +323,9 @@ public class XMLSystemFunctions {
 				}
 				switch(xml.getType()) {
 				case FRAGMENT:
-				case SIBLINGS: //write the value directly to the writer
+				case SIBLINGS: 
+				case PI:
+				case COMMENT: //write the value directly to the writer
 					eventWriter.flush();
 					int chr = -1;
 					while ((chr = r.read()) != -1) {
@@ -340,6 +358,10 @@ public class XMLSystemFunctions {
 		}
 		//TODO: blob - with base64 encoding
 		//TODO: full clob?
+	}
+	
+	public static XMLType xmlComment(String comment) {
+		return new XMLType(new SQLXMLImpl("<!--" + comment + "-->")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**

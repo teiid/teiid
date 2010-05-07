@@ -7555,5 +7555,20 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testXmlElementWithPi() {
+        String sql = "SELECT xmlelement(x, xmlpi(name e1, '  1'))"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("<x><?e1 1?></x>"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }

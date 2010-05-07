@@ -1380,4 +1380,14 @@ public class TestFunctionLibrary {
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<bar/><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", xml);
     }
+	
+	@Test public void testInvokeXmlComment() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        XMLType result = (XMLType)helpInvokeMethod("xmlcomment", new Class[] {DataTypeManager.DefaultDataClasses.STRING}, 
+        		new Object[] {"comment"}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<!--comment-->", xml);
+    }
 }
