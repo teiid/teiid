@@ -65,6 +65,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 
+@SuppressWarnings("nls")
 public class TestValidator {
 
     public static Map getStoredProcedureExternalMetadata(GroupSymbol virtualProc, QueryMetadataInterface metadata)
@@ -1961,5 +1962,21 @@ public class TestValidator {
 	@Test public void testValidateNoExpressionName() {        
         helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+    @Test public void testXpathValueValid_defect15088() {
+        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', 'a/b/c')"; //$NON-NLS-1$
+        helpValidate(userSql, new String[] {}, FakeMetadataFactory.exampleBQTCached());        
+    }
+
+    @Test public void testXpathValueInvalid_defect15088() throws Exception {
+        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
+        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, FakeMetadataFactory.exampleBQTCached());
+    }
+    
+    @Test public void testXpathValueInvalidNamespaces() throws Exception {
+        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"; //$NON-NLS-1$
+        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"}, FakeMetadataFactory.exampleBQTCached());
+    }
+
 
 }

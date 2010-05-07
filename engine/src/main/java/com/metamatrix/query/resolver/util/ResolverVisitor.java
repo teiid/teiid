@@ -31,17 +31,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.api.SourceSystemFunctions;
-
-import net.sf.saxon.trans.XPathException;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.UnresolvedSymbolDescription;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
-import com.metamatrix.internal.core.xml.XPathHelper;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionForm;
@@ -442,24 +437,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } else if(fd.getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
-	        // Validate the xpath value is valid
-	        if(args[1] != null && args[1] instanceof Constant) {
-	            Constant xpathConst = (Constant) args[1];
-	            if(xpathConst.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
-	                String value = (String) xpathConst.getValue();
-	                if(value == null) {
-	                    throw new QueryResolverException(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", QueryPlugin.Util.getString("ResolveFunctionsVisitor.xpath_cant_be_null"))); //$NON-NLS-1$ //$NON-NLS-2$                        
-	                } 
-	
-	                try {
-	                    XPathHelper.validateXpath(value);
-	                } catch(XPathException e) {
-	                    throw new QueryResolverException(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage())); //$NON-NLS-1$
-	                }
-	            }                
-	        }
-	    }
+	    } 
 	
 	    // Resolve the function
 	    function.setFunctionDescriptor(fd);

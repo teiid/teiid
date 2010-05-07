@@ -1243,7 +1243,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             parts.add(")"); //$NON-NLS-1$
 
-		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XMLELEMENT)){
+		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XMLELEMENT) || name.equalsIgnoreCase(SourceSystemFunctions.XMLPI)){
 			parts.add(name);
 			parts.add("(NAME "); //$NON-NLS-1$
 			outputDisplayName((String)((Constant)args[0]).getValue());

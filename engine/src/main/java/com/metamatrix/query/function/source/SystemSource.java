@@ -166,7 +166,8 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		addParseNumberFunctions();
         
         // xml functions
-        addXpathFunction();
+        addXpathQueryFunction();
+        addXpathValueFunction();
         addXslTransformFunction();
         addXmlElement();
         addXmlConcat();
@@ -881,22 +882,61 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         );
     }
     
-    /** 
-     * 
-     * @since 4.2
-     */
-    private void addXpathFunction() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
+    private void addXpathValueFunction() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter[] { 
                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
-        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter[] { 
                                              new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                              new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                         new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+                                         new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("namespace", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
+                             new FunctionParameter[] { 
+                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                 new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2")), //$NON-NLS-1$ //$NON-NLS-2$
+                                 new FunctionParameter("namespace", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+    }
+    
+    private void addXpathQueryFunction() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHQUERY, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathQuery", //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter[] { 
+                                new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHQUERY, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathQuery", //$NON-NLS-1$ //$NON-NLS-2$ 
+                                         new FunctionParameter[] { 
+                                             new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                             new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                         new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHQUERY, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathQuery", //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2")), //$NON-NLS-1$ //$NON-NLS-2$ 
+                    new FunctionParameter("namespaces", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHQUERY, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathQuery", //$NON-NLS-1$ //$NON-NLS-2$ 
+                             new FunctionParameter[] { 
+                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                                 new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2")), //$NON-NLS-1$ //$NON-NLS-2$ 
+                                 new FunctionParameter("namespaces", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
     }
     
@@ -1008,7 +1048,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      * Get all function signatures for this metadata source.
      * @return Unordered collection of {@link FunctionMethod}s
      */
-    public Collection getFunctionMethods() {
+    public Collection<FunctionMethod> getFunctionMethods() {
         return this.functions;
 	}
     

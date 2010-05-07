@@ -6737,5 +6737,10 @@ public class TestParser {
     	SQLXMLFunction f = new SQLXMLFunction("xmlforest", Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
     	helpTestExpression("xmlforest(a as \"table\")", "xmlforest(a AS \"table\")", f);
     }
+    
+    @Test public void testXmlPi() throws Exception {
+    	Function f = new Function("xmlpi", new Expression[] {new Constant("a"), new ElementSymbol("val")});
+    	helpTestExpression("xmlpi(NAME a, val)", "xmlpi(NAME a, val)", f);
+    }
 
 }

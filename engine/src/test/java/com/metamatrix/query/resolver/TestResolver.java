@@ -2171,23 +2171,6 @@ public class TestResolver {
         assertTrue("Params should be not equal", ! params[0].equals(params[1])); //$NON-NLS-1$
     }
     
-    @Test public void testXpathValueValid_defect15088() {
-        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', 'a/b/c')"; //$NON-NLS-1$
-        helpResolve(userSql, FakeMetadataFactory.exampleBQTCached(), AnalysisRecord.createNonRecordingRecord());        
-    }
-
-    @Test public void testXpathValueInvalid_defect15088() throws Exception {
-        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
-        Command command = helpParse(userSql);
-        
-        try {
-            QueryResolver.resolveCommand(command, FakeMetadataFactory.exampleBQTCached(), AnalysisRecord.createNonRecordingRecord());
-            fail("Expected resolver exception on invalid xpath value"); //$NON-NLS-1$
-        } catch(QueryResolverException e) {
-            //System.out.println(e.getMessage());
-        }
-    }
-
     @Test public void testNullConstantInSelect() throws Exception {
         String userSql = "SELECT null as x"; //$NON-NLS-1$
         Query query = (Query)helpParse(userSql);

@@ -1932,15 +1932,29 @@
         <tbody>
           <row>
             <entry>
-              <para><code>XPATHVALUE(doc, xpath)</code></para>
+              <para><code>XPATHVALUE(doc, xpath [, namepaces])</code></para>
             </entry>
             <entry>
-              <para>Takes a document and an XPATH query and returns a
-                string value for the result. An attempt is made to provide a
+              <para>Applies the XPATH query to the document and returns a
+                string value for the first matching result. An attempt is made to provide a
                 meaningful result for non-text nodes.</para>
+              <para>The optional namespaces string is used to provide default and prefix to uri mappings for the given xpath. The format is the same as namespace declarations in an xml element: xmlns:foo="uri"</para>
             </entry>
             <entry>
-              <para>Doc in {string, xml} and xpath in {string}. Return value is a string.
+              <para>Doc in {string, xml} and xpath, namespaces in {string}. Return value is a string.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XPATHQUERY(doc, xpath [, namepaces])</code></para>
+            </entry>
+            <entry>
+              <para>Takes a document and an XPATH query and returns a SQL/XML of the result.</para>
+              <para>The optional namespaces string is used to provide default and prefix to uri mappings for the given xpath. The format is the same as namespace declarations in an xml element: xmlns:foo="uri"</para>
+            </entry>
+            <entry>
+              <para>Doc in {string, xml} and xpath, namespaces in {string}. Return value is a string.
               </para>
             </entry>
           </row>
@@ -1949,8 +1963,7 @@
               <para><code>XSLTRANSFORM(doc, xsl)</code></para>
             </entry>
             <entry>
-              <para>Takes a document and an xsl stylesheet and returns a
-                clob of the result.  If either argument is null, the result is null.</para>
+              <para>Applies an xsl stylesheet to the given document.  If either argument is null, the result is null.</para>
             </entry>
             <entry>
               <para>Doc, xsl in {string, xml}. Return value is a clob.

@@ -1390,4 +1390,15 @@ public class TestFunctionLibrary {
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<!--comment-->", xml);
     }
+	
+	@Test public void testInvokeXpathQuery() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        XMLType result = (XMLType)helpInvokeMethod("xpathquery", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING}, 
+        		new Object[] {"<foo><bar>1</bar><bar>2</bar></foo>", "/foo/bar"}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<bar>1</bar><bar>2</bar>", xml);
+    }
+	
 }

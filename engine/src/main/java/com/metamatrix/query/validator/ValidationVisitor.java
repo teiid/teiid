@@ -31,15 +31,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.xpath.XPathExpressionException;
+
+import org.teiid.connector.api.SourceSystemFunctions;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
+import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.source.XMLSystemFunctions;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.LanguageObject;
@@ -319,7 +325,25 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 // can't use this pseudo-function in non-XML queries
                 handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_rowlimit_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
             }
-        }
+        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE) || obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHQUERY)) {
+	        // Validate the xpath value is valid
+	        if(obj.getArgs()[1] instanceof Constant) {
+	            Constant xpathConst = (Constant) obj.getArgs()[1];
+                try {
+                    XMLSystemFunctions.validateXpath((String)xpathConst.getValue());
+                } catch(XPathExpressionException e) {
+                	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
+                }
+	        }
+	        if (obj.getArgs().length > 2 && obj.getArgs()[2] instanceof Constant) {
+	            Constant xpathConst = (Constant) obj.getArgs()[2];
+                try {
+                    XMLSystemFunctions.getNamespaces((String)xpathConst.getValue());
+                } catch(FunctionExecutionException e) {
+                	handleValidationError(e.getMessage(), obj);
+                }
+	        }
+	    }
     }
 
     // ############### Visitor methods for stored procedure lang objects ##################

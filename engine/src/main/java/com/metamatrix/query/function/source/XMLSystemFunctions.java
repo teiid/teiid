@@ -27,11 +27,13 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.EventFilter;
 import javax.xml.stream.FactoryConfigurationError;
@@ -41,15 +43,24 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
-import net.sf.saxon.trans.XPathException;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -62,7 +73,6 @@ import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLTranslator;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.types.XMLType.Type;
-import com.metamatrix.internal.core.xml.XPathHelper;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.processor.xml.XMLUtil;
@@ -99,31 +109,7 @@ public class XMLSystemFunctions {
         }
         YEAR_ZERO = cal.getTimeInMillis();
     }
-
-    public static Object xpathValue(Object document, Object xpathStr) throws FunctionExecutionException {
-        Reader stream = null;
-        
-        if (document instanceof SQLXML) {
-            try {
-                stream = ((SQLXML)document).getCharacterStream();
-            } catch (SQLException e) {
-                throw new FunctionExecutionException(QueryPlugin.Util.getString("XMLSystemFunctions.xpathvalue_takes_only_string", document.getClass().getName())); //$NON-NLS-1$
-            }
-        } else if(document instanceof String) {
-            stream = new StringReader((String)document);
-        } else {
-            throw new FunctionExecutionException(QueryPlugin.Util.getString("XMLSystemFunctions.xpathvalue_takes_only_string", document.getClass().getName())); //$NON-NLS-1$
-        }
-        
-        try {
-            return XPathHelper.getSingleMatchAsString(stream, (String) xpathStr);
-        } catch(IOException e) {
-            throw new FunctionExecutionException(QueryPlugin.Util.getString("XMLSystemFunctions.wrap_exception", xpathStr, e.getMessage())); //$NON-NLS-1$
-        } catch(XPathException e) {
-            throw new FunctionExecutionException(QueryPlugin.Util.getString("XMLSystemFunctions.wrap_exception", xpathStr, e.getMessage())); //$NON-NLS-1$
-        }
-    }
-
+    
 	public static ClobType xslTransform(CommandContext context, String xmlResults, String styleSheet) throws Exception {
 		return xslTransform(context, DataTypeManager.transformValue(xmlResults, DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue(styleSheet, DataTypeManager.DefaultDataClasses.XML));
 	}
@@ -313,51 +299,61 @@ public class XMLSystemFunctions {
 		if (object == null) {
 			return;
 		}
-		if (object instanceof XMLType) {
-			XMLType xml = (XMLType)object;
-			Reader r = null;
-			try {
+		Reader r = null;
+		try {
+			if (object instanceof XMLType) {
+				XMLType xml = (XMLType)object;
 				r = xml.getCharacterStream();
-				if (!(r instanceof BufferedReader)) {
-					r = new BufferedReader(r);
-				}
-				switch(xml.getType()) {
-				case FRAGMENT:
-				case SIBLINGS: 
-				case PI:
-				case COMMENT: //write the value directly to the writer
-					eventWriter.flush();
-					int chr = -1;
-					while ((chr = r.read()) != -1) {
-						writer.write(chr);
-					}
-					break;
-				case UNKNOWN:  //assume a document
-				case DOCUMENT: //filter the doc declaration
-					XMLInputFactory inputFactory = XMLInputFactory.newInstance();
-					XMLEventReader eventReader = inputFactory.createXMLEventReader(r);
-		        	eventReader = inputFactory.createFilteredReader(eventReader, new EventFilter() {
-						@Override
-						public boolean accept(XMLEvent event) {
-							return !event.isStartDocument() && !event.isEndDocument();
-						}
-					});
-		        	eventWriter.add(eventReader);
-		        	break;
-				}
-			} catch (SQLException e) {
-				throw new IOException(e);
-			} finally {
-				if (r != null) {
-					r.close();
-				}
+				Type type = xml.getType();
+				convertReader(writer, eventWriter, r, type);
+			} else if (object instanceof Clob) {
+				Clob clob = (Clob)object;
+				r = clob.getCharacterStream();
+				convertReader(writer, eventWriter, r, Type.TEXT);
+			} else {
+				String val = getStringValue(object);
+				eventWriter.add(eventFactory.createCharacters(val));
 			}
-		} else {
-			String val = getStringValue(object);
-			eventWriter.add(eventFactory.createCharacters(val));
+		} catch (SQLException e) {
+			throw new IOException(e);
+		} finally {
+			if (r != null) {
+				r.close();
+			}
 		}
 		//TODO: blob - with base64 encoding
-		//TODO: full clob?
+	}
+
+	private static void convertReader(Writer writer,
+			XMLEventWriter eventWriter, Reader r, Type type)
+			throws XMLStreamException, IOException, FactoryConfigurationError {
+		if (!(r instanceof BufferedReader)) {
+			r = new BufferedReader(r);
+		}
+		switch(type) {
+		case FRAGMENT:
+		case SIBLINGS: 
+		case PI:
+		case COMMENT: //write the value directly to the writer
+			eventWriter.flush();
+			int chr = -1;
+			while ((chr = r.read()) != -1) {
+				writer.write(chr);
+			}
+			break;
+		case UNKNOWN:  //assume a document
+		case DOCUMENT: //filter the doc declaration
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			XMLEventReader eventReader = inputFactory.createXMLEventReader(r);
+			eventReader = inputFactory.createFilteredReader(eventReader, new EventFilter() {
+				@Override
+				public boolean accept(XMLEvent event) {
+					return !event.isStartDocument() && !event.isEndDocument();
+				}
+			});
+			eventWriter.add(eventReader);
+			break;
+		}
 	}
 	
 	public static XMLType xmlComment(String comment) {
@@ -401,5 +397,131 @@ public class XMLSystemFunctions {
 	    return resultBuffer.toString();
 	    
 	}
+
+    public static String xpathValue(XMLType document, String xpathStr, String namespaces) throws IOException, XPathExpressionException, SQLException, FunctionExecutionException {
+    	Reader stream = document.getCharacterStream();
+        return xpathValue(stream, xpathStr, namespaces);
+    }
+	
+    public static String xpathValue(String document, String xpathStr, String namespaces) throws IOException, XPathExpressionException, FunctionExecutionException {
+    	return xpathValue(new StringReader(document), xpathStr, namespaces);	
+    }
+    
+    public static String xpathValue(String document, String xpathStr) throws IOException, XPathExpressionException, FunctionExecutionException {
+    	return xpathValue(document, xpathStr, null);
+    }
+    
+    public static String xpathValue(XMLType document, String xpathStr) throws IOException, SQLException, XPathExpressionException, FunctionExecutionException {
+    	return xpathValue(document, xpathStr, null);
+    }
+
+    public static XMLType xpathQuery(CommandContext context, String document, String xpathStr) throws IOException, MetaMatrixComponentException, MetaMatrixProcessingException, XPathExpressionException {
+    	return xpathQuery(context, document, xpathStr, null);
+    }
+    
+    public static XMLType xpathQuery(CommandContext context, XMLType document, String xpathStr) throws IOException, SQLException, XPathExpressionException, MetaMatrixComponentException, MetaMatrixProcessingException {
+    	return xpathQuery(context, document, xpathStr, null);
+    }
+    
+    public static XMLType xpathQuery(CommandContext context, String document, String xpathStr, String namespaces) throws IOException, MetaMatrixComponentException, MetaMatrixProcessingException, XPathExpressionException {
+    	Reader stream = new StringReader(document);
+    	return xpathQuery(context, xpathStr, stream, namespaces);
+    }
+    
+    public static XMLType xpathQuery(CommandContext context, XMLType document, String xpathStr, String namespaces) throws IOException, SQLException, XPathExpressionException, MetaMatrixComponentException, MetaMatrixProcessingException {
+    	Reader stream = ((SQLXML)document).getCharacterStream();
+    	return xpathQuery(context, xpathStr, stream, namespaces);
+    }
+
+	private static XMLType xpathQuery(CommandContext context, String xpathStr,
+			Reader stream, String namespaces) throws XPathExpressionException,
+			MetaMatrixComponentException, MetaMatrixProcessingException,
+			IOException {
+		try {
+            XPathFactory xpathFactory = XPathFactory.newInstance();
+        	XPath xp = xpathFactory.newXPath();
+        	NamespaceContext nc = getNamespaces(namespaces);
+        	if (nc != null) {
+        		xp.setNamespaceContext(nc);
+        	}
+        	final NodeList nodes = (NodeList)xp.evaluate(xpathStr, new InputSource(stream), XPathConstants.NODESET);
+        	if (nodes.getLength() == 0) {
+        		return null;
+        	}
+        	Type type = nodes.getLength() > 1 ? Type.SIBLINGS : Type.FRAGMENT;
+        	for (int i = 0; i < nodes.getLength(); i++) {
+        		Node node = nodes.item(i);
+        		if (node.getNodeType() == Node.TEXT_NODE) {
+        			type = Type.TEXT;
+        		}
+        	}
+        	SQLXML sqlXml = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+				
+				@Override
+				public void translate(Writer writer) throws TransformerException {
+	                TransformerFactory factory = TransformerFactory.newInstance();
+	                Transformer transformer = factory.newTransformer();
+	                transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+	                for (int i = 0; i < nodes.getLength(); i++) {
+	            		Node node = nodes.item(i);
+						transformer.transform(new DOMSource(node), new StreamResult(writer));
+	            	}
+				}
+			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
+        	XMLType result = new XMLType(sqlXml);
+        	result.setType(type);
+        	return result;
+        } finally {
+    		stream.close();
+        }
+	}  
+	
+    public static String xpathValue(Reader documentReader, String xpath, String namespaces) throws IOException, XPathExpressionException, FunctionExecutionException {        
+        try {
+            XPathFactory xpathFactory = XPathFactory.newInstance();
+        	XPath xp = xpathFactory.newXPath();
+        	NamespaceContext nc = getNamespaces(namespaces);
+        	if (nc != null) {
+        		xp.setNamespaceContext(nc);
+        	}
+        	Node node = (Node)xp.evaluate(xpath, new InputSource(documentReader), XPathConstants.NODE);
+        	if (node == null) {
+        		return null;
+        	}
+        	return node.getTextContent();
+        } finally {
+            // Always close the reader
+            documentReader.close();
+        }
+    }
+    
+    public static NamespaceContext getNamespaces(String namespaces) throws FunctionExecutionException {
+    	if (namespaces == null) {
+    		return null;
+    	}
+		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		try {
+			XMLStreamReader eventReader = inputFactory.createXMLStreamReader(new StringReader("<x " + namespaces + " />")); //$NON-NLS-1$ //$NON-NLS-2$
+			eventReader.next();
+        	return eventReader.getNamespaceContext();
+		} catch (XMLStreamException e) {
+			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("XMLSystemFunctions.invalid_namespaces", namespaces)); //$NON-NLS-1$
+		}
+    }
+
+    /**
+     * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.
+     * @param xpath An xpath expression, for example: a/b/c/getText()
+     * @throws XPathExpressionException 
+     */
+    public static void validateXpath(String xpath) throws XPathExpressionException {
+        if(xpath == null) { 
+            return;
+        }
+        
+        XPathFactory factory = XPathFactory.newInstance();
+        XPath xp = factory.newXPath();
+        xp.compile(xpath);
+    }
 	
 }
