@@ -1,0 +1,117 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package org.teiid.translator.jdbc;
+
+import java.sql.Timestamp;
+import java.util.Arrays;
+
+import junit.framework.TestCase;
+
+import org.teiid.connector.language.ColumnReference;
+import org.teiid.connector.language.Expression;
+import org.teiid.connector.language.Function;
+import org.teiid.connector.language.LanguageFactory;
+import org.teiid.connector.language.Literal;
+import org.teiid.connector.language.NamedTable;
+import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
+import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.jdbc.ExtractFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.Translator;
+
+import com.metamatrix.query.unittest.TimestampUtil;
+
+/**
+ */
+public class TestExtractFunctionModifier extends TestCase {
+
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
+
+    /**
+     * Constructor for TestMonthFunctionModifier.
+     * @param name
+     */
+    public TestExtractFunctionModifier(String name) {
+        super(name);
+    }
+
+    public void helpTestMod(Expression c, String expectedStr, String target) throws Exception {
+        Function func = LANG_FACTORY.createFunction(target, 
+            Arrays.asList(c),
+            Integer.class);
+        
+        ExtractFunctionModifier mod = new ExtractFunctionModifier ();
+        Translator trans = new Translator();
+        trans.registerFunctionModifier(target, mod);
+        trans.initialize(new JDBCExecutionFactory());
+        
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
+
+        sqlVisitor.append(func);  
+        assertEquals(expectedStr, sqlVisitor.toString());
+    }
+    public void test1() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        helpTestMod(arg1, "EXTRACT(MONTH FROM {d '2004-01-21'})" , "month");   //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void test2() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        helpTestMod(arg1, "EXTRACT(MONTH FROM {ts '2004-01-21 17:05:00.0'})", "month"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void test3() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        helpTestMod(arg1, "EXTRACT(YEAR FROM {d '2004-01-21'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void test4() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        helpTestMod(arg1, "EXTRACT(YEAR FROM {ts '2004-01-21 17:05:00.0'})", "year"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void test5() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
+        helpTestMod(arg1, "EXTRACT(DAY FROM {d '2004-01-21'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void test6() throws Exception {
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
+        helpTestMod(arg1, "EXTRACT(DAY FROM {ts '2004-01-21 17:05:00.0'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+    }    
+
+    public void test11() throws Exception {
+        NamedTable group = LANG_FACTORY.createNamedTable("group", null, null); //$NON-NLS-1$
+        ColumnReference elem = LANG_FACTORY.createColumnReference("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
+        helpTestMod(elem, "EXTRACT(DAY FROM group.col)", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void test12() throws Exception {
+        NamedTable group = LANG_FACTORY.createNamedTable("group", null, null); //$NON-NLS-1$
+        ColumnReference elem = LANG_FACTORY.createColumnReference("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
+        helpTestMod(elem, "(EXTRACT(DOW FROM group.col) + 1)", SourceSystemFunctions.DAYOFWEEK); //$NON-NLS-1$
+    }
+    
+}
+
