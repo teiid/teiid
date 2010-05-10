@@ -27,18 +27,17 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.jboss.managed.api.annotation.ManagementPropertyFactory;
 import org.teiid.adminapi.Translator;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="translator"), properties=ManagementProperties.EXPLICIT)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = "translator")
 public class TranslatorMetaData extends AdminObjectImpl implements Translator, Serializable {
 
 	private static final long serialVersionUID = 1680003620274793056L;
@@ -49,6 +48,7 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	public static final String MAX_RESULT_ROWS = "max-result-rows"; //$NON-NLS-1$
 	public static final String XA_CAPABLE = "xa-capable"; //$NON-NLS-1$
 	public static final String OVERRIDE_CAPABILITIES_FILE = "override-capabilities-file"; //$NON-NLS-1$
+	public static final String NAME = "name"; //$NON-NLS-1$
 	
 	// objects are used to keep the jaxb putting verbose xml elements when they are not defined.
 	private String executionFactoryClass;
@@ -65,6 +65,11 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	public String getName() {
 		return super.getName();
 	}	
+	
+	@XmlElement(name = NAME)
+	public void setName(String name) {
+		super.setName(name);
+	}
 	
 	@Override
 	@ManagementProperty(name=EXECUTION_FACTORY_CLASS, description="Connector Class", mandatory = true)
@@ -145,7 +150,8 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	
 	@Override
 	@XmlElement(name = "translator-property", type = PropertyMetadata.class)
-	@ManagementProperty(description = "Translator Properties", managed=true)
+	@ManagementProperty(name="translator-property", description = "Translator Properties", managed=true)
+	@ManagementPropertyFactory(TranslatorPropertyFactory.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}	

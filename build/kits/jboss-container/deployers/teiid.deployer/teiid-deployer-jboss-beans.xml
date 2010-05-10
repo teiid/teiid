@@ -75,6 +75,11 @@
    <bean name="VDBMetadataComponentMapper" class="org.teiid.jboss.deployers.VDBMetadataComponentMapper">
         <constructor><parameter><inject bean="PersistenceFactory" /></parameter></constructor>
    </bean>    
+   <!-- Persistence class for the Translator deployment file -->
+   <bean name="TranslatorMetadataGroupComponentMapper" class="org.teiid.jboss.deployers.TranslatorMetadataGroupComponentMapper">
+        <constructor><parameter><inject bean="PersistenceFactory" /></parameter></constructor>
+   </bean>   
+   
         
     <!--  used for the translators -->
    <bean name="TranslatorDeploymentTemplateInfoFactory" class="org.teiid.templates.TranslatorTemplateInfoFactory"/>

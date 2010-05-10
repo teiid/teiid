@@ -19,34 +19,54 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.adminapi.impl;
+package org.teiid.deployers;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.StringReader;
 import java.io.StringWriter;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.TranslatorMetaData;
+
 
 @SuppressWarnings("nls")
 public class TestTranslatorMetadata {
 
 	@Test
 	public void testFormat() throws Exception {
+		
+		TranslatorMetaDataGroup group = new TranslatorMetaDataGroup();
 		TranslatorMetaData tm = new TranslatorMetaData();
+		group.translators.add(tm);
+		
 		
 		tm.setExecutionFactoryClass("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory");
 		tm.setXaCapable(true);
 		tm.setName("Oracle");
 		tm.addProperty("ExtensionTranslationClassName", "org.teiid.translator.jdbc.oracle.OracleSQLTranslator");
 		
-		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {TranslatorMetaData.class});
+		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {TranslatorMetaDataGroup.class});
 		Marshaller marshell = jc.createMarshaller();
 		marshell.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,new Boolean(true));
 		
 		StringWriter sw = new StringWriter();
-		marshell.marshal(tm, sw);
+		marshell.marshal(group, sw);
 				
 		System.out.println(sw.toString());		
+		
+		Unmarshaller un = jc.createUnmarshaller();
+		group = (TranslatorMetaDataGroup)un.unmarshal(new StringReader(sw.toString()));
+		
+		tm = group.getTranslators().get(0);
+		
+		assertEquals("Oracle", tm.getName());
+		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", tm.getExecutionFactoryClass());
+		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", tm.getPropertyValue("ExtensionTranslationClassName"));
+		
 	}
 }

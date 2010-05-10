@@ -170,22 +170,17 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 			Boolean supportMultiSource = Boolean.TRUE;
 			try {
-				supportMultiSource = ProfileServiceUtil
-						.booleanValue(managedObject.getProperty(
-								"supportsMultiSourceBindings").getValue());
+				supportMultiSource = ProfileServiceUtil.booleanValue(managedObject.getProperty("supportsMultiSourceBindings").getValue());
 			} catch (Exception e) {
 				throw e;
 			}
 
 			String modelName = managedObject.getName();
-			ManagedProperty connectorBinding = managedObject
-					.getProperty("sourceMappings");
+			ManagedProperty connectorBinding = managedObject.getProperty("sourceMappings");
 			Collection<Map<String, String>> sourceList = new ArrayList<Map<String, String>>();
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
-			String visibility = ((SimpleValueSupport) managedObject
-					.getProperty("visible").getValue()).getValue().toString();
-			String type = ((EnumValueSupport) managedObject.getProperty(
-					"modelType").getValue()).getValue().toString();
+			String visibility = ((SimpleValueSupport) managedObject.getProperty("visible").getValue()).getValue().toString();
+			String type = ((EnumValueSupport) managedObject.getProperty("modelType").getValue()).getValue().toString();
 
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
@@ -194,13 +189,9 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 				MetaValue[] errorArray = errorValueSupport.getElements();
 				for (MetaValue error : errorArray) {
 					GenericValueSupport errorGenValueSupport = (GenericValueSupport) error;
-					ManagedObject errorMo = (ManagedObject) errorGenValueSupport
-							.getValue();
-					String severity = ((SimpleValue) errorMo.getProperty(
-							"severity").getValue()).getValue().toString();
-					String message = ((SimpleValue) errorMo
-							.getProperty("value").getValue()).getValue()
-							.toString();
+					ManagedObject errorMo = (ManagedObject) errorGenValueSupport.getValue();
+					String severity = ((SimpleValue) errorMo.getProperty("severity").getValue()).getValue().toString();
+					String message = ((SimpleValue) errorMo.getProperty("value").getValue()).getValue().toString();
 					PropertyMap errorMap = new PropertyMap("errorMap",
 							new PropertySimple("severity", severity),
 							new PropertySimple("message", message));
@@ -211,16 +202,17 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			for (Map<String, String> sourceMap : sourceList) {
 
 				if (isSource) {
-					String sourceName = (String) sourceMap.get("name");
-					String jndiName = (String) sourceMap.get("jndiName");
+					String sourceName =  sourceMap.get("name");
+					String jndiName = sourceMap.get("jndiName");
+					String translatorName =  sourceMap.get("translatorName");
 					
 					PropertyMap model = new PropertyMap("model",
 							new PropertySimple("name", modelName),
 							new PropertySimple("sourceName", sourceName),
 							new PropertySimple("jndiName", jndiName),
+							new PropertySimple("translatorName", translatorName),
 							new PropertySimple("visibility", visibility),
-							new PropertySimple("supportsMultiSource",
-									supportMultiSource));
+							new PropertySimple("supportsMultiSource",supportMultiSource));
 
 					model.getSimple("jndiName").setOverride(false);
 					sourceModelsList.add(model);
@@ -252,14 +244,14 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 				GenericValueSupport genValue = ((GenericValueSupport) value);
 				ManagedObject mo = (ManagedObject) genValue.getValue();
 				String sourceName = mo.getName();
-				String jndi = ((SimpleValue) mo.getProperty("jndiName")
-						.getValue()).getValue().toString();
+				String jndi = ((SimpleValue) mo.getProperty("connectionJndiName").getValue()).getValue().toString();
+				String translatorName = ((SimpleValue) mo.getProperty("translatorName").getValue()).getValue().toString();
 				map.put("name", sourceName);
 				map.put("jndiName", jndi);
+				map.put("translatorName", translatorName);
 			}
 		} else {
-			throw new IllegalStateException(pValue
-					+ " is not a Collection type");
+			throw new IllegalStateException(pValue+ " is not a Collection type");
 		}
 	}
 

@@ -192,6 +192,8 @@ public class Admin extends TeiidAdmin {
 				throw new AdminProcessingException(IntegrationPlugin.Util.getString("translator_template_not_found", typeName)); //$NON-NLS-1$
 			}
 			
+			properties.setProperty("name", deploymentName); //$NON-NLS-1$
+			
 			// template properties specific to the template
 			Map<String, ManagedProperty> propertyMap = info.getProperties();
 			

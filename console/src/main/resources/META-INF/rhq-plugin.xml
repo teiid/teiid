@@ -449,8 +449,11 @@
 							<c:simple-property name="sourceName"
 								displayName="Source Name" description="Source name for this model"
 								required="false" readOnly="true" />
+                            <c:simple-property name="translatorName"
+                                displayName="Translator Name" description="Name of the translator"
+                                required="true" />                                
 							<c:simple-property name="jndiName"
-								displayName="Connector Binding JNDI Name" description="JNDI name for this connector binding"
+								displayName="Connection JNDI Name" description="JNDI name for this connection"
 								required="false" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visibility of the model"

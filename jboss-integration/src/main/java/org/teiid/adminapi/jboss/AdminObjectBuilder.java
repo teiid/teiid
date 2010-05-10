@@ -52,7 +52,7 @@ public class AdminObjectBuilder {
 				if (value != null) {
 					MetaType type = value.getMetaType();
 					if (type.isSimple()) {
-						PropertiesUtils.setBeanProperty(t, mp.getName(), ((SimpleValue)value).getValue());
+						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), ((SimpleValue)value).getValue());
 					}
 					else if (type.isProperties()) {
 						

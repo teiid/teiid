@@ -23,12 +23,11 @@
     --> 
     <model name="MarketData">
         <!-- 
-            Each of source represents data source that are defined for reading and writing data. 
-            Connectors in Teiid are defined using "xxx-ds.xml" files. The below jndi name refers
-            to one such connector.  Connectors are defined using "connection factory" templates in
-            JBoss. (ex: look at text-connector-ds.xml file)
+            Each of source represents translator and data source  reading and writing data. There are pre-defined translators or
+            you can create one. They are defined using "-translator.xml" file. Connections define connections
+            to physical sources. In JBoss AS they are typically defined using "xxx-ds.xml" files. 
         -->
-        <source name="text-connector" jndi-name="java:text-connector"/>
+        <source name="text-connector" translator-name="text" connection-jndi-name="java:marketdata-text-connection"/>
     </model>
 
     <model name="Accounts">
@@ -44,7 +43,7 @@
          <!--
             This connector is defined in the "derby-connector-ds.xml" 
           -->
-        <source name="derby-connector" jndi-name="java:derby-connector"/>
+        <source name="derby-connector" translator-name="derby" connection-jndi-name="java:PortfolioDS"/>
     </model>
 
 </vdb>

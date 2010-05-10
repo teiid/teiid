@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<translator>
-    <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
-    <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.sqlserver.SQLServerSQLTranslator" />
-    <xa-capable>true</xa-capable>
-</translator>

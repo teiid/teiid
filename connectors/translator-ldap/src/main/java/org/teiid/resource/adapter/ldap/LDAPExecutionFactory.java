@@ -65,8 +65,8 @@ public class LDAPExecutionFactory extends BasicExecutionFactory {
 		return restrictToObjectClass;
 	}
 	
-	public void setRestrictToObjectClass(Boolean restrictToObjectClass) {
-		this.restrictToObjectClass = restrictToObjectClass.booleanValue();
+	public void setRestrictToObjectClass(boolean restrictToObjectClass) {
+		this.restrictToObjectClass = restrictToObjectClass;
 	}
 
 	@TranslatorProperty(name="SearchDefaultScope", display="Default Search Scope", description="Default Scope for LDAP Searches", allowed={"OBJECT_SCOPE","ONELEVEL_SCOPE","SUBTREE_SCOPE"},required=true, defaultValue="SUBTREE_SCOPE")

@@ -7,8 +7,7 @@ Put the <derby home>/lib/derbyclient.jar to the "<jboss home>/server/default/lib
 Copy the PortfolioModel/Portolio.vdb file to the "<jboss home>/server/default/deploy" directory.
 
 Copy the Connectors for the example
-	- derby-connector-ds.xml
-	- text-connector-ds.xml
+	- text-connection-ds.xml
 	- portfolio-ds.xml 
  
 Start the JBoss Container

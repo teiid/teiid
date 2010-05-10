@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<translator>
-    <execution-factory-class>org.teiid.resource.adapter.loopback.LoopbackExecutionFactory</execution-factory-class>
-</translator>
+<translator-factory>
+    <translator>
+        <name>loopback</name>
+        <execution-factory-class>org.teiid.resource.adapter.loopback.LoopbackExecutionFactory</execution-factory-class>
+    </translator>
+</translator-factory>

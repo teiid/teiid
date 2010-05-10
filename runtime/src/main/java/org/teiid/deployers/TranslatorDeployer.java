@@ -45,39 +45,49 @@ import com.metamatrix.core.util.ReflectionHelper;
 /**
  * Deployer for the Translator
  */
-public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMetaData> {
+public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMetaDataGroup> {
 	
 	private TranslatorRepository translatorRepository;
 	private VDBStatusChecker vdbChecker;
 	
 	public TranslatorDeployer() {
-		super(TranslatorMetaData.class);
+		super(TranslatorMetaDataGroup.class);
 	}
 
 	@Override
-	public void deploy(DeploymentUnit unit, TranslatorMetaData data) throws DeploymentException {
+	public void deploy(DeploymentUnit unit, TranslatorMetaDataGroup group) throws DeploymentException {
 
-		String translatorName = data.getName();
-		
-		String executionFactoryClass = data.getExecutionFactoryClass();
-		if (executionFactoryClass != null) {
-			ExecutionFactory connector = buildTranslator(executionFactoryClass, data);
-            this.translatorRepository.addTranslator(translatorName, connector);
-            LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("translator_started", translatorName)); //$NON-NLS-1$
-            this.vdbChecker.translatorAdded(translatorName);
-		}				
+		for (TranslatorMetaData data:group.getTranslators()) {
+			String translatorName = data.getName();
+			if (translatorName == null) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("name_not_found", unit.getName())); //$NON-NLS-1$
+			}
+			
+			String executionFactoryClass = data.getExecutionFactoryClass();
+			if (executionFactoryClass != null) {
+				ExecutionFactory connector = buildTranslator(executionFactoryClass, data);
+	            this.translatorRepository.addTranslator(translatorName, connector);
+	            LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("translator_started", translatorName)); //$NON-NLS-1$
+	            this.vdbChecker.translatorAdded(translatorName);
+			}	
+			else {
+				throw new DeploymentException(RuntimePlugin.Util.getString("executionfactory_not_found", unit.getName())); //$NON-NLS-1$
+			}
+		}
 	}
 	
 	@Override
-	public void undeploy(DeploymentUnit unit, TranslatorMetaData data) {
-		super.undeploy(unit, data);
-		
-		String translatorName = data.getName();
+	public void undeploy(DeploymentUnit unit, TranslatorMetaDataGroup group) {
+		super.undeploy(unit, group);
 
-		if (this.translatorRepository != null) {
-			this.translatorRepository.removeTranslator(translatorName);
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("translator_stopped", translatorName)); //$NON-NLS-1$
-			this.vdbChecker.translatorRemoved(translatorName);
+		for (TranslatorMetaData data:group.getTranslators()) {
+		
+			String translatorName = data.getName();
+			if (this.translatorRepository != null) {
+				this.translatorRepository.removeTranslator(translatorName);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("translator_stopped", translatorName)); //$NON-NLS-1$
+				this.vdbChecker.translatorRemoved(translatorName);
+			}
 		}
 	}	
 
@@ -136,7 +146,7 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 				if (setterMethod == null) {
 					throw new DeploymentException(RuntimePlugin.Util.getString("no_set_method", setter, tp.name())); //$NON-NLS-1$
 				}
-				setterMethod.invoke(ef, value);
+				setterMethod.invoke(ef, convert(value, method.getReturnType()));
 			}
 		}
 	}
@@ -147,5 +157,34 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 	
 	public void setVDBStatusChecker(VDBStatusChecker checker) {
 		this.vdbChecker = checker;
+	}
+	
+	Object convert(Object value, Class type) {
+		if(value.getClass() == type) {
+			return value;
+		}
+		
+		if (value instanceof String) {
+			String str = (String)value;
+			if (type == int.class || type == Integer.class) {
+				return Integer.parseInt(str);
+			}
+			else if (type == boolean.class || type == Boolean.class) {
+				return Boolean.parseBoolean(str);
+			}
+			else if (type == long.class || type == Long.class) {
+				return Long.parseLong(str);
+			}
+			else if (type == byte.class || type == Byte.class) {
+				return Byte.parseByte(str);
+			}
+			else if (type == short.class || type == Short.class) {
+				return Short.parseShort(str);
+			}
+			else if (type == float.class || type == Float.class) {
+				return Float.parseFloat(str);
+			}
+		}
+		return value;
 	}
 }

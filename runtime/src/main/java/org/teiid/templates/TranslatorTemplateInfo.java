@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.BasicDeploymentTemplateInfo;
+import org.jboss.metatype.api.types.MapCompositeMetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.teiid.deployers.ManagedPropertyUtil;
 import org.teiid.resource.cci.TranslatorProperty;
@@ -38,6 +39,9 @@ public class TranslatorTemplateInfo extends BasicDeploymentTemplateInfo {
 	
 	private static final long serialVersionUID = 9066758787789280783L;
 	static final String TEMPLATE_NAME = "template-name"; //$NON-NLS-1$
+	static final String EXECUTION_FACTORY_NAME = "execution-factory-class"; //$NON-NLS-1$
+	static final String NAME = "name"; //$NON-NLS-1$
+	static final String TRANSLATOR_PROPERTY = "translator-property"; //$NON-NLS-1$
 	
 	
 	public TranslatorTemplateInfo(String name, String description, Map<String, ManagedProperty> properties) {
@@ -59,6 +63,10 @@ public class TranslatorTemplateInfo extends BasicDeploymentTemplateInfo {
 	
 	private void populate() {
 		addProperty(buildTemplateProperty(getName()));
+		
+		addProperty(ManagedPropertyUtil.createProperty(EXECUTION_FACTORY_NAME,SimpleMetaType.STRING, "Execution Factory Class name", "The translator's execution factory name", true, false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		addProperty(ManagedPropertyUtil.createProperty(NAME,SimpleMetaType.STRING, "name", "Name of the Translator", true, false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		addProperty(ManagedPropertyUtil.createProperty(TRANSLATOR_PROPERTY, new MapCompositeMetaType(SimpleMetaType.STRING), TRANSLATOR_PROPERTY, "Additional Translator properties", false, false, null)); //$NON-NLS-1$
 	}
 	
 	static ManagedProperty buildTemplateProperty(String name) {

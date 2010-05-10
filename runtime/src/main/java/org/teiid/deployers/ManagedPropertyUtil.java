@@ -27,6 +27,7 @@ import org.jboss.managed.api.Fields;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
 import org.jboss.managed.plugins.ManagedPropertyImpl;
+import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
@@ -48,7 +49,7 @@ public class ManagedPropertyUtil {
 	}
 	
 	public static ManagedProperty createProperty(String name,
-			SimpleMetaType type, String displayName, String description,
+			MetaType type, String displayName, String description,
 			boolean mandatory, boolean readOnly, String defaultValue) {
 
 		DefaultFieldsImpl fields = new DefaultFieldsImpl(name);

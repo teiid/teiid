@@ -2,8 +2,7 @@ Follow the same derby setup instructions as the portfolio example.
 
 Copy the followng files to the <jboss.home>/server/default/deploy directory.
 	- portfolio-dynamic-vdb.xml
-	- ../portfolio/derby-connector-ds.xml
-	- ../portfolio/text-connector-ds.xml
+	- ../portfolio/text-connection-ds.xml
 	- ../portfolio/portfolio-ds.xml 
 
 Start the JBoss Container

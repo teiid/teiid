@@ -6,6 +6,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +17,7 @@ import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import org.junit.After;
@@ -31,6 +33,7 @@ import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 
 import com.metamatrix.core.util.ObjectConverterUtil;
@@ -40,6 +43,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 public class TestConnectorBindings extends BaseConnection {
 	static ServerDatasourceConnection ds;
 	static Admin admin;
+	private static final String VERSION = "-7.0.0-SNAPSHOT"; 
 	
 	@Before
 	public void setUp() throws Exception {
@@ -201,10 +205,10 @@ public class TestConnectorBindings extends BaseConnection {
 	}
 	
 	@Test
-	public void testConnectorTypeProperties() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getTranslatorTemplatePropertyDefinitions("connector-jdbc-xa-7.0.0-SNAPSHOT"); //$NON-NLS-1$
+	public void testTranslatorTemplateProperties() throws Exception {
+		Collection<PropertyDefinition> defs = admin.getTranslatorTemplatePropertyDefinitions("translator-jdbc"+VERSION); //$NON-NLS-1$
 		for (PropertyDefinition pd:defs) {
-			System.out.println(pd.getName()+":"+pd.getPropertyTypeClassName());
+			System.out.println(pd.getName()+":"+pd.getPropertyTypeClassName()+":"+pd.getDefaultValue());
 			if (pd.getName().equals("ExtensionTranslationClassName")) { //$NON-NLS-1$
 				assertEquals("Extension SQL Translation Class", pd.getDisplayName()); //$NON-NLS-1$
 				assertEquals(false, pd.isAdvanced());
@@ -212,30 +216,27 @@ public class TestConnectorBindings extends BaseConnection {
 				assertEquals(false, pd.isMasked());
 				assertEquals(true, pd.isModifiable());
 				
-				HashSet<String> values = new HashSet<String>();
-				values.add("org.teiid.connector.jdbc.h2.H2Translator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.sqlserver.SqlServerSQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.mysql.MySQL5Translator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.derby.DerbySQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.postgresql.PostgreSQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.db2.DB2SQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.access.AccessSQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.mysql.MySQLTranslator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.translator.Translator"); //$NON-NLS-1$
-				values.add("org.teiid.connector.jdbc.oracle.OracleSQLTranslator"); //$NON-NLS-1$
-				assertEquals(values, pd.getAllowedValues());
+				assertEquals(12, pd.getAllowedValues().size());
+				System.out.println(pd.getAllowedValues());
 			}
 		}
 	}
 	
 	@Test
-	public void testConnectorTypes() throws Exception {
+	public void testGetTemplate() throws Exception {
+		Translator translator = admin.getTranslator("oracle");
+		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", translator.getPropertyValue("ExtensionTranslationClassName")); //$NON-NLS-1$
+		assertEquals(true, translator.isXaCapable());
+	}
+	
+	@Test
+	public void testTranslatorTypes() throws Exception {
 		Set<String> defs = admin.getTranslatorTemplateNames();
-//		assertTrue(defs.contains("connector-salesforce-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-//		assertTrue(defs.contains("connector-jdbc-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-//		assertTrue(defs.contains("connector-text-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-//		assertTrue(defs.contains("connector-loopback-7.0.0-SNAPSHOT")); //$NON-NLS-1$
-//		assertTrue(defs.contains("connector-ldap-7.0.0-SNAPSHOT")); //$NON-NLS-1$
+		assertTrue(defs.contains("translator-salesforce"+VERSION)); //$NON-NLS-1$
+		assertTrue(defs.contains("translator-jdbc"+VERSION)); //$NON-NLS-1$
+		assertTrue(defs.contains("translator-text"+VERSION)); //$NON-NLS-1$
+		assertTrue(defs.contains("translator-loopback"+VERSION)); //$NON-NLS-1$
+		assertTrue(defs.contains("translator-ldap"+VERSION)); //$NON-NLS-1$
 		System.out.println(defs);
 	}
 
@@ -307,5 +308,42 @@ public class TestConnectorBindings extends BaseConnection {
 		// remove non-existent role name
 		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
 	}	
+	
+	@Test
+	public void testTranslator() throws Exception {
+		Properties props = new Properties();
+		
+		// test blank add
+		try {
+			admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
+			fail("must have failed because no exeuction factory set");
+		}catch(Throwable e) {
+			
+		}
+		
+		// test minimal correct add
+		props.setProperty("execution-factory-class", "org.teiid.resource.adapter.jdbc.JDBCExecutionFactory");
+		admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
+		
+		// test set property
+		admin.setTranslatorProperty("foo", "TrimStrings", "true");
+		
+		Translator t = admin.getTranslator("foo");
+		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
+		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
+		
+		try {
+			admin.setTranslatorProperty("foo", "any-thing", "every-thing");
+			fail("can not set arbitary properties on translator");
+		}catch(Throwable e) {
+			
+		}
+		
+		admin.deleteTranslator("foo");
+		
+		t = admin.getTranslator("foo");
+		assertNull(t);
+		
+	}
 	
 }

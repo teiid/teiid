@@ -279,50 +279,44 @@ public class VDBComponent extends Facet {
 
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
-			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
-					.getValue();
+			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport.getValue();
 
 			Boolean isSource = Boolean.TRUE;
 			try {
-				isSource = ProfileServiceUtil.booleanValue(managedObject
-						.getProperty("source").getValue());
+				isSource = ProfileServiceUtil.booleanValue(managedObject.getProperty("source").getValue());
 			} catch (Exception e) {
 				LOG.error(e.getMessage());
 			}
 
 			Boolean supportMultiSource = Boolean.TRUE;
 			try {
-				supportMultiSource = ProfileServiceUtil
-						.booleanValue(managedObject.getProperty(
-								"supportsMultiSourceBindings").getValue());
+				supportMultiSource = ProfileServiceUtil.booleanValue(managedObject.getProperty("supportsMultiSourceBindings").getValue());
 			} catch (Exception e) {
 				LOG.error(e.getMessage());
 			}
 
 			String modelName = managedObject.getName();
-			ManagedProperty connectorBinding = managedObject
-					.getProperty("sourceMappings");
+			ManagedProperty connectorBinding = managedObject.getProperty("sourceMappings");
 			Collection<Map<String, String>> sourceList = new ArrayList<Map<String, String>>();
+			
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
-			String visibility = ((SimpleValueSupport) managedObject
-					.getProperty("visible").getValue()).getValue().toString();
-			String type = ((EnumValueSupport) managedObject.getProperty(
-					"modelType").getValue()).getValue().toString();
+			
+			String visibility = ((SimpleValueSupport) managedObject.getProperty("visible").getValue()).getValue().toString();
+			String type = ((EnumValueSupport) managedObject.getProperty("modelType").getValue()).getValue().toString();
 
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
 			if (errors != null) {
 				CollectionValueSupport errorValueSupport = (CollectionValueSupport) errors;
 				MetaValue[] errorArray = errorValueSupport.getElements();
+				
 				for (MetaValue error : errorArray) {
 					GenericValueSupport errorGenValueSupport = (GenericValueSupport) error;
-					ManagedObject errorMo = (ManagedObject) errorGenValueSupport
-							.getValue();
-					String severity = ((SimpleValue) errorMo.getProperty(
-							"severity").getValue()).getValue().toString();
-					String message = ((SimpleValue) errorMo
-							.getProperty("value").getValue()).getValue()
-							.toString();
+					
+					ManagedObject errorMo = (ManagedObject) errorGenValueSupport.getValue();
+					String severity = ((SimpleValue) errorMo.getProperty("severity").getValue()).getValue().toString();
+					String message = ((SimpleValue) errorMo.getProperty("value").getValue()).getValue().toString();
+					
 					PropertyMap errorMap = new PropertyMap("errorMap",
 							new PropertySimple("severity", severity),
 							new PropertySimple("message", message));
@@ -335,21 +329,26 @@ public class VDBComponent extends Facet {
 				if (isSource) {
 					String sourceName = (String) sourceMap.get("name");
 					String jndiName = (String) sourceMap.get("jndiName");
+					String translatorName = (String) sourceMap.get("translatorName");
 					PropertyMap multiSourceModel = null;
 					PropertyMap multiSourceModel2 = null;
 
 				PropertyMap model = null;
 				if (supportMultiSource){
 					//TODO need to loop through multisource models
-						multiSourceModel = new PropertyMap("model",
+					multiSourceModel = new PropertyMap("model",
 									new PropertySimple("name", modelName),
 									new PropertySimple("sourceName", sourceName),
-									new PropertySimple("jndiName", jndiName));
-						multiSourceModelsList.add(multiSourceModel);
+									new PropertySimple("jndiName", jndiName),
+									new PropertySimple("translatorName", translatorName));
+					
+					multiSourceModelsList.add(multiSourceModel);
+					
 					 model = new PropertyMap("model",
 							new PropertySimple("name", modelName),
 							new PropertySimple("sourceName", "See below"),
 							new PropertySimple("jndiName", "See below"),
+							new PropertySimple("translatorName", "See below"),
 							new PropertySimple("visibility", visibility),
 							new PropertySimple("supportsMultiSource",
 									true));
@@ -357,13 +356,15 @@ public class VDBComponent extends Facet {
 					 	multiSourceModel = new PropertyMap("model",
 								new PropertySimple("name", modelName),
 								new PropertySimple("sourceName", sourceName),
-								new PropertySimple("jndiName", jndiName));
+								new PropertySimple("jndiName", jndiName),
+								new PropertySimple("translatorName", translatorName));
 					multiSourceModelsList.add(multiSourceModel);
 					}else{
 						 model = new PropertyMap("model",
 								new PropertySimple("name", modelName),
 								new PropertySimple("sourceName", sourceName),
 								new PropertySimple("jndiName", jndiName),
+								new PropertySimple("translatorName", translatorName),
 								new PropertySimple("visibility", visibility),
 								new PropertySimple("supportsMultiSource",
 										supportMultiSource));
@@ -397,14 +398,14 @@ public class VDBComponent extends Facet {
 				GenericValueSupport genValue = ((GenericValueSupport) value);
 				ManagedObject mo = (ManagedObject) genValue.getValue();
 				String sourceName = mo.getName();
-				String jndi = ((SimpleValue) mo.getProperty("jndiName")
-						.getValue()).getValue().toString();
+				String jndi = ((SimpleValue) mo.getProperty("connectionJndiName").getValue()).getValue().toString();
+				String translatorName = ((SimpleValue) mo.getProperty("translatorName").getValue()).getValue().toString();
 				map.put("name", sourceName);
 				map.put("jndiName", jndi);
+				map.put("translatorName", translatorName);
 			}
 		} else {
-			throw new IllegalStateException(pValue
-					+ " is not a Collection type");
+			throw new IllegalStateException(pValue+ " is not a Collection type");
 		}
 	}
 

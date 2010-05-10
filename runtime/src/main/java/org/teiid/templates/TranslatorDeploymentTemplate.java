@@ -27,6 +27,7 @@ import java.io.FileWriter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.management.DeploymentTemplate;
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedObject;
@@ -35,7 +36,9 @@ import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.virtual.VFS;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.deployers.TranslatorMetaDataGroup;
 import org.teiid.deployers.TranslatorParserDeployer;
+import org.teiid.runtime.RuntimePlugin;
 
 /**
  * Translator template writer and deployer 
@@ -63,6 +66,8 @@ public class TranslatorDeploymentTemplate implements DeploymentTemplate {
 	
 	private void writeTemplate(File dsXml, DeploymentTemplateInfo values) throws Exception {
 
+		TranslatorMetaDataGroup group = new TranslatorMetaDataGroup();
+		
 		// The management framework, will update the attachment the managed property value changes.
 		// that way the translator is configured.
 		TranslatorMetaData translator = new TranslatorMetaData();
@@ -75,11 +80,17 @@ public class TranslatorDeploymentTemplate implements DeploymentTemplate {
 				if (mp.getValue() != null) {
 					dsProp.setValue(mp.getValue());
 				}
+				
+				if(mp.isMandatory() && mp.getValue() == null && mp.getDefaultValue() == null) {
+					throw new DeploymentException(RuntimePlugin.Util.getString("required_property_not_exists", mp.getName())); //$NON-NLS-1$
+				}
 			}
-		}      
+		}  
+		
+		group.addTranslator(translator);
         
 		// Now use JAXB and write the file.
-		Class[] classes = { TranslatorMetaData.class };
+		Class[] classes = { TranslatorMetaDataGroup.class };
 		JAXBContext context = JAXBContext.newInstance(classes);
 		Marshaller marshaller = context.createMarshaller();
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,new Boolean(true));
@@ -87,7 +98,7 @@ public class TranslatorDeploymentTemplate implements DeploymentTemplate {
 		FileWriter fw = null;
 		try {
 			fw = new FileWriter(dsXml);
-			marshaller.marshal(translator, fw);
+			marshaller.marshal(group, fw);
 		} finally {
 			if (fw != null) {
 				fw.close();

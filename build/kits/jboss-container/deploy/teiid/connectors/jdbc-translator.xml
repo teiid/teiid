@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<translator-factory>
+    <translator>
+        <name>access</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.access.AccessSQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>db2</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.db2.DB2SQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>derby</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.derby.DerbySQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>h2</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.h2.H2Translator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>hsql</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.hsql.HsqlTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+
+    <translator>
+        <name>mysql</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.mysql.MySQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>oracle</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.oracle.OracleSQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>postgresql</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.postgresql.PostgreSQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>sqlserver</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.sqlserver.SQLServerSQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+
+    <translator>
+        <name>sybase</name>
+        <execution-factory-class>org.teiid.resource.adapter.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <translator-property name="ExtensionTranslationClassName" value="org.teiid.translator.jdbc.sybase.SybaseSQLTranslator" />
+        <xa-capable>true</xa-capable>
+    </translator>
+</translator-factory>
