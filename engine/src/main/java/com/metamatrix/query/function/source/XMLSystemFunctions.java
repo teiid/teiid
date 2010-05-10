@@ -32,7 +32,10 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.EventFilter;
@@ -85,11 +88,11 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class XMLSystemFunctions {
 	
-	public static class NameValuePair {
+	public static class NameValuePair<T> {
 		String name;
-		Object value;
+		T value;
 		
-		public NameValuePair(String name, Object value) {
+		public NameValuePair(String name, T value) {
 			this.name = name;
 			this.value = value;
 		}
@@ -153,7 +156,7 @@ public class XMLSystemFunctions {
 		}
     }
 		
-	public static XMLType xmlForest(final CommandContext context, final NameValuePair[] values) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+	public static XMLType xmlForest(final CommandContext context, final NameValuePair[] namespaces, final NameValuePair[] values) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		boolean valueExists = false;
 		for (NameValuePair nameValuePair : values) {
 			if (nameValuePair.value != null) {
@@ -178,7 +181,7 @@ public class XMLSystemFunctions {
 						if (nameValuePair.value == null) {
 							continue;
 						}
-						addElement(nameValuePair.name, writer, eventWriter, eventFactory, nameValuePair.value);
+						addElement(nameValuePair.name, writer, eventWriter, eventFactory, namespaces, null, Collections.singletonList(nameValuePair.value));
 					}
 				} catch (XMLStreamException e) {
 					throw new TransformerException(e);
@@ -199,7 +202,7 @@ public class XMLSystemFunctions {
 	 * @throws MetaMatrixProcessingException 
 	 */
 	public static XMLType xmlElement(CommandContext context, final String name, 
-			final Object... contents) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			final NameValuePair<String>[] namespaces, final NameValuePair<?>[] attributes, final List<?> contents) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
@@ -209,7 +212,7 @@ public class XMLSystemFunctions {
 					XMLOutputFactory factory = XMLOutputFactory.newInstance();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
 					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-					addElement(name, writer, eventWriter, eventFactory, contents);
+					addElement(name, writer, eventWriter, eventFactory, namespaces, attributes, contents);
 				} catch (XMLStreamException e) {
 					throw new TransformerException(e);
 				} 
@@ -221,21 +224,32 @@ public class XMLSystemFunctions {
 	}
 	
 	private static void addElement(final String name, Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory,
-			Object... contents) throws XMLStreamException, IOException, TransformerException {
+			NameValuePair<String> namespaces[], NameValuePair<?> attributes[], List<?> contents) throws XMLStreamException, IOException, TransformerException {
 		eventWriter.add(eventFactory.createStartElement("", null, name)); //$NON-NLS-1$
-		int start = 0;
-		if (contents.length > 0 && contents[0] instanceof NameValuePair[]) {
-			for (NameValuePair nameValuePair : (NameValuePair[])contents[0]) {
+		if (namespaces != null) {
+			for (NameValuePair<String> nameValuePair : namespaces) {
+				if (nameValuePair.name == null) {
+					if (nameValuePair.value == null) {
+						eventWriter.add(eventFactory.createNamespace(XMLConstants.NULL_NS_URI));
+					} else {
+						eventWriter.add(eventFactory.createNamespace(nameValuePair.value));
+					} 
+				} else {
+					eventWriter.add(eventFactory.createNamespace(nameValuePair.name, nameValuePair.value));
+				}
+			}
+		}
+		if (attributes != null) {
+			for (NameValuePair<?> nameValuePair : attributes) {
 				if (nameValuePair.value != null) {
 					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), getStringValue(nameValuePair.value)));
 				}
 			}
-			start = 1;
 		}
 		//add empty chars to close the start tag
 		eventWriter.add(eventFactory.createCharacters("")); //$NON-NLS-1$ 
-		for (int i = start; i < contents.length; i++) {
-			convertValue(writer, eventWriter, eventFactory, contents[i]);
+		for (Object object : contents) {
+			convertValue(writer, eventWriter, eventFactory, object);
 		}
 		eventWriter.add(eventFactory.createEndElement("", null, name)); //$NON-NLS-1$
 	}

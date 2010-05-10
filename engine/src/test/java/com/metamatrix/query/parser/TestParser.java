@@ -106,7 +106,10 @@ import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
+import com.metamatrix.query.sql.symbol.XMLAttributes;
+import com.metamatrix.query.sql.symbol.XMLElement;
+import com.metamatrix.query.sql.symbol.XMLForest;
+import com.metamatrix.query.sql.symbol.XMLNamespaces;
 
 @SuppressWarnings("nls")
 public class TestParser {
@@ -2947,25 +2950,6 @@ public class TestParser {
                  query);        
     }
 
-    /** SELECT neato."cheese brain" FROM neato */
-    public void XXX_testSpacesInIdentifiers() {
-        GroupSymbol g = new GroupSymbol("neato"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        ElementSymbol symbol = new ElementSymbol("cheese brain"); //$NON-NLS-1$
-        symbol.setGroupSymbol(g);
-        select.addSymbol(symbol);
-        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        helpTest("SELECT neato.\"cheese brain\" FROM neato",  //$NON-NLS-1$
-                 "SELECT neato.\"cheese brain\" FROM neato",  //$NON-NLS-1$
-                 query);        
-    }
-    
     /** SELECT a, b FROM (SELECT c FROM m.g) AS y */
     @Test public void testSubquery1() {
         GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
@@ -6719,28 +6703,35 @@ public class TestParser {
     }
     
     @Test public void testXmlElement() throws Exception {
-    	Function f = new Function("xmlelement", new Expression[] {new Constant("table"), new Constant("x")});
-    	helpTestExpression("xmlelement(name \"table\", 'x')", "xmlelement(NAME \"table\", 'x')", f);
+    	XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
+    	helpTestExpression("xmlelement(name \"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
     }
 
     @Test public void testXmlElement1() throws Exception {
-    	Function f = new Function("xmlelement", new Expression[] {new Constant("table"), new Constant("x")});
-    	helpTestExpression("xmlelement(\"table\", 'x')", "xmlelement(NAME \"table\", 'x')", f);
+    	XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
+    	helpTestExpression("xmlelement(\"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
     }
     
     @Test public void testXmlElementWithAttributes() throws Exception {
-    	Function f = new Function("xmlelement", new Expression[] {new Constant("y"), new SQLXMLFunction("xmlattributes", Arrays.asList((SingleElementSymbol)new AliasSymbol("val", new ExpressionSymbol("", new Constant("a")))))});
-    	helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "xmlelement(NAME y, xmlattributes('a' AS val))", f);
+    	XMLElement f = new XMLElement("y", new ArrayList<Expression>());
+    	f.setAttributes(new XMLAttributes(Arrays.asList((SingleElementSymbol)new AliasSymbol("val", new ExpressionSymbol("", new Constant("a"))))));
+    	helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "XMLELEMENT(NAME y, XMLATTRIBUTES('a' AS val))", f);
     }
     
     @Test public void testXmlForest() throws Exception {
-    	SQLXMLFunction f = new SQLXMLFunction("xmlforest", Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
-    	helpTestExpression("xmlforest(a as \"table\")", "xmlforest(a AS \"table\")", f);
+    	XMLForest f = new XMLForest(Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
+    	helpTestExpression("xmlforest(a as \"table\")", "XMLFOREST(a AS \"table\")", f);
     }
     
     @Test public void testXmlPi() throws Exception {
     	Function f = new Function("xmlpi", new Expression[] {new Constant("a"), new ElementSymbol("val")});
     	helpTestExpression("xmlpi(NAME a, val)", "xmlpi(NAME a, val)", f);
+    }
+    
+    @Test public void testXmlNamespaces() throws Exception {
+    	XMLForest f = new XMLForest(Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
+    	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("x", "http://foo"))));
+    	helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
     }
 
 }

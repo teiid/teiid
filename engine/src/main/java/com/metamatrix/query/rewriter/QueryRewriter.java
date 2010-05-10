@@ -135,7 +135,6 @@ import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;

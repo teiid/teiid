@@ -57,9 +57,10 @@ import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.symbol.XMLAttributes;
+import com.metamatrix.query.sql.symbol.XMLForest;
 
 /**
  * It is important to use a Post Navigator with this class, 
@@ -86,7 +87,12 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     @Override
-    public void visit(SQLXMLFunction obj) {
+    public void visit(XMLForest obj) {
+    	replaceSymbols(obj.getArgs(), true);
+    }
+    
+    @Override
+    public void visit(XMLAttributes obj) {
     	replaceSymbols(obj.getArgs(), true);
     }
 

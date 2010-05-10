@@ -28,11 +28,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Timestamp;
+import java.util.TimeZone;
 
 import javax.xml.xpath.XPathExpressionException;
 
 import org.jdom.Attribute;
 import org.jdom.Element;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.query.FunctionExecutionException;
@@ -205,5 +209,17 @@ public class TestXMLSystemFunctions {
         final String xpath = "//*:ReadOnly"; //$NON-NLS-1$
         helpTestXpathValue(xmlFilePath,xpath,null, "false"); //$NON-NLS-1$
     }
+    
+	@Test public void testInvokeXmlElement2() throws Exception {
+		assertEquals("1969-12-31T18:00:00", XMLSystemFunctions.getStringValue(new Timestamp(0)));
+    }
+	
+	@BeforeClass static public void setUpOnce() {
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));
+	}
+	
+	@AfterClass static public void tearDownOnce() {
+		TimeZone.setDefault(null);
+	}
 
 }

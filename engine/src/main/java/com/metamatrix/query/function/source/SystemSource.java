@@ -169,7 +169,6 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addXpathQueryFunction();
         addXpathValueFunction();
         addXslTransformFunction();
-        addXmlElement();
         addXmlConcat();
         addXmlComment();
         addXmlPi();
@@ -963,14 +962,6 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                     new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    private void addXmlElement() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.XMLELEMENT, QueryPlugin.Util.getString("SystemSource.xmlelement_description"), XML, FunctionMethod.CAN_PUSHDOWN, XML_FUNCTION_CLASS, "xmlElement", //$NON-NLS-1$ //$NON-NLS-2$  
-                            new FunctionParameter[] { 
-                                new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlelement_param1")), //$NON-NLS-1$ //$NON-NLS-2$
-                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.xmlelement_param2"), true)}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlement_result")), true, FunctionMethod.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addXmlComment() {

@@ -2977,32 +2977,10 @@ Expression function(ParseInfo info) :
 		]
 		<RPAREN>
 	)  			
-	| ( funcToken = <XMLELEMENT>
-		<LPAREN>
-		(
-		 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> expression = idExpression()
-		 |
-		 expression = idExpression()
-		)
-		{
-			args.add(expression);	
-			expression = null;
-		}
-		[
-			LOOKAHEAD(2) <COMMA> expression = sqlXmlFunction(info)
-			{
-				args.add(expression);	
-				expression = null;
-			}	
-		]
-		(<COMMA> expression=expression(info)
-		{
-			args.add(expression);
-			expression = null;
-		}
-		)*
-		<RPAREN>
-	)
+	| expression = xmlElement(info)
+	  {
+	  	return expression;
+	  }
 	| ( funcToken = <XMLPI>
 		<LPAREN>
 		(
@@ -3023,13 +3001,10 @@ Expression function(ParseInfo info) :
 		]
 		<RPAREN>
 	)
-	|
-	LOOKAHEAD(<XMLFOREST>) (
-		expression = sqlXmlFunction(info)
+	|	expression = xmlForest(info)
 		{
 			return expression;
 		}
-	)  				
 	|
 	(	funcName = id()
 		{ 
@@ -3059,17 +3034,51 @@ Expression function(ParseInfo info) :
 			
 		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
 	}
+}
+
+XMLElement xmlElement(ParseInfo info) :
+{
+	String name = null;
+	ArrayList content = new ArrayList();
+	XMLNamespaces xmlNamespaces = null;
+	XMLAttributes xmlAttributes = null;
+	Expression expression = null;
+}
+{
+	<XMLELEMENT> <LPAREN>
+	(
+	 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> name = id()
+	 |
+	 name = id()
+	)
+	[
+		LOOKAHEAD(2) <COMMA> xmlNamespaces = xmlNamespaces(info)
+	]
+	[
+		LOOKAHEAD(2) <COMMA> xmlAttributes = xmlAttributes(info)
+	]
+	(<COMMA> expression=expression(info)
+	{
+		content.add(expression);
+		expression = null;
+	}
+	)*
+	<RPAREN>
+	{
+		XMLElement result = new XMLElement(name, content);
+		result.setNamespaces(xmlNamespaces);
+		result.setAttributes(xmlAttributes);
+		return result;
+	}
 }	
 
-SQLXMLFunction sqlXmlFunction(ParseInfo info) :
+XMLAttributes xmlAttributes(ParseInfo info) :
 {
 	Expression expression = null;
 	ArrayList args = new ArrayList();
-	Token funcToken = null;
 }
 {
- 	(funcToken = <XMLFOREST> | funcToken = <XMLATTRIBUTES>)
-	<LPAREN>
+ 	<XMLATTRIBUTES> <LPAREN>
 	expression = selectExpression(info)
 	{
 		args.add(expression);
@@ -3083,8 +3092,84 @@ SQLXMLFunction sqlXmlFunction(ParseInfo info) :
 	)*
 	<RPAREN>  		
 	{
-		return new SQLXMLFunction(funcToken.image, args);
+		return new XMLAttributes(args);
 	}
+}
+
+XMLForest xmlForest(ParseInfo info) :
+{
+	Expression expression = null;
+	XMLNamespaces xmlNamespaces = null;
+	ArrayList args = new ArrayList();
+}
+{
+ 	<XMLFOREST> <LPAREN>
+	[
+		xmlNamespaces = xmlNamespaces(info) <COMMA>
+	]
+	expression = selectExpression(info)
+	{
+		args.add(expression);
+		expression = null;
+	}
+	(<COMMA> expression=selectExpression(info)
+	 {
+		args.add(expression);
+		expression = null;
+	 }
+	)*
+	<RPAREN>  		
+	{
+		XMLForest result = new XMLForest(args);
+		result.setNamespaces(xmlNamespaces);
+		return result;
+	}
+}		
+		
+XMLNamespaces xmlNamespaces(ParseInfo info) :
+{
+	ArrayList namespaces = new ArrayList();
+	XMLNamespaces.NamespaceItem item = null;
+}
+{
+ 	<XMLNAMESPACES> <LPAREN>
+	item = namespaceItem(info)
+	{
+		namespaces.add(item);
+	}
+	(<COMMA> item = namespaceItem(info)
+	 {
+		 namespaces.add(item);
+	 }
+	)*
+	<RPAREN>  		
+	{
+		return new XMLNamespaces(namespaces);
+	}
+}
+
+XMLNamespaces.NamespaceItem namespaceItem(ParseInfo info) :
+{
+	String uri = null;
+	String prefix = null;
+}
+{
+	(
+		uri = stringVal() <AS> prefix = id()
+		{
+			return new XMLNamespaces.NamespaceItem(uri, prefix);
+		}
+	) | (
+		<NO> <DEFAULT_KEYWORD>
+		{
+			return new XMLNamespaces.NamespaceItem();
+		}
+	) | (
+		<DEFAULT_KEYWORD> uri = stringVal()
+		{
+			return new XMLNamespaces.NamespaceItem(uri);
+		}
+	)
 }
 
 Constant idExpression() :

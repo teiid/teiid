@@ -1972,8 +1972,9 @@
           </row>
           <row>
             <entry>
-              <para><code>XMLELEMENT([NAME] name [, &lt;ATTR&gt;][, exp]*)</code>
-               		ATTR:=<code>XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</code></para>
+              <para><code>XMLELEMENT([NAME] name [, &lt;NSP&gt;] [, &lt;ATTR&gt;][, exp]*)</code></para>
+              <para>ATTR:=<code>XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</code></para>
+              <para>NSP:=<code>XMLNAMESPACES((uri AS prefix | DEFAULT uri | NO DEFAULTS))+</code></para>
             </entry>
             <entry>
               <para>Returns an XML element with the given name and content.  If the content value is of a type other than xml, 
@@ -1985,7 +1986,7 @@
               </para>
             </entry>
             <entry>
-              <para>Name is an identifier.  exp can be any type. Return value is xml.
+              <para>Name, prefix are identifiers. uri is a string literal. exp can be any type. Return value is xml.
               </para>
             </entry>
           </row>
@@ -2004,11 +2005,12 @@
           </row>
           <row>
             <entry>
-              <para><code>XMLFOREST(exp [AS name], [exp [AS name]]*)</code></para>
+              <para><code>XMLFOREST(exp [AS name] [, &lt;NSP&gt;] [, exp [AS name]]*)</code></para>
             </entry>
             <entry>
               <para>Returns an concatination of an XML element for each non-null expression exp.  If a name is not supplied, the expression must be a column reference, in which case the element name will be the column name.
               </para>
+              <para>See XMLELEMENT for the definition of NSP - XMLNAMESPACES.</para>
             </entry>
             <entry>
               <para>Name is an identifier. Exp can be any type. Return value is xml.

@@ -92,8 +92,11 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.symbol.XMLAttributes;
+import com.metamatrix.query.sql.symbol.XMLElement;
+import com.metamatrix.query.sql.symbol.XMLForest;
+import com.metamatrix.query.sql.symbol.XMLNamespaces;
 import com.metamatrix.query.sql.util.SymbolMap;
 
 
@@ -511,13 +514,39 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     
     @Override
-    public void visit(SQLXMLFunction obj) {
+    public void visit(XMLForest obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getNamespaces());
+    	//we just want the underlying expressions, not the wrapping alias/expression symbols
+    	for (SingleElementSymbol symbol : obj.getArgs()) {
+        	visitNode(SymbolMap.getExpression(symbol));
+		}
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLAttributes obj) {
     	preVisitVisitor(obj);
     	//we just want the underlying expressions, not the wrapping alias/expression symbols
     	for (SingleElementSymbol symbol : obj.getArgs()) {
         	visitNode(SymbolMap.getExpression(symbol));
 		}
         postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLElement obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getNamespaces());
+    	visitNode(obj.getAttributes());
+    	visitNodes(obj.getContent());
+    	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLNamespaces obj) {
+    	preVisitVisitor(obj);
+    	postVisitVisitor(obj);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {

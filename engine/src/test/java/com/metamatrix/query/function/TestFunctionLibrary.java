@@ -1341,36 +1341,6 @@ public class TestFunctionLibrary {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name></Item></Items></Catalog></Catalogs>", xml);
     }
 	
-	@Test public void testInvokeXmlElement() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.DefaultDataClasses.OBJECT}, 
-        		new Object[] {"foo", "<bar>", DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<foo>&lt;bar&gt;<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs></foo>", xml);
-    }
-	
-	@Test public void testInvokeXmlElementWithFragment() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.DefaultDataClasses.OBJECT}, 
-        		new Object[] {"foo", "<bar>", DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<foo>&lt;bar&gt;<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs></foo>", xml);
-    }
-	
-	@Test public void testInvokeXmlElement2() throws Exception {
-        CommandContext c = new CommandContext();
-        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlelement", new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, 
-        		new Object[] {"foo", new Timestamp(0)}, c);
-        
-        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
-        assertEquals("<foo>1969-12-31T18:00:00</foo>", xml);
-    }
-	
 	@Test public void testInvokeXmlConcat() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());

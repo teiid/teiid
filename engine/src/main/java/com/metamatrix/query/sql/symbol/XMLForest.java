@@ -25,31 +25,32 @@ package com.metamatrix.query.sql.symbol;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
-/**
- * Represents XMLATTRIBUTES or XMLFOREST name value pairs
- */
-public class SQLXMLFunction implements Expression {
+public class XMLForest implements Expression {
 
 	private static final long serialVersionUID = -3348922701950966494L;
 	private List<SingleElementSymbol> args;
-	private String name;
+	private XMLNamespaces namespaces;
 	
-	public SQLXMLFunction(String name, List<SingleElementSymbol> args) {
-		this.name = name;
+	public XMLForest(List<SingleElementSymbol> args) {
 		this.args = args;
+	}
+	
+	public XMLNamespaces getNamespaces() {
+		return namespaces;
+	}
+	
+	public void setNamespaces(XMLNamespaces namespaces) {
+		this.namespaces = namespaces;
 	}
 	
 	public List<SingleElementSymbol> getArgs() {
 		return args;
-	}
-	
-	public String getName() {
-		return name;
 	}
 
 	@Override
@@ -66,28 +67,32 @@ public class SQLXMLFunction implements Expression {
 		}
 		return true;
 	}
-
+	
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+		
 	@Override
-	public SQLXMLFunction clone() {
-		return new SQLXMLFunction(name, LanguageObject.Util.deepClone(args, SingleElementSymbol.class));
+	public XMLForest clone() {
+		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, SingleElementSymbol.class));
+		return clone;
 	}
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(name.toUpperCase().hashCode(), args.hashCode());
+		return HashCodeUtil.hashCode(args.hashCode());
 	}
 	
 	public boolean equals(Object obj) {
-		if (!(obj instanceof SQLXMLFunction)) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof XMLForest)) {
 			return false;
 		}
-		SQLXMLFunction other = (SQLXMLFunction)obj;
-		return name.equalsIgnoreCase(other.name) && args.equals(other.args);
+		XMLForest other = (XMLForest)obj;
+		return args.equals(other.args);
 	}
 	
 	@Override

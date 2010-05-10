@@ -1963,6 +1963,10 @@ public class TestValidator {
         helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
+	@Test public void testValidateNoExpressionName1() {        
+        helpValidate("SELECT xmlforest('1')", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
     @Test public void testXpathValueValid_defect15088() {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', 'a/b/c')"; //$NON-NLS-1$
         helpValidate(userSql, new String[] {}, FakeMetadataFactory.exampleBQTCached());        

@@ -100,8 +100,9 @@ import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.symbol.XMLAttributes;
+import com.metamatrix.query.sql.symbol.XMLForest;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
@@ -1140,7 +1141,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
-    public void visit(SQLXMLFunction obj) {
+    public void visit(XMLAttributes obj) {
+    	for (SingleElementSymbol arg : obj.getArgs()) {
+    		if (arg instanceof ExpressionSymbol) {
+    			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$
+    		}
+		}
+    }
+    
+    @Override
+    public void visit(XMLForest obj) {
     	for (SingleElementSymbol arg : obj.getArgs()) {
     		if (arg instanceof ExpressionSymbol) {
     			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$

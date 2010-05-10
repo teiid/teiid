@@ -35,6 +35,7 @@ import org.teiid.connector.language.SQLReservedWords.Tokens;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
@@ -109,7 +110,11 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
+import com.metamatrix.query.sql.symbol.XMLAttributes;
+import com.metamatrix.query.sql.symbol.XMLElement;
+import com.metamatrix.query.sql.symbol.XMLForest;
+import com.metamatrix.query.sql.symbol.XMLNamespaces;
+import com.metamatrix.query.sql.symbol.XMLNamespaces.NamespaceItem;
 
 /**
  * <p>The SQLStringVisitor will visit a set of language objects and return the
@@ -1243,7 +1248,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             parts.add(")"); //$NON-NLS-1$
 
-		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XMLELEMENT) || name.equalsIgnoreCase(SourceSystemFunctions.XMLPI)){
+		} else if (name.equalsIgnoreCase(SourceSystemFunctions.XMLPI)){
 			parts.add(name);
 			parts.add("(NAME "); //$NON-NLS-1$
 			outputDisplayName((String)((Constant)args[0]).getValue());
@@ -1538,12 +1543,71 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(registerNode(obj.getCommand()));
         parts.add(")"); //$NON-NLS-1$
     }
-
+    
     @Override
-    public void visit(SQLXMLFunction obj) {
-    	parts.add(obj.getName());
+    public void visit(XMLAttributes obj) {
+    	parts.add(FunctionLibrary.XMLATTRIBUTES);
     	parts.add("("); //$NON-NLS-1$
     	registerNodes(obj.getArgs().toArray(new LanguageObject[obj.getArgs().size()]), 0);
+    	parts.add(")"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLElement obj) {
+    	parts.add(FunctionLibrary.XMLELEMENT);
+    	parts.add("(NAME "); //$NON-NLS-1$
+    	outputDisplayName(obj.getName());
+    	if (obj.getNamespaces() != null) {
+    		parts.add(", "); //$NON-NLS-1$
+    		parts.add(registerNode(obj.getNamespaces()));
+    	}
+    	if (obj.getAttributes() != null) {
+    		parts.add(", "); //$NON-NLS-1$
+    		parts.add(registerNode(obj.getAttributes()));
+    	}
+    	if (!obj.getContent().isEmpty()) {
+    		parts.add(", "); //$NON-NLS-1$
+    	}
+		registerNodes(obj.getContent().toArray(new LanguageObject[obj.getContent().size()]), 0);
+    	parts.add(")"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLForest obj) {
+    	parts.add(FunctionLibrary.XMLFOREST);
+    	parts.add("("); //$NON-NLS-1$
+    	if (obj.getNamespaces() != null) {
+    		parts.add(registerNode(obj.getNamespaces()));
+    		parts.add(", "); //$NON-NLS-1$
+    	}
+    	registerNodes(obj.getArgs().toArray(new LanguageObject[obj.getArgs().size()]), 0);
+    	parts.add(")"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLNamespaces obj) {
+    	parts.add(FunctionLibrary.XMLNAMESPACES);
+    	parts.add("("); //$NON-NLS-1$
+    	for (Iterator<NamespaceItem> items = obj.getNamespaceItems().iterator(); items.hasNext();) {
+    		NamespaceItem item = items.next();
+    		if (item.getPrefix() == null) {
+    			if (item.getUri() == null) {
+    				parts.add("NO DEFAULT"); //$NON-NLS-1$
+    			} else {
+	    			parts.add("DEFAULT '"); //$NON-NLS-1$
+	        		parts.add(escapeStringValue(item.getUri(), "'")); //$NON-NLS-1$
+	        		parts.add("'"); //$NON-NLS-1$
+    			}
+    		} else {
+    			parts.add("'"); //$NON-NLS-1$
+    			parts.add(escapeStringValue(item.getUri(), "'")); //$NON-NLS-1$
+    			parts.add("' AS "); //$NON-NLS-1$
+        		outputDisplayName(item.getPrefix());
+    		}
+    		if (items.hasNext()) {
+    			parts.add(", "); //$NON-NLS-1$
+    		}
+    	}
     	parts.add(")"); //$NON-NLS-1$
     }
     

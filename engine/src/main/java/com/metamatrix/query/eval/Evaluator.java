@@ -23,6 +23,7 @@
 package com.metamatrix.query.eval;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -73,10 +74,13 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.symbol.SQLXMLFunction;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.symbol.XMLElement;
+import com.metamatrix.query.sql.symbol.XMLForest;
+import com.metamatrix.query.sql.symbol.XMLNamespaces;
+import com.metamatrix.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.ValueIteratorSource;
 import com.metamatrix.query.util.CommandContext;
@@ -233,7 +237,7 @@ public class Evaluator {
     	if (leftValue == rightValue) {
     		return 0;
     	}
-        return ((Comparable)leftValue).compareTo(rightValue);
+        return ((Comparable<Object>)leftValue).compareTo(rightValue);
     }
 
 	public Boolean evaluate(MatchCriteria criteria, List tuple)
@@ -561,30 +565,63 @@ public class Evaluator {
 		   return internalEvaluate(ref.getExpression(), tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
-	   } else if (expression instanceof SQLXMLFunction){
-		   SQLXMLFunction function = (SQLXMLFunction)expression;
+	   } else if (expression instanceof XMLElement){
+		   XMLElement function = (XMLElement)expression;
+		   List<Expression> content = function.getContent();
+		   List<Object> values = new ArrayList<Object>(content.size());
+		   for (Expression exp : content) {
+			   values.add(internalEvaluate(exp, tuple));
+		   }
+		   try {
+			   NameValuePair<Object>[] attributes = null;
+			   if (function.getAttributes() != null) {
+				   attributes = getNameValuePairs(tuple, function.getAttributes().getArgs());
+			   }
+			   return XMLSystemFunctions.xmlElement(context, function.getName(), namespaces(function.getNamespaces()), attributes, values);
+		   } catch (MetaMatrixProcessingException e) {
+			   throw new FunctionExecutionException(e, e.getMessage());
+		   }
+	   } else if (expression instanceof XMLForest){
+		   XMLForest function = (XMLForest)expression;
 		   List<SingleElementSymbol> args = function.getArgs();
-		   NameValuePair[] nameValuePairs = new NameValuePair[args.size()];
-		   for(int i=0; i < args.size(); i++) {
-			   SingleElementSymbol symbol = args.get(i);
-			   String name = symbol.getShortName();
-			   Expression ex = symbol;
-			   if (symbol instanceof AliasSymbol) {
-				   ex = ((AliasSymbol)symbol).getSymbol();
-			   }
-			   nameValuePairs[i] = new NameValuePair(name, internalEvaluate(ex, tuple));
-		   } 
-		   if (FunctionLibrary.XMLFOREST.equalsIgnoreCase(function.getName())) {
-			   try {
-				   return XMLSystemFunctions.xmlForest(context, nameValuePairs);
-			   } catch (MetaMatrixProcessingException e) {
-				   throw new FunctionExecutionException(e, e.getMessage());
-			   }
-		   } 
-		   return nameValuePairs;
+		   NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args); 
+		   
+		   try {
+			   return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
+		   } catch (MetaMatrixProcessingException e) {
+			   throw new FunctionExecutionException(e, e.getMessage());
+		   }
 	   } else {
 	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
 	   }
+	}
+
+	private NameValuePair<Object>[] getNameValuePairs(List tuple, List<SingleElementSymbol> args)
+			throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+		NameValuePair<Object>[] nameValuePairs = new NameValuePair[args.size()];
+		for (int i = 0; i < args.size(); i++) {
+			SingleElementSymbol symbol = args.get(i);
+			String name = symbol.getShortName();
+			Expression ex = symbol;
+			if (symbol instanceof AliasSymbol) {
+				ex = ((AliasSymbol) symbol).getSymbol();
+			}
+			nameValuePairs[i] = new NameValuePair<Object>(name, internalEvaluate(ex, tuple));
+		}
+		return nameValuePairs;
+	}
+	
+	private NameValuePair<String>[] namespaces(XMLNamespaces namespaces) {
+		if (namespaces == null) {
+			return null;
+		}
+	    List<NamespaceItem> args = namespaces.getNamespaceItems();
+	    NameValuePair<String>[] nameValuePairs = new NameValuePair[args.size()];
+	    for(int i=0; i < args.size(); i++) {
+	    	NamespaceItem item = args.get(i);
+	    	nameValuePairs[i] = new NameValuePair<String>(item.getPrefix(), item.getUri());
+	    } 
+	    return nameValuePairs;
 	}
 	
 	private Object evaluate(CaseExpression expr, List tuple)

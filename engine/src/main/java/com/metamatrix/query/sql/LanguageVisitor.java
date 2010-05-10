@@ -126,5 +126,8 @@ public abstract class LanguageVisitor {
     public void visit(SetClauseList obj) {}
     public void visit(SetClause obj) {}
     public void visit(OrderByItem obj) {}
-    public void visit(SQLXMLFunction obj) {}
+    public void visit(XMLElement obj) {}
+    public void visit(XMLAttributes obj) {}
+    public void visit(XMLForest obj) {}
+    public void visit(XMLNamespaces obj) {}
 }
