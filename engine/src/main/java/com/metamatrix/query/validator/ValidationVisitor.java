@@ -33,7 +33,7 @@ import java.util.Set;
 
 import javax.xml.xpath.XPathExpressionException;
 
-import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;

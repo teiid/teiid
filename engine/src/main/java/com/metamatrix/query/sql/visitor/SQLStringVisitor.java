@@ -29,9 +29,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.language.SQLReservedWords.Tokens;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.StringUtil;

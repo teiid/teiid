@@ -41,8 +41,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;

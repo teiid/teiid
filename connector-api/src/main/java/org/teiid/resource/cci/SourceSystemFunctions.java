@@ -136,9 +136,10 @@ public class SourceSystemFunctions {
 	
 	//xml
 	public static final String XPATHVALUE = "xpathvalue"; //$NON-NLS-1$
+	public static final String XPATHQUERY = "xpathquery"; //$NON-NLS-1$
 	public static final String XSLTRANSFORM = "xsltransform"; //$NON-NLS-1$
-	public static final String XMLELEMENT = "xmlelement"; //$NON-NLS-1$
 	public static final String XMLCONCAT = "xmlconcat"; //$NON-NLS-1$
 	public static final String XMLCOMMENT = "xmlcomment"; //$NON-NLS-1$
 	public static final String XMLPI = "xmlpi"; //$NON-NLS-1$
+
 }

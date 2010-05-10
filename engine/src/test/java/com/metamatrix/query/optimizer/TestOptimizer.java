@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
-import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.resource.cci.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
