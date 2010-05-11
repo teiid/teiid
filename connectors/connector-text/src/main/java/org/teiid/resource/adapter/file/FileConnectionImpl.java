@@ -20,46 +20,55 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.adapter.text;
+package org.teiid.resource.adapter.file;
 
 import java.io.File;
 
+import javax.resource.ResourceException;
+
+import org.teiid.resource.adapter.FileConnection;
+import org.teiid.resource.spi.BasicConnection;
+
 import com.metamatrix.core.util.FileUtils;
 
-
-/** 
- * @since 4.3
+/**
+ * TODO: consider using VFS 
  */
-public class TextUtil {
+public class FileConnectionImpl extends BasicConnection implements FileConnection {
+	
+	private File parentDirectory;
+	
+	public FileConnectionImpl(String parentDirectory) {
+		this.parentDirectory = new File(parentDirectory);
+	}
 
-    public static boolean usesWildCard(String location) {
-        if (location == null) return false;
-        
-        File datafile = new File(location);
-        String fname = datafile.getName();
-        
-        // determine if the wild card is used to indicate all files
-        // of the specified extension
-        if (fname.indexOf("*") >= 0) { //$NON-NLS-1$            
-            return true;
-        }
-        return false;
-    }
-    public static File[] getFiles(String location) {
+    public File[] getFiles(String location) {
         if (location == null) return null;
         
-        File datafile = new File(location);
+        File datafile = new File(parentDirectory, location);
+        
+        if (datafile.isDirectory()) {
+        	return datafile.listFiles();
+        }
+        
         String fname = datafile.getName();
+        String ext = FileUtils.getExtension(fname);
+        File parentDir = datafile.getParentFile();
         
         // determine if the wild card is used to indicate all files
         // of the specified extension
-        if (fname.indexOf("*") >= 0) { //$NON-NLS-1$            
-        
-            File parentDir = datafile.getParentFile();
-            String ext = FileUtils.getExtension(fname);
+        if (ext != null && "*".equals(FileUtils.getBaseFileNameWithoutExtension(fname))) { //$NON-NLS-1$            
             return FileUtils.findAllFilesInDirectoryHavingExtension(parentDir.getAbsolutePath(), "." + ext); //$NON-NLS-1$
         }
-        return null;
-
+        if (!datafile.exists()) {
+        	return null;
+        }
+        return new File[] {datafile};
     }
+
+	@Override
+	public void close() throws ResourceException {
+		
+	}
+	
 }

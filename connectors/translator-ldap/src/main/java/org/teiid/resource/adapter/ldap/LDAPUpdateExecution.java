@@ -70,11 +70,11 @@ import org.teiid.resource.cci.UpdateExecution;
  * of attributes to assign values in an INSERT operation * Responsible for update/insert/delete operations against LDAP
  */
 public class LDAPUpdateExecution extends BasicExecution implements UpdateExecution {
-	private LDAPConnection ldapConnection;
+	private LdapContext ldapConnection;
 	private LdapContext ldapCtx;
 	private Command command;
 
-	public LDAPUpdateExecution(Command command, LDAPConnection ldapCtx) {
+	public LDAPUpdateExecution(Command command, LdapContext ldapCtx) {
 		this.ldapConnection = ldapCtx;
 		this.command = command;
 	}

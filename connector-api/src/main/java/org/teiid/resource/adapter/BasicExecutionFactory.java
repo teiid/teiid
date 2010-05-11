@@ -20,7 +20,6 @@ import org.teiid.resource.cci.ExecutionFactory;
 import org.teiid.resource.cci.ProcedureExecution;
 import org.teiid.resource.cci.ResultSetExecution;
 import org.teiid.resource.cci.TypeFacility;
-import org.teiid.resource.cci.TypeFacilityImpl;
 import org.teiid.resource.cci.UpdateExecution;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -31,7 +30,7 @@ import com.metamatrix.core.util.StringUtil;
 public class BasicExecutionFactory implements ExecutionFactory {
 
 	protected ConnectorCapabilities capabilities;
-	private static final TypeFacility TYPE_FACILITY = new TypeFacilityImpl();
+	private static final TypeFacility TYPE_FACILITY = new TypeFacility();
 	
 	private String capabilitiesClass;
 	private boolean immutable = false;

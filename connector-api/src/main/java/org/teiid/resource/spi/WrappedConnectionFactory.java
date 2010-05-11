@@ -37,12 +37,12 @@ import javax.resource.spi.ConnectionManager;
 public class WrappedConnectionFactory implements ConnectionFactory, Referenceable, Serializable  {
 
 	private static final long serialVersionUID = 5499157394014613035L;
-	private ConnectionFactory delegate;
+	private BasicConnectionFactory delegate;
 	private ConnectionManager cm;	
 	private BasicManagedConnectionFactory mcf;
 	private Reference reference;
 	
-	public WrappedConnectionFactory(ConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
+	public WrappedConnectionFactory(BasicConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
 		this.delegate = delegate;
 		this.cm = cm;
 		this.mcf = mcf;

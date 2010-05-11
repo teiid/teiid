@@ -27,8 +27,6 @@ package org.teiid.resource.adapter.text;
  */
 public class TextDescriptorPropertyNames {
     public static final String LOCATION = "LOCATION"; //$NON-NLS-1$
-    public static final String FILE_LOCATION = "FILE"; //$NON-NLS-1$
-    public static final String URL_LOCATION = "URL"; //$NON-NLS-1$
     public static final String DELIMITER  = "DELIMITER"; //$NON-NLS-1$
     public static final String QUALIFIER  = "QUALIFIER"; //$NON-NLS-1$
     public static final String HEADER_LINES  = "SKIPHEADERLINES"; //$NON-NLS-1$

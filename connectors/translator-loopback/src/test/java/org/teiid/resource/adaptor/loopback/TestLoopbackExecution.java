@@ -54,9 +54,9 @@ public class TestLoopbackExecution extends TestCase {
     }
 
     public void helpTestQuery(String sql, TranslationUtility metadata, int waitTime, int rowCount, Object[][] expectedResults) throws ConnectorException {
-    	ConnectorHost host = new ConnectorHost(exampleProperties(waitTime, rowCount), metadata);
+    	ConnectorHost host = new ConnectorHost(exampleProperties(waitTime, rowCount), null, metadata);
                               
-    	List actualResults = host.executeCommand(sql, null);
+    	List actualResults = host.executeCommand(sql);
        
         // Compare actual and expected results
         assertEquals("Did not get expected number of rows", expectedResults.length, actualResults.size()); //$NON-NLS-1$
@@ -152,11 +152,11 @@ public class TestLoopbackExecution extends TestCase {
         int waitTime = 100;
         int testCount = 10;
         
-        ConnectorHost host = new ConnectorHost(exampleProperties(waitTime, 1), FakeTranslationFactory.getInstance().getBQTTranslationUtility());
+        ConnectorHost host = new ConnectorHost(exampleProperties(waitTime, 1), null, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
                 
         for(int i=0; i<testCount; i++) {
             long before = System.currentTimeMillis();
-            host.executeCommand("SELECT intkey FROM BQT1.SmallA", null); //$NON-NLS-1$
+            host.executeCommand("SELECT intkey FROM BQT1.SmallA"); //$NON-NLS-1$
             long after = System.currentTimeMillis();
             assertTrue("Waited too long", (after-before) <= waitTime); //$NON-NLS-1$
         }            

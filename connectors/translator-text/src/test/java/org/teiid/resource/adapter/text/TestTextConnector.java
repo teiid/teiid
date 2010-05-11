@@ -20,10 +20,9 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.cci.text;
+package org.teiid.resource.adapter.text;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,30 +32,28 @@ import org.junit.Test;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.resource.adapter.text.TextExecutionFactory;
 import org.teiid.resource.cci.MetadataProvider;
-import org.teiid.resource.cci.text.TextConnectionFactory;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestTextConnector {
 
     @Test public void testGetMetadata() throws Exception{
-        TextConnectionFactory tcf = Util.createConnectionFactory(UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt"); //$NON-NLS-1$
         TextExecutionFactory connector = new TextExecutionFactory();
-        
+        connector.setDescriptorFile("SummitData_Descriptor.txt");
+        connector.start();
         Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new Datatype());
         datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new Datatype());
-        
+       
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         
-        ((MetadataProvider)connector).getConnectorMetadata(metadata, tcf); 
+        ((MetadataProvider)connector).getConnectorMetadata(metadata, null); 
         
         assertEquals(0, metadata.getMetadataStore().getSchemas().values().iterator().next().getProcedures().size());
         Table group = metadata.getMetadataStore().getSchemas().values().iterator().next().getTables().get("summitdata"); //$NON-NLS-1$

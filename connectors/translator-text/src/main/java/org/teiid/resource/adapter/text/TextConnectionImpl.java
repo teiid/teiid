@@ -20,14 +20,16 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.cci.text;
+package org.teiid.resource.adapter.text;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -36,16 +38,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.resource.ResourceException;
-
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.text.TextConnection;
-import org.teiid.resource.adapter.text.TextDescriptorPropertyNames;
-import org.teiid.resource.adapter.text.TextPlugin;
-import org.teiid.resource.adapter.text.TextUtil;
-import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.adapter.FileConnection;
 
 import com.metamatrix.core.util.StringUtil;
 
@@ -53,10 +49,10 @@ import com.metamatrix.core.util.StringUtil;
 /**
  * Implementation of Connection interface for text connection.
  */
-public class TextConnectionImpl extends BasicConnection implements TextConnection{
+public class TextConnectionImpl {
 	
 	private Map<String, Properties> metadataProps;
-    private ArrayList readerQueue = new ArrayList();
+    private ArrayList<BufferedReader> readerQueue = new ArrayList<BufferedReader>();
     private int readerQueueIndex = 0;    
     private String headerMsg;
     private String firstLine = null;
@@ -66,17 +62,19 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
 
     // Line num in the text file
     private int lineNum = 0;    
+    private FileConnection conn;
+    private String encoding;
     
-    
-	public TextConnectionImpl(Map<String, Properties> props) {
+	public TextConnectionImpl(Map<String, Properties> props, FileConnection conn, String encoding) {
 		this.metadataProps = props;
+		this.conn = conn;
+		this.encoding = encoding;
 	}
 	
-	@Override
-	public void close() throws ResourceException {
+	public void close() {
         if (readerQueue.size() > 0) {
-            for (Iterator it=readerQueue.iterator(); it.hasNext();) {
-                BufferedReader br = (BufferedReader) it.next();
+            for (Iterator<BufferedReader> it=readerQueue.iterator(); it.hasNext();) {
+                BufferedReader br = it.next();
                 try {
                     br.close();
                 } catch (IOException err) {
@@ -87,12 +85,11 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
         readerQueue.clear();		
 	}
 
-	@Override
 	public Map<String, Properties> getMetadataProperties() {
 		return metadataProps;
 	}
 	
-	private List<Reader> createReaders(String tableName) throws ConnectorException {
+	private List<BufferedReader> createReaders(String tableName) throws ConnectorException {
 		try {
 			createReaders(this.metadataProps.get(tableName), tableName);
 		} catch (IOException e) {
@@ -117,61 +114,42 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
             throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Error_obtain_properties_for_group", groupName)); //$NON-NLS-1$
         }
         
-        String fileName  = props.getProperty(TextDescriptorPropertyNames.FILE_LOCATION);
+        String location = props.getProperty(TextDescriptorPropertyNames.LOCATION);
         
-
-        if(fileName != null) {
-            File datafile = new File(fileName);
-            File[] files= TextUtil.getFiles(fileName);
-
-            
+        File[] files = conn.getFiles(location);
+        
+        if (files != null) {
             // determine if the wild card is used to indicate all files
             // of the specified extension
-            if (files != null && files.length > 0) { 
-                for (int i = 0; i<files.length; i++) {
-                    File f = files[i];
-                   addReader(f.getName(), f);  
-                }
-                
-            } else {
-                addReader(fileName, datafile);                    
-            } 
-        } else {
-            String urlName = props.getProperty(TextDescriptorPropertyNames.URL_LOCATION);
-            if(urlName==null) {
-                Object[] params = new Object[] { groupName };
-                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_get_Reader_for_group", params)); //$NON-NLS-1$
+            for (int i = 0; i<files.length; i++) {
+                File f = files[i];
+               addReader(f.getName(), new FileInputStream(f));  
             }
-
+        } else {
             // create the URL object
-            URL url = new URL(urlName);
-            // create the connection to the URL
-            URLConnection conn = url.openConnection();
-            // establish the connection to the URL
-            conn.connect();
-            // get the stream from the connection
-            InputStreamReader inSR = new InputStreamReader(conn.getInputStream());
-            // place the stream into a buffered reader
-            addReader(fileName, inSR);
+        	try {
+	            URL url = new URL(location);
+	            // create the connection to the URL
+	            URLConnection urlConn = url.openConnection();
+	            // establish the connection to the URL
+	            urlConn.connect();
+	            // get the stream from the connection
+	            addReader(location, urlConn.getInputStream());
+        	} catch (MalformedURLException e) {
+        		throw new ConnectorException(TextPlugin.Util.getString("TextConnection.fileDoesNotExistForGroup", new Object[] {location, groupName})); //$NON-NLS-1$
+        	}
         }
  
     }
     
-    private void addReader(String fileName, File datafile) throws IOException {
+    private void addReader(String fileName, InputStream stream) throws UnsupportedEncodingException {
         
-        FileInputStream fis = new FileInputStream(datafile);
-        InputStreamReader inSR = new InputStreamReader(fis);
+        InputStreamReader inSR = new InputStreamReader(stream, encoding);
 
         BufferedReader r = new BufferedReader(inSR);
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Reading file: " + fileName); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Reading: " + fileName); //$NON-NLS-1$
         readerQueue.add(r);
     }
-    
-    private void addReader(String fileName, InputStreamReader inSr) {
-        BufferedReader r = new BufferedReader(inSr);
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Reading URL: " + fileName); //$NON-NLS-1$
-        readerQueue.add(r);
-    } 	
     
     /**
      * Gets the current reader, looking at the next
@@ -190,7 +168,7 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
     	if (currentreader == null && readerQueueIndex < readerQueue.size()) {
             // reader queue index is advanced only by the nextReader()
             // method.  Don't do it here.
-            currentreader = (BufferedReader)readerQueue.get(readerQueueIndex);
+            currentreader = readerQueue.get(readerQueueIndex);
     	}
 		/* Retrieve connector properties so that we can find a 
 		 * header row if necessary.
@@ -287,7 +265,6 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
         readerQueueIndex++;
     }    
     
-    @Override
     public String getHeaderLine(String tableName) throws ConnectorException {
     	if (this.headerMsg != null) {
     		return this.headerMsg; 
@@ -297,7 +274,6 @@ public class TextConnectionImpl extends BasicConnection implements TextConnectio
     	return this.headerMsg;
     }
     
-    @Override
     public String getNextLine(String tableName) throws ConnectorException {
     	// make sure the reader are created
     	createReaders(tableName);

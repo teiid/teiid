@@ -21,6 +21,7 @@
  */
 package org.teiid.resource.adapter.ldap;
 
+import javax.naming.ldap.LdapContext;
 import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
@@ -83,7 +84,7 @@ public class LDAPExecutionFactory extends BasicExecutionFactory {
 			throws ConnectorException {
 		try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
-			return new LDAPSyncQueryExecution((Select)command, this, (LDAPConnection)cf.getConnection());
+			return new LDAPSyncQueryExecution((Select)command, this, (LdapContext)cf.getConnection());
 		} catch (ResourceException e) {
 			throw new ConnectorException(e);
 		}
@@ -94,7 +95,7 @@ public class LDAPExecutionFactory extends BasicExecutionFactory {
 			throws ConnectorException {
 		try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
-			return new LDAPUpdateExecution(command, (LDAPConnection)cf.getConnection());
+			return new LDAPUpdateExecution(command, (LdapContext)cf.getConnection());
 		} catch (ResourceException e) {
 			throw new ConnectorException(e);
 		}

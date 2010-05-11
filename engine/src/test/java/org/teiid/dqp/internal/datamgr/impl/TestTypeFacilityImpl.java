@@ -24,14 +24,14 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import java.sql.Clob;
 
-import org.teiid.resource.cci.TypeFacilityImpl;
+import org.teiid.resource.cci.TypeFacility;
 
 import junit.framework.TestCase;
 
 public class TestTypeFacilityImpl extends TestCase {
 
 	public void testNullClob() {
-		assertNull(new TypeFacilityImpl().convertToRuntimeType((Clob)null));
+		assertNull(new TypeFacility().convertToRuntimeType((Clob)null));
 	}
 	
 }

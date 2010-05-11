@@ -24,14 +24,27 @@ package org.teiid.resource.cci.ldap;
 
 import java.util.Hashtable;
 
+import javax.naming.Binding;
 import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.NameClassPair;
+import javax.naming.NameParser;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.ModificationItem;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.ExtendedRequest;
+import javax.naming.ldap.ExtendedResponse;
 import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.ldap.LDAPConnection;
 import org.teiid.resource.spi.BasicConnection;
 
 
@@ -39,13 +52,13 @@ import org.teiid.resource.spi.BasicConnection;
 /** 
  * Represents a connection to an LDAP data source. 
  */
-public class LDAPConnectionImpl extends BasicConnection implements LDAPConnection  {  
+public class LDAPConnectionImpl extends BasicConnection implements LdapContext  {  
 
 	private LDAPManagedConnectionFactory config;
 	
 	// Standard Connection data members
 	private InitialLdapContext initCtx;
-	
+
 	// LDAP-specific properties
     public static final String LDAP_AUTH_TYPE = "simple"; //$NON-NLS-1$
     public static final String LDAP_USER_OBJECT_TYPE = "person"; //$NON-NLS-1$
@@ -174,8 +187,289 @@ public class LDAPConnectionImpl extends BasicConnection implements LDAPConnectio
 		return true;
 	}
 
-	@Override
 	public Object lookup(String context) throws NamingException {
 		return this.initCtx.lookup(context);
 	}
+
+	public Object addToEnvironment(String propName, Object propVal)
+			throws NamingException {
+		return initCtx.addToEnvironment(propName, propVal);
+	}
+
+	public void bind(Name name, Object obj, Attributes attrs)
+			throws NamingException {
+		initCtx.bind(name, obj, attrs);
+	}
+
+	public void bind(Name name, Object obj) throws NamingException {
+		initCtx.bind(name, obj);
+	}
+
+	public void bind(String name, Object obj, Attributes attrs)
+			throws NamingException {
+		initCtx.bind(name, obj, attrs);
+	}
+
+	public void bind(String name, Object obj) throws NamingException {
+		initCtx.bind(name, obj);
+	}
+
+	public Name composeName(Name name, Name prefix) throws NamingException {
+		return initCtx.composeName(name, prefix);
+	}
+
+	public String composeName(String name, String prefix)
+			throws NamingException {
+		return initCtx.composeName(name, prefix);
+	}
+
+	public DirContext createSubcontext(Name name, Attributes attrs)
+			throws NamingException {
+		return initCtx.createSubcontext(name, attrs);
+	}
+
+	public Context createSubcontext(Name name) throws NamingException {
+		return initCtx.createSubcontext(name);
+	}
+
+	public DirContext createSubcontext(String name, Attributes attrs)
+			throws NamingException {
+		return initCtx.createSubcontext(name, attrs);
+	}
+
+	public Context createSubcontext(String name) throws NamingException {
+		return initCtx.createSubcontext(name);
+	}
+
+	public void destroySubcontext(Name name) throws NamingException {
+		initCtx.destroySubcontext(name);
+	}
+
+	public void destroySubcontext(String name) throws NamingException {
+		initCtx.destroySubcontext(name);
+	}
+
+	public boolean equals(Object obj) {
+		return initCtx.equals(obj);
+	}
+
+	public ExtendedResponse extendedOperation(ExtendedRequest request)
+			throws NamingException {
+		return initCtx.extendedOperation(request);
+	}
+
+	public Attributes getAttributes(Name name, String[] attrIds)
+			throws NamingException {
+		return initCtx.getAttributes(name, attrIds);
+	}
+
+	public Attributes getAttributes(Name name) throws NamingException {
+		return initCtx.getAttributes(name);
+	}
+
+	public Attributes getAttributes(String name, String[] attrIds)
+			throws NamingException {
+		return initCtx.getAttributes(name, attrIds);
+	}
+
+	public Attributes getAttributes(String name) throws NamingException {
+		return initCtx.getAttributes(name);
+	}
+
+	public Control[] getConnectControls() throws NamingException {
+		return initCtx.getConnectControls();
+	}
+
+	public Hashtable<?, ?> getEnvironment() throws NamingException {
+		return initCtx.getEnvironment();
+	}
+
+	public String getNameInNamespace() throws NamingException {
+		return initCtx.getNameInNamespace();
+	}
+
+	public NameParser getNameParser(Name name) throws NamingException {
+		return initCtx.getNameParser(name);
+	}
+
+	public NameParser getNameParser(String name) throws NamingException {
+		return initCtx.getNameParser(name);
+	}
+
+	public Control[] getRequestControls() throws NamingException {
+		return initCtx.getRequestControls();
+	}
+
+	public Control[] getResponseControls() throws NamingException {
+		return initCtx.getResponseControls();
+	}
+
+	public DirContext getSchema(Name name) throws NamingException {
+		return initCtx.getSchema(name);
+	}
+
+	public DirContext getSchema(String name) throws NamingException {
+		return initCtx.getSchema(name);
+	}
+
+	public DirContext getSchemaClassDefinition(Name name)
+			throws NamingException {
+		return initCtx.getSchemaClassDefinition(name);
+	}
+
+	public DirContext getSchemaClassDefinition(String name)
+			throws NamingException {
+		return initCtx.getSchemaClassDefinition(name);
+	}
+
+	public int hashCode() {
+		return initCtx.hashCode();
+	}
+
+	public NamingEnumeration<NameClassPair> list(Name name)
+			throws NamingException {
+		return initCtx.list(name);
+	}
+
+	public NamingEnumeration<NameClassPair> list(String name)
+			throws NamingException {
+		return initCtx.list(name);
+	}
+
+	public NamingEnumeration<Binding> listBindings(Name name)
+			throws NamingException {
+		return initCtx.listBindings(name);
+	}
+
+	public NamingEnumeration<Binding> listBindings(String name)
+			throws NamingException {
+		return initCtx.listBindings(name);
+	}
+
+	public Object lookup(Name name) throws NamingException {
+		return initCtx.lookup(name);
+	}
+
+	public Object lookupLink(Name name) throws NamingException {
+		return initCtx.lookupLink(name);
+	}
+
+	public Object lookupLink(String name) throws NamingException {
+		return initCtx.lookupLink(name);
+	}
+
+	public void modifyAttributes(Name name, int modOp, Attributes attrs)
+			throws NamingException {
+		initCtx.modifyAttributes(name, modOp, attrs);
+	}
+
+	public void modifyAttributes(Name name, ModificationItem[] mods)
+			throws NamingException {
+		initCtx.modifyAttributes(name, mods);
+	}
+
+	public void modifyAttributes(String name, int modOp, Attributes attrs)
+			throws NamingException {
+		initCtx.modifyAttributes(name, modOp, attrs);
+	}
+
+	public void modifyAttributes(String name, ModificationItem[] mods)
+			throws NamingException {
+		initCtx.modifyAttributes(name, mods);
+	}
+
+	public LdapContext newInstance(Control[] reqCtls) throws NamingException {
+		return initCtx.newInstance(reqCtls);
+	}
+
+	public void rebind(Name name, Object obj, Attributes attrs)
+			throws NamingException {
+		initCtx.rebind(name, obj, attrs);
+	}
+
+	public void rebind(Name name, Object obj) throws NamingException {
+		initCtx.rebind(name, obj);
+	}
+
+	public void rebind(String name, Object obj, Attributes attrs)
+			throws NamingException {
+		initCtx.rebind(name, obj, attrs);
+	}
+
+	public void rebind(String name, Object obj) throws NamingException {
+		initCtx.rebind(name, obj);
+	}
+
+	public void reconnect(Control[] connCtls) throws NamingException {
+		initCtx.reconnect(connCtls);
+	}
+
+	public Object removeFromEnvironment(String propName) throws NamingException {
+		return initCtx.removeFromEnvironment(propName);
+	}
+
+	public void rename(Name oldName, Name newName) throws NamingException {
+		initCtx.rename(oldName, newName);
+	}
+
+	public void rename(String oldName, String newName) throws NamingException {
+		initCtx.rename(oldName, newName);
+	}
+
+	public NamingEnumeration<SearchResult> search(Name name,
+			Attributes matchingAttributes, String[] attributesToReturn)
+			throws NamingException {
+		return initCtx.search(name, matchingAttributes, attributesToReturn);
+	}
+
+	public NamingEnumeration<SearchResult> search(Name name,
+			Attributes matchingAttributes) throws NamingException {
+		return initCtx.search(name, matchingAttributes);
+	}
+
+	public NamingEnumeration<SearchResult> search(Name name, String filterExpr,
+			Object[] filterArgs, SearchControls cons) throws NamingException {
+		return initCtx.search(name, filterExpr, filterArgs, cons);
+	}
+
+	public NamingEnumeration<SearchResult> search(Name name, String filter,
+			SearchControls cons) throws NamingException {
+		return initCtx.search(name, filter, cons);
+	}
+
+	public NamingEnumeration<SearchResult> search(String name,
+			Attributes matchingAttributes, String[] attributesToReturn)
+			throws NamingException {
+		return initCtx.search(name, matchingAttributes, attributesToReturn);
+	}
+
+	public NamingEnumeration<SearchResult> search(String name,
+			Attributes matchingAttributes) throws NamingException {
+		return initCtx.search(name, matchingAttributes);
+	}
+
+	public NamingEnumeration<SearchResult> search(String name,
+			String filterExpr, Object[] filterArgs, SearchControls cons)
+			throws NamingException {
+		return initCtx.search(name, filterExpr, filterArgs, cons);
+	}
+
+	public NamingEnumeration<SearchResult> search(String name, String filter,
+			SearchControls cons) throws NamingException {
+		return initCtx.search(name, filter, cons);
+	}
+
+	public void setRequestControls(Control[] requestControls)
+			throws NamingException {
+		initCtx.setRequestControls(requestControls);
+	}
+
+	public void unbind(Name name) throws NamingException {
+		initCtx.unbind(name);
+	}
+
+	public void unbind(String name) throws NamingException {
+		initCtx.unbind(name);
+	}
+	
 }

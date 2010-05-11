@@ -23,14 +23,16 @@
 package org.teiid.resource.cci;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.JDBCSQLTypeInfo;
+import com.metamatrix.common.util.TimestampWithTimezone;
 
 /**
  */
-public abstract class TypeFacility {
+public class TypeFacility {
 
     public interface RUNTIME_TYPES {
         public static final Class STRING        = DataTypeManager.DefaultDataClasses.STRING;
@@ -107,8 +109,10 @@ public abstract class TypeFacility {
      * @param value
      * @return
      */
-    public abstract Object convertToRuntimeType(Object value);
-
+	public Object convertToRuntimeType(Object value) {
+		return DataTypeManager.convertToRuntimeType(value);
+	}
+	
     /**
      * Convert the given date to a target type, optionally adjusting its display 
      * for a given target Calendar.
@@ -118,6 +122,9 @@ public abstract class TypeFacility {
      * @param targetType
      * @return
      */
-    public abstract Object convertDate(java.util.Date date, TimeZone initial, Calendar target, Class targetType);
+	public Object convertDate(Date date, TimeZone initial, Calendar target,
+			Class targetType) {
+		return TimestampWithTimezone.create(date, initial, target, targetType);
+	}
 
 }

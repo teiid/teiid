@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -69,8 +70,12 @@ import com.metamatrix.query.sql.lang.Command;
 public class ConnectorManager  {
 	
 	public static final int DEFAULT_MAX_THREADS = 20;
+	
+	private static AtomicInteger ID_SEQUENCE = new AtomicInteger();
+	
 	private String translatorName;
 	private String connectionName;
+	private String connectorId = String.valueOf(ID_SEQUENCE.getAndIncrement());
 	
     //services acquired in start
     private BufferService bufferService;
@@ -85,7 +90,6 @@ public class ConnectorManager  {
 	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
 	
 	private volatile boolean stopped;
-
 	
     public ConnectorManager(String translatorName, String connectionName) {
     	this.translatorName = translatorName;
@@ -142,7 +146,7 @@ public class ConnectorManager  {
     	checkStatus();
     	ExecutionFactory connector = getExecutionFactory();
     	ConnectorCapabilities caps = connector.getCapabilities();
-        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, this.translatorName, connector.isXaCapable());
+        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, this.connectorId, connector.isXaCapable());
     	resultCaps.setScope(Scope.SCOPE_GLOBAL);
     	cachedCapabilities = resultCaps;
         return resultCaps;
@@ -193,6 +197,7 @@ public class ConnectorManager  {
     
     /**
      * initialize this <code>ConnectorManager</code>.
+     * @throws ConnectorException 
      */
     public void start() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$

@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.logging.LogListener;
+import org.teiid.logging.Logger;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 
@@ -103,7 +103,7 @@ public class TestLogManager extends TestCase {
      * A log listener that saves messages (IStatus)s in a
      * List for later comparison.
      */
-    class ListLogger implements LogListener {
+    class ListLogger implements Logger {
         private List<String> messages = new ArrayList<String>();
         private Map<String, Integer> contextMap = new HashMap<String, Integer>();
     	private int defaultLevel;

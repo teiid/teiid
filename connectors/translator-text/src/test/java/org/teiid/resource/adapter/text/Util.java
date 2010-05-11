@@ -20,29 +20,30 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.cci.text;
+package org.teiid.resource.adapter.text;
 
 import java.io.File;
 import java.util.List;
 
+import javax.resource.cci.ConnectionFactory;
+
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
-import org.teiid.resource.adapter.text.TextConnection;
-import org.teiid.resource.adapter.text.TextExecutionFactory;
-import org.teiid.resource.cci.text.TextConnectionFactory;
-import org.teiid.resource.cci.text.TextConnectionImpl;
-import org.teiid.resource.cci.text.TextManagedConnectionFactory;
+import org.teiid.resource.adapter.FileConnection;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.RealMetadataFactory;
@@ -50,30 +51,57 @@ import com.metamatrix.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class Util {
 
-	static void helpTestExecution(String vdb, String descriptorFile, String sql, int maxBatchSize, int expectedRowCount) throws Exception {
+	static void helpTestExecution(String vdb, String descriptorFile, String sql, int expectedRowCount) throws Exception {
 		TextExecutionFactory connector = new TextExecutionFactory();
         connector.setDateResultFormats("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
         connector.setDateResultFormatsDelimiter(",");
-	    
-	    ConnectorHost host = new ConnectorHost(connector, UnitTestUtil.getTestDataPath() + File.separator + vdb);
-	    List results = host.executeCommand(sql, createConnectionFactory(descriptorFile));
+	    connector.setDescriptorFile(descriptorFile);
+	    ConnectorHost host = new ConnectorHost(connector, createConnectionFactory(), UnitTestUtil.getTestDataPath() + File.separator + vdb);
+	    List results = host.executeCommand(sql);
 	    Assert.assertEquals("Total row count doesn't match expected size. ", expectedRowCount, results.size()); //$NON-NLS-1$
 	}
 	
-	public static TextConnectionFactory createConnectionFactory(String descriptorFile) throws Exception {
-        TextManagedConnectionFactory config = Mockito.mock(TextManagedConnectionFactory.class);
-        Mockito.stub(config.getDescriptorFile()).toReturn(descriptorFile);
-        Mockito.stub(config.isPartialStartupAllowed()).toReturn(true);
-        return new TextConnectionFactory(config);
+	public static ConnectionFactory createConnectionFactory() throws Exception {
+		ConnectionFactory config = Mockito.mock(ConnectionFactory.class);
+		FileConnection fc = Mockito.mock(FileConnection.class);
+		Mockito.doAnswer(new Answer<File[]>() {
+			@Override
+			public File[] answer(InvocationOnMock invocation) throws Throwable {
+				String location = (String)invocation.getArguments()[0];
+				if (location == null) return null;
+		        
+		        File datafile = new File(location);
+		        
+		        if (datafile.isDirectory()) {
+		        	return datafile.listFiles();
+		        }
+		        
+		        String fname = datafile.getName();
+		        String ext = FileUtils.getExtension(fname);
+		        File parentDir = datafile.getParentFile();
+		        
+		        // determine if the wild card is used to indicate all files
+		        // of the specified extension
+		        if (ext != null && "*".equals(FileUtils.getBaseFileNameWithoutExtension(fname))) { //$NON-NLS-1$            
+		            return FileUtils.findAllFilesInDirectoryHavingExtension(parentDir.getAbsolutePath(), "." + ext); //$NON-NLS-1$
+		        }
+		        if (!datafile.exists()) {
+		        	return null;
+		        }
+		        return new File[] {datafile};
+			}
+		}).when(fc).getFiles(Mockito.anyString());
+		Mockito.stub(config.getConnection()).toReturn(fc);
+        return config;
 	}
 
-	public static ConnectorHost getConnectorHostWithFakeMetadata() throws Exception {
+	public static ConnectorHost getConnectorHostWithFakeMetadata(String descriptorFile) throws Exception {
   		TextExecutionFactory connector = new TextExecutionFactory();
         connector.setDateResultFormats("yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
         connector.setDateResultFormatsDelimiter(","); 
         connector.setEnforceColumnCount(true);
-        
-	    ConnectorHost host = new ConnectorHost(connector, new TranslationUtility(exampleText()));
+        connector.setDescriptorFile(descriptorFile);
+	    ConnectorHost host = new ConnectorHost(connector, createConnectionFactory(), new TranslationUtility(exampleText()));
 	    return host;
 	}
 	

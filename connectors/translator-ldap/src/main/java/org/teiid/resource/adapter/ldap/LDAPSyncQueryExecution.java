@@ -110,7 +110,7 @@ import org.teiid.resource.cci.ResultSetExecution;
 public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetExecution {
 
 	private LDAPSearchDetails searchDetails;
-	private LDAPConnection ldapConnection;
+	private LdapContext ldapConnection;
 	private LdapContext ldapCtx;
 	private NamingEnumeration searchEnumeration;
 	private IQueryToLdapSearchParser parser;
@@ -125,7 +125,7 @@ public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetE
 	 * @param logger the ConnectorLogger
 	 * @param ldapCtx the LDAP Context
 	 */
-	public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, LDAPConnection ldapCtx) {
+	public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, LdapContext ldapCtx) {
 		this.ldapConnection = ldapCtx;
 		this.query = query;
 		this.executionFactory = factory;

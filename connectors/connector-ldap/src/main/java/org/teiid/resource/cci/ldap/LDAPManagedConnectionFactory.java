@@ -22,7 +22,6 @@
 package org.teiid.resource.cci.ldap;
 
 import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
 
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -39,10 +38,10 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	
 	
 	@Override
-	public Object createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
 			@Override
-			public Connection getConnection() throws ResourceException {
+			public LDAPConnectionImpl getConnection() throws ResourceException {
 				return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
 			}
 		};

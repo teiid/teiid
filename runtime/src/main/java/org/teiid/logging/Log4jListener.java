@@ -29,7 +29,7 @@ import org.apache.log4j.Logger;
 /**
  * Log4J Listener
  */
-public class Log4jListener implements LogListener{
+public class Log4jListener implements org.teiid.logging.Logger {
 	
 	@Override
 	public boolean isEnabled(String context, int level) {

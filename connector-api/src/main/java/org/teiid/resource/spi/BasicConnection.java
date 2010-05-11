@@ -49,5 +49,9 @@ public abstract class BasicConnection implements Connection {
 	public ResultSetInfo getResultSetInfo() throws ResourceException {
 		throw new ResourceException("This operation not supported"); //$NON-NLS-1$
 	}
+	
+	public boolean isAlive() {
+		return true;
+	}
 
 }

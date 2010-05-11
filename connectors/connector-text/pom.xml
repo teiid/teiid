@@ -24,12 +24,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-text</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.nio.CharBuffer;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -366,6 +367,14 @@ public class XMLSystemFunctions {
 				}
 			});
 			eventWriter.add(eventReader);
+			break;
+		case TEXT:
+			CharBuffer buffer = CharBuffer.allocate(1 << 13);
+			XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+			while (r.read(buffer) != -1) {
+				eventWriter.add(eventFactory.createCharacters(new String(buffer.array(), 0, buffer.position())));
+				buffer.reset();
+			}
 			break;
 		}
 	}

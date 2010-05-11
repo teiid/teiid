@@ -20,32 +20,38 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.logging;
+package org.teiid.resource.adapter.text;
 
+import junit.framework.TestCase;
 
 /**
- * LogListener
  */
-public interface LogListener {
-	
-    /**
-     * Is the logging for the given context at the specified message level enabled. 
-     * @param context
-     * @param msgLevel
-     * @return
-     */
-    boolean isEnabled(String context, int msgLevel);
+public class TestTextConnection extends TestCase {
 
-    void log(int level, String context, Object msg);
+    /**
+     * @param name
+     */
+    public TestTextConnection(String name) {
+        super(name);
+    }
     
-    void log(int level, String context, Throwable t, Object msg);
+    public void testDefect10371() throws Exception {    
+    	String descFile = "EmployeeTestDataSalary.txt"; //$NON-NLS-1$
+    	TextExecutionFactory tef = new TextExecutionFactory();
+        tef.setDescriptorFile(descFile);
+        tef.start();
+        assertNotNull(tef.metadataProps);
+    }
 
     /**
-     * Shut down this listener, requesting it clean up and release any resources it
-     * may have acquired during its use.  The listener is free to ignore this
-     * request if it is not responsible for managing the resources it uses or if
-     * there are no resources.
+     * Test partial startup property - test default - should default to allow partial startup
      */
-    void shutdown(); 
+    public void testCase4284Default() throws Exception {        
+        String descFile = "testDescriptorDelimited.txt"; //$NON-NLS-1$
+            
+        TextExecutionFactory tef = new TextExecutionFactory();
+        tef.setDescriptorFile(descFile);
+        tef.start();
+    }
 
 }

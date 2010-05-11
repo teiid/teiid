@@ -42,38 +42,18 @@ public class YahooCapabilities extends BasicConnectorCapabilities {
     public YahooCapabilities() {
     }
 
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
-     */
     public List getSupportedFunctions() {
         return Collections.EMPTY_LIST;
     }
 
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsOrCriteria()
-     */
-    public boolean supportsOrCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaEquals()
-     */
     public boolean supportsCompareCriteriaEquals() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsInCriteria()
-     */
     public boolean supportsInCriteria() {
         return true;
     }
 
-    /** 
-     * @see com.metamatrix.connector.jdbc.JDBCCapabilities#getMaxInCriteriaSize()
-     * @since 4.2
-     */
     public int getMaxInCriteriaSize() {
         return YAHOO_MAX_SET_SIZE;
     }

@@ -43,8 +43,8 @@ public class TestLoobackAsynch extends TestCase {
         connector.setRowCount(1000);
         connector.setPollIntervalInMilli(100L);
         
-        ConnectorHost host = new ConnectorHost(connector, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
-        List results = host.executeCommand("SELECT intkey from bqt1.smalla", null); //$NON-NLS-1$
+        ConnectorHost host = new ConnectorHost(connector, null, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
+        List results = host.executeCommand("SELECT intkey from bqt1.smalla"); //$NON-NLS-1$
         assertEquals(1000, results.size());
     }
 

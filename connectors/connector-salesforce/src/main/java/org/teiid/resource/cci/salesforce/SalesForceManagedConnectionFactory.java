@@ -25,7 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
 
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -99,7 +98,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public Object createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
 			@Override
-			public Connection getConnection() throws ResourceException {
+			public SalesforceConnectionImpl getConnection() throws ResourceException {
 				return new SalesforceConnectionImpl(getUsername(), getPassword(), getURL(), getSourceConnectionTestInterval(), getSourceConnectionTimeout());
 			}
 		};

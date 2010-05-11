@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 /** 
  * Write to Java logging
  */
-public class JavaLogWriter implements LogListener {
+public class JavaLogger implements org.teiid.logging.Logger {
 	
 	@Override
 	public boolean isEnabled(String context, int msgLevel) {

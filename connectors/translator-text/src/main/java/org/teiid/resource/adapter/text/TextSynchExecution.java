@@ -22,13 +22,6 @@
 
 package org.teiid.resource.adapter.text;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -36,10 +29,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-
-import javax.resource.ResourceException;
 
 import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.Command;
@@ -47,7 +37,6 @@ import org.teiid.connector.language.DerivedColumn;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.ConnectorException;
@@ -55,8 +44,6 @@ import org.teiid.resource.adapter.BasicExecution;
 import org.teiid.resource.cci.DataNotAvailableException;
 import org.teiid.resource.cci.ResultSetExecution;
 import org.teiid.resource.cci.TypeFacility;
-
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * The essential part that executes the query. It keeps all the execution
@@ -89,14 +76,14 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 
 	private int[] cols;
 	
-	private TextConnection connection;
+	private TextConnectionImpl connection;
 
     /**
      * Constructor.
      * @param cmd
      * @param txtConn
      */
-    public TextSynchExecution(TextExecutionFactory config, Select query, TextConnection connection) {
+    public TextSynchExecution(TextExecutionFactory config, Select query, TextConnectionImpl connection) {
         this.config = config;
         this.cmd = query;
         this.connection = connection;
@@ -122,7 +109,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         Select query = cmd;
         NamedTable group = (NamedTable)query.getFrom().get(0);
         String tableName = group.getMetadataObject().getFullName().toUpperCase();
-        Properties groupProps = this.connection.getMetadataProperties().get(tableName);
+        Properties groupProps = this.config.metadataProps.get(tableName);
         
         Class[] types = query.getColumnTypes();
 
@@ -159,11 +146,8 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         
 
     public void close() {
-        try {
-			this.connection.close();
-			 LogManager.logDetail(LogConstants.CTX_CONNECTOR, "TextSynchExecution is successfully closed.");//$NON-NLS-1$
-		} catch (ResourceException e) {
-		}       
+		this.connection.close();
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "TextSynchExecution is successfully closed.");//$NON-NLS-1$
     }
 
     public void cancel() {

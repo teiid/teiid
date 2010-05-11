@@ -22,8 +22,6 @@
 
 package com.metamatrix.cdk.api;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,18 +48,20 @@ public class ConnectorHost {
     private ExecutionFactory connector;
     private TranslationUtility util;
     private ExecutionContext executionContext;
+    private Object connectionFactory;
     
-    public ConnectorHost(ExecutionFactory connector, String vdbFileName) throws ConnectorException {  
-        initialize(connector, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
+    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, String vdbFileName) throws ConnectorException {  
+        initialize(connector, connectionFactory, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
     }
     
-    public ConnectorHost(ExecutionFactory connector, TranslationUtility util) throws ConnectorException{
-        initialize(connector, util);
+    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws ConnectorException{
+        initialize(connector, connectionFactory, util);
     }
     
-    private void initialize(ExecutionFactory connector, TranslationUtility util) throws ConnectorException {
+    private void initialize(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws ConnectorException {
         this.connector = connector;
         this.util = util;
+        this.connectionFactory = connectionFactory;
         this.connector.start();
     }
 
@@ -69,49 +69,22 @@ public class ConnectorHost {
     	this.executionContext = context;
     }
     
-    public List executeCommand(String query, Object connection) throws ConnectorException {
+    public List executeCommand(String query) throws ConnectorException {
+        Command command = getCommand(query);
+        RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
-        try {
-            Command command = getCommand(query);
-            RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
-
-            return executeCommand(connection, command, runtimeMetadata);
-        } finally {
-            if (connection != null) {
-                close(connection);
-            }
-        }
+        return executeCommand(command, runtimeMetadata);
     }
     
-    public List executeCommand(Command command, Object connection) throws ConnectorException {
-        try {
-            RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
-            return executeCommand(connection, command, runtimeMetadata);
-        } finally {
-            if (connection != null) {
-                close(connection);
-            }
-        }
+    public List executeCommand(Command command) throws ConnectorException {
+        RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
+        return executeCommand(command, runtimeMetadata);
     }
 
-	private void close(Object connection) {
-		try {
-			Method m = connection.getClass().getMethod("close"); //$NON-NLS-1$
-			if (m != null) {
-				m.invoke(connection);
-			}
-		} catch (SecurityException e) {
-		} catch (IllegalArgumentException e) {
-		} catch (NoSuchMethodException e) {
-		} catch (IllegalAccessException e) {
-		} catch (InvocationTargetException e) {
-		}
-	}
-
-    private List executeCommand(Object connection, Command command, RuntimeMetadata runtimeMetadata)
+    private List executeCommand(Command command, RuntimeMetadata runtimeMetadata)
         throws ConnectorException {
 
-        Execution exec = connector.createExecution(command, this.executionContext, runtimeMetadata, connection);
+        Execution exec = connector.createExecution(command, this.executionContext, runtimeMetadata, this.connectionFactory);
         exec.execute();
         List results = readResultsFromExecution(exec);
         exec.close();                
@@ -119,24 +92,18 @@ public class ConnectorHost {
         return results;
     }
 
-    public int[] executeBatchedUpdates(String[] updates, Object connection) throws ConnectorException {
-        try {
-            RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
-            Command[] commands = new Command[updates.length];
-            for (int i = 0; i < updates.length; i++) {
-                commands[i] = getCommand(updates[i]);
-            }
-
-            return executeBatchedUpdates(connection, commands, runtimeMetadata);
-        } finally {
-            if (connection != null) {
-            	close(connection);
-            }
+    public int[] executeBatchedUpdates(String[] updates) throws ConnectorException {
+        RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
+        Command[] commands = new Command[updates.length];
+        for (int i = 0; i < updates.length; i++) {
+            commands[i] = getCommand(updates[i]);
         }
+
+        return executeBatchedUpdates(commands, runtimeMetadata);
     }
     
-    public int[] executeBatchedUpdates(Object connection, Command[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
-    	List<List> result = executeCommand(connection, new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata);
+    public int[] executeBatchedUpdates(Command[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
+    	List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata);
     	int[] counts = new int[result.size()];
     	for (int i = 0; i < counts.length; i++) {
     		counts[i] = ((Integer)result.get(i).get(0)).intValue();

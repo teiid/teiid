@@ -19,11 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.adapter.ldap;
+package org.teiid.resource.adapter;
 
-import javax.naming.NamingException;
+import java.io.File;
 
-public interface LDAPConnection {
-	Object lookup(String context) throws NamingException;
-	void close();
+import javax.resource.cci.Connection;
+
+public interface FileConnection extends Connection {
+	
+	File[] getFiles(String path);
+	
 }

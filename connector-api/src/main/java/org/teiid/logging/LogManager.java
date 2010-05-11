@@ -130,7 +130,7 @@ public final class LogManager {
 		}
 	}
 
-    static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
+    static Logger logListener = new JavaLogger(); // either injected or manually set using the set methods
 
     /**
      * Send a critical message to the log.  This level of message is generally
@@ -354,13 +354,13 @@ public final class LogManager {
     	logListener.log(msgLevel, context, e, message);
     }
 
-    public static void setLogListener(LogListener listener) {
+    public static void setLogListener(Logger listener) {
     	logListener.shutdown();
     	if (listener != null) {
     		logListener = listener;
     	}
     	else {
-    		logListener = new JavaLogWriter();
+    		logListener = new JavaLogger();
     	}
     }
     	

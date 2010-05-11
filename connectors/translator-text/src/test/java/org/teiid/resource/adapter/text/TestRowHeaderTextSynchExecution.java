@@ -20,13 +20,11 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.cci.text;
+package org.teiid.resource.adapter.text;
 
 import junit.framework.TestCase;
 
 import org.teiid.resource.ConnectorException;
-
-import com.metamatrix.core.util.UnitTestUtil;
 
 
 
@@ -43,7 +41,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -53,7 +51,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader2() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_NoNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /** 
@@ -63,7 +61,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader3() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_AlphaNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -74,7 +72,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader4() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_AlphaDiffNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -84,7 +82,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader5() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_NoNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor_HeaderRowTest.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor_HeaderRowTest.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -94,7 +92,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader6() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_AlphaDiffNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor_HeaderRowTest.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor_HeaderRowTest.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -104,7 +102,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader7() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_NoNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor3.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor3.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -114,7 +112,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader8() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_SpaceNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor4.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor4.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -126,7 +124,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
     public void testRowHeader_Error() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_AlphaNameInSource";  //$NON-NLS-1$
         try {
-            Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor4.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+            Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor4.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
             fail("Should have received ConnectorException due to an invalid header row being defined."); //$NON-NLS-1$
         } catch (ConnectorException ce ) {
         	assertEquals("'SELECT PARTS_AlphaNameInSource.Part_Id, PARTS_AlphaNameInSource.Part_Name, PARTS_AlphaNameInSource.Part_Color, PARTS_AlphaNameInSource.Part_Weight FROM PARTS_AlphaNameInSource' cannot be translated by the TextTranslator. Column Part_Id not found for element Parts.PARTS_AlphaNameInSource.Part_Id.  Verify column name \"Part_Id\" is defined in the header row of the text file and that the header row number is correctly defined in the descriptor file.", ce.getMessage()); //$NON-NLS-1$
@@ -143,7 +141,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
      */
     public void testRowHeader_Error2() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS_NoNameInSource";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", UnitTestUtil.getTestDataPath() + "/TextParts/PartsDescriptor4.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor4.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

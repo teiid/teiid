@@ -43,10 +43,10 @@ import org.teiid.resource.ConnectorException;
 public class BasicManagedConnection implements ManagedConnection {
 	protected PrintWriter log;
 	protected final Collection<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
-	private Connection physicalConnection;
+	private BasicConnection physicalConnection;
 	private final Set<WrappedConnection> handles = new HashSet<WrappedConnection>();
 	
-	public BasicManagedConnection(Connection connection) {
+	public BasicManagedConnection(BasicConnection connection) {
 		this.physicalConnection = connection;
 	}
 
@@ -160,6 +160,9 @@ public class BasicManagedConnection implements ManagedConnection {
    }	
    
    public boolean isValid() {
-	   return true;
+	   if (this.physicalConnection == null) {
+		   return false;
+	   }
+	   return this.physicalConnection.isAlive();
    }
 }

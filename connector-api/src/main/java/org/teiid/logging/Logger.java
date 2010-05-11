@@ -20,32 +20,32 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.cci;
+package org.teiid.logging;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
-
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.TimestampWithTimezone;
 
 /**
+ * LogListener
  */
-public class TypeFacilityImpl extends TypeFacility {
-
-    public TypeFacilityImpl() {
-    }
-
-	@Override
-	public Object convertToRuntimeType(Object value) {
-		return DataTypeManager.convertToRuntimeType(value);
-	}
+public interface Logger {
 	
-	@Override
-	public Object convertDate(Date date, TimeZone initial, Calendar target,
-			Class targetType) {
-		return TimestampWithTimezone.create(date, initial, target, targetType);
-	}
+    /**
+     * Is the logging for the given context at the specified message level enabled. 
+     * @param context
+     * @param msgLevel
+     * @return
+     */
+    boolean isEnabled(String context, int msgLevel);
+
+    void log(int level, String context, Object msg);
+    
+    void log(int level, String context, Throwable t, Object msg);
+
+    /**
+     * Shut down this listener, requesting it clean up and release any resources it
+     * may have acquired during its use.  The listener is free to ignore this
+     * request if it is not responsible for managing the resources it uses or if
+     * there are no resources.
+     */
+    void shutdown(); 
 
 }

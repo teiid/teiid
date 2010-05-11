@@ -3,7 +3,6 @@ package org.teiid.resource.spi;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
 import javax.resource.cci.ConnectionFactory;
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.cci.RecordFactory;
@@ -14,7 +13,10 @@ public abstract class BasicConnectionFactory implements ConnectionFactory {
 	private Reference reference;
 	
 	@Override
-	public Connection getConnection(ConnectionSpec arg0) throws ResourceException {
+	public abstract BasicConnection getConnection() throws ResourceException;
+	
+	@Override
+	public BasicConnection getConnection(ConnectionSpec arg0) throws ResourceException {
 		throw new ResourceException("This operation not supported"); //$NON-NLS-1$;
 	}
 

@@ -19,36 +19,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.cci.text;
+package org.teiid.resource.adapter.file;
 
 import javax.resource.ResourceException;
 
+import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-public class TextManagedConnectionFactory extends BasicManagedConnectionFactory{
+public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 
 	private static final long serialVersionUID = -1495488034205703625L;
-	private String descriptorFile;
-	private boolean partialStartupAllowed;
+
+	private String parentDirectory;
 	
 	@Override
 	public Object createConnectionFactory() throws ResourceException {
-		return new TextConnectionFactory(this);
+		return new BasicConnectionFactory() {
+			
+			@Override
+			public BasicConnection getConnection() throws ResourceException {
+				return new FileConnectionImpl(parentDirectory);
+			}
+		};
 	}
 	
-	public String getDescriptorFile() {
-		return descriptorFile;
+	public String getParentDirectory() {
+		return parentDirectory;
 	}
-
-	public void setDescriptorFile(String descriptorFile) {
-		this.descriptorFile = descriptorFile;
-	}	
 	
-	public boolean isPartialStartupAllowed() {
-		return partialStartupAllowed;
+	public void setParentDirectory(String parentDirectory) {
+		this.parentDirectory = parentDirectory;
 	}
-
-	public void setPartialStartupAllowed(Boolean partialStartupAllowed) {
-		this.partialStartupAllowed = partialStartupAllowed.booleanValue();
-	}	
+	
 }
