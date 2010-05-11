@@ -24,15 +24,15 @@
  */
 package org.teiid.dqp.internal.datamgr.metadata;
 
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.connector.metadata.runtime.*;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.StoredProcedureInfo;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
-import com.metamatrix.query.sql.lang.SPParameter;
 
 /**
  */
@@ -51,7 +51,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 			return getElement(metadataId);
 		} catch (QueryMetadataException e) {
 			throw new ConnectorException(e);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw new ConnectorException(e);
 		}
     }
@@ -70,12 +70,12 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 	    	return getGroup(groupId);
 		} catch (QueryMetadataException e) {
 			throw new ConnectorException(e);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw new ConnectorException(e);
 		}
     }
 
-	public Table getGroup(Object groupId) throws QueryMetadataException, MetaMatrixComponentException {
+	public Table getGroup(Object groupId) throws QueryMetadataException, TeiidComponentException {
 		if (!metadata.isVirtualGroup(groupId) && groupId instanceof Table) {
 			return (Table)groupId;
 		}
@@ -89,7 +89,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 	    	return getProcedure(sp);
 		} catch (QueryMetadataException e) {
 			throw new ConnectorException(e);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw new ConnectorException(e);
 		}
     }
@@ -113,7 +113,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
             return metadata.getBinaryVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
-        } catch (MetaMatrixComponentException e) {
+        } catch (TeiidComponentException e) {
             throw new ConnectorException(e);
         }
     }
@@ -123,7 +123,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
             return metadata.getCharacterVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
-        } catch (MetaMatrixComponentException e) {
+        } catch (TeiidComponentException e) {
             throw new ConnectorException(e);
         }
     }
@@ -133,7 +133,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
             return metadata.getVDBResourcePaths();
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
-        } catch (MetaMatrixComponentException e) {
+        } catch (TeiidComponentException e) {
             throw new ConnectorException(e);
         }
     }

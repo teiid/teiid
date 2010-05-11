@@ -24,10 +24,11 @@ package org.teiid.dqp.internal.process;
 
 import java.util.List;
 
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.Reference;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Reference;
+
 
 class PreparedPlan{
 	private ProcessorPlan plan;

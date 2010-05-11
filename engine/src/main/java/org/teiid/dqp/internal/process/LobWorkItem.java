@@ -30,16 +30,16 @@ import javax.resource.spi.work.Work;
 
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsReceiver;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.util.Assertion;
+import org.teiid.core.util.ReaderInputStream;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.logging.LogManager;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.types.BlobType;
-import com.metamatrix.common.types.ClobType;
-import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.types.XMLType;
-import com.metamatrix.common.util.ReaderInputStream;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
 
 public class LobWorkItem implements Work {
 	
@@ -74,7 +74,7 @@ public class LobWorkItem implements Work {
             // now get the chunk from stream
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
-        } catch (MetaMatrixComponentException e) {            
+        } catch (TeiidComponentException e) {            
             LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
         } catch (IOException e) {
@@ -112,7 +112,7 @@ public class LobWorkItem implements Work {
      * LOB object 
      */
     private ByteLobChunkStream createLobStream(String referenceStreamId) 
-        throws MetaMatrixComponentException, IOException {
+        throws TeiidComponentException, IOException {
         
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.

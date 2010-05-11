@@ -34,6 +34,9 @@ import java.util.Map;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
@@ -44,41 +47,38 @@ import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.query.processor.CollectionTupleSource;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.util.CommandContext;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.types.BlobImpl;
-import com.metamatrix.common.types.BlobType;
-import com.metamatrix.common.types.ClobImpl;
-import com.metamatrix.common.types.ClobType;
-import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.common.types.XMLType;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.query.processor.CollectionTupleSource;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.UnaryFromClause;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.util.CommandContext;
 
 public class DataTierManagerImpl implements ProcessorDataManager {
 	
@@ -122,7 +122,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     	return this.connectorManagerRepository.getConnectorManager(connectorName);
     }
 
-	public TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+	public TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID) throws TeiidComponentException, TeiidProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
@@ -138,11 +138,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	 * @param command
 	 * @param workItem
 	 * @return
-	 * @throws MetaMatrixComponentException
+	 * @throws TeiidComponentException
 	 */
 	@SuppressWarnings("unchecked")
 	private TupleSource processSystemQuery(Command command,
-			DQPWorkContext workContext) throws MetaMatrixComponentException {
+			DQPWorkContext workContext) throws TeiidComponentException {
 		String vdbName = workContext.getVdbName();
 		int vdbVersion = workContext.getVdbVersion();
 		VDBMetaData vdb = workContext.getVDB();
@@ -318,7 +318,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private AtomicRequestMessage createRequest(Object processorId,
 			Command command, String modelName, String connectorBindingId, int nodeID)
-			throws MetaMatrixProcessingException, MetaMatrixComponentException {
+			throws TeiidProcessingException, TeiidComponentException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 	    RequestMessage request = workItem.requestMsg;
@@ -337,7 +337,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	List<String> bindings = model.getSourceNames();
 	        if (bindings == null || bindings.size() != 1) {
 	            // this should not happen, but it did occur when setting up the SystemAdmin models
-	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
+	            throw new TeiidComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
 	        }
 	        connectorBindingId = bindings.get(0); 
 	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$
@@ -372,7 +372,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         String returnElementName,
         String keyElementName,
         Object keyValue)
-        throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+        throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
         switch (this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context)) {
         	case CACHE_NOT_EXIST:
@@ -380,7 +380,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	case CACHE_EXISTS:
 	        	return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
 	        case CACHE_OVERLOAD:
-	        	throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	        	throw new TeiidProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	        default:
 	            throw BlockedException.INSTANCE;
         }
@@ -391,7 +391,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         final String codeTableName,
         String returnElementName,
         String keyElementName)
-        throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        throws TeiidComponentException, TeiidProcessingException {
 
         String query = SQLReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + SQLReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
         

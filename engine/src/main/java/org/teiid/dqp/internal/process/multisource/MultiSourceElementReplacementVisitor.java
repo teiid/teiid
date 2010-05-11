@@ -22,11 +22,12 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+
 
 public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisitor {
 

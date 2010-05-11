@@ -29,42 +29,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.client.metadata.ResultsMetadataDefaults;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.parser.ParseInfo;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.XQuery;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.TempTableStore;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.XMLType;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
-import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataStore;
-import com.metamatrix.query.parser.ParseInfo;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.XQuery;
-import com.metamatrix.query.sql.symbol.AggregateSymbol;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
-import com.metamatrix.query.tempdata.TempTableStore;
 
 /**
  * Handles MetaDataMessages on behalf of DQPCore.
@@ -93,10 +93,10 @@ public class MetaDataProcessor {
      * an already processed command.
      * @param metadataMsg The message from the client
      * @return The message for the client
-     * @throws MetaMatrixComponentException
-     * @throws MetaMatrixProcessingException 
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException 
      */
-    MetadataResult processMessage(RequestID requestId, DQPWorkContext workContext, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    MetadataResult processMessage(RequestID requestId, DQPWorkContext workContext, String preparedSql, boolean allowDoubleQuotedVariable) throws TeiidComponentException, TeiidProcessingException {
         this.requestID = requestId;
         
         this.metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
@@ -110,7 +110,7 @@ public class MetaDataProcessor {
         RequestWorkItem workItem = null;
         try {
         	workItem = requestManager.getRequestWorkItem(requestID);
-        } catch (MetaMatrixProcessingException e) {
+        } catch (TeiidProcessingException e) {
         	if (preparedSql == null) {
         		throw e;
         	}
@@ -136,7 +136,7 @@ public class MetaDataProcessor {
     }
     
     // For each projected symbol, construct a metadata map
-    private MetadataResult getMetadataForCommand(Command originalCommand) throws MetaMatrixComponentException {
+    private MetadataResult getMetadataForCommand(Command originalCommand) throws TeiidComponentException {
         Map[] columnMetadata = null;
         
         switch(originalCommand.getType()) {
@@ -178,7 +178,7 @@ public class MetaDataProcessor {
         return new MetadataResult(columnMetadata, paramMetadata);
     }
 
-    private Map[] createProjectedSymbolMetadata(Command originalCommand) throws MetaMatrixComponentException {
+    private Map[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
         Map[] columnMetadata;
         // Allow command to use temporary metadata
         Map tempMetadata = originalCommand.getTemporaryMetadata();
@@ -200,13 +200,13 @@ public class MetaDataProcessor {
             try {
                 columnMetadata[i] = createColumnMetadata(shortColumnName, symbol);
             } catch(QueryMetadataException e) {
-                throw new MetaMatrixComponentException(e);
+                throw new TeiidComponentException(e);
             }
         }
         return columnMetadata;
     }
 
-    private MetadataResult obtainMetadataForPreparedSql(String sql, DQPWorkContext workContext, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private MetadataResult obtainMetadataForPreparedSql(String sql, DQPWorkContext workContext, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, TeiidComponentException {
         Command command = null;
         
         ParseInfo info = new ParseInfo();
@@ -242,7 +242,7 @@ public class MetaDataProcessor {
         return xqueryMetadata;
     }
 
-    private Map createColumnMetadata(String shortColumnName, SingleElementSymbol symbol) throws QueryMetadataException, MetaMatrixComponentException {
+    private Map createColumnMetadata(String shortColumnName, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         if(symbol instanceof ElementSymbol) {
             return createElementMetadata(shortColumnName, (ElementSymbol) symbol);        
         } else if(symbol instanceof AggregateSymbol) {
@@ -251,7 +251,7 @@ public class MetaDataProcessor {
         return createTypedMetadata(shortColumnName, symbol);            
     }
     
-    private Map createElementMetadata(String shortColumnName, ElementSymbol symbol) throws QueryMetadataException, MetaMatrixComponentException {
+    private Map createElementMetadata(String shortColumnName, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         Object elementID = symbol.getMetadataID();
         
         Map column = new HashMap();
@@ -318,7 +318,7 @@ public class MetaDataProcessor {
     }
     
     private Map createAggregateMetadata(String shortColumnName,
-                                        AggregateSymbol symbol) throws QueryMetadataException, MetaMatrixComponentException {
+                                        AggregateSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         
         Expression expression = symbol.getExpression();
         String function = symbol.getAggregateFunction();
@@ -334,7 +334,7 @@ public class MetaDataProcessor {
         return getDefaultColumn(null, shortColumnName, symbol.getType());
     }
     
-    private int getColumnPrecision(Class dataType, Object elementID) throws QueryMetadataException, MetaMatrixComponentException {
+    private int getColumnPrecision(Class dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
         if (!Number.class.isAssignableFrom(dataType)) {
             int length = metadata.getElementLength(elementID);
             if (length > 0) {
@@ -362,7 +362,7 @@ public class MetaDataProcessor {
      * @param dataType A string representing the MetaMatrix data type of the column
      * @return An int value giving the displaysize of the column
      */
-    private Integer getColumnDisplaySize(int precision, Class dataType, Object elementID) throws QueryMetadataException, MetaMatrixComponentException {
+    private Integer getColumnDisplaySize(int precision, Class dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
 
        if(elementID != null && dataType.equals(DataTypeManager.DefaultDataClasses.STRING)) {
            int length = metadata.getElementLength(elementID);

@@ -28,8 +28,8 @@ import java.io.PushbackInputStream;
 
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.lob.LobChunkProducer;
+import org.teiid.core.CorePlugin;
 
-import com.metamatrix.core.CorePlugin;
 
 /**
  * A wrapper class, given a InputStream object can convert a underlying 

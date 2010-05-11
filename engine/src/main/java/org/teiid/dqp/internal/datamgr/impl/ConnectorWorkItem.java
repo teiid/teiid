@@ -28,15 +28,31 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.connector.language.Call;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
+import org.teiid.dqp.message.AtomicRequestID;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.DataNotAvailableException;
 import org.teiid.resource.cci.Execution;
@@ -45,22 +61,6 @@ import org.teiid.resource.cci.ProcedureExecution;
 import org.teiid.resource.cci.ResultSetExecution;
 import org.teiid.resource.cci.UpdateExecution;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestID;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataStore;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
@@ -203,7 +203,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
-        } else if (t instanceof ConnectorException || t instanceof MetaMatrixProcessingException) {
+        } else if (t instanceof ConnectorException || t instanceof TeiidProcessingException) {
         	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
         } else {
             LogManager.logError(LogConstants.CTX_CONNECTOR, t, msg);

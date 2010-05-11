@@ -30,10 +30,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+
 
 
 /** 
@@ -53,7 +54,7 @@ public class MultiSourceCapabilitiesFinder implements
         this.multiSourceModels = multiSourceModels;
     }
     
-    public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
+    public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
         SourceCapabilities caps = finder.findCapabilities(modelName);
         
         if(multiSourceModels.contains(modelName)) {

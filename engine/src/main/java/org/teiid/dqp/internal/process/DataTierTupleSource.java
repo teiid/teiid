@@ -26,15 +26,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.SourceWarning;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 
 /**
  * This tuple source impl can only be used once; once it is closed, it 
@@ -77,7 +77,7 @@ public class DataTierTupleSource implements TupleSource {
         return this.schema;
     }
 
-    public List nextTuple() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    public List nextTuple() throws TeiidComponentException, TeiidProcessingException {
     	if (this.arm == null) {
     		open();
     	}
@@ -107,7 +107,7 @@ public class DataTierTupleSource implements TupleSource {
 		return this.arm != null && this.arm.getFinalRow() >= 0;
 	}
     
-    void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    void open() throws TeiidComponentException, TeiidProcessingException {
         try {
 	        if (this.cwi == null) {
 	        	this.cwi = this.dataMgr.executeRequest(aqr, this.workItem, this.connectorName);
@@ -157,7 +157,7 @@ public class DataTierTupleSource implements TupleSource {
     	}
     }
 
-    void exceptionOccurred(ConnectorException exception, boolean removeState) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    void exceptionOccurred(ConnectorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
     	if (removeState) {
 			fullyCloseSource();
 		}
@@ -167,13 +167,13 @@ public class DataTierTupleSource implements TupleSource {
 			emptyResults.setFinalRow(this.rowsProcessed);
 			receiveResults(arm);
 		} else {
-    		if (exception.getCause() instanceof MetaMatrixComponentException) {
-    			throw (MetaMatrixComponentException)exception.getCause();
+    		if (exception.getCause() instanceof TeiidComponentException) {
+    			throw (TeiidComponentException)exception.getCause();
     		}
-    		if (exception.getCause() instanceof MetaMatrixProcessingException) {
-    			throw (MetaMatrixProcessingException)exception.getCause();
+    		if (exception.getCause() instanceof TeiidProcessingException) {
+    			throw (TeiidProcessingException)exception.getCause();
     		}
-    		throw new MetaMatrixProcessingException(exception);
+    		throw new TeiidProcessingException(exception);
 		}	
 	}
 

@@ -55,29 +55,29 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.tempdata.TempTableStoreImpl;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.types.Streamable;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.TransactionContext.Scope;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.tempdata.TempTableStoreImpl;
 
 /**
  * Implements the core DQP processing.
@@ -323,7 +323,7 @@ public class DQPCore implements DQP {
     }
 	
 	public ResultsFuture<ResultsMessage> processCursorRequest(long reqID,
-			int batchFirst, int fetchSize) throws MetaMatrixProcessingException {
+			int batchFirst, int fetchSize) throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst);  //$NON-NLS-1$
         }
@@ -353,7 +353,7 @@ public class DQPCore implements DQP {
 			this.processWorkerPool.scheduleWork(work);
 		} catch (WorkException e) {
 			//TODO: cancel? close?
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
 		}
     }
     
@@ -372,7 +372,7 @@ public class DQPCore implements DQP {
 				}
 			}, null, delay);
 		} catch (WorkException e) {
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
 		}
     }
     
@@ -382,7 +382,7 @@ public class DQPCore implements DQP {
     
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,
 			long requestId, String streamId)
-			throws MetaMatrixProcessingException {
+			throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }   
@@ -396,7 +396,7 @@ public class DQPCore implements DQP {
 	    
 	public ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId,
 			long requestId, String streamId)
-			throws MetaMatrixProcessingException {
+			throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request for next Lob chunk with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }  
@@ -421,10 +421,10 @@ public class DQPCore implements DQP {
 //        workItem.requestAtomicRequestCancel(requestID);
 //    }
     
-    RequestWorkItem getRequestWorkItem(RequestID reqID) throws MetaMatrixProcessingException {
+    RequestWorkItem getRequestWorkItem(RequestID reqID) throws TeiidProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
-    		throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
+    		throw new TeiidProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
     	}
     	return result;
     }
@@ -450,7 +450,7 @@ public class DQPCore implements DQP {
 	        for (RequestID reqId : state.getRequests()) {
 	            try {
 	                cancelRequest(reqId);
-	            } catch (MetaMatrixComponentException err) {
+	            } catch (TeiidComponentException err) {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
 				}
 	        }
@@ -464,12 +464,12 @@ public class DQPCore implements DQP {
         contextCache.removeSessionScopedCache(sessionId);
     }
 
-    public boolean cancelRequest(String sessionId, long requestId) throws MetaMatrixComponentException {
+    public boolean cancelRequest(String sessionId, long requestId) throws TeiidComponentException {
     	RequestID requestID = new RequestID(sessionId, requestId);
     	return cancelRequest(requestID);
     }
     
-    private boolean cancelRequest(RequestID requestID) throws MetaMatrixComponentException {
+    private boolean cancelRequest(RequestID requestID) throws TeiidComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
         }
@@ -488,7 +488,7 @@ public class DQPCore implements DQP {
         return markCancelled;
     }
     
-	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+	public ResultsFuture<?> closeRequest(long requestId) throws TeiidProcessingException, TeiidComponentException {
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         closeRequest(workContext.getRequestID(requestId));
         return ResultsFuture.NULL_FUTURE;
@@ -497,9 +497,9 @@ public class DQPCore implements DQP {
     /**
      * Close the request with given ID 
      * @param requestID
-     * @throws MetaMatrixComponentException 
+     * @throws TeiidComponentException 
      */
-    void closeRequest(RequestID requestID) throws MetaMatrixComponentException {
+    void closeRequest(RequestID requestID) throws TeiidComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
         }
@@ -668,7 +668,7 @@ public class DQPCore implements DQP {
 	
 	@Override
 	public boolean cancelRequest(long requestID)
-			throws MetaMatrixProcessingException, MetaMatrixComponentException {
+			throws TeiidProcessingException, TeiidComponentException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		return this.cancelRequest(workContext.getRequestID(requestID));
 	}
@@ -748,7 +748,7 @@ public class DQPCore implements DQP {
 		try {
 			this.workManager.scheduleWork(work);
 		} catch (WorkException e) {
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
 		}
 		return work.getResult();
 	}
@@ -787,7 +787,7 @@ public class DQPCore implements DQP {
 	}
 
 	public MetadataResult getMetadata(long requestID)
-			throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			throws TeiidComponentException, TeiidProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache,  workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, null, true);
@@ -795,7 +795,7 @@ public class DQPCore implements DQP {
 
 	public MetadataResult getMetadata(long requestID, String preparedSql,
 			boolean allowDoubleQuotedVariable)
-			throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			throws TeiidComponentException, TeiidProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);

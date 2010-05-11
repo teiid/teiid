@@ -28,27 +28,27 @@ import java.util.Set;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.relational.PlanToProcessConverter;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.NullNode;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
+import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
+import org.teiid.query.util.CommandContext;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
-import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.processor.relational.AccessNode;
-import com.metamatrix.query.processor.relational.NullNode;
-import com.metamatrix.query.processor.relational.RelationalNode;
-import com.metamatrix.query.processor.relational.RelationalNodeUtil;
-import com.metamatrix.query.processor.relational.UnionAllNode;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
-import com.metamatrix.query.util.CommandContext;
 
 public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	
@@ -64,13 +64,13 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		this.workContext = workContext;
 	}
 
-	protected RelationalNode convertNode(PlanNode planNode) throws QueryPlannerException, MetaMatrixComponentException {
+	protected RelationalNode convertNode(PlanNode planNode) throws QueryPlannerException, TeiidComponentException {
 		RelationalNode node = super.convertNode(planNode);
 		
 		if (node instanceof AccessNode) {
 			try {
 				return multiSourceModify((AccessNode)node);
-			} catch (MetaMatrixProcessingException e) {
+			} catch (TeiidProcessingException e) {
 				throw new QueryPlannerException(e, e.getMessage());
 			} 
 		}
@@ -78,7 +78,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		return node;
 	}
 	
-	private RelationalNode multiSourceModify(AccessNode accessNode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+	private RelationalNode multiSourceModify(AccessNode accessNode) throws TeiidComponentException, TeiidProcessingException {
         String modelName = accessNode.getModelName();
 
 		if(!this.multiSourceModels.contains(modelName)) {

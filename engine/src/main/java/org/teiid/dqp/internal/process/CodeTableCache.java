@@ -29,14 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.logging.LogManager;
+import org.teiid.query.util.CommandContext;
+import org.teiid.vdb.runtime.VDBKey;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * Code table cache.  Heavily synchronized in-memory cache of code tables.  There is no purging policy for this cache.  Once the limits have been reached exceptions will occur.
@@ -136,9 +136,9 @@ class CodeTableCache {
      * @param requestID Part of RequestKey
      * @param nodeID Part of RequestKey
      * @param results QueryResults of <List<List<keyValue, returnValue>>
-     * @throws MetaMatrixProcessingException 
+     * @throws TeiidProcessingException 
      */
-    public synchronized void loadTable(CacheKey cacheKey, List[] records) throws MetaMatrixProcessingException {
+    public synchronized void loadTable(CacheKey cacheKey, List[] records) throws TeiidProcessingException {
 		// Lookup the existing data  
 		// Map of data: keyValue --> returnValue;
 		CodeTable table = codeTableCache.get(cacheKey);
@@ -150,11 +150,11 @@ class CodeTableCache {
     	// Depends on size of results and available memory and system parameters
 		int potentialSize = table.codeMap.size() + records.length;
     	if (potentialSize > maxCodeTableRecords) {
-    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                  
+    		throw new TeiidProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                  
     	}
     	
     	if (potentialSize + rowCount > maxCodeRecords) {
-    		throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTableRecords")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    		throw new TeiidProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTableRecords")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	}
 		
         // Add data: <List<List<keyValue, returnValue>> from results to the code table cache
@@ -165,7 +165,7 @@ class CodeTableCache {
       		Object returnValue = record.get(1);
       		Object existing = table.codeMap.put(keyValue, returnValue);
       		if (existing != null) {
-      			throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("CodeTableCache.duplicate_key", cacheKey.getCodeTable(), cacheKey.getKeyElement(), keyValue)); //$NON-NLS-1$
+      			throw new TeiidProcessingException(DQPPlugin.Util.getString("CodeTableCache.duplicate_key", cacheKey.getCodeTable(), cacheKey.getKeyElement(), keyValue)); //$NON-NLS-1$
       		}
       	}      	 
     }
@@ -178,14 +178,14 @@ class CodeTableCache {
      * @param keyValue Input key value
      * @return Object of return value in code table cache
      */ 
-    public synchronized Object lookupValue(String codeTable, String returnElement, String keyElement, Object keyValue, CommandContext context) throws MetaMatrixComponentException {
+    public synchronized Object lookupValue(String codeTable, String returnElement, String keyElement, Object keyValue, CommandContext context) throws TeiidComponentException {
         // Create CacheKey
         CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
 
         // Find the corresponding data map in cache for the cache key
         CodeTable table = codeTableCache.get(cacheKey);
         if(table == null || table.codeMap == null) {
-            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("CodeTableCache.No_code_table", cacheKey.codeTable,cacheKey.keyElement,cacheKey.returnElement)); //$NON-NLS-1$
+            throw new TeiidComponentException(DQPPlugin.Util.getString("CodeTableCache.No_code_table", cacheKey.codeTable,cacheKey.keyElement,cacheKey.returnElement)); //$NON-NLS-1$
         }
 		return table.codeMap.get(keyValue);
     }

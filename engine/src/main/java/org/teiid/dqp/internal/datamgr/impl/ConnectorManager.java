@@ -35,33 +35,33 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem.PermitMode;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
+import org.teiid.dqp.message.AtomicRequestID;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ConnectorCapabilities;
 import org.teiid.resource.cci.ExecutionContext;
 import org.teiid.resource.cci.ExecutionFactory;
 import org.teiid.resource.cci.MetadataProvider;
 
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestID;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Scope;
-import com.metamatrix.query.sql.lang.Command;
 
 /**
  * The <code>ConnectorManager</code> manages a {@link org.teiid.resource.adapter.BasicExecutionFactory Connector}

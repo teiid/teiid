@@ -33,10 +33,10 @@ import java.util.List;
 import org.teiid.connector.language.Argument;
 import org.teiid.connector.language.Call;
 import org.teiid.connector.language.Argument.Direction;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ProcedureExecution;
 
-import com.metamatrix.dqp.DQPPlugin;
 
 class ProcedureBatchHandler {
 	private Call proc;

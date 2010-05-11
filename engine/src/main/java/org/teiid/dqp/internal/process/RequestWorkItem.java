@@ -38,36 +38,36 @@ import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.message.AtomicRequestID;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.processor.BatchCollector;
+import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.BatchCollector.BatchHandler;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.resource.cci.DataNotAvailableException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.AtomicRequestID;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.TransactionContext.Scope;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.processor.BatchCollector;
-import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.processor.BatchCollector.BatchHandler;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public class RequestWorkItem extends AbstractWorkItem {
 	
@@ -106,7 +106,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     private Throwable processingException;
     private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = new ConcurrentHashMap<AtomicRequestID, DataTierTupleSource>(4);
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
-    private List<MetaMatrixException> warnings = new LinkedList<MetaMatrixException>();
+    private List<TeiidException> warnings = new LinkedList<TeiidException>();
     private boolean doneProducingBatches;
     private volatile boolean isClosed;
     private volatile boolean isCanceled;
@@ -168,7 +168,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                 state = ProcessingState.PROCESSING;
         		processNew();
                 if (isCanceled) {
-                	this.processingException = new MetaMatrixProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+                	this.processingException = new TeiidProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
                     state = ProcessingState.CLOSE;
                 } 
         	}
@@ -197,7 +197,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                 //Case 5558: Differentiate between system level errors and
                 //processing errors.  Only log system level errors as errors, 
                 //log the processing errors as warnings only
-                if(e instanceof MetaMatrixProcessingException) {                          
+                if(e instanceof TeiidProcessingException) {                          
                 	Throwable cause = e;
                 	while (cause.getCause() != null && cause.getCause() != cause) {
                 		cause = cause.getCause();
@@ -245,7 +245,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		}
 	}
 
-	protected void processMore() throws BlockedException, MetaMatrixCoreException {
+	protected void processMore() throws BlockedException, TeiidException {
 		if (!doneProducingBatches) {
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
@@ -334,7 +334,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		}
 	}
 
-	protected void processNew() throws MetaMatrixProcessingException, MetaMatrixComponentException {
+	protected void processNew() throws TeiidProcessingException, TeiidComponentException {
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
 		CacheID cacheId = new CacheID(this.dqpWorkContext, Request.createParseInfo(requestMsg), requestMsg.getCommandString());
     	cacheId.setParameters(requestMsg.getParameterValues());
@@ -356,7 +356,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		processor = request.processor;
 		collector = processor.createBatchCollector();
 		collector.setBatchHandler(new BatchHandler() {
-			public boolean batchProduced(TupleBatch batch) throws MetaMatrixComponentException {
+			public boolean batchProduced(TupleBatch batch) throws TeiidComponentException {
 			    return sendResultsIfNeeded(batch);
 			}
 		});
@@ -380,7 +380,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	/**
 	 * Send results if they have been requested.  This should only be called from the processing thread.
 	 */
-	protected boolean sendResultsIfNeeded(TupleBatch batch) throws MetaMatrixComponentException {
+	protected boolean sendResultsIfNeeded(TupleBatch batch) throws TeiidComponentException {
 		if (batch != null) {
 			doneProducingBatches = batch.getTerminationFlag();
 			if (doneProducingBatches && cid != null) {
@@ -548,7 +548,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         this.lobStreams.remove(new Integer(streamRequestId));
     } 
     
-    public boolean requestCancel() throws MetaMatrixComponentException {
+    public boolean requestCancel() throws TeiidComponentException {
     	synchronized (this) {
         	if (this.isCanceled) {
         		return false;
@@ -570,7 +570,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	                try {
 	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
 	                } catch (XATransactionException err) {
-	                    throw new MetaMatrixComponentException(err);
+	                    throw new TeiidComponentException(err);
 	                }
 	            }
         	} finally {
@@ -580,7 +580,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         return true;
     }
     
-    public boolean requestAtomicRequestCancel(AtomicRequestID ari) throws MetaMatrixComponentException {
+    public boolean requestAtomicRequestCancel(AtomicRequestID ari) throws TeiidComponentException {
     	// in the case that this does not support partial results; cancel
         // the original processor request.
         if(!requestMsg.supportsPartialResults()) {
@@ -597,7 +597,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         return false;
     }
     
-    public void requestClose() throws MetaMatrixComponentException {
+    public void requestClose() throws TeiidComponentException {
     	synchronized (this) {
         	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
         		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -639,10 +639,10 @@ public class RequestWorkItem extends AbstractWorkItem {
 		return isCanceled;
 	}
 	
-	Command getOriginalCommand() throws MetaMatrixProcessingException {
+	Command getOriginalCommand() throws TeiidProcessingException {
 		if (this.originalCommand == null) {
 			if (this.processingException != null) {
-				throw new MetaMatrixProcessingException(this.processingException);
+				throw new TeiidProcessingException(this.processingException);
 			} 
 			throw new IllegalStateException("Original command is not available"); //$NON-NLS-1$
 		}
@@ -666,7 +666,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		return this.connectorInfo.get(id);
 	}
 	
-	public List<MetaMatrixException> getWarnings() {
+	public List<TeiidException> getWarnings() {
 		return warnings;
 	}
 
@@ -687,7 +687,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	public void release() {
 		try {
 			requestCancel();
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to cancel " + requestID); //$NON-NLS-1$
 		}
 	}

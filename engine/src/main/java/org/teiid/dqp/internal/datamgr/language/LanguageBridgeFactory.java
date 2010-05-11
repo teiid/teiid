@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.connector.language.AggregateFunction;
 import org.teiid.connector.language.AndOr;
@@ -60,56 +61,55 @@ import org.teiid.connector.language.SortSpecification.Ordering;
 import org.teiid.connector.language.SubqueryComparison.Quantifier;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.GroupBy;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.SetClauseList;
+import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.lang.Delete;
-import com.metamatrix.query.sql.lang.ExistsCriteria;
-import com.metamatrix.query.sql.lang.FromClause;
-import com.metamatrix.query.sql.lang.GroupBy;
-import com.metamatrix.query.sql.lang.Insert;
-import com.metamatrix.query.sql.lang.IsNullCriteria;
-import com.metamatrix.query.sql.lang.JoinPredicate;
-import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.lang.Limit;
-import com.metamatrix.query.sql.lang.MatchCriteria;
-import com.metamatrix.query.sql.lang.NotCriteria;
-import com.metamatrix.query.sql.lang.OrderBy;
-import com.metamatrix.query.sql.lang.OrderByItem;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.QueryCommand;
-import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.lang.SetClause;
-import com.metamatrix.query.sql.lang.SetClauseList;
-import com.metamatrix.query.sql.lang.SetCriteria;
-import com.metamatrix.query.sql.lang.SetQuery;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
-import com.metamatrix.query.sql.lang.SubqueryFromClause;
-import com.metamatrix.query.sql.lang.SubquerySetCriteria;
-import com.metamatrix.query.sql.lang.UnaryFromClause;
-import com.metamatrix.query.sql.lang.Update;
-import com.metamatrix.query.sql.symbol.AggregateSymbol;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.ExpressionSymbol;
-import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.ScalarSubquery;
-import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public class LanguageBridgeFactory {
     private RuntimeMetadataImpl metadataFactory = null;
@@ -586,7 +586,7 @@ public class LanguageBridgeFactory {
             try {
 				proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
 			} catch (ConnectorException e) {
-				throw new MetaMatrixRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
         }
         Class<?> returnType = null;
@@ -640,9 +640,9 @@ public class LanguageBridgeFactory {
         try {
 			group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
 		} catch (QueryMetadataException e) {
-			throw new MetaMatrixRuntimeException(e);
-		} catch (MetaMatrixComponentException e) {
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
+		} catch (TeiidComponentException e) {
+			throw new TeiidRuntimeException(e);
 		}
         return group;
     }

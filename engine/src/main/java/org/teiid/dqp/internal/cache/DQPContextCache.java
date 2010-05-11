@@ -23,13 +23,13 @@ package org.teiid.dqp.internal.cache;
 
 import java.io.Serializable;
 
+import org.teiid.cache.Cache;
+import org.teiid.cache.CacheConfiguration;
+import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.cache.CacheConfiguration;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.cache.CacheConfiguration.Policy;
 
 public class DQPContextCache implements Serializable{
 	private static final long serialVersionUID = 6958846566556640186L;

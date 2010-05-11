@@ -38,6 +38,7 @@ import java.util.Properties;
 
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
@@ -51,34 +52,33 @@ import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.Column.SearchType;
 import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.StringUtil;
+import org.teiid.dqp.DQPPlugin;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.function.UDFSource;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.mapping.xml.MappingDocument;
+import org.teiid.query.mapping.xml.MappingLoader;
+import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.metadata.BasicQueryMetadata;
+import org.teiid.query.metadata.GroupInfo;
+import org.teiid.query.metadata.StoredProcedureInfo;
+import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.sql.lang.SPParameter;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.types.BlobImpl;
-import com.metamatrix.common.types.ClobImpl;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.InputStreamFactory;
-import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionTree;
-import com.metamatrix.query.function.SystemFunctionManager;
-import com.metamatrix.query.function.UDFSource;
-import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.mapping.relational.QueryNode;
-import com.metamatrix.query.mapping.xml.MappingDocument;
-import com.metamatrix.query.mapping.xml.MappingLoader;
-import com.metamatrix.query.mapping.xml.MappingNode;
-import com.metamatrix.query.metadata.BasicQueryMetadata;
-import com.metamatrix.query.metadata.GroupInfo;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
-import com.metamatrix.query.metadata.SupportConstants;
-import com.metamatrix.query.sql.lang.SPParameter;
 
 /**
  * Modelers implementation of QueryMetadataInterface that reads columns, groups, models etc.
@@ -144,7 +144,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
      */
-    public Object getElementID(final String elementName) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getElementID(final String elementName) throws TeiidComponentException, QueryMetadataException {
     	int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
 		if (columnIndex == -1) {
 			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
@@ -162,7 +162,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupID(java.lang.String)
      */
-    public Object getGroupID(final String groupName) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
         return getMetadataStore().findGroup(groupName.toLowerCase());
     }
     
@@ -170,7 +170,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupsForPartialName(java.lang.String)
      */
     public Collection getGroupsForPartialName(final String partialGroupName)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
 		ArgCheck.isNotEmpty(partialGroupName);
 
 		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
@@ -199,7 +199,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
      */
-    public Object getModelID(final Object groupOrElementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getModelID(final Object groupOrElementID) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(AbstractMetadataRecord.class, groupOrElementID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) groupOrElementID;
         AbstractMetadataRecord parent = metadataRecord.getParent();
@@ -219,7 +219,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
      */
-    public String getFullName(final Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getFullName(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         return metadataRecord.getFullName();
@@ -229,7 +229,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
    * @see com.metamatrix.query.metadata.QueryMetadataInterface#getFullElementName(java.lang.String, java.lang.String)
    */
     public String getFullElementName(final String fullGroupName, final String shortElementName)     
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullGroupName);
         ArgCheck.isNotEmpty(shortElementName);
 
@@ -239,7 +239,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
   /* (non-Javadoc)
    * @see com.metamatrix.query.metadata.QueryMetadataInterface#getShortElementName(java.lang.String)
    */
-    public String getShortElementName(final String fullElementName) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getShortElementName(final String fullElementName) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullElementName);
         int index = fullElementName.lastIndexOf(DELIMITER_CHAR);
         if(index >= 0) { 
@@ -258,9 +258,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * why it is important not to introduce new metadata here.  Also, returning
      * null indicates that no portion of the fullElementName is a
      * group name - that is ok as it will be resolved as an ambiguous element.
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupName(java.lang.String)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getGroupName(java.lang.String)
      */
-    public String getGroupName(final String fullElementName) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getGroupName(final String fullElementName) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullElementName);  
 
         int index = fullElementName.lastIndexOf(DELIMITER_CHAR);
@@ -273,7 +273,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInGroupID(java.lang.Object)
      */
-    public List getElementIDsInGroupID(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public List getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getColumns();
     }
@@ -281,7 +281,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupIDForElementID(java.lang.Object)
      */
-    public Object getGroupIDForElementID(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getGroupIDForElementID(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             Column columnRecord = (Column) elementID;
             return this.getGroupID(getGroupName(columnRecord.getFullName()));
@@ -297,7 +297,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getStoredProcedureInfoForProcedure(java.lang.String)
      */
     public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String fullyQualifiedProcedureName)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullyQualifiedProcedureName);
         String lowerGroupName = fullyQualifiedProcedureName.toLowerCase();
         Collection<StoredProcedureInfo> results = this.procedureCache.get(lowerGroupName);
@@ -396,7 +396,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementType(java.lang.Object)
      */
-    public String getElementType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getElementType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getRuntimeType();            
         } else if(elementID instanceof ProcedureParameter){
@@ -409,7 +409,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDefaultValue(java.lang.String)
      */
-    public Object getDefaultValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getDefaultValue();            
         } else if(elementID instanceof ProcedureParameter){
@@ -419,7 +419,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public Object getMinimumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getMinimumValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getMinimumValue();            
         } else if(elementID instanceof ProcedureParameter){
@@ -429,7 +429,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public Object getMaximumValue(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Object getMaximumValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getMaximumValue();            
         } else if(elementID instanceof ProcedureParameter){
@@ -442,16 +442,16 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#isVirtualGroup(java.lang.Object)
      */
-    public boolean isVirtualGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public boolean isVirtualGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         return ((Table) groupID).isVirtual();
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#isProcedureInputElement(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#isProcedureInputElement(java.lang.Object)
      * @since 4.2
      */
-    public boolean isProcedure(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public boolean isProcedure(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	if(groupID instanceof Procedure) {
             return true;            
         } 
@@ -461,7 +461,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	throw createInvalidRecordTypeException(groupID);
     }
 
-    public boolean isVirtualModel(final Object modelID) throws MetaMatrixComponentException, QueryMetadataException {
+    public boolean isVirtualModel(final Object modelID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Schema.class, modelID);
         Schema modelRecord = (Schema) modelID;
         return !modelRecord.isPhysical();
@@ -470,7 +470,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getVirtualPlan(java.lang.Object)
      */
-    public QueryNode getVirtualPlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public QueryNode getVirtualPlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
 
         Table tableRecord = (Table) groupID;
@@ -494,7 +494,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getInsertPlan(java.lang.Object)
      */
-    public String getInsertPlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getInsertPlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
@@ -506,7 +506,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getUpdatePlan(java.lang.Object)
      */
-    public String getUpdatePlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getUpdatePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
@@ -518,7 +518,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDeletePlan(java.lang.Object)
      */
-    public String getDeletePlan(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getDeletePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
@@ -531,7 +531,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#modelSupports(java.lang.Object, int)
      */
     public boolean modelSupports(final Object modelID, final int modelConstant)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Schema.class, modelID);
 
         switch(modelConstant) {
@@ -544,7 +544,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#groupSupports(java.lang.Object, int)
      */
     public boolean groupSupports(final Object groupID, final int groupConstant)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
@@ -560,7 +560,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#elementSupports(java.lang.Object, int)
      */
     public boolean elementSupports(final Object elementID, final int elementConstant)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         
         if(elementID instanceof Column) {
             Column columnRecord = (Column) elementID;            
@@ -634,7 +634,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaxSetSize(java.lang.Object)
      */
-    public int getMaxSetSize(final Object modelID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getMaxSetSize(final Object modelID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Schema.class, modelID);
         return 0;
     }
@@ -642,7 +642,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getIndexesInGroup(java.lang.Object)
      */
-    public Collection getIndexesInGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Collection getIndexesInGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         return ((Table)groupID).getIndexes();
     }
@@ -651,7 +651,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getUniqueKeysInGroup(java.lang.Object)
      */
     public Collection getUniqueKeysInGroup(final Object groupID)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	Table tableRecordImpl = (Table)groupID;
     	ArrayList<ColumnSet> result = new ArrayList<ColumnSet>(tableRecordImpl.getUniqueKeys());
@@ -670,7 +670,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getForeignKeysInGroup(java.lang.Object)
      */
     public Collection getForeignKeysInGroup(final Object groupID)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getForeignKeys();
     }
@@ -679,7 +679,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getPrimaryKeyIDForForeignKeyID(java.lang.Object)
      */
     public Object getPrimaryKeyIDForForeignKeyID(final Object foreignKeyID)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ForeignKey.class, foreignKeyID);
         ForeignKey fkRecord = (ForeignKey) foreignKeyID;
         return fkRecord.getPrimaryKey();
@@ -689,7 +689,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getAccessPatternsInGroup(java.lang.Object)
      */
     public Collection getAccessPatternsInGroup(final Object groupID)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getAccessPatterns();
     }
@@ -697,7 +697,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInIndex(java.lang.Object)
      */
-    public List getElementIDsInIndex(final Object index) throws MetaMatrixComponentException, QueryMetadataException {
+    public List getElementIDsInIndex(final Object index) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(ColumnSet.class, index);
     	return ((ColumnSet)index).getColumns();
     }
@@ -705,7 +705,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInKey(java.lang.Object)
      */
-    public List getElementIDsInKey(final Object key) throws MetaMatrixComponentException, QueryMetadataException {
+    public List getElementIDsInKey(final Object key) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ColumnSet.class, key);
         return ((ColumnSet)key).getColumns();
     }
@@ -714,7 +714,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInAccessPattern(java.lang.Object)
      */
     public List getElementIDsInAccessPattern(final Object accessPattern)
-        throws MetaMatrixComponentException, QueryMetadataException {
+        throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ColumnSet.class, accessPattern);
         return ((ColumnSet)accessPattern).getColumns();
     }
@@ -722,7 +722,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#isXMLGroup(java.lang.Object)
      */
-    public boolean isXMLGroup(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public boolean isXMLGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
 
         Table tableRecord = (Table) groupID;
@@ -730,10 +730,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#hasMaterialization(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#hasMaterialization(java.lang.Object)
      * @since 4.2
      */
-    public boolean hasMaterialization(final Object groupID) throws MetaMatrixComponentException,
+    public boolean hasMaterialization(final Object groupID) throws TeiidComponentException,
                                                       QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
@@ -741,10 +741,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaterialization(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getMaterialization(java.lang.Object)
      * @since 4.2
      */
-    public Object getMaterialization(final Object groupID) throws MetaMatrixComponentException,
+    public Object getMaterialization(final Object groupID) throws TeiidComponentException,
                                                     QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
@@ -755,10 +755,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaterializationStage(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getMaterializationStage(java.lang.Object)
      * @since 4.2
      */
-    public Object getMaterializationStage(final Object groupID) throws MetaMatrixComponentException,
+    public Object getMaterializationStage(final Object groupID) throws TeiidComponentException,
                                                          QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
@@ -771,7 +771,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMappingNode(java.lang.Object)
      */
-    public MappingNode getMappingNode(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public MappingNode getMappingNode(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
 
         Table tableRecord = (Table) groupID;
@@ -786,7 +786,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 mappingDoc = reader.loadDocument(inputStream);
                 mappingDoc.setName(groupName);
             } catch (Exception e){
-                throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_virtual_document_{0},_with_body__n{1}_1", groupName, mappingDoc)); //$NON-NLS-1$
+                throw new TeiidComponentException(e, DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_virtual_document_{0},_with_body__n{1}_1", groupName, mappingDoc)); //$NON-NLS-1$
             } finally {
             	try {
 					inputStream.close();
@@ -799,9 +799,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /**
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */
-    public String getVirtualDatabaseName() throws MetaMatrixComponentException, QueryMetadataException {
+    public String getVirtualDatabaseName() throws TeiidComponentException, QueryMetadataException {
     	if (vdbMetaData == null) {
     		return null;
     	}
@@ -816,9 +816,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     /**
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
-    public Collection getXMLTempGroups(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Collection getXMLTempGroups(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
@@ -831,7 +831,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getCardinality(java.lang.Object)
      */
-    public int getCardinality(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         return ((Table) groupID).getCardinality();
     }
@@ -839,7 +839,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLSchemas(java.lang.Object)
      */
-    public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+    public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws TeiidComponentException, QueryMetadataException {
 
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
@@ -867,7 +867,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	}
         	
         	if (schema == null) {
-        		throw new MetaMatrixComponentException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
+        		throw new TeiidComponentException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
         	}
         	schemas.add(schema);
         }
@@ -875,12 +875,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return schemas;
     }
 
-    public String getNameInSource(final Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getNameInSource(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         return ((AbstractMetadataRecord) metadataID).getNameInSource();
     }
 
-    public int getElementLength(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getElementLength(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getLength();            
         } else if(elementID instanceof ProcedureParameter){
@@ -890,7 +890,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getPosition(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getPosition(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getPosition();
         } else if(elementID instanceof ProcedureParameter) {
@@ -900,7 +900,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
     
-    public int getPrecision(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getPrecision(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getPrecision();
         } else if(elementID instanceof ProcedureParameter) {
@@ -910,7 +910,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
     
-    public int getRadix(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getRadix(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getRadix();
         } else if(elementID instanceof ProcedureParameter) {
@@ -920,14 +920,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
     
-	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getFormat();
         } 
         throw createInvalidRecordTypeException(elementID);            
 	}       
     
-    public int getScale(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getScale(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getScale();
         } else if(elementID instanceof ProcedureParameter) {
@@ -937,7 +937,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getDistinctValues(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getDistinctValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getDistinctValues();
         } else if(elementID instanceof ProcedureParameter) {
@@ -947,7 +947,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getNullValues(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getNullValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getNullValues();
         } else if(elementID instanceof ProcedureParameter) {
@@ -957,7 +957,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public String getNativeType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getNativeType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getNativeType();
         } else if(elementID instanceof ProcedureParameter) {
@@ -970,7 +970,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /* 
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
      */
-    public Properties getExtensionProperties(final Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+    public Properties getExtensionProperties(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         Map<String, String> result = metadataRecord.getProperties();
@@ -983,10 +983,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.BasicQueryMetadata#getBinaryVDBResource(java.lang.String)
+     * @see org.teiid.query.metadata.BasicQueryMetadata#getBinaryVDBResource(java.lang.String)
      * @since 4.3
      */
-    public byte[] getBinaryVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
+    public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
     	final VirtualFile f = getFile(resourcePath);
     	if (f == null) {
     		return null;
@@ -994,7 +994,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		try {
 			return ObjectConverterUtil.convertToByteArray(f.openStream());
 		} catch (IOException e) {
-			throw new MetaMatrixComponentException(e);
+			throw new TeiidComponentException(e);
 		}
     }
     
@@ -1057,10 +1057,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.BasicQueryMetadata#getCharacterVDBResource(java.lang.String)
+     * @see org.teiid.query.metadata.BasicQueryMetadata#getCharacterVDBResource(java.lang.String)
      * @since 4.3
      */
-    public String getCharacterVDBResource(String resourcePath) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getCharacterVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
     	try {
     		byte[] bytes = getBinaryVDBResource(resourcePath);
     		if (bytes == null) {
@@ -1068,7 +1068,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		}
 			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(bytes));
 		} catch (IOException e) {
-			throw new MetaMatrixComponentException(e);
+			throw new TeiidComponentException(e);
 		}
     }
     
@@ -1077,10 +1077,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.BasicQueryMetadata#getVDBResourcePaths()
+     * @see org.teiid.query.metadata.BasicQueryMetadata#getVDBResourcePaths()
      * @since 4.3
      */
-    public String[] getVDBResourcePaths() throws MetaMatrixComponentException, QueryMetadataException {
+    public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
     	LinkedList<String> paths = new LinkedList<String>();
     	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
 			if (entry.getValue().visible) {
@@ -1091,10 +1091,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModeledType(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledType(java.lang.Object)
      * @since 5.0
      */
-    public String getModeledType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getModeledType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getDatatypeID();
@@ -1103,10 +1103,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModeledBaseType(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledBaseType(java.lang.Object)
      * @since 5.0
      */
-    public String getModeledBaseType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getModeledBaseType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getBasetypeID();
@@ -1115,10 +1115,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     /** 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModeledPrimitiveType(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledPrimitiveType(java.lang.Object)
      * @since 5.0
      */
-    public String getModeledPrimitiveType(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public String getModeledPrimitiveType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         Datatype record = getDatatypeRecord(elementID);
         if (record != null) {
             return record.getPrimitiveTypeID();
@@ -1138,7 +1138,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 	@Override
 	public Object addToMetadataCache(Object metadataID, String key, Object value)
-			throws MetaMatrixComponentException, QueryMetadataException {
+			throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
@@ -1150,7 +1150,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 	@Override
 	public Object getFromMetadataCache(Object metadataID, String key)
-			throws MetaMatrixComponentException, QueryMetadataException {
+			throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);

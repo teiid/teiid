@@ -22,9 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
-import com.metamatrix.common.buffer.TupleBuffer;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.sql.lang.Command;
+import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.sql.lang.Command;
+
 
 public class CachedResults {
 	private Command command;

@@ -52,13 +52,13 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.TransactionContext.Scope;
 
 public class TransactionServerImpl implements TransactionService {
 

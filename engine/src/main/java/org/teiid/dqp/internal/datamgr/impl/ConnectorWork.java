@@ -22,10 +22,10 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
 
 /**
  * Represents a connector execution in batched form.

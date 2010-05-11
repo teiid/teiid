@@ -27,17 +27,17 @@ import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 /**
  */
@@ -63,7 +63,7 @@ public class CachedFinder implements CapabilitiesFinder {
     /**
      * Find capabilities used the cache if possible, otherwise do the lookup.
      */
-    public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
+    public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
     	SourceCapabilities caps = userCache.get(modelName);
         if(caps != null) {
             return caps;
@@ -86,11 +86,11 @@ public class CachedFinder implements CapabilitiesFinder {
         }
 
         if (exception != null) {
-        	throw new MetaMatrixComponentException(exception);
+        	throw new TeiidComponentException(exception);
         }
         
         if (caps == null) {
-        	throw new MetaMatrixRuntimeException("No sources were given for the model " + modelName); //$NON-NLS-1$
+        	throw new TeiidRuntimeException("No sources were given for the model " + modelName); //$NON-NLS-1$
         }
         
         userCache.put(modelName, caps);

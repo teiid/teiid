@@ -25,11 +25,11 @@ package org.teiid.dqp.internal.datamgr.impl;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.resource.cci.ConnectorCapabilities;
 
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 
 /**
  * Utility to convert a ConnectorCapabilities class into a Map of 

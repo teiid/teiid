@@ -43,12 +43,12 @@ import javax.resource.spi.work.WorkManager;
 import javax.resource.spi.work.WorkRejectedException;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 
-import com.metamatrix.core.util.NamedThreadFactory;
-import com.metamatrix.query.QueryPlugin;
 
 /**
  * StatsCapturingWorkManager acts as a wrapper to the passed in {@link WorkManager} to 

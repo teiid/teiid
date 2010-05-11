@@ -28,12 +28,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.metadata.BasicQueryMetadataWrapper;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.metadata.BasicQueryMetadataWrapper;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
+
 
 /**
  * This classs is a proxy to QueryMetadataInterface. It knows VDBService
@@ -49,9 +50,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     }	
 
     /**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
 	 */
-	public Object getElementID(String elementName) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getElementID(String elementName) throws TeiidComponentException, QueryMetadataException {
         String shortName = getShortElementName(elementName);        
         if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
             try {
@@ -76,9 +77,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
 	 */
-	public Object getModelID(Object groupOrElementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getModelID(Object groupOrElementID) throws TeiidComponentException, QueryMetadataException {
         if(groupOrElementID instanceof MultiSourceElement) {
             Object groupID = ((MultiSourceElement)groupOrElementID).groupID;
             return this.getModelID(groupID);
@@ -88,9 +89,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     }
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
 	 */
-	public String getFullName(Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+	public String getFullName(Object metadataID) throws TeiidComponentException, QueryMetadataException {
         if(metadataID instanceof MultiSourceElement) {
             return ((MultiSourceElement)metadataID).fullName;
         }
@@ -98,9 +99,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementIDsInGroupID(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInGroupID(java.lang.Object)
 	 */
-	public List getElementIDsInGroupID(Object groupID) throws MetaMatrixComponentException, QueryMetadataException {
+	public List getElementIDsInGroupID(Object groupID) throws TeiidComponentException, QueryMetadataException {
         List elements = actualMetadata.getElementIDsInGroupID(groupID);
         
         Object modelID = this.getModelID(groupID);
@@ -133,9 +134,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getGroupIDForElementID(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getGroupIDForElementID(java.lang.Object)
 	 */
-	public Object getGroupIDForElementID(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getGroupIDForElementID(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return ((MultiSourceElement)elementID).groupID;
         } 
@@ -144,9 +145,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementType(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementType(java.lang.Object)
 	 */
-	public String getElementType(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public String getElementType(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return DataTypeManager.DefaultDataTypes.STRING;
         } 
@@ -155,9 +156,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDefaultValue(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getDefaultValue(java.lang.Object)
 	 */
-	public Object getDefaultValue(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getDefaultValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return null;
         } 
@@ -166,9 +167,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMinimumValue(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getMinimumValue(java.lang.Object)
 	 */
-	public Object getMinimumValue(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getMinimumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return null;
         } 
@@ -177,9 +178,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaximumValue(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getMaximumValue(java.lang.Object)
 	 */
-	public Object getMaximumValue(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return null;
         } 
@@ -188,9 +189,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
     /**
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
      */
-    public int getDistinctValues(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getDistinctValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return ((MultiSourceElement)elementID).position;
         } 
@@ -199,9 +200,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     }
 
     /**
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
      */
-    public int getNullValues(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+    public int getNullValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return ((MultiSourceElement)elementID).position;
         } 
@@ -210,9 +211,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     }
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getPosition(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getPosition(java.lang.Object)
 	 */
-	public int getPosition(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public int getPosition(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return ((MultiSourceElement)elementID).position;
         } 
@@ -221,9 +222,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getPrecision(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getPrecision(java.lang.Object)
 	 */
-	public int getPrecision(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public int getPrecision(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return 0;
         } 
@@ -232,9 +233,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getScale(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getScale(java.lang.Object)
 	 */
-	public int getScale(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public int getScale(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return 0;
         } 
@@ -243,9 +244,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getRadix(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getRadix(java.lang.Object)
 	 */
-	public int getRadix(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public int getRadix(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return 0;
         } 
@@ -254,9 +255,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#elementSupports(java.lang.Object, int)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#elementSupports(java.lang.Object, int)
 	 */
-	public boolean elementSupports(Object elementID, int elementConstant) throws MetaMatrixComponentException, QueryMetadataException {
+	public boolean elementSupports(Object elementID, int elementConstant) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
@@ -288,9 +289,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
 	 */
-	public Properties getExtensionProperties(Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+	public Properties getExtensionProperties(Object metadataID) throws TeiidComponentException, QueryMetadataException {
         if(metadataID instanceof MultiSourceElement) {
             return new Properties();
         }
@@ -298,9 +299,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getNameInSource(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getNameInSource(java.lang.Object)
 	 */
-	public String getNameInSource(Object metadataID) throws MetaMatrixComponentException, QueryMetadataException {
+	public String getNameInSource(Object metadataID) throws TeiidComponentException, QueryMetadataException {
         if(metadataID instanceof MultiSourceElement) {
             return null;
         } 
@@ -309,9 +310,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementLength(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementLength(java.lang.Object)
 	 */
-	public int getElementLength(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public int getElementLength(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return 255;
         } 
@@ -320,9 +321,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 
 	/**
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#getNativeType(java.lang.Object)
+	 * @see org.teiid.query.metadata.QueryMetadataInterface#getNativeType(java.lang.Object)
 	 */
-	public String getNativeType(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+	public String getNativeType(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof MultiSourceElement) {
             return null;
         } 

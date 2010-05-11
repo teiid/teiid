@@ -37,33 +37,33 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.Into;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.validator.AbstractValidationVisitor;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.lang.Delete;
-import com.metamatrix.query.sql.lang.Insert;
-import com.metamatrix.query.sql.lang.Into;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.Update;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Symbol;
-import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
-import com.metamatrix.query.validator.AbstractValidationVisitor;
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
@@ -96,7 +96,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     		this.validateModelVisibility(modelID, obj);
 	    } catch(QueryMetadataException e) {
 	        handleException(e, obj);
-	    } catch(MetaMatrixComponentException e) {
+	    } catch(TeiidComponentException e) {
 	        handleException(e, obj);
 	    }
     }
@@ -132,9 +132,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 				symbols.add(lookup.getKeyElement());
 				symbols.add(lookup.getReturnElement());
 	    		validateEntitlements(symbols, DataPolicy.PermissionType.READ, Context.QUERY);
-			} catch (MetaMatrixComponentException e) {
+			} catch (TeiidComponentException e) {
 				handleException(e, obj);
-			} catch (MetaMatrixProcessingException e) {
+			} catch (TeiidProcessingException e) {
 				handleException(e, obj);
 			}
     	}
@@ -200,7 +200,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 intoElements = ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata());
             } catch (QueryMetadataException err) {
                 handleException(err, intoGroup);
-            } catch (MetaMatrixComponentException err) {
+            } catch (TeiidComponentException err) {
                 handleException(err, intoGroup);
             }
             validateEntitlements(intoElements,
@@ -271,7 +271,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 nameToSymbolMap.put(fullName, symbol);
             } catch(QueryMetadataException e) {
                 handleException(e);
-            } catch(MetaMatrixComponentException e) {
+            } catch(TeiidComponentException e) {
                 handleException(e);
             }
         }
@@ -307,7 +307,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		    if(!model.isVisible()) {
 		        handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
 		    }
-        } catch (MetaMatrixComponentException e) {
+        } catch (TeiidComponentException e) {
 			handleException(e, group);
 		}
     }

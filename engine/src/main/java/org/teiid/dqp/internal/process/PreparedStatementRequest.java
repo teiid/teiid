@@ -27,36 +27,36 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.Evaluator;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.batch.BatchedUpdatePlanner;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.util.CommandContext;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.ExpressionEvaluationException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.batch.BatchedUpdatePlanner;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.relational.AccessNode;
-import com.metamatrix.query.processor.relational.RelationalPlan;
-import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.util.VariableContext;
-import com.metamatrix.query.util.CommandContext;
 
 /**
  * Specific request for handling prepared statement calls.
@@ -76,11 +76,11 @@ public class PreparedStatementRequest extends Request {
     }
     
     /** 
-     * @see org.teiid.dqp.internal.process.Request#resolveCommand(com.metamatrix.query.sql.lang.Command)
+     * @see org.teiid.dqp.internal.process.Request#resolveCommand(org.teiid.query.sql.lang.Command)
      */
     @Override
     protected void resolveCommand(Command command) throws QueryResolverException,
-                                                  MetaMatrixComponentException {
+                                                  TeiidComponentException {
     	handleCallableStatement(command);
     	
     	super.resolveCommand(command);
@@ -123,11 +123,11 @@ public class PreparedStatementRequest extends Request {
 	}
     
     /** 
-     * @throws MetaMatrixComponentException 
-     * @throws MetaMatrixProcessingException 
+     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException 
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
-    protected void generatePlan() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    protected void generatePlan() throws TeiidComponentException, TeiidProcessingException {
     	String sqlQuery = requestMsg.getCommands()[0];
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.get(id);
@@ -176,13 +176,13 @@ public class PreparedStatementRequest extends Request {
      *     create a batchedupdatecommand that represents the batch operation 
      * @param command
      * @throws QueryMetadataException
-     * @throws MetaMatrixComponentException
+     * @throws TeiidComponentException
      * @throws QueryResolverException
      * @throws QueryPlannerException 
      * @throws QueryValidatorException 
      */
 	private void handlePreparedBatchUpdate() throws QueryMetadataException,
-			MetaMatrixComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
+			TeiidComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
 		List<List<?>> paramValues = (List<List<?>>) requestMsg.getParameterValues();
 		if (paramValues.isEmpty()) {
 			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
@@ -254,7 +254,7 @@ public class PreparedStatementRequest extends Request {
 	 * @throws QueryValidatorException 
 	 */
 	public static void resolveParameterValues(List<Reference> params,
-	                                    List values, CommandContext context, QueryMetadataInterface metadata) throws QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
+	                                    List values, CommandContext context, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException, QueryValidatorException {
 		VariableContext result = new VariableContext();
 	    //the size of the values must be the same as that of the parameters
 	    if (params.size() != values.size()) {

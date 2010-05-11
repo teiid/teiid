@@ -30,15 +30,15 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
+import org.teiid.cache.Cache;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.resource.cci.CacheScope;
 import org.teiid.resource.cci.ExecutionContext;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.dqp.DQPPlugin;
 
 /**
  */

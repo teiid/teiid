@@ -29,12 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.cache.CacheConfiguration;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.cache.CacheListener;
-import com.metamatrix.cache.Cache.Type;
-import com.metamatrix.core.MetaMatrixRuntimeException;
+import org.teiid.cache.Cache.Type;
+import org.teiid.core.TeiidRuntimeException;
+
 
 public class DefaultCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -5541424157695857527L;
@@ -53,7 +50,7 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 			Cache node = cacheRoot.addChild(type.location());
 			return node;
 		}
-		throw new MetaMatrixRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
+		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
 	
 	class DefaultCache<K, V> implements Cache<K, V>, Serializable {

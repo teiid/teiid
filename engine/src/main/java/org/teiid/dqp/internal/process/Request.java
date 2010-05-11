@@ -28,72 +28,72 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.xa.XATransactionException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.id.IDGenerator;
+import org.teiid.core.id.IntegerIDFactory;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
+import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.internal.process.validator.AuthorizationValidationVisitor;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.eval.SecurityFunctionEvaluator;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.parser.ParseInfo;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.TempTableDataManager;
+import org.teiid.query.processor.xml.XMLPlan;
+import org.teiid.query.processor.xquery.XQueryPlan;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.XQuery;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.ContextProperties;
+import org.teiid.query.validator.AbstractValidationVisitor;
+import org.teiid.query.validator.ValidationVisitor;
+import org.teiid.query.validator.Validator;
+import org.teiid.query.validator.ValidatorFailure;
+import org.teiid.query.validator.ValidatorReport;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.core.id.IntegerIDFactory;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.TransactionContext.Scope;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.eval.SecurityFunctionEvaluator;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.TempMetadataAdapter;
-import com.metamatrix.query.metadata.TempMetadataStore;
-import com.metamatrix.query.optimizer.QueryOptimizer;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.parser.ParseInfo;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.processor.TempTableDataManager;
-import com.metamatrix.query.processor.xml.XMLPlan;
-import com.metamatrix.query.processor.xquery.XQueryPlan;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Limit;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.QueryCommand;
-import com.metamatrix.query.sql.lang.SetQuery;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.XQuery;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
-import com.metamatrix.query.tempdata.TempTableStore;
-import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.ContextProperties;
-import com.metamatrix.query.validator.AbstractValidationVisitor;
-import com.metamatrix.query.validator.ValidationVisitor;
-import com.metamatrix.query.validator.Validator;
-import com.metamatrix.query.validator.ValidatorFailure;
-import com.metamatrix.query.validator.ValidatorReport;
 
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
@@ -170,9 +170,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
 	/**
 	 * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
 	 * 
-	 * @throws MetaMatrixComponentException
+	 * @throws TeiidComponentException
 	 */
-    protected void initMetadata() throws MetaMatrixComponentException {
+    protected void initMetadata() throws TeiidComponentException {
         if (this.metadata != null) {
         	return;
         }
@@ -183,7 +183,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
 
         if (metadata == null) {
-            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
+            throw new TeiidComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
         }
         
         this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
@@ -253,7 +253,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
         context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
 			@Override
-			public boolean hasRole(String roleType, String roleName) throws MetaMatrixComponentException {
+			public boolean hasRole(String roleType, String roleName) throws TeiidComponentException {
 				if (!useEntitlements) {
 					return true;
 				}
@@ -279,7 +279,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     	}
     }
 
-    protected void resolveCommand(Command command) throws QueryResolverException, MetaMatrixComponentException {
+    protected void resolveCommand(Command command) throws QueryResolverException, TeiidComponentException {
         if (this.tempTableStore != null) {
         	QueryResolver.setChildMetadata(command, tempTableStore.getMetadataStore().getData(), null);
         }
@@ -291,7 +291,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
         
     private void validateQuery(Command command)
-        throws QueryValidatorException, MetaMatrixComponentException {
+        throws QueryValidatorException, TeiidComponentException {
                 
         // Create generic sql validation visitor
         AbstractValidationVisitor visitor = new ValidationVisitor();
@@ -323,7 +323,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         AbstractValidationVisitor visitor,
         QueryMetadataInterface metadata,
         Command command)
-        throws QueryValidatorException, MetaMatrixComponentException {
+        throws QueryValidatorException, TeiidComponentException {
 
         // Validate with visitor
         ValidatorReport report = Validator.validate(command, metadata, visitor);
@@ -333,7 +333,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
 
-    private void createProcessor() throws MetaMatrixComponentException {
+    private void createProcessor() throws TeiidComponentException {
         
         TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
         
@@ -356,7 +356,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 try {
                     tc = transactionService.begin(tc);
                 } catch (XATransactionException err) {
-                    throw new MetaMatrixComponentException(err);
+                    throw new TeiidComponentException(err);
                 }
             }
         } 
@@ -380,10 +380,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
      * 		adds a limit clause if the row limit is specified
      * 		sets the processor plan
      * 
-     * @throws MetaMatrixComponentException
-     * @throws MetaMatrixProcessingException 
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException 
      */
-    protected void generatePlan() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    protected void generatePlan() throws TeiidComponentException, TeiidProcessingException {
         Command command = parseCommand();
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
@@ -446,7 +446,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
     public void processRequest() 
-        throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        throws TeiidComponentException, TeiidProcessingException {
                     
     	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	
@@ -472,7 +472,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.context.setValidateXML(requestMsg.getValidationMode());
 	}
     
-	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && userCommand instanceof XQuery;
 		
 		ParseInfo parseInfo = new ParseInfo();
@@ -502,7 +502,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}
 
-	protected void validateAccess(Command command) throws QueryValidatorException, MetaMatrixComponentException {
+	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
 		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getVDB(), this.useEntitlements, this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
 		validateWithVisitor(visitor, this.metadata, command);
 	}

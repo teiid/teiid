@@ -27,11 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.query.parser.ParseInfo;
-import com.metamatrix.vdb.runtime.VDBKey;
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.LRUCache;
+import org.teiid.query.parser.ParseInfo;
+import org.teiid.vdb.runtime.VDBKey;
+
 
 /**
  * This class is used to cache session aware objects

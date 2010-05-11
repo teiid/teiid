@@ -27,14 +27,14 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.Table.Type;
+import org.teiid.core.TeiidComponentException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 
 /**
  * Aggregates the metadata from multiple stores.  
@@ -100,7 +100,7 @@ public class CompositeMetadataStore extends MetadataStore {
 	}
 	
 	public Collection<Procedure> getStoredProcedure(String name)
-			throws MetaMatrixComponentException, QueryMetadataException {
+			throws TeiidComponentException, QueryMetadataException {
 		List<Procedure> result = new LinkedList<Procedure>();
 		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index > -1) {
