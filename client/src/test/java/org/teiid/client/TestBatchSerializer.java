@@ -36,10 +36,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.BatchSerializer;
+import org.teiid.core.types.DataTypeManager;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.types.DataTypeManager;
 
 
 /** 

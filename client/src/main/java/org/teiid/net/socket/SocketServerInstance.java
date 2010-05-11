@@ -24,9 +24,9 @@ package org.teiid.net.socket;
 
 import java.net.SocketAddress;
 
+import org.teiid.core.crypto.Cryptor;
 import org.teiid.net.HostInfo;
 
-import com.metamatrix.common.util.crypto.Cryptor;
 
 public interface SocketServerInstance {
 

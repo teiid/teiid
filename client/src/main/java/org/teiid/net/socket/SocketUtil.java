@@ -42,9 +42,9 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.net.NetPlugin;
 
-import com.metamatrix.core.util.Assertion;
 
 
 /** 

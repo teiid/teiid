@@ -32,9 +32,9 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.xa.XATransactionException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class TestSocketServiceRegistry extends TestCase {
 
@@ -46,16 +46,16 @@ public class TestSocketServiceRegistry extends TestCase {
 				
 		Method m = Foo.class.getMethod("somemethod", new Class[] {});
 		
-		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
+		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
 		
-		assertTrue(t instanceof MetaMatrixRuntimeException);
+		assertTrue(t instanceof TeiidRuntimeException);
 	}
 	
 	public void testAdminExceptionConversion() throws Exception {
 		
 		Method m = Admin.class.getMethod("getProcesses", new Class[] {String.class});
 		
-		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
+		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
 		
 		assertTrue(t instanceof AdminException);
 	}
@@ -66,14 +66,14 @@ public class TestSocketServiceRegistry extends TestCase {
 		
 		Throwable t = ExceptionUtil.convertException(m, new NullPointerException());
 		
-		assertTrue(t instanceof MetaMatrixComponentException);
+		assertTrue(t instanceof TeiidComponentException);
 	}
 	
 	public void testXATransactionExceptionConversion() throws Exception {
 		
 		Method m = DQP.class.getMethod("recover", new Class[] {Integer.TYPE});
 		
-		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
+		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
 		
 		assertTrue(t instanceof XATransactionException);
 	}

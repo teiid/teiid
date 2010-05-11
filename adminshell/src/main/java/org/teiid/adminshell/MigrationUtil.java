@@ -40,9 +40,10 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.ObjectConverterUtil;
+
 
 @SuppressWarnings("nls")
 public class MigrationUtil {

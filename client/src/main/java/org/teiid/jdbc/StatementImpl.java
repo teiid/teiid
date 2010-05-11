@@ -55,12 +55,12 @@ import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.SqlUtil;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
@@ -441,9 +441,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             // In update scenarios close the statement implicitly
             try {
 				getDQP().closeRequest(getCurrentRequestID());
-			} catch (MetaMatrixProcessingException e) {
+			} catch (TeiidProcessingException e) {
 				throw TeiidSQLException.create(e);
-			} catch (MetaMatrixComponentException e) {
+			} catch (TeiidComponentException e) {
 				throw TeiidSQLException.create(e);
 			}            
         } else {
@@ -730,7 +730,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         String txnAutoWrapMode = getExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         try {
 			res.setTxnAutoWrapMode(txnAutoWrapMode);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw TeiidSQLException.create(e);
 		}
         
@@ -778,9 +778,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
         try {
 			this.getDQP().cancelRequest(currentRequestID);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw TeiidSQLException.create(e);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw TeiidSQLException.create(e);
 		}
     }
@@ -833,7 +833,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         Future<ResultsMessage> pendingResult = null;
 		try {
 			pendingResult = this.getDQP().executeRequest(this.currentRequestID, reqMsg);
-		} catch (MetaMatrixException e) {
+		} catch (TeiidException e) {
 			throw TeiidSQLException.create(e);
 		}
 		long timeoutMillis = queryTimeout * 1000;

@@ -33,10 +33,10 @@ import java.util.List;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.client.util.ExceptionHolder;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ExternalizeUtil;
 
-import com.metamatrix.api.exception.ExceptionHolder;
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * Results Message, used by MMStatement to get the query results.
@@ -53,7 +53,7 @@ public class ResultsMessage implements Externalizable {
     private PlanNode planDescription;
 
     /** An exception that occurred. */
-    private MetaMatrixException exception;
+    private TeiidException exception;
 
     /** Warning could be schema validation errors or partial results warnings */
     private List<Throwable> warnings;
@@ -128,7 +128,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @return
      */
-    public MetaMatrixException getException() {
+    public TeiidException getException() {
         return exception;
     }
 
@@ -171,10 +171,10 @@ public class ResultsMessage implements Externalizable {
      * @param exception
      */
     public void setException(Throwable e) {
-        if(e instanceof MetaMatrixException) {
-            this.exception = (MetaMatrixException)e;
+        if(e instanceof TeiidException) {
+            this.exception = (TeiidException)e;
         } else {
-            this.exception = new MetaMatrixException(e, e.getMessage());
+            this.exception = new TeiidException(e, e.getMessage());
         }
     }
 
@@ -254,7 +254,7 @@ public class ResultsMessage implements Externalizable {
 
         ExceptionHolder holder = (ExceptionHolder)in.readObject();
         if (holder != null) {
-        	this.exception = (MetaMatrixException)holder.getException();
+        	this.exception = (TeiidException)holder.getException();
         }
         List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
         if (holderList != null) {

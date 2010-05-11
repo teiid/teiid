@@ -38,12 +38,12 @@ import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.socket.SocketUtil.SSLSocketFactory;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	

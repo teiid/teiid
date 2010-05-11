@@ -22,7 +22,7 @@
 
 package org.teiid.client;
 
-import com.metamatrix.api.exception.MetaMatrixException;
+import org.teiid.core.TeiidException;
 
 /**
  * <p> This class is used to store the details of an atomic query warning.
@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
  * query is executed.</p>
  */
 
-public class SourceWarning extends MetaMatrixException {
+public class SourceWarning extends TeiidException {
 	
 	private String modelName = "UNKNOWN"; // variable stores the name of the model for the atomic query //$NON-NLS-1$
 	private String connectorBindingName = "UNKNOWN"; // variable stores name of the connector binding //$NON-NLS-1$

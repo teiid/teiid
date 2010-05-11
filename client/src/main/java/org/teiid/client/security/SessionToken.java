@@ -29,7 +29,8 @@ import java.io.ObjectOutput;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import com.metamatrix.core.util.Base64;
+import org.teiid.core.util.Base64;
+
 
 /**
  * This class is an immutable identifier for a unique session that also

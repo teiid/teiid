@@ -24,11 +24,11 @@ package org.teiid.net.socket;
 
 import java.io.IOException;
 
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.net.socket.SocketUtil;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestSocketUtil extends TestCase {
 	

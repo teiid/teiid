@@ -27,10 +27,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.client.DQP;
+import org.teiid.core.TeiidException;
+import org.teiid.core.types.Streamable;
 import org.teiid.net.NetPlugin;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.types.Streamable;
 
 public class StreamingLobChunckProducer implements LobChunkProducer {
 	
@@ -80,7 +80,7 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 	public void close() throws IOException {
 	    try {
 	    	dqp.closeLobChunkStream(streamRequestId, requestId, streamable.getReferenceStreamId());
-	    } catch (MetaMatrixException e) {
+	    } catch (TeiidException e) {
 	        IOException ex = new IOException(e.getMessage());
 	        ex.initCause(e);
 	        throw  ex;

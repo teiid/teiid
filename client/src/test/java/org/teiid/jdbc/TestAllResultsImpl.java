@@ -45,13 +45,13 @@ import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
+import org.teiid.query.unittest.TimestampUtil;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
-import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestAllResultsImpl {
 
@@ -699,7 +699,7 @@ public class TestAllResultsImpl {
 	
 	static ResultSetImpl helpTestBatching(StatementImpl statement, int fetchSize, int batchLength,
 			int totalLength) throws InterruptedException, ExecutionException,
-			MetaMatrixProcessingException, SQLException, TimeoutException {
+			TeiidProcessingException, SQLException, TimeoutException {
 		DQP dqp = mock(DQP.class);
 		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getFetchSize()).toReturn(fetchSize);

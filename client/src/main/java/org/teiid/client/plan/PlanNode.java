@@ -40,7 +40,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.core.util.ExternalizeUtil;
+
 
 /**
  * A PlanNode represents part of processing plan tree.  For relational plans 

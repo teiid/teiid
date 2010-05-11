@@ -27,8 +27,8 @@ import java.util.Date;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.metatype.api.annotations.MetaMapping;
 import org.teiid.adminapi.Request;
+import org.teiid.core.util.HashCodeUtil;
 
-import com.metamatrix.core.util.HashCodeUtil;
 
 
 @MetaMapping(RequestMetadataMapper.class)

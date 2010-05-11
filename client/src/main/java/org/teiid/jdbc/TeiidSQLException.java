@@ -32,12 +32,12 @@ import java.sql.SQLException;
 import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * Teiid specific SQLException
@@ -122,7 +122,7 @@ public class TeiidSQLException extends SQLException {
 			sqlState = SQLStates.INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS;
 		} else if (exception instanceof ProcedureErrorInstructionException) {
 			sqlState = SQLStates.VIRTUAL_PROCEDURE_ERROR;
-		} else if (exception instanceof MetaMatrixProcessingException) {
+		} else if (exception instanceof TeiidProcessingException) {
 			sqlState = SQLStates.USAGE_ERROR;
 		} else if (exception instanceof UnknownHostException
 				|| exception instanceof ConnectException
@@ -132,7 +132,7 @@ public class TeiidSQLException extends SQLException {
 			sqlState = SQLStates.CONNECTION_EXCEPTION_SQLCLIENT_UNABLE_TO_ESTABLISH_SQLCONNECTION;
 		} else if (exception instanceof IOException) {
 			sqlState = SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION;
-		} else if (exception instanceof MetaMatrixCoreException) {
+		} else if (exception instanceof TeiidException) {
             if (exception instanceof CommunicationException) {
                 sqlState = SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION;
             }
@@ -158,17 +158,17 @@ public class TeiidSQLException extends SQLException {
      * @return
      */
     private static Throwable findRootException(Throwable exception) {
-        if (exception instanceof MetaMatrixRuntimeException) {
+        if (exception instanceof TeiidRuntimeException) {
         	while (exception.getCause() != exception
         			&& exception.getCause() != null) {
         		exception = exception.getCause();
         	}
-        	if (exception instanceof MetaMatrixRuntimeException) {
-        		MetaMatrixRuntimeException runtimeException = (MetaMatrixRuntimeException) exception;
+        	if (exception instanceof TeiidRuntimeException) {
+        		TeiidRuntimeException runtimeException = (TeiidRuntimeException) exception;
         		while (runtimeException.getChild() != exception
         				&& runtimeException.getChild() != null) {
-        			if (runtimeException.getChild() instanceof MetaMatrixRuntimeException) {
-        				runtimeException = (MetaMatrixRuntimeException) runtimeException
+        			if (runtimeException.getChild() instanceof TeiidRuntimeException) {
+        				runtimeException = (TeiidRuntimeException) runtimeException
         						.getChild();
         			} else {
         				exception = runtimeException.getChild();

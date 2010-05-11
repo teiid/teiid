@@ -28,7 +28,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Map;
 
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.core.util.ExternalizeUtil;
+
 
 public class MetadataResult implements Externalizable {
 	private static final long serialVersionUID = -1520482281079030324L;

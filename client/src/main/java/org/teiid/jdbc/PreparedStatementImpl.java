@@ -54,17 +54,17 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.metadata.MetadataResult;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.SqlUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.BlobImpl;
-import com.metamatrix.common.types.ClobImpl;
-import com.metamatrix.common.types.InputStreamFactory;
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
-import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 /**
  * <p> Instances of PreparedStatement contain a SQL statement that has already been
@@ -269,9 +269,9 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		if (metadataResults == null) {
 			try {
 				metadataResults = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
-			} catch (MetaMatrixComponentException e) {
+			} catch (TeiidComponentException e) {
 				throw TeiidSQLException.create(e);
-			} catch (MetaMatrixProcessingException e) {
+			} catch (TeiidProcessingException e) {
 				throw TeiidSQLException.create(e);
 			}
 		}

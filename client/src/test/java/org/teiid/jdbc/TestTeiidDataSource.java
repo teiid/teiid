@@ -28,12 +28,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.TeiidDataSource;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestTeiidDataSource extends TestCase {
 

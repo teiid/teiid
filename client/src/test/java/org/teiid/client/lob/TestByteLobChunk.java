@@ -25,10 +25,10 @@ package org.teiid.client.lob;
 import java.util.Arrays;
 
 import org.teiid.client.lob.LobChunk;
+import org.teiid.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 
 public class TestByteLobChunk extends TestCase {

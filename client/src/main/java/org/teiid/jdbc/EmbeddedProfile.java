@@ -31,14 +31,14 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.ReflectionHelper;
 
 final class EmbeddedProfile {
     
@@ -84,13 +84,13 @@ final class EmbeddedProfile {
         try {
         	ServerConnection sc = (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
 			return new ConnectionImpl(sc, info, url);
-		} catch (MetaMatrixRuntimeException e) {
+		} catch (TeiidRuntimeException e) {
 			throw TeiidSQLException.create(e);
 		} catch (ConnectionException e) {
 			throw TeiidSQLException.create(e);
 		} catch (CommunicationException e) {
 			throw TeiidSQLException.create(e);
-		} catch (MetaMatrixCoreException e) {
+		} catch (TeiidException e) {
 			throw TeiidSQLException.create(e);
 		}
     }

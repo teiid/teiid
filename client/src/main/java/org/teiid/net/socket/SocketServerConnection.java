@@ -49,6 +49,7 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
@@ -56,7 +57,6 @@ import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 
 /**
  * Represents a client connection that maintains session state and allows for service fail over.
@@ -109,7 +109,7 @@ public class SocketServerConnection implements ServerConnection {
     					} 
     				} catch (InvalidSessionException e) {
     					shutdown(false);
-    				} catch (MetaMatrixComponentException e) {
+    				} catch (TeiidComponentException e) {
     					close();
     				} 
     				this.cancel();
@@ -157,7 +157,7 @@ public class SocketServerConnection implements ServerConnection {
 				throw new CommunicationException(e,NetPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), e.getMessage())); //$NON-NLS-1$
 			} catch (SingleInstanceCommunicationException e) { 
 				ex = e;
-			} catch (MetaMatrixComponentException e) {
+			} catch (TeiidComponentException e) {
 				ex = e;
 			} 	
 			this.serverDiscovery.markInstanceAsBad(hostInfo);
@@ -186,7 +186,7 @@ public class SocketServerConnection implements ServerConnection {
             // Propagate the original message as it contains the message we want
             // to give to the user
             throw new ConnectionException(e, e.getMessage());
-        } catch (MetaMatrixComponentException e) {
+        } catch (TeiidComponentException e) {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();
         	}
@@ -265,7 +265,7 @@ public class SocketServerConnection implements ServerConnection {
 				//ignore
 			} catch (TimeoutException e) {
 				//ignore
-			} catch (MetaMatrixComponentException e) {
+			} catch (TeiidComponentException e) {
 				//ignore
 			}
 		}

@@ -37,10 +37,11 @@ import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 import java.util.List;
 
-import com.metamatrix.common.types.InputStreamFactory;
-import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.types.InputStreamFactory.StreamFactoryReference;
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
+import org.teiid.core.util.ExternalizeUtil;
+
 
 /**
  * An {@link ObjectInput} which is interoperable with {@link ObjectEncoder}

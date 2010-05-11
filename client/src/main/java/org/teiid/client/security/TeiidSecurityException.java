@@ -22,14 +22,14 @@
 
 package org.teiid.client.security;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import org.teiid.core.TeiidProcessingException;
 
-public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
+public class TeiidSecurityException extends TeiidProcessingException {
 
     /**
      * No-Arg Constructor
      */
-    public MetaMatrixSecurityException(  ) {
+    public TeiidSecurityException(  ) {
         super( );
     }
 
@@ -41,7 +41,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * @param message The error message
      * @param code    The error code 
      */
-    public MetaMatrixSecurityException( Throwable e, String code, String message ) {
+    public TeiidSecurityException( Throwable e, String code, String message ) {
         super( e, code, message );
     }
     /**
@@ -50,7 +50,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * @param message The error message
      * @param code    The error code 
      */
-    public MetaMatrixSecurityException( String code, String message ) {
+    public TeiidSecurityException( String code, String message ) {
         super( code, message );
     }
     /**
@@ -60,7 +60,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * @param message the detail message
      * @param e the exception that is encapsulated by this exception
      */
-    public MetaMatrixSecurityException( Throwable e, String message ) {
+    public TeiidSecurityException( Throwable e, String message ) {
         super(e, message);
     }
     /**
@@ -68,7 +68,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * single exception.
      * @param e the exception that is encapsulated by this exception
      */
-    public MetaMatrixSecurityException(Throwable e) {
+    public TeiidSecurityException(Throwable e) {
         super(e);
     }
     /**
@@ -76,7 +76,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * message is a String that describes this particular exception.
      * @param the detail message
      */
-    public MetaMatrixSecurityException(String message) {
+    public TeiidSecurityException(String message) {
     	super(message);
     }
 }

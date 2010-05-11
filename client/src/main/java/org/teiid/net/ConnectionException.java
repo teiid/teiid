@@ -22,14 +22,14 @@
 
 package org.teiid.net;
 
-import com.metamatrix.core.MetaMatrixCoreException;
+import org.teiid.core.TeiidException;
 
 /**
  * This exception indicates that an error has occurred during connection.  There
  * are many possible reasons for this, but the most likely is a problem with
  * connection parameters.  
  */
-public class ConnectionException extends MetaMatrixCoreException {
+public class ConnectionException extends TeiidException {
     /**
      * No-Arg Constructor
      */

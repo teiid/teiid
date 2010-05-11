@@ -24,16 +24,16 @@ package org.teiid.client.security;
 import java.util.Properties;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.TeiidComponentException;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 
 /**
  * Generic logon interface.
  */
 public interface ILogon {
     LogonResult logon(Properties connectionProperties)
-    throws LogonException, MetaMatrixComponentException;
+    throws LogonException, TeiidComponentException;
    
    /**
     * Ping the server to see if the client-server connection is alive.
@@ -41,7 +41,7 @@ public interface ILogon {
     * @throws ComponentNotFoundException if can't find the Session service.
     */
    ResultsFuture<?> ping()
-       throws InvalidSessionException, MetaMatrixComponentException;
+       throws InvalidSessionException, TeiidComponentException;
    
    
    /**
@@ -49,7 +49,7 @@ public interface ILogon {
     * @throws InvalidSessionException If session has expired or doesn't exist
     * @throws ComponentNotFoundException If couldn't find needed service component
     */
-   ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException;
+   ResultsFuture<?> logoff() throws InvalidSessionException, TeiidComponentException;
    
-   void assertIdentity(SessionToken sessionId) throws InvalidSessionException, MetaMatrixComponentException;
+   void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException;
 }

@@ -29,27 +29,27 @@ import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 
 public interface DQP {
 	
-	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws TeiidProcessingException, TeiidComponentException;
 	
-	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws MetaMatrixProcessingException;
+	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws TeiidProcessingException;
 
-	ResultsFuture<?> closeRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	ResultsFuture<?> closeRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
 	
-	boolean cancelRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	boolean cancelRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
 	
-	ResultsFuture<?> closeLobChunkStream(int lobRequestId, long requestId, String streamId) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	ResultsFuture<?> closeLobChunkStream(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
 	
-	ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
 		
-	MetadataResult getMetadata(long requestID) throws MetaMatrixComponentException, MetaMatrixProcessingException;
+	MetadataResult getMetadata(long requestID) throws TeiidComponentException, TeiidProcessingException;
 	
-	MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws MetaMatrixComponentException, MetaMatrixProcessingException;
+	MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws TeiidComponentException, TeiidProcessingException;
 	
     // local transaction
  

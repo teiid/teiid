@@ -27,7 +27,8 @@ import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+
 
 /**
  * Note: this is currently only accurate for {@link PreparedStatement}s.

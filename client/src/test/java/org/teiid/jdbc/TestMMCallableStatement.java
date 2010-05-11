@@ -37,12 +37,12 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.security.LogonResult;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.net.ServerConnection;
 
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 public class TestMMCallableStatement extends TestCase {
 	

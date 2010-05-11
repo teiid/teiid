@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.core.MetaMatrixCoreException;
+import org.teiid.core.TeiidException;
+
 
 /**
  * <code>AdminException</code> is the base exception for the admin package.  Many *Admin methods throw this
@@ -38,7 +39,7 @@ import com.metamatrix.core.MetaMatrixCoreException;
  * clients should be aware of this and use the {@link #hasMultiple()} method to
  * determine if they need to check the child exceptions.</p>
  */
-public abstract class AdminException extends MetaMatrixCoreException {
+public abstract class AdminException extends TeiidException {
 
 	private static final long serialVersionUID = -4446936145500241358L;
 	// List of Admin exceptions in

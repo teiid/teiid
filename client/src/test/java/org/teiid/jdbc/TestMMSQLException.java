@@ -34,13 +34,13 @@ import java.sql.SQLException;
 import junit.framework.TestCase;
 
 import org.teiid.client.ProcedureErrorInstructionException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class TestMMSQLException extends TestCase {
   
@@ -99,14 +99,14 @@ public class TestMMSQLException extends TestCase {
 				new MalformedURLException(
 						"A test java.net.MalformedURLException"), //$NON-NLS-1$
 				SQLStates.CONNECTION_EXCEPTION_SQLCLIENT_UNABLE_TO_ESTABLISH_SQLCONNECTION);
-		testCreateThrowable(new MetaMatrixCoreException(
+		testCreateThrowable(new TeiidException(
 				"A test Generic MM Core Exception"), SQLStates.DEFAULT); //$NON-NLS-1$
-		testCreateThrowable(new MetaMatrixException("A test MM Exception"), //$NON-NLS-1$
+		testCreateThrowable(new TeiidException("A test MM Exception"), //$NON-NLS-1$
 				SQLStates.DEFAULT);
-		testCreateThrowable(new MetaMatrixProcessingException(
+		testCreateThrowable(new TeiidProcessingException(
 				"A test Generic MM Query Processing Exception"), //$NON-NLS-1$
 				SQLStates.USAGE_ERROR);
-		testCreateThrowable(new MetaMatrixRuntimeException(
+		testCreateThrowable(new TeiidRuntimeException(
 				"A test MM Runtime Exception"), SQLStates.DEFAULT); //$NON-NLS-1$
 		testCreateThrowable(new TeiidSQLException(
 				"A test Generic MM SQL Exception"), SQLStates.DEFAULT); //$NON-NLS-1$
@@ -144,7 +144,7 @@ public class TestMMSQLException extends TestCase {
 				"Test Communication Exception with a SocketException in it"), //$NON-NLS-1$
 				SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
 		testCreateThrowable(
-				new MetaMatrixException(new SocketTimeoutException(
+				new TeiidException(new SocketTimeoutException(
 						"A test java.net.SocketTimeoutException"), //$NON-NLS-1$
 						"Test MetaMatrixException with a SocketTimeoutException in it"), //$NON-NLS-1$
 				SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
@@ -152,8 +152,8 @@ public class TestMMSQLException extends TestCase {
     
     public void testCreateThrowable3() {
         TeiidSQLException e = testCreateThrowable(
-                            new MetaMatrixCoreException(
-                                    new MetaMatrixRuntimeException(
+                            new TeiidException(
+                                    new TeiidRuntimeException(
                                             new SocketTimeoutException(
                                                     "A test MM Invalid Session Exception"), //$NON-NLS-1$
                                             "Test MetaMatrixRuntimeException with a InvalidSessionException in it"), //$NON-NLS-1$

@@ -55,21 +55,21 @@ import org.teiid.client.lob.LobChunkInputStream;
 import org.teiid.client.lob.StreamingLobChunckProducer;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.util.SqlUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.BatchResults.Batch;
 import org.teiid.jdbc.BatchResults.BatchFetcher;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.BlobImpl;
-import com.metamatrix.common.types.BlobType;
-import com.metamatrix.common.types.ClobImpl;
-import com.metamatrix.common.types.ClobType;
-import com.metamatrix.common.types.InputStreamFactory;
-import com.metamatrix.common.types.SQLXMLImpl;
-import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.types.XMLType;
-import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.common.util.TimestampWithTimezone;
 
 /**
  * <p>
@@ -161,9 +161,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     		if(this.requestID >= 0){
 	            try {
 					this.statement.getDQP().closeRequest(requestID);
-				} catch (MetaMatrixProcessingException e) {
+				} catch (TeiidProcessingException e) {
 					throw TeiidSQLException.create(e);
-				} catch (MetaMatrixComponentException e) {
+				} catch (TeiidComponentException e) {
 					throw TeiidSQLException.create(e);
 				}
     		}
@@ -372,7 +372,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         	ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
     		this.accumulateWarnings(currentResultMsg);
     		return getCurrentBatch(currentResultMsg);
-        } catch (MetaMatrixProcessingException e) {
+        } catch (TeiidProcessingException e) {
 			throw TeiidSQLException.create(e);
 		} catch (InterruptedException e) {
 			throw TeiidSQLException.create(e);

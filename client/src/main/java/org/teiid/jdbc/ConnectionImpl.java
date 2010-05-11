@@ -61,6 +61,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.core.util.SqlUtil;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.ServerConnection;
@@ -68,7 +69,6 @@ import org.teiid.net.socket.SocketServerConnection;
 
 
 
-import com.metamatrix.common.util.SqlUtil;
 
 public class ConnectionImpl extends WrapperImpl implements Connection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$

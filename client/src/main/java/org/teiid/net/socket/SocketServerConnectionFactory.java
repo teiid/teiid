@@ -42,15 +42,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.ServerConnectionFactory;
 import org.teiid.net.TeiidURL;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * Responsible for creating socket based connections
@@ -251,7 +251,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		} else {
 			try {
 				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, this.getClass().getClassLoader());
-			} catch (MetaMatrixCoreException e) {
+			} catch (TeiidException e) {
 				throw new ConnectionException(e);
 			}
 		}

@@ -24,11 +24,11 @@ package org.teiid.net.socket;
 
 import java.util.Arrays;
 
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.net.socket.ServiceInvocationStruct;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestServiceInvocationStruct extends TestCase {
 

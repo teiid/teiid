@@ -25,9 +25,9 @@ package org.teiid.jdbc;
 import java.sql.SQLException;
 //## JDBC4.0-begin ##
 import java.sql.Wrapper;
-//## JDBC4.0-end ##
 
-import com.metamatrix.core.util.ArgCheck;
+import org.teiid.core.util.ArgCheck;
+
 
 public class WrapperImpl 
 	//## JDBC4.0-begin ##

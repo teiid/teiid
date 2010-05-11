@@ -28,10 +28,10 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.xa.XATransactionException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ExceptionUtil {
 	
@@ -58,15 +58,15 @@ public class ExceptionUtil {
 			if (exception.getClass().isAssignableFrom(exceptionClasses[i])) {
 				return exception;
 			}
-			canThrowComponentException |= MetaMatrixComponentException.class.isAssignableFrom(exceptionClasses[i]);
+			canThrowComponentException |= TeiidComponentException.class.isAssignableFrom(exceptionClasses[i]);
 			canThrowAdminException |= AdminException.class.isAssignableFrom(exceptionClasses[i]);
 			canThrowXATransactionException |= XATransactionException.class.isAssignableFrom(exceptionClasses[i]);
         }
         if (canThrowComponentException) {
-        	return new MetaMatrixComponentException(exception);
+        	return new TeiidComponentException(exception);
         }
         if (canThrowAdminException) {
-			if (exception instanceof MetaMatrixProcessingException) {
+			if (exception instanceof TeiidProcessingException) {
 				return new AdminProcessingException(exception);
 			}
         	return new AdminComponentException(exception);
@@ -77,6 +77,6 @@ public class ExceptionUtil {
         if (RuntimeException.class.isAssignableFrom(exception.getClass())) {
         	return exception;
         }
-        return new MetaMatrixRuntimeException(exception);
+        return new TeiidRuntimeException(exception);
 	}
 }

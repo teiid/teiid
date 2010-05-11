@@ -33,8 +33,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.common.util.PropertiesUtils;
+import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.PropertiesUtils;
+
 
 /**
  * JDBC Driver class for Teiid Embedded and Teiid Server. This class automatically registers with the 

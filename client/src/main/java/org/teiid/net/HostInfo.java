@@ -25,8 +25,9 @@ package org.teiid.net;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.HashCodeUtil;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.HashCodeUtil;
+
 
 /**
  * Defines the hostname/port or {@link InetAddress} to connect to a host.

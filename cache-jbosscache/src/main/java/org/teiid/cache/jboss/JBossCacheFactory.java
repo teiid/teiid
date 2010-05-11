@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.cache.jboss;
+package org.teiid.cache.jboss;
 
 import java.io.Serializable;
 
@@ -39,13 +39,13 @@ import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
 import org.jboss.cache.jmx.CacheJmxWrapperMBean;
+import org.teiid.cache.Cache;
+import org.teiid.cache.CacheConfiguration;
+import org.teiid.cache.CacheFactory;
+import org.teiid.cache.Cache.Type;
+import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.core.TeiidRuntimeException;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.cache.CacheConfiguration;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.cache.Cache.Type;
-import com.metamatrix.cache.CacheConfiguration.Policy;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class JBossCacheFactory implements CacheFactory, Serializable{
 	private transient org.jboss.cache.Cache cacheStore;
@@ -59,7 +59,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			CacheJmxWrapperMBean cacheWrapper = MBeanServerInvocationHandler.newProxyInstance(server, on, CacheJmxWrapperMBean.class, false);
 			this.cacheStore = cacheWrapper.getCache();
 		} catch (MalformedObjectNameException e) {
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
 		} 
 	}
 	
@@ -77,7 +77,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			return new JBossCache(this.cacheStore, node.getFqn());
 		}
-		throw new MetaMatrixRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
+		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
 
 	private EvictionAlgorithmConfig  buildEvictionAlgorithmConfig(CacheConfiguration config) {

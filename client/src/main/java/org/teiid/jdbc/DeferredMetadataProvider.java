@@ -28,10 +28,10 @@ import java.util.Map;
 
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.StringUtil;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * This metadata provider starts with just column names and types (provided in the response)
@@ -68,9 +68,9 @@ public class DeferredMetadataProvider extends MetadataProvider {
     	MetadataResult results;
 		try {
 			results = this.statement.getDQP().getMetadata(this.requestID);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw TeiidSQLException.create(e);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw TeiidSQLException.create(e);
 		}
         this.metadata = results.getColumnMetadata();

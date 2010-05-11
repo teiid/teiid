@@ -26,7 +26,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.core.util.Assertion;
+import org.teiid.core.util.Assertion;
+
 
 /** 
  * @since 4.3

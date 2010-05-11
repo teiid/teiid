@@ -38,6 +38,8 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.crypto.NullCryptor;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
@@ -47,8 +49,6 @@ import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.SocketServerInstance;
 import org.teiid.net.socket.SocketServerInstanceFactory;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.util.crypto.NullCryptor;
 
 /**
  * <code>TestCase</case> for <code>SocketServerConnection</code>
@@ -65,7 +65,7 @@ public class TestSocketServerConnection extends TestCase {
 		@Override
 		//## JDBC4.0-end ##
 		public void assertIdentity(SessionToken sessionId)
-				throws InvalidSessionException, MetaMatrixComponentException {
+				throws InvalidSessionException, TeiidComponentException {
 			
 		}
 
@@ -83,7 +83,7 @@ public class TestSocketServerConnection extends TestCase {
 		public LogonResult logon(
 				Properties connectionProperties)
 				throws LogonException,
-				MetaMatrixComponentException {
+				TeiidComponentException {
 			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
@@ -92,9 +92,9 @@ public class TestSocketServerConnection extends TestCase {
 		//## JDBC4.0-end ##
 		public ResultsFuture<?> ping()
 				throws InvalidSessionException,
-				MetaMatrixComponentException {
+				TeiidComponentException {
 			if (t != null) {
-				MetaMatrixComponentException e = new MetaMatrixComponentException(t);
+				TeiidComponentException e = new TeiidComponentException(t);
 				t = null;
 				throw e;
 			}
@@ -167,7 +167,7 @@ public class TestSocketServerConnection extends TestCase {
 		try {
 			logon.ping();
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			
 		}
 	}
@@ -179,7 +179,7 @@ public class TestSocketServerConnection extends TestCase {
 		try {
 			logon.ping();
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			
 		}
 	}

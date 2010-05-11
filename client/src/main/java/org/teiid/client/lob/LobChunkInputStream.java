@@ -25,7 +25,8 @@ package org.teiid.client.lob;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.metamatrix.core.CorePlugin;
+import org.teiid.core.CorePlugin;
+
 
 
 /** 

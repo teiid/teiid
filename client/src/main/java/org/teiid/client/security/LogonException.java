@@ -31,7 +31,7 @@ package org.teiid.client.security;
  * <li>An account for the user does not exist, has been frozen or has been removed; and</li>
  * <li>The credentials that were supplied did not authenticate the user.</li> 
  */
-public class LogonException extends MetaMatrixSecurityException {
+public class LogonException extends TeiidSecurityException {
 
     /**
      * No-Arg Constructor

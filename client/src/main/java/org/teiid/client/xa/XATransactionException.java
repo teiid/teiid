@@ -24,13 +24,14 @@ package org.teiid.client.xa;
 
 import javax.transaction.xa.XAException;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import org.teiid.core.TeiidProcessingException;
+
 
 /**
  * Exception which occurs if an error occurs within the server that is
  * XA transaction-related.
  */
-public class XATransactionException extends MetaMatrixProcessingException {
+public class XATransactionException extends TeiidProcessingException {
 	private static final long serialVersionUID = 5685144848609237877L;
 	private int errorCode = XAException.XAER_RMERR;
     

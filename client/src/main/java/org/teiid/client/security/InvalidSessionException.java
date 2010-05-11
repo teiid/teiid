@@ -22,7 +22,7 @@
 
 package org.teiid.client.security;
 
-public class InvalidSessionException extends MetaMatrixSecurityException {
+public class InvalidSessionException extends TeiidSecurityException {
 
 
     /**

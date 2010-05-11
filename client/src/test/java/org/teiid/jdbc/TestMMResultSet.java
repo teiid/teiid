@@ -40,8 +40,8 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.teiid.client.DQP;
 import org.teiid.client.ResultsMessage;
+import org.teiid.core.TeiidProcessingException;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 
 public class TestMMResultSet {
 
@@ -713,7 +713,7 @@ public class TestMMResultSet {
 		}
     }
     
-    private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, MetaMatrixProcessingException, InterruptedException, ExecutionException, TimeoutException {
+    private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, TeiidProcessingException, InterruptedException, ExecutionException, TimeoutException {
         StatementImpl statement = createMockStatement(cursorType);
 		return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
     }

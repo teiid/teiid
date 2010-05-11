@@ -28,11 +28,11 @@ import java.util.List;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestRequestMessage extends TestCase {
 
@@ -60,7 +60,7 @@ public class TestRequestMessage extends TestCase {
         message.setExecutionPayload("myExecutionPayload"); //$NON-NLS-1$
         try {
 			message.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_ON);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
 		} 
 
@@ -99,7 +99,7 @@ public class TestRequestMessage extends TestCase {
 		try {
 			rm.setTxnAutoWrapMode("foo"); //$NON-NLS-1$
 			fail("exception expected"); //$NON-NLS-1$
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			assertEquals("'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
 		}
 	}

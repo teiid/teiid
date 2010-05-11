@@ -30,6 +30,8 @@ import java.util.Properties;
 
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.NetPlugin;
@@ -38,8 +40,6 @@ import org.teiid.net.ServerConnectionFactory;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /** 
  * Singleton factory for ServerAdmins.
@@ -127,7 +127,7 @@ public class AdminFactory {
         	try {
 				Thread.sleep(bounceWait);
 			} catch (InterruptedException e) {
-				throw new MetaMatrixRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
 			
 			//we'll wait 30 seconds for the server to come back up
@@ -140,7 +140,7 @@ public class AdminFactory {
                     try {
 						Thread.sleep(bounceWait);
 					} catch (InterruptedException ex) {
-						throw new MetaMatrixRuntimeException(ex);
+						throw new TeiidRuntimeException(ex);
 					}                                        
         		}
         	}

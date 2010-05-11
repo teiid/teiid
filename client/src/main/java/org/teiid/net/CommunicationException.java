@@ -22,14 +22,14 @@
 
 package org.teiid.net;
 
-import com.metamatrix.core.MetaMatrixCoreException;
+import org.teiid.core.TeiidException;
 
 /**
  * An error occurred in communication between client and server.  This 
  * error may or may not be recoverable.  Generally the communication 
  * transport should be able to tell the difference and recover if possible.
  */
-public class CommunicationException extends MetaMatrixCoreException {
+public class CommunicationException extends TeiidException {
     /**
      * No-Arg Constructor
      */

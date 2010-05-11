@@ -45,19 +45,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsReceiver;
+import org.teiid.core.crypto.CryptoException;
+import org.teiid.core.crypto.Cryptor;
+import org.teiid.core.crypto.DhKeyGenerator;
+import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.NetPlugin;
 
-import com.metamatrix.api.exception.ExceptionHolder;
-import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.Cryptor;
-import com.metamatrix.common.util.crypto.DhKeyGenerator;
-import com.metamatrix.common.util.crypto.NullCryptor;
 
 /**
  * Client view of a socket server connection that exposes remote services

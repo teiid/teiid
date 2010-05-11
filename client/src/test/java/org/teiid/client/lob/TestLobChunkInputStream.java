@@ -29,10 +29,10 @@ import java.util.Iterator;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.lob.LobChunkInputStream;
 import org.teiid.client.lob.LobChunkProducer;
+import org.teiid.core.util.ObjectConverterUtil;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class TestLobChunkInputStream extends TestCase {
 

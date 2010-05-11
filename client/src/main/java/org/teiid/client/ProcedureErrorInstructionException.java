@@ -22,14 +22,14 @@
 
 package org.teiid.client;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import org.teiid.core.TeiidProcessingException;
 
 
 /** 
  * Used to notify the user that the virtual procedure raised an error.
  * @since 4.3
  */
-public class ProcedureErrorInstructionException extends MetaMatrixProcessingException {
+public class ProcedureErrorInstructionException extends TeiidProcessingException {
 
     /** 
      * 

@@ -37,12 +37,12 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.socket.ObjectChannelFactory;
 import org.teiid.net.socket.SocketServerInstanceImpl;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 
 public class TestSocketServerInstanceImpl {
 	
@@ -155,7 +155,7 @@ public class TestSocketServerInstanceImpl {
 		try {
 			logon.logon(new Properties());
 			fail("Exception expected"); //$NON-NLS-1$
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			assertTrue(e.getCause().getCause() instanceof TimeoutException);
 		}
 	}

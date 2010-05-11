@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.cache.jboss;
+package org.teiid.cache.jboss;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,9 +30,9 @@ import java.util.Set;
 
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
+import org.teiid.cache.Cache;
+import org.teiid.cache.CacheListener;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.cache.CacheListener;
 
 /**
  * Implementation of Cache using JBoss Cache

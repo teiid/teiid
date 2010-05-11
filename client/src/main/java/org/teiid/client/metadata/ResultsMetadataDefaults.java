@@ -25,7 +25,8 @@ package org.teiid.client.metadata;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.common.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager;
+
 
 
 /** 

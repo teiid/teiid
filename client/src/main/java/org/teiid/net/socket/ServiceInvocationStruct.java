@@ -30,8 +30,9 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.ExternalizeUtil;
+
 
 public final class ServiceInvocationStruct implements Externalizable {
 	private static final long serialVersionUID = 1207674062670068350L;

@@ -38,9 +38,10 @@ import com.metamatrix.core.jdbc.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+
 
 /**
  * <p>This class is used to transform objects into desired data types. The static

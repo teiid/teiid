@@ -49,9 +49,9 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminshell.Help.Doc;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReaderInputStream;
 
-import com.metamatrix.common.util.ReaderInputStream;
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 /**
  * Contextual shell wrapper around the AdminAPI, see {@link Admin}

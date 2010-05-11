@@ -27,7 +27,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import com.metamatrix.common.util.ApplicationInfo;
+import org.teiid.core.util.ApplicationInfo;
+
 
 /**
  * Represents the information needed in a socket connection handshake  

@@ -28,8 +28,9 @@ import java.io.InputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
-import com.metamatrix.core.util.AccessibleByteArrayOutputStream;
-import com.metamatrix.core.util.ExternalizeUtil;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
+import org.teiid.core.util.ExternalizeUtil;
+
 
 /**
  * An {@link ObjectOutput} which is interoperable with {@link ObjectDecoder}

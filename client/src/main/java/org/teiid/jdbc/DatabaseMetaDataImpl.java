@@ -40,12 +40,12 @@ import java.util.logging.Logger;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.client.metadata.ResultsMetadataDefaults;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.SqlUtil;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
-import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaData {
 	private static final String DATA_TYPES = "DataTypes"; //$NON-NLS-1$
@@ -473,7 +473,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             stmt.setFetchSize(500);
         } catch(SQLException e) {
             // will never happen but throw a runtime if it does
-            throw new MetaMatrixRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
         Map[] metadata = new Map[columnNames.length];
         for (int i = 0; i < columnNames.length; i++) {

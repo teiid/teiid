@@ -26,8 +26,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.teiid.client.metadata.ResultsMetadataConstants;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
 
 /**
  */

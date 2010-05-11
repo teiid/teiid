@@ -31,14 +31,14 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
 
 /**
  * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server or Teiid Embedded.
@@ -86,7 +86,7 @@ final class SocketProfile {
             parseURL(url, info);
 
             myConnection = createConnection(url, info);
-        } catch (MetaMatrixCoreException e) {
+        } catch (TeiidException e) {
             logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
             throw TeiidSQLException.create(e, e.getMessage());
         }

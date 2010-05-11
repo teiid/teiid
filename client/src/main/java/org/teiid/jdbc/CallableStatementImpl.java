@@ -51,9 +51,9 @@ import java.util.Map;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.core.util.SqlUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 
-import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.common.util.TimestampWithTimezone;
 
 /**
  * <p> This class inherits Statement methods, which deal with SQL statements in

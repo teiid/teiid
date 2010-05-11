@@ -31,10 +31,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.net.NetPlugin;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * Request Message, used by MMXStatement for submitting queries.
@@ -213,15 +213,15 @@ public class RequestMessage implements Externalizable {
     /**
      * Sets the txnAutoWrapMode.
      * @param txnAutoWrapMode The txnAutoWrapMode to set
-     * @throws MetaMatrixProcessingException 
+     * @throws TeiidProcessingException 
      */
-    public void setTxnAutoWrapMode(String txnAutoWrapMode) throws MetaMatrixProcessingException {
+    public void setTxnAutoWrapMode(String txnAutoWrapMode) throws TeiidProcessingException {
     	if (txnAutoWrapMode != null) {
     		txnAutoWrapMode = txnAutoWrapMode.toUpperCase();
     		if (!(txnAutoWrapMode.equals(TXN_WRAP_OFF)
     			|| txnAutoWrapMode.equals(TXN_WRAP_ON)
     			|| txnAutoWrapMode.equals(TXN_WRAP_DETECT))) {
-    			throw new MetaMatrixProcessingException(NetPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
+    			throw new TeiidProcessingException(NetPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 
         this.txnAutoWrapMode = txnAutoWrapMode;

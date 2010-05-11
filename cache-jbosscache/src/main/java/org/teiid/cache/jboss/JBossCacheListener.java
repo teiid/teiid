@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package com.metamatrix.cache.jboss;
+package org.teiid.cache.jboss;
 
 import org.jboss.cache.Fqn;
 import org.jboss.cache.notifications.annotation.NodeCreated;
@@ -29,8 +29,8 @@ import org.jboss.cache.notifications.annotation.NodeModified;
 import org.jboss.cache.notifications.annotation.NodeMoved;
 import org.jboss.cache.notifications.annotation.NodeRemoved;
 import org.jboss.cache.notifications.event.NodeEvent;
+import org.teiid.cache.CacheListener;
 
-import com.metamatrix.cache.CacheListener;
 
 @org.jboss.cache.notifications.annotation.CacheListener
 public class JBossCacheListener {

@@ -34,9 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.net.NetPlugin;
 
-import com.metamatrix.common.types.DataTypeManager;
 
 
 /** 
