@@ -41,7 +41,7 @@ public class TestOrderByImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.OrderBy helpExample() {
+    public static org.teiid.query.sql.lang.OrderBy helpExample() {
         ArrayList elements = new ArrayList();
         elements.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -53,7 +53,7 @@ public class TestOrderByImpl extends TestCase {
         types.add(Boolean.FALSE);
         types.add(Boolean.TRUE);
         types.add(Boolean.FALSE);
-        return new com.metamatrix.query.sql.lang.OrderBy(elements, types);
+        return new org.teiid.query.sql.lang.OrderBy(elements, types);
     }
     
     public static OrderBy example() throws Exception {

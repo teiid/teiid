@@ -26,22 +26,22 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
+import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.dynamic.SimpleQueryProcessorFactory;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.dynamic.SimpleQueryProcessorFactory;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.util.CommandContext;
 
 
 public class TestDataTierManager extends TestCase {
@@ -125,7 +125,7 @@ public class TestDataTierManager extends TestCase {
         try {
             dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             fail("processor should have failed"); //$NON-NLS-1$
-        } catch (MetaMatrixException e) {
+        } catch (TeiidException e) {
             assertEquals("Connector Exception", e.getMessage()); //$NON-NLS-1$
         }
     }

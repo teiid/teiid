@@ -35,9 +35,9 @@ import org.teiid.connector.language.Select;
 import org.teiid.connector.language.SetQuery;
 import org.teiid.connector.language.SortSpecification;
 import org.teiid.connector.language.SortSpecification.Ordering;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.sql.lang.SetQuery.Operation;
 
 
 /** 
@@ -45,8 +45,8 @@ import com.metamatrix.query.sql.lang.SetQuery.Operation;
  */
 public class TestSetQueryImpl extends TestCase {
 
-    public static com.metamatrix.query.sql.lang.SetQuery helpExampleSetQuery() {
-        com.metamatrix.query.sql.lang.SetQuery setQuery = new com.metamatrix.query.sql.lang.SetQuery(Operation.UNION);
+    public static org.teiid.query.sql.lang.SetQuery helpExampleSetQuery() {
+        org.teiid.query.sql.lang.SetQuery setQuery = new org.teiid.query.sql.lang.SetQuery(Operation.UNION);
         setQuery.setAll(false);
         setQuery.setLeftQuery(TestQueryImpl.helpExample(true));
         setQuery.setRightQuery(TestQueryImpl.helpExample(true));
@@ -101,7 +101,7 @@ public class TestSetQueryImpl extends TestCase {
     }
     
     public void testNestedSetQuery() throws Exception {
-        com.metamatrix.query.sql.lang.SetQuery query = new com.metamatrix.query.sql.lang.SetQuery(com.metamatrix.query.sql.lang.SetQuery.Operation.EXCEPT, true, helpExampleSetQuery(), helpExampleSetQuery());
+        org.teiid.query.sql.lang.SetQuery query = new org.teiid.query.sql.lang.SetQuery(org.teiid.query.sql.lang.SetQuery.Operation.EXCEPT, true, helpExampleSetQuery(), helpExampleSetQuery());
         
         SetQuery setQuery = TstLanguageBridgeFactory.factory.translate(query);
         assertTrue(setQuery.getLeftQuery() instanceof SetQuery);

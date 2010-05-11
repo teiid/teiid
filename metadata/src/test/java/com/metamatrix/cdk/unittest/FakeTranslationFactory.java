@@ -22,8 +22,9 @@
 
 package com.metamatrix.cdk.unittest;
 
+import org.teiid.query.unittest.FakeMetadataFactory;
+
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class FakeTranslationFactory {
 	

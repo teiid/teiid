@@ -28,15 +28,15 @@ import java.util.ArrayList;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.parser.ParseInfo;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.relational.ProjectNode;
+import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.sql.lang.Command;
 
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.parser.ParseInfo;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.relational.ProjectNode;
-import com.metamatrix.query.processor.relational.RelationalPlan;
-import com.metamatrix.query.sql.lang.Command;
 
 public class TestPreparedPlanCache {
     private static final String EXAMPLE_QUERY = "SELECT * FROM table"; //$NON-NLS-1$

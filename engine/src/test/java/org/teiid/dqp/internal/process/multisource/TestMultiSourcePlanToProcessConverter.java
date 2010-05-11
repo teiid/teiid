@@ -34,29 +34,29 @@ import java.util.Set;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.id.IDGenerator;
+import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.resolver.TestResolver;
+import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.unittest.FakeMetadataFacade;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.core.id.IntegerIDFactory;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.QueryOptimizer;
-import com.metamatrix.query.optimizer.TestOptimizer;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.resolver.TestResolver;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.util.CommandContext;
 
 
 /** 
@@ -73,7 +73,7 @@ public class TestMultiSourcePlanToProcessConverter {
             setMustRegisterCommands(false);
         }
 
-        public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID) throws com.metamatrix.api.exception.MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID) throws org.teiid.core.TeiidComponentException {
         	assertNotNull(connectorBindingId);
         	
         	Collection elements = ElementCollectorVisitor.getElements(command, true, true);

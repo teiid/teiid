@@ -29,13 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.util.SqlUtil;
 import org.teiid.test.client.ExpectedResults;
 import org.teiid.test.client.ctc.ResultsHolder;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-import com.metamatrix.common.util.SqlUtil;
 
 public class ExpectedResultsImpl implements ExpectedResults {
 

@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.IsNull;
+import org.teiid.query.sql.lang.IsNullCriteria;
 
-import com.metamatrix.query.sql.lang.IsNullCriteria;
 
 import junit.framework.TestCase;
 

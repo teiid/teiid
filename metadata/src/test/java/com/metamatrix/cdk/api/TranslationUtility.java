@@ -26,19 +26,19 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 
+import org.teiid.cdk.CommandBuilder;
 import org.teiid.connector.language.Command;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.function.UDFSource;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.metadata.BasicQueryMetadataWrapper;
+import org.teiid.query.metadata.QueryMetadataInterface;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.query.function.FunctionLibrary;
-import com.metamatrix.query.function.FunctionTree;
-import com.metamatrix.query.function.SystemFunctionManager;
-import com.metamatrix.query.function.UDFSource;
-import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.metadata.BasicQueryMetadataWrapper;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**
  * <p>This translation utility can be used to translate sql strings into 

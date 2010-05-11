@@ -28,9 +28,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.teiid.connector.language.Call;
+import org.teiid.core.util.UnitTestUtil;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

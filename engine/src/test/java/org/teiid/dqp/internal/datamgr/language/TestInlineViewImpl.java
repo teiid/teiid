@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.DerivedTable;
+import org.teiid.query.sql.lang.SubqueryFromClause;
 
-import com.metamatrix.query.sql.lang.SubqueryFromClause;
 
 import junit.framework.TestCase;
 

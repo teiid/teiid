@@ -26,8 +26,8 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.DerivedColumn;
+import org.teiid.core.types.DataTypeManager;
 
-import com.metamatrix.common.types.DataTypeManager;
 
 public class TestSelectSymbolImpl extends TestCase {
 

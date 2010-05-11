@@ -27,8 +27,8 @@ import static org.junit.Assert.*;
 import java.io.File;
 
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestObjectSerializer {

@@ -20,6 +20,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.JDBCURL;
 import org.teiid.test.framework.ConfigPropertyLoader;
@@ -31,7 +32,6 @@ import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 public abstract class ConnectionStrategy {
 

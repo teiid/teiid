@@ -42,14 +42,14 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.output.XMLOutputter;
 import org.junit.Assert;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.StringUtil;
+import org.teiid.internal.core.xml.JdomHelper;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.internal.core.xml.JdomHelper;
 
 public class XMLGenerateResults implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(

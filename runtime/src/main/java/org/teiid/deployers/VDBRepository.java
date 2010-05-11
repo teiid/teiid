@@ -37,11 +37,11 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.vdb.runtime.VDBKey;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * Repository for VDBs

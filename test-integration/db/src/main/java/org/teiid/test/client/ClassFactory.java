@@ -24,10 +24,10 @@ package org.teiid.test.client;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * @author vanhalbert

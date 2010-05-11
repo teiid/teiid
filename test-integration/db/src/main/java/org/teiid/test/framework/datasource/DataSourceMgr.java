@@ -12,13 +12,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  * The DataSourceMgr is responsible for loading and managing the datasources

@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Properties;
 
 import org.junit.Assert;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.StringUtil;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
@@ -37,9 +40,6 @@ import org.teiid.test.framework.connection.DriverConnection;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.StringUtil;
 
 
 /**

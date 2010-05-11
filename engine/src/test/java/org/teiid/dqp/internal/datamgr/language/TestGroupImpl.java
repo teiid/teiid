@@ -24,11 +24,11 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.NamedTable;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.unittest.FakeMetadataObject;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestGroupImpl extends TestCase {
 

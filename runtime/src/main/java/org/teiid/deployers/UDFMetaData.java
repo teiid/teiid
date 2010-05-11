@@ -28,10 +28,10 @@ import java.util.HashMap;
 
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.virtual.VirtualFile;
+import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
-import com.metamatrix.query.function.metadata.FunctionMethod;
 
 @ManagementObject
 public class UDFMetaData {

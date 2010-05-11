@@ -27,11 +27,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.unittest.FakeMetadataFactory;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestCallableStatement extends TestCase {
 	

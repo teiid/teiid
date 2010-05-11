@@ -30,6 +30,9 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -37,9 +40,6 @@ import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ChannelListener.ChannelListenerFactory;
 
-import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.core.util.NamedThreadFactory;
 
 /**
  * Server-side class to listen for new connection requests and create a SocketClientConnection for each connection request.

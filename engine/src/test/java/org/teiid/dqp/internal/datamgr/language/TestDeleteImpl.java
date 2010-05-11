@@ -26,8 +26,8 @@ package org.teiid.dqp.internal.datamgr.language;
 import junit.framework.TestCase;
 
 import org.teiid.connector.language.Delete;
+import org.teiid.query.sql.lang.CompoundCriteria;
 
-import com.metamatrix.query.sql.lang.CompoundCriteria;
 
 public class TestDeleteImpl extends TestCase {
 
@@ -39,8 +39,8 @@ public class TestDeleteImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.Delete helpExample() {
-        return new com.metamatrix.query.sql.lang.Delete(TestGroupImpl.helpExample("vm1.g1"), //$NON-NLS-1$
+    public static org.teiid.query.sql.lang.Delete helpExample() {
+        return new org.teiid.query.sql.lang.Delete(TestGroupImpl.helpExample("vm1.g1"), //$NON-NLS-1$
                           TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND));
     }
     

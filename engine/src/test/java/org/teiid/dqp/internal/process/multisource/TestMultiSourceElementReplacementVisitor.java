@@ -25,14 +25,15 @@ package org.teiid.dqp.internal.process.multisource;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.unittest.FakeMetadataFactory;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.navigator.DeepPostOrderNavigator;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 
 /** 

@@ -36,6 +36,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
@@ -48,8 +50,6 @@ import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ExecutionFactory;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.util.FileUtils;
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private VDBRepository vdbRepository;

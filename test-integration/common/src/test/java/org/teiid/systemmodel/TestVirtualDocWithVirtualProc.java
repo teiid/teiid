@@ -25,10 +25,10 @@ package org.teiid.systemmodel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  * Tests xml virtual documents which are built on top of virtual

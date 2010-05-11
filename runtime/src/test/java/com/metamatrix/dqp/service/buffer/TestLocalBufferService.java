@@ -22,13 +22,13 @@
 
 package com.metamatrix.dqp.service.buffer;
 
+import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.services.BufferServiceImpl;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.impl.FileStorageManager;
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestLocalBufferService extends TestCase {
 

@@ -29,14 +29,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.client.TestProperties.RESULT_MODES;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.FileUtils;
 
 
 /**

@@ -23,7 +23,8 @@ package org.teiid.runtime;
 
 import java.util.ResourceBundle;
 
-import com.metamatrix.core.BundleUtil;
+import org.teiid.core.BundleUtil;
+
 
 public class RuntimePlugin {
     private static final String PLUGIN_ID = "org.teiid.runtime" ; //$NON-NLS-1$

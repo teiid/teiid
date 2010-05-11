@@ -27,9 +27,9 @@ import junit.framework.TestCase;
 import org.teiid.connector.language.Comparison;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.query.sql.lang.AbstractCompareCriteria;
+import org.teiid.query.sql.symbol.Constant;
 
-import com.metamatrix.query.sql.lang.AbstractCompareCriteria;
-import com.metamatrix.query.sql.symbol.Constant;
 
 public class TestCompareCriteriaImpl extends TestCase {
 
@@ -41,10 +41,10 @@ public class TestCompareCriteriaImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.CompareCriteria helpExample(int operator, int leftVal, int rightVal) {
+    public static org.teiid.query.sql.lang.CompareCriteria helpExample(int operator, int leftVal, int rightVal) {
         Constant left = new Constant(new Integer(leftVal));
         Constant right = new Constant(new Integer(rightVal));
-        return new com.metamatrix.query.sql.lang.CompareCriteria(left, operator, right);
+        return new org.teiid.query.sql.lang.CompareCriteria(left, operator, right);
     }
     
     public static Comparison example(int operator, int leftVal, int rightVal) throws Exception {

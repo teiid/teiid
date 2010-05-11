@@ -28,12 +28,12 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.Comparison;
 import org.teiid.connector.language.Join;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.JoinPredicate;
-import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.lang.UnaryFromClause;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 public class TestJoinImpl extends TestCase {
 

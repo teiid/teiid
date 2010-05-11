@@ -27,6 +27,10 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.core.crypto.CryptoException;
+import org.teiid.core.crypto.Cryptor;
+import org.teiid.core.crypto.DhKeyGenerator;
+import org.teiid.core.crypto.NullCryptor;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -37,10 +41,6 @@ import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ObjectChannel;
 
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.Cryptor;
-import com.metamatrix.common.util.crypto.DhKeyGenerator;
-import com.metamatrix.common.util.crypto.NullCryptor;
 
 /**
  * Sockets implementation of the communication framework class representing the server's view of a client connection.

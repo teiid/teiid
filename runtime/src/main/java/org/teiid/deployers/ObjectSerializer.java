@@ -30,11 +30,11 @@ import java.io.ObjectOutputStream;
 
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.logging.Logger;
+import org.teiid.core.util.FileUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.core.util.FileUtils;
 
 public class ObjectSerializer {
 	

@@ -25,20 +25,20 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.util.CommandContext;
 
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.QueryOptimizer;
-import com.metamatrix.query.optimizer.TestOptimizer;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.util.CommandContext;
 
 
 /** 

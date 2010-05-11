@@ -35,21 +35,21 @@ import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
+import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.Request;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.validator.Validator;
+import org.teiid.query.validator.ValidatorFailure;
+import org.teiid.query.validator.ValidatorReport;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.Symbol;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.validator.Validator;
-import com.metamatrix.query.validator.ValidatorFailure;
-import com.metamatrix.query.validator.ValidatorReport;
 
 public class TestAuthorizationValidationVisitor extends TestCase {
 
@@ -153,7 +153,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         return svc;
     }
 
-    private void helpTest(DataPolicyMetadata policy, String sql, QueryMetadataInterface metadata, String[] expectedInaccesible, VDBMetaData vdb) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private void helpTest(DataPolicyMetadata policy, String sql, QueryMetadataInterface metadata, String[] expectedInaccesible, VDBMetaData vdb) throws QueryParserException, QueryResolverException, TeiidComponentException {
         QueryParser parser = QueryParser.getQueryParser();
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -279,7 +279,7 @@ public class TestAuthorizationValidationVisitor extends TestCase {
         helpTest(exampleAuthSvc1(), "select * from xmltest.doc1", FakeMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, MetaMatrixComponentException {
+	private void helpTestLookupVisibility(boolean visible) throws QueryParserException, QueryValidatorException, TeiidComponentException {
 		VDBMetaData vdb = FakeMetadataFactory.example1VDB();
 		vdb.getModel("pm1").setVisible(visible); //$NON-NLS-1$
 		AuthorizationValidationVisitor mvvv = new AuthorizationValidationVisitor(vdb, false, new HashMap<String, DataPolicy>(), "test"); //$NON-NLS-1$

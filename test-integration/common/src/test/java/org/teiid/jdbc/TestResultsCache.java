@@ -30,8 +30,8 @@ import java.sql.Statement;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestResultsCache {

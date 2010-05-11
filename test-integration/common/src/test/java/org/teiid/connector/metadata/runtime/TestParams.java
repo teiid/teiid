@@ -31,9 +31,9 @@ import org.teiid.connector.language.Argument;
 import org.teiid.connector.language.Call;
 import org.teiid.connector.language.Argument.Direction;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
+import org.teiid.core.util.UnitTestUtil;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.core.util.UnitTestUtil;
 
 
 /** 

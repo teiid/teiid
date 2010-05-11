@@ -32,9 +32,9 @@ import org.teiid.connector.language.DerivedColumn;
 import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.Column.SearchType;
+import org.teiid.core.util.UnitTestUtil;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

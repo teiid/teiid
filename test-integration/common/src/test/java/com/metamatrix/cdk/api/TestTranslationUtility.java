@@ -28,8 +28,8 @@ import org.teiid.connector.language.Command;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.Select;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.core.util.UnitTestUtil;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestTranslationUtility extends TestCase {
 

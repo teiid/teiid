@@ -34,9 +34,9 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestConnectorBindings extends BaseConnection {

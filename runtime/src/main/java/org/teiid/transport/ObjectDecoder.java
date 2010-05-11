@@ -39,15 +39,15 @@ import org.jboss.netty.handler.codec.frame.FrameDecoder;
 import org.jboss.netty.handler.codec.serialization.CompatibleObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.CompatibleObjectEncoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
+import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
-import com.metamatrix.common.buffer.FileStore;
-import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.types.InputStreamFactory;
-import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.types.InputStreamFactory.StreamFactoryReference;
-import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * A decoder which deserializes the received {@link ChannelBuffer}s into Java

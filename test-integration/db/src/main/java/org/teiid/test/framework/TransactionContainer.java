@@ -4,9 +4,9 @@
  */
 package org.teiid.test.framework;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.core.util.StringUtil;
 
 public abstract class TransactionContainer {
 

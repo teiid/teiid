@@ -42,6 +42,10 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.internal.core.xml.SAXBuilderHelper;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.test.client.QuerySQL;
 import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.ctc.QueryResults.ColumnInfo;
@@ -49,10 +53,6 @@ import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.StringUtil;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.internal.core.xml.SAXBuilderHelper;
-import com.metamatrix.query.sql.lang.Select;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 
 /**

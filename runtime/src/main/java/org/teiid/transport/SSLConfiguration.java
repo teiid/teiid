@@ -30,9 +30,9 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.net.socket.SocketUtil;
 
-import com.metamatrix.core.util.Assertion;
 
 
 public class SSLConfiguration {

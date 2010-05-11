@@ -26,10 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 
 import org.teiid.client.lob.LobChunkInputStream;
+import org.teiid.core.util.ObjectConverterUtil;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class TestByteLobChunkStream extends TestCase {
 

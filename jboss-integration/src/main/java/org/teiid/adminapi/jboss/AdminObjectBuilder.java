@@ -39,11 +39,11 @@ import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.templates.TranslatorMetadataICF;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 
 public class AdminObjectBuilder {
@@ -96,9 +96,9 @@ public class AdminObjectBuilder {
 			}
 			return clazz.cast(t);
 		} catch (InstantiationException e) {
-			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
 		} catch (IllegalAccessException e) {
-			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
 		}
 	}
 	
@@ -116,9 +116,9 @@ public class AdminObjectBuilder {
 			}  
 			return clazz.cast(t);
 		} catch (InstantiationException e) {
-			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
 		} catch (IllegalAccessException e) {
-			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
 		}
 	}
 }

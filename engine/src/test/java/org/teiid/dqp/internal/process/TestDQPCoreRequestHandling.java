@@ -32,13 +32,13 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.client.security.SessionToken;
+import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.query.sql.lang.Command;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.query.sql.lang.Command;
 
 /**
  */
@@ -107,7 +107,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     }
     
     private SourceWarning getSourceFailures(String model, String binding, String message) {
-    	return new SourceWarning(model, binding, new MetaMatrixException(message), true);
+    	return new SourceWarning(model, binding, new TeiidException(message), true);
     }
         
     public void testAddRequest() {

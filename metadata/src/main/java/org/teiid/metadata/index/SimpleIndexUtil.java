@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.TeiidException;
 import org.teiid.core.index.IEntryResult;
+import org.teiid.core.util.ArgCheck;
 import org.teiid.internal.core.index.Index;
 
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ArgCheck;
 
 /**
  * IndexUtil
@@ -60,7 +60,7 @@ public class SimpleIndexUtil {
      * @return results
      * @throws MetamatrixCoreException
      */
-    public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws MetaMatrixCoreException {
+    public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws TeiidException {
         final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();
         
         try {
@@ -104,7 +104,7 @@ public class SimpleIndexUtil {
                 }                
             }
         } catch(IOException e) {
-            throw new MetaMatrixCoreException(e);
+            throw new TeiidException(e);
         }
 
         return queryResult.toArray(new IEntryResult[queryResult.size()]);

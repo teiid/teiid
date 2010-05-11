@@ -40,10 +40,10 @@ import org.jboss.netty.channel.DownstreamMessageEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.stream.ChunkedInput;
 import org.jboss.netty.handler.stream.ChunkedStream;
+import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
 
-import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
  * An encoder which serializes a Java object into a {@link ChannelBuffer}.

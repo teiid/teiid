@@ -29,8 +29,8 @@ import java.util.List;
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.In;
+import org.teiid.query.sql.lang.SetCriteria;
 
-import com.metamatrix.query.sql.lang.SetCriteria;
 
 import junit.framework.TestCase;
 

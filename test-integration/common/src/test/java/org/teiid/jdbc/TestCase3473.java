@@ -28,8 +28,8 @@ import java.sql.ResultSet;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

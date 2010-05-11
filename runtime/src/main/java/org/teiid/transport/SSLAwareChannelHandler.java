@@ -51,12 +51,12 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
+import org.teiid.common.buffer.StorageManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.ObjectChannel;
 
-import com.metamatrix.common.buffer.StorageManager;
 
 /**
  * Main class for creating Netty Nio Channels 

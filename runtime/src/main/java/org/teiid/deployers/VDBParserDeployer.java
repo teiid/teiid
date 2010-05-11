@@ -44,15 +44,15 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.VdbConstants;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
 import org.xml.sax.SAXException;
 
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.vdb.VdbConstants;
 
 /**
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files

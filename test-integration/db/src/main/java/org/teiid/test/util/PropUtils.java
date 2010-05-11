@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 public class PropUtils {
 	

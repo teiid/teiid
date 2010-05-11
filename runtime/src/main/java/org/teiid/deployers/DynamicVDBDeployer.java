@@ -29,10 +29,10 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-import com.metamatrix.core.CoreConstants;
 
 public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> {
 	

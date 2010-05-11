@@ -33,16 +33,16 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 /**
  */

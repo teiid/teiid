@@ -33,10 +33,10 @@ import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.TransformationMetadata.Resource;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.vdb.runtime.VDBKey;
 
-import com.metamatrix.query.function.metadata.FunctionMethod;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 
 public class CompositeVDB {

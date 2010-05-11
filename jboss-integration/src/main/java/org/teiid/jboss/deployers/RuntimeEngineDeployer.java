@@ -52,12 +52,19 @@ import org.teiid.adminapi.jboss.AdminProvider;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.SessionService;
+import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
@@ -70,13 +77,6 @@ import org.teiid.transport.LogonImpl;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.dqp.service.SessionServiceException;
-import com.metamatrix.dqp.service.TransactionService;
 
 @ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
@@ -141,7 +141,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	try {
 	    	this.dqpCore.stop();
-    	} catch(MetaMatrixRuntimeException e) {
+    	} catch(TeiidRuntimeException e) {
     		// this bean is already shutdown
     	}
     	
@@ -166,7 +166,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	try {
     		this.admin = AdminProvider.getLocal();
     	} catch (AdminComponentException e) {
-    		throw new MetaMatrixRuntimeException(e.getCause());
+    		throw new TeiidRuntimeException(e.getCause());
     	}		        
 	}    
 	
@@ -270,7 +270,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     public boolean cancelRequest(String sessionId, long requestId) throws AdminException {
     	try {
 			return this.dqpCore.cancelRequest(sessionId, requestId);
-		} catch (MetaMatrixComponentException e) {
+		} catch (TeiidComponentException e) {
 			throw new AdminComponentException(e);
 		}
     }

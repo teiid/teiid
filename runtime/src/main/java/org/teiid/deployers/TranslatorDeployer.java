@@ -32,6 +32,8 @@ import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -39,8 +41,6 @@ import org.teiid.resource.cci.ExecutionFactory;
 import org.teiid.resource.cci.TranslatorProperty;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * Deployer for the Translator
@@ -104,7 +104,7 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 			executionFactory.start();
 			return executionFactory;
 			
-		} catch (MetaMatrixCoreException e) {
+		} catch (TeiidException e) {
 			throw new DeploymentException(e);
 		} catch (ResourceException e) {
 			throw new DeploymentException(e);

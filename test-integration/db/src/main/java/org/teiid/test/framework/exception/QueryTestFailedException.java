@@ -6,8 +6,9 @@ package org.teiid.test.framework.exception;
 import java.io.Serializable;
 import java.util.List;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.MetaMatrixExceptionUtil;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ExceptionUtil;
+
 
 /**
  */
@@ -91,7 +92,7 @@ public class QueryTestFailedException extends Exception
 
 	    /**
 	     * Construct an instance with a linked exception specified.  If the exception is a MetaMatrixException or a
-	     * {@link MetaMatrixRuntimeException}, then the code will be set to the exception's code.
+	     * {@link TeiidRuntimeException}, then the code will be set to the exception's code.
 	     * @param e An exception to chain to this exception
 	     */
 	    public QueryTestFailedException(final Throwable e) {
@@ -106,7 +107,7 @@ public class QueryTestFailedException extends Exception
 	    /**
 	     * Construct an instance with the linked exception and error message specified.  If the message is actually a key, the error
 	     * message will be retrieved from a resource bundle the key, and code will be set to that key.  Otherwise, if the specified
-	     * exception is a MetaMatrixException or a {@link MetaMatrixRuntimeException}, the code will be set to the exception's code.
+	     * exception is a MetaMatrixException or a {@link TeiidRuntimeException}, the code will be set to the exception's code.
 	     * @param e       The exception to chain to this exception
 	     * @param message The error message or a resource bundle key
 	     */
@@ -186,7 +187,7 @@ public class QueryTestFailedException extends Exception
 	     * @see #getFormattedMessage
 	     */
 	    public String getFullMessage() {
-	        return MetaMatrixExceptionUtil.getLinkedMessages(this, 0 );
+	        return ExceptionUtil.getLinkedMessages(this, 0 );
 	    }
 
 	    /* (non-Javadoc)

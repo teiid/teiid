@@ -31,12 +31,12 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.DerivedColumn;
 import org.teiid.connector.language.Select;
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.UnaryFromClause;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 public class TestQueryImpl extends TestCase {
 
@@ -48,13 +48,13 @@ public class TestQueryImpl extends TestCase {
         super(name);
     }
     
-    public static com.metamatrix.query.sql.lang.Select helpExampleSelect(boolean distinct) {
+    public static org.teiid.query.sql.lang.Select helpExampleSelect(boolean distinct) {
         ArrayList<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
-        com.metamatrix.query.sql.lang.Select sel = new com.metamatrix.query.sql.lang.Select(symbols);
+        org.teiid.query.sql.lang.Select sel = new org.teiid.query.sql.lang.Select(symbols);
         sel.setDistinct(distinct);
         return sel;
     }
@@ -109,13 +109,13 @@ public class TestQueryImpl extends TestCase {
         assertTrue(EquivalenceUtil.areEquivalent(expected, types));
     }
 
-	public static com.metamatrix.query.sql.lang.From helpExampleFrom() {
+	public static org.teiid.query.sql.lang.From helpExampleFrom() {
 	    List<UnaryFromClause> clauses = new ArrayList<UnaryFromClause>();
 	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g1"))); //$NON-NLS-1$
 	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("myAlias", "vm1.g2"))); //$NON-NLS-1$ //$NON-NLS-2$
 	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g3"))); //$NON-NLS-1$
 	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g4"))); //$NON-NLS-1$
-	    return new com.metamatrix.query.sql.lang.From(clauses);
+	    return new org.teiid.query.sql.lang.From(clauses);
 	}
 	
     public void testGetSelectSymbols() throws Exception {

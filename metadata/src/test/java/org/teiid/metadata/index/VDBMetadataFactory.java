@@ -32,16 +32,16 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.function.metadata.FunctionMethod;
 
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.LRUCache;
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
-import com.metamatrix.query.function.metadata.FunctionMethod;
 
 @SuppressWarnings("nls")
 public class VDBMetadataFactory {
@@ -52,7 +52,7 @@ public class VDBMetadataFactory {
 		try {
 			return getVDBMetadata(new File(vdbFile).toURI().toURL(), null);
 		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e);
+			throw new TeiidRuntimeException(e);
 		}
     }
 	
@@ -61,7 +61,7 @@ public class VDBMetadataFactory {
 			IndexMetadataFactory imf = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB));
 			return imf.getMetadataStore();
 		} catch (Exception e) {
-			throw new MetaMatrixRuntimeException("System VDB not found");
+			throw new TeiidRuntimeException("System VDB not found");
 		}
     }
 	

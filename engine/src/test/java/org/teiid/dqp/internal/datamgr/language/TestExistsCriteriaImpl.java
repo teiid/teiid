@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.Exists;
+import org.teiid.query.sql.lang.ExistsCriteria;
 
-import com.metamatrix.query.sql.lang.ExistsCriteria;
 
 import junit.framework.TestCase;
 

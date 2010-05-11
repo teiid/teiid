@@ -27,11 +27,11 @@ import junit.framework.TestCase;
 import org.teiid.connector.language.Comparison;
 import org.teiid.connector.language.SubqueryComparison;
 import org.teiid.connector.language.SubqueryComparison.Quantifier;
+import org.teiid.query.sql.lang.AbstractCompareCriteria;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-import com.metamatrix.query.sql.lang.AbstractCompareCriteria;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 /**
  */

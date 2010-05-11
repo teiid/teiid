@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.util.PropUtils;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 
 /**

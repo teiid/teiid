@@ -32,6 +32,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.deployers.MetadataStoreGroup;
@@ -41,8 +42,11 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.resource.ConnectorException;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
@@ -50,10 +54,6 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
-import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 public class FakeServer extends ClientServiceRegistryImpl {
 

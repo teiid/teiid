@@ -23,9 +23,9 @@
 package org.teiid.dqp.internal.datamgr.language;
 
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TstLanguageBridgeFactory {
     

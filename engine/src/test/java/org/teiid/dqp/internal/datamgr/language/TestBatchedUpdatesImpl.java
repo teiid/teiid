@@ -29,10 +29,10 @@ import org.teiid.connector.language.BatchedUpdates;
 import org.teiid.connector.language.Delete;
 import org.teiid.connector.language.Insert;
 import org.teiid.connector.language.Update;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 
 
 /** 

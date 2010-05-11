@@ -27,10 +27,10 @@ import junit.framework.TestCase;
 import org.teiid.connector.language.AggregateFunction;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.sql.symbol.AggregateSymbol;
-import com.metamatrix.query.sql.symbol.Constant;
 
 public class TestAggregateImpl extends TestCase {
 

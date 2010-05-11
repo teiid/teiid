@@ -22,9 +22,9 @@
 
 package org.teiid.transport;
 
+import org.teiid.core.ComponentNotFoundException;
 import org.teiid.security.SecurityHelper;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
 
 public interface ClientServiceRegistry {
 	

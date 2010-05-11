@@ -23,10 +23,10 @@ package org.teiid.dqp.internal.cache;
 
 import junit.framework.TestCase;
 
+import org.teiid.cache.Cache;
+import org.teiid.cache.FakeCache.FakeCacheFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.cache.Cache;
-import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 
 
 public class TestDQPContextCache extends TestCase {

@@ -22,11 +22,11 @@
 
 package org.teiid.deployers;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import org.teiid.core.TeiidProcessingException;
 /**
  * The base exception from which all Runtime Metadata Exceptions extend.
  */
-public class VirtualDatabaseException extends MetaMatrixProcessingException {
+public class VirtualDatabaseException extends TeiidProcessingException {
 
     public static final String NO_MODELS = "1"; //$NON-NLS-1$
     public static final String MODEL_NON_DEPLOYABLE_STATE = "2";  //$NON-NLS-1$

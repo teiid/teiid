@@ -33,16 +33,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
+import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.dqp.service.FakeBufferService;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestDQPCore {
 

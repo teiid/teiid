@@ -33,17 +33,17 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.service.SessionService;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
 import org.teiid.security.Credentials;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.dqp.service.SessionService;
-import com.metamatrix.dqp.service.SessionServiceException;
 
 public class LogonImpl implements ILogon {
 	
@@ -97,7 +97,7 @@ public class LogonImpl implements ILogon {
 		return ResultsFuture.NULL_FUTURE;
 	}
 
-	public ResultsFuture<?> ping() throws InvalidSessionException,MetaMatrixComponentException {
+	public ResultsFuture<?> ping() throws InvalidSessionException,TeiidComponentException {
 		// ping is double used to alert the aliveness of the client, as well as check the server instance is 
 		// alive by socket server instance, so that they can be cached.
 		String id = DQPWorkContext.getWorkContext().getSessionId();
@@ -109,12 +109,12 @@ public class LogonImpl implements ILogon {
 	}
 
 	@Override
-	public void assertIdentity(SessionToken checkSession) throws InvalidSessionException, MetaMatrixComponentException {
+	public void assertIdentity(SessionToken checkSession) throws InvalidSessionException, TeiidComponentException {
 		SessionMetadata sessionInfo = null;
 		try {
 			sessionInfo = this.service.validateSession(checkSession.getSessionID());
 		} catch (SessionServiceException e) {
-			throw new MetaMatrixComponentException(e);
+			throw new TeiidComponentException(e);
 		}
 		
 		if (sessionInfo == null) {

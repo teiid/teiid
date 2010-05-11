@@ -30,21 +30,21 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.util.ContextProperties;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.FakeDataManager;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.util.ContextProperties;
 
 
 /** 
@@ -125,8 +125,8 @@ public class TestRequest extends TestCase {
         assertEquals("1", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
     }
 
-    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws MetaMatrixComponentException,
-                                                           MetaMatrixProcessingException {
+    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws TeiidComponentException,
+                                                           TeiidProcessingException {
         Request request = null;
         if (cache != null) {
         	request = new PreparedStatementRequest(cache);

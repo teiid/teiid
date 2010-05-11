@@ -55,9 +55,9 @@ import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.profileservice.spi.DeploymentOption;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.jboss.IntegrationPlugin;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ManagedUtil {
 	
@@ -102,7 +102,7 @@ public class ManagedUtil {
 				SimpleValue simple = (SimpleValue)v1;
 				return simple.getValue().toString();
 			}
-			throw new MetaMatrixRuntimeException("Failed to convert value to string value"); //$NON-NLS-1$
+			throw new TeiidRuntimeException("Failed to convert value to string value"); //$NON-NLS-1$
 		}
 		return null;
 	}	
@@ -189,7 +189,7 @@ public class ManagedUtil {
 				try {
 					return new SimpleValueSupport(st, SimpleDateFormat.getInstance().parse(value));
 				} catch (ParseException e) {
-					throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
+					throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
 				}
 			} else if (SimpleMetaType.DOUBLE.equals(st)) {
 				return new SimpleValueSupport(st, Double.valueOf(value));
@@ -215,7 +215,7 @@ public class ManagedUtil {
 				return new SimpleValueSupport(st,value);
 			}
 		}
-		throw new MetaMatrixRuntimeException(IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
+		throw new TeiidRuntimeException(IntegrationPlugin.Util.getString("failed_to_convert", type.getClassName())); //$NON-NLS-1$
 	}
 	
 	public static void deployArchive(DeploymentManager deploymentManager, String fileName, final InputStream resource, boolean deployExploded) throws AdminProcessingException {
@@ -275,7 +275,7 @@ public class ManagedUtil {
 				}
 			});
 		} catch (MalformedURLException e2) {
-			throw new MetaMatrixRuntimeException(e2);
+			throw new TeiidRuntimeException(e2);
 		}
 	}
 
@@ -312,6 +312,6 @@ public class ManagedUtil {
 				return mo.invoke(args);
 			}
 		}
-		throw new MetaMatrixRuntimeException(IntegrationPlugin.Util.getString("no_operation", operation)); //$NON-NLS-1$ 
+		throw new TeiidRuntimeException(IntegrationPlugin.Util.getString("no_operation", operation)); //$NON-NLS-1$ 
 	}
 }

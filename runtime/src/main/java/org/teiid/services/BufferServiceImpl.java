@@ -30,18 +30,18 @@ import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.cache.CacheFactory;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.MemoryStorageManager;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.runtime.RuntimePlugin;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.impl.FileStorageManager;
-import com.metamatrix.common.buffer.impl.MemoryStorageManager;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.dqp.service.BufferService;
 
 /**
  * Implement the BufferService for the DQP Embedded component.  This implementation
@@ -104,10 +104,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
             	this.bufferMgr.setStorageManager(new MemoryStorageManager());
             }
             
-        } catch(MetaMatrixComponentException e) { 
-            throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
+        } catch(TeiidComponentException e) { 
+            throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
         } catch(IOException e) {
-            throw new MetaMatrixRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
+            throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
         }
     }
    

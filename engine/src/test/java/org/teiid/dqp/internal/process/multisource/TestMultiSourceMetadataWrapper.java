@@ -26,10 +26,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.unittest.FakeMetadataFactory;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 
 /** 

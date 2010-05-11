@@ -28,8 +28,8 @@ import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.core.TeiidRuntimeException;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SocketConfiguration {
@@ -82,7 +82,7 @@ public class SocketConfiguration {
 				this.hostName = InetAddress.getLocalHost().getHostName();
 			}
 		} catch (UnknownHostException e) {
-			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+			throw new TeiidRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
 		}
 	}
 
@@ -128,7 +128,7 @@ public class SocketConfiguration {
 			}
 			return addr;
 		} catch (UnknownHostException e) {
-			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+			throw new TeiidRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
 		}		
 	}
 	

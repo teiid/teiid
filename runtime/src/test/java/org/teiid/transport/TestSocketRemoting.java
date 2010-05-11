@@ -43,6 +43,11 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsReceiver;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.crypto.Cryptor;
+import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -55,11 +60,6 @@ import org.teiid.net.socket.SocketServerInstanceFactory;
 import org.teiid.net.socket.SocketServerInstanceImpl;
 import org.teiid.net.socket.UrlServerDiscovery;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.util.crypto.Cryptor;
-import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class TestSocketRemoting {
 	
@@ -67,7 +67,7 @@ public class TestSocketRemoting {
 		
 		ResultsFuture<Integer> asynchResult();
 		
-		String exceptionMethod() throws MetaMatrixProcessingException;
+		String exceptionMethod() throws TeiidProcessingException;
 		
 		int lobMethod(InputStream is, Reader r) throws IOException;
 		
@@ -83,8 +83,8 @@ public class TestSocketRemoting {
 			return result;
 		}
 
-		public String exceptionMethod() throws MetaMatrixProcessingException {
-			throw new MetaMatrixProcessingException();
+		public String exceptionMethod() throws TeiidProcessingException {
+			throw new TeiidProcessingException();
 		}
 		
 		@Override
@@ -166,25 +166,25 @@ public class TestSocketRemoting {
 				public ResultsFuture<?> logoff()
 						throws InvalidSessionException {
 					ResultsFuture<?> result = new ResultsFuture<Void>();
-					result.getResultsReceiver().exceptionOccurred(new MetaMatrixComponentException("some exception")); //$NON-NLS-1$
+					result.getResultsReceiver().exceptionOccurred(new TeiidComponentException("some exception")); //$NON-NLS-1$
 					return result;
 				}
 
 				public LogonResult logon(Properties connectionProperties)
-						throws LogonException, MetaMatrixComponentException {
+						throws LogonException, TeiidComponentException {
 					return new LogonResult();
 				}
 
 				// tests asynch where we don't care about the result
 				public ResultsFuture<?> ping() throws InvalidSessionException,
-						MetaMatrixComponentException {
+						TeiidComponentException {
 					return null;
 				}
 				
 				@Override
 				public void assertIdentity(SessionToken sessionId)
 					throws InvalidSessionException,
-					MetaMatrixComponentException {
+					TeiidComponentException {
 				}
 
 			}, "foo"); //$NON-NLS-1$
@@ -199,7 +199,7 @@ public class TestSocketRemoting {
 			result.get(0, TimeUnit.MICROSECONDS);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (ExecutionException e) {
-			assertTrue(e.getCause() instanceof MetaMatrixComponentException);
+			assertTrue(e.getCause() instanceof TeiidComponentException);
 		}
 		FakeService service = connection.getService(FakeService.class);
 		Future<Integer> asynchInteger = service.asynchResult();
@@ -207,7 +207,7 @@ public class TestSocketRemoting {
 		try {
 			service.exceptionMethod();
 			fail("exception expected"); //$NON-NLS-1$
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			
 		}
 		DQP dqp = connection.getService(DQP.class);

@@ -31,18 +31,18 @@ import java.util.Set;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.resource.cci.SourceSystemFunctions;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestXMLTypeTranslations extends BaseQueryTest {
 

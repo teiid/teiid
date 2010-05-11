@@ -31,10 +31,10 @@ import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.ExpressionValueSource;
 import org.teiid.connector.language.Insert;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
 
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 public class TestInsertImpl extends TestCase {
 
@@ -46,7 +46,7 @@ public class TestInsertImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.Insert helpExample(String groupName) {
+    public static org.teiid.query.sql.lang.Insert helpExample(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
         ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
@@ -60,12 +60,12 @@ public class TestInsertImpl extends TestCase {
         values.add(TestLiteralImpl.helpExample(3));
         values.add(TestLiteralImpl.helpExample(4));
         
-        return new com.metamatrix.query.sql.lang.Insert(group,
+        return new org.teiid.query.sql.lang.Insert(group,
                           elements,
                           values);
     }
     
-    public static com.metamatrix.query.sql.lang.Insert helpExample2(String groupName) {
+    public static org.teiid.query.sql.lang.Insert helpExample2(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
         ArrayList elements = new ArrayList();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
@@ -73,7 +73,7 @@ public class TestInsertImpl extends TestCase {
         ArrayList values = new ArrayList();
         values.add(TestSearchedCaseExpressionImpl.helpExample());
         
-        return new com.metamatrix.query.sql.lang.Insert(group,
+        return new org.teiid.query.sql.lang.Insert(group,
                           elements,
                           values);
     }

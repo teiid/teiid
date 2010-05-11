@@ -30,10 +30,10 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.GroupBy;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.Function;
 
 public class TestGroupByImpl extends TestCase {
 
@@ -45,16 +45,16 @@ public class TestGroupByImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.GroupBy helpExample() {
+    public static org.teiid.query.sql.lang.GroupBy helpExample() {
         List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
-        return new com.metamatrix.query.sql.lang.GroupBy(symbols);
+        return new org.teiid.query.sql.lang.GroupBy(symbols);
     }
 
-    public static com.metamatrix.query.sql.lang.GroupBy helpExampleWithFunctions() {
+    public static org.teiid.query.sql.lang.GroupBy helpExampleWithFunctions() {
         List<Expression> symbols = new ArrayList<Expression>();
         
         ElementSymbol e1 = TestElementImpl.helpExample("vm1.g1", "e1");//$NON-NLS-1$ //$NON-NLS-2$
@@ -62,7 +62,7 @@ public class TestGroupByImpl extends TestCase {
         
         symbols.add(e1); 
         symbols.add(f);
-        return new com.metamatrix.query.sql.lang.GroupBy(symbols);
+        return new org.teiid.query.sql.lang.GroupBy(symbols);
     }
     
 

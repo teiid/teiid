@@ -24,10 +24,10 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.Like;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-import com.metamatrix.query.sql.lang.MatchCriteria;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;
 

@@ -68,10 +68,10 @@ import org.teiid.dqp.internal.datamgr.language.TestSubqueryCompareCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSubqueryInCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.JoinType;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.JoinType;
 
 public class TestSQLStringVisitor  {
 

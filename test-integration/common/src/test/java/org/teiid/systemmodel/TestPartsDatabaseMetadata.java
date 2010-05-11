@@ -29,10 +29,10 @@ import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  * Test the DatabaseMetadata results using the Parts VDB.

@@ -28,8 +28,8 @@ import java.io.ByteArrayInputStream;
 import java.net.URL;
 
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class TestManagedUtil {
 

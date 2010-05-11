@@ -26,9 +26,9 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.Select;
 import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 /**
  */
@@ -42,9 +42,9 @@ public class TestScalarSubqueryImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.symbol.ScalarSubquery helpExample() {
+    public static org.teiid.query.sql.symbol.ScalarSubquery helpExample() {
         Query query = TestQueryImpl.helpExample(true);
-        com.metamatrix.query.sql.symbol.ScalarSubquery ss = new com.metamatrix.query.sql.symbol.ScalarSubquery(query);
+        org.teiid.query.sql.symbol.ScalarSubquery ss = new org.teiid.query.sql.symbol.ScalarSubquery(query);
         ss.setType(((SingleElementSymbol)query.getProjectedSymbols().get(0)).getType());
         return ss;
     }

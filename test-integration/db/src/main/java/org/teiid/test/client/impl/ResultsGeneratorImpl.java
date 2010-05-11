@@ -34,12 +34,12 @@ import java.util.List;
 import java.util.Properties;
 
 import org.junit.Assert;
+import org.teiid.core.util.FileUtils;
 import org.teiid.test.client.ResultsGenerator;
 import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-import com.metamatrix.core.util.FileUtils;
 
 public class ResultsGeneratorImpl implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(

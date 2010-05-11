@@ -27,8 +27,8 @@ import junit.framework.TestCase;
 import org.teiid.connector.language.AndOr;
 import org.teiid.connector.language.Comparison;
 import org.teiid.connector.language.AndOr.Operator;
+import org.teiid.query.sql.lang.CompareCriteria;
 
-import com.metamatrix.query.sql.lang.CompareCriteria;
 
 public class TestCompoundCriteriaImpl extends TestCase {
 
@@ -40,10 +40,10 @@ public class TestCompoundCriteriaImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.lang.CompoundCriteria helpExample(int operator) {
+    public static org.teiid.query.sql.lang.CompoundCriteria helpExample(int operator) {
         CompareCriteria c1 = TestCompareCriteriaImpl.helpExample(CompareCriteria.GE, 100, 200);
         CompareCriteria c2 = TestCompareCriteriaImpl.helpExample(CompareCriteria.LT, 500, 600);
-        return new com.metamatrix.query.sql.lang.CompoundCriteria(operator, c1, c2);
+        return new org.teiid.query.sql.lang.CompoundCriteria(operator, c1, c2);
     }
     
     public static AndOr example(int operator) throws Exception {
@@ -51,12 +51,12 @@ public class TestCompoundCriteriaImpl extends TestCase {
     }
 
     public void testGetOperator() throws Exception {
-        assertEquals(Operator.AND, example(com.metamatrix.query.sql.lang.CompoundCriteria.AND).getOperator());
-        assertEquals(Operator.OR, example(com.metamatrix.query.sql.lang.CompoundCriteria.OR).getOperator());
+        assertEquals(Operator.AND, example(org.teiid.query.sql.lang.CompoundCriteria.AND).getOperator());
+        assertEquals(Operator.OR, example(org.teiid.query.sql.lang.CompoundCriteria.OR).getOperator());
     }
 
     public void testGetCriteria() throws Exception {
-        AndOr cc = example(com.metamatrix.query.sql.lang.CompoundCriteria.AND);
+        AndOr cc = example(org.teiid.query.sql.lang.CompoundCriteria.AND);
         assertTrue(cc.getLeftCondition() instanceof Comparison);
         assertTrue(cc.getRightCondition() instanceof Comparison);
     }

@@ -25,11 +25,11 @@ package org.teiid.dqp.internal.datamgr.language;
 import junit.framework.TestCase;
 
 import org.teiid.connector.language.Call;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.StoredProcedure;
 
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.StoredProcedure;
 
 public class TestProcedureImpl extends TestCase {
 

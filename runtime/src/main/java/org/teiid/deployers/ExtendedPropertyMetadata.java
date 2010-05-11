@@ -23,7 +23,8 @@ package org.teiid.deployers;
 
 import java.util.ArrayList;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
+import org.teiid.core.TeiidRuntimeException;
+
 
 /**
  * This is used with ra.xml properties file to extend the metadata on the properties.
@@ -55,7 +56,7 @@ public class ExtendedPropertyMetadata {
 		}
 		
 		if (!encodedData.endsWith("}")) { //$NON-NLS-1$
-			throw new MetaMatrixRuntimeException("The description field = "+encodedData+" does not end with \"}\""); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TeiidRuntimeException("The description field = "+encodedData+" does not end with \"}\""); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		encodedData = encodedData.substring(1, encodedData.length()-1);
 		

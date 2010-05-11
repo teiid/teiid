@@ -25,18 +25,18 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.oracle.OracleCapabilities;
 import org.teiid.translator.jdbc.sqlserver.SQLServerCapabilities;
 
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.TestOptimizer;
-import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 
 public class TestTPCR extends BaseQueryTest {

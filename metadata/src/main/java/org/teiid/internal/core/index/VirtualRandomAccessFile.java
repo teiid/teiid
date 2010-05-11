@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.jboss.virtual.VirtualFile;
+import org.teiid.core.util.ObjectConverterUtil;
 
-import com.metamatrix.core.util.ObjectConverterUtil;
 
 public class VirtualRandomAccessFile {
 	File indexFile;

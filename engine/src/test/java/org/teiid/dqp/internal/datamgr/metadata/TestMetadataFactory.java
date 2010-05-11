@@ -26,13 +26,14 @@ package org.teiid.dqp.internal.datamgr.metadata;
 
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.unittest.FakeMetadataFacade;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.unittest.FakeMetadataStore;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
-import com.metamatrix.query.unittest.FakeMetadataStore;
 
 public class TestMetadataFactory  extends TestCase {
     private RuntimeMetadataImpl metadataFactory;

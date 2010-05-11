@@ -23,7 +23,8 @@ package org.teiid.jboss;
 
 import java.util.ResourceBundle;
 
-import com.metamatrix.core.BundleUtil;
+import org.teiid.core.BundleUtil;
+
 
 public class IntegrationPlugin {
     private static final String PLUGIN_ID = "org.teiid.jboss" ; //$NON-NLS-1$

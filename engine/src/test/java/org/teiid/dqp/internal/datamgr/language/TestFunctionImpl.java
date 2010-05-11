@@ -28,8 +28,8 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Function;
+import org.teiid.query.sql.symbol.Constant;
 
-import com.metamatrix.query.sql.symbol.Constant;
 
 public class TestFunctionImpl extends TestCase {
 
@@ -41,10 +41,10 @@ public class TestFunctionImpl extends TestCase {
         super(name);
     }
 
-    public static com.metamatrix.query.sql.symbol.Function helpExample(String name) {
+    public static org.teiid.query.sql.symbol.Function helpExample(String name) {
         Constant c1 = new Constant(new Integer(100));
         Constant c2 = new Constant(new Integer(200));
-        com.metamatrix.query.sql.symbol.Function f = new com.metamatrix.query.sql.symbol.Function(name, new com.metamatrix.query.sql.symbol.Expression[] {c1, c2});
+        org.teiid.query.sql.symbol.Function f = new org.teiid.query.sql.symbol.Function(name, new org.teiid.query.sql.symbol.Expression[] {c1, c2});
         f.setType(Integer.class);
         return f;
     }

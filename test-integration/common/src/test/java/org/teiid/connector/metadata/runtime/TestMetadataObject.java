@@ -31,9 +31,9 @@ import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.DerivedColumn;
 import org.teiid.connector.language.NamedTable;
 import org.teiid.connector.language.Select;
+import org.teiid.core.util.UnitTestUtil;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jdom.JDOMException;
+import org.teiid.core.util.StringUtil;
 import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
 import org.teiid.test.client.QueryScenario;
@@ -53,7 +54,6 @@ import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
-import com.metamatrix.core.util.StringUtil;
 
 
 

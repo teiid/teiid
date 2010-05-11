@@ -33,7 +33,11 @@ import java.util.concurrent.ExecutionException;
 import javax.crypto.SealedObject;
 
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.crypto.CryptoException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.Message;
@@ -41,10 +45,6 @@ import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
-import com.metamatrix.api.exception.ExceptionHolder;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ServerWorkItem implements Runnable {
 	
@@ -121,7 +121,7 @@ public class ServerWorkItem implements Runnable {
 			try {
 				result.setContents(socketClientInstance.getCryptor().sealObject(result.getContents()));
 			} catch (CryptoException e) {
-				throw new MetaMatrixRuntimeException(e);
+				throw new TeiidRuntimeException(e);
 			}
 		}
 		socketClientInstance.send(result, messageKey);
@@ -134,7 +134,7 @@ public class ServerWorkItem implements Runnable {
 		// Case 5558: Differentiate between system level errors and
 		// processing errors. Only log system level errors as errors,
 		// log the processing errors as warnings only
-		if (e instanceof MetaMatrixProcessingException) {
+		if (e instanceof TeiidProcessingException) {
         	logProcessingException(e, context);
 		} else if (e instanceof AdminProcessingException) {
 			logProcessingException(e, context);

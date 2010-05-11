@@ -24,12 +24,12 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.SubqueryIn;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SubquerySetCriteria;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 /**
  */

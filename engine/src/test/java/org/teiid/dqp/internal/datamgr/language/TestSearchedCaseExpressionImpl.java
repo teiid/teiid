@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.language.SearchedCase;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.TestCaseExpression;
 
 
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
-import com.metamatrix.query.sql.symbol.TestCaseExpression;
 
 import junit.framework.TestCase;
 

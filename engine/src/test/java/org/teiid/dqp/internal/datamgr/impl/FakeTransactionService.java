@@ -25,10 +25,10 @@ package org.teiid.dqp.internal.datamgr.impl;
 import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 
+import org.teiid.common.queue.FakeWorkManager;
+import org.teiid.core.util.SimpleMock;
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
-import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.core.util.SimpleMock;
 
 public class FakeTransactionService extends TransactionServerImpl {
 

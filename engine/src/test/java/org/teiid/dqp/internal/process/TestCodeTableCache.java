@@ -25,15 +25,15 @@ package org.teiid.dqp.internal.process;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CodeTableCache;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheState;
+import org.teiid.query.util.CommandContext;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.query.util.CommandContext;
 
 /**
  */
@@ -70,7 +70,7 @@ public class TestCodeTableCache extends TestCase {
 		
 		try {
 			ctc.loadTable(nodeId, results);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
 		}
 		ctc.markCacheDone(nodeId, setDone);
@@ -91,7 +91,7 @@ public class TestCodeTableCache extends TestCase {
 		
 		try {
 			ctc.loadTable(nodeId, results);
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
 		}
 		ctc.markCacheDone(nodeId, true);
@@ -179,7 +179,7 @@ public class TestCodeTableCache extends TestCase {
         try {
             ctc.lookupValue("countrycode", "code", "country", "US", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             fail("Expected exception during lookup"); //$NON-NLS-1$
-        } catch(MetaMatrixComponentException e) {
+        } catch(TeiidComponentException e) {
             // expected this
         }
     }
@@ -205,7 +205,7 @@ public class TestCodeTableCache extends TestCase {
 		try {
 			ctc.loadTable(nodeId, results);
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			assertEquals("Duplicate code table 'table' key 'value' value '1'", e.getMessage()); //$NON-NLS-1$
 		}
     }
@@ -223,7 +223,7 @@ public class TestCodeTableCache extends TestCase {
 		try {
 			ctc.loadTable(nodeId, results);
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTableRecords.", e.getMessage()); //$NON-NLS-1$
 		}
     }
@@ -241,7 +241,7 @@ public class TestCodeTableCache extends TestCase {
 		try {
 			ctc.loadTable(nodeId, results);
 			fail("expected exception"); //$NON-NLS-1$
-		} catch (MetaMatrixProcessingException e) {
+		} catch (TeiidProcessingException e) {
 			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTables.", e.getMessage()); //$NON-NLS-1$
 		}
     }

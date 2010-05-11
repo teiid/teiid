@@ -29,13 +29,13 @@ package org.teiid.dqp.internal.datamgr.impl;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
+import org.teiid.dqp.message.AtomicRequestID;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.RequestID;
 import org.teiid.resource.cci.ExecutionFactory;
 
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.dqp.message.AtomicRequestID;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.RequestID;
 
 /**
  * JUnit test for TestConnectorStateManager

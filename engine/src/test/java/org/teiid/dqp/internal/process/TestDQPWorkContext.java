@@ -22,9 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import org.teiid.core.util.UnitTestUtil;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestDQPWorkContext extends TestCase {
 

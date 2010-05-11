@@ -34,9 +34,9 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.common.queue.FakeWorkManager;
+import org.teiid.dqp.service.TransactionContext;
 
-import com.metamatrix.common.queue.FakeWorkManager;
-import com.metamatrix.dqp.service.TransactionContext;
 public class TestTransactionServer {
 
     private TransactionServerImpl server;

@@ -22,9 +22,9 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
 

@@ -29,16 +29,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.processor.FakeDataManager;
-import com.metamatrix.query.processor.HardcodedDataManager;
-import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.sql.lang.Update;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 /**
  * JUnit TestCase to test planning and caching of <code>PreparedStatement</code>

@@ -38,20 +38,20 @@ import org.teiid.connector.language.Call;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.message.AtomicRequestMessage;
+import org.teiid.dqp.message.AtomicResultsMessage;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ProcedureExecution;
 
-import com.metamatrix.dqp.message.AtomicRequestMessage;
-import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.dqp.service.TransactionContext;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestConnectorWorkItem {
 

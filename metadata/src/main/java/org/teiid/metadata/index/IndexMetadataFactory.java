@@ -42,6 +42,7 @@ import org.jboss.virtual.plugins.context.zip.ZipEntryContext;
 import org.jboss.virtual.spi.VirtualFileHandler;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.ColumnSet;
@@ -53,19 +54,18 @@ import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.id.UUID;
 import org.teiid.core.index.IEntryResult;
+import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.VdbConstants;
 import org.teiid.metadata.TransformationMetadata.Resource;
 
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.id.UUID;
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.core.vdb.VdbConstants;
 
 /**
  * Loads MetadataRecords from index files.  
@@ -73,6 +73,9 @@ import com.metamatrix.core.vdb.VdbConstants;
 public class IndexMetadataFactory {
 	
 	private Index[] indexes;
+	private RecordFactory recordFactory = new RecordFactory();
+	private Map<String, String> annotationCache = new HashMap<String, String>();
+	private Map<String, LinkedHashMap<String, String>> extensionCache = new HashMap<String, LinkedHashMap<String,String>>();
     private Map<String, Datatype> datatypeCache;
     private Map<String, KeyRecord> primaryKeyCache = new HashMap<String, KeyRecord>();
     private Map<String, Table> tableCache = new HashMap<String, Table>();
@@ -119,7 +122,13 @@ public class IndexMetadataFactory {
 	            tmp.add(index);
 			}
 			this.indexes = tmp.toArray(new Index[tmp.size()]);
+			getAnnotationCache();
+			getExtensionCache();			
 			getDatatypeCache();
+			List<KeyRecord> keys = findMetadataRecords(MetadataConstants.RECORD_TYPE.PRIMARY_KEY, null, false);
+			for (KeyRecord keyRecord : keys) {
+				this.primaryKeyCache.put(keyRecord.getUUID(), keyRecord);
+			}
 			getModels();
 			getTables();
 			getProcedures();
@@ -130,6 +139,52 @@ public class IndexMetadataFactory {
 		}
 		return store;
     }
+
+	private void getExtensionCache() {
+		IEntryResult[] properties = queryIndex(MetadataConstants.RECORD_TYPE.PROPERTY, null, false);
+
+		for (IEntryResult iEntryResult : properties) {
+        	final String str = new String(iEntryResult.getWord());
+            final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
+
+            // The tokens are the standard header values
+            int tokenIndex = 2;
+
+            String uuid = (String)tokens.get(1);
+	    	LinkedHashMap<String, String> result = this.extensionCache.get(uuid);
+	    	if (result == null) {
+	    		result = new LinkedHashMap<String, String>(); 
+	    		this.extensionCache.put(uuid, result);
+	    	}
+            result.put( (String)tokens.get(tokenIndex++), (String)tokens.get(tokenIndex++));
+		}
+	}
+
+	private void getAnnotationCache() {
+		IEntryResult[] results = queryIndex(MetadataConstants.RECORD_TYPE.ANNOTATION, null, false);
+		
+		for (IEntryResult iEntryResult : results) {
+	        final String str = new String(iEntryResult.getWord());
+	        final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
+
+	        // Extract the index version information from the record 
+	        int indexVersion = recordFactory.getIndexVersion(iEntryResult.getWord());
+
+	        
+	        String uuid = (String)tokens.get(2);
+	        
+	        // The tokens are the standard header values
+	        int tokenIndex = 6;
+
+	        if(recordFactory.includeAnnotationProperties(indexVersion)) {
+				// The next token are the properties, ignore it not going to be read any way
+	            tokenIndex++;
+	        }
+
+	        // The next token is the description
+	        this.annotationCache.put(uuid, (String)tokens.get(tokenIndex++));
+		}
+	}
 
     public void addIndexFile(VirtualFile f) {
     	this.indexFiles.add(f);
@@ -289,12 +344,11 @@ public class IndexMetadataFactory {
     }
 
 	private KeyRecord getPrimaryKey(String uuid) {
-		KeyRecord pk = this.primaryKeyCache.get(uuid);
-		if (pk == null) {
-			pk = (KeyRecord)this.getRecordByType(uuid, MetadataConstants.RECORD_TYPE.PRIMARY_KEY);
-			this.primaryKeyCache.put(uuid, pk);
-		}
-		return pk;
+		KeyRecord key = this.primaryKeyCache.get(uuid);
+		if (key == null) {
+            throw new TeiidRuntimeException(uuid+" PrimaryKey "+TransformationMetadata.NOT_EXISTS_MESSAGE); //$NON-NLS-1$
+    	}
+		return key;
 	}
 	
     public Map<String, Datatype> getDatatypeCache() {
@@ -331,11 +385,11 @@ public class IndexMetadataFactory {
         if(resultSize == 0) {
         	if (mustExist) {
 			// there should be only one for the UUID
-	            throw new MetaMatrixRuntimeException(entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	            throw new TeiidRuntimeException(entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
         	} 
         	return null;
 		} 
-        throw new MetaMatrixRuntimeException(RuntimeMetadataPlugin.Util.getString("TransformationMetadata.0", entityName)); //$NON-NLS-1$
+        throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("TransformationMetadata.0", entityName)); //$NON-NLS-1$
     }
     
     public void getProcedures() {
@@ -416,20 +470,13 @@ public class IndexMetadataFactory {
 
 	private List<AbstractMetadataRecord> loadRecords(
 			IEntryResult[] results) {
-		List<AbstractMetadataRecord> records = RecordFactory.getMetadataRecord(results);
+		List<AbstractMetadataRecord> records = recordFactory.getMetadataRecord(results);
 		
 		for (AbstractMetadataRecord metadataRecord : records) {
 			String uuid = metadataRecord.getUUID();
 			
-			String prefixString  = getUUIDMatchPattern(MetadataConstants.RECORD_TYPE.ANNOTATION, uuid, false);
-			IEntryResult[] annotations = queryIndex(MetadataConstants.RECORD_TYPE.ANNOTATION, prefixString.toCharArray(), false, true, true);
-			if (annotations.length > 0) {
-				metadataRecord.setAnnotation(RecordFactory.createAnnotationRecord(annotations[0].getWord()));
-			}
-			
-			prefixString = String.valueOf(MetadataConstants.RECORD_TYPE.PROPERTY) + IndexConstants.RECORD_STRING.RECORD_DELIMITER + uuid.trim() + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-			IEntryResult[] properties = queryIndex(MetadataConstants.RECORD_TYPE.PROPERTY, prefixString.toCharArray(), true, true, true);
-			metadataRecord.setProperties(RecordFactory.createPropertyRecord(properties));
+			metadataRecord.setAnnotation(this.annotationCache.get(uuid));
+			metadataRecord.setProperties(this.extensionCache.get(uuid));
 		}
 		return records;
 	}
@@ -582,8 +629,8 @@ public class IndexMetadataFactory {
 
     	try {
             return SimpleIndexUtil.queryIndex(search, pattern, isPrefix, isCaseSensitive, returnFirstMatch);
-        } catch (MetaMatrixCoreException e) {
-            throw new MetaMatrixRuntimeException(e);
+        } catch (TeiidException e) {
+            throw new TeiidRuntimeException(e);
         }
     }    
 }

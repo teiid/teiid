@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.AllCapabilities;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.query.optimizer.capabilities.AllCapabilities;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 
 
 /** 

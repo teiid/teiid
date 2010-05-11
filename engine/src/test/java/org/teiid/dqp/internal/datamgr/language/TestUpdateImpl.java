@@ -27,10 +27,10 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.teiid.connector.language.Update;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.GroupSymbol;
 
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 public class TestUpdateImpl extends TestCase {
 
@@ -42,9 +42,9 @@ public class TestUpdateImpl extends TestCase {
         super(name);
     }
     
-    public static com.metamatrix.query.sql.lang.Update helpExample() {
+    public static org.teiid.query.sql.lang.Update helpExample() {
         GroupSymbol group = TestGroupImpl.helpExample("vm1.g1"); //$NON-NLS-1$
-        com.metamatrix.query.sql.lang.Update result = new com.metamatrix.query.sql.lang.Update();
+        org.teiid.query.sql.lang.Update result = new org.teiid.query.sql.lang.Update();
         result.setGroup(group);
         result.addChange(TestElementImpl.helpExample("vm1.g1", "e1"), new Constant(new Integer(1)));
         result.addChange(TestElementImpl.helpExample("vm1.g1", "e2"), new Constant(new Integer(1)));

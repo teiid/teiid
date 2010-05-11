@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 
 import org.teiid.connector.language.Literal;
+import org.teiid.query.sql.symbol.Constant;
 
-import com.metamatrix.query.sql.symbol.Constant;
 
 import junit.framework.TestCase;
 

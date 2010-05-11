@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.StringUtil;
 import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryReader;
 import org.teiid.test.framework.ConfigPropertyLoader;
@@ -40,8 +42,6 @@ import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.StringUtil;
 
 public class XMLQueryReader implements QueryReader {
  

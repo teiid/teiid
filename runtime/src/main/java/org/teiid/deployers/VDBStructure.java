@@ -28,8 +28,8 @@ import org.jboss.deployers.vfs.plugins.structure.AbstractVFSStructureDeployer;
 import org.jboss.deployers.vfs.spi.structure.StructureContext;
 import org.jboss.virtual.VirtualFile;
 import org.jboss.virtual.plugins.context.jar.JarUtils;
+import org.teiid.metadata.VdbConstants;
 
-import com.metamatrix.core.vdb.VdbConstants;
 
 
 public class VDBStructure  extends AbstractVFSStructureDeployer{

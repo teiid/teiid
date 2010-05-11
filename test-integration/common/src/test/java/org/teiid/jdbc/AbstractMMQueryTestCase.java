@@ -31,9 +31,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Stack;
 
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 
-import com.metamatrix.core.util.UnitTestUtil;
 
 
 /** 

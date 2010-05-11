@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.test.framework.TestLogger;
@@ -19,7 +20,6 @@ import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.common.util.PropertiesUtils;
 
 public class DataSourceConnection extends ConnectionStrategy {
 

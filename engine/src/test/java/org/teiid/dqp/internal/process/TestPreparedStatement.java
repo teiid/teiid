@@ -31,31 +31,31 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.unittest.FakeMetadataFacade;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.dqp.service.AutoGenDataService;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.TestOptimizer;
-import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.processor.FakeDataManager;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.TestProcessor;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
-import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestPreparedStatement {
 	
@@ -207,13 +207,13 @@ public class TestPreparedStatement {
     }
     
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, SessionAwareCache<PreparedPlan> prepPlanCache)
-			throws MetaMatrixComponentException, MetaMatrixProcessingException {    	
+			throws TeiidComponentException, TeiidProcessingException {    	
 		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, FakeMetadataFactory.example1VDB());
     }
 	
 	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			SessionAwareCache<PreparedPlan> prepPlanCache, int conn)
-			throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			throws TeiidComponentException, TeiidProcessingException {
 		return helpGetProcessorPlan(preparedSql, values,
 				new DefaultCapabilitiesFinder(), FakeMetadataFactory
 						.example1Cached(), prepPlanCache, conn, false, false, FakeMetadataFactory.example1VDB());
@@ -221,7 +221,7 @@ public class TestPreparedStatement {
 
 	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults, VDBMetaData vdb)
-			throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			throws TeiidComponentException, TeiidProcessingException {
         
         //Create Request
         RequestMessage request = new RequestMessage(preparedSql);

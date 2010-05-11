@@ -38,6 +38,11 @@ import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.TeiidURL;
@@ -47,11 +52,6 @@ import org.teiid.net.socket.SocketUtil;
 import org.teiid.net.socket.UrlServerDiscovery;
 import org.teiid.transport.TestSocketRemoting.FakeService;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.dqp.service.SessionService;
 
 @SuppressWarnings("nls")
 public class TestCommSockets {

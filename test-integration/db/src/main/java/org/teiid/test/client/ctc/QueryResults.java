@@ -32,12 +32,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+
 
 
 /**

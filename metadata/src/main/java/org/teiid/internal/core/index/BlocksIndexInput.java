@@ -20,8 +20,8 @@ import org.jboss.virtual.VirtualFile;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IQueryResult;
+import org.teiid.core.util.LRUCache;
 
-import com.metamatrix.core.util.LRUCache;
 
 /**
  * This input is used for reading indexes saved using a BlocksIndexOutput.

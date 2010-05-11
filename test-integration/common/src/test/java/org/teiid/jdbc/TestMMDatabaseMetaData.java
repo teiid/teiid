@@ -46,11 +46,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.CoreConstants;
+import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.util.ResultSetUtil;
 
-import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

@@ -24,11 +24,11 @@ package org.teiid.transport;
 
 import java.util.HashMap;
 
+import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.SecurityHelper;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.core.util.ReflectionHelper;
 
 public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 

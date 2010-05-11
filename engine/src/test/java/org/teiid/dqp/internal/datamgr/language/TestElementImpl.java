@@ -26,9 +26,9 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.language.ColumnReference;
 import org.teiid.connector.language.NamedTable;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.unittest.FakeMetadataObject;
 
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestElementImpl extends TestCase {
 
