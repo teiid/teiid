@@ -26,9 +26,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.JDBCSQLTypeInfo;
-import com.metamatrix.common.util.TimestampWithTimezone;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.TimestampWithTimezone;
+
 
 /**
  */

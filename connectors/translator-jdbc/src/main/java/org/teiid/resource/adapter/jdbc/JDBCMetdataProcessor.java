@@ -42,12 +42,12 @@ import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
+import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.TypeFacility;
 import org.teiid.translator.jdbc.JDBCPlugin;
 
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.

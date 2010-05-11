@@ -21,13 +21,13 @@
  */
 package org.teiid.resource.cci;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
+import org.teiid.core.TeiidRuntimeException;
 
 /**
  * Used by asynch connectors to indicate data is not available 
  * and results should be polled for after the given delay.
  */
-public class DataNotAvailableException extends MetaMatrixRuntimeException {
+public class DataNotAvailableException extends TeiidRuntimeException {
 
 	private static final long serialVersionUID = 5569111182915674334L;
 

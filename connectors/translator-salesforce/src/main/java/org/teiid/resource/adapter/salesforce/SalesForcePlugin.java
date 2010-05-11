@@ -23,7 +23,8 @@ package org.teiid.resource.adapter.salesforce;
 
 import java.util.ResourceBundle;
 
-import com.metamatrix.core.BundleUtil;
+import org.teiid.core.BundleUtil;
+
 
 /**
  * For logging purposes

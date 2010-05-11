@@ -72,9 +72,9 @@ import org.teiid.connector.language.SQLReservedWords.Tokens;
 import org.teiid.connector.language.SortSpecification.Ordering;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.visitor.framework.AbstractLanguageVisitor;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * Creates a SQL string for a LanguageObject subtree. Instances of this class

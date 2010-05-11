@@ -31,6 +31,9 @@ import junit.framework.Assert;
 
 import org.mockito.Mockito;
 import org.teiid.connector.language.Command;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
@@ -38,9 +41,6 @@ import org.teiid.translator.jdbc.Translator;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.query.function.metadata.FunctionMetadataReader;
-import com.metamatrix.query.function.metadata.FunctionMethod;
 
 public class TranslationHelper {
 	
@@ -66,7 +66,7 @@ public class TranslationHelper {
 				Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
 				util.setUDF(methods);
 			} catch (IOException e) {
-				throw new MetaMatrixRuntimeException("failed to load UDF"); //$NON-NLS-1$
+				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 			}
     	}
         return util.parseCommand(sql);        

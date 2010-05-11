@@ -36,10 +36,10 @@ import javax.resource.spi.ResourceAdapterAssociation;
 import javax.resource.spi.ValidatingManagedConnectionFactory;
 import javax.security.auth.Subject;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.resource.ConnectorException;
 
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
 
 public abstract class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ValidatingManagedConnectionFactory {
 
@@ -95,7 +95,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	    		return expectedType.cast(defaultClass.newInstance());
 	    	}
 	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
-		} catch (MetaMatrixCoreException e) {
+		} catch (TeiidException e) {
 			throw new ConnectorException(e);
 		} catch (IllegalAccessException e) {
 			throw new ConnectorException(e);

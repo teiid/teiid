@@ -52,6 +52,7 @@ import org.teiid.connector.language.Limit;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.SetQuery;
 import org.teiid.connector.language.Argument.Direction;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.ConnectorException;
@@ -62,7 +63,6 @@ import org.teiid.resource.cci.ExecutionContext;
 import org.teiid.resource.cci.SourceSystemFunctions;
 import org.teiid.resource.cci.TypeFacility;
 
-import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * Base class for creating source SQL queries and retrieving results.

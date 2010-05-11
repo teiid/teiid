@@ -26,10 +26,10 @@ import java.io.File;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.util.FileUtils;
 import org.teiid.resource.adapter.FileConnection;
 import org.teiid.resource.spi.BasicConnection;
 
-import com.metamatrix.core.util.FileUtils;
 
 /**
  * TODO: consider using VFS 

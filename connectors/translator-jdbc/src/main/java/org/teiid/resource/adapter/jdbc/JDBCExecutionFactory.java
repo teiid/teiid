@@ -32,6 +32,10 @@ import org.teiid.connector.language.Command;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.StringUtil;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.BasicExecutionFactory;
 import org.teiid.resource.cci.ConnectorCapabilities;
@@ -43,10 +47,6 @@ import org.teiid.resource.cci.TranslatorProperty;
 import org.teiid.resource.cci.UpdateExecution;
 import org.teiid.translator.jdbc.Translator;
 
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * JDBC implementation of Connector interface.
@@ -78,7 +78,7 @@ public class JDBCExecutionFactory extends BasicExecutionFactory implements Metad
 	        		this.sqlTranslator = (Translator)ReflectionHelper.create(className, null, Thread.currentThread().getContextClassLoader());
 	        	}
 	            sqlTranslator.initialize(this);
-	        } catch (MetaMatrixCoreException e) {
+	        } catch (TeiidException e) {
 	            throw new ConnectorException(e);
 			}
 		}

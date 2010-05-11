@@ -26,10 +26,10 @@ import java.net.URL;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private static final long serialVersionUID = 5298591275313314698L;
@@ -47,7 +47,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	}
 	public void setUsername(String username) {
 		if (username.trim().length() == 0) {
-			throw new MetaMatrixRuntimeException("Name can not be null");
+			throw new TeiidRuntimeException("Name can not be null");
 		}
 		this.username = username;
 	}
@@ -71,7 +71,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		try {
 			this.URL = new URL(uRL);
 		} catch (MalformedURLException e) {
-			throw new MetaMatrixRuntimeException("URL Supplied is not valid URL"+ e.getMessage());
+			throw new TeiidRuntimeException("URL Supplied is not valid URL"+ e.getMessage());
 		}
 	}
 	

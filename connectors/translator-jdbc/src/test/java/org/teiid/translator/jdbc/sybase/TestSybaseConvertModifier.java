@@ -34,13 +34,13 @@ import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.LanguageFactory;
 import org.teiid.connector.language.Literal;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */

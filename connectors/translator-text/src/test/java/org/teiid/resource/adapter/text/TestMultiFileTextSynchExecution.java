@@ -29,10 +29,10 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.resource.ConnectorException;
 
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestMultiFileTextSynchExecution extends TestCase {
 	private static final String BAD_COUNT_FILE = "MultiParts/columCntMissMatchOption/testMultiDescriptorDelimited.txt"; //$NON-NLS-1$

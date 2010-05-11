@@ -26,15 +26,15 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.cdk.CommandBuilder;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.Literal;
 import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */

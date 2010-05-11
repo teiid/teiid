@@ -29,10 +29,10 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.DataPlugin;
+import org.teiid.core.id.UUIDFactory;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.TypeFacility;
 
-import com.metamatrix.core.id.UUIDFactory;
 
 /**
  * Allows connectors to build metadata for use by the engine.

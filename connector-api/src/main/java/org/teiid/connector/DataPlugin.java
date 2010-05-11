@@ -23,7 +23,8 @@
 package org.teiid.connector;
 
 import java.util.ResourceBundle;
-import com.metamatrix.core.BundleUtil;
+
+import org.teiid.core.BundleUtil;
 
 public class DataPlugin { // extends Plugin {
 

@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.connector.language.Command;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.TranslationHelper;
@@ -37,7 +38,6 @@ import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */

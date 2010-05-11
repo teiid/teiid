@@ -25,10 +25,11 @@ package org.teiid.resource.adapter.text;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.query.unittest.TimestampUtil;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  * TODO: test cancel

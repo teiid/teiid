@@ -25,7 +25,8 @@ package org.teiid.resource.adapter.jdbc;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.metamatrix.core.util.SimpleMock;
+import org.teiid.core.util.SimpleMock;
+
 
 /**
  * FakeConnection for unit testing

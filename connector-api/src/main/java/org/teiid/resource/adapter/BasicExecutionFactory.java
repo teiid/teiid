@@ -12,6 +12,9 @@ import org.teiid.connector.language.Command;
 import org.teiid.connector.language.LanguageFactory;
 import org.teiid.connector.language.QueryExpression;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.StringUtil;
 import org.teiid.resource.ConnectorException;
 import org.teiid.resource.cci.ConnectorCapabilities;
 import org.teiid.resource.cci.Execution;
@@ -23,9 +26,6 @@ import org.teiid.resource.cci.TypeFacility;
 import org.teiid.resource.cci.UpdateExecution;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.core.util.StringUtil;
 
 public class BasicExecutionFactory implements ExecutionFactory {
 
@@ -122,7 +122,7 @@ public class BasicExecutionFactory implements ExecutionFactory {
 	    		return expectedType.cast(defaultClass.newInstance());
 	    	}
 	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
-		} catch (MetaMatrixCoreException e) {
+		} catch (TeiidException e) {
 			throw new ConnectorException(e);
 		} catch (IllegalAccessException e) {
 			throw new ConnectorException(e);

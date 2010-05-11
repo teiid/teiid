@@ -32,12 +32,12 @@ import junit.framework.TestCase;
 import org.teiid.connector.language.Expression;
 import org.teiid.connector.language.Function;
 import org.teiid.connector.language.LanguageFactory;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.cci.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 
-import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */

@@ -36,17 +36,17 @@ import org.teiid.connector.metadata.runtime.Column;
 import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.Schema;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.resource.adapter.FileConnection;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class Util {

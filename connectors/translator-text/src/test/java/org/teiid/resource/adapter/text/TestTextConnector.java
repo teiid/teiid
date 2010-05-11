@@ -32,9 +32,9 @@ import org.junit.Test;
 import org.teiid.connector.metadata.runtime.Datatype;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.resource.cci.MetadataProvider;
 
-import com.metamatrix.common.types.DataTypeManager;
 
 /**
  */
