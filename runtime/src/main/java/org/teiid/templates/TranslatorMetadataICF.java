@@ -38,11 +38,13 @@ import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.adminapi.impl.TranslatorMetaData;
 
+/**
+ * This class is defined as bean in the deployer's -jboss-beans.xml file. This used to construct the 
+ * TranslatorMetadata object with "translator-property"
+ */
 public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<TranslatorMetaData> {
 
-	public TranslatorMetadataICF() {
-		super();
-	}
+	private static final String TRANSLATOR_PROPERTY = "translator-property"; //$NON-NLS-1$
 
 	public TranslatorMetadataICF(ManagedObjectFactory mof) {
 		super(mof);
@@ -65,7 +67,7 @@ public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<Translat
 			return null;
 
 		MetaValue value = null;
-		if ("translator-property".equals(property.getName())) { //$NON-NLS-1$
+		if (TRANSLATOR_PROPERTY.equals(property.getName())) { 
 			MapCompositeValueSupport mapValue = new MapCompositeValueSupport(SimpleMetaType.STRING);
 			List<PropertyMetadata> list = attachment.getJAXBProperties();
 			if (list != null) {
@@ -73,8 +75,6 @@ public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<Translat
 					String name = prop.getName();
 					MetaValue svalue = SimpleValueSupport.wrap(prop.getValue());
 					mapValue.put(name, svalue);
-//					MetaValue stype = SimpleValueSupport.wrap(prop.getType());
-//					mapValue.put(name + ".type", stype);
 				}
 			}
 			value = mapValue;
@@ -87,7 +87,7 @@ public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<Translat
 	@Override
 	protected Object unwrapValue(BeanInfo beanInfo, ManagedProperty property, MetaValue value) {
 		Object unwrapValue = null;
-		if ("translator-property".equals(property.getName())) { //$NON-NLS-1$
+		if (TRANSLATOR_PROPERTY.equals(property.getName())) { 
 			
 			if ((value instanceof MapCompositeValueSupport) == false) {
 				return super.unwrapValue(beanInfo, property, value);
@@ -97,22 +97,7 @@ public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<Translat
 
 			List<PropertyMetadata> list = new ArrayList<PropertyMetadata>();
 			for (String name : mapValue.getMetaType().keySet()) {
-//				// Ignore the type we've added before
-//				if (name.endsWith(".type"))
-//					continue;
-
-				PropertyMetadata prop = new PropertyMetadata();
-				prop.setName(name);
-				String svalue = (String) getMetaValueFactory().unwrap(mapValue.get(name));
-				prop.setValue(svalue);
-				
-//				String nameType = name + ".type";
-//				MetaValue typeValue = mapValue.get(nameType);
-//				if (typeValue != null) {
-//					String type = (String) getMetaValueFactory().unwrap(typeValue);
-//					prop.setType(type);
-//				}
-				list.add(prop);
+				list.add(new PropertyMetadata(name, (String) getMetaValueFactory().unwrap(mapValue.get(name))));
 			}
 			unwrapValue = list;
 		} else {

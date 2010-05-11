@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -89,10 +88,70 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		assertNull(admin.getVDB("TransactionsRevisited", 1)); //$NON-NLS-1$
 	}
+
+	@Test public void testGetVDB() throws Exception {
+		VDB vdb = admin.getVDB("TransactionsRevisited", 1);
+		assertNotNull(vdb); //$NON-NLS-1$
+		
+		assertEquals("TransactionsRevisited", vdb.getName());
+		assertEquals(1, vdb.getVersion());
+		assertEquals("A VDB to test transactions", vdb.getDescription());
+		//assertEquals("sample-value", vdb.getPropertyValue("sample"));
+		assertEquals(VDB.Status.INACTIVE, vdb.getStatus());
+
+		// test model
+		List<Model> models = vdb.getModels();
+		assertEquals(4, models.size());
+		Model model = null;
+		for (Model m:models) {
+			if (m.getName().equals("pm1")) {
+				model = m;
+				break;
+			}
+		}
+		assertNotNull(model);
+		assertEquals(Model.Type.PHYSICAL, model.getModelType());
+		assertEquals("sample-value", model.getPropertyValue("sample"));
+		List<String> sourceNames = model.getSourceNames();
+		assertEquals(1, sourceNames.size());
+		assertEquals("mysql", model.getSourceTranslatorName(sourceNames.get(0)));
+		assertEquals("java:mysql-connector-binding", model.getSourceConnectionJndiName(sourceNames.get(0)));
+		assertTrue(model.isSource());
+		//assertTrue(model.isSupportsMultiSourceBindings());
+		assertTrue(model.isVisible());
+		
+		// test data policies
+		List<DataPolicy> policies = vdb.getDataPolicies();
+		assertEquals(1, policies.size());
+		assertEquals("policy1", policies.get(0).getName());
+		assertEquals("roleOne described", policies.get(0).getDescription());
+		
+		List<DataPolicy.DataPermission> permissions = policies.get(0).getPermissions();
+		assertEquals(2, permissions.size());
+		
+		for(DataPolicy.DataPermission permission: permissions) {
+			if (permission.getResourceName().equals("myTable.T1")) {
+				assertTrue(permission.isAllowRead());
+				assertFalse(permission.isAllowCreate());
+				assertFalse(permission.isAllowDelete());
+				assertFalse(permission.isAllowUpdate());				
+			}
+			else if (permission.getResourceName().equals("myTable.T2")) {
+				assertFalse(permission.isAllowRead());
+				assertFalse(permission.isAllowCreate());
+				assertTrue(permission.isAllowDelete());
+				assertFalse(permission.isAllowUpdate());
+			}
+			else {
+				fail("there are only two types of permissions");
+			}
+		}
+		
+	}
 	
 	
 	@Test public void testSessions() throws Exception{
-		Connection c = ds.getConnection("TransactionsRevisited");
+		Connection c = ds.getConnection("TransactionsRevisited"); // to create the session
 		Collection<Session> sessions = admin.getSessions();
 		
 		int size = sessions.size();
@@ -112,6 +171,7 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		sessions = admin.getSessions();
 		assertTrue(sessions.size() == (size-1));
+		c.close();
 	}
 	
 	
@@ -158,7 +218,7 @@ public class TestConnectorBindings extends BaseConnection {
 	@Test
 	public void testCache() throws Exception {
 		Collection<String> caches = admin.getCacheTypes();
-		assertEquals(4, caches.size());
+		assertEquals(3, caches.size());
 		
 		admin.clearCache("CODE_TABLE_CACHE"); //$NON-NLS-1$
 	}
@@ -225,6 +285,9 @@ public class TestConnectorBindings extends BaseConnection {
 	@Test
 	public void testGetTemplate() throws Exception {
 		Translator translator = admin.getTranslator("oracle");
+		for (String key:translator.getProperties().stringPropertyNames()) {
+			System.out.println(key+"="+translator.getPropertyValue(key));
+		}
 		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", translator.getPropertyValue("ExtensionTranslationClassName")); //$NON-NLS-1$
 		assertEquals(true, translator.isXaCapable());
 	}
@@ -317,7 +380,7 @@ public class TestConnectorBindings extends BaseConnection {
 		try {
 			admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
 			fail("must have failed because no exeuction factory set");
-		}catch(Throwable e) {
+		}catch(AdminException e) {
 			
 		}
 		
@@ -332,12 +395,7 @@ public class TestConnectorBindings extends BaseConnection {
 		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
 		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
 		
-		try {
-			admin.setTranslatorProperty("foo", "any-thing", "every-thing");
-			fail("can not set arbitary properties on translator");
-		}catch(Throwable e) {
-			
-		}
+		admin.setTranslatorProperty("foo", "any-thing", "every-thing");
 		
 		admin.deleteTranslator("foo");
 		

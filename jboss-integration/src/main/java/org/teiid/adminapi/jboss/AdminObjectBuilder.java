@@ -28,12 +28,19 @@ import java.util.Map;
 import org.jboss.managed.api.ManagedCommon;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
+import org.jboss.managed.api.factory.ManagedObjectFactory;
+import org.jboss.managed.plugins.factory.AbstractManagedObjectFactory;
+import org.jboss.managed.plugins.factory.ManagedObjectFactoryBuilder;
+import org.jboss.metatype.api.types.CollectionMetaType;
 import org.jboss.metatype.api.types.MetaType;
+import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
+import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.jboss.IntegrationPlugin;
+import org.teiid.templates.TranslatorMetadataICF;
 
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -41,6 +48,12 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class AdminObjectBuilder {
 
+	private ManagedObjectFactory mof = ManagedObjectFactoryBuilder.create();
+	
+	public AdminObjectBuilder() {
+		this.mof.setInstanceClassFactory(TranslatorMetaData.class, new TranslatorMetadataICF(this.mof));	
+	}
+	
 	public static <T> T buildAO(ManagedCommon mc, Class<T> clazz) {
 		
 		try {
@@ -59,19 +72,48 @@ public class AdminObjectBuilder {
 					}
 					else if (type.isComposite()) {
 						if (value instanceof MapCompositeValueSupport) {
-							MapCompositeValueSupport map = (MapCompositeValueSupport)value;
+							Object myValue = MetaValueFactory.getInstance().unwrap(value);
+							PropertiesUtils.setBeanProperty(t, mp.getMappedName(), myValue);
 						}
 					}
 					else if (type.isCollection()) {
 						List list = new ArrayList();
-						List<ManagedObject> managedObjects = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(value);
-						for (ManagedObject mo:managedObjects) {
-							list.add(buildAO(mo, mo.getAttachment().getClass()));							
+
+						MetaType elementType = ((CollectionMetaType) type).getElementType();
+						if (elementType == AbstractManagedObjectFactory.MANAGED_OBJECT_META_TYPE) {
+							List<ManagedObject> managedObjects = (List<ManagedObject>) MetaValueFactory.getInstance().unwrap(value);
+							for (ManagedObject mo : managedObjects) {
+								list.add(buildAO(mo, mo.getAttachment().getClass()));
+							}
 						}
-						PropertiesUtils.setBeanProperty(t, mp.getName(), list);
+						else if (elementType == SimpleMetaType.STRING) {
+							list.addAll((List<String>) MetaValueFactory.getInstance().unwrap(value));
+						}
+						
+						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), list);
 					}
 				}
 			}
+			return clazz.cast(t);
+		} catch (InstantiationException e) {
+			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+		} catch (IllegalAccessException e) {
+			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
+		}
+	}
+	
+	public <T> T buildAdminObject(ManagedCommon mc, Class<T> clazz) {
+		try {
+			Object t = clazz.newInstance();			
+	        ManagedObject mo = mof.initManagedObject(t, "teiid", "translator"); //$NON-NLS-1$ //$NON-NLS-2$		
+			for (ManagedProperty mp : mc.getProperties().values()) {
+				ManagedProperty dsProp = mo.getProperty(mp.getName());
+				if (dsProp != null) {
+					if (mp.getValue() != null) {
+						dsProp.setValue(mp.getValue());
+					}
+				}
+			}  
 			return clazz.cast(t);
 		} catch (InstantiationException e) {
 			throw new MetaMatrixRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$

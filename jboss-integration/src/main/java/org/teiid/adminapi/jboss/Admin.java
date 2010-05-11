@@ -83,10 +83,11 @@ public class Admin extends TeiidAdmin {
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$	
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
 	private static ComponentType TRANSLATOR_TYPE = new ComponentType("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
-	
+	private static AdminObjectBuilder AOB = new AdminObjectBuilder();
 	
 	private ManagementView view;
 	private DeploymentManager deploymentMgr;
+	
 	
 	static {
 		VFS.init();
@@ -95,7 +96,7 @@ public class Admin extends TeiidAdmin {
 	public Admin(ManagementView view, DeploymentManager deployMgr) {
 		this.view = view;
 		this.view.load();
-		
+				
 		this.deploymentMgr =  deployMgr;
         try {
         	this.deploymentMgr.loadProfile(DEFAULT_PROFILE_KEY);
@@ -147,7 +148,7 @@ public class Admin extends TeiidAdmin {
 		try {
 			Set<ManagedComponent> mcSet = getView().getComponentsForType(TRANSLATOR_TYPE);
 			for (ManagedComponent mc:mcSet) {
-				factories.add(AdminObjectBuilder.buildAO(mc, TranslatorMetaData.class));
+				factories.add(AOB.buildAdminObject(mc, TranslatorMetaData.class));
 			}
 		} catch (Exception e) {
 			throw new AdminComponentException(e);
@@ -160,7 +161,7 @@ public class Admin extends TeiidAdmin {
 		try {
 			ManagedComponent mc = getView().getComponent(deployedName, TRANSLATOR_TYPE);
 			if (mc != null) {
-				return AdminObjectBuilder.buildAO(mc, TranslatorMetaData.class);
+				return AOB.buildAdminObject(mc, TranslatorMetaData.class);
 			}
 			return null;
 		} catch(Exception e) {

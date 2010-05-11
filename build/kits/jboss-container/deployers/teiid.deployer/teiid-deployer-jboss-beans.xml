@@ -80,6 +80,11 @@
         <constructor><parameter><inject bean="PersistenceFactory" /></parameter></constructor>
    </bean>   
    
+   <bean name="TranslatorMetadataICF" class="org.teiid.templates.TranslatorMetadataICF">
+      <constructor>
+         <parameter><inject bean="ManagedObjectFactory"/></parameter>
+      </constructor>
+   </bean>   
         
     <!--  used for the translators -->
    <bean name="TranslatorDeploymentTemplateInfoFactory" class="org.teiid.templates.TranslatorTemplateInfoFactory"/>
