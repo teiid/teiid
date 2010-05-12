@@ -25,10 +25,10 @@ import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.salesforce.execution.DataPayload;
 import org.teiid.resource.adapter.salesforce.execution.DeletedResult;
 import org.teiid.resource.adapter.salesforce.execution.UpdatedResult;
+import org.teiid.translator.ConnectorException;
 
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;

@@ -24,7 +24,7 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
-import org.teiid.connector.language.*;
+import org.teiid.language.*;
 
 public class AliasModifier extends FunctionModifier {
     // The alias to use

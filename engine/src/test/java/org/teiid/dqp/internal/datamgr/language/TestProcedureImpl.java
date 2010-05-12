@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Call;
+import org.teiid.language.Call;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;

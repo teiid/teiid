@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.jdbc;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.TranslatedCommand;
 

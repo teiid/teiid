@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory;
 
 
 public class TranslatorRepository implements Serializable{

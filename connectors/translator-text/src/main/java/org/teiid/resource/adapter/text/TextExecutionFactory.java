@@ -37,22 +37,22 @@ import java.util.Properties;
 import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.metadata.runtime.Table;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.adapter.FileConnection;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.MetadataProvider;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.TranslatorProperty;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.FileConnection;
+import org.teiid.translator.MetadataProvider;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 
 
 /**

@@ -27,19 +27,19 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.Execution;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicConnectorCapabilities;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.UpdateExecution;
 
 public class FakeConnector extends BasicExecutionFactory {
 	private static final int RESULT_SIZE = 5;

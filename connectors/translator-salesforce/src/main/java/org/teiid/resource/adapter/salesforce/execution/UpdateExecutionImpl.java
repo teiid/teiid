@@ -27,18 +27,18 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SetClause;
-import org.teiid.connector.language.Update;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Literal;
+import org.teiid.language.SetClause;
+import org.teiid.language.Update;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.salesforce.SalesforceConnection;
 import org.teiid.resource.adapter.salesforce.Util;
 import org.teiid.resource.adapter.salesforce.execution.visitors.UpdateVisitor;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 
 
 public class UpdateExecutionImpl extends AbstractUpdateExecution {

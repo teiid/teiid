@@ -26,15 +26,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.Condition;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SearchedWhenClause;
-import org.teiid.connector.language.AndOr.Operator;
-import org.teiid.resource.cci.SourceSystemFunctions;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Literal;
+import org.teiid.language.SearchedWhenClause;
+import org.teiid.language.AndOr.Operator;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 

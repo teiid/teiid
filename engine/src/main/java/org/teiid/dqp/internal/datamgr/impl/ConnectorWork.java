@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 /**

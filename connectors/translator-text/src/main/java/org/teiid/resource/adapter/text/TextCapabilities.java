@@ -22,7 +22,7 @@
 
 package org.teiid.resource.adapter.text;
 
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.translator.BasicConnectorCapabilities;
 
 public class TextCapabilities extends BasicConnectorCapabilities {
 

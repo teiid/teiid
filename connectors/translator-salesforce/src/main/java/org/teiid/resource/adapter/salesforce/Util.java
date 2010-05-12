@@ -24,7 +24,7 @@ package org.teiid.resource.adapter.salesforce;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 public class Util {

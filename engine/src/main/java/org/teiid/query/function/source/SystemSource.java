@@ -34,7 +34,7 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionParameter;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**

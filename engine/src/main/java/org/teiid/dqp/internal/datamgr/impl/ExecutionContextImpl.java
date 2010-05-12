@@ -36,8 +36,8 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.resource.cci.CacheScope;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.CacheScope;
+import org.teiid.translator.ExecutionContext;
 
 
 /**

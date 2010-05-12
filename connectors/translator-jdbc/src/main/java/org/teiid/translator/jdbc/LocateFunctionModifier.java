@@ -25,13 +25,13 @@ package org.teiid.translator.jdbc;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.Comparison.Operator;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.Comparison;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Literal;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.translator.TypeFacility;
 
 
 /**

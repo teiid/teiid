@@ -38,7 +38,7 @@ import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 public abstract class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ValidatingManagedConnectionFactory {

@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.Function;
+import org.teiid.language.Function;
 
 
 /**
@@ -36,7 +36,7 @@ import org.teiid.connector.language.Function;
 public class EscapeSyntaxModifier extends FunctionModifier {
 
     /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.connector.language.Function)
+     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.language.Function)
      * @since 5.0
      */
     public List<?> translate(Function function) {

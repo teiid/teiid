@@ -24,7 +24,7 @@ package org.teiid.resource.adapter.text;
 
 import junit.framework.TestCase;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 

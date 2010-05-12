@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Select;
@@ -46,7 +46,7 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 

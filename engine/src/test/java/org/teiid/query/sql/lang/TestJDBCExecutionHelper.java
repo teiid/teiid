@@ -29,10 +29,10 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.Select;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Literal;
+import org.teiid.language.Select;
 
 
 public class TestJDBCExecutionHelper extends TestCase{

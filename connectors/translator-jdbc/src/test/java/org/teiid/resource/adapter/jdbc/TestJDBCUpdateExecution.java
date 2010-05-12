@@ -28,13 +28,13 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.Insert;
-import org.teiid.connector.language.Literal;
+import org.teiid.language.Command;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.JDBCUpdateExecution;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.Translator;
 
 public class TestJDBCUpdateExecution {

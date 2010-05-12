@@ -34,24 +34,24 @@ import javax.naming.ldap.SortKey;
 import junit.framework.TestCase;
 
 import org.teiid.cdk.CommandBuilder;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.metadata.runtime.Schema;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.metadata.runtime.Column.SearchType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.language.Command;
+import org.teiid.language.Select;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.ldap.IQueryToLdapSearchParser;
-import org.teiid.resource.adapter.ldap.LDAPExecutionFactory;
-import org.teiid.resource.adapter.ldap.LDAPSearchDetails;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ldap.IQueryToLdapSearchParser;
+import org.teiid.translator.ldap.LDAPExecutionFactory;
+import org.teiid.translator.ldap.LDAPSearchDetails;
 
 
 /** 

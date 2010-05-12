@@ -37,9 +37,9 @@ import org.teiid.core.util.ReflectionHelper;
 import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.cci.ExecutionFactory;
-import org.teiid.resource.cci.TranslatorProperty;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorProperty;
 
 
 /**

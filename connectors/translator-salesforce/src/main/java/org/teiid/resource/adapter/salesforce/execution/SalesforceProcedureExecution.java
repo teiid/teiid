@@ -2,7 +2,7 @@ package org.teiid.resource.adapter.salesforce.execution;
 
 import java.util.List;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 public interface SalesforceProcedureExecution {
 

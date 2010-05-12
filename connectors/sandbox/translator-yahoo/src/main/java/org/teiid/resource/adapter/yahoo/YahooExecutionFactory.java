@@ -22,14 +22,14 @@
 
 package org.teiid.resource.adapter.yahoo;
 
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 
 public class YahooExecutionFactory extends BasicExecutionFactory {
 

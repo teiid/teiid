@@ -27,9 +27,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ExecutionFactory;
 
 
 public class TestBasicExecutionFactory {

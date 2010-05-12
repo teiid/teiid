@@ -31,7 +31,7 @@ import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
-import org.teiid.resource.cci.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty;
 
 public class ManagedPropertyUtil {
 	private static final String TEIID_PROPERTY = "teiid-property"; //$NON-NLS-1$

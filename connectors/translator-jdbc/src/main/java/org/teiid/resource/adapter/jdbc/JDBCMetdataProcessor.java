@@ -34,18 +34,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.BaseColumn;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.Procedure;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.ProcedureParameter.Type;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCPlugin;
 
 

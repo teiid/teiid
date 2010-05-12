@@ -27,14 +27,14 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Insert;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.ConnectorException;
 
 
 public class InsertVisitor extends CriteriaVisitor {

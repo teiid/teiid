@@ -26,11 +26,11 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 

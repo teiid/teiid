@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.NamedTable;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.NamedTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.FakeMetadataObject;
 

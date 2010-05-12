@@ -25,10 +25,10 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.BatchedUpdates;
-import org.teiid.connector.language.Delete;
-import org.teiid.connector.language.Insert;
-import org.teiid.connector.language.Update;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.Delete;
+import org.teiid.language.Insert;
+import org.teiid.language.Update;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 
 import junit.framework.TestCase;

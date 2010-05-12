@@ -24,7 +24,7 @@ package org.teiid.resource.adapter.salesforce;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.translator.BasicConnectorCapabilities;
 
 public class SalesforceCapabilities extends BasicConnectorCapabilities {
 

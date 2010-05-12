@@ -28,9 +28,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.loopback.LoopbackExecution;
 import org.teiid.resource.adapter.loopback.LoopbackExecutionFactory;
+import org.teiid.translator.ConnectorException;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;

@@ -26,9 +26,9 @@ import static org.junit.Assert.assertEquals;
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
-import org.teiid.connector.language.Command;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.language.Command;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.Translator;
 

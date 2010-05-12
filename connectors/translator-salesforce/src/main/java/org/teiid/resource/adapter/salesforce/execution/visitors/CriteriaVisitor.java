@@ -29,24 +29,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.language.AndOr;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.In;
-import org.teiid.connector.language.Like;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Not;
-import org.teiid.connector.language.Comparison.Operator;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.visitor.framework.HierarchyVisitor;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.salesforce.Messages;
 import org.teiid.resource.adapter.salesforce.Util;
+import org.teiid.translator.ConnectorException;
 
 
 /**

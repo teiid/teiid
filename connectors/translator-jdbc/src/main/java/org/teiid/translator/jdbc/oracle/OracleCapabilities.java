@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -122,7 +122,7 @@ public class OracleCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -137,7 +137,7 @@ public class OracleCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsExcept()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -145,7 +145,7 @@ public class OracleCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsIntersect()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

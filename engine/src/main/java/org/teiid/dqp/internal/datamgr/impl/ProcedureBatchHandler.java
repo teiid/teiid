@@ -30,12 +30,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Argument.Direction;
 import org.teiid.dqp.DQPPlugin;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ProcedureExecution;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Argument.Direction;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ProcedureExecution;
 
 
 class ProcedureBatchHandler {

@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.teiid.resource.cci.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty;
 
 public class TranslatorPropertyUtil {
 	

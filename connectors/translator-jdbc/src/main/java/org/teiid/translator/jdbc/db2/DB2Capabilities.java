@@ -112,7 +112,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -124,7 +124,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsExcept()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -132,7 +132,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsIntersect()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

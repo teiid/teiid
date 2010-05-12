@@ -26,8 +26,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.language.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.language.TestInsertImpl;
@@ -35,10 +33,12 @@ import org.teiid.dqp.internal.datamgr.language.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.LanguageObject;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.TranslationHelper;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.Translator;
 

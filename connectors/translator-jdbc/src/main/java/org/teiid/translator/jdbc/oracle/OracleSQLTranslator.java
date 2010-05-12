@@ -35,30 +35,30 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.Insert;
-import org.teiid.connector.language.Limit;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.SQLReservedWords.Tokens;
-import org.teiid.connector.language.SetQuery.Operation;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.visitor.util.CollectorVisitor;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Function;
+import org.teiid.language.Insert;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SetQuery.Operation;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
+import org.teiid.metadata.Column;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.SourceSystemFunctions;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
@@ -348,7 +348,7 @@ public class OracleSQLTranslator extends Translator {
     /**
      * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
      *  
-     * @see org.teiid.connector.visitor.util.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
+     * @see org.teiid.language.visitor.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
      * @since 5.0
      */
     @Override

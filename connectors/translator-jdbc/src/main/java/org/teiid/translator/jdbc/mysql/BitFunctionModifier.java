@@ -25,9 +25,9 @@ package org.teiid.translator.jdbc.mysql;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 

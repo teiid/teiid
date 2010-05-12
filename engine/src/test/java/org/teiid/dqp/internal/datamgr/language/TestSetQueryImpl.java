@@ -27,15 +27,15 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.OrderBy;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.SetQuery;
-import org.teiid.connector.language.SortSpecification;
-import org.teiid.connector.language.SortSpecification.Ordering;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 
 

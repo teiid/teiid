@@ -24,10 +24,10 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.AggregateFunction;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 

@@ -36,9 +36,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.connector.metadata.runtime.Datatype;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -52,19 +49,22 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ExecutionFactory;
-import org.teiid.resource.cci.MetadataProvider;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProvider;
 
 
 /**
- * The <code>ConnectorManager</code> manages a {@link org.teiid.resource.adapter.BasicExecutionFactory Connector}
+ * The <code>ConnectorManager</code> manages a {@link org.teiid.translator.BasicExecutionFactory Connector}
  * and its associated workers' state.
  */
 public class ConnectorManager  {

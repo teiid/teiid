@@ -32,7 +32,6 @@ import javax.xml.ws.BindingProvider;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.salesforce.Messages;
 import org.teiid.resource.adapter.salesforce.SalesforceConnection;
 import org.teiid.resource.adapter.salesforce.execution.DataPayload;
@@ -40,6 +39,7 @@ import org.teiid.resource.adapter.salesforce.execution.DeletedObject;
 import org.teiid.resource.adapter.salesforce.execution.DeletedResult;
 import org.teiid.resource.adapter.salesforce.execution.UpdatedResult;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.ConnectorException;
 
 import com.sforce.soap.partner.CallOptions;
 import com.sforce.soap.partner.DeleteResult;

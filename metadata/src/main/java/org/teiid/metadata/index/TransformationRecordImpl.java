@@ -24,7 +24,7 @@ package org.teiid.metadata.index;
 
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.metadata.AbstractMetadataRecord;
 
 /**
  * TransformationRecordImpl

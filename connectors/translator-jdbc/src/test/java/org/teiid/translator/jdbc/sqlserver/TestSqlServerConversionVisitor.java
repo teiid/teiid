@@ -26,19 +26,19 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.Schema;
-import org.teiid.connector.metadata.runtime.Table;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Command;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.TranslationHelper;
+import org.teiid.translator.ConnectorException;
 import org.teiid.translator.jdbc.sqlserver.SQLServerSQLTranslator;
 
 import com.metamatrix.cdk.api.TranslationUtility;

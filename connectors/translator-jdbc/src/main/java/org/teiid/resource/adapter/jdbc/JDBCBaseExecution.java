@@ -30,14 +30,14 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.List;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Literal;
+import org.teiid.language.Command;
+import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.Translator;
 

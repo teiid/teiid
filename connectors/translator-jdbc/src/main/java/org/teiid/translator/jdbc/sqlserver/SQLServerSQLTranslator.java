@@ -27,12 +27,12 @@ package org.teiid.translator.jdbc.sqlserver;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 
 /**

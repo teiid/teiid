@@ -28,9 +28,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -45,7 +45,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.translator.ConnectorCapabilities.SupportedJoinCriteria;
 
 
 /**

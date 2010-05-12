@@ -34,7 +34,7 @@ import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory;
 
 
 /**

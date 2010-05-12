@@ -32,12 +32,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.Translator;

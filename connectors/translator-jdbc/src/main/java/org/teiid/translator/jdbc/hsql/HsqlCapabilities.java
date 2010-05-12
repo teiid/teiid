@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 public class HsqlCapabilities extends JDBCCapabilities {
 

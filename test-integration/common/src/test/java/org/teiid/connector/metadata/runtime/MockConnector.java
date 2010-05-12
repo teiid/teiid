@@ -5,20 +5,23 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.Column.SearchType;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ProcedureExecution;
-import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
+import org.teiid.language.QueryExpression;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
+import org.teiid.translator.BasicConnectorCapabilities;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
 
 
 public class MockConnector extends BasicExecutionFactory {

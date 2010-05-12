@@ -25,7 +25,7 @@ package org.teiid.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.SearchedCase;
+import org.teiid.language.SearchedCase;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;

@@ -28,19 +28,19 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.AggregateFunction;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.connector.language.Limit;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SQLReservedWords;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.SourceSystemFunctions;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -188,7 +188,7 @@ public class PostgreSQLTranslator extends Translator {
     /**
      * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as 
      * bool_and(BooleanValue)
-     * @see org.teiid.connector.visitor.framework.LanguageObjectVisitor#visit(org.teiid.connector.language.AggregateFunction)
+     * @see org.teiid.language.visitor.LanguageObjectVisitor#visit(org.teiid.language.AggregateFunction)
      * @since 4.3
      */
     @Override

@@ -24,9 +24,9 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.AndOr;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.AndOr.Operator;
+import org.teiid.language.AndOr;
+import org.teiid.language.Comparison;
+import org.teiid.language.AndOr.Operator;
 import org.teiid.query.sql.lang.CompareCriteria;
 
 

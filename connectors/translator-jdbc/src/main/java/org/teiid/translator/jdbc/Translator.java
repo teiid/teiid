@@ -41,27 +41,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.connector.language.Limit;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SetQuery;
-import org.teiid.connector.language.Argument.Direction;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.language.Argument;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.SetQuery;
+import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.SourceSystemFunctions;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 
 
 /**

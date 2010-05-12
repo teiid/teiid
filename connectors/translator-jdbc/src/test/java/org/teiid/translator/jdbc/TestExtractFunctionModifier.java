@@ -27,16 +27,16 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.NamedTable;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.cci.SourceSystemFunctions;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.Translator;

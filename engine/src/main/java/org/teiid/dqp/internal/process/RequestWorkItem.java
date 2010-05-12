@@ -66,7 +66,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.translator.DataNotAvailableException;
 
 
 public class RequestWorkItem extends AbstractWorkItem {

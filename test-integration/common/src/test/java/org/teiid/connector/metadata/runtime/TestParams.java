@@ -27,11 +27,12 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Argument.Direction;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Argument.Direction;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.BaseColumn.NullType;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 

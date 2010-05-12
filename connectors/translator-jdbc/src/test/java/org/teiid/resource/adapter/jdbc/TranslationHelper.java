@@ -30,12 +30,12 @@ import java.util.Collection;
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
-import org.teiid.connector.language.Command;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.language.Command;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.Translator;
 

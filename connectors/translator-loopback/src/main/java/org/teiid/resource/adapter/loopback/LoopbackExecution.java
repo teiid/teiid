@@ -33,20 +33,20 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.language.Argument.Direction;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ProcedureExecution;
-import org.teiid.resource.cci.TypeFacility;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.UpdateExecution;
 
 
 /**

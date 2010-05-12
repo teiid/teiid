@@ -21,9 +21,9 @@
  */
 package org.teiid.resource.adapter.salesforce.execution.visitors;
 
-import org.teiid.connector.language.Update;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.Update;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.ConnectorException;
 
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {

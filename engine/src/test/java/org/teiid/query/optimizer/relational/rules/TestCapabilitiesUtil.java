@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;

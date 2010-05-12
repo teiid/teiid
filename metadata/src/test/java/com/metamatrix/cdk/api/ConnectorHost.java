@@ -26,17 +26,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.language.BatchedUpdates;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.Command;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.Execution;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ExecutionFactory;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.UpdateExecution;
 
 /**
  * A simple test environment to execute commands on a connector.

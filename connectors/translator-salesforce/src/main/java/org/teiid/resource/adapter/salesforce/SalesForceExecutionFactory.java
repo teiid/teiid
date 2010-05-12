@@ -22,29 +22,29 @@
 
 package org.teiid.resource.adapter.salesforce;
 
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.salesforce.execution.DeleteExecutionImpl;
 import org.teiid.resource.adapter.salesforce.execution.InsertExecutionImpl;
 import org.teiid.resource.adapter.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.resource.adapter.salesforce.execution.QueryExecutionImpl;
 import org.teiid.resource.adapter.salesforce.execution.UpdateExecutionImpl;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.MetadataProvider;
-import org.teiid.resource.cci.ProcedureExecution;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.TranslatorProperty;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProvider;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
 
 
-public class SalesForceExecutionFactory extends org.teiid.resource.adapter.BasicExecutionFactory implements MetadataProvider {
+public class SalesForceExecutionFactory extends org.teiid.translator.BasicExecutionFactory implements MetadataProvider {
 
 	private String connectorStateClass;
 	private boolean auditModelFields = false;	
@@ -87,11 +87,11 @@ public class SalesForceExecutionFactory extends org.teiid.resource.adapter.Basic
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws ConnectorException {
 		UpdateExecution result = null;
-		if(command instanceof org.teiid.connector.language.Delete) {
+		if(command instanceof org.teiid.language.Delete) {
 			result = new DeleteExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
-		} else if (command instanceof org.teiid.connector.language.Insert) {
+		} else if (command instanceof org.teiid.language.Insert) {
 			result = new InsertExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
-		} else if (command instanceof org.teiid.connector.language.Update) {
+		} else if (command instanceof org.teiid.language.Update) {
 			result = new UpdateExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
 		}
 		return result;

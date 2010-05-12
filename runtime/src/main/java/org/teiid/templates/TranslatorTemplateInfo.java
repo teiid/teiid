@@ -28,7 +28,7 @@ import org.jboss.managed.plugins.BasicDeploymentTemplateInfo;
 import org.jboss.metatype.api.types.MapCompositeMetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.teiid.deployers.ManagedPropertyUtil;
-import org.teiid.resource.cci.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty;
 
 /**
  * This class defines the template for all the translator classes. Each Translator's class

@@ -28,7 +28,7 @@ import org.teiid.core.BundleUtil;
 
 public class DataPlugin { // extends Plugin {
 
-    public static final String PLUGIN_ID = "org.teiid.connector" ; //$NON-NLS-1$
+    public static final String PLUGIN_ID = DataPlugin.class.getPackage().getName(); 
 
 	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
 	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -27,21 +27,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.language.AggregateFunction;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Limit;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Limit;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.salesforce.Constants;
 import org.teiid.resource.adapter.salesforce.Messages;
 import org.teiid.resource.adapter.salesforce.Util;
+import org.teiid.translator.ConnectorException;
 
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {

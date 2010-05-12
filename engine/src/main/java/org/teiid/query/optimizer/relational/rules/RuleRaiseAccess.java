@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
-import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.translator.ConnectorCapabilities.SupportedJoinCriteria;
 
 
 public final class RuleRaiseAccess implements OptimizerRule {

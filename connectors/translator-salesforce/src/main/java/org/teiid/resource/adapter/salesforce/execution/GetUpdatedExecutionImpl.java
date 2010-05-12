@@ -10,9 +10,9 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.translator.ConnectorException;
 
 /**
  * 

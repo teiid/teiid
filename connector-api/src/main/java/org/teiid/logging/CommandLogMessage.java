@@ -25,7 +25,7 @@ package org.teiid.logging;
 import java.text.DateFormat;
 import java.util.Date;
 
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ExecutionContext;
 
 /**
  * Log Message for source and user command events.

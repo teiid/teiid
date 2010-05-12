@@ -25,9 +25,9 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;

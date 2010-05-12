@@ -26,7 +26,7 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords;
 
 /**
  * Special variable names in stored procedure language.

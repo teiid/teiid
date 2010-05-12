@@ -38,8 +38,8 @@ import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
 
 
 /**

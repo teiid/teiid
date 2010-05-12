@@ -26,8 +26,8 @@ import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.Join;
+import org.teiid.language.Comparison;
+import org.teiid.language.Join;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;

@@ -41,8 +41,8 @@ import java.util.Properties;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.FileConnection;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.FileConnection;
 
 
 

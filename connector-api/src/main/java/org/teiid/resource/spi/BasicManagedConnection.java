@@ -38,7 +38,7 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 public class BasicManagedConnection implements ManagedConnection {
 	protected PrintWriter log;

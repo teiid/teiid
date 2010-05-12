@@ -116,7 +116,7 @@ public class SQLServerCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

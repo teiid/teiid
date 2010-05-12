@@ -25,9 +25,9 @@ package org.teiid.query.function;
 import java.io.Serializable;
 import java.util.*;
 
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.function.metadata.*;
 
 

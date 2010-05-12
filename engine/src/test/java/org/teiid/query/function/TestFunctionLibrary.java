@@ -41,13 +41,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionForm;
 import org.teiid.query.function.FunctionLibrary;
@@ -58,7 +58,7 @@ import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 @SuppressWarnings("nls")

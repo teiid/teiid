@@ -28,42 +28,42 @@ import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.connector.language.AggregateFunction;
-import org.teiid.connector.language.AndOr;
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.BatchedUpdates;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Condition;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.DerivedTable;
-import org.teiid.connector.language.Exists;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.In;
-import org.teiid.connector.language.InsertValueSource;
-import org.teiid.connector.language.IsNull;
-import org.teiid.connector.language.Join;
-import org.teiid.connector.language.Like;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Not;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.language.SearchedCase;
-import org.teiid.connector.language.SearchedWhenClause;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.SortSpecification;
-import org.teiid.connector.language.SubqueryComparison;
-import org.teiid.connector.language.SubqueryIn;
-import org.teiid.connector.language.TableReference;
-import org.teiid.connector.language.Argument.Direction;
-import org.teiid.connector.language.Comparison.Operator;
-import org.teiid.connector.language.SortSpecification.Ordering;
-import org.teiid.connector.language.SubqueryComparison.Quantifier;
-import org.teiid.connector.metadata.runtime.Procedure;
-import org.teiid.connector.metadata.runtime.ProcedureParameter;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.Argument;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.DerivedTable;
+import org.teiid.language.Exists;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.In;
+import org.teiid.language.InsertValueSource;
+import org.teiid.language.IsNull;
+import org.teiid.language.Join;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SearchedWhenClause;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.SubqueryComparison;
+import org.teiid.language.SubqueryIn;
+import org.teiid.language.TableReference;
+import org.teiid.language.Argument.Direction;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.SubqueryComparison.Quantifier;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -108,7 +108,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 public class LanguageBridgeFactory {
@@ -120,7 +120,7 @@ public class LanguageBridgeFactory {
         }
     }
 
-    public org.teiid.connector.language.Command translate(Command command) {
+    public org.teiid.language.Command translate(Command command) {
         if (command == null) return null;
         if (command instanceof Query) {
             return translate((Query)command);
@@ -147,18 +147,18 @@ public class LanguageBridgeFactory {
     	return translate((SetQuery)command);
     }
 
-    org.teiid.connector.language.SetQuery translate(SetQuery union) {
-        org.teiid.connector.language.SetQuery result = new org.teiid.connector.language.SetQuery();
+    org.teiid.language.SetQuery translate(SetQuery union) {
+        org.teiid.language.SetQuery result = new org.teiid.language.SetQuery();
         result.setAll(union.isAll());
         switch (union.getOperation()) {
             case UNION:
-                result.setOperation(org.teiid.connector.language.SetQuery.Operation.UNION);
+                result.setOperation(org.teiid.language.SetQuery.Operation.UNION);
                 break;
             case INTERSECT:
-                result.setOperation(org.teiid.connector.language.SetQuery.Operation.INTERSECT);
+                result.setOperation(org.teiid.language.SetQuery.Operation.INTERSECT);
                 break;
             case EXCEPT:
-                result.setOperation(org.teiid.connector.language.SetQuery.Operation.EXCEPT);
+                result.setOperation(org.teiid.language.SetQuery.Operation.EXCEPT);
                 break;
         }
         result.setLeftQuery(translate(union.getLeftQuery()));
@@ -180,7 +180,7 @@ public class LanguageBridgeFactory {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
 
-            org.teiid.connector.language.Expression iExp = null;
+            org.teiid.language.Expression iExp = null;
             if(symbol instanceof ElementSymbol) {
                 iExp = translate((ElementSymbol)symbol);
             } else if(symbol instanceof AggregateSymbol) {
@@ -280,7 +280,7 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    org.teiid.connector.language.Comparison translate(CompareCriteria criteria) {
+    org.teiid.language.Comparison translate(CompareCriteria criteria) {
         Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
             case CompareCriteria.EQ:    
@@ -304,7 +304,7 @@ public class LanguageBridgeFactory {
             
         }
         
-        return new org.teiid.connector.language.Comparison(translate(criteria.getLeftExpression()),
+        return new org.teiid.language.Comparison(translate(criteria.getLeftExpression()),
                                         translate(criteria.getRightExpression()), operator);
     }
 
@@ -401,19 +401,19 @@ public class LanguageBridgeFactory {
         return new Not(translate(criteria.getCriteria()));
     }
 
-    public org.teiid.connector.language.GroupBy translate(GroupBy groupBy) {
+    public org.teiid.language.GroupBy translate(GroupBy groupBy) {
         if(groupBy == null){
             return null;
         }
         List items = groupBy.getSymbols();
-        List<org.teiid.connector.language.Expression> translatedItems = new ArrayList<org.teiid.connector.language.Expression>();
+        List<org.teiid.language.Expression> translatedItems = new ArrayList<org.teiid.language.Expression>();
         for (Iterator i = items.iterator(); i.hasNext();) {
             translatedItems.add(translate((Expression)i.next()));
         }
-        return new org.teiid.connector.language.GroupBy(translatedItems);
+        return new org.teiid.language.GroupBy(translatedItems);
     }
 
-    public org.teiid.connector.language.OrderBy translate(OrderBy orderBy) {
+    public org.teiid.language.OrderBy translate(OrderBy orderBy) {
         if(orderBy == null){
             return null;
         }
@@ -431,12 +431,12 @@ public class LanguageBridgeFactory {
             }
             translatedItems.add(orderByItem);
         }
-        return new org.teiid.connector.language.OrderBy(translatedItems);
+        return new org.teiid.language.OrderBy(translatedItems);
     }
 
 
     /* Expressions */
-    public org.teiid.connector.language.Expression translate(Expression expr) {
+    public org.teiid.language.Expression translate(Expression expr) {
         if (expr == null) return null;
         if (expr instanceof Constant) {
             return translate((Constant)expr);
@@ -459,15 +459,15 @@ public class LanguageBridgeFactory {
         return result;
     }
 
-    org.teiid.connector.language.Function translate(Function function) {
+    org.teiid.language.Function translate(Function function) {
         Expression [] args = function.getArgs();
-        List<org.teiid.connector.language.Expression> params = new ArrayList<org.teiid.connector.language.Expression>(args.length);
+        List<org.teiid.language.Expression> params = new ArrayList<org.teiid.language.Expression>(args.length);
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 params.add(translate(args[i]));
             }
         }
-        return new org.teiid.connector.language.Function(function.getName(), params, function.getType());
+        return new org.teiid.language.Function(function.getName(), params, function.getType());
     }
 
     SearchedCase translate(SearchedCaseExpression expr) {
@@ -481,11 +481,11 @@ public class LanguageBridgeFactory {
     }
 
 
-    org.teiid.connector.language.Expression translate(ScalarSubquery ss) {
-        return new org.teiid.connector.language.ScalarSubquery(translate((QueryCommand)ss.getCommand()));
+    org.teiid.language.Expression translate(ScalarSubquery ss) {
+        return new org.teiid.language.ScalarSubquery(translate((QueryCommand)ss.getCommand()));
     }
 
-    org.teiid.connector.language.Expression translate(SingleElementSymbol symbol) {
+    org.teiid.language.Expression translate(SingleElementSymbol symbol) {
         if (symbol == null) return null;
         if (symbol instanceof ElementSymbol) {
             return translate((ElementSymbol)symbol);
@@ -497,7 +497,7 @@ public class LanguageBridgeFactory {
         throw new AssertionError();
     }
 
-    org.teiid.connector.language.Expression translate(AliasSymbol symbol) {
+    org.teiid.language.Expression translate(AliasSymbol symbol) {
         return translate(symbol.getSymbol());
     }
 
@@ -522,13 +522,13 @@ public class LanguageBridgeFactory {
                                 symbol.getType());
     }
 
-    org.teiid.connector.language.Expression translate(ExpressionSymbol symbol) {
+    org.teiid.language.Expression translate(ExpressionSymbol symbol) {
         return translate(symbol.getExpression());
     }
 
 
     /* Insert */
-    org.teiid.connector.language.Insert translate(Insert insert) {
+    org.teiid.language.Insert translate(Insert insert) {
         List elements = insert.getVariables();
         List<ColumnReference> translatedElements = new ArrayList<ColumnReference>();
         for (Iterator i = elements.iterator(); i.hasNext();) {
@@ -541,40 +541,40 @@ public class LanguageBridgeFactory {
         } else {
             // This is for the simple one row insert.
             List values = insert.getValues();
-            List<org.teiid.connector.language.Expression> translatedValues = new ArrayList<org.teiid.connector.language.Expression>();
+            List<org.teiid.language.Expression> translatedValues = new ArrayList<org.teiid.language.Expression>();
             for (Iterator i = values.iterator(); i.hasNext();) {
                 translatedValues.add(translate((Expression)i.next()));
             }
             valueSource = new ExpressionValueSource(translatedValues);
         }
         
-        return new org.teiid.connector.language.Insert(translate(insert.getGroup()),
+        return new org.teiid.language.Insert(translate(insert.getGroup()),
                               translatedElements,
                               valueSource);
     }
 
     /* Update */
-    org.teiid.connector.language.Update translate(Update update) {
-        return new org.teiid.connector.language.Update(translate(update.getGroup()),
+    org.teiid.language.Update translate(Update update) {
+        return new org.teiid.language.Update(translate(update.getGroup()),
                               translate(update.getChangeList()),
                               translate(update.getCriteria()));
     }
     
-    List<org.teiid.connector.language.SetClause> translate(SetClauseList setClauseList) {
-    	List<org.teiid.connector.language.SetClause> clauses = new ArrayList<org.teiid.connector.language.SetClause>(setClauseList.getClauses().size());
+    List<org.teiid.language.SetClause> translate(SetClauseList setClauseList) {
+    	List<org.teiid.language.SetClause> clauses = new ArrayList<org.teiid.language.SetClause>(setClauseList.getClauses().size());
     	for (SetClause setClause : setClauseList.getClauses()) {
     		clauses.add(translate(setClause));
     	}
     	return clauses;
     }
     
-    org.teiid.connector.language.SetClause translate(SetClause setClause) {
-    	return new org.teiid.connector.language.SetClause(translate(setClause.getSymbol()), translate(setClause.getValue()));
+    org.teiid.language.SetClause translate(SetClause setClause) {
+    	return new org.teiid.language.SetClause(translate(setClause.getSymbol()), translate(setClause.getValue()));
     }
 
     /* Delete */
-    org.teiid.connector.language.Delete translate(Delete delete) {
-        org.teiid.connector.language.Delete deleteImpl = new org.teiid.connector.language.Delete(translate(delete.getGroup()),
+    org.teiid.language.Delete translate(Delete delete) {
+        org.teiid.language.Delete deleteImpl = new org.teiid.language.Delete(translate(delete.getGroup()),
                               translate(delete.getCriteria()));
         return deleteImpl;
     }
@@ -659,14 +659,14 @@ public class LanguageBridgeFactory {
     /* Batched Updates */
     BatchedUpdates translate(BatchedUpdateCommand command) {
         List updates = command.getUpdateCommands();
-        List<org.teiid.connector.language.Command> translatedUpdates = new ArrayList<org.teiid.connector.language.Command>(updates.size());
+        List<org.teiid.language.Command> translatedUpdates = new ArrayList<org.teiid.language.Command>(updates.size());
         for (Iterator i = updates.iterator(); i.hasNext();) {
             translatedUpdates.add(translate((Command)i.next()));
         }
         return new BatchedUpdates(translatedUpdates);
     }
 
-    org.teiid.connector.language.Limit translate(Limit limit) {
+    org.teiid.language.Limit translate(Limit limit) {
         if (limit == null) {
             return null;
         }
@@ -677,6 +677,6 @@ public class LanguageBridgeFactory {
         }
         Literal c2 = (Literal)translate(limit.getRowLimit());
         int rowLimit = ((Integer)c2.getValue()).intValue();
-        return new org.teiid.connector.language.Limit(rowOffset, rowLimit);
+        return new org.teiid.language.Limit(rowOffset, rowLimit);
     }
 }

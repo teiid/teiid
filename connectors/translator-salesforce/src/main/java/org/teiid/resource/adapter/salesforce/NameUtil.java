@@ -7,7 +7,7 @@
  */
 package org.teiid.resource.adapter.salesforce;
 
-import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords;
 
 public class NameUtil {
 

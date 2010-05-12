@@ -1,18 +1,18 @@
 package org.teiid.resource.adapter.salesforce.execution.visitors;
 
-import org.teiid.connector.language.AggregateFunction;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Join;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.TableReference;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Join;
+import org.teiid.language.NamedTable;
+import org.teiid.language.TableReference;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.salesforce.Util;
+import org.teiid.translator.ConnectorException;
 
 
 /**

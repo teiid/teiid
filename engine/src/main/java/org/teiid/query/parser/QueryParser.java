@@ -25,8 +25,8 @@ package org.teiid.query.parser;
 import java.io.StringReader;
 
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;

@@ -31,7 +31,7 @@ import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedProperty;
 import org.teiid.deployers.ManagedPropertyUtil;
 import org.teiid.deployers.TranslatorPropertyUtil;
-import org.teiid.resource.cci.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty;
 
 public class TranslatorTemplateInfoFactory {
 

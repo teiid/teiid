@@ -26,12 +26,16 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 

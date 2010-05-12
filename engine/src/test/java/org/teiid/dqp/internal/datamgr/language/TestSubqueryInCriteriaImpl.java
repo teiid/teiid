@@ -23,7 +23,7 @@
 package org.teiid.dqp.internal.datamgr.language;
 
 
-import org.teiid.connector.language.SubqueryIn;
+import org.teiid.language.SubqueryIn;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.symbol.ElementSymbol;

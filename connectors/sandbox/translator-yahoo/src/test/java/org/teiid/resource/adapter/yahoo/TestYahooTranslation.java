@@ -22,8 +22,8 @@
 
 package org.teiid.resource.adapter.yahoo;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Select;
+import org.teiid.language.Command;
+import org.teiid.language.Select;
 import org.teiid.resource.adapter.yahoo.YahooExecution;
 
 import junit.framework.TestCase;

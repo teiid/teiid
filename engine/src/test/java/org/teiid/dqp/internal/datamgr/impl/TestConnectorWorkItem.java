@@ -34,7 +34,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
-import org.teiid.connector.language.Call;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -42,6 +41,7 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
+import org.teiid.language.Call;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
@@ -49,8 +49,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ProcedureExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ProcedureExecution;
 
 
 public class TestConnectorWorkItem {

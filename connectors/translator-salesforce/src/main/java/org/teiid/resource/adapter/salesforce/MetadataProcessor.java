@@ -6,16 +6,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.Column.SearchType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
+import org.teiid.translator.ConnectorException;
 
 import com.sforce.soap.partner.ChildRelationship;
 import com.sforce.soap.partner.DescribeGlobalResult;

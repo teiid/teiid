@@ -27,9 +27,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.cdk.CommandBuilder;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 

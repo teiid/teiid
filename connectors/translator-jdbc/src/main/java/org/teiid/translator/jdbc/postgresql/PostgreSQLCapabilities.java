@@ -263,7 +263,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsExcept()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -271,7 +271,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsIntersect()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

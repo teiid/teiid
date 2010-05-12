@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.metadata.MetadataStore;
 
 public class MetadataStoreGroup implements Serializable{
 	private static final long serialVersionUID = -3702321839716725121L;

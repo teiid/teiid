@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.loopback;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.translator.BasicConnectorCapabilities;
 
 
 /**

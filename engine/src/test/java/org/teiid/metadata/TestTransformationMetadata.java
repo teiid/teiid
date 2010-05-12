@@ -36,9 +36,9 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.connector.metadata.runtime.Datatype;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 

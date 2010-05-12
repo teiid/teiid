@@ -23,18 +23,18 @@ package org.teiid.resource.adapter.salesforce.execution;
 
 import java.util.ArrayList;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.Condition;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
+import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.salesforce.SalesforceConnection;
 import org.teiid.resource.adapter.salesforce.Util;
 import org.teiid.resource.adapter.salesforce.execution.visitors.IQueryProvidingVisitor;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.UpdateExecution;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;

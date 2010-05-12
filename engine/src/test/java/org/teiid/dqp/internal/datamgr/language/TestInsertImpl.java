@@ -27,10 +27,10 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.Insert;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;

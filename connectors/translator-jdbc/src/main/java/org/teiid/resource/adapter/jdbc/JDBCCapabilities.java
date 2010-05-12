@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.jdbc;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.translator.BasicConnectorCapabilities;
 
 
 /**
@@ -46,7 +46,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#getMaxInCriteriaSize()
+     * @see org.teiid.translator.BasicConnectorCapabilities#getMaxInCriteriaSize()
      * @since 4.2
      */
     public int getMaxInCriteriaSize() {
@@ -260,21 +260,21 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsInlineViews()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsInlineViews()
      */
     public boolean supportsInlineViews() {
         return false;
     }       
     
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return true;
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsSetQueryOrderBy()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsSetQueryOrderBy()
      */
     @Override
     public boolean supportsSetQueryOrderBy() {
@@ -282,7 +282,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsUnions()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsUnions()
      */
     public boolean supportsUnions() {
         return true;

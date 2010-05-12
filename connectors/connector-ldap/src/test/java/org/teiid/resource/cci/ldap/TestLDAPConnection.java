@@ -30,8 +30,8 @@ import javax.naming.spi.InitialContextFactory;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.resource.cci.ldap.LDAPConnectionImpl;
-import org.teiid.resource.cci.ldap.LDAPManagedConnectionFactory;
+import org.teiid.resource.adapter.ldap.LDAPConnectionImpl;
+import org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory;
 
 
 public class TestLDAPConnection {

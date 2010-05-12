@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ProcedureExecution;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ProcedureExecution;
 
 
 final class FakeProcedureExecution extends BasicExecution implements ProcedureExecution {

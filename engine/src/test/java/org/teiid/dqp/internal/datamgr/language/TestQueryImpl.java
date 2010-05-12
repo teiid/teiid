@@ -29,9 +29,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Select;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Select;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.UnaryFromClause;

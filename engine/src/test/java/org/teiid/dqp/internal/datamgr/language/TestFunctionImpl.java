@@ -26,8 +26,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
 import org.teiid.query.sql.symbol.Constant;
 
 

@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.In;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.Literal;
 import org.teiid.query.sql.lang.SetCriteria;
 
 

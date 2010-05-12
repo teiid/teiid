@@ -31,19 +31,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.Column;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.metadata.Column;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TypeFacility;
 
 /**
  * The essential part that executes the query. It keeps all the execution
@@ -241,7 +241,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
-     * {@link org.teiid.connector.language.DerivedColumn}.
+     * {@link org.teiid.language.DerivedColumn}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */

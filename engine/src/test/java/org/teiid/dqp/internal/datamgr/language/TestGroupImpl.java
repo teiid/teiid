@@ -23,7 +23,7 @@
 package org.teiid.dqp.internal.datamgr.language;
 
 
-import org.teiid.connector.language.NamedTable;
+import org.teiid.language.NamedTable;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.FakeMetadataObject;
 

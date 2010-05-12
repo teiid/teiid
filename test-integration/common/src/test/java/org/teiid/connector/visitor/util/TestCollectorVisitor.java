@@ -32,14 +32,15 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.Comparison.Operator;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.visitor.CollectorVisitor;
 
 /**
  */

@@ -25,9 +25,9 @@ package org.teiid.translator.jdbc.mysql;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.TranslationHelper;
+import org.teiid.translator.ConnectorException;
 import org.teiid.translator.jdbc.mysql.MySQLTranslator;
 
 /**

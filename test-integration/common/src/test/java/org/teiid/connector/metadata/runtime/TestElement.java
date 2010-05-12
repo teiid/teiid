@@ -27,12 +27,13 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.Column.SearchType;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Select;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 

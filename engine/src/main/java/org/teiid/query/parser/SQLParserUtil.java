@@ -26,9 +26,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.FromClause;

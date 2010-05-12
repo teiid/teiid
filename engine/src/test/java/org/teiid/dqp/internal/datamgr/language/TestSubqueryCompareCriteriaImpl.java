@@ -24,9 +24,9 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.SubqueryComparison;
-import org.teiid.connector.language.SubqueryComparison.Quantifier;
+import org.teiid.language.Comparison;
+import org.teiid.language.SubqueryComparison;
+import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.query.sql.lang.AbstractCompareCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;

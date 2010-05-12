@@ -36,7 +36,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 /**

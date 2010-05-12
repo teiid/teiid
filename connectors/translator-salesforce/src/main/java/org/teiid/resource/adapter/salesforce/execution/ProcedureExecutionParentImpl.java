@@ -2,13 +2,13 @@ package org.teiid.resource.adapter.salesforce.execution;
 
 import java.util.List;
 
-import org.teiid.connector.language.Call;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.Call;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.salesforce.SalesforceConnection;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.ProcedureExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ProcedureExecution;
 
 
 public class ProcedureExecutionParentImpl implements ProcedureExecution, ProcedureExecutionParent {

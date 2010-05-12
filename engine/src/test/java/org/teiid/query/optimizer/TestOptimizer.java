@@ -89,7 +89,7 @@ import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 public class TestOptimizer {

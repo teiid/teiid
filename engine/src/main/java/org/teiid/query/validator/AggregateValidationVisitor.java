@@ -25,8 +25,8 @@ package org.teiid.query.validator;
 import java.util.Collection;
 import java.util.Set;
 
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.navigator.PreOrderNavigator;

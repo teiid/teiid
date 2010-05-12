@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.yahoo;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.resource.adapter.BasicConnectorCapabilities;
+import org.teiid.translator.BasicConnectorCapabilities;
 
 
 /**

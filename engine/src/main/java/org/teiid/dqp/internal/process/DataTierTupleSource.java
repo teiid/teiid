@@ -33,7 +33,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 
 /**

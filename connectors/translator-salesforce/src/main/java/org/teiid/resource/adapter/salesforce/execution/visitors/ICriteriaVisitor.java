@@ -21,7 +21,7 @@
  */
 package org.teiid.resource.adapter.salesforce.execution.visitors;
 
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 public interface ICriteriaVisitor {
 

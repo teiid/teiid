@@ -28,8 +28,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.OrderBy;
-import org.teiid.connector.language.SortSpecification;
+import org.teiid.language.OrderBy;
+import org.teiid.language.SortSpecification;
 
 public class TestOrderByImpl extends TestCase {
 

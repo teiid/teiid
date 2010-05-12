@@ -26,12 +26,12 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.visitor.util.CollectorVisitor;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.Command;
+import org.teiid.language.Literal;
+import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TypeFacility;
 
 
 /**

@@ -24,11 +24,11 @@ package com.metamatrix.cdk.api;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.Command;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
+import org.teiid.metadata.AbstractMetadataRecord;
 
 
 public class TestTranslationUtility extends TestCase {

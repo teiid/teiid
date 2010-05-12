@@ -28,12 +28,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.connector.metadata.runtime.MetadataStore;
-import org.teiid.connector.metadata.runtime.Procedure;
-import org.teiid.connector.metadata.runtime.Schema;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.metadata.runtime.Table.Type;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.Table.Type;
 
 
 /**

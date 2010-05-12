@@ -27,11 +27,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.connector.language.Command;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.Command;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.resource.adapter.jdbc.TranslationHelper;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 

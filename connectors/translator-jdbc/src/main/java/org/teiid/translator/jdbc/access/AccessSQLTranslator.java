@@ -24,7 +24,7 @@
  */
 package org.teiid.translator.jdbc.access;
 
-import org.teiid.resource.cci.ConnectorCapabilities;
+import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 
 

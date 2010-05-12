@@ -28,8 +28,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.GroupBy;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.GroupBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;

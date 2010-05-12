@@ -34,28 +34,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Comparison;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.ExpressionValueSource;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.In;
-import org.teiid.connector.language.LanguageObject;
-import org.teiid.connector.language.Like;
-import org.teiid.connector.language.Literal;
-import org.teiid.connector.language.SQLReservedWords;
-import org.teiid.connector.language.SearchedCase;
-import org.teiid.connector.language.SetClause;
-import org.teiid.connector.language.SortSpecification;
-import org.teiid.connector.language.Argument.Direction;
-import org.teiid.connector.language.SQLReservedWords.Tokens;
-import org.teiid.connector.language.SetQuery.Operation;
-import org.teiid.connector.language.SortSpecification.Ordering;
-import org.teiid.connector.visitor.util.SQLStringVisitor;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SetClause;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.Argument.Direction;
+import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SetQuery.Operation;
+import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.Translator.NullOrder;
 
 
@@ -197,7 +197,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.Call)
+     * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Call)
      */
     public void visit(Call obj) {
         this.prepared = true;
@@ -209,7 +209,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.Literal)
+     * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
     public void visit(Literal obj) {
         if (this.prepared && (replaceWithBinding || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {

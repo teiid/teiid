@@ -46,7 +46,7 @@ import org.jboss.resource.metadata.DescriptionMetaData;
 import org.teiid.adminapi.jboss.ManagedUtil;
 import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.ManagedPropertyUtil;
-import org.teiid.resource.cci.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory;
 
 public class RaXmlPropertyConverter {
 

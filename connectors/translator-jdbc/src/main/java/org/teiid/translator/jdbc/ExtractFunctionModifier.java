@@ -27,11 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.SQLReservedWords;
-import org.teiid.connector.language.SQLReservedWords.Tokens;
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**

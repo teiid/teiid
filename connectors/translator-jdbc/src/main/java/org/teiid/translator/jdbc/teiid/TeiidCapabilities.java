@@ -36,7 +36,7 @@ import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
 public class TeiidCapabilities extends JDBCCapabilities {
     
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#getSupportedFunctions()
+     * @see org.teiid.translator.ConnectorCapabilities#getSupportedFunctions()
      * @since 4.3
      */
     public List<String> getSupportedFunctions() {
@@ -140,7 +140,7 @@ public class TeiidCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

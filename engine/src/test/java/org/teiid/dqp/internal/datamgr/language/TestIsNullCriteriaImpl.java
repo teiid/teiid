@@ -23,7 +23,7 @@
 package org.teiid.dqp.internal.datamgr.language;
 
 
-import org.teiid.connector.language.IsNull;
+import org.teiid.language.IsNull;
 import org.teiid.query.sql.lang.IsNullCriteria;
 
 

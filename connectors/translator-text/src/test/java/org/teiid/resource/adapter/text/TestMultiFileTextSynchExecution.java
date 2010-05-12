@@ -30,7 +30,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.resource.ConnectorException;
+import org.teiid.translator.ConnectorException;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 

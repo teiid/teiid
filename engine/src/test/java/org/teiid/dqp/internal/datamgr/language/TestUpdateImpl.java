@@ -26,7 +26,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Update;
+import org.teiid.language.Update;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;

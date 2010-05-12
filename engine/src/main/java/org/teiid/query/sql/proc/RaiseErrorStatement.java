@@ -22,7 +22,7 @@
 
 package org.teiid.query.sql.proc;
 
-import org.teiid.connector.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;

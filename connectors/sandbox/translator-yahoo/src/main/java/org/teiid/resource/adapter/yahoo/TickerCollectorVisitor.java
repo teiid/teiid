@@ -24,9 +24,9 @@ package org.teiid.resource.adapter.yahoo;
 
 import java.util.*;
 
-import org.teiid.connector.language.*;
-import org.teiid.connector.visitor.framework.HierarchyVisitor;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.*;
+import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.translator.ConnectorException;
 
 
 /**

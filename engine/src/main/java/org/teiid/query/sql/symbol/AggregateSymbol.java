@@ -27,10 +27,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.connector.language.SQLReservedWords;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
@@ -110,7 +110,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	/**
 	 * Construct an aggregate symbol with all given data.
 	 * @param name Name of the function
-	 * @param aggregateFunction Aggregate function type ({@link org.teiid.connector.language.SQLReservedWords#COUNT}, etc)
+	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLReservedWords#COUNT}, etc)
 	 * @param isDistinct True if DISTINCT flag is set
 	 * @param expression Contained expression
 	 */
@@ -125,11 +125,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Set the aggregate function.  If the aggregate function is an invalid value, an
 	 * IllegalArgumentException is thrown.
 	 * @param aggregateFunction Aggregate function type
-	 * @see org.teiid.connector.language.SQLReservedWords#COUNT
-	 * @see org.teiid.connector.language.SQLReservedWords#SUM
-	 * @see org.teiid.connector.language.SQLReservedWords#AVG
-	 * @see org.teiid.connector.language.SQLReservedWords#MIN
-	 * @see org.teiid.connector.language.SQLReservedWords#MAX
+	 * @see org.teiid.language.SQLReservedWords#COUNT
+	 * @see org.teiid.language.SQLReservedWords#SUM
+	 * @see org.teiid.language.SQLReservedWords#AVG
+	 * @see org.teiid.language.SQLReservedWords#MIN
+	 * @see org.teiid.language.SQLReservedWords#MAX
 	 */
 	private void setAggregateFunction(String aggregateFunction) {
 		// Validate aggregate
@@ -143,11 +143,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Get the aggregate function type - this will map to one of the reserved words
 	 * for the aggregate functions.
 	 * @return Aggregate function type
-	 * @see org.teiid.connector.language.SQLReservedWords#COUNT
-	 * @see org.teiid.connector.language.SQLReservedWords#SUM
-	 * @see org.teiid.connector.language.SQLReservedWords#AVG
-	 * @see org.teiid.connector.language.SQLReservedWords#MIN
-	 * @see org.teiid.connector.language.SQLReservedWords#MAX
+	 * @see org.teiid.language.SQLReservedWords#COUNT
+	 * @see org.teiid.language.SQLReservedWords#SUM
+	 * @see org.teiid.language.SQLReservedWords#AVG
+	 * @see org.teiid.language.SQLReservedWords#MIN
+	 * @see org.teiid.language.SQLReservedWords#MAX
 	 */
 	public String getAggregateFunction() {
 		return this.aggregate;

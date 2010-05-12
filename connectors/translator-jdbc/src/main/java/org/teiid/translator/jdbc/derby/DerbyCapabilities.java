@@ -143,7 +143,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
 
     /**
      * Derby supports only SearchedCaseExpression, not CaseExpression. 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsCaseExpressions()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsCaseExpressions()
      * @since 5.0
      */
     public boolean supportsCaseExpressions() {
@@ -152,7 +152,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     
     /**
      * Derby supports only left and right outer joins. 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFullOuterJoins()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFullOuterJoins()
      * @since 5.0
      */
     public boolean supportsFullOuterJoins() {
@@ -161,7 +161,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     
     /**
      * Inline views (subqueries in the FROM clause) are supported. 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsInlineViews()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsInlineViews()
      * @since 4.3
      */
     public boolean supportsInlineViews() {
@@ -169,7 +169,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsExcept()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -177,7 +177,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#supportsIntersect()
+     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

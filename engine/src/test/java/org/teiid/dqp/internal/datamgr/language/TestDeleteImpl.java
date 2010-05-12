@@ -25,7 +25,7 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Delete;
+import org.teiid.language.Delete;
 import org.teiid.query.sql.lang.CompoundCriteria;
 
 

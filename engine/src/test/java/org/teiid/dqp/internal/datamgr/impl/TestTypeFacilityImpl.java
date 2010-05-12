@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import java.sql.Clob;
 
-import org.teiid.resource.cci.TypeFacility;
+import org.teiid.translator.TypeFacility;
 
 import junit.framework.TestCase;
 

@@ -24,9 +24,9 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.DerivedColumn;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
 
 
 public class TestSelectSymbolImpl extends TestCase {

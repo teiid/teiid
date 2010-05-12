@@ -22,14 +22,14 @@
 
 package org.teiid.resource.adapter.loopback;
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.Execution;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.TranslatorProperty;
+import org.teiid.language.Command;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorProperty;
 
 /**
  * Loopback connector.

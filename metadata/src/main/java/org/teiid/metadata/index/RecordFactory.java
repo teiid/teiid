@@ -27,25 +27,25 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.ColumnSet;
-import org.teiid.connector.metadata.runtime.Datatype;
-import org.teiid.connector.metadata.runtime.ForeignKey;
-import org.teiid.connector.metadata.runtime.KeyRecord;
-import org.teiid.connector.metadata.runtime.Procedure;
-import org.teiid.connector.metadata.runtime.ProcedureParameter;
-import org.teiid.connector.metadata.runtime.Schema;
-import org.teiid.connector.metadata.runtime.Table;
-import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
-import org.teiid.connector.metadata.runtime.Column.SearchType;
-import org.teiid.connector.metadata.runtime.Datatype.Variety;
 import org.teiid.core.id.UUID;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.internal.core.index.EntryResult;
 import org.teiid.internal.core.index.IIndexConstants;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.Datatype.Variety;
 
 
 /**

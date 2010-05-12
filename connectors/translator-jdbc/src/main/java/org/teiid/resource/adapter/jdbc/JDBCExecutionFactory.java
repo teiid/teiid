@@ -27,24 +27,24 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.QueryExpression;
-import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.ConnectorCapabilities;
-import org.teiid.resource.cci.ExecutionContext;
-import org.teiid.resource.cci.MetadataProvider;
-import org.teiid.resource.cci.ProcedureExecution;
-import org.teiid.resource.cci.ResultSetExecution;
-import org.teiid.resource.cci.TranslatorProperty;
-import org.teiid.resource.cci.UpdateExecution;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProvider;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.Translator;
 
 

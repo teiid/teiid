@@ -28,7 +28,7 @@ import java.util.List;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.resource.cci.ConnectorCapabilities;
+import org.teiid.translator.ConnectorCapabilities;
 
 
 /**

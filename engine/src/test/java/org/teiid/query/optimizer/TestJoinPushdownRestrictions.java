@@ -27,7 +27,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.resource.cci.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.translator.ConnectorCapabilities.SupportedJoinCriteria;
 
 
 public class TestJoinPushdownRestrictions {

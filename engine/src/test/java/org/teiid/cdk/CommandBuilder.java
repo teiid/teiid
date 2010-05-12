@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.connector.language.LanguageFactory;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
+import org.teiid.language.LanguageFactory;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.AliasGenerator;
 import org.teiid.query.parser.QueryParser;
@@ -59,11 +59,11 @@ public class CommandBuilder {
         this.metadata = metadata;
     }
     
-    public org.teiid.connector.language.Command getCommand(String queryString) {
+    public org.teiid.language.Command getCommand(String queryString) {
         return getCommand(queryString, false, false);
     }
     
-    public org.teiid.connector.language.Command getCommand(String queryString, boolean generateAliases, boolean supportsGroupAlias) {
+    public org.teiid.language.Command getCommand(String queryString, boolean generateAliases, boolean supportsGroupAlias) {
         Command command = null;
         try {
             command = QueryParser.getQueryParser().parseCommand(queryString);

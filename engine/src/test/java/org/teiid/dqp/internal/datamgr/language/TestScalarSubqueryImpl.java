@@ -24,8 +24,8 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Select;
-import org.teiid.connector.language.ScalarSubquery;
+import org.teiid.language.ScalarSubquery;
+import org.teiid.language.Select;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 

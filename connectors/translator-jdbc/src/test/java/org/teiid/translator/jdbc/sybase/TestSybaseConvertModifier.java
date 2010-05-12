@@ -30,14 +30,14 @@ import java.sql.Timestamp;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.LanguageFactory;
-import org.teiid.connector.language.Literal;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.resource.ConnectorException;
 import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.ConnectorException;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 

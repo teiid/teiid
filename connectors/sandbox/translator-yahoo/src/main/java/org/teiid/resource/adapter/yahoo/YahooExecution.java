@@ -38,19 +38,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.teiid.connector.language.ColumnReference;
-import org.teiid.connector.language.Condition;
-import org.teiid.connector.language.DerivedColumn;
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Select;
-import org.teiid.connector.metadata.runtime.Column;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.ConnectorException;
-import org.teiid.resource.adapter.BasicExecution;
-import org.teiid.resource.cci.DataNotAvailableException;
-import org.teiid.resource.cci.ResultSetExecution;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BasicExecution;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ResultSetExecution;
 
 
 /**

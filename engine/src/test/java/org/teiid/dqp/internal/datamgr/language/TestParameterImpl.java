@@ -24,9 +24,9 @@ package org.teiid.dqp.internal.datamgr.language;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.Argument;
-import org.teiid.connector.language.Call;
-import org.teiid.connector.language.Argument.Direction;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Argument.Direction;
 
 public class TestParameterImpl extends TestCase {
 

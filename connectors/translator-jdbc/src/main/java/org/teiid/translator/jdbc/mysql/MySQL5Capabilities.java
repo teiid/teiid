@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc.mysql;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.resource.cci.SourceSystemFunctions;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 

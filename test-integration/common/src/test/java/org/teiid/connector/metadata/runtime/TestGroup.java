@@ -27,9 +27,10 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.language.NamedTable;
-import org.teiid.connector.language.Select;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
+import org.teiid.metadata.Table;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 

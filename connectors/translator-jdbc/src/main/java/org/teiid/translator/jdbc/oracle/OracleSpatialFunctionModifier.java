@@ -25,9 +25,9 @@ package org.teiid.translator.jdbc.oracle;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.language.Expression;
-import org.teiid.connector.language.Function;
-import org.teiid.connector.language.Literal;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 

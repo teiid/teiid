@@ -22,13 +22,13 @@
 package org.teiid.resource.adapter.salesforce.execution;
 
 
-import org.teiid.connector.language.Command;
-import org.teiid.connector.language.Insert;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.resource.ConnectorException;
+import org.teiid.language.Command;
+import org.teiid.language.Insert;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.salesforce.SalesforceConnection;
 import org.teiid.resource.adapter.salesforce.execution.visitors.InsertVisitor;
-import org.teiid.resource.cci.ExecutionContext;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.ExecutionContext;
 
 
 public class InsertExecutionImpl extends AbstractUpdateExecution {

@@ -248,7 +248,7 @@ public class SimpleCapabilities extends JDBCCapabilities {
     /**
      * Return null to indicate no functions are supported.
      * @return null 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#getSupportedFunctions()
+     * @see org.teiid.translator.ConnectorCapabilities#getSupportedFunctions()
      */
     public List getSupportedFunctions() {
         return null;
@@ -259,7 +259,7 @@ public class SimpleCapabilities extends JDBCCapabilities {
     }       
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsUnions()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsUnions()
      * @since 4.2
      */
     public boolean supportsUnions() {

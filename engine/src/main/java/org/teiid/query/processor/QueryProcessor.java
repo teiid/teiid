@@ -40,7 +40,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
-import org.teiid.resource.cci.DataNotAvailableException;
+import org.teiid.translator.DataNotAvailableException;
 
 
 public class QueryProcessor implements BatchProducer {

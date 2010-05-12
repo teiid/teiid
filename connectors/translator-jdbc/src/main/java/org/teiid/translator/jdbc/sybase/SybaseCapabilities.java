@@ -117,7 +117,7 @@ public class SybaseCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see org.teiid.resource.cci.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -125,7 +125,7 @@ public class SybaseCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see org.teiid.resource.adapter.BasicConnectorCapabilities#getMaxFromGroups()
+     * @see org.teiid.translator.BasicConnectorCapabilities#getMaxFromGroups()
      */
     public int getMaxFromGroups() {
         return 50;
