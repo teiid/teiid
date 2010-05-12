@@ -24,11 +24,11 @@
  */
 package org.teiid.translator.jdbc.informix;
 
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.Translator;
 
 

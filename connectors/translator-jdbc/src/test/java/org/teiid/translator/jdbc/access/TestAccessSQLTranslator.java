@@ -26,9 +26,9 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.language.Command;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.Translator;
 import org.teiid.translator.jdbc.access.AccessSQLTranslator;

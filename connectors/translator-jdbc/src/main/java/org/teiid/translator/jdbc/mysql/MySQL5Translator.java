@@ -26,11 +26,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 public class MySQL5Translator extends MySQLTranslator {
 	

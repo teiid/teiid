@@ -43,11 +43,11 @@ import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.adapter.jdbc.TranslationHelper;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
+import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.Translator;
 import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 

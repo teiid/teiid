@@ -29,8 +29,8 @@ import junit.framework.TestCase;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 

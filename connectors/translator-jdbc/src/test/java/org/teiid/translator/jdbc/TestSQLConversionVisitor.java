@@ -35,8 +35,6 @@ import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
 import org.teiid.language.LanguageObject;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.adapter.jdbc.TranslationHelper;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.SQLConversionVisitor;

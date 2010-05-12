@@ -24,9 +24,9 @@ package org.teiid.translator.jdbc.h2;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.adapter.jdbc.TranslationHelper;
 import org.teiid.translator.ConnectorException;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.h2.H2Translator;
 
 public class TestH2Translator {

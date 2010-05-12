@@ -29,11 +29,11 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
-import org.teiid.resource.adapter.jdbc.TranslationHelper;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
+import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 
 import com.metamatrix.cdk.api.TranslationUtility;

@@ -27,8 +27,8 @@ package org.teiid.translator.jdbc.oracle;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.jdbc.JDBCCapabilities;
 
 
 /**

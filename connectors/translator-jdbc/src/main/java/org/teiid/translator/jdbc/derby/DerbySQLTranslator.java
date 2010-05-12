@@ -22,11 +22,11 @@
 
 package org.teiid.translator.jdbc.derby;
 
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 

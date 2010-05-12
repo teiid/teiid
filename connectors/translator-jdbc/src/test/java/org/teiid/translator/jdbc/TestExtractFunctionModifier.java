@@ -34,7 +34,6 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;

@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc.teradata;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
+import org.teiid.translator.jdbc.JDBCCapabilities;
 
 
 

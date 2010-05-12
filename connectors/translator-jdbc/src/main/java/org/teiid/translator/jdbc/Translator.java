@@ -55,8 +55,6 @@ import org.teiid.language.SetQuery;
 import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;

@@ -34,13 +34,13 @@ import java.util.List;
 import org.teiid.language.Function;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.Translator;
 

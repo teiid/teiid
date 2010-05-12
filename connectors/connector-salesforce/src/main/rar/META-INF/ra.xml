@@ -38,7 +38,7 @@
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>org.teiid.resource.cci.salesforce.SalesForceManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
                <description>{$display:"User Name",$description:"Name value for Salesforce authentication",$required:"true"}</description>

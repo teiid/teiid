@@ -24,7 +24,7 @@
  */
 package org.teiid.translator.jdbc.access;
 
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
+import org.teiid.translator.jdbc.JDBCCapabilities;
 
 public class AccessCapabilities extends JDBCCapabilities{
     /* 

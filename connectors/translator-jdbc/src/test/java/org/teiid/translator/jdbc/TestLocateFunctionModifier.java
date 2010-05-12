@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.LocateFunctionModifier;

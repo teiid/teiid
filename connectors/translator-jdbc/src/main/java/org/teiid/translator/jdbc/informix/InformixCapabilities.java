@@ -26,7 +26,7 @@ package org.teiid.translator.jdbc.informix;
 
 import java.util.*;
 
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
+import org.teiid.translator.jdbc.JDBCCapabilities;
 
 
 /**

@@ -33,7 +33,6 @@ import org.teiid.language.Function;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
-import org.teiid.resource.adapter.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
@@ -42,6 +41,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.Translator;
 

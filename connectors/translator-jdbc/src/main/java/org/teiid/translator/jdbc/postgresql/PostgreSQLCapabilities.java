@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc.postgresql;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.resource.adapter.jdbc.JDBCCapabilities;
+import org.teiid.translator.jdbc.JDBCCapabilities;
 
 
 
@@ -249,7 +249,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
      * This is true only after Postgre version 7.1 
      * However, since version 7 was released in 2000 we'll assume a post 7 instance.
      * 
-     * @see org.teiid.resource.adapter.jdbc.JDBCCapabilities#supportsInlineViews()
+     * @see org.teiid.translator.jdbc.JDBCCapabilities#supportsInlineViews()
      */
     public boolean supportsInlineViews() {
         return true;
