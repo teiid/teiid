@@ -21,11 +21,12 @@
  */
 package org.teiid.deployers;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.resource.adapter.BasicExecutionFactory;
-import org.teiid.resource.cci.TranslatorProperty;
-import static org.junit.Assert.*;
+import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.TranslatorProperty;
 
 @SuppressWarnings("nls")
 public class TestTranslatorDeployer {
