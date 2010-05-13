@@ -28,7 +28,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -37,7 +37,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 public class HsqlExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, getLanguageFactory()));
 		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, getLanguageFactory())); 

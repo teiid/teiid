@@ -30,7 +30,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 
@@ -47,7 +47,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
         try {
         	Util.getConnectorHostWithFakeMetadata(BAD_COUNT_FILE).executeCommand(sql);
             fail("Should have failed due to extra column defined in .csv file");//$NON-NLS-1$
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             assertEquals("Expected input file to have 3 columns based on model, but found 4.  This could be caused by misplaced quotes, causing multiple columns to be treated as one.", e.getMessage()); //$NON-NLS-1$
         }
     }
@@ -57,7 +57,7 @@ public class TestMultiFileTextSynchExecution extends TestCase {
         try {
         	Util.getConnectorHostWithFakeMetadata(BAD_COUNT_FILE).executeCommand(sql);
             fail("Should have failed due to extra column defined in .csv file");//$NON-NLS-1$
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             assertEquals("Expected input file to have 3 columns based on model, but found 4.  This could be caused by misplaced quotes, causing multiple columns to be treated as one.", e.getMessage()); //$NON-NLS-1$
         }
     }

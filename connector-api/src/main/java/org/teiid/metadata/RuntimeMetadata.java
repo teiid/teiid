@@ -22,7 +22,7 @@
 
 package org.teiid.metadata;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 /**
  * Helper methods that can be used to access runtime metadata.
@@ -34,45 +34,45 @@ public interface RuntimeMetadata {
      * @param fullName
      * @return The object
      */
-    Table getTable(String fullName) throws ConnectorException;
+    Table getTable(String fullName) throws TranslatorException;
 
     /**
      * Look up an object by identifier
      * @param fullName
      * @return The object
      */
-    Column getColumn(String fullName) throws ConnectorException;
+    Column getColumn(String fullName) throws TranslatorException;
 
     /**
      * Look up an object by identifier
      * @param fullName
      * @return The object
      */
-    Procedure getProcedure(String fullName) throws ConnectorException;
+    Procedure getProcedure(String fullName) throws TranslatorException;
     
     /**
      * Gets the contents of a VDB resource in binary form.
      * @param resourcePath a path returned by getVDBResourcePaths()
      * @return the binary contents of the resource in a byte[]
-     * @throws ConnectorException if the operation fails
+     * @throws TranslatorException if the operation fails
      * @since 4.3
      */
-    public byte[] getBinaryVDBResource(String resourcePath) throws ConnectorException;
+    public byte[] getBinaryVDBResource(String resourcePath) throws TranslatorException;
 
     /**
      * Gets the contents of a VDB resource as a String.
      * @param resourcePath a path returned by getVDBResourcePaths()
      * @return the contents of the resource as a String of characters
-     * @throws ConnectorException if the operation fails
+     * @throws TranslatorException if the operation fails
      * @since 4.3
      */
-    public String getCharacterVDBResource(String resourcePath) throws ConnectorException;
+    public String getCharacterVDBResource(String resourcePath) throws TranslatorException;
 
     /**
      * Gets the resource paths of all the resources in the VDB. 
      * @return an array of resource paths of the resources in the VDB
-     * @throws ConnectorException if the operation fails
+     * @throws TranslatorException if the operation fails
      * @since 4.3
      */
-    public String[] getVDBResourcePaths() throws ConnectorException;
+    public String[] getVDBResourcePaths() throws TranslatorException;
 }

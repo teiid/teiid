@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 
 /**
@@ -96,7 +96,7 @@ public class TestLocateFunctionModifier {
 
     	JDBCExecutionFactory trans = new JDBCExecutionFactory() {
 			@Override
-			public void start() throws ConnectorException {
+			public void start() throws TranslatorException {
 				super.start();
 				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
 			}

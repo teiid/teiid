@@ -36,7 +36,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -68,17 +68,17 @@ public class CachedFinder implements CapabilitiesFinder {
         if(caps != null) {
             return caps;
         }
-        ConnectorException exception = null;
+        TranslatorException exception = null;
         ModelMetaData model = vdb.getModel(modelName);
         for (String sourceName:model.getSourceNames()) {
         	try {
         		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
         		if (mgr == null) {
-        			throw new ConnectorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
+        			throw new TranslatorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
         		}
         		caps = mgr.getCapabilities();
         		break;
-            } catch(ConnectorException e) {
+            } catch(TranslatorException e) {
             	if (exception == null) {
             		exception = e;
             	}

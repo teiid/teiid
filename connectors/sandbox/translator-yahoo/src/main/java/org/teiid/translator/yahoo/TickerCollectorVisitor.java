@@ -26,7 +26,7 @@ import java.util.*;
 
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -34,7 +34,7 @@ import org.teiid.translator.ConnectorException;
 public class TickerCollectorVisitor extends HierarchyVisitor {
 
     private Set tickers = new HashSet();
-    private ConnectorException exception;
+    private TranslatorException exception;
 
     /**
      * 
@@ -51,7 +51,7 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
         return this.tickers;
     }
     
-    public ConnectorException getException() {
+    public TranslatorException getException() {
         return this.exception;
     }
 
@@ -82,16 +82,16 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
                 String ticker = (String) literal.getValue();
                 this.tickers.add(ticker.toUpperCase());                
             } else {
-                this.exception = new ConnectorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_type", literal.getType().getName())); //$NON-NLS-1$
+                this.exception = new TranslatorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_type", literal.getType().getName())); //$NON-NLS-1$
             }
         } else {
-            this.exception = new ConnectorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_expression", expr)); //$NON-NLS-1$
+            this.exception = new TranslatorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_expression", expr)); //$NON-NLS-1$
         }
          
     }
     
     
-    public static Set getTickers(Condition crit) throws ConnectorException {
+    public static Set getTickers(Condition crit) throws TranslatorException {
         TickerCollectorVisitor visitor = new TickerCollectorVisitor();
         crit.acceptVisitor(visitor);
         

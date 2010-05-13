@@ -37,8 +37,8 @@ public interface ProcedureExecution extends ResultSetExecution {
      * Get the output parameter values.  Results should place the return parameter
      * first if it is present, then the IN/OUT and OUT parameters should follow in
      * the order they appeared in the command.
-     * @throws ConnectorException If an error occurs while retrieving the output value
+     * @throws TranslatorException If an error occurs while retrieving the output value
      */
-    List<?> getOutputParameterValues() throws ConnectorException;
+    List<?> getOutputParameterValues() throws TranslatorException;
     
 }

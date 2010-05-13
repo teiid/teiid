@@ -35,7 +35,7 @@ import java.util.List;
 import org.teiid.language.Function;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -63,7 +63,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	}
 
 	@Override
-    public void start() throws ConnectorException {
+    public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$

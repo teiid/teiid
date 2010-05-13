@@ -27,14 +27,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	
 	@Override
-    public void start() throws ConnectorException {
+    public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
 			

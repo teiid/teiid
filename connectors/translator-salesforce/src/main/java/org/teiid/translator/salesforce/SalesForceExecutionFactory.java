@@ -32,7 +32,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProvider;
@@ -70,7 +70,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 	}
 
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Started"); //$NON-NLS-1$
 	}
@@ -78,12 +78,12 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-			throws ConnectorException {
+			throws TranslatorException {
 		return new QueryExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
 	}
 	
 	@Override
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws ConnectorException {
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
 		UpdateExecution result = null;
 		if(command instanceof org.teiid.language.Delete) {
 			result = new DeleteExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
@@ -98,11 +98,11 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 	
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-			throws ConnectorException {
+			throws TranslatorException {
 		return new ProcedureExecutionParentImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
 	}
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws ConnectorException {
+	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException {
 		MetadataProcessor processor = new MetadataProcessor((SalesforceConnection)connectionFactory,metadataFactory, this);
 		processor.processMetadata();
 	}	

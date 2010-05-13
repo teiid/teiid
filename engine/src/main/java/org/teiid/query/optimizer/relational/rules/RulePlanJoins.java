@@ -52,7 +52,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Permutation;
-import org.teiid.translator.ConnectorCapabilities.SupportedJoinCriteria;
+import org.teiid.translator.TranslatorCapabilities.SupportedJoinCriteria;
 
 
 /**

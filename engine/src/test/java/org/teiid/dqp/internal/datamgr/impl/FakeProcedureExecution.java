@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ProcedureExecution;
 
@@ -43,12 +43,12 @@ final class FakeProcedureExecution implements ProcedureExecution {
     }
     
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
     	
     }
     
     @Override
-    public List<?> getOutputParameterValues() throws ConnectorException {
+    public List<?> getOutputParameterValues() throws TranslatorException {
     	List<Object> result = new ArrayList<Object>(paramSize);
     	for (int i = 0; i < paramSize; i++) {
     		result.add(i);
@@ -56,14 +56,14 @@ final class FakeProcedureExecution implements ProcedureExecution {
     	return result;
     }
     
-    public void close() throws ConnectorException {
+    public void close() throws TranslatorException {
     }
 
-    public void cancel() throws ConnectorException {
+    public void cancel() throws TranslatorException {
     }
     
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List next() throws TranslatorException, DataNotAvailableException {
     	if (rowNum == 1) {
     		return null;
     	}

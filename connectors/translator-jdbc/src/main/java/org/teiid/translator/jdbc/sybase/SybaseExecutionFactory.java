@@ -33,7 +33,7 @@ import org.teiid.language.Function;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.AliasModifier;
@@ -48,7 +48,7 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
  */
 public class SybaseExecutionFactory extends JDBCExecutionFactory {
     
-    public void start() throws ConnectorException {
+    public void start() throws TranslatorException {
         super.start();
         
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$ 

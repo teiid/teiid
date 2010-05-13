@@ -35,10 +35,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
  */
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
-    /** 
-     * @see org.teiid.translator.ConnectorCapabilities#getSupportedFunctions()
-     * @since 4.3
-     */
+	@Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());

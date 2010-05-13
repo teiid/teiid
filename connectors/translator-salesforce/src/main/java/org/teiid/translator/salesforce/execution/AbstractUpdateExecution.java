@@ -23,11 +23,13 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.ArrayList;
 
+import javax.resource.ResourceException;
+
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.UpdateExecution;
@@ -63,16 +65,16 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 	}
 
 	@Override
-	public void cancel() throws ConnectorException {
+	public void cancel() throws TranslatorException {
 	}
 
 	@Override
-	public void close() throws ConnectorException {
+	public void close() throws TranslatorException {
 	}
 	
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
-			ConnectorException {
+			TranslatorException {
 		return new int[] {result};
 	}
 
@@ -84,7 +86,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 		return connection;
 	}
 
-	String[] getIDs(Condition criteria, IQueryProvidingVisitor visitor) throws ConnectorException {
+	String[] getIDs(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
 		String[] Ids = null;
 		if (visitor.hasOnlyIDCriteria()) {
 			try {
@@ -97,16 +99,20 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 			}
 	
 		} else if (visitor.hasCriteria()) {
-			String query = visitor.getQuery();
-			QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
-			if (null != results && results.getSize() > 0) {
-				ArrayList<String> idList = new ArrayList<String>(results
-						.getRecords().size());
-				for (int i = 0; i < results.getRecords().size(); i++) {
-					SObject sObject = results.getRecords().get(i);
-					idList.add(sObject.getId());
+			try {
+				String query = visitor.getQuery();
+				QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
+				if (null != results && results.getSize() > 0) {
+					ArrayList<String> idList = new ArrayList<String>(results
+							.getRecords().size());
+					for (int i = 0; i < results.getRecords().size(); i++) {
+						SObject sObject = results.getRecords().get(i);
+						idList.add(sObject.getId());
+					}
+					Ids = idList.toArray(new String[0]);
 				}
-				Ids = idList.toArray(new String[0]);
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
 			}
 		}
 		return Ids;

@@ -31,7 +31,7 @@ import org.teiid.metadata.*;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -45,14 +45,14 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     @Override
-    public Column getColumn(String fullName) throws ConnectorException {
+    public Column getColumn(String fullName) throws TranslatorException {
 		try {
 			Object metadataId = metadata.getElementID(fullName);
 			return getElement(metadataId);
 		} catch (QueryMetadataException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		} catch (TeiidComponentException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
     }
     
@@ -64,14 +64,14 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     @Override
-    public Table getTable(String fullName) throws ConnectorException {
+    public Table getTable(String fullName) throws TranslatorException {
 		try {
 			Object groupId = metadata.getGroupID(fullName);
 	    	return getGroup(groupId);
 		} catch (QueryMetadataException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		} catch (TeiidComponentException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
     }
 
@@ -83,14 +83,14 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 	}    
     
     @Override
-    public Procedure getProcedure(String fullName) throws ConnectorException {
+    public Procedure getProcedure(String fullName) throws TranslatorException {
 		try {
 			StoredProcedureInfo sp = metadata.getStoredProcedureInfoForProcedure(fullName);
 	    	return getProcedure(sp);
 		} catch (QueryMetadataException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		} catch (TeiidComponentException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
     }
 
@@ -108,33 +108,33 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 		return null;
 	}
     
-    public byte[] getBinaryVDBResource(String resourcePath) throws ConnectorException {
+    public byte[] getBinaryVDBResource(String resourcePath) throws TranslatorException {
         try {
             return metadata.getBinaryVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         } catch (TeiidComponentException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         }
     }
 
-    public String getCharacterVDBResource(String resourcePath) throws ConnectorException {
+    public String getCharacterVDBResource(String resourcePath) throws TranslatorException {
         try {
             return metadata.getCharacterVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         } catch (TeiidComponentException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         }
     }
 
-    public String[] getVDBResourcePaths() throws ConnectorException {
+    public String[] getVDBResourcePaths() throws TranslatorException {
         try {
             return metadata.getVDBResourcePaths();
         } catch (QueryMetadataException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         } catch (TeiidComponentException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         }
     }
     

@@ -108,7 +108,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 public class LanguageBridgeFactory {
@@ -585,7 +585,7 @@ public class LanguageBridgeFactory {
         if(sp.getProcedureID() != null) {
             try {
 				proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
-			} catch (ConnectorException e) {
+			} catch (TranslatorException e) {
 				throw new TeiidRuntimeException(e);
 			}
         }

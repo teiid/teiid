@@ -77,7 +77,7 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 public class DataTierManagerImpl implements ProcessorDataManager {
@@ -346,7 +346,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return aqr;
 	}
 	
-	ConnectorWork executeRequest(AtomicRequestMessage aqr, AbstractWorkItem awi, String connectorName) throws ConnectorException {
+	ConnectorWork executeRequest(AtomicRequestMessage aqr, AbstractWorkItem awi, String connectorName) throws TranslatorException {
 		return getCM(connectorName).executeRequest(aqr, awi);
 	}
 

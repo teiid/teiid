@@ -44,7 +44,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 
@@ -88,7 +88,7 @@ public class JDBCMetdataProcessor {
 	private String quoteString;
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-			throws SQLException, ConnectorException {
+			throws SQLException, TranslatorException {
 		DatabaseMetaData metadata = conn.getMetaData();
 		
 		quoteString = metadata.getIdentifierQuoteString();
@@ -126,7 +126,7 @@ public class JDBCMetdataProcessor {
 	}
 
 	private void getProcedures(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, ConnectorException {
+			DatabaseMetaData metadata) throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
 		while (procedures.next()) {
@@ -183,7 +183,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, ConnectorException {
+			DatabaseMetaData metadata) throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
@@ -208,7 +208,7 @@ public class JDBCMetdataProcessor {
 
 	private void getColumns(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
-			throws SQLException, ConnectorException {
+			throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
 		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
 		int rsColumns = columns.getMetaData().getColumnCount();
@@ -254,7 +254,7 @@ public class JDBCMetdataProcessor {
 
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
-			throws SQLException, ConnectorException {
+			throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet pks = metadata.getPrimaryKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -282,7 +282,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private void getForeignKeys(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, ConnectorException {
+			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -309,7 +309,7 @@ public class JDBCMetdataProcessor {
 					String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 					pkTable = tableMap.get(fullTableName);
 					if (pkTable == null) {
-						throw new ConnectorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
+						throw new TranslatorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
 					}
 					fkName = fks.getString(12);
 					if (fkName == null) {
@@ -325,7 +325,7 @@ public class JDBCMetdataProcessor {
 	}
 
 	private void getIndexes(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, ConnectorException {
+			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);

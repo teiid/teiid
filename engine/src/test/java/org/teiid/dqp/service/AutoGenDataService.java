@@ -38,7 +38,7 @@ import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 
 
@@ -69,9 +69,9 @@ public class AutoGenDataService extends ConnectorManager{
 
     @Override
     public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi)
-    		throws ConnectorException {
+    		throws TranslatorException {
     	if (throwExceptionOnExecute) {
-    		throw new ConnectorException("Connector Exception"); //$NON-NLS-1$
+    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
     	}
         List projectedSymbols = (message.getCommand()).getProjectedSymbols();               
         List[] results = createResults(projectedSymbols);
@@ -81,12 +81,12 @@ public class AutoGenDataService extends ConnectorManager{
         return new ConnectorWork() {
 			
 			@Override
-			public AtomicResultsMessage more() throws ConnectorException {
+			public AtomicResultsMessage more() throws TranslatorException {
 				throw new RuntimeException("Should not be called"); //$NON-NLS-1$
 			}
 			
 			@Override
-			public AtomicResultsMessage execute() throws ConnectorException {
+			public AtomicResultsMessage execute() throws TranslatorException {
 				if (dataNotAvailable > -1) {
 					int delay = dataNotAvailable;
 					dataNotAvailable = -1;

@@ -24,6 +24,7 @@ package org.teiid.translator.salesforce.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.resource.ResourceException;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
@@ -34,7 +35,7 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
@@ -54,7 +55,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void execute() throws ConnectorException {
+	public void execute() throws TranslatorException {
 		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
 		visitor.visit((Update)command);
 		String[] Ids = getIDs(((Update)command).getWhere(), visitor);
@@ -78,7 +79,11 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 				updateDataList.add(data);
 			}
 
-			result = getConnection().update(updateDataList);
+			try {
+				result = getConnection().update(updateDataList);
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
+			}
 		}
 	}
 }

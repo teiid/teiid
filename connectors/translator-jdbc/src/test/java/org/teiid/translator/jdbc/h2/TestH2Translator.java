@@ -24,7 +24,7 @@ package org.teiid.translator.jdbc.h2;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 public class TestH2Translator {
@@ -32,7 +32,7 @@ public class TestH2Translator {
     private static H2ExecutionFactory TRANSLATOR; 
 
     @BeforeClass
-    public static void setUp() throws ConnectorException {
+    public static void setUp() throws TranslatorException {
         TRANSLATOR = new H2ExecutionFactory();        
         TRANSLATOR.start();
     }

@@ -31,7 +31,7 @@ import java.util.List;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.UpdateExecution;
@@ -61,7 +61,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     // ===========================================================================================================================
 
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
         if (command instanceof BatchedUpdates) {
         	result = execute(((BatchedUpdates)command));
         } else {
@@ -76,7 +76,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(org.teiid.language.Command[])
      * @since 4.2
      */
-    public int[] execute(BatchedUpdates batchedCommand) throws ConnectorException {
+    public int[] execute(BatchedUpdates batchedCommand) throws TranslatorException {
         boolean succeeded = false;
 
         boolean commitType = getAutoCommit(null);
@@ -140,7 +140,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
     private void executeBatch(int commandCount,
                               int[] results,
-                              List<TranslatedCommand> commands) throws ConnectorException {
+                              List<TranslatedCommand> commands) throws TranslatorException {
         try {
             int[] batchResults = statement.executeBatch();
             addStatementWarnings();
@@ -155,10 +155,10 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
     /**
      * @param translatedComm
-     * @throws ConnectorException
+     * @throws TranslatorException
      * @since 4.3
      */
-    private int[] executeTranslatedCommand(TranslatedCommand translatedComm) throws ConnectorException {
+    private int[] executeTranslatedCommand(TranslatedCommand translatedComm) throws TranslatorException {
         // create statement or PreparedStatement and execute
         String sql = translatedComm.getSql();
         boolean commitType = false;
@@ -209,9 +209,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     /**
      * @param command
      * @return
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
-    private boolean getAutoCommit(TranslatedCommand tCommand) throws ConnectorException {
+    private boolean getAutoCommit(TranslatedCommand tCommand) throws TranslatorException {
     	if (this.context.isTransactional()) {
     		return false;
     	}
@@ -227,10 +227,10 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * 
      * @param exceptionOccurred
      * @param command
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
     private void restoreAutoCommit(boolean exceptionOccurred,
-                                   TranslatedCommand tCommand) throws ConnectorException {
+                                   TranslatedCommand tCommand) throws TranslatorException {
         try {
             if (exceptionOccurred) {
                 connection.rollback();
@@ -249,7 +249,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException,
-    		ConnectorException {
+    		TranslatorException {
     	return result;
     }
 }

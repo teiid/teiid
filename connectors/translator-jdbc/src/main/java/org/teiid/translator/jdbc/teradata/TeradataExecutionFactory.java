@@ -44,9 +44,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         return false;
     }
     
-    /**
-     * @see org.teiid.resource.cci.data.ConnectorCapabilities#getSupportedFunctions()
-     */
+    @Override
     public List getSupportedFunctions() {
         List supportedFunctions = new ArrayList();
         supportedFunctions.addAll(super.getSupportedFunctions());

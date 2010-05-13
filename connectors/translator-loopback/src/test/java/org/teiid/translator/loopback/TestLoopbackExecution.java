@@ -28,7 +28,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.loopback.LoopbackExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
@@ -49,11 +49,11 @@ public class TestLoopbackExecution extends TestCase {
         return config;
     }
     
-    public void helpTestQuery(String sql, TranslationUtility metadata, Object[][] expectedResults) throws ConnectorException {
+    public void helpTestQuery(String sql, TranslationUtility metadata, Object[][] expectedResults) throws TranslatorException {
         helpTestQuery(sql, metadata, 0, 1, expectedResults);
     }
 
-    public void helpTestQuery(String sql, TranslationUtility metadata, int waitTime, int rowCount, Object[][] expectedResults) throws ConnectorException {
+    public void helpTestQuery(String sql, TranslationUtility metadata, int waitTime, int rowCount, Object[][] expectedResults) throws TranslatorException {
     	ConnectorHost host = new ConnectorHost(exampleProperties(waitTime, rowCount), null, metadata);
                               
     	List actualResults = host.executeCommand(sql);

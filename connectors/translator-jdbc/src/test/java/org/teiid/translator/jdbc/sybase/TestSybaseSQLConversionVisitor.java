@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.language.Command;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
@@ -42,7 +42,7 @@ public class TestSybaseSQLConversionVisitor {
     private static SybaseExecutionFactory trans = new SybaseExecutionFactory();
     
     @BeforeClass
-    public static void setup() throws ConnectorException {
+    public static void setup() throws TranslatorException {
         trans.start();
     }
 
@@ -61,7 +61,7 @@ public class TestSybaseSQLConversionVisitor {
         TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), trans);
 		try {
 			tc.translateCommand(obj);
-		} catch (ConnectorException e) {
+		} catch (TranslatorException e) {
 			throw new RuntimeException(e);
 		}
         

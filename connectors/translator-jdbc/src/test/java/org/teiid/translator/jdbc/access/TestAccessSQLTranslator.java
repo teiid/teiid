@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.language.Command;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
@@ -45,12 +45,12 @@ public class TestAccessSQLTranslator extends TestCase {
         try {
             TRANSLATOR = new AccessExecutionFactory();        
             TRANSLATOR.start();
-        } catch(ConnectorException e) {
+        } catch(TranslatorException e) {
             e.printStackTrace();    
         }
     }
     
-    public void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         Command obj = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(input);
         

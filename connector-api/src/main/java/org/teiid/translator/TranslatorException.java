@@ -22,20 +22,20 @@
 
 package org.teiid.translator;
 
-import javax.resource.ResourceException;
+import org.teiid.core.TeiidException;
 
 /**
  * An exception the connector writer can return in case of an 
  * error while using the connector.
  */
-public class ConnectorException extends ResourceException{
+public class TranslatorException extends TeiidException{
 
 	private static final long serialVersionUID = -5980862789340592219L;
 
 	/**
      * No-arg constructor required by Externalizable semantics.
      */
-    public ConnectorException() {
+    public TranslatorException() {
         super();
     }
     
@@ -44,15 +44,15 @@ public class ConnectorException extends ResourceException{
      *
      * @param message A message describing the exception
      */
-    public ConnectorException( String message ) {
+    public TranslatorException( String message ) {
         super( message );
     }
     
-    public ConnectorException( String errorCode, String message ) {
+    public TranslatorException( String errorCode, String message ) {
         super( message, errorCode);
     }
     
-    public ConnectorException( int errorCode, String message ) {
+    public TranslatorException( int errorCode, String message ) {
         super(message, Integer.toString(errorCode));
     }    
     
@@ -63,8 +63,8 @@ public class ConnectorException extends ResourceException{
      * @param code A code denoting the exception
      * @param e An exception to nest within this one
      */
-    public ConnectorException( Throwable e, String message ) {
-        super(message,e);
+    public TranslatorException( Throwable e, String message ) {
+        super(e, message);
     }  
     
     /**
@@ -72,7 +72,7 @@ public class ConnectorException extends ResourceException{
      *
      * @param e An exception to chain to this exception
      */
-    public ConnectorException( Throwable e ) {
+    public TranslatorException( Throwable e ) {
         super( e );
     }  
 

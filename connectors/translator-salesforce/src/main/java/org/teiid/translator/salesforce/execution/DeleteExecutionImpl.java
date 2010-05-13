@@ -21,10 +21,12 @@
  */
 package org.teiid.translator.salesforce.execution;
 
+import javax.resource.ResourceException;
+
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.DeleteVisitor;
@@ -40,12 +42,16 @@ public class DeleteExecutionImpl extends AbstractUpdateExecution {
 	}
 
 	@Override
-	public void execute() throws ConnectorException {
-		DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
-		dVisitor.visitNode(command);
-		String[] Ids = getIDs(((Delete)command).getWhere(), dVisitor);
-		if(null != Ids && Ids.length > 0) {
-			result = getConnection().delete(Ids);
+	public void execute() throws TranslatorException {
+		try {
+			DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
+			dVisitor.visitNode(command);
+			String[] Ids = getIDs(((Delete)command).getWhere(), dVisitor);
+			if(null != Ids && Ids.length > 0) {
+				result = getConnection().delete(Ids);
+			}
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
 		}
 	}
 }

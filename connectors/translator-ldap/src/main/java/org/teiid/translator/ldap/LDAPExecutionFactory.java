@@ -29,7 +29,7 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
@@ -77,23 +77,23 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 	
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-			throws ConnectorException {
+			throws TranslatorException {
 		try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
 			return new LDAPSyncQueryExecution((Select)command, this, (LdapContext)cf.getConnection());
 		} catch (ResourceException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
 	}
 	
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-			throws ConnectorException {
+			throws TranslatorException {
 		try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
 			return new LDAPUpdateExecution(command, (LdapContext)cf.getConnection());
 		} catch (ResourceException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
 	}	
 	

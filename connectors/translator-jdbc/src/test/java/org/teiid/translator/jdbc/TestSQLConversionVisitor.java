@@ -35,7 +35,7 @@ import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
 import org.teiid.language.LanguageObject;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 
 /**
@@ -53,7 +53,7 @@ public class TestSQLConversionVisitor {
     
     private static JDBCExecutionFactory TRANSLATOR; 
     
-    @BeforeClass public static void oneTimeSetup() throws ConnectorException {
+    @BeforeClass public static void oneTimeSetup() throws TranslatorException {
     	TRANSLATOR = new JDBCExecutionFactory();
     	TRANSLATOR.setTrimStrings(true);
     	TRANSLATOR.start();
@@ -75,14 +75,14 @@ public class TestSQLConversionVisitor {
         try {
 			trans.start();
 	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
-		} catch (ConnectorException e) {
+		} catch (TranslatorException e) {
 			throw new RuntimeException(e);
 		}
     }
     
     public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
 
-    private String getStringWithContext(LanguageObject obj) throws ConnectorException {
+    private String getStringWithContext(LanguageObject obj) throws TranslatorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
         env.start();

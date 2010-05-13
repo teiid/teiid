@@ -41,7 +41,7 @@ import java.util.Properties;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.FileConnection;
 
 
@@ -89,11 +89,11 @@ public class TextConnectionImpl {
 		return metadataProps;
 	}
 	
-	private List<BufferedReader> createReaders(String tableName) throws ConnectorException {
+	private List<BufferedReader> createReaders(String tableName) throws TranslatorException {
 		try {
 			createReaders(this.metadataProps.get(tableName), tableName);
 		} catch (IOException e) {
-            throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Unable_get_Reader", new Object[] {tableName, e.getMessage() })); //$NON-NLS-1$
+            throw new TranslatorException(e, TextPlugin.Util.getString("TextSynchExecution.Unable_get_Reader", new Object[] {tableName, e.getMessage() })); //$NON-NLS-1$
 
 		}
 		return readerQueue;
@@ -105,13 +105,13 @@ public class TextConnectionImpl {
      * @param props Group's metadata properites string
      * @return BufferReader Object
      */
-    private void createReaders(Properties props, String groupName) throws IOException, ConnectorException {
+    private void createReaders(Properties props, String groupName) throws IOException, TranslatorException {
         if(readerQueue != null && readerQueue.size() > 0) {
             return ;
         }
         
         if(props == null) {
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Error_obtain_properties_for_group", groupName)); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Error_obtain_properties_for_group", groupName)); //$NON-NLS-1$
         }
         
         String location = props.getProperty(TextDescriptorPropertyNames.LOCATION);
@@ -136,7 +136,7 @@ public class TextConnectionImpl {
 	            // get the stream from the connection
 	            addReader(location, urlConn.getInputStream());
         	} catch (MalformedURLException e) {
-        		throw new ConnectorException(TextPlugin.Util.getString("TextConnection.fileDoesNotExistForGroup", new Object[] {location, groupName})); //$NON-NLS-1$
+        		throw new TranslatorException(TextPlugin.Util.getString("TextConnection.fileDoesNotExistForGroup", new Object[] {location, groupName})); //$NON-NLS-1$
         	}
         }
  
@@ -162,9 +162,9 @@ public class TextConnectionImpl {
      * row HEADER_ROW is used as the row that may contain column 
 	 * names.
      *
-     * @throws ConnectorException 
+     * @throws TranslatorException 
      */
-    private String nextLine(String tableName) throws ConnectorException {
+    private String nextLine(String tableName) throws TranslatorException {
     	if (currentreader == null && readerQueueIndex < readerQueue.size()) {
             // reader queue index is advanced only by the nextReader()
             // method.  Don't do it here.
@@ -227,7 +227,7 @@ public class TextConnectionImpl {
 						else {
 							Object[] params = new Object[] { line }; 
 							String msg = TextPlugin.Util.getString("TextSynchExecution.Text_has_no_determined_ending_qualifier", params); //$NON-NLS-1$
-							throw new ConnectorException(msg); 
+							throw new TranslatorException(msg); 
 						}
 					}
 				}
@@ -250,7 +250,7 @@ public class TextConnectionImpl {
 				return line;
 			}
 		} catch (Throwable e) {
-			throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
+			throw new TranslatorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
 		}
     	// we are done reading..
     	return null;
@@ -265,7 +265,7 @@ public class TextConnectionImpl {
         readerQueueIndex++;
     }    
     
-    public String getHeaderLine(String tableName) throws ConnectorException {
+    public String getHeaderLine(String tableName) throws TranslatorException {
     	if (this.headerMsg != null) {
     		return this.headerMsg; 
     	}
@@ -274,7 +274,7 @@ public class TextConnectionImpl {
     	return this.headerMsg;
     }
     
-    public String getNextLine(String tableName) throws ConnectorException {
+    public String getNextLine(String tableName) throws TranslatorException {
     	// make sure the reader are created
     	createReaders(tableName);
     	if (this.firstLine != null) {

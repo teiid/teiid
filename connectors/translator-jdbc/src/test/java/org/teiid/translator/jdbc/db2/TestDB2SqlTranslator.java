@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -44,7 +44,7 @@ public class TestDB2SqlTranslator {
     private static DB2ExecutionFactory TRANSLATOR; 
 
     @BeforeClass
-    public static void setUp() throws ConnectorException {
+    public static void setUp() throws TranslatorException {
         TRANSLATOR = new DB2ExecutionFactory();        
         TRANSLATOR.start();
     }
@@ -53,7 +53,7 @@ public class TestDB2SqlTranslator {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
     }
     
-    public void helpTestVisitor(TranslationUtility util, String input, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(TranslationUtility util, String input, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         Command obj = util.parseCommand(input);
         

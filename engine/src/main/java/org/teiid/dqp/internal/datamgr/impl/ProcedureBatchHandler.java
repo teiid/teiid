@@ -34,7 +34,7 @@ import org.teiid.dqp.DQPPlugin;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Argument.Direction;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ProcedureExecution;
 
 
@@ -65,9 +65,9 @@ class ProcedureBatchHandler {
         }
 	}
 	
-	List padRow(List row) throws ConnectorException {
+	List padRow(List row) throws TranslatorException {
         if (row.size() != resultSetCols) {
-            throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
+            throw new TranslatorException(DQPPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
         }
         if (paramCols == 0) {
         	return row;
@@ -78,7 +78,7 @@ class ProcedureBatchHandler {
         return result;
 	}
 	
-	List getParameterRow() throws ConnectorException {
+	List getParameterRow() throws TranslatorException {
 		if (paramCols == 0) {
 			return null;
 		}

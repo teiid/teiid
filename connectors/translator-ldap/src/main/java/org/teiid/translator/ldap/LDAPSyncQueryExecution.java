@@ -97,7 +97,7 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ResultSetExecution;
 
 
@@ -136,7 +136,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * @param maxBatchSize the max batch size.
 	 */
 	@Override
-	public void execute() throws ConnectorException {
+	public void execute() throws TranslatorException {
 		// Parse the IQuery, and translate it into an appropriate LDAP search.
 		this.parser = new IQueryToLdapSearchParser(this.executionFactory);
 		searchDetails = parser.translateSQLQueryToLDAPSearch(query);
@@ -152,7 +152,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	/** 
 	 * Set the standard request controls
 	 */
-	private void setStandardRequestControls() throws ConnectorException {
+	private void setStandardRequestControls() throws TranslatorException {
 		Control[] sortCtrl = new Control[1];
 		SortKey[] keys = searchDetails.getSortKeys();
 		if (keys != null) {
@@ -163,10 +163,10 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			} catch (NamingException ne) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError") +  //$NON-NLS-1$
 	            " : "+ne.getExplanation(); //$NON-NLS-1$
-				throw new ConnectorException(msg);
+				throw new TranslatorException(msg);
 			} catch(IOException e) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.setControlsError"); //$NON-NLS-1$
-				throw new ConnectorException(e,msg);
+				throw new TranslatorException(e,msg);
 			}
 		}
 	}
@@ -176,7 +176,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * sets the context to something appropriate for the search that is about to occur.
 	 * 
 	 */
-	private void createSearchContext() throws ConnectorException {
+	private void createSearchContext() throws TranslatorException {
 		try {
 			ldapCtx = (LdapContext) this.ldapConnection.lookup(searchDetails.getContextName());
 		} catch (NamingException ne) {			
@@ -185,7 +185,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 						+ searchDetails.getContextName());
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
-			throw new ConnectorException(msg); 
+			throw new TranslatorException(msg); 
 		}
 	}
 
@@ -193,7 +193,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	/** 
 	 * Set the search controls
 	 */
-	private SearchControls setSearchControls() throws ConnectorException {
+	private SearchControls setSearchControls() throws TranslatorException {
 		SearchControls ctrls = new SearchControls();
 		//ArrayList modelAttrList = searchDetails.getAttributeList();
 		ArrayList modelAttrList = searchDetails.getElementList();
@@ -221,7 +221,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * Perform the LDAP search against the subcontext, using the filter and 
 	 * search controls appropriate to the query and model metadata.
 	 */
-	private void executeSearch(SearchControls ctrls) throws ConnectorException {
+	private void executeSearch(SearchControls ctrls) throws TranslatorException {
 		String ctxName = searchDetails.getContextName();
 		String filter = searchDetails.getContextFilter();
 		if (ctxName == null || filter == null || ctrls == null) {
@@ -233,12 +233,12 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			LogManager.logError(LogConstants.CTX_CONNECTOR, "LDAP search failed. Attempted to search context " //$NON-NLS-1$
 					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
-			throw new ConnectorException(msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
+			throw new TranslatorException(msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
 		} catch(Exception e) {
 			LogManager.logError(LogConstants.CTX_CONNECTOR, "LDAP search failed. Attempted to search context " //$NON-NLS-1$
 					+ ctxName + " using filter " + filter); //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
-			throw new ConnectorException(e, msg); 
+			throw new TranslatorException(e, msg); 
 		}
 	}
 
@@ -248,7 +248,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// but less so when closing context, since it is safe to call close
 	// on contexts multiple times
 	@Override
-	public void cancel() throws ConnectorException {
+	public void cancel() throws TranslatorException {
 		close();
 	}
 
@@ -259,7 +259,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// but less so when closing context, since it is safe to call close
 	// on contexts multiple times
 	@Override
-	public void close() throws ConnectorException {
+	public void close() throws TranslatorException {
 		if (searchEnumeration != null) {
 			try {
 				searchEnumeration.close();
@@ -286,7 +286,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// it from being used again.
 	// GHH 20080326 - also added return of explanation for generic
 	// NamingException
-	public List next() throws ConnectorException {
+	public List next() throws TranslatorException {
 		try {
 			// The search has been executed, so process up to one batch of
 			// results.
@@ -306,7 +306,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			final String msg = "Ldap error while processing next batch of results: " + ne.getExplanation(); //$NON-NLS-1$
 			LogManager.logError(LogConstants.CTX_CONNECTOR, msg);  // GHH 20080326 - changed to output explanation from LDAP server
 			searchEnumeration = null; // GHH 20080326 - NamingEnumertion's are no longer good after an exception so toss it
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 	}
 
@@ -317,7 +317,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 */
 	// GHH 20080326 - added fetching of DN of result, for directories that
 	// do not include it as an attribute
-	private List getRow(SearchResult result) throws ConnectorException {
+	private List getRow(SearchResult result) throws TranslatorException {
 		Attributes attrs = result.getAttributes();
 		String resultDN = result.getNameInNamespace(); // added GHH 20080326 
 		ArrayList attributeList = searchDetails.getElementList();
@@ -345,14 +345,14 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// value for that column in the result
 	// GHH 20080326 - added handling of ClassCastException when non-string
 	// attribute is returned
-	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List row) throws ConnectorException {
+	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List row) throws TranslatorException {
 
 		String strResult;
 		String modelAttrName = parser.getNameFromElement(modelElement);
 		Class modelAttrClass = modelElement.getJavaType();
 		if(modelAttrName == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.nullAttrError"); //$NON-NLS-1$
-			throw new ConnectorException(msg); 
+			throw new TranslatorException(msg); 
 		}
 
 		Attribute resultAttr = attrs.get(modelAttrName);
@@ -386,7 +386,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.attrValueFetchError",modelAttrName); //$NON-NLS-1$
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg+" : "+ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
+			throw new TranslatorException(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
 		}
 
 		// GHH 20080326 - if attribute is not a string, just
@@ -419,7 +419,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 						row.add(null);
 					}
 				} catch(NumberFormatException nfe) {
-					throw new ConnectorException(nfe, "Element " + modelAttrName + " is typed as Integer, " + //$NON-NLS-1$ //$NON-NLS-2$
+					throw new TranslatorException(nfe, "Element " + modelAttrName + " is typed as Integer, " + //$NON-NLS-1$ //$NON-NLS-2$
 							"but it's value (" + strResult + ") cannot be converted from string " + //$NON-NLS-1$ //$NON-NLS-2$
 							"to Integer. Please change type to String, or modify the data."); //$NON-NLS-1$
 				}
@@ -446,7 +446,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 						row.add(null);
 					}
 				} catch(ParseException pe) {
-					throw new ConnectorException(pe, "Timestamp could not be parsed. Please check to ensure the "  //$NON-NLS-1$
+					throw new TranslatorException(pe, "Timestamp could not be parsed. Please check to ensure the "  //$NON-NLS-1$
 							+ " Format field for attribute "  //$NON-NLS-1$
 							+ modelAttrName + " is configured using SimpleDateFormat conventions."); //$NON-NLS-1$
 				}		
@@ -455,13 +455,13 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			// Specifically, add support for byte arrays, since that's actually supported
 			// in the underlying data source.
 			} else {
-				throw new ConnectorException("Base type " + modelAttrClass.toString()  //$NON-NLS-1$
+				throw new TranslatorException("Base type " + modelAttrClass.toString()  //$NON-NLS-1$
 						+ " is not supported in the LDAP connector. "  //$NON-NLS-1$
 						+ " Please modify the base model to use a supported type."); //$NON-NLS-1$
 			}
 		} catch(ClassNotFoundException cne) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.supportedClassNotFoundError"); //$NON-NLS-1$
-			throw new ConnectorException(cne, msg); 
+			throw new TranslatorException(cne, msg); 
 		}
 	}
 	

@@ -43,7 +43,7 @@ import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -62,7 +62,7 @@ public class TestOracleTranslator {
         TRANSLATOR.start();
     }
 
-	private void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
+	private void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
 		helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, expectedOutput);
     }
 	
@@ -490,15 +490,15 @@ public class TestOracleTranslator {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplierOracle.vdb"; //$NON-NLS-1$
     }
     
-    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, false);
     }
 
-    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws TranslatorException {
         helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, correctNaming);
     }
 
-    private void helpTestVisitor(String vdb, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+    private void helpTestVisitor(String vdb, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws TranslatorException {
         // Convert from sql to objects
         TranslationUtility util = new TranslationUtility(vdb);
         Command obj =  util.parseCommand(input, correctNaming, true);        
@@ -506,16 +506,16 @@ public class TestOracleTranslator {
     }
 
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
-     * @throws ConnectorException 
+     * @throws TranslatorException 
      */
-    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         Command obj = commandBuilder.getCommand(input);
 		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
     }
     
-    private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         OracleExecutionFactory translator = new OracleExecutionFactory();
         if (dbmsTimeZone != null) {
         	translator.setDatabaseTimeZone(dbmsTimeZone);
@@ -717,7 +717,7 @@ public class TestOracleTranslator {
         return new TransformationMetadata(null, store, null, null);
     }
 
-	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
+	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
 		helpTestVisitor(vdb, input, null, expectedOutput);
 	}
 

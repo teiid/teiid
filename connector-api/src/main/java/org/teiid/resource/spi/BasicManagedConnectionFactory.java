@@ -38,7 +38,6 @@ import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.translator.ConnectorException;
 
 
 public abstract class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ValidatingManagedConnectionFactory {
@@ -86,21 +85,21 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 		this.ra = (BasicResourceAdapter)arg0;
 	}
 	
-    public static <T> T getInstance(Class<T> expectedType, String className, Collection ctorObjs, Class defaultClass) throws ConnectorException {
+    public static <T> T getInstance(Class<T> expectedType, String className, Collection ctorObjs, Class defaultClass) throws ResourceException {
     	try {
 	    	if (className == null) {
 	    		if (defaultClass == null) {
-	    			throw new ConnectorException("Neither class name or default class specified to create an instance"); //$NON-NLS-1$
+	    			throw new ResourceException("Neither class name or default class specified to create an instance"); //$NON-NLS-1$
 	    		}
 	    		return expectedType.cast(defaultClass.newInstance());
 	    	}
 	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
 		} catch (TeiidException e) {
-			throw new ConnectorException(e);
+			throw new ResourceException(e);
 		} catch (IllegalAccessException e) {
-			throw new ConnectorException(e);
+			throw new ResourceException(e);
 		} catch(InstantiationException e) {
-			throw new ConnectorException(e);
+			throw new ResourceException(e);
 		}    	
     }
 

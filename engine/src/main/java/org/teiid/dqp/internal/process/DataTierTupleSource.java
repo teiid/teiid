@@ -33,7 +33,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -91,7 +91,7 @@ public class DataTierTupleSource implements TupleSource {
 	    	try {
 	    		running = true;
 				receiveResults(this.cwi.more());
-			} catch (ConnectorException e) {
+			} catch (TranslatorException e) {
 	        	exceptionOccurred(e, true);
 			} finally {
 				running = false;
@@ -116,7 +116,7 @@ public class DataTierTupleSource implements TupleSource {
 	        }
 	        running = true;
 	        receiveResults(this.cwi.execute());
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
         	exceptionOccurred(e, true);
         } finally {
         	running = false;
@@ -157,7 +157,7 @@ public class DataTierTupleSource implements TupleSource {
     	}
     }
 
-    void exceptionOccurred(ConnectorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
+    void exceptionOccurred(TranslatorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
     	if (removeState) {
 			fullyCloseSource();
 		}

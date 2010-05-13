@@ -41,11 +41,11 @@ import javax.naming.ldap.ExtendedRequest;
 import javax.naming.ldap.ExtendedResponse;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.resource.ResourceException;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
-import org.teiid.translator.ConnectorException;
 
 
 
@@ -64,19 +64,13 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
     public static final String LDAP_USER_OBJECT_TYPE = "person"; //$NON-NLS-1$
     public static final String LDAP_REFERRAL_MODE = "follow"; //$NON-NLS-1$
 
-	public LDAPConnectionImpl(LDAPManagedConnectionFactory config) throws ConnectorException {
+	public LDAPConnectionImpl(LDAPManagedConnectionFactory config) throws ResourceException {
 		this.config = config;
 			
 		checkProperties();
 
 		// Create initial LDAP connection.
-		try {
-			this.initCtx = initializeLDAPContext();
-		} catch(ConnectorException ce) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.contextInitFailed"); //$NON-NLS-1$
-			throw new ConnectorException(ce, msg);
-		}
-
+		this.initCtx = initializeLDAPContext();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "LDAP Connection has been newly created."); //$NON-NLS-1$
 	}
 	
@@ -85,21 +79,21 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
      * a ConnectorException is thrown.
      * @param props
      */
-	private void checkProperties() throws ConnectorException {
+	private void checkProperties() throws ResourceException {
 		// LDAP URL 
 		if(this.config.getLdapUrl() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.urlPropNotFound"); //$NON-NLS-1$
-            throw new ConnectorException(msg);
+            throw new ResourceException(msg);
 		}
 		// LDAP Admin User DN
 		if(this.config.getLdapAdminUserDN() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
-            throw new ConnectorException(msg);
+            throw new ResourceException(msg);
 		}
 		// LDAP Admin User Password
 		if(this.config.getLdapAdminUserPassword() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
-            throw new ConnectorException(msg);
+            throw new ResourceException(msg);
 		}
 	}
 	
@@ -109,7 +103,7 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 	 * contexts, in order to support the different paging implementations they provide.
 	 * @return the initial LDAP Context
 	 */
-	private InitialLdapContext initializeLDAPContext() throws ConnectorException {
+	private InitialLdapContext initializeLDAPContext() throws ResourceException {
 	  	// Create the root context.
 		InitialLdapContext initContext;
 
@@ -141,11 +135,8 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			initContext = new InitialLdapContext(connenv, null);
 		} catch(NamingException ne){ 
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryNamingError",ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg);
-		} catch(Exception e) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryInitError"); //$NON-NLS-1$
-			throw new ConnectorException(e, msg); 
-		}
+			throw new ResourceException(msg);
+		} 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Successfully obtained initial LDAP context."); //$NON-NLS-1$
 		return initContext;
 	}

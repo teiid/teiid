@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -34,11 +34,11 @@ public interface ConnectorWork {
 
 	void cancel();
 
-	AtomicResultsMessage more() throws ConnectorException;
+	AtomicResultsMessage more() throws TranslatorException;
 
 	void close();
 
-	AtomicResultsMessage execute() throws ConnectorException, BlockedException;
+	AtomicResultsMessage execute() throws TranslatorException, BlockedException;
 	
 	boolean isQueued();
 	

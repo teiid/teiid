@@ -36,19 +36,19 @@ public interface Execution {
     /**
      * Terminates the execution normally.
      */
-    void close() throws ConnectorException;
+    void close() throws TranslatorException;
     
     /**
      * Cancels the execution abnormally.  This will happen via
      * a different thread from the one performing the execution, so
      * should be expected to happen in a multi-threaded scenario.
      */
-    void cancel() throws ConnectorException;
+    void cancel() throws TranslatorException;
     
     /**
      * Execute the associated command.  Results will be retrieved through a specific sub-interface call.
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
-    void execute() throws ConnectorException;
+    void execute() throws TranslatorException;
 
 }

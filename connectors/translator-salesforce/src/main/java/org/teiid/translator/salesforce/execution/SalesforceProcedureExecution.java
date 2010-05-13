@@ -2,7 +2,7 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 public interface SalesforceProcedureExecution {
 
@@ -19,6 +19,6 @@ public interface SalesforceProcedureExecution {
 
 	void close();
 
-	void execute(ProcedureExecutionParent procedureExecutionParent) throws ConnectorException;
+	void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException;
 
 }

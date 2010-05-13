@@ -56,8 +56,8 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.translator.ConnectorCapabilities;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorCapabilities;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProvider;
@@ -129,7 +129,7 @@ public class ConnectorManager  {
     }
         
     
-    public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws ConnectorException {
+    public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
     	MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
     	ExecutionFactory executionFactory = getExecutionFactory();
     	if (executionFactory instanceof MetadataProvider) {
@@ -138,7 +138,7 @@ public class ConnectorManager  {
     	return factory.getMetadataStore();
 	}    
     
-    public SourceCapabilities getCapabilities() throws ConnectorException {
+    public SourceCapabilities getCapabilities() throws TranslatorException {
     	if (cachedCapabilities != null) {
     		return cachedCapabilities;
     	}
@@ -151,7 +151,7 @@ public class ConnectorManager  {
         return resultCaps;
     }
     
-    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws ConnectorException {
+    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws TranslatorException {
         // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
@@ -196,7 +196,7 @@ public class ConnectorManager  {
     
     /**
      * initialize this <code>ConnectorManager</code>.
-     * @throws ConnectorException 
+     * @throws TranslatorException 
      */
     public void start() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$
@@ -283,9 +283,9 @@ public class ConnectorManager  {
     	return null;
     }
     
-    private void checkStatus() throws ConnectorException {
+    private void checkStatus() throws TranslatorException {
     	if (stopped) {
-    		throw new ConnectorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
+    		throw new TranslatorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
     	}
     }
     

@@ -31,7 +31,7 @@ import java.util.List;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -52,7 +52,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     }
 
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
     	Call procedure = (Call)command;
         columnDataTypes = procedure.getResultSetColumnTypes();
 
@@ -67,13 +67,13 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             this.results = this.executionFactory.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
             addStatementWarnings();
         }catch(SQLException e){
-            throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
+            throw new TranslatorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
         }           
         
     }
     
     @Override
-    public List<?> next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
     	if (results == null) {
     		return null;
     	}
@@ -81,7 +81,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     }
         
     @Override
-    public List<?> getOutputParameterValues() throws ConnectorException {
+    public List<?> getOutputParameterValues() throws TranslatorException {
         try {
         	Call proc = (Call)this.command;
         	List<Object> result = new ArrayList<Object>();
@@ -102,7 +102,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 			}
         	return result;
         } catch (SQLException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         }
     }
 

@@ -35,7 +35,7 @@ import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
@@ -66,7 +66,7 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 	}
 
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 

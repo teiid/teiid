@@ -23,9 +23,9 @@ package org.teiid.translator.salesforce;
 
 import java.util.List;
 
+import javax.resource.ResourceException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.teiid.translator.ConnectorException;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
@@ -36,25 +36,25 @@ import com.sforce.soap.partner.QueryResult;
 
 public interface SalesforceConnection {
 
-	public QueryResult query(String queryString, int maxBatchSize, Boolean queryAll) throws ConnectorException;
+	public QueryResult query(String queryString, int maxBatchSize, Boolean queryAll) throws ResourceException;
 
-	public QueryResult queryMore(String queryLocator, int batchSize) throws ConnectorException;
+	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException;
 	
 	public boolean isAlive();
 	
-	public int delete(String[] ids) throws ConnectorException ;
+	public int delete(String[] ids) throws ResourceException ;
 
-	public int create(DataPayload data) throws ConnectorException;
+	public int create(DataPayload data) throws ResourceException;
 
-	public int update(List<DataPayload> updateDataList) throws ConnectorException;
+	public int update(List<DataPayload> updateDataList) throws ResourceException;
 
-	public UpdatedResult getUpdated(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ConnectorException;
+	public UpdatedResult getUpdated(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
 
-	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ConnectorException;
+	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
 	
-	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ConnectorException;
+	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
 	
-	public DescribeGlobalResult getObjects() throws ConnectorException;
+	public DescribeGlobalResult getObjects() throws ResourceException;
 	
-	public DescribeSObjectResult getObjectMetaData(String objectName) throws ConnectorException;
+	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
 }

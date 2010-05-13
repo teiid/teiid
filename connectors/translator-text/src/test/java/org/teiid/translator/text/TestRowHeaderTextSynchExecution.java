@@ -24,7 +24,7 @@ package org.teiid.translator.text;
 
 import junit.framework.TestCase;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 
@@ -126,7 +126,7 @@ public class TestRowHeaderTextSynchExecution extends TestCase {
         try {
             Util.helpTestExecution("TextParts/TextParts.vdb", "TextParts/PartsDescriptor4.txt", sql, 21); //$NON-NLS-1$ //$NON-NLS-2$
             fail("Should have received ConnectorException due to an invalid header row being defined."); //$NON-NLS-1$
-        } catch (ConnectorException ce ) {
+        } catch (TranslatorException ce ) {
         	assertEquals("'SELECT PARTS_AlphaNameInSource.Part_Id, PARTS_AlphaNameInSource.Part_Name, PARTS_AlphaNameInSource.Part_Color, PARTS_AlphaNameInSource.Part_Weight FROM PARTS_AlphaNameInSource' cannot be translated by the TextTranslator. Column Part_Id not found for element Parts.PARTS_AlphaNameInSource.Part_Id.  Verify column name \"Part_Id\" is defined in the header row of the text file and that the header row number is correctly defined in the descriptor file.", ce.getMessage()); //$NON-NLS-1$
         }
     }

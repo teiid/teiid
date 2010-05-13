@@ -23,7 +23,7 @@ package org.teiid.translator.salesforce.execution.visitors;
 
 import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
@@ -39,7 +39,7 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
         visitNode(update.getWhere());
 		try {
 			loadColumnMetadata(update.getTable());
-		} catch (ConnectorException ce) {
+		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 	}
@@ -50,9 +50,9 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	 * LIMIT ?
 	 */
 
-	public String getQuery() throws ConnectorException {
+	public String getQuery() throws TranslatorException {
 		if (!exceptions.isEmpty()) {
-			throw ((ConnectorException) exceptions.get(0));
+			throw ((TranslatorException) exceptions.get(0));
 		}
 		StringBuffer result = new StringBuffer();
 		result.append(SELECT).append(SPACE);

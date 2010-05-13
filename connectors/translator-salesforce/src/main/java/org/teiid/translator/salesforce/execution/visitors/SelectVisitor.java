@@ -38,7 +38,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.Messages;
 import org.teiid.translator.salesforce.Util;
@@ -61,7 +61,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public void visit(Select query) {
 		super.visit(query);
 		if (query.isDistinct()) {
-			exceptions.add(new ConnectorException(
+			exceptions.add(new TranslatorException(
 					Messages.getString("SelectVisitor.distinct.not.supported")));
 		}
 		selectSymbols = query.getDerivedColumns();
@@ -78,7 +78,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 				selectSymbolNameToIndex .put(element.getNameInSource(), index);
 				String nameInSource = element.getNameInSource();
 				if (null == nameInSource || nameInSource.length() == 0) {
-					exceptions.add(new ConnectorException(
+					exceptions.add(new TranslatorException(
 							"name in source is null or empty for column "
 									+ symbol.toString()));
 					continue;
@@ -98,11 +98,11 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	        String supportsQuery = table.getProperties().get(Constants.SUPPORTS_QUERY);
 	        objectSupportsRetrieve = Boolean.valueOf(table.getProperties().get(Constants.SUPPORTS_RETRIEVE));
 	        if (!Boolean.valueOf(supportsQuery)) {
-	            throw new ConnectorException(table.getNameInSource() + " "
+	            throw new TranslatorException(table.getNameInSource() + " "
 	                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
 	        }
 			loadColumnMetadata(obj);
-		} catch (ConnectorException ce) {
+		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 	}
@@ -119,9 +119,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	 * LIMIT ?
 	 */
 
-	public String getQuery() throws ConnectorException {
+	public String getQuery() throws TranslatorException {
 		if (!exceptions.isEmpty()) {
-			throw ((ConnectorException) exceptions.get(0));
+			throw ((TranslatorException) exceptions.get(0));
 		}
 		StringBuffer result = new StringBuffer();
 		result.append(SELECT).append(SPACE);
@@ -136,7 +136,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		return result.toString();
 	}
 
-	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws ConnectorException {
+	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws TranslatorException {
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			if (!firstTime) {
@@ -156,7 +156,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 					if(parent instanceof Table) {
 						table = (Table)parent;
 					} else {
-						throw new ConnectorException("Could not resolve Table for column " + element.getName());
+						throw new TranslatorException("Could not resolve Table for column " + element.getName());
 					}
 				}
 				result.append(table.getNameInSource());
@@ -200,7 +200,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 
-	public String getRetrieveFieldList() throws ConnectorException {
+	public String getRetrieveFieldList() throws TranslatorException {
 		assertRetrieveValidated();
 		StringBuffer result = new StringBuffer();
 		addSelectSymbols(table.getNameInSource(), result);
@@ -208,7 +208,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	}
 
 
-	public List<String> getIdInCriteria() throws ConnectorException {
+	public List<String> getIdInCriteria() throws TranslatorException {
 		assertRetrieveValidated();
 		List<Expression> expressions = this.idInCriteria.getRightExpressions();
 		List<String> result = new ArrayList<String>(expressions.size());

@@ -47,7 +47,7 @@ import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.UpdateExecution;
 
@@ -93,7 +93,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	 * here for the sake of efficiency.
 	 */
 	@Override
-	public void execute() throws ConnectorException {
+	public void execute() throws TranslatorException {
 		// first make a copy of the initial LDAP context we got from
 		// the connection.  The actual update-class operation will use
 		// this copy.  This will enable the close and cancel methods
@@ -104,7 +104,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx = (LdapContext)this.ldapConnection.lookup("");  //$NON-NLS-1$
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.createContextError",ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 
 		if (command instanceof Update) {
@@ -118,13 +118,13 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		}
 		else {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.incorrectCommandError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 	}
 	
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
-			ConnectorException {
+			TranslatorException {
 		return new int[] {1};
 	}
 
@@ -154,7 +154,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// TODO - maybe automatically specify objectClass based off of
 	// Name/NameInSource RESTRICT property settings, like with read support
 	private void executeInsert()
-			throws ConnectorException {
+			throws TranslatorException {
 
 		List<ColumnReference> insertElementList = ((Insert)command).getColumns();
 		List<Expression> insertValueList = ((ExpressionValueSource)((Insert)command).getValueSource()).getValues();
@@ -181,11 +181,11 @@ public class LDAPUpdateExecution implements UpdateExecution {
 				insertValue = ((Literal)insertValueList.get(i)).getValue();
 				if (insertValue == null) { 
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
-					throw new ConnectorException(msg);
+					throw new TranslatorException(msg);
 				}
 				if (!(insertValue instanceof java.lang.String)) {
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNTypeError"); //$NON-NLS-1$
-					throw new ConnectorException(msg);
+					throw new TranslatorException(msg);
 				}
 				distinguishedName = (String)insertValue;
 			}
@@ -202,7 +202,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// the LDAP add operation, so throw an exception
 		if (distinguishedName == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.noInsertSourceNameDNError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		// just try to create a new LDAP entry using the DN and
 		// attributes specified in the INSERT operation.  If it isn't
@@ -212,10 +212,10 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx.createSubcontext(distinguishedName, insertAttrs);
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailed",distinguishedName,ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		} catch (Exception e) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected",distinguishedName); //$NON-NLS-1$
-			throw new ConnectorException(e, msg);
+			throw new TranslatorException(e, msg);
 		}
 	}
 
@@ -230,7 +230,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// even if the named entry doesn't exist (as long as its parent does
 	// exist).
 	private void executeDelete()
-			throws ConnectorException {
+			throws TranslatorException {
 
 		Condition criteria = ((Delete)command).getWhere();
 
@@ -249,12 +249,12 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx.destroySubcontext(distinguishedName);
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailed",distinguishedName,ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		// don't remember why I added this generic catch of Exception,
 		// but it does no harm...
 		} catch (Exception e) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailedUnexpected",distinguishedName); //$NON-NLS-1$
-			throw new ConnectorException(e, msg);
+			throw new TranslatorException(e, msg);
 		}
 	}
 
@@ -274,7 +274,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// The update criteria must include only an equals comparison
 	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'") 
 	private void executeUpdate()
-			throws ConnectorException {
+			throws TranslatorException {
 
 		List<SetClause> updateList = ((Update)command).getChanges();
 		Condition criteria = ((Update)command).getWhere();
@@ -314,7 +314,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			rightExpr = setClause.getValue();
 			if (!(rightExpr instanceof Literal)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
-				throw new ConnectorException(msg);
+				throw new TranslatorException(msg);
 		}
 			valueRightExpr = ((Literal)rightExpr).getValue();
 			// add in the modification as a replacement - meaning
@@ -335,12 +335,12 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx.modifyAttributes(distinguishedName, updateMods);
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailed",distinguishedName,ne.getExplanation()); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		// don't remember why I added this generic catch of Exception,
 		// but it does no harm...
 		} catch (Exception e) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailedUnexpected",distinguishedName); //$NON-NLS-1$
-			throw new ConnectorException(e, msg);
+			throw new TranslatorException(e, msg);
 		}
 	}
 
@@ -352,40 +352,40 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// since there is no way to specify this granularity of criteria
 	// right now in the connector capabilities
 	private String getDNFromCriteria(Condition criteria)
-			throws ConnectorException {
+			throws TranslatorException {
 		if (criteria == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaEmptyError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		if (!(criteria instanceof Comparison)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotSimpleError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		Comparison compareCriteria = (Comparison)criteria;	
 		if (compareCriteria.getOperator() != Operator.EQ) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotEqualsError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		Expression leftExpr = compareCriteria.getLeftExpression();
 		if (!(leftExpr instanceof ColumnReference)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaLHSNotElementError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		// call utility method to get NameInSource/Name for element
 		String nameLeftExpr = getNameFromElement((ColumnReference)leftExpr);
 		if (!(nameLeftExpr.toUpperCase().equals("DN"))) {   //$NON-NLS-1$
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaSrcColumnError",nameLeftExpr); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		Expression rightExpr = compareCriteria.getRightExpression();
 		if (!(rightExpr instanceof Literal)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaRHSNotLiteralError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		Object valueRightExpr = ((Literal)rightExpr).getValue();
 		if (!(valueRightExpr instanceof java.lang.String)) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaRHSNotStringError"); //$NON-NLS-1$
-			throw new ConnectorException(msg);
+			throw new TranslatorException(msg);
 		}
 		return (String)valueRightExpr;
 	}
@@ -416,7 +416,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// calling close on already closed context is safe per
 	// javax.naming.Context javadoc so we won't worry about this also
 	// happening in our close method
-	public void cancel() throws ConnectorException {
+	public void cancel() throws TranslatorException {
 		close();
 	}
 
@@ -425,7 +425,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// calling close on already closed context is safe per
 	// javax.naming.Context javadoc so we won't worry about this also
 	// happening in our close method
-	public void close() throws ConnectorException {
+	public void close() throws TranslatorException {
 		try {
 			if(ldapCtx != null) {
 				ldapCtx.close();

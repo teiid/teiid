@@ -27,7 +27,7 @@ package org.teiid.translator.jdbc.informix;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
@@ -38,7 +38,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 public class InformixExecutionFactory extends JDBCExecutionFactory {
 
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, new ConvertModifier());
     }

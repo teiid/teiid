@@ -24,7 +24,7 @@ package org.teiid.translator.jdbc.derby;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 
@@ -35,7 +35,7 @@ public class TestDerbySQLTranslator {
     private static DerbyExecutionFactory TRANSLATOR; 
 
     @BeforeClass
-    public static void setUp() throws ConnectorException {
+    public static void setUp() throws TranslatorException {
         TRANSLATOR = new DerbyExecutionFactory();        
         TRANSLATOR.start();
     }

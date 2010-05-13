@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.resource.ResourceException;
 import javax.xml.namespace.QName;
 
 import org.teiid.language.AggregateFunction;
@@ -44,7 +45,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -102,43 +103,47 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		partIdentifier = context.getPartIdentifier();
 	}
 
-	public void cancel() throws ConnectorException {
+	public void cancel() throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
 	}
 
-	public void close() throws ConnectorException {
+	public void close() throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
 	}
 
 	@Override
-	public void execute() throws ConnectorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble() + "Incoming Query: " + query.toString()); //$NON-NLS-1$
-		List<TableReference> from = ((Select)query).getFrom();
-		String finalQuery;
-		if(from.get(0) instanceof Join) {
-			visitor = new JoinQueryVisitor(metadata);
-			visitor.visitNode(query);
-			finalQuery = visitor.getQuery().trim();
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble() + "Executing Query: " + finalQuery); //$NON-NLS-1$
-			
-			results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
-		} else {
-			visitor = new SelectVisitor(metadata);
-			visitor.visitNode(query);
-			if(visitor.canRetrieve()) {
-				results = connection.retrieve(visitor.getRetrieveFieldList(),
-						visitor.getTableName(), visitor.getIdInCriteria());
-			} else {
+	public void execute() throws TranslatorException {
+		try {
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble() + "Incoming Query: " + query.toString()); //$NON-NLS-1$
+			List<TableReference> from = ((Select)query).getFrom();
+			String finalQuery;
+			if(from.get(0) instanceof Join) {
+				visitor = new JoinQueryVisitor(metadata);
+				visitor.visitNode(query);
 				finalQuery = visitor.getQuery().trim();
-				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble() + "Executing Query: " + finalQuery); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble() + "Executing Query: " + finalQuery); //$NON-NLS-1$
+				
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
+			} else {
+				visitor = new SelectVisitor(metadata);
+				visitor.visitNode(query);
+				if(visitor.canRetrieve()) {
+					results = connection.retrieve(visitor.getRetrieveFieldList(),
+							visitor.getTableName(), visitor.getIdInCriteria());
+				} else {
+					finalQuery = visitor.getQuery().trim();
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble() + "Executing Query: " + finalQuery); //$NON-NLS-1$
+					results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
+				}
 			}
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List next() throws ConnectorException, DataNotAvailableException {
+	public List next() throws TranslatorException, DataNotAvailableException {
 		List<?> result;
 		if (query.getProjectedQuery().getDerivedColumns().get(0)
 				.getExpression() instanceof AggregateFunction) {
@@ -151,7 +156,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		return result;
 	}
 
-	private List<Object> getRow(QueryResult result) throws ConnectorException {
+	private List<Object> getRow(QueryResult result) throws TranslatorException {
 		List<Object> row;
 		if(null == resultBatch) {
 			loadBatch();
@@ -171,22 +176,26 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		return row;
 	}
 
-		private void loadBatch() throws ConnectorException {
-			if(null != resultBatch) { // if we have an old batch, then we have to get new results
-				results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
-			}
-			resultBatch = new ArrayList<List<Object>>();
-				
-			for(int resultIndex = 0; resultIndex < results.getSize(); resultIndex++) {
-				SObject sObject = results.getRecords().get(resultIndex);
-				List<Object[]> result = getObjectData(sObject);
-				for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
-					resultBatch.add(Arrays.asList(i.next()));
+		private void loadBatch() throws TranslatorException {
+			try {
+				if(null != resultBatch) { // if we have an old batch, then we have to get new results
+					results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
 				}
+				resultBatch = new ArrayList<List<Object>>();
+					
+				for(int resultIndex = 0; resultIndex < results.getSize(); resultIndex++) {
+					SObject sObject = results.getRecords().get(resultIndex);
+					List<Object[]> result = getObjectData(sObject);
+					for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
+						resultBatch.add(Arrays.asList(i.next()));
+					}
+				}
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
 			}
 		}
 
-		private List<Object[]> getObjectData(SObject sObject) throws ConnectorException {
+		private List<Object[]> getObjectData(SObject sObject) throws TranslatorException {
 			List<Object> topFields = sObject.getAny();
 			logAndMapFields(sObject.getType(), topFields);
 			List<Object[]> result = new ArrayList<Object[]>();
@@ -212,7 +221,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 
 		private List<Object[]> extractDataFromFields(SObject sObject,
-			List<Object> fields, List<Object[]> result) throws ConnectorException {
+			List<Object> fields, List<Object[]> result) throws TranslatorException {
 			Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
 				Column element = visitor.getSelectSymbolMetadata(j);
@@ -225,7 +234,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					if(parent instanceof Table) {
 						table = (Table)parent;
 					} else {
-						throw new ConnectorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
+						throw new TranslatorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
 					}
 				}
 				if(table.getNameInSource().equals(sObject.getType())) {
@@ -236,7 +245,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
 							setValueInColumn(j, sObject.getId(), result);
 						} else {
-							throw new ConnectorException("SalesforceQueryExecutionImpl.missing.field"+ element.getNameInSource()); //$NON-NLS-1$
+							throw new TranslatorException("SalesforceQueryExecutionImpl.missing.field"+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
 						Object cell;
@@ -263,10 +272,10 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	/**
 	 * Load the map of response field names to index.
 	 * @param fields
-	 * @throws ConnectorException 
+	 * @throws TranslatorException 
 	 */
 	private void logAndMapFields(String sObjectName,
-			List<Object> fields) throws ConnectorException {
+			List<Object> fields) throws TranslatorException {
 		if (!sObjectToResponseField.containsKey(sObjectName)) {
 			logFields(sObjectName, fields);
 			Map<String, Integer> responseFieldToIndexMap;
@@ -279,7 +288,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 	}
 
-	private void logFields(String sObjectName, List<Object> fields) throws ConnectorException {
+	private void logFields(String sObjectName, List<Object> fields) throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SalesForce Object Name = " + sObjectName); //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "FieldCount = " + fields.size()); //$NON-NLS-1$
 		for(int i = 0; i < fields.size(); i++) {
@@ -291,9 +300,9 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object getCellDatum(Column element, Element elem) throws ConnectorException {
+	private Object getCellDatum(Column element, Element elem) throws TranslatorException {
 		if(!element.getNameInSource().equals(elem.getLocalName())) {
-			throw new ConnectorException("SalesforceQueryExecutionImpl.column.mismatch1" + element.getNameInSource() + "SalesforceQueryExecutionImpl.column.mismatch2" + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TranslatorException("SalesforceQueryExecutionImpl.column.mismatch1" + element.getNameInSource() + "SalesforceQueryExecutionImpl.column.mismatch2" + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		String value = elem.getTextContent();
 		Object result = null;
@@ -336,7 +345,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					Date date = Util.getSalesforceDateTimeFormat().parse(value);
 					result = new Timestamp(date.getTime());
 				} catch (ParseException e) {
-					throw new ConnectorException(e, "SalesforceQueryExecutionImpl.datatime.parse" + value); //$NON-NLS-1$
+					throw new TranslatorException(e, "SalesforceQueryExecutionImpl.datatime.parse" + value); //$NON-NLS-1$
 				}
 			}
 		} else {

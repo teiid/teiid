@@ -26,6 +26,6 @@ import org.teiid.metadata.MetadataFactory;
 
 public interface MetadataProvider {
 
-	void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws ConnectorException;
+	void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException;
 	
 }

@@ -37,9 +37,9 @@ public interface ResultSetExecution extends Execution {
 	/**
 	 * Retrieves the next row of the resultset.  
 	 * @return the next row or null indicating that there are no more results
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 * @throws DataNotAvailableException
 	 */
-	List<?> next() throws ConnectorException, DataNotAvailableException;
+	List<?> next() throws TranslatorException, DataNotAvailableException;
 
 }

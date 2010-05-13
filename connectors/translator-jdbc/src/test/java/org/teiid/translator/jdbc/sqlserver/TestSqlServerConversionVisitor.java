@@ -36,7 +36,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 import com.metamatrix.cdk.api.TranslationUtility;
@@ -48,7 +48,7 @@ public class TestSqlServerConversionVisitor {
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
     
     @BeforeClass
-    public static void setup() throws ConnectorException {
+    public static void setup() throws TranslatorException {
         trans.start();
     }
 
@@ -60,7 +60,7 @@ public class TestSqlServerConversionVisitor {
         return TranslationHelper.BQT_VDB;
     }
     
-    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
     	TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
     }
 

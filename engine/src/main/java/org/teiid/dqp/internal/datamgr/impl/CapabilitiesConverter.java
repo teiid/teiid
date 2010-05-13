@@ -28,7 +28,7 @@ import java.util.List;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.translator.ConnectorCapabilities;
+import org.teiid.translator.TranslatorCapabilities;
 
 
 /**
@@ -40,11 +40,11 @@ public class CapabilitiesConverter {
     private CapabilitiesConverter() {
     }
 
-    public static SourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps) {
+    public static SourceCapabilities convertCapabilities(TranslatorCapabilities srcCaps) {
         return convertCapabilities(srcCaps, null, false);
     }
     
-    public static BasicSourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps, String connectorID, boolean isXa) {
+    public static BasicSourceCapabilities convertCapabilities(TranslatorCapabilities srcCaps, String connectorID, boolean isXa) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());

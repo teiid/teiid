@@ -11,7 +11,7 @@ import org.teiid.language.TableReference;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.Util;
 
 
@@ -55,7 +55,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 				loadColumnMetadata((NamedTable) right);
 			}
 			super.visit(join);
-		} catch (ConnectorException ce) {
+		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 
@@ -94,13 +94,13 @@ public class JoinQueryVisitor extends SelectVisitor {
 			} else {
 				super.visit(criteria);
 			}
-		} catch (ConnectorException e) {
+		} catch (TranslatorException e) {
 			exceptions.add(e);
 		}
 	}
 
 	@Override
-	public String getQuery() throws ConnectorException {
+	public String getQuery() throws TranslatorException {
 		
 		if (isParentToChildJoin()) {
 			return super.getQuery();
@@ -133,7 +133,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 		return childTable.equals(leftTableInJoin);
 	}
 
-	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws ConnectorException {
+	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws TranslatorException {
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			Expression expression = symbol.getExpression();

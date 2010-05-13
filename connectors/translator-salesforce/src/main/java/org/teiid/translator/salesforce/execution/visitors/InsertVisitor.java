@@ -34,7 +34,7 @@ import org.teiid.language.Insert;
 import org.teiid.language.Literal;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 public class InsertVisitor extends CriteriaVisitor {
@@ -57,7 +57,7 @@ public class InsertVisitor extends CriteriaVisitor {
 			List<ColumnReference> columns = insert.getColumns();
 			List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
 			if(columns.size() != values.size()) {
-				throw new ConnectorException("Error:  columns.size and values.size are not the same.");
+				throw new TranslatorException("Error:  columns.size and values.size are not the same.");
 			}
 			
 			for(int i = 0; i < columns.size(); i++) {
@@ -80,7 +80,7 @@ public class InsertVisitor extends CriteriaVisitor {
 				elements.add(jbe);
 			}
 			
-		} catch (ConnectorException ce) {
+		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 	}

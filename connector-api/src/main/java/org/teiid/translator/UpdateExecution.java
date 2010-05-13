@@ -38,8 +38,8 @@ public interface UpdateExecution extends Execution {
 	 * Returns the update counts for the execution.
 	 * @return the update counts corresponding to the command executed
 	 * @throws DataNotAvailableException
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-    int[] getUpdateCounts() throws DataNotAvailableException, ConnectorException;
+    int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException;
     
 }

@@ -53,7 +53,7 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
@@ -154,12 +154,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     	        }            
     	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
         	}
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
         }
     }
     
-    public AtomicResultsMessage more() throws ConnectorException {
+    public AtomicResultsMessage more() throws TranslatorException {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
     	try {
     		return handleBatch();
@@ -178,7 +178,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            execution.close();
 	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$                    
 	        }	        
-	    } catch (ConnectorException e) {
+	    } catch (TranslatorException e) {
 	        LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
@@ -190,7 +190,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 
 
     
-    private ConnectorException handleError(Throwable t) {
+    private TranslatorException handleError(Throwable t) {
     	if (t instanceof DataNotAvailableException) {
     		throw (DataNotAvailableException)t;
     	}
@@ -203,23 +203,23 @@ public class ConnectorWorkItem implements ConnectorWork {
         String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
-        } else if (t instanceof ConnectorException || t instanceof TeiidProcessingException) {
+        } else if (t instanceof TranslatorException || t instanceof TeiidProcessingException) {
         	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
         } else {
             LogManager.logError(LogConstants.CTX_CONNECTOR, t, msg);
         } 
-		if (t instanceof ConnectorException) {
-			return (ConnectorException)t;
+		if (t instanceof TranslatorException) {
+			return (TranslatorException)t;
 		}
 		if (t instanceof RuntimeException) {
 			throw (RuntimeException)t;
 		}
-		return new ConnectorException(t);
+		return new TranslatorException(t);
     }
     
-	public AtomicResultsMessage execute() throws ConnectorException, BlockedException {
+	public AtomicResultsMessage execute() throws TranslatorException, BlockedException {
         if(isCancelled()) {
-    		throw new ConnectorException("Request canceled"); //$NON-NLS-1$
+    		throw new TranslatorException("Request canceled"); //$NON-NLS-1$
     	}
         
         if (!this.securityContext.isTransactional()) {
@@ -267,19 +267,19 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        		private int index;
 	        		
 	        		@Override
-	        		public void cancel() throws ConnectorException {
+	        		public void cancel() throws TranslatorException {
 	        			exec.cancel();
 	        		}
 	        		@Override
-	        		public void close() throws ConnectorException {
+	        		public void close() throws TranslatorException {
 	        			exec.close();
 	        		}
 	        		@Override
-	        		public void execute() throws ConnectorException {
+	        		public void execute() throws TranslatorException {
 	        			exec.execute();
 	        		}
 	        		@Override
-	        		public List<?> next() throws ConnectorException,
+	        		public List<?> next() throws TranslatorException,
 	        				DataNotAvailableException {
 	        			if (results == null) {
 	        				results = ((UpdateExecution)exec).getUpdateCounts();
@@ -305,7 +305,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	}
 	}
     
-    protected AtomicResultsMessage handleBatch() throws ConnectorException {
+    protected AtomicResultsMessage handleBatch() throws TranslatorException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Sending results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
@@ -336,7 +336,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		        		break;
 	            	} else if (this.rowCount > this.connector.getMaxResultRows() && this.connector.isExceptionOnMaxRows()) {
 	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.connector.getMaxResultRows()); //$NON-NLS-1$
-	                    throw new ConnectorException(msg);
+	                    throw new TranslatorException(msg);
 	                }
 	            }
 	        }
@@ -378,7 +378,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return response;
 	}
 
-	private void correctTypes(List row) throws ConnectorException {
+	private void correctTypes(List row) throws TranslatorException {
 		//TODO: add a proper source schema
 		for (int i = convertToRuntimeType.size() - 1; i >= 0; i--) {
 			int index = convertToRuntimeType.get(i);
@@ -403,7 +403,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					try {
 						result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
 					} catch (TransformationException e) {
-						throw new ConnectorException(e);
+						throw new TranslatorException(e);
 					}
 					if (value == result) {
 						convertToDesiredRuntimeType[i] = false;

@@ -25,8 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import javax.resource.ResourceException;
-
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
@@ -105,8 +103,6 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 			return executionFactory;
 			
 		} catch (TeiidException e) {
-			throw new DeploymentException(e);
-		} catch (ResourceException e) {
 			throw new DeploymentException(e);
 		} catch (InvocationTargetException e) {
 			throw new DeploymentException(e);

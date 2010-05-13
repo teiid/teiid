@@ -28,7 +28,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -41,7 +41,7 @@ import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 public class H2ExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier("parsedatetime")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("formatdatetime")); //$NON-NLS-1$

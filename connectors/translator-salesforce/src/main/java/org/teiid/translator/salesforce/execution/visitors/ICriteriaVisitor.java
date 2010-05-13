@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 public interface ICriteriaVisitor {
 
@@ -31,6 +31,6 @@ public interface ICriteriaVisitor {
 
 	public boolean hasOnlyIDCriteria();
 
-	public String getTableName() throws ConnectorException;
+	public String getTableName() throws TranslatorException;
 
 }

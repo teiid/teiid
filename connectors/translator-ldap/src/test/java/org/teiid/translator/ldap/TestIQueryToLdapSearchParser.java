@@ -48,7 +48,7 @@ import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ldap.IQueryToLdapSearchParser;
 import org.teiid.translator.ldap.LDAPExecutionFactory;
 import org.teiid.translator.ldap.LDAPSearchDetails;
@@ -254,7 +254,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
     }
 
-	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws ConnectorException {
+	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws TranslatorException {
     	QueryMetadataInterface metadata = exampleLdap();
     	RuntimeMetadata rm = new RuntimeMetadataImpl(metadata);
     	

@@ -47,7 +47,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionFactory;
 
 
@@ -275,7 +275,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     				this.serializer.saveAttachment(cacheFile, store);
     			}
     			return store;
-			} catch (ConnectorException e) {
+			} catch (TranslatorException e) {
 				if (exception != null) {
 					exception = e;
 				}

@@ -30,7 +30,7 @@ import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -50,15 +50,15 @@ public class ConnectorHost {
     private ExecutionContext executionContext;
     private Object connectionFactory;
     
-    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, String vdbFileName) throws ConnectorException {  
+    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, String vdbFileName) throws TranslatorException {  
         initialize(connector, connectionFactory, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
     }
     
-    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws ConnectorException{
+    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws TranslatorException{
         initialize(connector, connectionFactory, util);
     }
     
-    private void initialize(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws ConnectorException {
+    private void initialize(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws TranslatorException {
         this.connector = connector;
         this.util = util;
         this.connectionFactory = connectionFactory;
@@ -69,20 +69,20 @@ public class ConnectorHost {
     	this.executionContext = context;
     }
     
-    public List executeCommand(String query) throws ConnectorException {
+    public List executeCommand(String query) throws TranslatorException {
         Command command = getCommand(query);
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
         return executeCommand(command, runtimeMetadata);
     }
     
-    public List executeCommand(Command command) throws ConnectorException {
+    public List executeCommand(Command command) throws TranslatorException {
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
         return executeCommand(command, runtimeMetadata);
     }
 
     private List executeCommand(Command command, RuntimeMetadata runtimeMetadata)
-        throws ConnectorException {
+        throws TranslatorException {
 
         Execution exec = connector.createExecution(command, this.executionContext, runtimeMetadata, this.connectionFactory);
         exec.execute();
@@ -92,7 +92,7 @@ public class ConnectorHost {
         return results;
     }
 
-    public int[] executeBatchedUpdates(String[] updates) throws ConnectorException {
+    public int[] executeBatchedUpdates(String[] updates) throws TranslatorException {
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
         Command[] commands = new Command[updates.length];
         for (int i = 0; i < updates.length; i++) {
@@ -102,7 +102,7 @@ public class ConnectorHost {
         return executeBatchedUpdates(commands, runtimeMetadata);
     }
     
-    public int[] executeBatchedUpdates(Command[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
+    public int[] executeBatchedUpdates(Command[] commands, RuntimeMetadata runtimeMetadata) throws TranslatorException {
     	List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata);
     	int[] counts = new int[result.size()];
     	for (int i = 0; i < counts.length; i++) {
@@ -111,7 +111,7 @@ public class ConnectorHost {
     	return counts;
     }
     
-    private List<List> readResultsFromExecution(Execution execution) throws ConnectorException {
+    private List<List> readResultsFromExecution(Execution execution) throws TranslatorException {
     	List<List> results = new ArrayList<List>();
     	while (true) {
 	    	try {
@@ -133,7 +133,7 @@ public class ConnectorHost {
 	    		try {
 					Thread.sleep(e.getRetryDelay());
 				} catch (InterruptedException e1) {
-					throw new ConnectorException(e1);
+					throw new TranslatorException(e1);
 				}
 	    	}
     	}

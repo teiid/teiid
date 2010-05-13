@@ -38,8 +38,6 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 
-import org.teiid.translator.ConnectorException;
-
 public class BasicManagedConnection implements ManagedConnection {
 	protected PrintWriter log;
 	protected final Collection<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
@@ -88,7 +86,7 @@ public class BasicManagedConnection implements ManagedConnection {
 	@Override
 	public Object getConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
 		if(!(arg1 instanceof ConnectionRequestInfoWrapper)) {
-			throw new ConnectorException("Un-recognized Connection Request Info object received"); //$NON-NLS-1$
+			throw new ResourceException("Un-recognized Connection Request Info object received"); //$NON-NLS-1$
 		}
 		ConnectionContext.setSubject(arg0);
 		
@@ -153,9 +151,9 @@ public class BasicManagedConnection implements ManagedConnection {
 		}
 	}
 	
-   Connection getConnection() throws ConnectorException {
+   Connection getConnection() throws ResourceException {
       if (this.physicalConnection == null)
-         throw new ConnectorException("Connection has been destroyed!!!"); //$NON-NLS-1$
+         throw new ResourceException("Connection has been destroyed!!!"); //$NON-NLS-1$
       return this.physicalConnection;
    }	
    

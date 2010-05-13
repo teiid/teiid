@@ -25,7 +25,7 @@ import java.util.Iterator;
 
 import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
 public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
@@ -39,7 +39,7 @@ public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		super.visit(delete);
 		try {
 			loadColumnMetadata(delete.getTable());
-		} catch (ConnectorException ce) {
+		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 	}
@@ -50,7 +50,7 @@ public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	 * LIMIT ?
 	 */
 
-	public String getQuery() throws ConnectorException {
+	public String getQuery() throws TranslatorException {
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}

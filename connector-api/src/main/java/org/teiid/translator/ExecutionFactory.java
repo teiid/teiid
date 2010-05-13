@@ -38,7 +38,7 @@ import org.teiid.metadata.RuntimeMetadata;
  * The deployer instantiates this class through reflection. So it is important to have no-arg constructor. Once constructed
  * the "start" method is called. This class represents the basic capabilities of the translator.
  */
-public class ExecutionFactory implements ConnectorCapabilities{
+public class ExecutionFactory implements TranslatorCapabilities{
 
 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
 
@@ -53,7 +53,7 @@ public class ExecutionFactory implements ConnectorCapabilities{
 	/**
 	 * Initialize the connector with supplied configuration
 	 */
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 	}
 	    
 	/**
@@ -146,7 +146,7 @@ public class ExecutionFactory implements ConnectorCapabilities{
      * @param connection connection factory object to the data source
      * @return An execution object that can use to execute the command
      */
-	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws ConnectorException {
+	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
 		if (command instanceof QueryExpression) {
 			return createResultSetExecution((QueryExpression)command, executionContext, metadata, connectionFactory);
 		}
@@ -156,16 +156,16 @@ public class ExecutionFactory implements ConnectorCapabilities{
 		return createUpdateExecution(command, executionContext, metadata, connectionFactory);
 	}
 
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws ConnectorException {
-		throw new ConnectorException("Unsupported Execution"); //$NON-NLS-1$
+	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+		throw new TranslatorException("Unsupported Execution"); //$NON-NLS-1$
 	}
 
-	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws ConnectorException {
-		throw new ConnectorException("Unsupported Execution");//$NON-NLS-1$
+	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}
 
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws ConnectorException {
-		throw new ConnectorException("Unsupported Execution");//$NON-NLS-1$
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}   
 	
 	@Override

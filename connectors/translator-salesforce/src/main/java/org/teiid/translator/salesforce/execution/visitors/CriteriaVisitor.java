@@ -44,7 +44,7 @@ import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.Messages;
 import org.teiid.translator.salesforce.Util;
 
@@ -75,7 +75,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     protected List<String> criteriaList = new ArrayList<String>();
     protected boolean hasCriteria;
     protected Map<String, Column> columnElementsByName = new HashMap<String, Column>();
-    protected List<ConnectorException> exceptions = new ArrayList<ConnectorException>();
+    protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     protected Table table;
     boolean onlyIDCriteria;
     protected Boolean queryAll = Boolean.FALSE;
@@ -102,7 +102,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             addCompareCriteria(criteriaList, criteria);
             boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
             setHasCriteria(true, isAcceptableID);
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             exceptions.add(e);
         }
     }
@@ -111,15 +111,15 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public void visit( Like criteria ) {
         try {
             if (isIdColumn(criteria.getLeftExpression())) {
-                ConnectorException e = new ConnectorException(Messages.getString("CriteriaVisitor.LIKE.not.supported.on.Id"));
+                TranslatorException e = new TranslatorException(Messages.getString("CriteriaVisitor.LIKE.not.supported.on.Id"));
                 exceptions.add(e);
             }
             if (isMultiSelectColumn(criteria.getLeftExpression())) {
-                ConnectorException e = new ConnectorException(
+                TranslatorException e = new TranslatorException(
                                                               Messages.getString("CriteriaVisitor.LIKE.not.supported.on.multiselect"));
                 exceptions.add(e);
             }
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             exceptions.add(e);
         }
         boolean negated = criteria.isNegated();
@@ -179,7 +179,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
                 }
             }
             setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             exceptions.add(e);
         }
     }
@@ -192,13 +192,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             } else if (functionName.equalsIgnoreCase("excludes")) {
                 generateMultiSelect(func, EXCLUDES);
             }
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             exceptions.add(e);
         }
     }
 
     private void generateMultiSelect( Function func,
-                                      String funcName ) throws ConnectorException {
+                                      String funcName ) throws TranslatorException {
         List<Expression> expressions = func.getParameters();
         validateFunction(expressions);
         Expression columnExpression = expressions.get(0);
@@ -210,7 +210,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     private void appendMultiselectIn( Column column,
-                                      In criteria ) throws ConnectorException {
+                                      In criteria ) throws TranslatorException {
         StringBuffer result = new StringBuffer();
         result.append(column.getNameInSource()).append(SPACE);
         if (criteria.isNegated()) {
@@ -236,15 +236,15 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         criteriaList.add(result.toString());
     }
 
-    private void validateFunction( List<Expression> expressions ) throws ConnectorException {
+    private void validateFunction( List<Expression> expressions ) throws TranslatorException {
         if (expressions.size() != 2) {
-            throw new ConnectorException(Messages.getString("CriteriaVisitor.invalid.arg.count"));
+            throw new TranslatorException(Messages.getString("CriteriaVisitor.invalid.arg.count"));
         }
         if (!(expressions.get(0) instanceof ColumnReference)) {
-            throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.column.arg"));
+            throw new TranslatorException(Messages.getString("CriteriaVisitor.function.not.column.arg"));
         }
         if (!(expressions.get(1) instanceof Literal)) {
-            throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.literal.arg"));
+            throw new TranslatorException(Messages.getString("CriteriaVisitor.function.not.literal.arg"));
         }
     }
 
@@ -267,7 +267,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     protected void addCompareCriteria( List criteriaList,
-                                       Comparison compCriteria ) throws ConnectorException {
+                                       Comparison compCriteria ) throws TranslatorException {
         Expression lExpr = compCriteria.getLeftExpression();
         if (lExpr instanceof Function) {
             parseFunction((Function)lExpr);
@@ -319,7 +319,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    private void appendCriteria( In criteria ) throws ConnectorException {
+    private void appendCriteria( In criteria ) throws TranslatorException {
         StringBuffer queryString = new StringBuffer();
         Expression leftExp = criteria.getLeftExpression();
         if(isIdColumn(leftExp)) {
@@ -347,7 +347,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         criteriaList.add(queryString.toString());
     }
 
-    private boolean isTimeColumn( Column column ) throws ConnectorException {
+    private boolean isTimeColumn( Column column ) throws TranslatorException {
         boolean result = false;
         if (column.getJavaType().equals(java.sql.Timestamp.class) || column.getJavaType().equals(java.sql.Time.class)
             || column.getJavaType().equals(java.sql.Date.class)) {
@@ -356,7 +356,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected String getValue( Expression expr ) throws ConnectorException {
+    protected String getValue( Expression expr ) throws TranslatorException {
         String result;
         if (expr instanceof ColumnReference) {
             ColumnReference element = (ColumnReference)expr;
@@ -371,11 +371,11 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected void loadColumnMetadata( NamedTable group ) throws ConnectorException {
+    protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
         String supportsQuery = table.getProperties().get("Supports Query");
         if (!Boolean.valueOf(supportsQuery)) {
-            throw new ConnectorException(table.getNameInSource() + " "
+            throw new TranslatorException(table.getNameInSource() + " "
                                          + Messages.getString("CriteriaVisitor.query.not.supported"));
         }
         List<Column> columnIds = table.getColumns();
@@ -393,7 +393,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    protected boolean isIdColumn( Expression expression ) throws ConnectorException {
+    protected boolean isIdColumn( Expression expression ) throws TranslatorException {
         boolean result = false;
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();
@@ -405,7 +405,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return result;
     }
 
-    protected boolean isMultiSelectColumn( Expression expression ) throws ConnectorException {
+    protected boolean isMultiSelectColumn( Expression expression ) throws TranslatorException {
         boolean result = false;
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();
@@ -439,7 +439,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         return this.onlyIDCriteria;
     }
 
-    public String getTableName() throws ConnectorException {
+    public String getTableName() throws TranslatorException {
         return table.getNameInSource();
     }
     

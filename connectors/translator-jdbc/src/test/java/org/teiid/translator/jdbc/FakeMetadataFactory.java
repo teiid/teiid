@@ -27,7 +27,7 @@ import junit.framework.Assert;
 
 import org.mockito.Mockito;
 import org.teiid.language.Command;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 
 import com.metamatrix.cdk.api.TranslationUtility;
@@ -50,7 +50,7 @@ public class FakeMetadataFactory {
         return util.parseCommand(sql);        
     }
 
-	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws ConnectorException {
+	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
 	    // Convert from sql to objects
 	    Command obj = helpTranslate(vdb, input);
 	    

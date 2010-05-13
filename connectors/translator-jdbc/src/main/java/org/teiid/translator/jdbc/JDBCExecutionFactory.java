@@ -60,7 +60,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProvider;
@@ -147,7 +147,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	boolean initialConnection = true;
     
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 		
         String timeZone = getDatabaseTimeZone();
@@ -212,7 +212,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-    		throws ConnectorException {
+    		throws TranslatorException {
     	try {
 			DataSource ds = (DataSource)connectionFactory;
 			Connection conn = ds.getConnection();
@@ -220,13 +220,13 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	    	afterConnectionCreation(conn);
 	    	return new JDBCQueryExecution(command, conn, executionContext, this);
     	} catch(SQLException e) {
-    		throw new ConnectorException(e);
+    		throw new TranslatorException(e);
     	}
     }
     
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-    		throws ConnectorException {
+    		throws TranslatorException {
     	try {
 			DataSource ds = (DataSource)connectionFactory;
 			Connection conn = ds.getConnection();
@@ -234,13 +234,13 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 			afterConnectionCreation(conn);
 			return new JDBCProcedureExecution(command, conn, executionContext, this);
 		} catch (SQLException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
     }
 
     @Override
     public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-    		throws ConnectorException {
+    		throws TranslatorException {
     	try {
 			DataSource ds = (DataSource)connectionFactory;
 			Connection conn = ds.getConnection();
@@ -249,12 +249,12 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 			afterConnectionCreation(conn);
 			return new JDBCUpdateExecution(command, conn, executionContext, this);
 		} catch (SQLException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}    
     }	
     
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws ConnectorException {
+	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException {
 		try {
 	    	Connection conn = null;
 			try {
@@ -270,7 +270,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 				}
 			}
 		} catch (SQLException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
 	}    
 	

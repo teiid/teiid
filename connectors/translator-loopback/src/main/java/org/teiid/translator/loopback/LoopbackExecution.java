@@ -40,7 +40,7 @@ import org.teiid.language.QueryExpression;
 import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TypeFacility;
@@ -71,7 +71,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     }
     
     @Override
-    public List<?> next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
         // Wait on first batch if necessary
         if(this.config.getWaitTime() > 0 && !waited) {
             // Wait a random amount of time up to waitTime milliseconds
@@ -102,13 +102,13 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
      * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
      */
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
        
     	// Log our command
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Loopback executing command: " + command); //$NON-NLS-1$
 
         if(this.config.isThrowError()) {
-            throw new ConnectorException("Failing because Error=true"); //$NON-NLS-1$
+            throw new TranslatorException("Failing because Error=true"); //$NON-NLS-1$
         }
               
         this.rowsNeeded = this.config.getRowCount();
@@ -127,12 +127,12 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException,
-    		ConnectorException {
+    		TranslatorException {
     	return new int [] {0};
     }
     
     @Override
-    public List<?> getOutputParameterValues() throws ConnectorException {
+    public List<?> getOutputParameterValues() throws TranslatorException {
     	Call proc = (Call)this.command;
     	int count = proc.getReturnType() != null ? 1:0;
     	for (Argument param : proc.getArguments()) {
@@ -147,7 +147,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
      * @see com.metamatrix.data.Execution#close()
      */
     @Override
-    public void close() throws ConnectorException {
+    public void close() throws TranslatorException {
         // nothing to do
     }
 
@@ -155,7 +155,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
      * @see com.metamatrix.data.Execution#cancel()
      */
     @Override
-    public void cancel() throws ConnectorException {
+    public void cancel() throws TranslatorException {
 
     }
 

@@ -48,7 +48,7 @@ import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
@@ -78,7 +78,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
         	@Override
         	public SourceCapabilities getCapabilities()
-        			throws ConnectorException {
+        			throws TranslatorException {
         		return new BasicSourceCapabilities();
         	}
         });

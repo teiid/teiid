@@ -29,7 +29,7 @@ import java.util.List;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.CollectorVisitor;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
 
@@ -62,9 +62,9 @@ public class TranslatedCommand {
      * be called right after the constructor; afterward, all of the getter methods
      * can be called to retrieve results. 
      * @param command ICommand to be translated
-     * @throws ConnectorException 
+     * @throws TranslatorException 
      */
-    public void translateCommand(Command command) throws ConnectorException {
+    public void translateCommand(Command command) throws TranslatorException {
     	SQLConversionVisitor sqlConversionVisitor = executionFactory.getSQLConversionVisitor();
         sqlConversionVisitor.setExecutionContext(context);
         if (executionFactory.usePreparedStatements() || hasBindValue(command)) {

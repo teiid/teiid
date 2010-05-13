@@ -34,7 +34,7 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -63,7 +63,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     }
     
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
         // get column types
         columnDataTypes = ((QueryExpression)command).getColumnTypes();
 
@@ -88,7 +88,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     }
 
     @Override
-    public List<?> next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
         try {
             if (results.next()) {
                 // New row for result set
@@ -103,7 +103,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 return vals;
             } 
         } catch (SQLException e) {
-            throw new ConnectorException(e,
+            throw new TranslatorException(e,
                     JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
         }
         
@@ -113,7 +113,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     /**
      * @see org.teiid.translator.jdbc.JDBCBaseExecution#close()
      */
-    public synchronized void close() throws ConnectorException {
+    public synchronized void close() throws TranslatorException {
         // first we would need to close the result set here then we can close
         // the statement, using the base class.
         if (results != null) {
@@ -121,7 +121,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 results.close();
                 results = null;
             } catch (SQLException e) {
-                throw new ConnectorException(e);
+                throw new TranslatorException(e);
             }
         }
         super.close();

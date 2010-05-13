@@ -22,10 +22,12 @@
 package org.teiid.translator.salesforce.execution;
 
 
+import javax.resource.ResourceException;
+
 import org.teiid.language.Command;
 import org.teiid.language.Insert;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.InsertVisitor;
@@ -40,12 +42,16 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 	}
 
 	@Override
-	public void execute() throws ConnectorException {
-		InsertVisitor visitor = new InsertVisitor(getMetadata());
-		visitor.visit((Insert)command);
-		DataPayload data = new DataPayload();
-		data.setType(visitor.getTableName());
-		data.setMessageElements(visitor.getMessageElements());
-		result = getConnection().create(data);		
+	public void execute() throws TranslatorException {
+		try {
+			InsertVisitor visitor = new InsertVisitor(getMetadata());
+			visitor.visit((Insert)command);
+			DataPayload data = new DataPayload();
+			data.setType(visitor.getTableName());
+			data.setMessageElements(visitor.getMessageElements());
+			result = getConnection().create(data);
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		}		
 	}
 }

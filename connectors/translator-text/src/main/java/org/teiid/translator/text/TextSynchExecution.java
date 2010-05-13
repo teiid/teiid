@@ -39,7 +39,7 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TypeFacility;
@@ -93,7 +93,7 @@ public class TextSynchExecution implements ResultSetExecution {
     }
 
     @Override
-    public void execute() throws ConnectorException {
+    public void execute() throws TranslatorException {
         //translate request
         translateRequest(cmd);
 
@@ -101,9 +101,9 @@ public class TextSynchExecution implements ResultSetExecution {
     }
     
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List next() throws TranslatorException, DataNotAvailableException {
         if (canceled) {
-        	throw new ConnectorException("Execution cancelled"); //$NON-NLS-1$
+        	throw new TranslatorException("Execution cancelled"); //$NON-NLS-1$
         }
         Select query = cmd;
         NamedTable group = (NamedTable)query.getFrom().get(0);
@@ -131,15 +131,15 @@ public class TextSynchExecution implements ResultSetExecution {
 		        // Save selected columns into query results
 		        
 		        if (this.config.isEnforceColumnCount() && record.size() != numModeledColumns) {
-		            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", new Object[] { new Integer(numModeledColumns), new Integer(record.size()) })); //$NON-NLS-1$ 
+		            throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", new Object[] { new Integer(numModeledColumns), new Integer(record.size()) })); //$NON-NLS-1$ 
 		        } 
 		            
 		        return getRow(record, cols, types);
 	        }
-        } catch(ConnectorException ce) {
+        } catch(TranslatorException ce) {
             throw ce;
         } catch(Throwable e) {
-            throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
+            throw new TranslatorException(e, TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", new Object[] { location, e.getMessage() })); //$NON-NLS-1$
         }
     }
         
@@ -157,16 +157,16 @@ public class TextSynchExecution implements ResultSetExecution {
      * Translate command.
      * @param request ICommand as request
      * @return Object translated request
-     * @throws ConnectorException if error occurs
+     * @throws TranslatorException if error occurs
      */
-    protected Object translateRequest(Command request) throws ConnectorException {
+    protected Object translateRequest(Command request) throws TranslatorException {
         if (request == null) {
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Request_is_null")); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Request_is_null")); //$NON-NLS-1$
         }
 
         if (cmd == null) {
             Object[] params = new Object[] { cmd };
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Error_translating_request", params)); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Error_translating_request", params)); //$NON-NLS-1$
         }
 
         // Get the columns widths for all the elements in the group.
@@ -203,9 +203,9 @@ public class TextSynchExecution implements ResultSetExecution {
             }
             
  
-        } catch (ConnectorException e) {
+        } catch (TranslatorException e) {
             Object[] params = new Object[] { query, e.getMessage() };
-            throw new ConnectorException(e, TextPlugin.Util.getString("TextSynchExecution.Cannot_be_translated_by_the_TextTranslator.", params)); //$NON-NLS-1$
+            throw new TranslatorException(e, TextPlugin.Util.getString("TextSynchExecution.Cannot_be_translated_by_the_TextTranslator.", params)); //$NON-NLS-1$
         }
         
         return request;
@@ -216,7 +216,7 @@ public class TextSynchExecution implements ResultSetExecution {
      * @param vars List of DataNodeIDs
      * @return Column numbers corresponding to vars
      */
-    private int[] getSelectCols(List vars) throws ConnectorException{
+    private int[] getSelectCols(List vars) throws TranslatorException{
         int[] cols = new int[vars.size()];
         for(int i=0; i<vars.size(); i++) {
             cols[i] = getColumn((DerivedColumn)vars.get(i));
@@ -232,9 +232,9 @@ public class TextSynchExecution implements ResultSetExecution {
      *
      * @param symbol Identifier to look up the column
      * @return int The column corresponding to that id
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
-    private int getColumn(DerivedColumn symbol) throws ConnectorException{
+    private int getColumn(DerivedColumn symbol) throws TranslatorException{
         return this.getColumn(getElementFromSymbol(symbol));
     }
 
@@ -259,9 +259,9 @@ public class TextSynchExecution implements ResultSetExecution {
      * is used otherwise, Name In Source is used.
      * @param elem
      * @return int
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
-    private int getColumn(Column elem) throws ConnectorException{
+    private int getColumn(Column elem) throws TranslatorException{
         String colStr = elem.getNameInSource();
         try {
         	// If Name In Source is numeric, it is a column number
@@ -275,9 +275,9 @@ public class TextSynchExecution implements ResultSetExecution {
         		for ( int i = 0; i < headerRow.size(); i++ ) {
         			if ( colStr.compareToIgnoreCase((String)headerRow.get(i) )==0) return i;
         		}
-                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Column_not_found_in_header_row", new Object[] {colStr, elem.getFullName() } )); //$NON-NLS-1$
+                throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Column_not_found_in_header_row", new Object[] {colStr, elem.getFullName() } )); //$NON-NLS-1$
         	}
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Invalid_column_number", new Object[] {colStr, elem.getFullName() } ) ); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Invalid_column_number", new Object[] {colStr, elem.getFullName() } ) ); //$NON-NLS-1$
         }
     }
 
@@ -290,7 +290,7 @@ public class TextSynchExecution implements ResultSetExecution {
      * @return List of column values inside the line
      * @throws Exception
      */
-    private List getRecord(String line, String delimiter, String qualifier, List colWidths) throws ConnectorException {
+    private List getRecord(String line, String delimiter, String qualifier, List colWidths) throws TranslatorException {
         if(delimiter != null) {
             return parseDelimitedLine(line, delimiter, qualifier);
         }
@@ -301,7 +301,7 @@ public class TextSynchExecution implements ResultSetExecution {
      * @param line line's length will not be 0
      * @return List of parsed columns
      */
-    private List parseDelimitedLine(String line, String delimiter, String qualifier) throws ConnectorException {
+    private List parseDelimitedLine(String line, String delimiter, String qualifier) throws TranslatorException {
         // the case with no qualifier
         if (qualifier == null || qualifier.trim().length()==0) {
             // parse on delimiters
@@ -359,7 +359,7 @@ public class TextSynchExecution implements ResultSetExecution {
 						// changed to Connectorexception so that the exception is thrown to the user
 						// and becomes known a problem, rather than just
 						// keeping it internally to the server
-                        throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Text_has_no_ending_qualifier", params)); //$NON-NLS-1$
+                        throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Text_has_no_ending_qualifier", params)); //$NON-NLS-1$
                       }
                     // skipping escaped qualifier charachters
                     if(line.length() > endQualIndex+1) {
@@ -379,7 +379,7 @@ public class TextSynchExecution implements ResultSetExecution {
 						// changed to Connectorexception so that the exception is thrown to the user
 						// and becomes known a problem, rather than just
 						// keeping it internally to the server
-                        throw new ConnectorException(msg); 
+                        throw new TranslatorException(msg); 
                         
                     }
 
@@ -437,9 +437,9 @@ public class TextSynchExecution implements ResultSetExecution {
      * @param line
      * @param colWidths
      * @return List
-     * @throws ConnectorException
+     * @throws TranslatorException
      */
-    private List parseFixedWidthLine(String line, List colWidths) throws ConnectorException {
+    private List parseFixedWidthLine(String line, List colWidths) throws TranslatorException {
         int length = line.length();
         List fields = new ArrayList(colWidths.size());
         Iterator iter = colWidths.iterator();
@@ -448,7 +448,7 @@ public class TextSynchExecution implements ResultSetExecution {
             try {
                 int width = ((Integer)iter.next()).intValue();
                 if(width <= 0) {
-                    throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Column_length_must_be_positive")); //$NON-NLS-1$
+                    throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Column_length_must_be_positive")); //$NON-NLS-1$
                 }
 
                 int end = current + width;
@@ -479,7 +479,7 @@ public class TextSynchExecution implements ResultSetExecution {
      * @param columns Columns to save in results
      * @param types Class of all columns' types
      */
-    private List getRow(List record, int[] columns, Class[] types) throws ConnectorException {
+    private List getRow(List record, int[] columns, Class[] types) throws TranslatorException {
         List newRecord = new ArrayList(columns.length);
         for(int i=0; i<columns.length; i++) {
             int column = columns[i];
@@ -496,7 +496,7 @@ public class TextSynchExecution implements ResultSetExecution {
      * @param type Input type
      * @return Object translated Object from String
      */
-    private Object convertString(String value, Class type) throws ConnectorException {
+    private Object convertString(String value, Class type) throws TranslatorException {
         if (value==null) {
             return null;
         }
@@ -527,7 +527,7 @@ public class TextSynchExecution implements ResultSetExecution {
 	            try {
 	                 return new Timestamp(stringToDateTranslator.translateStringToDate(value).getTime());
 	            }catch(ParseException ex) {
-	                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_translate_String_to_Date", new Object[] { ex.getMessage() })); //$NON-NLS-1$
+	                throw new TranslatorException(TextPlugin.Util.getString("TextSynchExecution.Unable_translate_String_to_Date", new Object[] { ex.getMessage() })); //$NON-NLS-1$
 	            }
         	}
         }

@@ -24,7 +24,7 @@ package org.teiid.translator.jdbc.postgresql;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 public class TestPostgreSQLTranslator {
@@ -44,7 +44,7 @@ public class TestPostgreSQLTranslator {
         return TranslationHelper.BQT_VDB;
     }
         
-    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
         TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, TRANSLATOR);
     }
 

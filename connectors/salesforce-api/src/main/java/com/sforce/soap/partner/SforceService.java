@@ -24,7 +24,7 @@ import javax.xml.ws.WebServiceFeature;
 @WebServiceClient(name = "SforceService", wsdlLocation = SforceService.PARTNER_WSDL,targetNamespace = "urn:partner.soap.sforce.com") 
 public class SforceService extends Service {
 
-    private static final String PARTNER_WSDL = "partner_17.wsdl"; //$NON-NLS-1$
+    public static final String PARTNER_WSDL = "partner_17.wsdl"; //$NON-NLS-1$
 	public final static URL WSDL_LOCATION;
     public final static QName SERVICE = new QName("urn:partner.soap.sforce.com", "SforceService"); //$NON-NLS-1$ //$NON-NLS-2$
     public final static QName Soap = new QName("urn:partner.soap.sforce.com", "Soap");//$NON-NLS-1$ //$NON-NLS-2$

@@ -15,7 +15,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -28,7 +28,7 @@ public class MockConnector extends ExecutionFactory {
 	@Override
 	public ProcedureExecution createProcedureExecution(
 			Call procedure, ExecutionContext executionContext,
-			RuntimeMetadata metadata, Object connection) throws ConnectorException {
+			RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		Properties props = new Properties();
 		props.setProperty("customBehaviour", "SkipExecute");//$NON-NLS-1$ //$NON-NLS-2$
 	
@@ -45,7 +45,7 @@ public class MockConnector extends ExecutionFactory {
 	@Override
 	public ResultSetExecution createResultSetExecution(
 			QueryExpression query, ExecutionContext executionContext,
-			RuntimeMetadata metadata, Object connection) throws ConnectorException {
+			RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		Properties groupProps = new Properties();
 		groupProps.setProperty("customName", "CustomTableA");//$NON-NLS-1$ //$NON-NLS-2$
 		NamedTable group = (NamedTable)query.getProjectedQuery().getFrom().get(0);			

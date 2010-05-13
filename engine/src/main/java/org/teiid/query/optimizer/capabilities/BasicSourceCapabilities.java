@@ -40,17 +40,11 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     public BasicSourceCapabilities() {
     }
 
-    /**
-     * @see org.teiid.resource.cci.server.datatier.ConnectorCapabilities#supportsCapability(java.lang.String)
-     */
     public boolean supportsCapability(Capability capability) {
         Boolean supports = (Boolean) capabilityMap.get(capability);
         return (supports == null) ? false : supports.booleanValue();
     }
 
-    /**
-     * @see org.teiid.resource.cci.server.datatier.ConnectorCapabilities#supportsFunction(java.lang.String)
-     */
     public boolean supportsFunction(String functionName) {
         Boolean supports = (Boolean) functionMap.get(functionName);
         return (supports == null) ? false : supports.booleanValue();

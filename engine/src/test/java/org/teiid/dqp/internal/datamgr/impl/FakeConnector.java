@@ -30,7 +30,7 @@ import junit.framework.Assert;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -60,7 +60,7 @@ public class FakeConnector extends ExecutionFactory {
 	}
     
     @Override
-    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws ConnectorException {
+    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
     	executionCount++;
         return new FakeBlockingExecution(executionContext);
     }
@@ -89,7 +89,7 @@ public class FakeConnector extends ExecutionFactory {
         public FakeBlockingExecution(ExecutionContext ec) {
             this.ec = ec;
         }
-        public void execute(QueryExpression query, int maxBatchSize) throws ConnectorException {
+        public void execute(QueryExpression query, int maxBatchSize) throws TranslatorException {
             if (executeBlocks) {
                 waitForCancel();
             }
@@ -97,20 +97,20 @@ public class FakeConnector extends ExecutionFactory {
             	Assert.assertSame(classloader, Thread.currentThread().getContextClassLoader());
             }
         }
-        public synchronized void cancel() throws ConnectorException {
+        public synchronized void cancel() throws TranslatorException {
             cancelled = true;
             this.notify();
         }
-        public void close() throws ConnectorException {
+        public void close() throws TranslatorException {
             Assert.assertFalse("The execution should not be closed more than once", closed); //$NON-NLS-1$
             closed = true;
         }
         @Override
-        public void execute() throws ConnectorException {
+        public void execute() throws TranslatorException {
             ec.addWarning(new Exception("Some warning")); //$NON-NLS-1$
         }
         @Override
-        public List next() throws ConnectorException, DataNotAvailableException {
+        public List next() throws TranslatorException, DataNotAvailableException {
         	if (nextBatchBlocks) {
                 waitForCancel();
             }
@@ -120,11 +120,11 @@ public class FakeConnector extends ExecutionFactory {
             this.rowCount++;
             return Arrays.asList(this.rowCount - 1);
         }
-        private synchronized void waitForCancel() throws ConnectorException {
+        private synchronized void waitForCancel() throws TranslatorException {
             try {
                 this.wait(simulatedBatchRetrievalTime);
                 if (cancelled && driverThrowsExceptionOnCancel) {
-                    throw new ConnectorException("Request cancelled"); //$NON-NLS-1$
+                    throw new TranslatorException("Request cancelled"); //$NON-NLS-1$
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -132,7 +132,7 @@ public class FakeConnector extends ExecutionFactory {
         }
 		@Override
 		public int[] getUpdateCounts() throws DataNotAvailableException,
-				ConnectorException {
+				TranslatorException {
 			return new int[] {1};
 		}
     }

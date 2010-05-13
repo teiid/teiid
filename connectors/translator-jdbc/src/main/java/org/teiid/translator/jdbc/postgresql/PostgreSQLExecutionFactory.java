@@ -36,7 +36,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLReservedWords;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorProperty;
@@ -67,7 +67,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
 	private String version = EIGHT_0;	
 
-    public void start() throws ConnectorException {
+    public void start() throws TranslatorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.start();
         

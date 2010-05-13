@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -80,13 +80,13 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 	}
 	
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 	}
 
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionfactory)
-    		throws ConnectorException {
+    		throws TranslatorException {
         return new LoopbackExecution(command, this);
     }   
     

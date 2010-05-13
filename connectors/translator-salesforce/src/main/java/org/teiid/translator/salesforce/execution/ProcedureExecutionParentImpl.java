@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -28,27 +28,27 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 	}
 
 	@Override
-	public List<?> getOutputParameterValues() throws ConnectorException {
+	public List<?> getOutputParameterValues() throws TranslatorException {
 		return execution.getOutputParameterValues();
 	}
 
 	@Override
-	public List<?> next() throws ConnectorException, DataNotAvailableException {
+	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		return execution.next();
 	}
 
 	@Override
-	public void cancel() throws ConnectorException {
+	public void cancel() throws TranslatorException {
 		execution.cancel();
 	}
 
 	@Override
-	public void close() throws ConnectorException {
+	public void close() throws TranslatorException {
 		execution.close();
 	}
 
 	@Override
-	public void execute() throws ConnectorException {
+	public void execute() throws TranslatorException {
 		if(getCommand().getProcedureName().endsWith("getUpdated")) {
 			execution = new GetUpdatedExecutionImpl(this);
 			execution.execute(this);

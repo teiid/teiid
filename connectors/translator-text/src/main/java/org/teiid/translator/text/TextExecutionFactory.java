@@ -45,7 +45,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.FileConnection;
@@ -68,7 +68,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 	private String encoding = Charset.defaultCharset().name();
 	
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		initMetaDataProps();
     }
 
@@ -119,18 +119,18 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 	
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-    		throws ConnectorException {
+    		throws TranslatorException {
     	try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
 			TextConnectionImpl textConn = new TextConnectionImpl(this.metadataProps, (FileConnection)cf.getConnection(), encoding);
 			return new TextSynchExecution(this, (Select)command, textConn);
 		} catch (ResourceException e) {
-			throw new ConnectorException(e);
+			throw new TranslatorException(e);
 		}
     }
 
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws ConnectorException {
+	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException {
 		for (Map.Entry<String, Properties> entry : metadataProps.entrySet()) {
 			Properties p = entry.getValue();
 			String columns = p.getProperty(TextDescriptorPropertyNames.COLUMNS);
@@ -143,7 +143,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 			if (types != null) {
 				typeNames = types.trim().split(","); //$NON-NLS-1$
 				if (typeNames.length != columnNames.length) {
-					throw new ConnectorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
+					throw new TranslatorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
 				}
 			}
 			Table table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
@@ -156,10 +156,10 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		}
 	} 
 	    
-    private void initMetaDataProps() throws ConnectorException {
+    private void initMetaDataProps() throws TranslatorException {
         // Verify required items
         if (descriptorFile == null || descriptorFile.trim().length() == 0) {
-            throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Descriptor_file_name_is_not_specified._2")); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextConnection.Descriptor_file_name_is_not_specified._2")); //$NON-NLS-1$
         }
         BufferedReader br = null;
         try {
@@ -185,7 +185,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
             }
         } catch (IOException e) {
         	LogManager.logError(LogConstants.CTX_CONNECTOR, e, TextPlugin.Util.getString("TextConnection.Error_while_reading_text_file__{0}_1", new Object[] {e.getMessage()})); //$NON-NLS-1$
-            throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.Error_trying_to_establish_connection_5")); //$NON-NLS-1$
+            throw new TranslatorException(e, TextPlugin.Util.getString("TextConnection.Error_trying_to_establish_connection_5")); //$NON-NLS-1$
         } finally {
         	if (br != null) {
         		try {br.close();} catch (Exception ee) {}
@@ -197,7 +197,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
     /**
      * Read the property string and populate the properties with info needed to access data files.
      */
-    private void getMetadata(String propStr) throws ConnectorException {
+    private void getMetadata(String propStr) throws TranslatorException {
         try {
             int index = 0;
 
@@ -232,18 +232,18 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
                 try {
                     Integer.parseInt(propertyValue);
                 } catch (NumberFormatException e) {
-                    throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.The_value_for_the_property_should_be_an_integer._{0}_3", new Object[] {e.getMessage()})); //$NON-NLS-1$
+                    throw new TranslatorException(e, TextPlugin.Util.getString("TextConnection.The_value_for_the_property_should_be_an_integer._{0}_3", new Object[] {e.getMessage()})); //$NON-NLS-1$
                 }
             } else if (propertyName.equals(TextDescriptorPropertyNames.HEADER_ROW)) {
                 try {
                     Integer.parseInt(propertyValue);
                 } catch (NumberFormatException e) {
-                    throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.The_value_for_the_property_should_be_an_integer._{0}_3", new Object[] {e.getMessage()})); //$NON-NLS-1$
+                    throw new TranslatorException(e, TextPlugin.Util.getString("TextConnection.The_value_for_the_property_should_be_an_integer._{0}_3", new Object[] {e.getMessage()})); //$NON-NLS-1$
                 }
             } else if (!(propertyName.equals(TextDescriptorPropertyNames.COLUMNS)
             		|| propertyName.equals(TextDescriptorPropertyNames.TYPES) || propertyName.equals(TextDescriptorPropertyNames.LOCATION)
             		|| propertyName.equals(TextDescriptorPropertyNames.DELIMITER) || propertyName.equals(TextDescriptorPropertyNames.QUALIFIER))) {
-                throw new ConnectorException(TextPlugin.Util.getString("TextConnection.The_property_{0}_for_the_group_{1}_is_invalid._4", new Object[] {propertyName, groupName})); //$NON-NLS-1$
+                throw new TranslatorException(TextPlugin.Util.getString("TextConnection.The_property_{0}_for_the_group_{1}_is_invalid._4", new Object[] {propertyName, groupName})); //$NON-NLS-1$
             }
 
             // Check for tab as a delimiter and use correct string
@@ -257,7 +257,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
                 metadataProps.put(groupName, props);
             }
         } catch (Exception e) {
-            throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Error_parsing_property_string_{0}__{1}_6", new Object[] {propStr, e.getMessage()})); //$NON-NLS-1$
+            throw new TranslatorException(TextPlugin.Util.getString("TextConnection.Error_parsing_property_string_{0}__{1}_6", new Object[] {propStr, e.getMessage()})); //$NON-NLS-1$
         }
     }
     
@@ -266,7 +266,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
      * @param fileLocation String standing for the fileLocation either in file system or web.
      * @return BufferReader for the file
      */
-    private BufferedReader getReader(String fileLocation) throws ConnectorException {
+    private BufferedReader getReader(String fileLocation) throws TranslatorException {
         try {
         	InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileLocation);
         	if (is != null) {
@@ -283,10 +283,10 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 	            // place the stream into a buffered reader
 	            return new BufferedReader(inSR);
         	} catch (MalformedURLException e) {
-        		throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Descriptor_file_does_not_exist_at_this_location__{0}_12", new Object[] {fileLocation})); //$NON-NLS-1$
+        		throw new TranslatorException(TextPlugin.Util.getString("TextConnection.Descriptor_file_does_not_exist_at_this_location__{0}_12", new Object[] {fileLocation})); //$NON-NLS-1$
         	}
         } catch (IOException e) {
-            throw new ConnectorException(e,TextPlugin.Util.getString("TextConnection.Descriptor_file_does_not_exist_at_this_location__{0}_12", new Object[] {fileLocation})); //$NON-NLS-1$
+            throw new TranslatorException(e,TextPlugin.Util.getString("TextConnection.Descriptor_file_does_not_exist_at_this_location__{0}_12", new Object[] {fileLocation})); //$NON-NLS-1$
         }
     }      
 

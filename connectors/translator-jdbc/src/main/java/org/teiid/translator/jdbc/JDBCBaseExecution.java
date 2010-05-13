@@ -35,7 +35,7 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 
@@ -110,7 +110,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     // Methods
     // ===========================================================================================================================
 
-    protected TranslatedCommand translateCommand(Command command) throws ConnectorException {
+    protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
         TranslatedCommand translatedCommand = new TranslatedCommand(context, this.executionFactory);
         translatedCommand.translateCommand(command);
 
@@ -124,7 +124,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     /*
      * @see com.metamatrix.data.Execution#close()
      */
-    public synchronized void close() throws ConnectorException {
+    public synchronized void close() throws TranslatorException {
         try {
             if (statement != null) {
                 statement.close();
@@ -133,14 +133,14 @@ public abstract class JDBCBaseExecution implements Execution  {
             	connection.close();
             }
         } catch (SQLException e) {
-            throw new ConnectorException(e);
+            throw new TranslatorException(e);
         }
     }
 
     /*
      * @see com.metamatrix.data.Execution#cancel()
      */
-    public synchronized void cancel() throws ConnectorException {
+    public synchronized void cancel() throws TranslatorException {
         // if both the DBMS and driver support aborting an SQL
         try {
             if (statement != null) {

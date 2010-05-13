@@ -53,7 +53,7 @@ import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
@@ -83,7 +83,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
 	
-    public void start() throws ConnectorException {
+    public void start() throws TranslatorException {
         super.start();
         
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
@@ -182,7 +182,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
     
-    public void handleInsertSequences(Insert insert) throws ConnectorException {
+    public void handleInsertSequences(Insert insert) throws TranslatorException {
         /* 
          * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence 
          * then pull the Sequence name out of the name in source of the column.
@@ -224,7 +224,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             
             int delimiterIndex = sequence.indexOf(Tokens.DOT);
             if (delimiterIndex == -1) {
-            	throw new ConnectorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name); //$NON-NLS-1$ //$NON-NLS-2$
+            	throw new TranslatorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name); //$NON-NLS-1$ //$NON-NLS-2$
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);
@@ -241,7 +241,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	if (command instanceof Insert) {
     		try {
 				handleInsertSequences((Insert)command);
-			} catch (ConnectorException e) {
+			} catch (TranslatorException e) {
 				throw new RuntimeException(e);
 			}
     	}
@@ -514,10 +514,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
 
-    /** 
-     * @see org.teiid.translator.ConnectorCapabilities#supportsFunctionsInGroupBy()
-     * @since 5.0
-     */
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
@@ -531,17 +527,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
-    /** 
-     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
-     */
     @Override
     public boolean supportsExcept() {
         return true;
     }
     
-    /** 
-     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
-     */
     @Override
     public boolean supportsIntersect() {
         return true;

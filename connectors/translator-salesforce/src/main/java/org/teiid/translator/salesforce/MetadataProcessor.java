@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.resource.ResourceException;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -15,7 +17,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 import com.sforce.soap.partner.ChildRelationship;
 import com.sforce.soap.partner.DescribeGlobalResult;
@@ -64,16 +66,20 @@ public class MetadataProcessor {
 		this.connectorEnv = env;
 	}
 
-	public void processMetadata() throws ConnectorException {
-		DescribeGlobalResult globalResult = connection.getObjects();
-		List<DescribeGlobalSObjectResult> objects = globalResult.getSobjects();
-		for (DescribeGlobalSObjectResult object : objects) {
-			addTable(object);
-		}  
-		addRelationships();
+	public void processMetadata() throws TranslatorException {
+		try {
+			DescribeGlobalResult globalResult = connection.getObjects();
+			List<DescribeGlobalSObjectResult> objects = globalResult.getSobjects();
+			for (DescribeGlobalSObjectResult object : objects) {
+				addTable(object);
+			}  
+			addRelationships();
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		}
 	}
 
-	private void addRelationships() throws ConnectorException {
+	private void addRelationships() throws TranslatorException {
 		for (Iterator<Relationship> iterator = relationships.iterator(); iterator.hasNext();) {
 			Relationship relationship = iterator.next();
 			if (!this.connectorEnv.isModelAuditFields() && isAuditField(relationship.getForeignKeyField())) {
@@ -125,8 +131,14 @@ public class MetadataProcessor {
 		return result;
 	}
 
-	private void addTable(DescribeGlobalSObjectResult object) throws ConnectorException {
-		DescribeSObjectResult objectMetadata = connection.getObjectMetaData(object.getName());
+	private void addTable(DescribeGlobalSObjectResult object) throws TranslatorException {
+		DescribeSObjectResult objectMetadata = null;
+		try {
+			objectMetadata = connection.getObjectMetaData(object.getName());
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		}
+		
 		String name = NameUtil.normalizeName(objectMetadata.getName());
 		Table table = metadataFactory.addTable(name);
 		
@@ -166,7 +178,7 @@ public class MetadataProcessor {
 		}
 	}
 
-	private void addColumns(DescribeSObjectResult objectMetadata, Table table) throws ConnectorException {
+	private void addColumns(DescribeSObjectResult objectMetadata, Table table) throws TranslatorException {
 		List<Field> fields = objectMetadata.getFields();
 		for (Field field : fields) {
 			String normalizedName = NameUtil.normalizeName(field.getName());

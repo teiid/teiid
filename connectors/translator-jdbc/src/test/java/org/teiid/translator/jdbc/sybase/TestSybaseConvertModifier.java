@@ -36,7 +36,7 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 
@@ -48,7 +48,7 @@ public class TestSybaseConvertModifier {
     private static SybaseExecutionFactory trans = new SybaseExecutionFactory();
     
     @BeforeClass
-    public static void setup() throws ConnectorException {
+    public static void setup() throws TranslatorException {
         trans.start();
     }
     

@@ -49,7 +49,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ProcedureExecution;
 
 
@@ -101,7 +101,7 @@ public class TestConnectorWorkItem {
 		try {
 			pbh.padRow(Arrays.asList(1));
 			fail("Expected exception from resultset mismatch"); //$NON-NLS-1$
-		} catch (ConnectorException err) {
+		} catch (TranslatorException err) {
 			assertEquals(
 					"Could not process stored procedure results for EXEC spTest8(1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
 		}
@@ -156,7 +156,7 @@ public class TestConnectorWorkItem {
     }
     
 	@Ignore
-	@Test(expected=ConnectorException.class) public void testIsImmutablePropertyFails() throws Exception {
+	@Test(expected=TranslatorException.class) public void testIsImmutablePropertyFails() throws Exception {
     	/*
     	 * Setup:
     	 *  1. requestMsg.isTransactional() must be TRUE 

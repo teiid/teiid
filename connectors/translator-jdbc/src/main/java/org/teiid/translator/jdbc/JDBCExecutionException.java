@@ -25,10 +25,10 @@ package org.teiid.translator.jdbc;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 
 
-public class JDBCExecutionException extends ConnectorException {
+public class JDBCExecutionException extends TranslatorException {
 
 	private static final long serialVersionUID = 1758087499488916573L;
 

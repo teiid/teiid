@@ -30,7 +30,7 @@ import java.util.Properties;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.id.UUIDFactory;
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 
@@ -73,9 +73,9 @@ public class MetadataFactory {
 	 * Add a table with the given name to the model.  
 	 * @param name
 	 * @return
-	 * @throws ConnectorException 
+	 * @throws TranslatorException 
 	 */
-	public Table addTable(String name) throws ConnectorException {
+	public Table addTable(String name) throws TranslatorException {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
 		table.setName(name);
@@ -90,11 +90,11 @@ public class MetadataFactory {
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param table
 	 * @return
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-	public Column addColumn(String name, String type, ColumnSet<?> table) throws ConnectorException {
+	public Column addColumn(String name, String type, ColumnSet<?> table) throws TranslatorException {
 		if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
-			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.invalid_name", name)); //$NON-NLS-1$
+			throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.invalid_name", name)); //$NON-NLS-1$
 		}
 		Column column = new Column();
 		column.setName(name);
@@ -109,10 +109,10 @@ public class MetadataFactory {
 	}
 
 	private Datatype setColumnType(String type,
-			BaseColumn column) throws ConnectorException {
+			BaseColumn column) throws TranslatorException {
 		Datatype datatype = dataTypes.get(type);
 		if (datatype == null) {
-			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.unknown_datatype", type)); //$NON-NLS-1$
+			throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.unknown_datatype", type)); //$NON-NLS-1$
 		}
 		column.setDatatype(datatype);
 		column.setDatatypeUUID(datatype.getUUID());
@@ -129,9 +129,9 @@ public class MetadataFactory {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-	public KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) throws ConnectorException {
+	public KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) throws TranslatorException {
 		KeyRecord primaryKey = new KeyRecord(KeyRecord.Type.Primary);
 		primaryKey.setParent(table);
 		primaryKey.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -148,9 +148,9 @@ public class MetadataFactory {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-	public KeyRecord addAccessPattern(String name, List<String> columnNames, Table table) throws ConnectorException {
+	public KeyRecord addAccessPattern(String name, List<String> columnNames, Table table) throws TranslatorException {
 		KeyRecord ap = new KeyRecord(KeyRecord.Type.AccessPattern);
 		ap.setParent(table);
 		ap.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -168,9 +168,9 @@ public class MetadataFactory {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) throws ConnectorException {
+	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) throws TranslatorException {
 		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.NonUnique:KeyRecord.Type.Index);
 		index.setParent(table);
 		index.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -188,16 +188,16 @@ public class MetadataFactory {
 	 * @param pkTable
 	 * @param table
 	 * @return
-	 * @throws ConnectorException
+	 * @throws TranslatorException
 	 */
-	public ForeignKey addForiegnKey(String name, List<String> columnNames, Table pkTable, Table table) throws ConnectorException {
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, Table pkTable, Table table) throws TranslatorException {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setParent(table);
 		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
 		foreignKey.setName(name);
 		setUUID(foreignKey);
 		if (pkTable.getPrimaryKey() == null) {
-			throw new ConnectorException("No primary key defined for table " + pkTable); //$NON-NLS-1$
+			throw new TranslatorException("No primary key defined for table " + pkTable); //$NON-NLS-1$
 		}
 		foreignKey.setPrimaryKey(pkTable.getPrimaryKey());
 		foreignKey.setUniqueKeyID(pkTable.getPrimaryKey().getUUID());
@@ -210,9 +210,9 @@ public class MetadataFactory {
 	 * Add a procedure with the given name to the model.  
 	 * @param name
 	 * @return
-	 * @throws ConnectorException 
+	 * @throws TranslatorException 
 	 */
-	public Procedure addProcedure(String name) throws ConnectorException {
+	public Procedure addProcedure(String name) throws TranslatorException {
 		Procedure procedure = new Procedure();
 		procedure.setName(name);
 		setUUID(procedure);
@@ -228,9 +228,9 @@ public class MetadataFactory {
 	 * @param parameterType should be one of {@link ProcedureParameter.Type}
 	 * @param procedure
 	 * @return
-	 * @throws ConnectorException 
+	 * @throws TranslatorException 
 	 */
-	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) throws ConnectorException {
+	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) throws TranslatorException {
 		ProcedureParameter param = new ProcedureParameter();
 		param.setName(name);
 		setUUID(param);
@@ -248,9 +248,9 @@ public class MetadataFactory {
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param procedure
 	 * @return
-	 * @throws ConnectorException 
+	 * @throws TranslatorException 
 	 */
-	public Column addProcedureResultSetColumn(String name, String type, Procedure procedure) throws ConnectorException {
+	public Column addProcedureResultSetColumn(String name, String type, Procedure procedure) throws TranslatorException {
 		if (procedure.getResultSet() == null) {
 			ColumnSet<Procedure> resultSet = new ColumnSet<Procedure>();
 			resultSet.setParent(procedure);
@@ -262,7 +262,7 @@ public class MetadataFactory {
 	}
 
 	private void assignColumns(List<String> columnNames, Table table,
-			ColumnSet<?> columns) throws ConnectorException {
+			ColumnSet<?> columns) throws TranslatorException {
 		for (String columnName : columnNames) {
 			boolean match = false;
 			for (Column column : table.getColumns()) {
@@ -273,7 +273,7 @@ public class MetadataFactory {
 				}
 			}
 			if (!match) {
-				throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.no_column_found", columnName)); //$NON-NLS-1$
+				throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.no_column_found", columnName)); //$NON-NLS-1$
 			}
 		}
 	}

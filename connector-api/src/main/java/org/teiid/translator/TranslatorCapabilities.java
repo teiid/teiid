@@ -32,7 +32,7 @@ import org.teiid.language.SetQuery;
  * Allows a connector to specify the capabilities that a connector
  * supports.    
  */
-public interface ConnectorCapabilities {
+public interface TranslatorCapabilities {
 	
 	public enum SupportedJoinCriteria {
 		/**

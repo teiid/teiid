@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc.derby;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.translator.ConnectorException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -47,7 +47,7 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	private String version = TEN_1;
 	
 	@Override
-	public void start() throws ConnectorException {
+	public void start() throws TranslatorException {
 		super.start();
 		//additional derby functions
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
@@ -176,7 +176,6 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     
     /**
      * Derby supports only SearchedCaseExpression, not CaseExpression. 
-     * @see org.teiid.translator.ConnectorCapabilities#supportsCaseExpressions()
      * @since 5.0
      */
     @Override
@@ -186,7 +185,6 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     
     /**
      * Derby supports only left and right outer joins. 
-     * @see org.teiid.translator.ConnectorCapabilities#supportsFullOuterJoins()
      * @since 5.0
      */
     @Override
